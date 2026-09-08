@@ -1,0 +1,92 @@
+name: CI
+
+# Gatekeeper: every push and pull request must pass the full standard
+# (composer validate -> code style -> static analysis -> boundaries -> tests)
+# before it is valid for review.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: PHP ${{ matrix.php }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.4', '8.5']
+
+    # Real PostGIS. The core owns tables — the registry's catalogue and per-area
+    # ledger among them — so there is no honest version of this suite that does
+    # not connect. Locally the same database lives on port 5434.
+    services:
+      postgres:
+        image: ghcr.io/fundistadi/postgis:17
+        env:
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: app
+          POSTGRES_DB: uhifadhi_core_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U app"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      UHIFADHI_TEST_DATABASE_URL: "postgresql://app:app@127.0.0.1:5432/uhifadhi_core_test?serverVersion=17&charset=utf8"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: ctype, iconv, pdo_pgsql
+          coverage: none
+          tools: composer:v2
+
+      - name: Validate the root manifest
+        run: composer validate --strict
+
+      # Every bundle is a package. Its manifest is validated as one, here,
+      # because after a split that is exactly what it will be.
+      - name: Validate every bundle manifest
+        run: |
+          for bundle in src/Uhifadhi/Bundle/*/composer.json; do
+            echo "== $bundle"
+            composer validate --strict --no-check-all --working-dir="$(dirname "$bundle")"
+          done
+
+      - name: Cache Composer packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache/files
+          key: composer-${{ matrix.php }}-${{ hashFiles('composer.json') }}
+          restore-keys: composer-${{ matrix.php }}-
+
+      # `update`, not `install`: a library is tested against the versions its
+      # constraints allow, and the lock is not committed.
+      - name: Install dependencies
+        run: composer update --no-interaction --no-progress --prefer-dist
+
+      - name: Code style (php-cs-fixer)
+        run: composer cs:check
+
+      - name: Static analysis (PHPStan max)
+        run: composer phpstan
+
+      # The boundary between bundles, enforced. A symbol a bundle uses without
+      # declaring the dependency that provides it fails the build.
+      - name: Boundaries (composer-require-checker)
+        run: composer require-check
+
+      - name: Tests (PHPUnit)
+        run: composer test

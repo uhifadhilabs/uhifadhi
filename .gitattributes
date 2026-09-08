@@ -1,0 +1,9 @@
+/tests export-ignore
+/.github export-ignore
+/.git* export-ignore
+/phpunit.dist.xml export-ignore
+/phpstan.dist.neon export-ignore
+/.php-cs-fixer.dist.php export-ignore
+/require-check export-ignore
+/src/Uhifadhi/Bundle/*/tests export-ignore
+/composer-require-checker.dist.json export-ignore

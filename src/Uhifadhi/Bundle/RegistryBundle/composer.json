@@ -1,0 +1,51 @@
+{
+    "name": "uhifadhi/registry-bundle",
+    "type": "symfony-bundle",
+    "description": "The uhifadhi registry: the module catalogue, the per-area install ledger, the parking gate and the permissions modules declare.",
+    "keywords": [
+        "catalogue",
+        "conservation",
+        "module",
+        "platform",
+        "registry",
+        "symfony",
+        "uhifadhi"
+    ],
+    "license": "AGPL-3.0-or-later",
+    "authors": [
+        {
+            "name": "Ezekiel Mjema",
+            "homepage": "https://github.com/eemjema"
+        }
+    ],
+    "require": {
+        "php": ">=8.4",
+        "doctrine/doctrine-bundle": "^3.0",
+        "doctrine/doctrine-migrations-bundle": "^4.0",
+        "doctrine/persistence": "^3.1 || ^4.0",
+        "doctrine/orm": "^3.5",
+        "psr/container": "^1.1 || ^2.0",
+        "symfony/config": "^7.3 || ^8.0",
+        "symfony/dependency-injection": "^7.3 || ^8.0",
+        "symfony/framework-bundle": "^7.3 || ^8.0",
+        "symfony/http-kernel": "^7.3 || ^8.0",
+        "symfony/service-contracts": "^3.5",
+        "symfony/uid": "^7.3 || ^8.0",
+        "uhifadhi/module-contracts": "^0.6"
+    },
+    "autoload": {
+        "psr-4": {
+            "Uhifadhi\\Bundle\\RegistryBundle\\": ""
+        },
+        "exclude-from-classmap": [
+            "/tests/"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Uhifadhi\\Bundle\\RegistryBundle\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

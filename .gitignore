@@ -1,0 +1,12 @@
+/vendor/
+/.phpunit.cache/
+/.php-cs-fixer.cache
+/composer.lock
+/tests/Application/var/
+
+# IDE / editor files — never commit
+/.idea/
+/.vscode/
+*.iml
+/src/Uhifadhi/Bundle/*/config/reference.php
+/src/Uhifadhi/Bundle/*/.composer-require-checker.json

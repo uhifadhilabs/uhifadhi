@@ -1,0 +1,68 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/*
+ * This file is part of the Uhifadhi core.
+ *
+ * (c) Ezekiel Mjema <https://github.com/eemjema>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+/*
+ * EVERY BUNDLE'S composer.json IS ITS BOUNDARY, CHECKED.
+ *
+ * `composer-require-checker` fails on any symbol a package uses without
+ * declaring the dependency that provides it — which is what makes the per-bundle
+ * manifests real rather than decorative, and what makes the future split a
+ * no-op. It reads the vendor directory next to the composer.json it is given
+ * (`config.vendor-dir`, default `vendor/`), and a monorepo's bundles have no
+ * vendor directory of their own: they share the root's.
+ * @see vendor/maglnet/composer-require-checker/src/ComposerRequireChecker/FileLocator/LocateComposerPackageDirectDependenciesSourceFiles.php
+ *
+ * So each bundle's manifest is copied beside itself with that one key added and
+ * the checker is pointed at the copy. The published composer.json stays free of
+ * a path that only makes sense before the split.
+ *
+ * The whitelist in composer-require-checker.dist.json exists for one reason: a
+ * PHP service file declares the configurator's own namespace, so `service()`,
+ * `param()` and `tagged_iterator()` are written unqualified and no scan can
+ * attribute them to the package that defines them.
+ */
+
+$root = __DIR__;
+$bundles = glob($root.'/src/Uhifadhi/Bundle/*/composer.json') ?: [];
+sort($bundles);
+
+$checker = $root.'/vendor/bin/composer-require-checker';
+$status = 0;
+
+foreach ($bundles as $manifest) {
+    $dir = \dirname($manifest);
+    $name = basename($dir);
+
+    $json = json_decode((string) file_get_contents($manifest), true, 512, \JSON_THROW_ON_ERROR);
+    \assert(\is_array($json));
+    $json['config']['vendor-dir'] = str_repeat('../', 4).'vendor';
+
+    $copy = $dir.'/.composer-require-checker.json';
+    file_put_contents($copy, json_encode($json, \JSON_PRETTY_PRINT | \JSON_UNESCAPED_SLASHES | \JSON_THROW_ON_ERROR));
+
+    echo \PHP_EOL, '== ', $name, \PHP_EOL;
+    passthru(
+        escapeshellarg($checker)
+        .' check --config-file='.escapeshellarg($root.'/composer-require-checker.dist.json')
+        .' '.escapeshellarg($copy),
+        $exit,
+    );
+    unlink($copy);
+
+    if (0 !== $exit) {
+        $status = 1;
+    }
+}
+
+exit($status);
