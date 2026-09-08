@@ -24,7 +24,7 @@ use Symfony\Component\Config\Definition\Builder\NodeDefinition;
  *     after_sign_in_path: /
  *     sign_in_lede: 'Analytical observatory for protected areas.'
  *     mail_from: 'uhifadhi@example.org'
- *     installation_name: 'Ngorongoro Conservation Area'
+ *     installation_name: 'Northern Reserve Authority'
  *
  * FOUR KEYS, AND NONE OF THEM IS SECURITY. What a deployment usually wants to
  * change about signing in — who may reach what, how long a session lives,

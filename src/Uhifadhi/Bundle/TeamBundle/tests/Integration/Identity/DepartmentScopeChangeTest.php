@@ -52,13 +52,13 @@ final class DepartmentScopeChangeTest extends IntegrationTestCase
     public function testConfiningAnOrgDepartmentRecordsAnAuditedReason(): void
     {
         $admin = $this->administrator();
-        $area = new HostArea()->setName('Ngorongoro');
+        $area = new HostArea()->setName('Northern Reserve');
         $this->em->persist($area);
 
         $department = new Department()->setName('Ecology');
         $this->em->persist($department);
 
-        $change = $department->changeScopeTo($area, $admin, 'Ecology now works only in the crater.');
+        $change = $department->changeScopeTo($area, $admin, 'Ecology now works only in the north.');
         $this->em->flush();
         $this->em->clear();
 
@@ -73,7 +73,7 @@ final class DepartmentScopeChangeTest extends IntegrationTestCase
         $entry = $trail[0];
         self::assertSame(DepartmentScopeEnum::Org, $entry->getFromScope());
         self::assertSame(DepartmentScopeEnum::Area, $entry->getToScope());
-        self::assertSame('Ecology now works only in the crater.', $entry->getReason());
+        self::assertSame('Ecology now works only in the north.', $entry->getReason());
         self::assertInstanceOf(User::class, $entry->getChangedBy());
         self::assertSame('naomi@example.test', $entry->getChangedBy()->getEmail());
         self::assertNotNull($entry->getArea(), 'Confining records the area it was confined to.');
@@ -83,17 +83,17 @@ final class DepartmentScopeChangeTest extends IntegrationTestCase
     public function testPromotingAnAreaDepartmentRecordsAnAuditedReason(): void
     {
         $admin = $this->administrator();
-        $area = new HostArea()->setName('Ngorongoro');
+        $area = new HostArea()->setName('Northern Reserve');
         $this->em->persist($area);
 
-        $department = new Department()->setName('Crater Management')->setArea($area);
+        $department = new Department()->setName('Wetland Management')->setArea($area);
         $this->em->persist($department);
 
         $department->changeScopeTo(null, $admin, 'Its remit is now the whole park.');
         $this->em->flush();
         $this->em->clear();
 
-        $stored = $this->service(DepartmentRepository::class)->findOneByName('Crater Management');
+        $stored = $this->service(DepartmentRepository::class)->findOneByName('Wetland Management');
         self::assertInstanceOf(Department::class, $stored);
         self::assertTrue($stored->isOrgLevel(), 'The department is org-wide after promotion.');
         self::assertNull($stored->getArea());
@@ -107,7 +107,7 @@ final class DepartmentScopeChangeTest extends IntegrationTestCase
     /** A BLANK REASON IS REFUSED, and the area does not move. */
     public function testABlankReasonIsRefusedAndNothingChanges(): void
     {
-        $area = new HostArea()->setName('Ngorongoro');
+        $area = new HostArea()->setName('Northern Reserve');
         $this->em->persist($area);
         $department = new Department()->setName('Ecology');
         $this->em->persist($department);
@@ -128,16 +128,16 @@ final class DepartmentScopeChangeTest extends IntegrationTestCase
     public function testTheTrailAccumulatesInOrder(): void
     {
         $admin = $this->administrator();
-        $ngorongoro = new HostArea()->setName('Ngorongoro');
-        $serengeti = new HostArea()->setName('Serengeti');
-        $this->em->persist($ngorongoro);
-        $this->em->persist($serengeti);
+        $north = new HostArea()->setName('Northern Reserve');
+        $south = new HostArea()->setName('Southern Reserve');
+        $this->em->persist($north);
+        $this->em->persist($south);
 
         $department = new Department()->setName('Ecology');
         $this->em->persist($department);
 
-        $department->changeScopeTo($ngorongoro, $admin, 'Confine to Ngorongoro.');
-        $department->changeScopeTo($serengeti, $admin, 'Move to Serengeti.');
+        $department->changeScopeTo($north, $admin, 'Confine to Northern Reserve.');
+        $department->changeScopeTo($south, $admin, 'Move to Southern Reserve.');
         $department->changeScopeTo(null, $admin, 'Widen to the whole org.');
         $this->em->flush();
         $this->em->clear();
@@ -147,15 +147,15 @@ final class DepartmentScopeChangeTest extends IntegrationTestCase
 
         $trail = $this->service(DepartmentScopeChangeRepository::class)->findForDepartment($stored);
         self::assertCount(3, $trail);
-        self::assertSame('Confine to Ngorongoro.', $trail[0]->getReason());
-        self::assertSame('Move to Serengeti.', $trail[1]->getReason());
+        self::assertSame('Confine to Northern Reserve.', $trail[0]->getReason());
+        self::assertSame('Move to Southern Reserve.', $trail[1]->getReason());
         self::assertSame('Widen to the whole org.', $trail[2]->getReason());
     }
 
     /** A console or seed transition has no signed-in actor; the line is still truthful. */
     public function testAChangeMayHaveNoActor(): void
     {
-        $area = new HostArea()->setName('Ngorongoro');
+        $area = new HostArea()->setName('Northern Reserve');
         $this->em->persist($area);
         $department = new Department()->setName('Ecology');
         $this->em->persist($department);

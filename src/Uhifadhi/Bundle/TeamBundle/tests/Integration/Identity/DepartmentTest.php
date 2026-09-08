@@ -109,17 +109,18 @@ final class DepartmentTest extends IntegrationTestCase
     }
 
     /**
-     * NOTHING IS UNIQUE ORG-WIDE ANY MORE, and the old index is named here so
-     * that its removal is a decision rather than a diff nobody read.
+     * NOTHING IS UNIQUE ORG-WIDE. The installation-wide index a reader might
+     * expect is named too, so that its absence is a decision somebody asserted
+     * rather than a diff nobody read.
      */
-    public function testThePositionNameIsNoLongerUniqueAcrossTheInstallation(): void
+    public function testThePositionNameIsNotUniqueAcrossTheInstallation(): void
     {
         $constraints = $this->em->getClassMetadata(Position::class)->table['uniqueConstraints'] ?? [];
 
         self::assertSame(
             ['uniq_team_position_department_name' => ['fields' => ['department', 'name']]],
             $constraints,
-            'One unique constraint, and it is the department-scoped one. uniq_team_position_name is gone.',
+            'One unique constraint, and it is the department-scoped one. There is no uniq_team_position_name.',
         );
     }
 

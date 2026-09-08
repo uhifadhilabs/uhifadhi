@@ -114,9 +114,8 @@ final class TeamNavigationTest extends TestCase
      * fails when they change.
      *
      * DEPARTMENTS COMES FIRST, and that is the drawing rather than a
-     * preference: the old application's sidebar puts Departments above Team
-     * under Organization, because the org chart is the thing the roster is read
-     * against.
+     * preference: Departments sits above Team under Organization, because the
+     * org chart is the thing the roster is read against.
      */
     public function testTheTwoRowsAreOneSectionAtTheDeclaredPosition(): void
     {

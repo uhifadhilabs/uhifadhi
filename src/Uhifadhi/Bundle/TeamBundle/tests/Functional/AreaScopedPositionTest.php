@@ -45,9 +45,9 @@ final class AreaScopedPositionTest extends WebTestCaseWithSchema
     /** An area-X admin creates a position under a department in their OWN area. */
     public function testAnAreaAdminCreatesAPositionUnderADepartmentInTheirOwnArea(): void
     {
-        $ngorongoro = $this->area('Ngorongoro');
-        $this->areaAdminIn($ngorongoro);
-        $antiPoaching = $this->areaDepartment('Anti-Poaching', $ngorongoro);
+        $north = $this->area('Northern Reserve');
+        $this->areaAdminIn($north);
+        $antiPoaching = $this->areaDepartment('Anti-Poaching', $north);
         $this->em->flush();
 
         $token = $this->tokenFrom('/team/positions');
@@ -65,10 +65,10 @@ final class AreaScopedPositionTest extends WebTestCaseWithSchema
     /** But NOT under another area's department — that files past their boundary. */
     public function testAnAreaAdminCannotCreateAPositionUnderAnotherAreasDepartment(): void
     {
-        $ngorongoro = $this->area('Ngorongoro');
-        $pololeti = $this->area('Pololeti Game Reserve');
-        $this->areaAdminIn($ngorongoro);
-        $elsewhere = $this->areaDepartment('Anti-Poaching', $pololeti);
+        $north = $this->area('Northern Reserve');
+        $west = $this->area('Western Reserve');
+        $this->areaAdminIn($north);
+        $elsewhere = $this->areaDepartment('Anti-Poaching', $west);
         $this->em->flush();
 
         $token = $this->tokenFrom('/team/positions');
@@ -84,8 +84,8 @@ final class AreaScopedPositionTest extends WebTestCaseWithSchema
     /** And NOT under an org-level department — that grants an org-wide job. */
     public function testAnAreaAdminCannotCreateAPositionUnderAnOrgLevelDepartment(): void
     {
-        $ngorongoro = $this->area('Ngorongoro');
-        $this->areaAdminIn($ngorongoro);
+        $north = $this->area('Northern Reserve');
+        $this->areaAdminIn($north);
         $ecology = $this->department('Ecology');
         $this->em->flush();
 
@@ -102,8 +102,8 @@ final class AreaScopedPositionTest extends WebTestCaseWithSchema
     /** And NOT a loose position with no department — a position with no scope. */
     public function testAnAreaAdminCannotCreateALoosePosition(): void
     {
-        $ngorongoro = $this->area('Ngorongoro');
-        $this->areaAdminIn($ngorongoro);
+        $north = $this->area('Northern Reserve');
+        $this->areaAdminIn($north);
         $this->em->flush();
 
         $token = $this->tokenFrom('/team/positions');
@@ -121,9 +121,9 @@ final class AreaScopedPositionTest extends WebTestCaseWithSchema
     /** An area-X admin renames a position in a department in their OWN area. */
     public function testAnAreaAdminRenamesAPositionInTheirOwnArea(): void
     {
-        $ngorongoro = $this->area('Ngorongoro');
-        $this->areaAdminIn($ngorongoro);
-        $ranger = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $ngorongoro), []);
+        $north = $this->area('Northern Reserve');
+        $this->areaAdminIn($north);
+        $ranger = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $north), []);
         $this->em->flush();
 
         $token = $this->tokenFrom('/team/positions');
@@ -139,10 +139,10 @@ final class AreaScopedPositionTest extends WebTestCaseWithSchema
     /** But NOT a position under another area's department. */
     public function testAnAreaAdminCannotRenameAPositionUnderAnotherAreasDepartment(): void
     {
-        $ngorongoro = $this->area('Ngorongoro');
-        $pololeti = $this->area('Pololeti Game Reserve');
-        $this->areaAdminIn($ngorongoro);
-        $elsewhere = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $pololeti), []);
+        $north = $this->area('Northern Reserve');
+        $west = $this->area('Western Reserve');
+        $this->areaAdminIn($north);
+        $elsewhere = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $west), []);
         $this->em->flush();
 
         $token = $this->tokenFrom('/team/positions');
@@ -158,8 +158,8 @@ final class AreaScopedPositionTest extends WebTestCaseWithSchema
     /** And NOT an org-level position. */
     public function testAnAreaAdminCannotRenameAnOrgLevelPosition(): void
     {
-        $ngorongoro = $this->area('Ngorongoro');
-        $this->areaAdminIn($ngorongoro);
+        $north = $this->area('Northern Reserve');
+        $this->areaAdminIn($north);
         $analyst = $this->position('Analyst', $this->department('Ecology'), []);
         $this->em->flush();
 
@@ -174,8 +174,8 @@ final class AreaScopedPositionTest extends WebTestCaseWithSchema
     /** And NOT a loose position (no department, no scope). */
     public function testAnAreaAdminCannotRenameALoosePosition(): void
     {
-        $ngorongoro = $this->area('Ngorongoro');
-        $this->areaAdminIn($ngorongoro);
+        $north = $this->area('Northern Reserve');
+        $this->areaAdminIn($north);
         $loose = $this->position('Floater', null, []);
         $this->em->flush();
 
@@ -192,11 +192,11 @@ final class AreaScopedPositionTest extends WebTestCaseWithSchema
     /** The create picker offers only the admin's own area's departments. */
     public function testTheCreatePickerOffersOnlyTheAdminsAreaDepartments(): void
     {
-        $ngorongoro = $this->area('Ngorongoro');
-        $pololeti = $this->area('Pololeti Game Reserve');
-        $this->areaAdminIn($ngorongoro);
-        $this->areaDepartment('Anti-Poaching', $ngorongoro);
-        $this->areaDepartment('Scouts', $pololeti);
+        $north = $this->area('Northern Reserve');
+        $west = $this->area('Western Reserve');
+        $this->areaAdminIn($north);
+        $this->areaDepartment('Anti-Poaching', $north);
+        $this->areaDepartment('Scouts', $west);
         $this->department('Ecology');
         $this->em->flush();
 
@@ -216,10 +216,10 @@ final class AreaScopedPositionTest extends WebTestCaseWithSchema
     /** An org-level team.manage holder is unbounded: they create anywhere. */
     public function testAnOrgLevelAdminMayCreateUnderAnyDepartment(): void
     {
-        $pololeti = $this->area('Pololeti Game Reserve');
+        $west = $this->area('Western Reserve');
         $orgAdmin = $this->person('Amina', 'Salehe', TeamRoleEnum::Staff);
         $orgAdmin->setPosition($this->position('Coordinator', $this->department('Administration'), [PermissionEnum::TeamManage->value]));
-        $elsewhere = $this->areaDepartment('Anti-Poaching', $pololeti);
+        $elsewhere = $this->areaDepartment('Anti-Poaching', $west);
         $this->em->flush();
         $this->client->loginUser($orgAdmin);
 
@@ -236,9 +236,9 @@ final class AreaScopedPositionTest extends WebTestCaseWithSchema
     /** And the create picker offers every department, loose option included. */
     public function testTheCreatePickerOffersEverythingToAnUnboundedAdmin(): void
     {
-        $ngorongoro = $this->area('Ngorongoro');
+        $north = $this->area('Northern Reserve');
         $this->administrator();
-        $this->areaDepartment('Anti-Poaching', $ngorongoro);
+        $this->areaDepartment('Anti-Poaching', $north);
         $this->department('Ecology');
         $this->em->flush();
 

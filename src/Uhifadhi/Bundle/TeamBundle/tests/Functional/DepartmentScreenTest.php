@@ -31,10 +31,10 @@ use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentScopeChangeRepository;
  * department to its own lens, and changes a scope with a reason recorded to the
  * audit trail.
  *
- * THIS SUPERSEDES the org-only card screen the module shipped through v0.7: the
- * `.dcard`/`.pitem`/Unassigned-card vocabulary is gone, replaced by the
- * canonical register. Where a rule is unchanged (a department grants nothing;
- * DELETE/DEACTIVATE are not drawn, so not here) it is re-asserted below.
+ * THE SCREEN IS THE CANONICAL REGISTER, not a card wall: there is no
+ * `.dcard`/`.pitem`/Unassigned-card vocabulary. The rules that hold whatever it
+ * is drawn as (a department grants nothing; DELETE and DEACTIVATE are not
+ * drawn, so not here) are asserted below.
  */
 final class DepartmentScreenTest extends WebTestCaseWithSchema
 {
@@ -51,13 +51,13 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
 
         $headings = $crawler->filter('[data-dp] .deptgroup .gh')->each(static fn (Crawler $c): string => $c->text());
 
-        self::assertContains('Area-level · Ngorongoro', $headings);
+        self::assertContains('Area-level · Northern Reserve', $headings);
         self::assertContains('Org-level', $headings);
 
         // Area-level precedes org-level.
         self::assertLessThan(
             array_search('Org-level', $headings, true),
-            array_search('Area-level · Ngorongoro', $headings, true),
+            array_search('Area-level · Northern Reserve', $headings, true),
         );
     }
 
@@ -69,7 +69,7 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
     {
         $crawler = $this->screen();
 
-        self::assertSame('Ngorongoro', $this->row($crawler, 'Crater Management')->filter('.dr-scope .sc-v')->text());
+        self::assertSame('Northern Reserve', $this->row($crawler, 'Wetland Management')->filter('.dr-scope .sc-v')->text());
         self::assertSame('Org-level', $this->row($crawler, 'Ecology')->filter('.dr-scope .sc-v')->text());
     }
 
@@ -78,7 +78,7 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
     {
         $crawler = $this->screen();
 
-        self::assertStringContainsString('area', (string) $this->row($crawler, 'Crater Management')->filter('.dr-scope')->attr('class'));
+        self::assertStringContainsString('area', (string) $this->row($crawler, 'Wetland Management')->filter('.dr-scope')->attr('class'));
     }
 
     // ---- every department opens to its lens -------------------------------
@@ -91,7 +91,7 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
     {
         $crawler = $this->screen();
 
-        foreach (['Crater Management', 'Ecology'] as $name) {
+        foreach (['Wetland Management', 'Ecology'] as $name) {
             $row = $this->row($crawler, $name);
             $show = '/departments/'.$this->uuidOf($name);
 
@@ -105,12 +105,12 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
     {
         $this->screen();
 
-        $crawler = $this->client->request('GET', '/departments/'.$this->uuidOf('Crater Management'));
+        $crawler = $this->client->request('GET', '/departments/'.$this->uuidOf('Wetland Management'));
 
         self::assertResponseIsSuccessful();
-        self::assertStringContainsString('Crater Management', $crawler->filter('.dpthead h1')->text());
-        self::assertStringContainsString('Ngorongoro', $crawler->filter('.dpthead .scope.area')->text());
-        self::assertStringContainsString('confined to Ngorongoro', $crawler->filter('.scoperule')->first()->text());
+        self::assertStringContainsString('Wetland Management', $crawler->filter('.dpthead h1')->text());
+        self::assertStringContainsString('Northern Reserve', $crawler->filter('.dpthead .scope.area')->text());
+        self::assertStringContainsString('confined to Northern Reserve', $crawler->filter('.scoperule')->first()->text());
     }
 
     public function testTheOrgLevelLensReadsAcrossEveryArea(): void
@@ -167,8 +167,8 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
     public function testTheCreatePickerListsEveryAreaByName(): void
     {
         $this->administrator();
-        $this->area('Ngorongoro');
-        $this->area('Pololeti Game Reserve');
+        $this->area('Northern Reserve');
+        $this->area('Western Reserve');
         $this->em->flush();
 
         $crawler = $this->client->request('GET', '/departments');
@@ -176,39 +176,39 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
         $options = $crawler->filter('form[data-create-department] select[name="area"] option')
             ->each(static fn (Crawler $c): string => $c->text());
 
-        self::assertContains('Ngorongoro', $options);
-        self::assertContains('Pololeti Game Reserve', $options);
+        self::assertContains('Northern Reserve', $options);
+        self::assertContains('Western Reserve', $options);
     }
 
     /** CREATE PER-AREA — the picked area becomes the department's scope. */
     public function testCreatingADepartmentPerAreaConfinesItToThePickedArea(): void
     {
         $this->administrator();
-        $ngorongoro = $this->area('Ngorongoro');
-        $this->area('Pololeti Game Reserve');
+        $north = $this->area('Northern Reserve');
+        $this->area('Western Reserve');
         $this->em->flush();
 
         $crawler = $this->client->request('GET', '/departments');
         $form = $crawler->selectButton('Add department')->form();
         $form['scope'] = 'area';
-        $form['area'] = (string) $ngorongoro->getUuidString();
-        $form['name'] = 'Crater Management';
+        $form['area'] = (string) $north->getUuidString();
+        $form['name'] = 'Wetland Management';
         $this->client->submit($form);
 
         self::assertResponseRedirects('/departments');
 
         $this->em->clear();
-        $created = $this->em->getRepository(Department::class)->findOneBy(['name' => 'Crater Management']);
+        $created = $this->em->getRepository(Department::class)->findOneBy(['name' => 'Wetland Management']);
         self::assertInstanceOf(Department::class, $created);
         self::assertTrue($created->isAreaLevel());
-        self::assertSame('Ngorongoro', $created->getArea()?->getName());
+        self::assertSame('Northern Reserve', $created->getArea()?->getName());
     }
 
     /** CREATE PER-ORG — no area, spans every one. */
     public function testCreatingADepartmentPerOrgLeavesItOrgWide(): void
     {
         $this->administrator();
-        $this->area('Ngorongoro');
+        $this->area('Northern Reserve');
         $this->em->flush();
 
         $crawler = $this->client->request('GET', '/departments');
@@ -230,15 +230,15 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
     public function testTheSameNameMayExistInTwoDifferentAreas(): void
     {
         $this->administrator();
-        $ngorongoro = $this->area('Ngorongoro');
-        $pololeti = $this->area('Pololeti Game Reserve');
-        $this->areaDepartment('Anti-Poaching', $ngorongoro);
+        $north = $this->area('Northern Reserve');
+        $west = $this->area('Western Reserve');
+        $this->areaDepartment('Anti-Poaching', $north);
         $this->em->flush();
 
         $crawler = $this->client->request('GET', '/departments');
         $form = $crawler->selectButton('Add department')->form();
         $form['scope'] = 'area';
-        $form['area'] = (string) $pololeti->getUuidString();
+        $form['area'] = (string) $west->getUuidString();
         $form['name'] = 'Anti-Poaching';
         $this->client->submit($form);
 
@@ -266,7 +266,7 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
     public function testADepartmentWithNoNameIsRefused(): void
     {
         $this->administrator();
-        $this->area('Ngorongoro');
+        $this->area('Northern Reserve');
         $this->em->flush();
 
         $crawler = $this->client->request('GET', '/departments');
@@ -288,8 +288,8 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
         $crawler = $this->screen();
 
         $form = $this->row($crawler, 'Ecology')->filter('form[action$="/scope"]')->selectButton('Confine to area')->form();
-        $form['area'] = (string) $this->uuidOf('__area:Ngorongoro');
-        $form['reason'] = 'Ecology now works only in the crater.';
+        $form['area'] = (string) $this->uuidOf('__area:Northern Reserve');
+        $form['reason'] = 'Ecology now works only in the north.';
         $this->client->submit($form);
 
         self::assertResponseRedirects('/departments');
@@ -298,11 +298,11 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
         $ecology = $this->em->getRepository(Department::class)->findOneBy(['name' => 'Ecology']);
         self::assertInstanceOf(Department::class, $ecology);
         self::assertTrue($ecology->isAreaLevel());
-        self::assertSame('Ngorongoro', $ecology->getArea()?->getName());
+        self::assertSame('Northern Reserve', $ecology->getArea()?->getName());
 
         $trail = $this->scopeChanges()->findForDepartment($ecology);
         self::assertCount(1, $trail);
-        self::assertSame('Ecology now works only in the crater.', $trail[0]->getReason());
+        self::assertSame('Ecology now works only in the north.', $trail[0]->getReason());
         self::assertSame('Naomi', $trail[0]->getChangedBy()?->getFirstName(), 'the audit line records who');
     }
 
@@ -311,18 +311,18 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
     {
         $crawler = $this->screen();
 
-        $form = $this->row($crawler, 'Crater Management')->filter('form[action$="/scope"]')->selectButton('Promote to org-wide')->form();
+        $form = $this->row($crawler, 'Wetland Management')->filter('form[action$="/scope"]')->selectButton('Promote to org-wide')->form();
         $form['reason'] = 'Its remit is now the whole park.';
         $this->client->submit($form);
 
         self::assertResponseRedirects('/departments');
 
         $this->em->clear();
-        $crater = $this->em->getRepository(Department::class)->findOneBy(['name' => 'Crater Management']);
-        self::assertInstanceOf(Department::class, $crater);
-        self::assertTrue($crater->isOrgLevel());
+        $wetland = $this->em->getRepository(Department::class)->findOneBy(['name' => 'Wetland Management']);
+        self::assertInstanceOf(Department::class, $wetland);
+        self::assertTrue($wetland->isOrgLevel());
 
-        $trail = $this->scopeChanges()->findForDepartment($crater);
+        $trail = $this->scopeChanges()->findForDepartment($wetland);
         self::assertCount(1, $trail);
         self::assertSame('Its remit is now the whole park.', $trail[0]->getReason());
     }
@@ -332,7 +332,7 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
     {
         $crawler = $this->screen();
 
-        $form = $this->row($crawler, 'Crater Management')->filter('form[action$="/scope"]')->selectButton('Promote to org-wide')->form();
+        $form = $this->row($crawler, 'Wetland Management')->filter('form[action$="/scope"]')->selectButton('Promote to org-wide')->form();
         $form['reason'] = '   ';
         $this->client->submit($form);
 
@@ -340,10 +340,10 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
         self::assertStringContainsString('needs a reason', $crawler->filter('[data-shell-flash]')->text());
 
         $this->em->clear();
-        $crater = $this->em->getRepository(Department::class)->findOneBy(['name' => 'Crater Management']);
-        self::assertInstanceOf(Department::class, $crater);
-        self::assertTrue($crater->isAreaLevel(), 'the refusal happens before the scope moves');
-        self::assertCount(0, $this->scopeChanges()->findForDepartment($crater));
+        $wetland = $this->em->getRepository(Department::class)->findOneBy(['name' => 'Wetland Management']);
+        self::assertInstanceOf(Department::class, $wetland);
+        self::assertTrue($wetland->isAreaLevel(), 'the refusal happens before the scope moves');
+        self::assertCount(0, $this->scopeChanges()->findForDepartment($wetland));
     }
 
     // ---- rename and filing still work -------------------------------------
@@ -468,14 +468,14 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
     public function testPromotingNoticesThatAuthorityWidensToEveryArea(): void
     {
         $this->administrator();
-        $ng = $this->area('Ngorongoro');
-        $crater = $this->areaDepartment('Crater Management', $ng);
-        $position = $this->position('Crater Ecologist', $crater, [PermissionEnum::AreaView->value]);
+        $ng = $this->area('Northern Reserve');
+        $wetland = $this->areaDepartment('Wetland Management', $ng);
+        $position = $this->position('Wetland Ecologist', $wetland, [PermissionEnum::AreaView->value]);
         $this->person('Zawadi', 'Kimaro', TeamRoleEnum::Staff)->setPosition($position);
         $this->em->flush();
 
         $crawler = $this->client->request('GET', '/departments');
-        $form = $this->row($crawler, 'Crater Management')->filter('form[action$="/scope"]')->selectButton('Promote to org-wide')->form();
+        $form = $this->row($crawler, 'Wetland Management')->filter('form[action$="/scope"]')->selectButton('Promote to org-wide')->form();
         $form['reason'] = 'Its remit is now the whole park.';
         $this->client->submit($form);
 
@@ -487,7 +487,7 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
     public function testConfiningNoticesThatAuthorityElsewhereIsLost(): void
     {
         $this->administrator();
-        $ng = $this->area('Ngorongoro');
+        $ng = $this->area('Northern Reserve');
         $ecology = $this->department('Ecology');
         $position = $this->position('Analyst', $ecology, [PermissionEnum::AreaView->value]);
         $this->person('Zawadi', 'Kimaro', TeamRoleEnum::Staff)->setPosition($position);
@@ -496,7 +496,7 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
         $crawler = $this->client->request('GET', '/departments');
         $form = $this->row($crawler, 'Ecology')->filter('form[action$="/scope"]')->selectButton('Confine to area')->form();
         $form['area'] = (string) $ng->getUuidString();
-        $form['reason'] = 'Ecology now works only in the crater.';
+        $form['reason'] = 'Ecology now works only in the north.';
         $this->client->submit($form);
 
         $crawler = $this->client->followRedirect();
@@ -508,7 +508,7 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
     {
         $crawler = $this->screen();
 
-        $form = $this->row($crawler, 'Crater Management')->filter('form[action$="/scope"]');
+        $form = $this->row($crawler, 'Wetland Management')->filter('form[action$="/scope"]');
         self::assertStringContainsStringIgnoringCase('every area', $form->text());
     }
 
@@ -517,19 +517,19 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
     /** An area-X admin CREATES an area-level department in their own area. */
     public function testAnAreaAdminCreatesAnAreaDepartmentInTheirOwnArea(): void
     {
-        $ngorongoro = $this->area('Ngorongoro');
-        $this->areaAdminIn($ngorongoro);
+        $north = $this->area('Northern Reserve');
+        $this->areaAdminIn($north);
 
         $crawler = $this->client->request('GET', '/departments');
         $form = $crawler->selectButton('Add department')->form();
         $form['scope'] = 'area';
-        $form['area'] = (string) $ngorongoro->getUuidString();
-        $form['name'] = 'Crater Ecology';
+        $form['area'] = (string) $north->getUuidString();
+        $form['name'] = 'Wetland Ecology';
         $this->client->submit($form);
 
         self::assertResponseRedirects('/departments');
         $this->em->clear();
-        $created = $this->em->getRepository(Department::class)->findOneBy(['name' => 'Crater Ecology']);
+        $created = $this->em->getRepository(Department::class)->findOneBy(['name' => 'Wetland Ecology']);
         self::assertInstanceOf(Department::class, $created);
         self::assertTrue($created->isAreaLevel());
     }
@@ -537,8 +537,8 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
     /** But NOT an org-level one — minting an org department is escalation. */
     public function testAnAreaAdminCannotCreateAnOrgDepartment(): void
     {
-        $ngorongoro = $this->area('Ngorongoro');
-        $this->areaAdminIn($ngorongoro);
+        $north = $this->area('Northern Reserve');
+        $this->areaAdminIn($north);
 
         $crawler = $this->client->request('GET', '/departments');
         $form = $crawler->selectButton('Add department')->form();
@@ -554,14 +554,14 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
     /** And NOT a department in another area. */
     public function testAnAreaAdminCannotCreateADepartmentInAnotherArea(): void
     {
-        $ngorongoro = $this->area('Ngorongoro');
-        $pololeti = $this->area('Pololeti Game Reserve');
-        $this->areaAdminIn($ngorongoro);
+        $north = $this->area('Northern Reserve');
+        $west = $this->area('Western Reserve');
+        $this->areaAdminIn($north);
 
         $crawler = $this->client->request('GET', '/departments');
         $form = $crawler->selectButton('Add department')->form();
         $form['scope'] = 'area';
-        $form['area'] = (string) $pololeti->getUuidString();
+        $form['area'] = (string) $west->getUuidString();
         $form['name'] = 'Anti-Poaching';
         $this->client->submit($form);
 
@@ -571,8 +571,8 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
     /** An area admin may NOT change any department's scope. */
     public function testAnAreaAdminCannotChangeScope(): void
     {
-        $ngorongoro = $this->area('Ngorongoro');
-        $this->areaAdminIn($ngorongoro);
+        $north = $this->area('Northern Reserve');
+        $this->areaAdminIn($north);
 
         // Their own area-level department — even so, scope change is unbounded.
         $crawler = $this->client->request('GET', '/departments');
@@ -586,8 +586,8 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
     /** An area admin may deactivate their OWN area department, not an org one. */
     public function testAnAreaAdminDeactivatesTheirOwnAreaDepartmentButNotAnOrgOne(): void
     {
-        $ngorongoro = $this->area('Ngorongoro');
-        $this->areaAdminIn($ngorongoro);
+        $north = $this->area('Northern Reserve');
+        $this->areaAdminIn($north);
         $ecology = $this->department('Ecology'); // org-level
         $this->em->flush();
 
@@ -636,8 +636,8 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
     // ---- the cast ---------------------------------------------------------
 
     /**
-     * The register's cast: one area (Ngorongoro), an area-level department in it
-     * (Crater Management), two org-level (Ecology, Protection Service — the twin
+     * The register's cast: one area (Northern Reserve), an area-level department in it
+     * (Wetland Management), two org-level (Ecology, Protection Service — the twin
      * Analysts the per-scope-uniqueness ruling exists for), and one loose
      * position nobody has filed.
      */
@@ -645,13 +645,13 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
     {
         $this->administrator();
 
-        $this->ngorongoro = $this->area('Ngorongoro');
+        $this->north = $this->area('Northern Reserve');
 
-        $crater = $this->areaDepartment('Crater Management', $this->ngorongoro);
+        $wetland = $this->areaDepartment('Wetland Management', $this->north);
         $ecology = $this->department('Ecology');
         $protection = $this->department('Protection Service');
 
-        $this->position('Crater Ecologist', $crater);
+        $this->position('Wetland Ecologist', $wetland);
         $this->position('Analyst', $ecology);
         $this->position('Analyst', $protection);
         $this->position('Volunteer', null);
@@ -678,7 +678,7 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
         return $admin;
     }
 
-    private ?\Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\Area\HostArea $ngorongoro = null;
+    private ?\Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\Area\HostArea $north = null;
 
     private function row(Crawler $crawler, string $name): Crawler
     {

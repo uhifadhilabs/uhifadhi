@@ -28,22 +28,22 @@ namespace Uhifadhi\Bundle\TeamBundle\Enum;
  * and nothing else — and a Staff member with no position holds nothing at all,
  * which is a real state of the model rather than an unfinished one.
  *
- * THERE WAS A FOURTH TIER, MANAGER, AND IT IS GONE. It named a job rather than
- * a system level, and it created the model's single most misread rule: a
- * Manager could administer the team and yet hold no capability at all, which
- * made the permission matrix decorative for half the people in it. Administering
- * the team is now an ordinary catalogue permission — `team.manage`, the seventh
- * core case ({@see PermissionEnum::TeamManage}) — granted through a position.
+ * THERE IS NO MANAGER TIER, and its absence is the model's sharpest line. A
+ * tier names a system level; "manager" names a job, and a tier that named a job
+ * would let somebody administer the team while holding no capability at all —
+ * which makes the permission matrix decorative for half the people in it.
+ * Administering the team is an ordinary catalogue permission — `team.manage`,
+ * the seventh core case ({@see PermissionEnum::TeamManage}) — granted through a
+ * position.
  *
- * So "a manager" is now something an administrator COMPOSES: a position
- * carrying `team.manage` plus whatever else that role needs. The authority is
- * visible in the matrix, countable across the roster, and revocable in one
- * click. None of those three things was true of a tier, and all three are why
- * the tier went.
+ * So "a manager" is something an administrator COMPOSES: a position carrying
+ * `team.manage` plus whatever else that job needs. The authority is visible in
+ * the matrix, countable across the roster, and revocable in one click. None of
+ * those three is true of a tier, and all three are why there is no tier for it.
  *
  * The cost is honest and worth stating: "who administers this installation" is
- * no longer answerable from the tier column alone, because a Staff member
- * holding `team.manage` can. Every screen that asks gates on
+ * not answerable from the tier column alone, because a Staff member holding
+ * `team.manage` can. Every screen that asks gates on
  * `is_granted('team.manage')`, never on a tier.
  *
  * Permission queries live here to keep the user entity thin.

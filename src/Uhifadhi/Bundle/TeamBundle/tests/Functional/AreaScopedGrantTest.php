@@ -43,9 +43,9 @@ final class AreaScopedGrantTest extends WebTestCaseWithSchema
     /** A bounded admin may grant a permission their OWN position holds. */
     public function testAnAreaAdminMayGrantAPermissionTheyThemselvesHold(): void
     {
-        $ngorongoro = $this->area('Ngorongoro');
-        $this->areaAdminHolding($ngorongoro, [PermissionEnum::TeamManage->value, PermissionEnum::AreaView->value]);
-        $ranger = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $ngorongoro), []);
+        $north = $this->area('Northern Reserve');
+        $this->areaAdminHolding($north, [PermissionEnum::TeamManage->value, PermissionEnum::AreaView->value]);
+        $ranger = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $north), []);
         $this->em->flush();
 
         $token = $this->tokenFrom('/team/positions');
@@ -63,9 +63,9 @@ final class AreaScopedGrantTest extends WebTestCaseWithSchema
     /** But NOT a permission their own position does not hold — that widens power. */
     public function testAnAreaAdminCannotGrantAPermissionBeyondTheirOwnAuthority(): void
     {
-        $ngorongoro = $this->area('Ngorongoro');
-        $this->areaAdminHolding($ngorongoro, [PermissionEnum::TeamManage->value, PermissionEnum::AreaView->value]);
-        $ranger = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $ngorongoro), []);
+        $north = $this->area('Northern Reserve');
+        $this->areaAdminHolding($north, [PermissionEnum::TeamManage->value, PermissionEnum::AreaView->value]);
+        $ranger = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $north), []);
         $this->em->flush();
 
         $token = $this->tokenFrom('/team/positions');
@@ -81,9 +81,9 @@ final class AreaScopedGrantTest extends WebTestCaseWithSchema
     /** And NEVER team.manage — conferring team administration is an unbounded act. */
     public function testAnAreaAdminCannotConferTeamManage(): void
     {
-        $ngorongoro = $this->area('Ngorongoro');
-        $this->areaAdminHolding($ngorongoro, [PermissionEnum::TeamManage->value, PermissionEnum::AreaView->value]);
-        $deputy = $this->position('Deputy Warden', $this->areaDepartment('Anti-Poaching', $ngorongoro), []);
+        $north = $this->area('Northern Reserve');
+        $this->areaAdminHolding($north, [PermissionEnum::TeamManage->value, PermissionEnum::AreaView->value]);
+        $deputy = $this->position('Deputy Warden', $this->areaDepartment('Anti-Poaching', $north), []);
         $this->em->flush();
 
         $token = $this->tokenFrom('/team/positions');
@@ -103,10 +103,10 @@ final class AreaScopedGrantTest extends WebTestCaseWithSchema
      */
     public function testABoundedSaveFreezesPermissionsBeyondTheAdminsAuthority(): void
     {
-        $ngorongoro = $this->area('Ngorongoro');
-        $this->areaAdminHolding($ngorongoro, [PermissionEnum::TeamManage->value, PermissionEnum::AreaView->value]);
+        $north = $this->area('Northern Reserve');
+        $this->areaAdminHolding($north, [PermissionEnum::TeamManage->value, PermissionEnum::AreaView->value]);
         // The position already carries a permission the admin does not hold.
-        $ranger = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $ngorongoro), [PermissionEnum::AreaDelete->value]);
+        $ranger = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $north), [PermissionEnum::AreaDelete->value]);
         $this->em->flush();
 
         $token = $this->tokenFrom('/team/positions');
@@ -125,9 +125,9 @@ final class AreaScopedGrantTest extends WebTestCaseWithSchema
     /** The matrix draws the rows beyond the admin's authority disabled, with the guard note. */
     public function testTheMatrixDisablesPermissionsBeyondTheAdminsAuthority(): void
     {
-        $ngorongoro = $this->area('Ngorongoro');
-        $this->areaAdminHolding($ngorongoro, [PermissionEnum::TeamManage->value, PermissionEnum::AreaView->value]);
-        $ranger = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $ngorongoro), []);
+        $north = $this->area('Northern Reserve');
+        $this->areaAdminHolding($north, [PermissionEnum::TeamManage->value, PermissionEnum::AreaView->value]);
+        $ranger = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $north), []);
         $this->em->flush();
 
         $crawler = $this->client->request('GET', '/team/positions?position='.$ranger->getUuidString());
@@ -143,10 +143,10 @@ final class AreaScopedGrantTest extends WebTestCaseWithSchema
     /** An org-level team.manage holder is unbounded: they grant anything, team.manage included. */
     public function testAnOrgLevelAdminMayGrantAnything(): void
     {
-        $ngorongoro = $this->area('Ngorongoro');
+        $north = $this->area('Northern Reserve');
         $orgAdmin = $this->person('Amina', 'Salehe', TeamRoleEnum::Staff);
         $orgAdmin->setPosition($this->position('Coordinator', $this->department('Administration'), [PermissionEnum::TeamManage->value]));
-        $ranger = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $ngorongoro), []);
+        $ranger = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $north), []);
         $this->em->flush();
         $this->client->loginUser($orgAdmin);
 
@@ -167,8 +167,8 @@ final class AreaScopedGrantTest extends WebTestCaseWithSchema
     /** A bounded admin may not change a person's tier — Super Admin / Admin are org-wide. */
     public function testAnAreaAdminCannotChangeAPersonsTier(): void
     {
-        $ngorongoro = $this->area('Ngorongoro');
-        $this->areaAdminHolding($ngorongoro, [PermissionEnum::TeamManage->value]);
+        $north = $this->area('Northern Reserve');
+        $this->areaAdminHolding($north, [PermissionEnum::TeamManage->value]);
         $grace = $this->person('Grace', 'Ndosi');
         $this->em->flush();
 

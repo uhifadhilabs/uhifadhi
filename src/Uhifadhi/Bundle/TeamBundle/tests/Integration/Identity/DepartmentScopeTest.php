@@ -52,16 +52,16 @@ final class DepartmentScopeTest extends IntegrationTestCase
     /** A department given an area is area-level, and reads that area back. */
     public function testADepartmentWithAnAreaIsAreaLevel(): void
     {
-        $area = new HostArea()->setName('Ngorongoro');
+        $area = new HostArea()->setName('Northern Reserve');
         $this->em->persist($area);
 
-        $department = new Department()->setName('Crater Management')->setArea($area);
+        $department = new Department()->setName('Wetland Management')->setArea($area);
         $this->em->persist($department);
         $this->em->flush();
         $areaId = $area->getId();
         $this->em->clear();
 
-        $stored = $this->service(DepartmentRepository::class)->findOneByName('Crater Management');
+        $stored = $this->service(DepartmentRepository::class)->findOneByName('Wetland Management');
         self::assertInstanceOf(Department::class, $stored);
         self::assertTrue($stored->isAreaLevel());
         self::assertFalse($stored->isOrgLevel());
@@ -107,9 +107,9 @@ final class DepartmentScopeTest extends IntegrationTestCase
     /** The repository splits the register the way the design groups it. */
     public function testTheRepositorySeparatesAreaLevelFromOrgLevel(): void
     {
-        $area = new HostArea()->setName('Ngorongoro');
+        $area = new HostArea()->setName('Northern Reserve');
         $this->em->persist($area);
-        $this->em->persist(new Department()->setName('Crater Management')->setArea($area));
+        $this->em->persist(new Department()->setName('Wetland Management')->setArea($area));
         $this->em->persist(new Department()->setName('Ecology'));
         $this->em->persist(new Department()->setName('Administration'));
         $this->em->flush();
@@ -120,7 +120,7 @@ final class DepartmentScopeTest extends IntegrationTestCase
         $areaLevel = array_map(static fn (Department $d): ?string => $d->getName(), $repository->findAreaLevelOrdered());
         $orgLevel = array_map(static fn (Department $d): ?string => $d->getName(), $repository->findOrgLevelOrdered());
 
-        self::assertSame(['Crater Management'], $areaLevel);
+        self::assertSame(['Wetland Management'], $areaLevel);
         self::assertSame(['Administration', 'Ecology'], $orgLevel);
     }
 }

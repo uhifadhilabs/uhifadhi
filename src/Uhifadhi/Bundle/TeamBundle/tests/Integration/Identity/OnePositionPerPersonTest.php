@@ -89,13 +89,13 @@ final class OnePositionPerPersonTest extends IntegrationTestCase
      */
     public function testTheDepartmentAndScopeFollowThePosition(): void
     {
-        $area = new HostArea()->setName('Ngorongoro');
+        $area = new HostArea()->setName('Northern Reserve');
         $this->em->persist($area);
 
         $orgDept = new Department()->setName('Ecology');
-        $areaDept = new Department()->setName('Crater Management')->setArea($area);
+        $areaDept = new Department()->setName('Wetland Management')->setArea($area);
         $orgPos = new Position()->setName('Ecologist')->setDepartment($orgDept);
-        $areaPos = new Position()->setName('Crater Ecologist')->setDepartment($areaDept);
+        $areaPos = new Position()->setName('Wetland Ecologist')->setDepartment($areaDept);
         foreach ([$orgDept, $areaDept, $orgPos, $areaPos] as $entity) {
             $this->em->persist($entity);
         }
@@ -114,7 +114,7 @@ final class OnePositionPerPersonTest extends IntegrationTestCase
         $stored = $this->service(UserRepository::class)->findOneBy(['email' => 'dw@example.test']);
         self::assertInstanceOf(User::class, $stored);
         self::assertInstanceOf(Department::class, $stored->getDepartment());
-        self::assertSame('Crater Management', $stored->getDepartment()->getName());
+        self::assertSame('Wetland Management', $stored->getDepartment()->getName());
         self::assertTrue($stored->getDepartment()->isAreaLevel());
     }
 

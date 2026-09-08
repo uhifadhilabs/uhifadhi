@@ -78,9 +78,9 @@ final class PermissionVoterTest extends IntegrationTestCase
     }
 
     /**
-     * WHAT THE MANAGER TIER BECAME. A Staff member whose position carries
-     * `team.manage` administers the team, and holds nothing else they were not
-     * given. This is the test the retired tier's own test turned into.
+     * WHO ADMINISTERS THE TEAM IS A POSITION'S ANSWER. A Staff member whose
+     * position carries `team.manage` administers the team, and holds nothing
+     * else they were not given.
      */
     public function testAStaffMemberAdministersTheTeamWhenTheirPositionSaysSo(): void
     {
@@ -144,12 +144,12 @@ final class PermissionVoterTest extends IntegrationTestCase
      */
     public function testAnAreaLevelStaffMemberIsGrantedInTheirAreaAndDeniedInAnother(): void
     {
-        $serengeti = $this->area('Serengeti');
-        $ngorongoro = $this->area('Ngorongoro');
-        $ranger = $this->areaLevelStaffWith([PermissionEnum::AreaView->value], $serengeti);
+        $south = $this->area('Southern Reserve');
+        $north = $this->area('Northern Reserve');
+        $ranger = $this->areaLevelStaffWith([PermissionEnum::AreaView->value], $south);
 
-        self::assertSame(VoterInterface::ACCESS_GRANTED, $this->voteOn($ranger, 'area.view', $serengeti));
-        self::assertSame(VoterInterface::ACCESS_DENIED, $this->voteOn($ranger, 'area.view', $ngorongoro));
+        self::assertSame(VoterInterface::ACCESS_GRANTED, $this->voteOn($ranger, 'area.view', $south));
+        self::assertSame(VoterInterface::ACCESS_DENIED, $this->voteOn($ranger, 'area.view', $north));
     }
 
     /**
@@ -159,8 +159,8 @@ final class PermissionVoterTest extends IntegrationTestCase
      */
     public function testANullSubjectGrantsForAnAreaLevelHolder(): void
     {
-        $serengeti = $this->area('Serengeti');
-        $ranger = $this->areaLevelStaffWith([PermissionEnum::AreaView->value], $serengeti);
+        $south = $this->area('Southern Reserve');
+        $ranger = $this->areaLevelStaffWith([PermissionEnum::AreaView->value], $south);
 
         self::assertSame(VoterInterface::ACCESS_GRANTED, $this->voteOn($ranger, 'area.view', null));
     }
@@ -168,8 +168,8 @@ final class PermissionVoterTest extends IntegrationTestCase
     /** AN ORG-LEVEL STAFF MEMBER (department scope null) holds it in every area. */
     public function testAnOrgLevelStaffMemberIsGrantedInEveryArea(): void
     {
-        $serengeti = $this->area('Serengeti');
-        $ngorongoro = $this->area('Ngorongoro');
+        $south = $this->area('Southern Reserve');
+        $north = $this->area('Northern Reserve');
 
         $orgDept = (new Department())->setName('Ecology'); // no area → org-level
         $this->em->persist($orgDept);
@@ -179,8 +179,8 @@ final class PermissionVoterTest extends IntegrationTestCase
         $this->em->flush();
         $analyst = $this->staffWith($position);
 
-        self::assertSame(VoterInterface::ACCESS_GRANTED, $this->voteOn($analyst, 'area.view', $serengeti));
-        self::assertSame(VoterInterface::ACCESS_GRANTED, $this->voteOn($analyst, 'area.view', $ngorongoro));
+        self::assertSame(VoterInterface::ACCESS_GRANTED, $this->voteOn($analyst, 'area.view', $south));
+        self::assertSame(VoterInterface::ACCESS_GRANTED, $this->voteOn($analyst, 'area.view', $north));
     }
 
     /**
@@ -189,33 +189,33 @@ final class PermissionVoterTest extends IntegrationTestCase
      */
     public function testAGlobalPermissionSkipsTheAreaComparison(): void
     {
-        $serengeti = $this->area('Serengeti');
-        $ngorongoro = $this->area('Ngorongoro');
-        $planner = $this->areaLevelStaffWith([PermissionEnum::AreaCreate->value], $serengeti);
+        $south = $this->area('Southern Reserve');
+        $north = $this->area('Northern Reserve');
+        $planner = $this->areaLevelStaffWith([PermissionEnum::AreaCreate->value], $south);
 
-        self::assertSame(VoterInterface::ACCESS_GRANTED, $this->voteOn($planner, 'area.create', $ngorongoro));
+        self::assertSame(VoterInterface::ACCESS_GRANTED, $this->voteOn($planner, 'area.create', $north));
         self::assertSame(VoterInterface::ACCESS_GRANTED, $this->voteOn($planner, 'area.create', null));
     }
 
     /** A MODULE-DECLARED permission is area-scoped by default — it compares too. */
     public function testAModuleDeclaredPermissionIsAreaScopedByDefault(): void
     {
-        $serengeti = $this->area('Serengeti');
-        $ngorongoro = $this->area('Ngorongoro');
-        $recorder = $this->areaLevelStaffWith(['surveys.record'], $serengeti);
+        $south = $this->area('Southern Reserve');
+        $north = $this->area('Northern Reserve');
+        $recorder = $this->areaLevelStaffWith(['surveys.record'], $south);
 
-        self::assertSame(VoterInterface::ACCESS_GRANTED, $this->voteOn($recorder, 'surveys.record', $serengeti));
-        self::assertSame(VoterInterface::ACCESS_DENIED, $this->voteOn($recorder, 'surveys.record', $ngorongoro));
+        self::assertSame(VoterInterface::ACCESS_GRANTED, $this->voteOn($recorder, 'surveys.record', $south));
+        self::assertSame(VoterInterface::ACCESS_DENIED, $this->voteOn($recorder, 'surveys.record', $north));
     }
 
     /** THE TIER BYPASS is total — an Admin holds it in every area, subject or not. */
     public function testTheTierBypassIgnoresTheTargetArea(): void
     {
-        $serengeti = $this->area('Serengeti');
+        $south = $this->area('Southern Reserve');
         $admin = (new User())->setEmail('a3@example.test')->setFirstName('A')->setLastName('D')
             ->setPassword('x')->setTeamRole(TeamRoleEnum::Admin);
 
-        self::assertSame(VoterInterface::ACCESS_GRANTED, $this->voteOn($admin, 'area.view', $serengeti));
+        self::assertSame(VoterInterface::ACCESS_GRANTED, $this->voteOn($admin, 'area.view', $south));
     }
 
     private function area(string $name): HostArea

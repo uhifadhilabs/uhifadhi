@@ -78,7 +78,7 @@ final readonly class TeamOverview
 
     /**
      * The Staff who administer this team because a position they hold carries
-     * `team.manage` — what the retired Manager tier became.
+     * `team.manage`.
      *
      * COUNTED IN PHP over the positions that grant it, rather than in SQL over
      * the JSON column. The grants are a JSON list of strings and every engine

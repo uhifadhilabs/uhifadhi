@@ -30,12 +30,12 @@ use Uhifadhi\Contracts\Entity\UserInterface as ModuleUserInterface;
  * `User`, because a module that type-hinted the latter would be a module no
  * installation could run without this one. Something has to close that loop.
  *
- * IT USED TO BE A DOCUMENTED HAND-STEP, and that was the wrong shape. The line
- * an installation was told to paste says exactly one thing —
- * "`UserInterface` means `Uhifadhi\Bundle\TeamBundle\Entity\User`" — and the package best
- * placed to know that is the package that provides the answer. A hand-step is
- * for a decision only the installation can make; this was not one. Its cost was
- * real: forget it and the container still boots, the kernel still starts, and
+ * IT IS NOT A HAND-STEP, and that shape would be wrong. The line says exactly
+ * one thing — "`UserInterface` means `Uhifadhi\Bundle\TeamBundle\Entity\User`" —
+ * and the package best placed to know that is the package that provides the
+ * answer. A hand-step is for a decision only the installation can make; this is
+ * not one. Left to the installation its cost is real: forget it and the
+ * container still boots, the kernel still starts, and
  * `doctrine:migrations:diff` stops on "Class
  * 'Uhifadhi\Contracts\Entity\UserInterface' does not exist" — a failure
  * a long way from its cause.
@@ -47,8 +47,8 @@ use Uhifadhi\Contracts\Entity\UserInterface as ModuleUserInterface;
  * rather than as a side effect, in the smallest host the question can be asked
  * in — framework, doctrine, this bundle, and one module's entity.
  *
- * THE ESCAPE HATCH IS SYMFONY'S OWN RULE, not a switch this module invented:
- * prepended configuration LOSES to the application's. An installation whose
+ * THE ESCAPE HATCH IS THE CONFIGURATION RULE, not a switch this bundle
+ * invented: prepended configuration LOSES to the application's. An installation whose
  * people are its own entity names that entity in its `doctrine.yaml` and its
  * answer wins, with nothing here to turn off first. That property is what makes
  * the default safe to ship, so it is tested rather than assumed.

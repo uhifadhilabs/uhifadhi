@@ -22,7 +22,7 @@ use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
  * bounded administrator is confined to, or nothing at all when they are
  * unbounded (DECISIONS §5.6, docs/area-scoped-authority.md §7.6).
  *
- * The area-admin design draws a banner ("You are scoped to Serengeti") on the
+ * The area-admin design draws a banner ("You are scoped to Southern Reserve") on the
  * team / department / position management chrome, shown to a bounded (area-X)
  * `team.manage` holder and to nobody else. Every one of those screens is a
  * separate controller, so the banner reads its one input through a Twig function

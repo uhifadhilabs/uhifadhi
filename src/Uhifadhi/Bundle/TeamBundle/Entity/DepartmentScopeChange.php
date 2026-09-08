@@ -30,7 +30,7 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
  * org-wide hands every one of its people authority in every area. A change with
  * that reach is not something the current state can
  * explain after the fact: the department ends up org-wide either way, and the row
- * itself cannot say it used to be Ngorongoro's, who widened it, or why. This
+ * itself cannot say it used to be Northern Reserve's, who widened it, or why. This
  * entity is that record, written on the transition and never edited afterwards.
  *
  * IT IS AN APPEND-ONLY LEDGER. Nothing here has a setter. The four facts are

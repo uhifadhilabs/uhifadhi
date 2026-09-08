@@ -44,10 +44,10 @@ final class TeamRoleEnumTest extends TestCase
     }
 
     /**
-     * Named rather than merely absent, because "we deleted it on purpose" is the
-     * fact worth keeping. A stored `manager` string no longer resolves to a case,
-     * which is what makes an installation's migration off the tier a decision it
-     * has to take rather than one it can drift past.
+     * Named rather than merely absent, because "not this one, on purpose" is
+     * the fact worth keeping. A stored `manager` string resolves to no case,
+     * which is what makes an installation carrying one face a decision rather
+     * than drift past it.
      */
     public function testManagerIsNotATier(): void
     {
@@ -80,12 +80,12 @@ final class TeamRoleEnumTest extends TestCase
     }
 
     /**
-     * A TIER NO LONGER ANSWERS "MAY THIS PERSON ADMINISTER THE TEAM". The method
-     * that used to is gone rather than deprecated: a call site left compiling
-     * would be a screen still gated on the retired axis, and the whole point of
-     * the ruling is that the question is now asked of the permission catalogue.
+     * A TIER DOES NOT ANSWER "MAY THIS PERSON ADMINISTER THE TEAM", and the
+     * absence is asserted rather than assumed: a method answering it would be a
+     * screen gated on the coarse axis, where the question belongs to the
+     * permission catalogue.
      */
-    public function testTheTierNoLongerAnswersWhoMayAdministerTheTeam(): void
+    public function testTheTierDoesNotAnswerWhoMayAdministerTheTeam(): void
     {
         // Through reflection rather than method_exists(): static analysis knows
         // the literal answer to the latter and narrows the assertion away.

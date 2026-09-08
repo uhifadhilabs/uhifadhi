@@ -22,15 +22,13 @@ use Uhifadhi\Bundle\TeamBundle\Tests\Integration\IntegrationTestCase;
 /**
  * THERE IS ONE WRITE PATH ONTO A POSITION, AND IT VALIDATES.
  *
- * There used to be two. `setPermissions(PermissionEnum[])` took the core enum
- * and was the obvious one to reach for — and it SILENTLY DISCARDED every
- * module-declared permission, because a module's value is not a case of an enum
- * this module owns. An administrator ticking a patrol module's row and saving
- * would watch it come back unticked, with nothing anywhere saying why. The
- * setter is removed rather than deprecated: a call site left compiling is the
- * bug still shipping.
+ * A second one is the obvious thing to reach for and is deliberately absent.
+ * `setPermissions(PermissionEnum[])` would take the core enum and SILENTLY
+ * DISCARD every module-declared permission, because a module's value is not a
+ * case of an enum this bundle owns: an administrator ticking a module's row and
+ * saving would watch it come back unticked, with nothing anywhere saying why.
  *
- * What replaces it is the value-string surface, and it takes the live catalogue
+ * The one that exists is the value-string surface, and it takes the live catalogue
  * as a second required argument, so it cannot be called without one. The
  * accepted set is:
  *
@@ -39,8 +37,8 @@ use Uhifadhi\Bundle\TeamBundle\Tests\Integration\IntegrationTestCase;
  * The union is the whole design. The left half is what makes an unknown NEW
  * string fail loudly instead of being quietly dropped. The right half is the
  * prune-not-purge ruling in code: a module uninstalled last week left grants
- * behind in positions' JSON, those values are in nobody's catalogue any more,
- * and saving an unrelated change to the position must not silently strip them.
+ * behind in positions' JSON, those values are in nobody's catalogue now, and
+ * saving an unrelated change to the position must not silently strip them.
  * Editing a position is not a migration.
  */
 final class PositionGrantTest extends IntegrationTestCase
@@ -51,11 +49,11 @@ final class PositionGrantTest extends IntegrationTestCase
     }
 
     /**
-     * The enum-typed setter is gone. Asserted by name, because "we removed it on
-     * purpose" is the fact worth keeping — and because a reintroduced one would
-     * pass every other test in this suite.
+     * THERE IS NO ENUM-TYPED SETTER. Asserted by name, because "not this one,
+     * on purpose" is the fact worth keeping — and because one introduced later
+     * would pass every other test in this suite.
      */
-    public function testTheEnumTypedSetterIsGone(): void
+    public function testThereIsNoEnumTypedSetter(): void
     {
         // Through reflection rather than method_exists(): static analysis knows
         // the literal answer to the latter and narrows the assertion away.
@@ -85,8 +83,9 @@ final class PositionGrantTest extends IntegrationTestCase
     }
 
     /**
-     * THE ONE THAT THE OLD SETTER GOT WRONG. `surveys.record` belongs to a module
-     * bundle, not to this module's enum, and it has to survive a save unchanged.
+     * THE ONE AN ENUM-TYPED SETTER COULD NOT CARRY. `surveys.record` belongs to
+     * a module bundle, not to this bundle's enum, and it has to survive a save
+     * unchanged.
      */
     public function testAModuleDeclaredPermissionRoundTrips(): void
     {

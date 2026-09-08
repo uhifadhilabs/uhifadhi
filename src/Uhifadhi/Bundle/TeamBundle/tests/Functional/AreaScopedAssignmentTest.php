@@ -35,7 +35,7 @@ use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\Area\HostArea;
  * Enforcement is server-side (a 403), exactly as the department controller does
  * it; the pickers on the member record and the invite page are narrowed to what
  * the administrator may assign, matching the confined reassignment control the
- * area-admin design draws ("the target list holds only Serengeti positions").
+ * area-admin design draws ("the target list holds only Southern Reserve positions").
  */
 final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
 {
@@ -44,9 +44,9 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
     /** An area-X admin assigns a person to a position in their OWN area. */
     public function testAnAreaAdminAssignsAPersonToAPositionInTheirOwnArea(): void
     {
-        $ngorongoro = $this->area('Ngorongoro');
-        $this->areaAdminIn($ngorongoro);
-        $ranger = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $ngorongoro), [PermissionEnum::AreaView->value]);
+        $north = $this->area('Northern Reserve');
+        $this->areaAdminIn($north);
+        $ranger = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $north), [PermissionEnum::AreaView->value]);
         $grace = $this->person('Grace', 'Ndosi');
         $this->em->flush();
 
@@ -65,10 +65,10 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
     /** But NOT to another area's position — that reaches past their boundary. */
     public function testAnAreaAdminCannotAssignToAnotherAreasPosition(): void
     {
-        $ngorongoro = $this->area('Ngorongoro');
-        $pololeti = $this->area('Pololeti Game Reserve');
-        $this->areaAdminIn($ngorongoro);
-        $elsewhere = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $pololeti), [PermissionEnum::AreaView->value]);
+        $north = $this->area('Northern Reserve');
+        $west = $this->area('Western Reserve');
+        $this->areaAdminIn($north);
+        $elsewhere = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $west), [PermissionEnum::AreaView->value]);
         $grace = $this->person('Grace', 'Ndosi');
         $this->em->flush();
 
@@ -85,8 +85,8 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
     /** And NOT to an org-level position — that grants org-wide authority. */
     public function testAnAreaAdminCannotAssignToAnOrgLevelPosition(): void
     {
-        $ngorongoro = $this->area('Ngorongoro');
-        $this->areaAdminIn($ngorongoro);
+        $north = $this->area('Northern Reserve');
+        $this->areaAdminIn($north);
         $orgPosition = $this->position('Analyst', $this->department('Ecology'), [PermissionEnum::AreaView->value]);
         $grace = $this->person('Grace', 'Ndosi');
         $this->em->flush();
@@ -102,10 +102,10 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
     /** A person already seated OUTSIDE the area cannot be reassigned either. */
     public function testAnAreaAdminCannotReassignAPersonSeatedOutsideTheirArea(): void
     {
-        $ngorongoro = $this->area('Ngorongoro');
-        $this->areaAdminIn($ngorongoro);
+        $north = $this->area('Northern Reserve');
+        $this->areaAdminIn($north);
         $orgPosition = $this->position('Analyst', $this->department('Ecology'), [PermissionEnum::AreaView->value]);
-        $mine = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $ngorongoro), [PermissionEnum::AreaView->value]);
+        $mine = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $north), [PermissionEnum::AreaView->value]);
         $grace = $this->person('Grace', 'Ndosi')->setPosition($orgPosition);
         $this->em->flush();
 
@@ -122,9 +122,9 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
     /** Unassigning somebody in the admin's own area is allowed. */
     public function testAnAreaAdminUnassignsSomebodyInTheirOwnArea(): void
     {
-        $ngorongoro = $this->area('Ngorongoro');
-        $this->areaAdminIn($ngorongoro);
-        $mine = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $ngorongoro), [PermissionEnum::AreaView->value]);
+        $north = $this->area('Northern Reserve');
+        $this->areaAdminIn($north);
+        $mine = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $north), [PermissionEnum::AreaView->value]);
         $grace = $this->person('Grace', 'Ndosi')->setPosition($mine);
         $this->em->flush();
 
@@ -141,8 +141,8 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
     /** But unassigning somebody OUTSIDE the area is refused. */
     public function testAnAreaAdminCannotUnassignSomebodyOutsideTheirArea(): void
     {
-        $ngorongoro = $this->area('Ngorongoro');
-        $this->areaAdminIn($ngorongoro);
+        $north = $this->area('Northern Reserve');
+        $this->areaAdminIn($north);
         $orgPosition = $this->position('Analyst', $this->department('Ecology'), [PermissionEnum::AreaView->value]);
         $grace = $this->person('Grace', 'Ndosi')->setPosition($orgPosition);
         $this->em->flush();
@@ -160,11 +160,11 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
     /** The member picker offers only the admin's own area's positions. */
     public function testTheMemberPickerOffersOnlyTheAdminsAreaPositions(): void
     {
-        $ngorongoro = $this->area('Ngorongoro');
-        $pololeti = $this->area('Pololeti Game Reserve');
-        $this->areaAdminIn($ngorongoro);
-        $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $ngorongoro), [PermissionEnum::AreaView->value]);
-        $this->position('Scout', $this->areaDepartment('Anti-Poaching', $pololeti), [PermissionEnum::AreaView->value]);
+        $north = $this->area('Northern Reserve');
+        $west = $this->area('Western Reserve');
+        $this->areaAdminIn($north);
+        $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $north), [PermissionEnum::AreaView->value]);
+        $this->position('Scout', $this->areaDepartment('Anti-Poaching', $west), [PermissionEnum::AreaView->value]);
         $this->position('Analyst', $this->department('Ecology'), [PermissionEnum::AreaView->value]);
         $grace = $this->person('Grace', 'Ndosi');
         $this->em->flush();
@@ -182,9 +182,9 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
     /** An area-X admin creates somebody straight into their own area's position. */
     public function testAnAreaAdminCreatesSomebodyIntoTheirOwnAreasPosition(): void
     {
-        $ngorongoro = $this->area('Ngorongoro');
-        $this->areaAdminIn($ngorongoro);
-        $ranger = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $ngorongoro), [PermissionEnum::AreaView->value]);
+        $north = $this->area('Northern Reserve');
+        $this->areaAdminIn($north);
+        $ranger = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $north), [PermissionEnum::AreaView->value]);
         $this->em->flush();
 
         $token = $this->tokenFrom('/team/invite');
@@ -205,10 +205,10 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
     /** But NOT into another area's position, and no half-made account survives. */
     public function testAnAreaAdminCannotCreateSomebodyIntoAnotherAreasPosition(): void
     {
-        $ngorongoro = $this->area('Ngorongoro');
-        $pololeti = $this->area('Pololeti Game Reserve');
-        $this->areaAdminIn($ngorongoro);
-        $elsewhere = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $pololeti), [PermissionEnum::AreaView->value]);
+        $north = $this->area('Northern Reserve');
+        $west = $this->area('Western Reserve');
+        $this->areaAdminIn($north);
+        $elsewhere = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $west), [PermissionEnum::AreaView->value]);
         $this->em->flush();
 
         $token = $this->tokenFrom('/team/invite');
@@ -227,8 +227,8 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
     /** And NOT into an org-level position. */
     public function testAnAreaAdminCannotCreateSomebodyIntoAnOrgLevelPosition(): void
     {
-        $ngorongoro = $this->area('Ngorongoro');
-        $this->areaAdminIn($ngorongoro);
+        $north = $this->area('Northern Reserve');
+        $this->areaAdminIn($north);
         $orgPosition = $this->position('Analyst', $this->department('Ecology'), [PermissionEnum::AreaView->value]);
         $this->em->flush();
 
@@ -246,11 +246,11 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
     /** The invite picker offers only the admin's own area's positions. */
     public function testTheInvitePickerOffersOnlyTheAdminsAreaPositions(): void
     {
-        $ngorongoro = $this->area('Ngorongoro');
-        $pololeti = $this->area('Pololeti Game Reserve');
-        $this->areaAdminIn($ngorongoro);
-        $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $ngorongoro), [PermissionEnum::AreaView->value]);
-        $this->position('Scout', $this->areaDepartment('Anti-Poaching', $pololeti), [PermissionEnum::AreaView->value]);
+        $north = $this->area('Northern Reserve');
+        $west = $this->area('Western Reserve');
+        $this->areaAdminIn($north);
+        $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $north), [PermissionEnum::AreaView->value]);
+        $this->position('Scout', $this->areaDepartment('Anti-Poaching', $west), [PermissionEnum::AreaView->value]);
         $this->position('Analyst', $this->department('Ecology'), [PermissionEnum::AreaView->value]);
         $this->em->flush();
 
@@ -267,12 +267,12 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
     /** An org-level team.manage holder is unbounded: they assign anywhere. */
     public function testAnOrgLevelTeamManageHolderAssignsToAnyArea(): void
     {
-        $pololeti = $this->area('Pololeti Game Reserve');
+        $west = $this->area('Western Reserve');
         // The admin's own position is org-level (no area), so their authority is
         // org-wide — they may seat somebody in any area's position.
         $orgAdmin = $this->person('Amina', 'Salehe', TeamRoleEnum::Staff);
         $orgAdmin->setPosition($this->position('Coordinator', $this->department('Administration'), [PermissionEnum::TeamManage->value]));
-        $elsewhere = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $pololeti), [PermissionEnum::AreaView->value]);
+        $elsewhere = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $west), [PermissionEnum::AreaView->value]);
         $grace = $this->person('Grace', 'Ndosi');
         $this->em->flush();
         $this->client->loginUser($orgAdmin);

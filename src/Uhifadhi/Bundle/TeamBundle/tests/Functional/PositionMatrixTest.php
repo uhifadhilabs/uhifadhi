@@ -199,7 +199,7 @@ final class PositionMatrixTest extends WebTestCaseWithSchema
         );
     }
 
-    /** A MODULE-DECLARED PERMISSION ROUND-TRIPS — the bug the old setter had. */
+    /** A MODULE-DECLARED PERMISSION ROUND-TRIPS, which an enum-typed write could not do. */
     public function testAModuleDeclaredPermissionRoundTripsThroughTheSave(): void
     {
         $this->administrator();

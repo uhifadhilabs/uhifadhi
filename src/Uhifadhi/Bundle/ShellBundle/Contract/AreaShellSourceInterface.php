@@ -53,7 +53,7 @@ interface AreaShellSourceInterface
 
     /**
      * WHAT THE VIEWER IS INSIDE, in words — the middle segment of the page
-     * title, as in "Zones — Ngorongoro — Uhifadhi".
+     * title, as in "Zones — Northern Reserve — Uhifadhi".
      *
      * It lives on this contract rather than on a third one because it is the same
      * question the tabs answer, asked for the title bar instead of the strip:

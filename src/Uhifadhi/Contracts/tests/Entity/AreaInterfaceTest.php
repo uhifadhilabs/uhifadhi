@@ -98,7 +98,7 @@ final class AreaInterfaceTest extends TestCase
     {
         $area = new class implements AreaInterface {
             public ?int $id = 42;
-            public ?string $name = 'Ngorongoro';
+            public ?string $name = 'Northern Reserve';
             public ?string $uuid = '018f1c2d-0000-7000-8000-000000000000';
 
             public function getId(): ?int
@@ -121,7 +121,7 @@ final class AreaInterfaceTest extends TestCase
         $contract = $area;
         self::assertInstanceOf(AreaInterface::class, $contract);
         self::assertSame(42, $contract->getId());
-        self::assertSame('Ngorongoro', $contract->getName());
+        self::assertSame('Northern Reserve', $contract->getName());
         self::assertSame('018f1c2d-0000-7000-8000-000000000000', $contract->getUuidString());
 
         // An area that has never been stored is an answer the contract allows.

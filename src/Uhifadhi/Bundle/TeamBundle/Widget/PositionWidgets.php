@@ -46,9 +46,8 @@ use Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceInterface;
  * grid opens on nothing at all.
  *
  * F IS NOT A SIXTH RENDERING. It is a different family — five department-first
- * layouts, drawn before the department was ruled into the model and turned out
- * to be right. Where A–E carry the department as context on every row, these
- * carry it as the shape of the page. It is the one preset that shows no matrix
+ * layouts. Where A–E carry the department as context on every row, these carry
+ * it as the shape of the page. It is the one preset that shows no matrix
  * rendering and no counts, which is why the KPI-at-the-top rule has nothing to
  * say about it.
  */

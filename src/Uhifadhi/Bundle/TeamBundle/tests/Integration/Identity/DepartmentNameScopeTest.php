@@ -50,11 +50,11 @@ final class DepartmentNameScopeTest extends IntegrationTestCase
      */
     public function testTwoAreasMayEachOwnADepartmentOfTheSameName(): void
     {
-        $serengeti = $this->area('Serengeti');
-        $ruaha = $this->area('Ruaha');
+        $south = $this->area('Southern Reserve');
+        $east = $this->area('Eastern Reserve');
 
-        $this->em->persist((new Department())->setName('Anti-Poaching')->setArea($serengeti));
-        $this->em->persist((new Department())->setName('Anti-Poaching')->setArea($ruaha));
+        $this->em->persist((new Department())->setName('Anti-Poaching')->setArea($south));
+        $this->em->persist((new Department())->setName('Anti-Poaching')->setArea($east));
         $this->em->flush();
         $this->em->clear();
 
@@ -64,10 +64,10 @@ final class DepartmentNameScopeTest extends IntegrationTestCase
     /** Inside one area the name is still the department's identity. */
     public function testOneAreaMayNotOwnTwoDepartmentsOfTheSameName(): void
     {
-        $serengeti = $this->area('Serengeti');
+        $south = $this->area('Southern Reserve');
 
-        $this->em->persist((new Department())->setName('Anti-Poaching')->setArea($serengeti));
-        $this->em->persist((new Department())->setName('Anti-Poaching')->setArea($serengeti));
+        $this->em->persist((new Department())->setName('Anti-Poaching')->setArea($south));
+        $this->em->persist((new Department())->setName('Anti-Poaching')->setArea($south));
 
         $this->expectException(UniqueConstraintViolationException::class);
         $this->em->flush();
@@ -95,10 +95,10 @@ final class DepartmentNameScopeTest extends IntegrationTestCase
      */
     public function testAnOrgLevelAndAnAreaLevelDepartmentMayShareAName(): void
     {
-        $serengeti = $this->area('Serengeti');
+        $south = $this->area('Southern Reserve');
 
         $this->em->persist((new Department())->setName('Ecology'));
-        $this->em->persist((new Department())->setName('Ecology')->setArea($serengeti));
+        $this->em->persist((new Department())->setName('Ecology')->setArea($south));
         $this->em->flush();
         $this->em->clear();
 
@@ -106,8 +106,9 @@ final class DepartmentNameScopeTest extends IntegrationTestCase
     }
 
     /**
-     * THE CONSTRAINT IS THE SCOPED PAIR, and the old global index is named here
-     * so its removal is a decision rather than a diff nobody read.
+     * THE CONSTRAINT IS THE SCOPED PAIR. The org-wide index a reader might
+     * expect is named too, so that its absence is a decision somebody asserted
+     * rather than a diff nobody read.
      */
     public function testTheConstraintIsTheScopedPairNotTheGlobalOne(): void
     {
@@ -116,6 +117,6 @@ final class DepartmentNameScopeTest extends IntegrationTestCase
         self::assertArrayHasKey('uniq_team_department_name_org', $constraints);
         self::assertArrayHasKey('uniq_team_department_name_area', $constraints);
         self::assertArrayNotHasKey('uniq_team_department_name', $constraints,
-            'the org-wide-only constraint is gone; uniqueness is per area');
+            'there is no org-wide-only constraint; uniqueness is per area');
     }
 }

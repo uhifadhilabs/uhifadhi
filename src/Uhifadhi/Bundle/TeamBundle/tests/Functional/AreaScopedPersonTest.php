@@ -38,9 +38,9 @@ final class AreaScopedPersonTest extends WebTestCaseWithSchema
     /** An area-X admin edits somebody seated in their OWN area. */
     public function testAnAreaAdminEditsAPersonInTheirOwnArea(): void
     {
-        $ngorongoro = $this->area('Ngorongoro');
-        $this->areaAdminIn($ngorongoro);
-        $mine = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $ngorongoro), [PermissionEnum::AreaView->value]);
+        $north = $this->area('Northern Reserve');
+        $this->areaAdminIn($north);
+        $mine = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $north), [PermissionEnum::AreaView->value]);
         $grace = $this->person('Grace', 'Ndosi')->setPosition($mine);
         $this->em->flush();
 
@@ -57,8 +57,8 @@ final class AreaScopedPersonTest extends WebTestCaseWithSchema
     /** But NOT somebody seated OUTSIDE their area — that reaches past the boundary. */
     public function testAnAreaAdminCannotEditAPersonOutsideTheirArea(): void
     {
-        $ngorongoro = $this->area('Ngorongoro');
-        $this->areaAdminIn($ngorongoro);
+        $north = $this->area('Northern Reserve');
+        $this->areaAdminIn($north);
         $orgPosition = $this->position('Analyst', $this->department('Ecology'), [PermissionEnum::AreaView->value]);
         $grace = $this->person('Grace', 'Ndosi')->setPosition($orgPosition);
         $this->em->flush();
@@ -76,8 +76,8 @@ final class AreaScopedPersonTest extends WebTestCaseWithSchema
     /** Somebody with NO position is nobody's to fence — editing them is allowed. */
     public function testAnAreaAdminEditsAPersonWithNoPosition(): void
     {
-        $ngorongoro = $this->area('Ngorongoro');
-        $this->areaAdminIn($ngorongoro);
+        $north = $this->area('Northern Reserve');
+        $this->areaAdminIn($north);
         $grace = $this->person('Grace', 'Ndosi');
         $this->em->flush();
 
@@ -96,9 +96,9 @@ final class AreaScopedPersonTest extends WebTestCaseWithSchema
     /** An area-X admin deactivates somebody in their own area. */
     public function testAnAreaAdminDeactivatesAPersonInTheirOwnArea(): void
     {
-        $ngorongoro = $this->area('Ngorongoro');
-        $this->areaAdminIn($ngorongoro);
-        $mine = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $ngorongoro), [PermissionEnum::AreaView->value]);
+        $north = $this->area('Northern Reserve');
+        $this->areaAdminIn($north);
+        $mine = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $north), [PermissionEnum::AreaView->value]);
         $grace = $this->person('Grace', 'Ndosi')->setPosition($mine);
         $this->em->flush();
 
@@ -112,8 +112,8 @@ final class AreaScopedPersonTest extends WebTestCaseWithSchema
     /** But NOT somebody seated outside their area. */
     public function testAnAreaAdminCannotDeactivateAPersonOutsideTheirArea(): void
     {
-        $ngorongoro = $this->area('Ngorongoro');
-        $this->areaAdminIn($ngorongoro);
+        $north = $this->area('Northern Reserve');
+        $this->areaAdminIn($north);
         $orgPosition = $this->position('Analyst', $this->department('Ecology'), [PermissionEnum::AreaView->value]);
         $grace = $this->person('Grace', 'Ndosi')->setPosition($orgPosition);
         $this->em->flush();
@@ -128,8 +128,8 @@ final class AreaScopedPersonTest extends WebTestCaseWithSchema
     /** Reactivating somebody outside their area is refused too. */
     public function testAnAreaAdminCannotReactivateAPersonOutsideTheirArea(): void
     {
-        $ngorongoro = $this->area('Ngorongoro');
-        $this->areaAdminIn($ngorongoro);
+        $north = $this->area('Northern Reserve');
+        $this->areaAdminIn($north);
         $orgPosition = $this->position('Analyst', $this->department('Ecology'), [PermissionEnum::AreaView->value]);
         $grace = $this->person('Grace', 'Ndosi')->setPosition($orgPosition);
         $grace->deactivate();
@@ -145,9 +145,9 @@ final class AreaScopedPersonTest extends WebTestCaseWithSchema
     /** Reactivating somebody in their own area is allowed. */
     public function testAnAreaAdminReactivatesAPersonInTheirOwnArea(): void
     {
-        $ngorongoro = $this->area('Ngorongoro');
-        $this->areaAdminIn($ngorongoro);
-        $mine = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $ngorongoro), [PermissionEnum::AreaView->value]);
+        $north = $this->area('Northern Reserve');
+        $this->areaAdminIn($north);
+        $mine = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $north), [PermissionEnum::AreaView->value]);
         $grace = $this->person('Grace', 'Ndosi')->setPosition($mine);
         $grace->deactivate();
         $this->em->flush();
@@ -164,10 +164,10 @@ final class AreaScopedPersonTest extends WebTestCaseWithSchema
     /** An org-level team.manage holder edits and deactivates anyone, anywhere. */
     public function testAnOrgLevelHolderManagesAnyone(): void
     {
-        $ngorongoro = $this->area('Ngorongoro');
+        $north = $this->area('Northern Reserve');
         $orgAdmin = $this->person('Amina', 'Salehe', TeamRoleEnum::Staff);
         $orgAdmin->setPosition($this->position('Coordinator', $this->department('Administration'), [PermissionEnum::TeamManage->value]));
-        $mine = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $ngorongoro), [PermissionEnum::AreaView->value]);
+        $mine = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $north), [PermissionEnum::AreaView->value]);
         $grace = $this->person('Grace', 'Ndosi')->setPosition($mine);
         $this->em->flush();
         $this->client->loginUser($orgAdmin);

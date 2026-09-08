@@ -77,11 +77,11 @@ bin/console doctrine:migrations:diff      # your history, your migration
 bin/console doctrine:migrations:migrate
 ```
 
-Four tables: `team_user`, `team_position`, `team_department` — which carries a
+Five tables: `team_user`, `team_position`, `team_department` — which carries a
 nullable **area**, and that is what makes a department org-level or area-level —
-and `team_department_scope_change`, the trail of every scope change. This bundle
-ships no migration versions: the tables are the bundle's, the migration history
-is the installation's.
+`team_department_scope_change` (the trail of every scope change) and
+`team_api_token`. This bundle ships no migration versions: the tables are the
+bundle's, the migration history is the installation's.
 
 ## Modules point at your people
 

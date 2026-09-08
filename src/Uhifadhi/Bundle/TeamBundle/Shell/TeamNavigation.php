@@ -38,10 +38,10 @@ use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
  * /team/positions are one place in the product, so the matrix lights the Team
  * row rather than adding a third; anything below that is the page's own
  * business, not the sidebar's. Departments is different in kind and the drawing
- * says so — the old application's sidebar puts Departments and Team side by
- * side under Organization, in that order, because a department is an org-wide
- * fact the roster reads rather than a corner of the roster. It has its own
- * top-level address for the same reason.
+ * says so — Departments and Team sit side by side under Organization, in that
+ * order, because a department is an org-wide fact the roster reads rather than
+ * a corner of the roster. It has its own top-level address for the same
+ * reason.
  *
  * ONE SECTION, THOUGH. Both rows are Organization, and a module contributing
  * two sections for two screens would be a module deciding the shape of somebody

@@ -142,12 +142,10 @@ class Position
     /**
      * THE ONLY WRITE PATH, AND IT VALIDATES.
      *
-     * There used to be a second one, `setPermissions(PermissionEnum[])`, and it
-     * was the obvious one to reach for. It silently discarded everything a
-     * module had declared, so an administrator could tick a patrol module's row,
-     * save, and watch it come back unticked with nothing anywhere saying why.
-     * It is removed rather than deprecated: a call site left compiling is the
-     * bug still shipping.
+     * A setter taking the core enum alone is the obvious one to reach for and
+     * is deliberately absent: it can only discard what a module declared, so an
+     * administrator would tick a module's row, save, and watch it come back
+     * unticked with nothing anywhere saying why.
      *
      * The live catalogue is a REQUIRED second argument rather than something
      * this entity fetches, because an entity that reached for a service to
@@ -158,8 +156,7 @@ class Position
      * WHAT IS ACCEPTED is the live catalogue UNION the strings this position
      * already holds, and the union is the design:
      *
-     *   · the catalogue half makes an unknown NEW string fail loudly, which is
-     *     precisely what the old setter did not do;
+     *   · the catalogue half makes an unknown NEW string fail loudly;
      *   · the already-held half is the prune-not-purge ruling in code. A module
      *     uninstalled last week left grants behind in positions' JSON; those
      *     values are in nobody's catalogue now, and saving an unrelated change

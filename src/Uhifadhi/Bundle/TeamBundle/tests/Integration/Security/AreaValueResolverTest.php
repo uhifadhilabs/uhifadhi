@@ -47,7 +47,7 @@ final class AreaValueResolverTest extends IntegrationTestCase
         return $request;
     }
 
-    private function storedArea(string $name = 'Serengeti'): HostArea
+    private function storedArea(string $name = 'Southern Reserve'): HostArea
     {
         $area = (new HostArea())->setName($name);
         $this->em->persist($area);

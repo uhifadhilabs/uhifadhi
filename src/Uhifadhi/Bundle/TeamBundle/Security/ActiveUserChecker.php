@@ -24,9 +24,10 @@ use Uhifadhi\Bundle\TeamBundle\Entity\User;
  *
  * Deactivation is how somebody leaves — the row survives, everything they
  * recorded keeps its author, and they stay on the roster under an inactive
- * filter. What has to stop is the sign-in, and Symfony's own plug-point for
- * that is a user checker, called by the authenticator BEFORE the password is
- * verified.
+ * filter. What has to stop is the sign-in, and the plug-point for that is a
+ * user checker, called by the authenticator BEFORE the password is verified.
+ *
+ * @see https://symfony.com/doc/current/security/user_checkers.html
  *
  * IT SAYS WHY. `checkPreAuth` could throw the generic account-status exception
  * and let the firewall render "invalid credentials", which is the wrong

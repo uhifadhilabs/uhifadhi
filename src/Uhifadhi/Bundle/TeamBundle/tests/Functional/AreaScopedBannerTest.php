@@ -22,7 +22,7 @@ use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\Area\HostArea;
 /**
  * §5.6, DESIGN FIDELITY — THE "SCOPED TO <AREA>" STATEMENT.
  *
- * The area-admin design draws a banner ("You are scoped to Serengeti") on the
+ * The area-admin design draws a banner ("You are scoped to Southern Reserve") on the
  * team / department / position management chrome, telling a bounded admin WHICH
  * area bounds them. It is shown to a bounded (area-X) `team.manage` holder on
  * every management surface, and to nobody else — an unbounded holder (a tier or
@@ -49,26 +49,26 @@ final class AreaScopedBannerTest extends WebTestCaseWithSchema
     #[DataProvider('managementChrome')]
     public function testTheBannerNamesTheAreaForABoundedAdmin(string $path): void
     {
-        $this->areaAdminIn($this->area('Ngorongoro'));
+        $this->areaAdminIn($this->area('Northern Reserve'));
         $this->em->flush();
 
         $crawler = $this->client->request('GET', $path);
 
         self::assertResponseIsSuccessful();
-        self::assertStringContainsString('You are scoped to Ngorongoro', $crawler->filter('.scope-fence')->html());
+        self::assertStringContainsString('You are scoped to Northern Reserve', $crawler->filter('.scope-fence')->html());
     }
 
     /** And on one person's record, the other management surface. */
     public function testTheBannerShowsOnTheMemberRecordForABoundedAdmin(): void
     {
-        $this->areaAdminIn($this->area('Ngorongoro'));
+        $this->areaAdminIn($this->area('Northern Reserve'));
         $grace = $this->person('Grace', 'Ndosi');
         $this->em->flush();
 
         $crawler = $this->client->request('GET', '/team/'.$grace->getUuidString());
 
         self::assertResponseIsSuccessful();
-        self::assertStringContainsString('You are scoped to Ngorongoro', $crawler->filter('.scope-fence')->html());
+        self::assertStringContainsString('You are scoped to Northern Reserve', $crawler->filter('.scope-fence')->html());
     }
 
     /** A tier (Super Admin) is unbounded — no banner, there is no one area. */
