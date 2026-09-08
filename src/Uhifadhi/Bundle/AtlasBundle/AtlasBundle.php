@@ -1,0 +1,237 @@
+<?php
+
+declare(strict_types=1);
+
+/*
+ * This file is part of the Uhifadhi core.
+ *
+ * (c) Ezekiel Mjema <https://github.com/eemjema>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace Uhifadhi\Bundle\AtlasBundle;
+
+use Symfony\Component\AssetMapper\AssetMapperInterface;
+use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
+use Uhifadhi\Bundle\AtlasBundle\DependencyInjection\AtlasConfiguration;
+use Uhifadhi\Bundle\AtlasBundle\Model\SatelliteSource;
+use Uhifadhi\Bundle\AtlasBundle\Twig\MapExtension;
+
+use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
+
+/**
+ * Map — the platform's map machinery. INFRASTRUCTURE, not a catalogue module.
+ *
+ * MECHANISM, NOT A SCREEN. This bundle owns no entities and no pages. What it
+ * owns is everything a map is made of before anyone decides what to draw on it:
+ * the self-hosted Leaflet build, the basemap contract (which imagery, from which
+ * provider), how an area boundary is cased and scrimmed, and the chrome — zoom,
+ * DIM, the base-layer menu, fullscreen, the scale bar, the Ctrl/⌘-scroll bargain
+ * — that every map in the product wears.
+ *
+ * THE TWO TIERS. A CAPABILITY module (patrol, incident) is the per-area grid an
+ * admin switches on, default off, ledgered per area. An INFRASTRUCTURE module is
+ * machinery every map-bearing screen already imports: patrol plates, incident
+ * plates, the area overview and the zones editor all draw with these assets, so a
+ * host that omitted this bundle would not have "fewer features", it would have
+ * four broken screens. That is not an opt-in, so map is not offered as one: it
+ * contributes NO "uhifadhi.module" provider, appears in no catalogue, in no
+ * per-area grid and in no ledger. It is installed-means-on, and enforcement is
+ * the composer graph — AreaBundle hard-requires it — not a toggle.
+ *
+ * WHAT A HOST MUST DO (both documented in the README; the importmap mechanics
+ * in docs/importmap-assets.md):
+ *   1. register the bundle — the recipe's job;
+ *   2. put {{ map_basemap_attributes() }} on its <body> — the one line that is
+ *      genuinely the host's, because it goes in a template only the host owns.
+ * The three importmap entries are not a third step: this package declares them
+ * in assets/package.json and Flex writes them on install (see prependExtension
+ * below).
+ * Leaflet itself needs nothing: it is served out of this bundle's public/ dir,
+ * which AssetMapper registers by itself.
+ */
+final class AtlasBundle extends AbstractBundle
+{
+    /**
+     * The self-hosted Leaflet build, as a host links it.
+     *
+     * Constants rather than literals for the same reason patrol's stylesheet is
+     * one: this path is written in the host layout AND in every module's
+     * base template, and a path typed five times is a path that eventually
+     * differs by one character in one of them.
+     *
+     * NOT in assets/ and NOT in the importmap, deliberately. Leaflet is a classic
+     * script that publishes window.L, and the map controllers read it from there;
+     * a classic <script> in <head> has run before the deferred importmap modules
+     * connect, which is precisely the ordering the controllers rely on.
+     * AssetMapper registers a bundle's public/ dir under bundles/<bundlename>
+     * with no configuration at all, and versions its contents — including the
+     * marker and layers PNGs that leaflet.css asks for by relative url.
+     */
+    public const string LEAFLET_JS = 'bundles/atlas/leaflet/leaflet.js';
+    public const string LEAFLET_CSS = 'bundles/atlas/leaflet/leaflet.css';
+
+    /**
+     * THE PLATFORM'S ONE MAP STYLESHEET, as a host links it.
+     *
+     * The chrome markup this bundle's chrome.js builds — the zoom column, the DIM
+     * pill, the base-layer menu, the scroll-bargain hint — and Leaflet's own
+     * controls need styling, and there must be exactly ONE copy of those rules or
+     * two maps on the platform drift apart. The rules used to live only in a host
+     * app.css, which meant a fresh installation that drew a map (with no such
+     * host CSS) rendered unstyled chrome; the styles belong beside the markup
+     * that emits them. This sheet also carries the .viewer imagery frame and the
+     * .zone-label halo, so any consumer that frames a plate gets them for free.
+     * A consumer links it alongside LEAFLET_CSS; it is served, versioned, out of
+     * this bundle's public/ dir the same way Leaflet is.
+     */
+    public const string STYLESHEET = 'bundles/atlas/map.css';
+
+    /**
+     * The AssetMapper namespace this bundle's JavaScript is served under, and
+     * the npm-side name in assets/package.json — which must be the composer
+     * package name with an '@', because that is the key Flex works from.
+     */
+    public const string ASSET_NAMESPACE = '@uhifadhi/atlas-bundle';
+
+    /** Config lives under "atlas:", not the class-derived "atlas_bundle:". */
+    protected string $extensionAlias = 'atlas';
+
+    /**
+     * THE BUNDLE CLASS SITS AT THE PACKAGE ROOT, beside this bundle's own
+     * composer.json, because after a split the package root IS the bundle
+     * root.
+     *
+     * AbstractBundle assumes otherwise. Its default "assume the modern
+     * directory structure" answer is `dirname($file, 2)`, which is right for a
+     * bundle whose class lives in src/ and two directories too high for one
+     * whose class lives at the root — public/ would be looked for outside the
+     * package, and the Leaflet build with it.
+     *
+     * @see vendor/symfony/dependency-injection/Kernel/AbstractBundle.php
+     */
+    public function getPath(): string
+    {
+        return __DIR__;
+    }
+
+    public function configure(DefinitionConfigurator $definition): void
+    {
+        AtlasConfiguration::define($definition->rootNode());
+    }
+
+    public function prependExtension(ContainerConfigurator $container, ContainerBuilder $builder): void
+    {
+        /*
+         * The three shared map modules, shipped under an AssetMapper namespace
+         * exactly as symfony/ux-turbo does (TurboExtension::prepend).
+         *
+         * This registers the DIRECTORY, which is all a BUNDLE can do: importmap
+         * entries are read from the host's single importmap.php and AssetMapper
+         * offers no extension point for a bundle to add to it.
+         *
+         * The IMPORT NAMES — uhifadhi/basemaps, uhifadhi/boundary,
+         * uhifadhi/map-chrome — are contributed by the PACKAGE instead, from
+         * assets/package.json's symfony.importmap block: Flex reads it on
+         * install (given the symfony-ux keyword in composer.json) and runs
+         * importmap:require once per entry. The two halves meet here — the
+         * entries name files under this directory — so a rename on either side
+         * without the other is a blank map, which is what
+         * tests/Unit/Assets/ImportmapContributionTest.php exists to catch.
+         *
+         * Guarded, because AssetMapper is optional: a host could install this
+         * bundle for the Leaflet build and the provider config alone.
+         */
+        if ($builder->hasExtension('framework') && interface_exists(AssetMapperInterface::class)) {
+            $container->extension('framework', [
+                'asset_mapper' => [
+                    'paths' => [
+                        __DIR__.'/assets' => self::ASSET_NAMESPACE,
+                    ],
+                ],
+            ]);
+        }
+    }
+
+    /**
+     * @param array<string, mixed> $config
+     */
+    public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
+    {
+        // Static service wiring lives in a PHP config file (see config/services.php
+        // for why PHP, not YAML). loadExtension keeps only the config-DRIVEN bits.
+        $container->import('config/services.php');
+
+        // Explicit wiring, no autowire/autoconfigure — see config/services.php for
+        // the Symfony reusable-bundle rule and its citation.
+        $services = $container->services();
+
+        $satellite = self::stringKeyed($config['satellite'] ?? null);
+        $google = self::stringKeyed($satellite['google'] ?? null);
+        $custom = self::stringKeyed($satellite['custom'] ?? null);
+
+        $provider = \is_string($satellite['provider'] ?? null) ? $satellite['provider'] : AtlasConfiguration::PROVIDER_ESRI;
+        $maxZoom = \is_int($satellite['max_zoom'] ?? null) ? $satellite['max_zoom'] : AtlasConfiguration::DEFAULT_MAX_ZOOM;
+
+        $builder->setParameter('atlas.satellite.provider', $provider);
+        $builder->setParameter('atlas.satellite.max_zoom', $maxZoom);
+
+        /*
+         * The configured source as ONE service, so the Twig contract and the
+         * catalogue tile cannot disagree about what this deployment draws.
+         *
+         * The api key normally arrives as an env placeholder and stays one: it is
+         * passed straight through as an argument and resolved at runtime, so a
+         * cached container is not a file with a key in it.
+         */
+        $services->set('atlas.satellite_source', SatelliteSource::class)
+            ->args([
+                $provider,
+                \is_string($google['api_key'] ?? null) ? $google['api_key'] : '',
+                \is_string($custom['url_template'] ?? null) ? $custom['url_template'] : null,
+                \is_string($custom['attribution'] ?? null) ? $custom['attribution'] : null,
+                $maxZoom,
+            ]);
+
+        /*
+         * The Twig function that publishes it, registered wherever there is a
+         * Twig at all. Checked through kernel.bundles rather than class_exists():
+         * twig/twig is a hard dependency of this package, so the class is
+         * autoloadable in our own test runs even when TwigBundle is absent, and
+         * the tag would then reference a twig service that does not exist.
+         */
+        $bundles = $builder->hasParameter('kernel.bundles') ? $builder->getParameter('kernel.bundles') : [];
+        if (\is_array($bundles) && isset($bundles['TwigBundle'])) {
+            $services->set('atlas.twig_extension', MapExtension::class)
+                ->args([service('atlas.satellite_source')])
+                ->tag('twig.extension');
+        }
+    }
+
+    /**
+     * Narrow a config sub-tree to the shape the rest of this class relies on.
+     * The tree guarantees it already; the analyser sees only mixed.
+     *
+     * @return array<string, mixed>
+     */
+    private static function stringKeyed(mixed $value): array
+    {
+        if (!\is_array($value)) {
+            return [];
+        }
+
+        $narrowed = [];
+        foreach ($value as $key => $item) {
+            if (\is_string($key)) {
+                $narrowed[$key] = $item;
+            }
+        }
+
+        return $narrowed;
+    }
+}

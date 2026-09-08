@@ -1,0 +1,50 @@
+{
+    "name": "uhifadhi/atlas-bundle",
+    "type": "symfony-bundle",
+    "description": "The uhifadhi atlas: the platform's map machinery — self-hosted Leaflet, the basemap contract, the boundary drawing and the chrome every map wears.",
+    "keywords": [
+        "basemap",
+        "conservation",
+        "geojson",
+        "leaflet",
+        "map",
+        "symfony",
+        "symfony-ux",
+        "tiles",
+        "uhifadhi"
+    ],
+    "license": "AGPL-3.0-or-later",
+    "authors": [
+        {
+            "name": "Ezekiel Mjema",
+            "homepage": "https://github.com/eemjema"
+        }
+    ],
+    "require": {
+        "php": ">=8.4",
+        "symfony/asset-mapper": "^7.3 || ^8.0",
+        "symfony/config": "^7.3 || ^8.0",
+        "symfony/dependency-injection": "^7.3 || ^8.0",
+        "symfony/framework-bundle": "^7.3 || ^8.0",
+        "symfony/http-kernel": "^7.3 || ^8.0",
+        "symfony/ux-chartjs": "^2.20 || ^3.0",
+        "symfony/ux-map": "^2.20 || ^3.0",
+        "twig/twig": "^3.14",
+        "uhifadhi/shell-bundle": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Uhifadhi\\Bundle\\AtlasBundle\\": ""
+        },
+        "exclude-from-classmap": [
+            "/tests/"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Uhifadhi\\Bundle\\AtlasBundle\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

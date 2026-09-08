@@ -1,0 +1,122 @@
+/*
+ * This file is part of the UhifadhiLabs Map Module.
+ *
+ * (c) Ezekiel Mjema <https://github.com/eemjema>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+/* THE PLATFORM'S ONE MAP STYLESHEET — the shared plate, imagery frame and the
+   chrome that chrome.js builds, styled ONCE so every map on the platform reads
+   identically. A consumer links it beside Leaflet's own sheet
+   (AtlasBundle::STYLESHEET / ::LEAFLET_CSS).
+
+   The theme tokens (--c-acc, --font-mono, …) come from the shell stylesheet a
+   consumer already loads; the map-only --z-* tokens are defined here so this
+   sheet is self-contained for the ground, the labels and the boundary colour. */
+
+:root {
+    --z-ink: #0A0F0C;      /* map-chrome ground: labels, control pills, halos */
+    --z-paper: #F5F7F3;    /* map-chrome ink on that ground */
+    --z-imagery: #20241F;  /* what shows through before a tile has loaded */
+    --z-aoi: #49E6B4;      /* the AOI boundary layer — its legend colour */
+}
+
+/* ---- the imagery frame -------------------------------------------------- */
+/* The map's ground. Leaflet fills it; the gradient is what a slow tile shows. */
+.viewer {
+    position: relative; border-radius: 10px; overflow: hidden;
+    height: min(58vh, 560px); margin-top: 8px;
+    background:
+        radial-gradient(340px 240px at 28% 38%, var(--z-imagery) 0%, transparent 70%),
+        radial-gradient(420px 300px at 72% 62%, var(--z-imagery) 0%, transparent 70%),
+        var(--z-imagery);
+}
+/* The Leaflet container fills the frame; it carries .map-chrome-host. */
+.viewer .map-canvas { position: absolute; inset: 0; isolation: isolate; }
+.leaflet-container { width: 100%; height: 100%; font: inherit; background: var(--z-imagery); }
+/* A caption riding on the imagery (source label, scale text). */
+.viewer .ol {
+    position: absolute; z-index: 500; left: 10px; bottom: 10px;
+    font: 600 10px var(--font-mono); color: var(--z-paper); letter-spacing: .04em;
+    background: color-mix(in srgb, var(--z-ink) 78%, transparent);
+    border: 1px solid color-mix(in srgb, var(--z-paper) 22%, transparent);
+    border-radius: 6px; padding: 4px 8px;
+}
+
+/* ---- the chrome chrome.js builds --------------------------------------- */
+/* The chrome shares the page's stacking context with modals; isolating it keeps
+   a zoom pill from floating over a dialog, and keeps the controls painting only
+   while the tile pane is still empty. */
+.map-chrome-host { isolation: isolate; }
+
+.map-chrome { position: absolute; z-index: 6; right: 10px; top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.map-chrome button {
+    width: 26px; height: 26px; display: grid; place-items: center; padding: 0;
+    background: rgba(10, 14, 11, .72); border: 1px solid rgba(234, 242, 236, .18);
+    border-radius: 6px; color: #eaf2ec; font: 600 13px var(--font-mono); cursor: pointer;
+}
+.map-chrome button svg { width: 14px; height: 14px; }
+.map-chrome button.on { background: rgb(var(--c-acc)); color: rgb(var(--c-accT)); border-color: transparent; }
+.map-chrome button:focus-visible,
+.map-chrome-menu button:focus-visible { outline: 2px solid rgb(var(--c-acc)); outline-offset: 2px; }
+
+/* Closed until the layers pill opens it. `hidden` alone loses to the display. */
+.map-chrome-menu[hidden] { display: none; }
+.map-chrome-menu {
+    position: absolute; z-index: 6; right: 44px; top: 74px;
+    display: flex; flex-direction: column; gap: 2px; padding: 4px;
+    background: rgba(10, 14, 11, .88); border: 1px solid rgba(234, 242, 236, .18); border-radius: 8px;
+}
+.map-chrome-menu button {
+    font: 700 10px var(--font-mono); letter-spacing: .08em; text-transform: uppercase;
+    color: #eaf2ec; padding: 5px 9px; border-radius: 6px; cursor: pointer;
+    background: none; border: 0; text-align: left;
+}
+.map-chrome-menu button.on { background: rgb(var(--c-acc)); color: rgb(var(--c-accT)); }
+
+/* The scroll bargain: a plain wheel over a map scrolls the page and flashes
+   this; Ctrl/Cmd + wheel zooms. Never shown in full screen, where the wheel
+   zooms outright because there is no page behind the map. */
+.map-chrome-hint {
+    position: absolute; inset: 0; z-index: 7; display: grid; place-items: center;
+    font: 600 12px var(--font-mono); color: #eaf2ec; letter-spacing: .04em;
+    background: rgba(10, 14, 11, .55); pointer-events: none;
+    opacity: 0; transition: opacity 180ms ease;
+}
+.map-chrome-hint.on { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .map-chrome-hint { transition: none; } }
+
+/* ---- Leaflet's own controls, dressed as the same overlay pills --------- */
+.leaflet-control-zoom a {
+    background: rgba(8, 13, 10, .72); color: #F5F7F3; border: 1px solid rgba(245, 247, 243, .25);
+}
+.leaflet-control-zoom a:hover,
+.leaflet-control-zoom a:focus,
+.leaflet-control-zoom a:active { background: rgba(8, 13, 10, .9); color: #F5F7F3; }
+.map-chrome-host .leaflet-control-attribution,
+.map-chrome-host .leaflet-control-scale-line {
+    font: 600 9px var(--font-mono); color: #eaf2ec; letter-spacing: .04em;
+    background: rgba(10, 14, 11, .72); border: 1px solid rgba(234, 242, 236, .18);
+    border-radius: 6px; padding: 3px 7px;
+}
+.map-chrome-host .leaflet-control-attribution a { color: #eaf2ec; }
+.map-chrome-host .leaflet-control-scale-line { border-top: 0; }
+.map-chrome-host .leaflet-tooltip {
+    font: 600 10px var(--font-mono); color: #eaf2ec; background: rgba(10, 14, 11, .88);
+    border: 1px solid rgba(234, 242, 236, .18); border-radius: 6px; box-shadow: none;
+}
+.map-chrome-host .leaflet-tooltip::before { display: none; }
+
+/* ---- overlays a plate draws over the imagery -------------------------- */
+/* The permanent zone name on its own polygon — a halo, so it survives imagery. */
+.zone-label, .leaflet-tooltip.zone-label {
+    background: none; border: 0; box-shadow: none; padding: 0;
+    font: 700 11.5px var(--font-mono); letter-spacing: .04em; color: var(--z-paper);
+    text-shadow: 0 0 3px var(--z-ink), 0 0 3px var(--z-ink), 0 0 3px var(--z-ink);
+}
+.leaflet-tooltip.zone-label::before { display: none; }
+
+/* Fullscreen takes the whole card; the plate fills it. */
+.c:fullscreen .viewer { height: auto; flex: 1; min-height: 0; }

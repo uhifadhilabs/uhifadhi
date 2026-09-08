@@ -1,0 +1,12 @@
+{
+    "name": "@uhifadhi/atlas-bundle",
+    "description": "The platform's shared map modules — the basemap contract, the boundary drawing and the map chrome, contributed into a host's importmap by Flex.",
+    "license": "AGPL-3.0-or-later",
+    "symfony": {
+        "importmap": {
+            "uhifadhi/basemaps": "path:%PACKAGE%/basemaps.js",
+            "uhifadhi/boundary": "path:%PACKAGE%/boundary.js",
+            "uhifadhi/map-chrome": "path:%PACKAGE%/chrome.js"
+        }
+    }
+}

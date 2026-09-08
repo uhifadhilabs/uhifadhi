@@ -14,10 +14,11 @@ declare(strict_types=1);
 namespace Uhifadhi\Core\Tests\Application;
 
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
-use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 use Symfony\Component\HttpKernel\Kernel as BaseKernel;
+use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
+use Uhifadhi\Bundle\ShellBundle\ShellBundle;
 
 /**
  * THE THROWAWAY APPLICATION the core's own functional tests run inside.
@@ -78,7 +79,12 @@ final class Kernel extends BaseKernel
         ]);
     }
 
-    protected function configureRoutes(LoaderInterface $loader): void
+    protected function configureRoutes(RoutingConfigurator $routes): void
     {
+        // The shell ships its welcome route as a RESOURCE it never loads; an
+        // application imports it, or does not, and owns the address either way.
+        // This one does, because a throwaway app with no route at all cannot
+        // answer whether the core serves a page.
+        $routes->import(ShellBundle::ROUTES);
     }
 }
