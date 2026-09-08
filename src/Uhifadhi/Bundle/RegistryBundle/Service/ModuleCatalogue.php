@@ -15,7 +15,7 @@ namespace Uhifadhi\Bundle\RegistryBundle\Service;
 
 use Uhifadhi\Bundle\RegistryBundle\Entity\Module;
 use Uhifadhi\Bundle\RegistryBundle\Repository\ModuleRepository;
-use Uhifadhi\ModuleContracts\ModuleProviderInterface;
+use Uhifadhi\Contracts\ModuleProviderInterface;
 
 /**
  * WHAT MODULES THIS DEPLOYMENT HAS — read once, in one place, by everything that

@@ -13,8 +13,8 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\RegistryBundle\Service;
 
-use Uhifadhi\ModuleContracts\ModulePermission;
-use Uhifadhi\ModuleContracts\ModuleProviderInterface;
+use Uhifadhi\Contracts\ModulePermission;
+use Uhifadhi\Contracts\ModuleProviderInterface;
 
 /**
  * THE PERMISSIONS INSTALLED MODULES DECLARE — gathered, and handed over.

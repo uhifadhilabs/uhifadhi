@@ -18,7 +18,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 use Uhifadhi\Bundle\RegistryBundle\DependencyInjection\RegistryConfiguration;
-use Uhifadhi\ModuleContracts\ModuleProviderInterface;
+use Uhifadhi\Contracts\ModuleProviderInterface;
 
 /**
  * THE REGISTRY — the runtime every uhifadhi module registers with.
@@ -77,6 +77,24 @@ final class RegistryBundle extends AbstractBundle
 
     /** Config lives under "registry:", not the class-derived "registry_bundle:". */
     protected string $extensionAlias = 'registry';
+
+    /**
+     * THE BUNDLE CLASS SITS AT THE PACKAGE ROOT, beside this bundle's own
+     * composer.json, because after a split the package root IS the bundle
+     * root.
+     *
+     * AbstractBundle assumes otherwise. Its default "assume the modern
+     * directory structure" answer is `dirname($file, 2)`, which is right for a
+     * bundle whose class lives in src/ and two directories too high for one
+     * whose class lives at the root — templates/ and public/ would be looked
+     * for outside the package.
+     *
+     * @see vendor/symfony/dependency-injection/Kernel/AbstractBundle.php
+     */
+    public function getPath(): string
+    {
+        return __DIR__;
+    }
 
     public function configure(DefinitionConfigurator $definition): void
     {

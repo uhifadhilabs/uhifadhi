@@ -15,7 +15,7 @@ namespace Uhifadhi\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
-use Uhifadhi\ModuleContracts\Entity\AreaInterface;
+use Uhifadhi\Contracts\Entity\AreaInterface;
 
 /**
  * THE HOST'S AREA, PLAYED BY A STAND-IN — and the reason the registry needs a
@@ -28,7 +28,7 @@ use Uhifadhi\ModuleContracts\Entity\AreaInterface;
  *
  * The answer is Doctrine's own: the registry maps the association to
  * {@see AreaInterface} — the platform's area contract, now published by
- * uhifadhi/module-contracts — and the host resolves that interface to its real
+ * uhifadhi/contracts — and the host resolves that interface to its real
  * entity with `doctrine.orm.resolve_target_entities`. This fixture is a host,
  * minimally — a real entity in the host's namespace, implementing the contract,
  * autoloaded in this suite alone (see composer.json autoload-dev).
@@ -43,7 +43,7 @@ use Uhifadhi\ModuleContracts\Entity\AreaInterface;
  * `Uhifadhi\Trunk\` → `Uhifadhi\Bundle\RegistryBundle\`, and this class did not move once,
  * because a stub follows the class it impersonates and the host was never
  * renamed. The `use` statement above DID follow — that is the platform's area
- * contract (module-contracts), not the impersonation. Sweeping the namespace on line 14 into a
+ * contract (the contracts package), not the impersonation. Sweeping the namespace on line 14 into a
  * rename would break nothing and fail nothing; it would simply stop testing
  * what this file exists to test. A project installed
  * from the skeleton names its area `App\Entity\AreaOfInterest` instead; either

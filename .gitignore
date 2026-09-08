@@ -10,3 +10,5 @@
 *.iml
 /src/Uhifadhi/Bundle/*/config/reference.php
 /src/Uhifadhi/Bundle/*/.composer-require-checker.json
+/tests/Application/config/reference.php
+/var/

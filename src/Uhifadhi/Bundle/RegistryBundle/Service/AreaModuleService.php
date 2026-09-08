@@ -16,7 +16,7 @@ namespace Uhifadhi\Bundle\RegistryBundle\Service;
 use Doctrine\ORM\EntityManagerInterface;
 use Uhifadhi\Bundle\RegistryBundle\Entity\AreaModule;
 use Uhifadhi\Bundle\RegistryBundle\Repository\AreaModuleRepository;
-use Uhifadhi\ModuleContracts\Entity\AreaInterface;
+use Uhifadhi\Contracts\Entity\AreaInterface;
 
 /**
  * PER-AREA INSTALL STATE: what THIS area has switched on, and the writes that

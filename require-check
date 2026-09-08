@@ -13,19 +13,30 @@ declare(strict_types=1);
  */
 
 /*
- * EVERY BUNDLE'S composer.json IS ITS BOUNDARY, CHECKED.
+ * EVERY PACKAGE'S composer.json IS ITS BOUNDARY, CHECKED.
  *
  * `composer-require-checker` fails on any symbol a package uses without
- * declaring the dependency that provides it — which is what makes the per-bundle
- * manifests real rather than decorative, and what makes the future split a
- * no-op. It reads the vendor directory next to the composer.json it is given
- * (`config.vendor-dir`, default `vendor/`), and a monorepo's bundles have no
- * vendor directory of their own: they share the root's.
+ * declaring the dependency that provides it — which is what makes the
+ * per-package manifests real rather than decorative, and what makes the future
+ * split a no-op.
+ *
+ * Two things have to be arranged before it can run against a monorepo, and both
+ * follow from how it locates a dependency's sources: it reads
+ * `<package>/<config.vendor-dir>/composer/installed.json` for the autoload of
+ * every package in `require`, then reads that package's files from
+ * `<package>/<config.vendor-dir>/<name>`.
  * @see vendor/maglnet/composer-require-checker/src/ComposerRequireChecker/FileLocator/LocateComposerPackageDirectDependenciesSourceFiles.php
  *
- * So each bundle's manifest is copied beside itself with that one key added and
- * the checker is pointed at the copy. The published composer.json stays free of
- * a path that only makes sense before the split.
+ *   1. A bundle here has no vendor directory of its own: it shares the root's.
+ *   2. The packages it depends on that live in THIS repository — the contracts,
+ *      and one bundle on another — are not in vendor/ at all, because Composer
+ *      resolves them through the root `replace` block.
+ *
+ * So an overlay vendor directory is built once: every real vendor entry
+ * symlinked into it, plus a symlink per in-repository package, and an
+ * installed.json that describes them all. Each manifest is then copied beside
+ * itself with `config.vendor-dir` pointing at the overlay. The published
+ * composer.json stays free of a path that only makes sense before the split.
  *
  * The whitelist in composer-require-checker.dist.json exists for one reason: a
  * PHP service file declares the configurator's own namespace, so `service()`,
@@ -34,24 +45,68 @@ declare(strict_types=1);
  */
 
 $root = __DIR__;
-$bundles = glob($root.'/src/Uhifadhi/Bundle/*/composer.json') ?: [];
-sort($bundles);
-
+$overlay = $root.'/var/require-check/vendor';
 $checker = $root.'/vendor/bin/composer-require-checker';
+
+$manifests = [
+    ...glob($root.'/src/Uhifadhi/Contracts/composer.json') ?: [],
+    ...glob($root.'/src/Uhifadhi/Bundle/*/composer.json') ?: [],
+];
+
+/** @var array<string, array{name: string, dir: string, autoload: array<string, mixed>}> $local */
+$local = [];
+foreach ($manifests as $manifest) {
+    $json = json_decode((string) file_get_contents($manifest), true, 512, \JSON_THROW_ON_ERROR);
+    \assert(\is_array($json) && \is_string($json['name']));
+    $local[$json['name']] = [
+        'name' => $json['name'],
+        'dir' => \dirname($manifest),
+        'autoload' => \is_array($json['autoload'] ?? null) ? $json['autoload'] : [],
+    ];
+}
+
+// The overlay, rebuilt from scratch so a removed dependency cannot linger.
+exec('rm -rf '.escapeshellarg(\dirname($overlay)));
+mkdir($overlay.'/composer', 0o777, true);
+
+foreach (glob($root.'/vendor/*/*', \GLOB_ONLYDIR) ?: [] as $package) {
+    $link = $overlay.'/'.basename(\dirname($package)).'/'.basename($package);
+    if (!is_dir(\dirname($link))) {
+        mkdir(\dirname($link), 0o777, true);
+    }
+    symlink($package, $link);
+}
+
+$installed = json_decode((string) file_get_contents($root.'/vendor/composer/installed.json'), true, 512, \JSON_THROW_ON_ERROR);
+\assert(\is_array($installed));
+
+foreach ($local as $package) {
+    $link = $overlay.'/'.$package['name'];
+    if (!is_dir(\dirname($link))) {
+        mkdir(\dirname($link), 0o777, true);
+    }
+    if (!file_exists($link)) {
+        symlink($package['dir'], $link);
+    }
+    $installed['packages'][] = ['name' => $package['name'], 'version' => 'dev-main', 'autoload' => $package['autoload']];
+}
+
+file_put_contents($overlay.'/composer/installed.json', json_encode($installed, \JSON_UNESCAPED_SLASHES | \JSON_THROW_ON_ERROR));
+
 $status = 0;
 
-foreach ($bundles as $manifest) {
+foreach ($manifests as $manifest) {
     $dir = \dirname($manifest);
-    $name = basename($dir);
-
     $json = json_decode((string) file_get_contents($manifest), true, 512, \JSON_THROW_ON_ERROR);
     \assert(\is_array($json));
-    $json['config']['vendor-dir'] = str_repeat('../', 4).'vendor';
+
+    $depth = substr_count(substr($dir, \strlen($root) + 1), '/') + 1;
+    $json['config']['vendor-dir'] = str_repeat('../', $depth).'var/require-check/vendor';
 
     $copy = $dir.'/.composer-require-checker.json';
     file_put_contents($copy, json_encode($json, \JSON_PRETTY_PRINT | \JSON_UNESCAPED_SLASHES | \JSON_THROW_ON_ERROR));
 
-    echo \PHP_EOL, '== ', $name, \PHP_EOL;
+    echo \PHP_EOL, '== ', basename($dir), \PHP_EOL;
     passthru(
         escapeshellarg($checker)
         .' check --config-file='.escapeshellarg($root.'/composer-require-checker.dist.json')

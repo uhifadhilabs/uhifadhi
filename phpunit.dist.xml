@@ -8,7 +8,11 @@
          failOnNotice="true"
          failOnWarning="true">
     <php>
-        <env name="KERNEL_CLASS" value="Uhifadhi\Core\Tests\Application\Kernel"/>
+        <!--
+            No KERNEL_CLASS. The core is one repository with one phpunit config
+            and several bundles, so an env var can only ever name one of their
+            kernels; every test base names its own in code instead.
+        -->
         <!--
             ONE database for the whole core. The bundles here are tagged and
             released together, so their suites can never be run against two
@@ -19,9 +23,15 @@
              value="postgresql://app:app@127.0.0.1:5434/uhifadhi_core_test?serverVersion=17&amp;charset=utf8"/>
     </php>
     <testsuites>
-        <!-- One suite per bundle: a suite is a package, exactly as after a split. -->
+        <!-- One suite per package: a suite is a package, exactly as after a split. -->
+        <testsuite name="Contracts">
+            <directory>src/Uhifadhi/Contracts/tests</directory>
+        </testsuite>
         <testsuite name="RegistryBundle">
             <directory>src/Uhifadhi/Bundle/RegistryBundle/tests</directory>
+        </testsuite>
+        <testsuite name="ShellBundle">
+            <directory>src/Uhifadhi/Bundle/ShellBundle/tests</directory>
         </testsuite>
     </testsuites>
     <source restrictNotices="true" restrictWarnings="true">

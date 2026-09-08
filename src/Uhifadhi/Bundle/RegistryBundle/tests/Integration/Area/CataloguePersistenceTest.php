@@ -17,8 +17,8 @@ use Doctrine\ORM\Mapping\ClassMetadata;
 use Uhifadhi\Bundle\RegistryBundle\Entity\AreaModule;
 use Uhifadhi\Bundle\RegistryBundle\Entity\Module;
 use Uhifadhi\Bundle\RegistryBundle\Tests\Integration\InstallationTestCase;
+use Uhifadhi\Contracts\Entity\AreaInterface;
 use Uhifadhi\Entity\AreaOfInterest;
-use Uhifadhi\ModuleContracts\Entity\AreaInterface;
 
 /**
  * WHAT THE EXTRACTION MOVES, AND WHAT IT MUST NOT RENAME.
@@ -104,7 +104,7 @@ final class CataloguePersistenceTest extends InstallationTestCase
         self::assertSame(AreaOfInterest::class, $association->targetEntity,
             'the host resolved the registry\'s area interface to its own entity');
         self::assertTrue(interface_exists(AreaInterface::class),
-            'and the contract the registry maps is the platform\'s to publish (module-contracts)');
+            'and the contract the registry maps is the platform\'s to publish (the contracts package)');
     }
 
     /**

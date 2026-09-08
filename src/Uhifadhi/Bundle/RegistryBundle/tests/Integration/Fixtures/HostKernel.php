@@ -58,7 +58,7 @@ class HostKernel extends TestKernel
         $container->extension('doctrine', [
             'orm' => [
                 'resolve_target_entities' => [
-                    \Uhifadhi\ModuleContracts\Entity\AreaInterface::class => \Uhifadhi\Entity\AreaOfInterest::class,
+                    \Uhifadhi\Contracts\Entity\AreaInterface::class => \Uhifadhi\Entity\AreaOfInterest::class,
                 ],
                 'mappings' => [
                     'TestHost' => [

@@ -15,7 +15,7 @@ namespace Uhifadhi\Bundle\RegistryBundle\Service;
 
 use Uhifadhi\Bundle\RegistryBundle\Enum\ModuleCategory;
 use Uhifadhi\Bundle\RegistryBundle\Enum\ModuleStatus;
-use Uhifadhi\ModuleContracts\ModuleProviderInterface;
+use Uhifadhi\Contracts\ModuleProviderInterface;
 
 /**
  * A provider's answers, turned into a catalogue row.

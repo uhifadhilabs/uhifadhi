@@ -1,0 +1,43 @@
+{
+    "name": "uhifadhi/contracts",
+    "type": "library",
+    "description": "The contracts a uhifadhi module declares itself with: the module provider, the permissions it declares, the area and user entity contracts, the user badge and the devkit seam.",
+    "keywords": [
+        "abstractions",
+        "contract",
+        "decoupling",
+        "interfaces",
+        "module",
+        "symfony",
+        "uhifadhi"
+    ],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Ezekiel Mjema",
+            "homepage": "https://github.com/eemjema"
+        }
+    ],
+    "require": {
+        "php": ">=8.4",
+        "ext-mbstring": "*"
+    },
+    "replace": {
+        "uhifadhi/module-contracts": "self.version"
+    },
+    "autoload": {
+        "psr-4": {
+            "Uhifadhi\\Contracts\\": ""
+        },
+        "exclude-from-classmap": [
+            "/tests/"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Uhifadhi\\Contracts\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

@@ -17,7 +17,7 @@ use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Uid\Uuid;
 use Uhifadhi\Bundle\RegistryBundle\Entity\AreaModule;
-use Uhifadhi\ModuleContracts\Entity\AreaInterface;
+use Uhifadhi\Contracts\Entity\AreaInterface;
 
 /**
  * Per-area install state, read in the area's own order.

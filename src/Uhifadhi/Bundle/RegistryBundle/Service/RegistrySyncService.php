@@ -18,8 +18,8 @@ use Uhifadhi\Bundle\RegistryBundle\Entity\AreaModule;
 use Uhifadhi\Bundle\RegistryBundle\Entity\Module;
 use Uhifadhi\Bundle\RegistryBundle\Repository\AreaModuleRepository;
 use Uhifadhi\Bundle\RegistryBundle\Repository\ModuleRepository;
-use Uhifadhi\ModuleContracts\Entity\AreaInterface;
-use Uhifadhi\ModuleContracts\ModuleProviderInterface;
+use Uhifadhi\Contracts\Entity\AreaInterface;
+use Uhifadhi\Contracts\ModuleProviderInterface;
 
 /**
  * RECONCILE THE REGISTRY WITH WHAT IS INSTALLED — what a deploy does.

@@ -5,9 +5,8 @@ the module catalogue, the per-area record of what is switched on, the
 permissions modules declare, and the automatic sync that keeps the catalogue in
 step with what is installed. It renders nothing.
 
-One of the bundles of the uhifadhi core, `uhifadhi/uhifadhi` — released as
-`uhifadhi/registry-bundle` when the core is split. History: this bundle was the
-package `uhifadhi/seam-module` until the core consolidation.
+One of the bundles of the uhifadhi core, `uhifadhi/uhifadhi`. It can be
+installed on its own as `uhifadhi/registry-bundle`.
 
 ## Contents
 

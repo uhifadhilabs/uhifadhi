@@ -25,9 +25,9 @@ Every row below is a test, and the table is the order they were written in:
 
 ## Parking closes the routes
 
-Parking a module used to be a tidier menu. It is a decision now: where an area
-has parked a module, every one of that module's pages answers **404**, and it
-answers before the module's controller is asked anything.
+Parking a module is a decision, not a tidier menu: where an area has parked a
+module, every one of that module's pages answers **404**, and it answers before
+the module's controller is asked anything.
 
 **404, not 403.** A 403 confirms the thing exists and is being withheld; parking
 withholds nothing. The module is not part of this area — which is exactly what

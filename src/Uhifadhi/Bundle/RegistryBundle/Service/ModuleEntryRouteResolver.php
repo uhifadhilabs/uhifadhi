@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\RegistryBundle\Service;
 
-use Uhifadhi\ModuleContracts\ModuleProviderInterface;
+use Uhifadhi\Contracts\ModuleProviderInterface;
 
 /**
  * WHERE A MODULE'S TILE LINKS — the one piece of routing the registry carries, and

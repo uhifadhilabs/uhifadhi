@@ -50,7 +50,7 @@ module — map, widget, storage, area, team — is machinery a screen already re
 on: installed means on, everywhere, and there is no honest per-area choice to
 offer for something whose absence breaks screens rather than removing features.
 An infrastructure module therefore carries **no** `uhifadhi.module` provider. It
-is guaranteed present by the composer graph (area-module hard-requires map, for
+is guaranteed present by the composer graph (AreaBundle hard-requires map, for
 one), not by a ledger row, so it appears in **no** catalogue, in **no** per-area
 grid, and in **no** `area_module` row. The distinction is a property of the
 bundle — whether it tags a provider — not a flag the registry reads; the registry simply
@@ -90,7 +90,7 @@ in a list, nothing more.
 | The Symfony plug, and the `uhifadhi.module` tag | `RegistryBundle.php` |
 | Config tree (`registry:`) | `DependencyInjection/RegistryConfiguration.php` |
 | Static service wiring, and the published ids | `config/services.php` |
-| The area contract, which a bundle answers | `Uhifadhi\ModuleContracts\Entity\AreaInterface` |
+| The area contract, which a bundle answers | `Uhifadhi\Contracts\Entity\AreaInterface` |
 | The catalogue and the per-area ledger | `Entity/`, `Repository/` |
 | The runtime | `Service/` |
 | The route gate, applied to every request | `EventListener/ParkedModuleListener.php` |

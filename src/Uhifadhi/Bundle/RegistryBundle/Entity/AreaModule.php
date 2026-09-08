@@ -17,7 +17,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Uhifadhi\Bundle\RegistryBundle\Entity\Trait\TimestampableTrait;
 use Uhifadhi\Bundle\RegistryBundle\Entity\Trait\UuidTrait;
 use Uhifadhi\Bundle\RegistryBundle\Repository\AreaModuleRepository;
-use Uhifadhi\ModuleContracts\Entity\AreaInterface;
+use Uhifadhi\Contracts\Entity\AreaInterface;
 
 /**
  * A {@see Module} as one area holds it: on the area's sub-nav or parked in its

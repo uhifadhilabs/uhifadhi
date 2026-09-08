@@ -13,9 +13,9 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\RegistryBundle\Tests\Integration\Fixtures;
 
-use Uhifadhi\ModuleContracts\ModulePermission;
-use Uhifadhi\ModuleContracts\ModuleProviderInterface;
-use Uhifadhi\ModuleContracts\ModuleProviderTrait;
+use Uhifadhi\Contracts\ModulePermission;
+use Uhifadhi\Contracts\ModuleProviderInterface;
+use Uhifadhi\Contracts\ModuleProviderTrait;
 
 /**
  * A module, dialled to whatever a given specification needs. Fictional on

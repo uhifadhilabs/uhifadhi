@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\RegistryBundle\Tests\Integration\Fixtures;
 
-use Uhifadhi\ModuleContracts\ModuleProviderInterface;
+use Uhifadhi\Contracts\ModuleProviderInterface;
 
 /**
  * Everything that reached the module tag, in registration order — the registry's

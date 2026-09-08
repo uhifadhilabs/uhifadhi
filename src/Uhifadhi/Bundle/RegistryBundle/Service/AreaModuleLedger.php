@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\RegistryBundle\Service;
 
 use Uhifadhi\Bundle\RegistryBundle\Repository\AreaModuleRepository;
-use Uhifadhi\ModuleContracts\Entity\AreaInterface;
+use Uhifadhi\Contracts\Entity\AreaInterface;
 
 /**
  * WHAT THIS AREA HAS AND WHAT IT DOES NOT — read once, in one place.

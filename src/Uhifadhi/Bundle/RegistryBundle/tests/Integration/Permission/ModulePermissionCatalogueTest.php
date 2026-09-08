@@ -15,7 +15,7 @@ namespace Uhifadhi\Bundle\RegistryBundle\Tests\Integration\Permission;
 
 use Uhifadhi\Bundle\RegistryBundle\Service\ModulePermissionCatalogue;
 use Uhifadhi\Bundle\RegistryBundle\Tests\Integration\InstallationTestCase;
-use Uhifadhi\ModuleContracts\ModulePermission;
+use Uhifadhi\Contracts\ModulePermission;
 
 /**
  * SPEC 6 — PERMISSIONS DECLARED BY MODULES, SURFACED THROUGH THE REGISTRY.
@@ -151,7 +151,7 @@ final class ModulePermissionCatalogueTest extends InstallationTestCase
      * registry, which is the only place the "never grants" rule can actually be
      * enforced rather than promised.
      *
-     * The description joined the shape in module-contracts v0.3.0 and changes
+     * The description joined the shape in the contracts package v0.3.0 and changes
      * nothing about that rule: it is prose for the administrator reading the
      * matrix, not a fourth thing the module gets to decide about who holds what.
      */

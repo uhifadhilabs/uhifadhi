@@ -20,11 +20,9 @@ use PHPUnit\Framework\TestCase;
  * THE BOUNDARIES, ENFORCED BY A SWEEP OF THE SHIPPED SOURCE.
  *
  * These are cheap, crude tests that read the shipped source as text, and they
- * are the only kind that can catch what they catch: a consolidation is a large
- * move under time pressure, and "just this one reference, for now" is how a
- * runtime acquires a dependency on a module. They were written before the
- * extraction that made this a bundle of its own and their job is to still be
- * green long after it.
+ * are the only kind that can catch what they catch: "just this one reference,
+ * for now" is how a runtime acquires a dependency on a module, and no type
+ * system objects to it.
  *
  * Four rules:
  *
@@ -65,7 +63,10 @@ final class BoundaryTest extends TestCase
     {
         $offenders = [];
         foreach (self::sources() as $path => $code) {
-            if (1 === preg_match('/\b'.preg_quote($name, '/').'\b/i', $code)) {
+            // A backslash on either side means the word is a namespace segment
+            // of somebody else's FQCN (Symfony's Token\Storage\, for one), not a
+            // module this bundle named.
+            if (1 === preg_match('/(?<![\\\\\w])'.preg_quote($name, '/').'(?![\\\\\w])/i', $code)) {
                 $offenders[] = $path;
             }
         }
@@ -146,10 +147,10 @@ final class BoundaryTest extends TestCase
     }
 
     /**
-     * NO COMMANDS IN THE CORE. Reconciling the catalogue used to be a console
-     * command an operator had to remember; it is a cache warmer now, and devkit
-     * — a dev-only package — owns every command the platform has. A `Command/`
-     * directory here is that ruling being undone by accident.
+     * NO COMMANDS IN THE CORE. Reconciling the catalogue is a cache warmer, so
+     * an operator has nothing to remember, and devkit — a dev-only package —
+     * owns every command the platform has. A `Command/` directory here is that
+     * ruling being undone by accident.
      */
     public function testTheRegistryShipsNoConsoleCommand(): void
     {

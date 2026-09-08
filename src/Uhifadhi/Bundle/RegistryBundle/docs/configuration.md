@@ -33,7 +33,7 @@ every tool that walks the association stops:
 ```console
 $ bin/console doctrine:schema:create
 In MappingException.php line 72:
-  Class 'Uhifadhi\ModuleContracts\Entity\AreaInterface' does not exist
+  Class 'Uhifadhi\Contracts\Entity\AreaInterface' does not exist
 ```
 
 Booting is fine — an installation between `composer require` and its first entity
@@ -44,8 +44,8 @@ it settles this one: the registry cannot name an area class, because it holds th
 per-area table for installations whose area model is their own — but the bundle
 that *provides* an area can, and does.
 
-The contract itself is `Uhifadhi\ModuleContracts\Entity\AreaInterface`, published
-by uhifadhi/module-contracts alongside the user contract, because more than the
+The contract itself is `Uhifadhi\Contracts\Entity\AreaInterface`, published
+by uhifadhi/contracts alongside the user contract, because more than the
 registry points at an area.
 
 `AreaBundle` maps its own entity and prepends the resolution, exactly the way
@@ -53,13 +53,11 @@ registry points at an area.
 installation writes no `doctrine.yaml` line at all** — a bare installation
 reaches `doctrine:migrations:diff` with zero doctrine edits.
 
-**This used to be a hand-step**, and it was the fleet's oldest: write a
-placeholder class yourself, then uncomment a block in `config/packages/registry.yaml`.
-A hand-step is for a decision only the installation can make, and "what is an
-area" was only a decision because nothing shipped one. Forgetting either half
-failed a long way from its cause — the container compiled, the kernel booted, and
-the diff stopped on the message above with nothing pointing back at the paragraph
-that was missed.
+**This is deliberately not a hand-step.** A hand-step is for a decision only the
+installation can make, and "what is an area" is not one while a bundle in the
+same package ships an answer. A missed hand-step here would fail a long way from
+its cause — the container compiles, the kernel boots, and the diff stops on the
+message above with nothing pointing back at the paragraph that was skipped.
 
 ### Bringing your own area
 
@@ -73,7 +71,7 @@ application's by design:
 doctrine:
     orm:
         resolve_target_entities:
-            Uhifadhi\ModuleContracts\Entity\AreaInterface: App\Entity\ManagementUnit
+            Uhifadhi\Contracts\Entity\AreaInterface: App\Entity\ManagementUnit
 ```
 
 Merge it into the `doctrine:` block already in that file, under the existing

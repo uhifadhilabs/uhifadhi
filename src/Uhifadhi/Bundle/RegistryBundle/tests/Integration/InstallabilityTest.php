@@ -18,7 +18,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
 use Doctrine\Persistence\Mapping\MappingException;
 use Uhifadhi\Bundle\RegistryBundle\Entity\AreaModule;
-use Uhifadhi\ModuleContracts\Entity\AreaInterface;
+use Uhifadhi\Contracts\Entity\AreaInterface;
 
 /**
  * FROM `composer require` TO TABLES — the claims the registry's recipe makes about
@@ -44,15 +44,15 @@ use Uhifadhi\ModuleContracts\Entity\AreaInterface;
  * 3. THE REGISTRY ANSWERS ITS OWN CONTRACT FOR NOBODY, AND MUST NOT. Whoever knows
  *    the answer states the resolution: the registry does not know one, because it
  *    holds the per-area table for installations whose area model is their own.
- *    So it yields — and that abstention is what lets uhifadhi/area-module
+ *    So it yields — and that abstention is what lets AreaBundle
  *    prepend the answer and an installation write no doctrine line at all. It
  *    is asserted here rather than assumed, because a resolution quietly added
  *    to this bundle would break every installation that brought its own area
  *    and nothing would say so.
  *
  * WHAT THIS SUITE CANNOT DO is install the answer-module and watch the schema
- * build: area-module requires the registry, so the registry requiring it back would be
- * a cycle. That half is pinned on the other side, in area-module's own
+ * build: AreaBundle requires the registry, so the registry requiring it back would be
+ * a cycle. That half is pinned on the other side, in AreaBundle's own
  * `Integration/InstallabilityTest`, which boots this bundle alongside it and
  * asserts all three tables appear with no doctrine configuration at all.
  */
@@ -86,7 +86,7 @@ final class InstallabilityTest extends RegistryKernelTestCase
         $metadata = $em->getMetadataFactory()->getAllMetadata();
 
         $this->expectException(MappingException::class);
-        $this->expectExceptionMessage("Class 'Uhifadhi\\ModuleContracts\\Entity\\AreaInterface' does not exist");
+        $this->expectExceptionMessage("Class 'Uhifadhi\\Contracts\\Entity\\AreaInterface' does not exist");
 
         new SchemaTool($em)->getCreateSchemaSql($metadata);
     }

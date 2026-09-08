@@ -8,7 +8,6 @@
 
 Not released yet.
 
- * imported from the retired `uhifadhi/uhifadhi` as the core's RegistryBundle
- * config root is `registry:`; the namespace is `Uhifadhi\Bundle\RegistryBundle\`
- * the catalogue reconciliation moved from the `the registry sync` command to
-   an automatic cache warmer — the core ships no console commands
+ * the module catalogue, the per-area install ledger and the parking gate
+ * the permissions modules declare, collected for an installation to assign
+ * an automatic registry sync on cache warm-up: the core ships no commands

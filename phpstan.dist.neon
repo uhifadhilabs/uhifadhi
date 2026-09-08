@@ -3,3 +3,8 @@ parameters:
     paths:
         - src
         - tests
+    excludePaths:
+        # Symfony auto-dumps a bundle's config reference ("for apps only") when a
+        # configured bundle boots in debug. It is generated, gitignored, and not
+        # ours to analyse.
+        - */config/reference.php

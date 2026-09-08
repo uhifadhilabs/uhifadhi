@@ -13,8 +13,8 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\RegistryBundle\Tests\Integration\Fixtures;
 
-use Uhifadhi\ModuleContracts\ModuleProviderInterface;
-use Uhifadhi\ModuleContracts\ModuleProviderTrait;
+use Uhifadhi\Contracts\ModuleProviderInterface;
+use Uhifadhi\Contracts\ModuleProviderTrait;
 
 /**
  * THE SMALLEST HONEST MODULE: slug, name, category, and the trait for
