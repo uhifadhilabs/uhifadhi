@@ -73,7 +73,7 @@ filtering.
 {# your module's widgets page #}
 <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Bundle\\ShellBundle\\Widget\\ShellBundle::STYLESHEET')) }}">
 
-{{ include('@UhifadhiWidget/widgets/_library.html.twig', {
+{{ include('@Shell/widget/_library.html.twig', {
     catalog: catalog,
     builtins: catalog.builtins,
     customPresets: customPresets,

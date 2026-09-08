@@ -16,7 +16,7 @@
      * EDITING A CUSTOM PRESET WRITES THROUGH to it, in place.
      * THE CANVAS IS THE DASHBOARD — exactly the composition, never the whole
        catalogue and never a greyed-out ghost of something switched off.
-     * ADDING IS A PICKER (@UhifadhiWidget/widgets/_picker.html.twig).
+     * ADDING IS A PICKER (@Shell/widget/_picker.html.twig).
 
    PARAMETERS — the whole contract, and nothing in here may name a surface:
      catalog        Uhifadhi\Bundle\ShellBundle\Widget\Model\WidgetCatalog
@@ -156,7 +156,7 @@
             product’s own designs, so they are never edited — copy one to make it yours.</p>
         <div class="w-presetrow">
             {% for preset in builtins %}
-                {{ include('@UhifadhiWidget/widgets/_preset_card.html.twig', {
+                {{ include('@Shell/widget/_preset_card.html.twig', {
                     kind: 'design',
                     preset: preset,
                     active: activeKind == 'design' and activeId == preset.id,
@@ -191,7 +191,7 @@
                  compose. Naming happens on save, so there is no "arrange first,
                  then hunt for the save box" step. It needs the script — with none
                  it is a plain link to the same thing one widget at a time. #}
-            {{ include('@UhifadhiWidget/widgets/_preset_card.html.twig', {
+            {{ include('@Shell/widget/_preset_card.html.twig', {
                 kind: 'new',
                 preset: null,
                 active: false,
@@ -202,7 +202,7 @@
             }, with_context: false) }}
 
             {% for preset in customPresets %}
-                {{ include('@UhifadhiWidget/widgets/_preset_card.html.twig', {
+                {{ include('@Shell/widget/_preset_card.html.twig', {
                     kind: 'mine',
                     preset: preset,
                     active: activeKind == 'mine' and activeId == preset.id,
@@ -302,7 +302,7 @@
             {% set shown = 0 %}
             {% for widget in widgets|filter(w => w.on) %}
                 {% set shown = shown + 1 %}
-                {{ include('@UhifadhiWidget/widgets/_canvas_card.html.twig', {
+                {{ include('@Shell/widget/_canvas_card.html.twig', {
                     widget: widget,
                     group: catalog.groups|filter(g => g.id == widget.group)|first,
                     editable: editable,
@@ -320,7 +320,7 @@
         {% endif %}
     </div>
 
-    {{ include('@UhifadhiWidget/widgets/_picker.html.twig', {
+    {{ include('@Shell/widget/_picker.html.twig', {
         catalog: catalog,
         widgets: widgets,
         rendered: rendered,

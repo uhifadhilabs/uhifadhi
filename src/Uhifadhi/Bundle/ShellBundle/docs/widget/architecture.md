@@ -38,7 +38,7 @@ catalogue with a stored row and hands back the layout a page renders.
 
 **3. A shared socket RENDERS.** The library's templates ship here, so every
 dashboard in an installation is arranged through the same screen. A module's
-page includes `@UhifadhiWidget/widgets/_library.html.twig` with its own
+page includes `@Shell/widget/_library.html.twig` with its own
 catalogue and its own routes and gets the whole component.
 
 The split earns itself twice over. **This is machinery every module with a

@@ -3,7 +3,7 @@
  * One widget library, identical on every surface that ships a WidgetCatalog:
  * departments, team, a department's detail and performance tabs, an area's
  * zones, a module's dashboard. A page instantiates it by including
- * @UhifadhiWidget/widgets/_library.html.twig; nothing below knows which dashboard it
+ * @Shell/widget/_library.html.twig; nothing below knows which dashboard it
  * is arranging, and a surface never varies it.
  *
  * THE MODEL (Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService) — there is NO ANONYMOUS LAYOUT. A
