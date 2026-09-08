@@ -19,6 +19,7 @@ use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 use Symfony\Component\HttpKernel\Kernel as BaseKernel;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Uhifadhi\Bundle\RegistryBundle\Security\ApiTokenAuthenticator;
 use Uhifadhi\Bundle\ShellBundle\ShellBundle;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 
@@ -100,6 +101,18 @@ final class Kernel extends BaseKernel
                 ],
             ],
             'firewalls' => [
+                'api_auth' => [
+                    'pattern' => '^/api/auth/token$',
+                    'security' => false,
+                ],
+                'api' => [
+                    'pattern' => '^/api',
+                    'stateless' => true,
+                    'provider' => 'team_user_provider',
+                    'user_checker' => 'team.user_checker',
+                    'custom_authenticators' => [ApiTokenAuthenticator::class],
+                    'entry_point' => ApiTokenAuthenticator::class,
+                ],
                 'main' => [
                     'lazy' => true,
                     'provider' => 'team_user_provider',

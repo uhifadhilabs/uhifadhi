@@ -24,6 +24,8 @@ use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 use Symfony\UX\Icons\UXIconsBundle;
 use Symfony\UX\StimulusBundle\StimulusBundle;
+use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
+use Uhifadhi\Bundle\RegistryBundle\Security\ApiTokenAuthenticator;
 use Uhifadhi\Bundle\ShellBundle\ShellBundle;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\TeamBundle;
@@ -57,6 +59,7 @@ final class TestKernel extends Kernel
         yield new UXIconsBundle();
         yield new DoctrineBundle();
         yield new SecurityBundle();
+        yield new RegistryBundle();
         yield new ShellBundle();
         yield new TeamBundle();
     }
@@ -102,6 +105,33 @@ final class TestKernel extends Kernel
                 ],
             ],
             'firewalls' => [
+                /*
+                 * WHERE A FIELD CLIENT SIGNS IN, deliberately firewall-free: a
+                 * handset whose token has expired still holds it and still
+                 * sends it, and that stale header must never be what stops
+                 * somebody signing in again. The endpoint checks the
+                 * credentials itself.
+                 */
+                'api_auth' => [
+                    'pattern' => '^/api/auth/token$',
+                    'security' => false,
+                ],
+                /*
+                 * THE MACHINE DOOR: bearer tokens, no session, no form, no
+                 * remembering. Stateless is not an optimisation — a client
+                 * syncs in bursts of hundreds after hours offline, and a
+                 * session per burst would be a lie about a conversation that is
+                 * not happening. The entry point is what makes "no token at
+                 * all" a 401 rather than a 403.
+                 */
+                'api' => [
+                    'pattern' => '^/api',
+                    'stateless' => true,
+                    'provider' => 'team_user_provider',
+                    'user_checker' => 'team.user_checker',
+                    'custom_authenticators' => [ApiTokenAuthenticator::class],
+                    'entry_point' => ApiTokenAuthenticator::class,
+                ],
                 'main' => [
                     'lazy' => true,
                     'provider' => 'team_user_provider',
@@ -223,6 +253,8 @@ final class TestKernel extends Kernel
             \Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository::class => \Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository::class,
             \Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository::class => \Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository::class,
             \Uhifadhi\Bundle\TeamBundle\Repository\DepartmentScopeChangeRepository::class => \Uhifadhi\Bundle\TeamBundle\Repository\DepartmentScopeChangeRepository::class,
+            \Uhifadhi\Bundle\TeamBundle\Repository\ApiTokenRepository::class => \Uhifadhi\Bundle\TeamBundle\Repository\ApiTokenRepository::class,
+            \Uhifadhi\Bundle\TeamBundle\Service\ApiTokenManager::class => 'team.api_token.manager',
             \Uhifadhi\Bundle\TeamBundle\Service\SuperAdminInvariant::class => 'team.super_admin_invariant',
             \Uhifadhi\Bundle\TeamBundle\Service\TeamOverview::class => 'team.overview',
             \Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceRegistry::class => 'shell.widget.surfaces',
@@ -239,6 +271,11 @@ final class TestKernel extends Kernel
         // Something behind the firewall, so "an anonymous visitor is sent to
         // /login" is a fact this suite can assert rather than assume.
         $routes->add('guarded', '/_guarded')
+            ->controller(GuardedController::class);
+
+        // The same thing behind the API firewall, so "a bearer token reaches
+        // what a session reaches" is a fact this suite can assert.
+        $routes->add('api_guarded', '/api/_guarded')
             ->controller(GuardedController::class);
 
         // Somewhere else in the shell, open to anybody, so the sidebar suite can

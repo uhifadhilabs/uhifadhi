@@ -15,6 +15,7 @@ installed on its own as `uhifadhi/team-bundle`.
 - [Installation](#installation)
 - [Modules point at your people](#modules-point-at-your-people)
 - [Two axes: tier and position](#two-axes-tier-and-position)
+- [Signing a field client in](#signing-a-field-client-in)
 - [The screens](#the-screens)
 - [Configuration](#configuration)
 - [License](#license)
@@ -109,6 +110,59 @@ is derived from the position's department every time it is asked.
 
 An installation always keeps one active Super Admin. Every write that would
 lower the last one is refused before anything is stored.
+
+## Signing a field client in
+
+A field client signs in once and then carries a bearer token, because somebody
+working out of signal cannot re-authenticate on demand. That token is a
+**credential of a person**, so it lives here beside the account — issued,
+rotated and withdrawn like a password. Deciding whether a request carrying one
+is authenticated is mechanism, and that lives in `RegistryBundle`; the two meet
+at `Uhifadhi\Contracts\Security\ApiTokenResolverInterface`, which this bundle
+answers.
+
+`POST /api/auth/token` is the one endpoint reachable without a token, and it is
+firewall-free on purpose: a handset whose token has expired still holds it and
+still sends it, and that stale header must never be what stops somebody signing
+in again.
+
+```jsonc
+// the request
+{ "rangerId": "sl-0142", "passcode": "…", "deviceId": "…", "deviceName": "…" }
+```
+
+`rangerId` is a service number, or an email address for staff who were never
+issued one. `deviceId` and `deviceName` are optional; where the body names no
+device the `X-Doria-Device` header is accepted instead, so a client need not say
+the same thing twice.
+
+```jsonc
+// 200
+{
+  "token": "…64 hex characters…",
+  "expiresAt": "2027-03-08T09:41:22Z",
+  "ranger": { "id": "sl-0142", "name": "…", "role": "…" },
+  "permissions": ["area.view"]
+}
+```
+
+The token is handed back **once**; only its hash is stored, so a leaked database
+yields nothing a handset could present. `permissions` is always sent, including
+empty — an empty array is a refusal, and a *missing* field would read as
+"permitted".
+
+```jsonc
+// 401, and the same document for every refusal
+{ "code": "invalid_credentials", "message": "…", "retryable": false, "details": {} }
+```
+
+No such person, the wrong passcode and a deactivated account answer identically:
+telling them apart would turn the one endpoint reachable without a credential
+into a directory of who works here.
+
+Signing in again on the same handset **rotates** that handset's row rather than
+adding another, so a wipe leaves no trail of live credentials. A different
+handset gets its own row, which is what lets one be withdrawn alone.
 
 ## The screens
 

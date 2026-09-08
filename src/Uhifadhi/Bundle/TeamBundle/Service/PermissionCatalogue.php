@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Service;
 
+use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Model\Permission;
 use Uhifadhi\Contracts\ModuleProviderInterface;
@@ -159,6 +160,26 @@ final readonly class PermissionCatalogue
         $core = PermissionEnum::tryFrom($value);
 
         return null === $core || $core->isAreaScoped();
+    }
+
+    /**
+     * EVERY PERMISSION ONE PERSON ACTUALLY HOLDS, in catalogue order — what a
+     * field client is told at sign-in so it knows whether it may record before
+     * it walks a day and finds out on upload.
+     *
+     * A tier holds the whole catalogue; anybody else holds what their position
+     * carries, filtered to what this installation still offers, so a value left
+     * behind by an uninstalled module is not reported as a power.
+     *
+     * @return list<string>
+     */
+    public function heldBy(User $user): array
+    {
+        if ($user->getTeamRole()->canManageContent()) {
+            return $this->values();
+        }
+
+        return $this->knownValues($user->getPosition()?->getPermissionValues() ?? []);
     }
 
     public function has(string $value): bool

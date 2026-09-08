@@ -16,6 +16,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 use Uhifadhi\Bundle\ShellBundle\Contract\NavigationSourceInterface;
 use Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceInterface;
 use Uhifadhi\Bundle\TeamBundle\ArgumentResolver\AreaValueResolver;
+use Uhifadhi\Bundle\TeamBundle\Controller\ApiAuthController;
 use Uhifadhi\Bundle\TeamBundle\Controller\DepartmentController;
 use Uhifadhi\Bundle\TeamBundle\Controller\InviteController;
 use Uhifadhi\Bundle\TeamBundle\Controller\MemberController;
@@ -25,6 +26,7 @@ use Uhifadhi\Bundle\TeamBundle\Controller\PositionWidgetsController;
 use Uhifadhi\Bundle\TeamBundle\Controller\SecurityController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamWidgetsController;
+use Uhifadhi\Bundle\TeamBundle\Repository\ApiTokenRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentScopeChangeRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
@@ -32,6 +34,8 @@ use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Security\ActiveUserChecker;
 use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
 use Uhifadhi\Bundle\TeamBundle\Security\PermissionVoter;
+use Uhifadhi\Bundle\TeamBundle\Service\ApiTokenManager;
+use Uhifadhi\Bundle\TeamBundle\Service\FieldSignIn;
 use Uhifadhi\Bundle\TeamBundle\Service\Mail;
 use Uhifadhi\Bundle\TeamBundle\Service\PermissionCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Service\SuperAdminInvariant;
@@ -41,6 +45,7 @@ use Uhifadhi\Bundle\TeamBundle\Shell\UserBadgeSource;
 use Uhifadhi\Bundle\TeamBundle\Twig\AreaScopeExtension;
 use Uhifadhi\Bundle\TeamBundle\Widget\PositionWidgets;
 use Uhifadhi\Bundle\TeamBundle\Widget\TeamWidgets;
+use Uhifadhi\Contracts\Security\ApiTokenResolverInterface;
 
 /*
  * The bundle's static service wiring.
@@ -61,6 +66,9 @@ use Uhifadhi\Bundle\TeamBundle\Widget\TeamWidgets;
  * The ids are the published surface. They are private, as a reusable bundle's
  * should be; anything that wants one aliases it.
  *
+ *   team.api_token.manager      the credential a field client carries: issue, find, note, withdraw
+ *   team.field_sign_in          identifier + passcode -> the person, or nobody
+ *   team.controller.api_auth    where a field client signs in
  *   team.permissions            the catalogue: this bundle's seven + what modules declared
  *   team.permission_voter       who holds which of them
  *   team.super_admin_invariant  the refusal that keeps one active Super Admin
@@ -110,6 +118,42 @@ return static function (ContainerConfigurator $container): void {
     $services->set(DepartmentScopeChangeRepository::class)
         ->args([service('doctrine')])
         ->tag('doctrine.repository_service');
+
+    $services->set(ApiTokenRepository::class)
+        ->args([service('doctrine')])
+        ->tag('doctrine.repository_service');
+
+    /*
+     * THE CREDENTIAL A FIELD CLIENT CARRIES. It lives here because a token is a
+     * credential OF A PERSON, kept, rotated and withdrawn beside the account it
+     * belongs to — exactly as a password is.
+     *
+     * ALIASED TO THE RESOLVER CONTRACT, which is the whole of what anything
+     * authenticating a request may ask of it: who does this string name, and
+     * note that it was seen. Issuing is wider than the contract and stays here.
+     */
+    $services->set('team.api_token.manager', ApiTokenManager::class)
+        ->args([service(ApiTokenRepository::class), service('doctrine.orm.entity_manager')]);
+
+    $services->alias(ApiTokenResolverInterface::class, 'team.api_token.manager');
+
+    /*
+     * WHETHER AN IDENTIFIER AND A PASSCODE NAME SOMEBODY WHO MAY SIGN IN — the
+     * three refusals a firewall would make separately, made together, because
+     * the field door is reached before any firewall.
+     */
+    $services->set('team.field_sign_in', FieldSignIn::class)
+        ->args([service(UserRepository::class), service('security.user_password_hasher')]);
+
+    /*
+     * WHERE A FIELD CLIENT SIGNS IN. The one endpoint that answers without a
+     * token, so the installation's security file leaves its path unguarded and
+     * the endpoint checks the credentials itself.
+     */
+    $services->set('team.controller.api_auth', ApiAuthController::class)
+        ->args([service('team.field_sign_in'), service('team.api_token.manager'), service('team.permissions')])
+        ->tag('controller.service_arguments');
+    $services->alias(ApiAuthController::class, 'team.controller.api_auth')->public();
 
     /*
      * THE CATALOGUE, reading the module providers LIVE from the container in
