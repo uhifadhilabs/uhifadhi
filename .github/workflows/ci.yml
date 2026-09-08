@@ -58,11 +58,11 @@ jobs:
 
       # Every bundle is a package. Its manifest is validated as one, here,
       # because after a split that is exactly what it will be.
-      - name: Validate every bundle manifest
+      - name: Validate every package manifest
         run: |
-          for bundle in src/Uhifadhi/Bundle/*/composer.json; do
-            echo "== $bundle"
-            composer validate --strict --no-check-all --working-dir="$(dirname "$bundle")"
+          for package in src/Uhifadhi/Contracts/composer.json src/Uhifadhi/Bundle/*/composer.json; do
+            echo "== $package"
+            composer validate --strict --no-check-all --working-dir="$(dirname "$package")"
           done
 
       - name: Cache Composer packages

@@ -6,4 +6,5 @@
 /.php-cs-fixer.dist.php export-ignore
 /require-check export-ignore
 /src/Uhifadhi/Bundle/*/tests export-ignore
+/src/Uhifadhi/Contracts/tests export-ignore
 /composer-require-checker.dist.json export-ignore

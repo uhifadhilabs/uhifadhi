@@ -10,7 +10,7 @@ patrols, incidents, rosters — arrives as **modules**, each its own package.
 ## Contents
 
 - [What the core is](#what-the-core-is)
-- [The bundles](#the-bundles)
+- [The packages](#the-packages)
 - [Installation](#installation)
 - [Development](#development)
 - [Versioning](#versioning)
@@ -25,15 +25,20 @@ in an application's bundle list is not a promise that it runs alone.
 That is why "the core" is the word an installer document uses, and "bundle" is
 a word for developers. An admin installs *the core* and then *modules*.
 
-## The bundles
+## The packages
 
-| Bundle | Package after a split | What it is |
+| Package | Installable alone as | What it is |
 |---|---|---|
+| `src/Uhifadhi/Contracts` | `uhifadhi/contracts` | the interfaces a module declares itself with — MIT, and depended on by modules that want nothing else |
 | `RegistryBundle` | `uhifadhi/registry-bundle` | the module catalogue, the per-area install ledger, parking, declared permissions |
 | `ShellBundle` | `uhifadhi/shell-bundle` | the document, the page frame, navigation, the theme, widget surfaces |
 | `AtlasBundle` | `uhifadhi/atlas-bundle` | maps, charts and the chrome every one of them wears |
 
 `TeamBundle` (people) and `AreaBundle` (areas, zones, the overview) join them.
+
+The contracts stay a package of their own so a capability module can depend on
+interfaces alone, and stay MIT while the runtime around them is AGPL: an
+interface anybody may implement should cost nobody anything.
 
 ## Installation
 
