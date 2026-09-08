@@ -17,32 +17,28 @@ namespace Uhifadhi\Contracts\Entity;
  * THE AREA A MODULE'S RECORD POINTS AT — published as an interface so no module
  * has to require the package that defines an area.
  *
- * Several modules keep records that belong to an area: the seam's record of
+ * Several modules keep records that belong to an area: the registry's record of
  * which modules an area has switched on, a department confined to one area, a
  * patrol walked inside one. The area entity itself belongs to
  * `AreaBundle`, and a module that type-hinted that bundle's
  * `AreaOfInterest` would be a module you cannot install without it — and a
  * module that could never be pointed at an installation's own area class. So the
  * module maps its association to this interface, and WHOEVER KNOWS THE ANSWER
- * STATES THE RESOLUTION — here AreaBundle, because it is the package
+ * STATES THE RESOLUTION — here AreaBundle, because it is the bundle
  * that provides the entity. It prepends this and an installation writes nothing:
  *
  *     doctrine:
  *         orm:
  *             resolve_target_entities:
- *                 Uhifadhi\Contracts\Entity\AreaInterface: Uhifadhi\Area\Entity\AreaOfInterest
+ *                 Uhifadhi\Contracts\Entity\AreaInterface: Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest
  *
  * An installation writes that line only to DISAGREE, naming its own class, which
  * wins because prepended configuration loses to the application's.
  *
- * IT LIVES HERE, ALONGSIDE THE USER CONTRACT. It began as the seam's own
- * promise — `Uhifadhi\Seam\Entity\AreaInterface` — on the argument that only the
- * seam needed an area and one package answered it. That argument no longer
- * holds: departments in TeamBundle, and records in other modules, point at an
- * area the same way they point at a person. A promise exchanged between MANY
- * modules and the platform belongs in the contracts package, by the same rule
- * that puts {@see UserInterface} here — so the seam's name is now a deprecated
- * alias of this one, and this is where an area is asked for.
+ * IT LIVES HERE, ALONGSIDE THE USER CONTRACT. Departments in TeamBundle, and
+ * records in other modules, point at an area the same way they point at a
+ * person. A promise exchanged between MANY modules and the platform belongs in
+ * the contracts package, by the same rule that puts {@see UserInterface} here.
  *
  * IT LIVES IN Entity/ because that is what it is: the stand-in Doctrine maps an
  * association to, resolved to a real entity at compile time. It carries no
@@ -63,7 +59,7 @@ interface AreaInterface
 {
     /**
      * The persistence identity. Present because Doctrine's association is built
-     * on it, and because it is the one thing the seam needs of an area — to tell
+     * on it, and because it is the one thing the registry needs of an area — to tell
      * two of them apart. Null before the area has ever been stored; never put in
      * a URL or an API payload.
      */

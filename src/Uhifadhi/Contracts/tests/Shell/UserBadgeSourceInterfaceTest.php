@@ -23,7 +23,7 @@ use Uhifadhi\Contracts\Shell\UserBadgeSourceInterface;
  * object, plain strings, and NOT a UserInterface. That is what lets the shell
  * draw a viewer's card without requiring the package that defines an account,
  * and lets any ring that knows who is signed in — a host, or a team-aware
- * battery module — implement the seam depending only on this package.
+ * core bundle — implement the contract depending only on this package.
  */
 final class UserBadgeSourceInterfaceTest extends TestCase
 {
@@ -46,7 +46,7 @@ final class UserBadgeSourceInterfaceTest extends TestCase
     }
 
     /**
-     * THE SEAM HANDS OVER STRINGS, NEVER AN ACCOUNT. The contract imports
+     * THE CONTRACT HANDS OVER STRINGS, NEVER AN ACCOUNT. The contract imports
      * nothing — its own value object is same-namespace, and there is no
      * UserInterface and no framework in sight — so a module can implement it
      * without the shell ever seeing the account model.
@@ -60,7 +60,7 @@ final class UserBadgeSourceInterfaceTest extends TestCase
         self::assertIsString($source);
 
         self::assertSame(0, preg_match('/^use /m', $source), 'The user-badge contract imports nothing: UserBadge is same-namespace, and no account model is imported.');
-        self::assertSame(0, preg_match('/^use .*UserInterface/m', $source), 'The card is data, not an account narrowed: the seam imports no UserInterface.');
+        self::assertSame(0, preg_match('/^use .*UserInterface/m', $source), 'The card is data, not an account narrowed: the contract imports no UserInterface.');
     }
 
     public function testASourceComposesACardOrNamesNobody(): void

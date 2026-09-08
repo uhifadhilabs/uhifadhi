@@ -17,7 +17,7 @@ namespace Uhifadhi\Contracts\Devkit;
  * One dev/maintenance command a module offers, described WITHOUT naming
  * symfony/console: a name, a help line, and the closure that does the work.
  *
- * This is the object that keeps the whole devkit seam framework-free. A module
+ * This is the object that keeps the whole devkit contract framework-free. A module
  * that wanted to contribute a command could have handed devkit a
  * {@see \Symfony\Component\Console\Command\Command}, and devkit would only have
  * had to register it — but the price is one this package refuses to pay twice

@@ -41,14 +41,12 @@ namespace Uhifadhi\Contracts\Entity;
  * that declares the association — and it imports nothing at all, because a
  * package of promises that dragged in an ORM would cost something to depend on.
  *
- * IT LIVES IN THIS PACKAGE, ALONGSIDE {@see AreaInterface}. This one is
- * exchanged between MANY modules and the platform — patrol, incidents and widget
- * preferences all point at a person, and a third-party module written by
- * somebody else will too. The area contract was once kept in the seam on the
- * argument that only the seam needed an area; that argument no longer holds now
- * that departments and other modules point at an area the same way, so it moved
- * here too. That is the rule of thumb in docs/what-is-a-contract.md applied
- * literally: a promise between modules and the platform lives here.
+ * IT LIVES IN THIS PACKAGE, ALONGSIDE {@see AreaInterface}. Both are exchanged
+ * between MANY modules and the platform — patrol, incidents and widget
+ * preferences all point at a person, departments and records point at an area,
+ * and a third-party module written by somebody else will do both. That is the
+ * rule of thumb in docs/what-is-a-contract.md applied literally: a promise
+ * between modules and the platform lives here.
  *
  * THE SURFACE IS MEASURED, NOT COPIED. It is not "the account class, as an
  * interface". Every question below is one the installed modules were found to

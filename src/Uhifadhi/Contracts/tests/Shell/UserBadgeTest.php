@@ -22,7 +22,7 @@ use Uhifadhi\Contracts\Shell\UserBadge;
  * line ("NCAA · operator"). The value object carries plain strings and nothing
  * else: it names no account class and imports nothing, because the shell that
  * draws it requires no module and no user package. Whoever knows who is signed
- * in composes one of these and hands it over through the seam.
+ * in composes one of these and hands it over through the contract.
  */
 final class UserBadgeTest extends TestCase
 {

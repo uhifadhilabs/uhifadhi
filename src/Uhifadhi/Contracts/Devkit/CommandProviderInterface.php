@@ -25,7 +25,7 @@ namespace Uhifadhi\Contracts\Devkit;
  * devkit is installed: the commands appear on a developer's machine and in CI,
  * and are absent from production entirely.
  *
- * THE INTERFACE LIVES HERE, NOT IN DEVKIT, and that is the crux of the seam. The
+ * THE INTERFACE LIVES HERE, NOT IN DEVKIT, and that is the crux of it. The
  * inert provider classes ship inside always-installed modules (patrol, incidents),
  * so their `implements` clause must resolve at runtime even when devkit — being
  * require-dev — is absent. A contract those modules point at therefore has to

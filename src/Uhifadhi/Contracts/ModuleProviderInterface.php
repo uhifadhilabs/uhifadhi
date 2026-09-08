@@ -20,10 +20,10 @@ namespace Uhifadhi\Contracts;
  * exactly one module named after itself; anything the module contains (a sightings
  * module's "surveys", say) is the module's OWN internal concern and invisible here.
  *
- * Built-in and installed modules implement this identically, so
- * the host can register both through one seam. `entryRoute()` is the one new
- * capability over the legacy catalogue: return null to render through the host's
- * generic module page, or a route name to own your pages.
+ * A module an installation defines for itself and a module it installs from a
+ * package implement this identically, so the registry collects both through one
+ * tag. `entryRoute()` decides where a module's tile leads: return null to render
+ * through the generic module page, or a route name to own your pages.
  *
  * The defaults for the optional methods live in {@see ModuleProviderTrait}; a
  * typical provider only defines slug(), name() and category().

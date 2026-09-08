@@ -20,7 +20,7 @@ namespace Uhifadhi\Contracts\Shell;
  * It carries PLAIN STRINGS and names no account class. The shell that draws it
  * requires no module and above all not the package that defines a user, so a
  * badge cannot be "a UserInterface, narrowed": it is the already-composed
- * reading a host or a team-aware source hands over through the seam. Who is
+ * reading a host or a team-aware source hands over through the contract. Who is
  * signed in, which organisation they belong to and what role they hold are all
  * resolved by whoever knows the answer and folded into these three fields — the
  * shell only draws them.
