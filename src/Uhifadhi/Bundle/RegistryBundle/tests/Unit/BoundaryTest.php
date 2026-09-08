@@ -124,6 +124,48 @@ final class BoundaryTest extends TestCase
     }
 
     /**
+     * THE REGISTRY NAMES NO SIBLING BUNDLE'S CLASS, and the one that matters
+     * most is the bundle that keeps people.
+     *
+     * The registry decides authority — who a presented credential names, and
+     * which permissions exist — and it must decide it about a CONTRACT, never
+     * about somebody's account entity. The day it imports that class, an
+     * installation cannot answer the question with its own people, and the two
+     * packages have become one.
+     *
+     * @param non-empty-string $namespace
+     */
+    #[DataProvider('siblingNamespaces')]
+    public function testTheRegistryNamesNoSiblingBundle(string $namespace): void
+    {
+        $offenders = [];
+        foreach (self::sources() as $path => $code) {
+            if (str_contains($code, $namespace.'\\')) {
+                $offenders[] = $path;
+            }
+        }
+
+        self::assertSame([], $offenders, \sprintf(
+            'The registry must not name %s. It decides about the contracts, so an installation can answer them itself.',
+            $namespace,
+        ));
+    }
+
+    /**
+     * Every other bundle of the core. The registry is what they register WITH;
+     * a dependency in this direction is the arrow pointing the wrong way.
+     *
+     * @return \Generator<string, array{non-empty-string}>
+     */
+    public static function siblingNamespaces(): \Generator
+    {
+        foreach (['TeamBundle', 'ShellBundle', 'AreaBundle', 'AtlasBundle'] as $bundle) {
+            $fqcn = 'Uhifadhi\\Bundle\\'.$bundle;
+            yield $fqcn => [$fqcn];
+        }
+    }
+
+    /**
      * THE REGISTRY RENDERS NOTHING. No templates directory, no controllers, no
      * routes — a module grid is a picture of the catalogue, and pictures are the
      * shell's. docs/boundaries.md says why at length; this is the part a refactor
