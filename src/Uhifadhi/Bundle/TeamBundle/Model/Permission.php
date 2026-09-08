@@ -15,11 +15,10 @@ namespace Uhifadhi\Bundle\TeamBundle\Model;
 
 /**
  * One entry of the deployment's permission catalogue, whichever side declared
- * it: the app's own {@see \Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum} cases or a
+ * it: this bundle's own {@see \Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum} cases or a
  * permission an installed module declares through its provider. The matrix and
- * the voter treat both identically; only core permissions may imply an umbrella
- * capability role — a module-declared permission never mints one (declared,
- * never granted).
+ * the voter treat both identically, and neither side mints a role: declaring a
+ * permission makes it assignable and nothing more.
  *
  * THE SENTENCE IS NOT OPTIONAL HERE EITHER. Both sides are required to supply
  * one — the core enum through {@see \Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum::description()},
@@ -32,18 +31,16 @@ namespace Uhifadhi\Bundle\TeamBundle\Model;
 final readonly class Permission
 {
     /**
-     * @param string      $description    one sentence saying what holding this lets a person
-     *                                    do, printed under the name in the matrix
-     * @param string|null $capabilityRole the coarse umbrella role, core permissions only
-     * @param string|null $source         the slug of the module that declared it, or null for
-     *                                    one of the host's own — see {@see isCore()}
+     * @param string      $description one sentence saying what holding this lets a person
+     *                                 do, printed under the name in the matrix
+     * @param string|null $source      the slug of the module that declared it, or null for one of
+     *                                 this bundle's own — see {@see isCore()}
      */
     public function __construct(
         public string $value,
         public string $umbrella,
         public string $action,
         public string $description,
-        public ?string $capabilityRole = null,
         public ?string $source = null,
     ) {
     }

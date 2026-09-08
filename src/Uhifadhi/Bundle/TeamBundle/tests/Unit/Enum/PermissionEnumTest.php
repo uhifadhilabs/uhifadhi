@@ -24,10 +24,10 @@ use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
  * is a decision, and a test that only counted would let the eighth arrive by
  * accident and the wrong seventh be swapped in silently.
  *
- * THE SEVENTH IS `team.manage`, and it is what the retired Manager tier became.
- * Administering the team used to be answered by the tier column; it is now an
- * ordinary row in the matrix under its own umbrella, which is what makes "who
- * administers this installation" a question with a countable answer.
+ * THE SEVENTH IS `team.manage`. Administering the team is an ordinary row in
+ * the matrix under its own umbrella rather than a standing beside it, which is
+ * what makes "who administers this installation" a question with a countable
+ * answer.
  */
 #[CoversClass(PermissionEnum::class)]
 final class PermissionEnumTest extends TestCase
@@ -46,12 +46,11 @@ final class PermissionEnumTest extends TestCase
     }
 
     /**
-     * THERE IS NO INGESTION, and this test is the guard on that. The catalogue
-     * used to carry `ingestion.run` under a `ROLE_INGESTION` umbrella, ported
-     * from an application that had an ingestion capability; this platform does
-     * not, and a permission guarding nothing is a power an admin can assign
-     * over code that does not exist. Named here rather than merely absent above,
-     * because "we deleted it on purpose" is the fact worth keeping.
+     * THERE IS NO INGESTION, and this test is the guard on that. This platform
+     * has no ingestion capability, and a permission guarding nothing is a power
+     * an admin can assign over code that does not exist. Named here rather than
+     * merely absent above, because "not this one, on purpose" is the fact worth
+     * keeping.
      */
     public function testIngestionIsNotInTheCatalogue(): void
     {
@@ -65,33 +64,53 @@ final class PermissionEnumTest extends TestCase
 
         foreach (PermissionEnum::all() as $permission) {
             self::assertNotSame('Ingestion', $permission->umbrella());
-            self::assertNotSame('ROLE_INGESTION', $permission->capabilityRole());
         }
     }
 
-    public function testEachPermissionCarriesItsUmbrellaActionAndCapabilityRole(): void
+    public function testEachPermissionCarriesItsUmbrellaAndAction(): void
     {
         self::assertSame('Areas', PermissionEnum::AreaView->umbrella());
         self::assertSame('View', PermissionEnum::AreaView->action());
-        self::assertSame('ROLE_AREAS', PermissionEnum::AreaView->capabilityRole());
-
-        self::assertSame('ROLE_MODULES', PermissionEnum::ModuleCreate->capabilityRole());
 
         // The label is the two words the matrix prints, joined the one way.
         self::assertSame('Modules · Add', PermissionEnum::ModuleCreate->label());
     }
 
     /**
-     * The Team umbrella is the new one, and it carries exactly one row. An
-     * umbrella with one permission is not a mistake: the umbrella is the coarse
-     * region an installation's access_control can name (`ROLE_TEAM` keeps
-     * `/team` shut), and the granular row is what the voter decides.
+     * A PERMISSION MINTS NO ROLE. An umbrella is a heading on the matrix, not a
+     * region an access rule can name: a permission answers "may this person do
+     * X *here*", and no path pattern can express the "here". Holding one has to
+     * be decided against the person, per action and per area, which is exactly
+     * what a role cannot do — so the coarse standing a role would have granted
+     * is a power nobody can see being granted.
+     *
+     * Asserted on the ABSENCE OF THE METHOD, because a call site left compiling
+     * would be a screen still gated on the coarse axis.
+     */
+    public function testNoPermissionMintsARole(): void
+    {
+        $methods = array_map(
+            static fn (\ReflectionMethod $method): string => $method->getName(),
+            new \ReflectionClass(PermissionEnum::class)->getMethods(\ReflectionMethod::IS_PUBLIC),
+        );
+        sort($methods);
+
+        self::assertSame(
+            ['action', 'all', 'cases', 'description', 'from', 'isAreaScoped', 'label', 'tryFrom', 'umbrella'],
+            $methods,
+            'A permission is decided by asking about the person, never by opening a region.',
+        );
+    }
+
+    /**
+     * The Team umbrella carries exactly one row, and that is not a mistake: an
+     * umbrella is the heading the matrix groups under, so one row under one
+     * heading is a catalogue an administrator can read.
      */
     public function testTeamManageIsTheSeventhUnderItsOwnUmbrella(): void
     {
         self::assertSame('Team', PermissionEnum::TeamManage->umbrella());
         self::assertSame('Manage', PermissionEnum::TeamManage->action());
-        self::assertSame('ROLE_TEAM', PermissionEnum::TeamManage->capabilityRole());
         self::assertSame('Team · Manage', PermissionEnum::TeamManage->label());
     }
 

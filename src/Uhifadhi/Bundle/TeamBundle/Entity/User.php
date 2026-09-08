@@ -18,7 +18,6 @@ use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Uhifadhi\Bundle\TeamBundle\Entity\Trait\TimestampableTrait;
 use Uhifadhi\Bundle\TeamBundle\Entity\Trait\UuidTrait;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Contracts\Entity\UserInterface as ModuleUserInterface;
@@ -261,20 +260,16 @@ class User implements ModuleUserInterface, PasswordAuthenticatedUserInterface, U
     }
 
     /**
-     * Stored roles + ROLE_USER, then the tier's roles and — for Staff — the capability role of
-     * each CORE permission in their position. Super Admin and Admin hold every permission by
-     * tier (role_hierarchy + the voter's canManageContent()); Staff open only their position's
-     * umbrellas here, with the granular action checked by {@see \Uhifadhi\Bundle\TeamBundle\Security\PermissionVoter}.
+     * Stored roles + ROLE_USER, plus the TIER's roles. Nothing else: a role is a coarse standing
+     * an installation's own rules may name, and the granular permissions a position carries are
+     * decided against the person by {@see \Uhifadhi\Bundle\TeamBundle\Security\PermissionVoter}.
      *
-     * A MODULE-DECLARED PERMISSION MINTS NO ROLE, which is why the loop below
-     * resolves each stored value through the core enum and skips what is not
-     * one. Declaring is not granting: a module may make a value assignable and
-     * may never open a URL region an installation's access_control names.
+     * A POSITION THEREFORE ADDS NOTHING HERE. Converting a permission into a role would grant the
+     * same authority twice — once where the matrix can show it and once where nothing can — and
+     * the coarse copy cannot answer the question a permission actually asks, which is "here?".
      *
-     * There is no ROLE_MANAGER. The tier that emitted it is gone, and what it
-     * used to stand for is `team.manage` — an ordinary permission, whose
-     * umbrella role is ROLE_TEAM and which reaches this list through a position
-     * like every other capability.
+     * There is no ROLE_MANAGER. Administering the team is `team.manage`, an ordinary permission
+     * reaching a person through a position like every other capability.
      *
      * @return list<string>
      */
@@ -292,15 +287,10 @@ class User implements ModuleUserInterface, PasswordAuthenticatedUserInterface, U
                 $roles[] = 'ROLE_ADMIN';
                 break;
             case TeamRoleEnum::Staff:
-                // Position-driven: nothing by tier at all.
-                if (null !== $this->position) {
-                    foreach ($this->position->getPermissionValues() as $value) {
-                        $core = PermissionEnum::tryFrom($value);
-                        if (null !== $core) {
-                            $roles[] = $core->capabilityRole();
-                        }
-                    }
-                }
+                // Nothing at all. A Staff member's capabilities come from their
+                // position, and a position is asked about — never converted
+                // into a standing that would grant the same authority again,
+                // coarsely, where nobody can see it.
                 break;
         }
 

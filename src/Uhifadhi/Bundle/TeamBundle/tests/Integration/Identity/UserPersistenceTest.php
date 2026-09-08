@@ -84,7 +84,7 @@ final class UserPersistenceTest extends IntegrationTestCase
         self::assertFalse($hasher->isPasswordValid($stored, 'wrong horse'));
     }
 
-    public function testRolesAreTheTiersPlusThePositionsCapabilityRoles(): void
+    public function testAPositionAddsNoRole(): void
     {
         $position = (new Position())->setName('Analyst')->setPermissionValues(
             [PermissionEnum::AreaView->value, PermissionEnum::ModuleView->value],
@@ -103,13 +103,11 @@ final class UserPersistenceTest extends IntegrationTestCase
         $stored = $users->findOneByEmail('staff@example.test');
         self::assertInstanceOf(User::class, $stored);
 
-        $roles = $stored->getRoles();
-        self::assertContains('ROLE_USER', $roles);
-        self::assertContains('ROLE_AREAS', $roles);
-        self::assertContains('ROLE_MODULES', $roles);
-        // Staff hold nothing by tier.
-        self::assertNotContains('ROLE_ADMIN', $roles);
-        self::assertNotContains('ROLE_SUPER_ADMIN', $roles);
+        // A POSITION OPENS NO REGION. Whatever the position carries, a Staff
+        // member's roles are ROLE_USER and nothing else: the permissions are
+        // decided by asking about the person, so a role would be the same
+        // authority granted a second time, coarsely, where nobody looks.
+        self::assertSame(['ROLE_USER'], $stored->getRoles());
     }
 
     public function testASuperAdminHoldsTheTierRolesWithoutAPosition(): void

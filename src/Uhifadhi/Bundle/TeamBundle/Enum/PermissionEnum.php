@@ -15,27 +15,21 @@ namespace Uhifadhi\Bundle\TeamBundle\Enum;
 
 /**
  * The fixed catalogue of granular permissions a {@see \Uhifadhi\Bundle\TeamBundle\Entity\Position} can grant.
- * Each belongs to an umbrella (Areas, Modules, Team) with a specific action (View, Create, …) and
- * implies a coarse umbrella *capability role* an installation's access_control can name — so a
- * position holding any permission in an umbrella opens that whole region, while the granular
- * permission itself is checked by {@see \Uhifadhi\Bundle\TeamBundle\Security\PermissionVoter}.
+ * Each belongs to an umbrella (Areas, Modules, Team) with a specific action (View, Create, …).
+ * An umbrella is the heading the matrix groups under and nothing more: holding a permission is
+ * decided against the person by {@see \Uhifadhi\Bundle\TeamBundle\Security\PermissionVoter},
+ * never by a coarse standing a path pattern could name.
  *
- * SEVEN, AND THE SEVENTH IS `team.manage`. It is what the retired Manager tier became: the tier
- * answered "may this person administer the team" invisibly, beside the matrix rather than in it,
- * and a second authority system running alongside the first is one nobody can audit. As a
- * permission the same authority is a row an administrator can see, count across the roster, and
- * take away — and it is granted the one way every other capability is, through a position.
+ * SEVEN, AND THE SEVENTH IS `team.manage`. Administering the team is a row an administrator can
+ * see, count across the roster and take away, granted the one way every other capability is —
+ * through a position. A standing beside the matrix rather than in it would be a second authority
+ * system running alongside the first, and nobody can audit that.
  *
- * The Team umbrella carries exactly one row, and that is not an oversight. An umbrella is the
- * coarse region an installation's `access_control` names — `ROLE_TEAM` keeps `/team` shut — and
- * the granular row is what the voter then decides. One row today; the region is what the umbrella
- * is for.
+ * The Team umbrella carries exactly one row, and that is not an oversight: an umbrella is a
+ * heading, and one row under one heading is a catalogue that reads.
  *
- * THERE IS NO INGESTION. An eighth case, `ingestion.run` under a `ROLE_INGESTION` umbrella,
- * existed here and is gone: this platform has no ingestion capability, and a permission that
- * guards nothing is a power an admin can assign over code that does not exist. Nothing else moved
- * with it — the two original umbrellas kept their values, their roles and their order, so a
- * position holding `area.edit` holds exactly what it held before.
+ * THERE IS NO INGESTION. This platform has no ingestion capability, and a permission that guards
+ * nothing is a power an admin can assign over code that does not exist.
  *
  * EVERY PERMISSION CARRIES A SENTENCE ({@see description()}), the core seven exactly as a
  * module-declared one does ({@see \Uhifadhi\Contracts\ModulePermission}). The matrix prints
@@ -47,15 +41,15 @@ namespace Uhifadhi\Bundle\TeamBundle\Enum;
  */
 enum PermissionEnum: string
 {
-    // Areas → ROLE_AREAS
+    // Areas
     case AreaView = 'area.view';
     case AreaCreate = 'area.create';
     case AreaEdit = 'area.edit';
     case AreaDelete = 'area.delete';
-    // Modules → ROLE_MODULES
+    // Modules
     case ModuleView = 'module.view';
     case ModuleCreate = 'module.create';   // configure a module: settings + visualizations (composition is Admin-tier)
-    // Team → ROLE_TEAM
+    // Team
     case TeamManage = 'team.manage';
 
     public function umbrella(): string
@@ -68,16 +62,10 @@ enum PermissionEnum: string
         return $this->meta()[1];
     }
 
-    /** The umbrella capability role this permission implies (for area-level access_control). */
-    public function capabilityRole(): string
-    {
-        return $this->meta()[2];
-    }
-
     /** One sentence saying what holding this lets a person do — printed under the name in the matrix. */
     public function description(): string
     {
-        return $this->meta()[3];
+        return $this->meta()[2];
     }
 
     public function label(): string
@@ -118,18 +106,18 @@ enum PermissionEnum: string
     }
 
     /**
-     * @return array{0: string, 1: string, 2: string, 3: string} [umbrella, action, capabilityRole, description]
+     * @return array{0: string, 1: string, 2: string} [umbrella, action, description]
      */
     private function meta(): array
     {
         return match ($this) {
-            self::AreaView => ['Areas', 'View', 'ROLE_AREAS', 'See the areas this installation manages and everything recorded inside them.'],
-            self::AreaCreate => ['Areas', 'Create', 'ROLE_AREAS', 'Draw a new area and add it to the installation.'],
-            self::AreaEdit => ['Areas', 'Edit', 'ROLE_AREAS', 'Change an area’s name, its boundary and its settings.'],
-            self::AreaDelete => ['Areas', 'Delete', 'ROLE_AREAS', 'Remove an area, and with it everything filed under that area.'],
-            self::ModuleView => ['Modules', 'View', 'ROLE_MODULES', 'Open the modules switched on for an area and read what they show.'],
-            self::ModuleCreate => ['Modules', 'Add', 'ROLE_MODULES', 'Switch a module on for an area and configure its settings and visualizations.'],
-            self::TeamManage => ['Team', 'Manage', 'ROLE_TEAM', 'Administer this team: add people, deactivate them, change tiers, and compose the positions everybody else’s permissions come from.'],
+            self::AreaView => ['Areas', 'View', 'See the areas this installation manages and everything recorded inside them.'],
+            self::AreaCreate => ['Areas', 'Create', 'Draw a new area and add it to the installation.'],
+            self::AreaEdit => ['Areas', 'Edit', 'Change an area’s name, its boundary and its settings.'],
+            self::AreaDelete => ['Areas', 'Delete', 'Remove an area, and with it everything filed under that area.'],
+            self::ModuleView => ['Modules', 'View', 'Open the modules switched on for an area and read what they show.'],
+            self::ModuleCreate => ['Modules', 'Add', 'Switch a module on for an area and configure its settings and visualizations.'],
+            self::TeamManage => ['Team', 'Manage', 'Administer this team: add people, deactivate them, change tiers, and compose the positions everybody else’s permissions come from.'],
         };
     }
 }

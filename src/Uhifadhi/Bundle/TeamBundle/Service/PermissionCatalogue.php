@@ -24,7 +24,7 @@ use Uhifadhi\Contracts\ModuleProviderInterface;
  *
  * Declaring makes a permission assignable — it appears in the matrix and the
  * {@see \Uhifadhi\Bundle\TeamBundle\Security\PermissionVoter} recognises it — and nothing
- * more: no capability role, no default holders. Uninstalling a module removes
+ * more: no standing, no default holders. Uninstalling a module removes
  * its provider and its permissions vanish from the catalogue with it, on the
  * next request rather than the next deploy.
  *
@@ -65,20 +65,16 @@ final readonly class PermissionCatalogue
                 $core->umbrella(),
                 $core->action(),
                 $core->description(),
-                $core->capabilityRole(),
             );
         }
 
         foreach ($this->moduleProviders as $provider) {
             foreach ($provider->permissions() as $declared) {
-                // No capability role, ever: a module declares, it does not grant.
                 $catalogue[$declared->value] ??= new Permission(
                     $declared->value,
                     $declared->umbrella,
                     $declared->action,
                     $declared->description,
-                    // No capability role, ever.
-                    null,
                     // WHO BROUGHT IT. The matrix prints this beside the umbrella
                     // heading, so uninstalling a bundle is a visible cause
                     // rather than a mystery about rows that vanished.

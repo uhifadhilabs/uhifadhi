@@ -52,18 +52,19 @@ final class PermissionCatalogueTest extends IntegrationTestCase
         self::assertCount(8, $this->catalogue()->all());
     }
 
-    public function testAModuleDeclarationNeverCarriesACapabilityRole(): void
+    /**
+     * NO ENTRY IN THE CATALOGUE CARRIES A ROLE, whichever side wrote it. A
+     * permission is decided by asking about the person holding it, per action
+     * and per area; a role is a coarse standing a path pattern can name, which
+     * is a different and weaker question. Carrying both would be two authority
+     * systems over one row, and only one of them visible on the matrix.
+     */
+    public function testNoCatalogueEntryCarriesARole(): void
     {
-        foreach ($this->catalogue()->all() as $permission) {
-            if ('surveys.record' === $permission->value) {
-                // Declaring is not granting: a module cannot mint an umbrella.
-                self::assertNull($permission->capabilityRole);
-
-                return;
-            }
-        }
-
-        self::fail('The declared permission is not in the catalogue.');
+        self::assertFalse(
+            property_exists(Permission::class, 'capabilityRole'),
+            'A catalogue entry is a permission, not a standing.',
+        );
     }
 
     public function testTheMatrixIsGroupedByUmbrella(): void
