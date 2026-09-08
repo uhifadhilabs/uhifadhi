@@ -35,6 +35,8 @@
         "symfony/framework-bundle": "^7.3 || ^8.0",
         "symfony/http-foundation": "^7.3 || ^8.0",
         "symfony/http-kernel": "^7.3 || ^8.0",
+        "symfony/mailer": "^7.3 || ^8.0",
+        "symfony/mime": "^7.3 || ^8.0",
         "symfony/password-hasher": "^7.3 || ^8.0",
         "symfony/routing": "^7.3 || ^8.0",
         "symfony/security-bundle": "^7.3 || ^8.0",
@@ -88,6 +90,7 @@
             "Uhifadhi\\Bundle\\AtlasBundle\\Tests\\": "src/Uhifadhi/Bundle/AtlasBundle/tests/",
             "Uhifadhi\\Bundle\\RegistryBundle\\Tests\\": "src/Uhifadhi/Bundle/RegistryBundle/tests/",
             "Uhifadhi\\Bundle\\ShellBundle\\Tests\\": "src/Uhifadhi/Bundle/ShellBundle/tests/",
+            "Uhifadhi\\Bundle\\TeamBundle\\Tests\\": "src/Uhifadhi/Bundle/TeamBundle/tests/",
             "Uhifadhi\\Contracts\\Tests\\": "src/Uhifadhi/Contracts/tests/",
             "Uhifadhi\\Core\\Tests\\": "tests/",
             "Uhifadhi\\Entity\\": "src/Uhifadhi/Bundle/RegistryBundle/tests/Integration/Fixtures/Uhifadhi/Entity/"

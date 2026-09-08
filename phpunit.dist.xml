@@ -40,6 +40,9 @@
         <testsuite name="ShellBundle">
             <directory>src/Uhifadhi/Bundle/ShellBundle/tests</directory>
         </testsuite>
+        <testsuite name="TeamBundle">
+            <directory>src/Uhifadhi/Bundle/TeamBundle/tests</directory>
+        </testsuite>
         <testsuite name="AtlasBundle">
             <directory>src/Uhifadhi/Bundle/AtlasBundle/tests</directory>
         </testsuite>

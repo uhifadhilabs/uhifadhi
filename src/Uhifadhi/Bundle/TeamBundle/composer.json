@@ -1,0 +1,72 @@
+{
+    "name": "uhifadhi/team-bundle",
+    "type": "symfony-bundle",
+    "description": "The uhifadhi team: who an installation's people are and how they sign in — the account, the position that bundles permissions, departments, and the sign-in, reset and invite screens.",
+    "keywords": [
+        "authentication",
+        "conservation",
+        "identity",
+        "people",
+        "permissions",
+        "symfony",
+        "symfony-ux",
+        "team",
+        "uhifadhi"
+    ],
+    "license": "AGPL-3.0-or-later",
+    "authors": [
+        {
+            "name": "Ezekiel Mjema",
+            "homepage": "https://github.com/eemjema"
+        }
+    ],
+    "require": {
+        "php": ">=8.4",
+        "ext-mbstring": "*",
+        "doctrine/collections": "^2.2",
+        "doctrine/dbal": "^4.0",
+        "doctrine/doctrine-bundle": "^3.0",
+        "doctrine/orm": "^3.5",
+        "doctrine/persistence": "^3.1 || ^4.0",
+        "symfony/asset-mapper": "^7.3 || ^8.0",
+        "symfony/config": "^7.3 || ^8.0",
+        "symfony/dependency-injection": "^7.3 || ^8.0",
+        "symfony/doctrine-bridge": "^7.3 || ^8.0",
+        "symfony/framework-bundle": "^7.3 || ^8.0",
+        "symfony/http-foundation": "^7.3 || ^8.0",
+        "symfony/http-kernel": "^7.3 || ^8.0",
+        "symfony/mailer": "^7.3 || ^8.0",
+        "symfony/mime": "^7.3 || ^8.0",
+        "symfony/password-hasher": "^7.3 || ^8.0",
+        "symfony/routing": "^7.3 || ^8.0",
+        "symfony/security-core": "^7.3 || ^8.0",
+        "symfony/security-csrf": "^7.3 || ^8.0",
+        "symfony/security-http": "^7.3 || ^8.0",
+        "symfony/uid": "^7.3 || ^8.0",
+        "twig/twig": "^3.14",
+        "uhifadhi/contracts": "^1.0",
+        "uhifadhi/registry-bundle": "^1.0",
+        "uhifadhi/shell-bundle": "^1.0"
+    },
+    "require-dev": {
+        "symfony/security-bundle": "^7.3 || ^8.0"
+    },
+    "suggest": {
+        "symfony/security-bundle": "The bundle that reads config/packages/security.yaml. The skeleton ships it and the file; these screens name SecurityBundle service ids, so an installation without it does not boot."
+    },
+    "autoload": {
+        "psr-4": {
+            "Uhifadhi\\Bundle\\TeamBundle\\": ""
+        },
+        "exclude-from-classmap": [
+            "/tests/"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Uhifadhi\\Bundle\\TeamBundle\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

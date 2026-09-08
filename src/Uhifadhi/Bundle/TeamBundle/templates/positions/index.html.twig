@@ -1,0 +1,69 @@
+{# POSITIONS AND PERMISSIONS — a widget surface, and the heart of this module. #}
+{% extends '@Shell/page.html.twig' %}
+{% import '@Team/team/_bits.html.twig' as bits %}
+{% import '@Team/positions/_bits.html.twig' as pm %}
+
+{% block title %}Positions &amp; permissions{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {{ include('@Team/_stylesheets.html.twig') }}
+{% endblock %}
+
+{% block shell_page_tabs %}{% endblock %}
+
+{% block shell_breadcrumbs %}
+    <a href="{{ path('team_index') }}">uhifadhi</a> / <a href="{{ path('team_index') }}">team</a> / positions
+{% endblock %}
+
+{% block shell_page_title %}Positions &amp; permissions{% endblock %}
+
+{% block shell_page_subtitle %}
+    A <b>position</b> is a named bundle of permissions, and it is the only thing that grants a Staff member any
+    capability at all. <b>A position belongs to a department</b>, and its name is unique only inside it &mdash;
+    <span class="mono">Ecology / Analyst</span> and <span class="mono">Protection Service / Analyst</span> are two
+    different jobs that share a word, so nothing on this page ever writes a bare name. <b>Tier and permission are
+    different things</b>: tier decides who stands above this matrix, permissions decide what anybody may do
+    &mdash; and since the Manager tier was retired, <b>administering the team is itself one of the permissions on
+    this page</b>: <span class="mono">team.manage</span>, the seventh core case.
+{% endblock %}
+
+{% block shell_page_actions %}
+    {# CREATING ONE IS TWO FIELDS AND THE DEPARTMENT IS THE FIRST OF THEM. The
+       name is unique inside that department and nowhere else. #}
+    <form class="assign" method="post" action="{{ path('team_position_create') }}">
+        <input type="hidden" name="_token" value="{{ csrfToken }}">
+        <select name="department" class="sel" aria-label="Department">
+            {# §5.6(b): a bounded area admin files only into the area-level
+               departments they reach; the loose "no department" option has no
+               scope, so only an unbounded administrator is offered it. #}
+            {% if canFileLoose %}
+                <option value="">No department yet&hellip;</option>
+            {% endif %}
+            {% for department in creatable %}
+                <option value="{{ department.uuidString }}">{{ department.name }}</option>
+            {% endfor %}
+        </select>
+        <input type="text" name="name" class="fld" placeholder="Senior Ranger" aria-label="New position name" required>
+        <button class="cta" type="submit">{{ bits.icon_plus() }} New position</button>
+    </form>
+    <a class="tgl w-act" href="{{ path('team_index') }}">{{ bits.icon_back() }} Back to the team</a>
+    <a class="tgl w-act" href="{{ path('team_position_widgets') }}">{{ bits.icon_grid() }} Widget library</a>
+{% endblock %}
+
+{% block shell_page %}
+    {{ include('@Team/team/_scope_banner.html.twig') }}
+    {# See the team page: these are the widget module's cell classes, and the
+       span is `.w-span-N` because bare `w-N` is Tailwind's width scale. #}
+    <div class="w-grid">
+        {% for widget in widgets %}
+            {% if widget.on %}
+                <div data-w="{{ widget.id }}" class="w-cell w-span-{{ widget.cols }}">
+                    <div class="w-inner">
+                        {{ include('@Team/positions/_w_' ~ widget.id ~ '.html.twig') }}
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+{% endblock %}

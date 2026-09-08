@@ -1,0 +1,21 @@
+{# THE "SCOPED TO <AREA>" BANNER (area-admin design, DECISIONS §5.6).
+
+   Shown to a bounded (area-X) team.manage holder on the team / department /
+   position management chrome, and to NOBODY else: team_scope_area() returns the
+   name of the area they are confined to, or null for an unbounded holder (a tier
+   or org-level admin), and a null draws nothing at all. The area is named through
+   the contract's AreaInterface::getName(); this partial never reaches into an
+   area package. #}
+{% import '@Team/team/_bits.html.twig' as bits %}
+{% set _scope_area = team_scope_area() %}
+{% if _scope_area %}
+    <div class="scope-fence">
+        {{ bits.icon_shield() }}
+        <div class="sf-bd">
+            <b>You are scoped to {{ _scope_area }}.</b> You manage team in {{ _scope_area }} only &mdash; its
+            area-level departments and their positions and people. Everything outside {{ _scope_area }} is
+            read-only here: org-level departments and other areas belong to the whole organisation and are
+            managed at the org.
+        </div>
+    </div>
+{% endif %}

@@ -1,0 +1,94 @@
+{# PM·A — THE GRID. Positions across, permissions down, a box at every
+   intersection, so "who may delete an area" is one row read left to right.
+
+   Every position added is another column, and past a dozen the table is a
+   horizontal scroll nobody reads accurately — which is the cost, and the
+   reason B rather than A is the shipped direction.
+
+   THE GRID IS READ-ONLY. Every other direction edits one position at a time and
+   can therefore post one position's permissions; a grid would have to post a
+   whole matrix, and a save that rewrites nine positions at once is a save
+   nobody can undo confidently. It links each column to its own editor instead. #}
+{% import '@Team/positions/_bits.html.twig' as pm %}
+
+<div class="c" data-pm="a">
+    <span class="tab">The grid<span class="src">&middot; every position, every permission</span></span>
+    <p class="use" style="margin-top:2px">One row per permission and one column per position, so a single row
+    answers <b>who may do this</b>. It reads across rather than down, which no other direction does. <b>It does
+    not edit:</b> a save here would rewrite every position at once, and that is not an action anybody can undo
+    confidently &mdash; each column heading is a link to that position&rsquo;s own checklist.</p>
+
+    {% if positions is empty %}
+        <p class="use"><b>The grid opens on nothing at all</b>, which is exactly the weakness that made B the
+        shipped direction: there are no positions yet, so there are no columns. <a href="{{ path('team_positions') }}">Make the first one.</a></p>
+    {% else %}
+        <div class="pm-scroll">
+            <table class="tbl pm-grid">
+                <thead>
+                    <tr>
+                        {# THE PINNED COLUMN. `.pm-rowh` is what makes the permission
+                           column stick while the positions scroll under it, and what
+                           gives it the width the description needs — a grid whose row
+                           header scrolls away is a grid of anonymous ticks. #}
+                        <th class="pm-rowh"><span class="lbl" style="margin:0">permission</span></th>
+                        {# A COLUMN HEAD STACKS: department, then name, then who holds it.
+                           Written inline as a `.qual` it was one long nowrap run per
+                           column, and eight of them ran into each other and off the
+                           right of the card — the grid's whole head was unreadable.
+                           `.pm-colh` is the design's own block for this and bounds the
+                           column's width, which is what lets eight positions fit. #}
+                        {% for position in positions %}
+                            {% set held = holders[position.uuidString]|default(0) %}
+                            <th>
+                                <a class="pm-colh" href="{{ path('team_positions', {position: position.uuidString}) }}">
+                                    <span class="pm-dept"><i class="dot"></i>{{ position.department ? position.department.name : 'no department' }}</span>
+                                    <b>{{ position.name }}</b>
+                                    <span class="held">{% if held %}{{ held }} {{ held == 1 ? 'person' : 'people' }}{% else %}nobody yet{% endif %}</span>
+                                </a>
+                            </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for umbrella, permissions in grouped %}
+                        <tr class="tm-bandrow"><td colspan="{{ positions|length + 1 }}"><div class="tm-band">
+                            <b>{{ umbrella }}</b>
+                            {% if permissions[0].isCore %}
+                                <span class="pm-by core"><i></i>the host</span>
+                            {% else %}
+                                <span class="pm-by {{ permissions[0].source }}"><i></i>{{ moduleNames[permissions[0].source]|default(permissions[0].source) }}</span>
+                            {% endif %}
+                        </div></td></tr>
+                        {# THE TWO MARKS THAT ARE PROPERTIES OF THE PERMISSION, not of a
+                           layout: the one core permission that destroys something, and
+                           the one that grants authority over other people. B carries
+                           them on `.pm-row`; the grid carries them on the row. #}
+                        {% for permission in permissions %}
+                            <tr class="{{ permission.value ends with '.delete' ? 'destructive' : '' }}{{ permission.value == 'team.manage' ? ' elevated' : '' }}">
+                                <td class="pm-rowh">
+                                    <div class="pm-name">
+                                        <b>{{ permission.label }}</b>
+                                        <span class="perm">{{ permission.value }}</span>
+                                        <em>{{ permission.description }}</em>
+                                    </div>
+                                </td>
+                                {# THE INTERSECTION, in the design's own vocabulary: `.pm-box` is the
+                                   whole-cell mark and the `<i>` inside it is the drawn box. It is a
+                                   span and not a button here because THIS DIRECTION IS READ-ONLY —
+                                   the ruled deviation for A and C — so `.pm-ro` takes back the hover
+                                   and the pointer a clickable cell would offer and cannot honour. #}
+                                {% for position in positions %}
+                                    <td>
+                                        <span class="pm-box pm-ro{{ permission.value in position.permissionValues ? ' on' : '' }}">
+                                            <i>{{ pm.icon_tick() }}</i>
+                                        </span>
+                                    </td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+</div>

@@ -32,9 +32,10 @@ a word for developers. An admin installs *the core* and then *modules*.
 | `src/Uhifadhi/Contracts` | `uhifadhi/contracts` | the interfaces a module declares itself with — MIT, and depended on by modules that want nothing else |
 | `RegistryBundle` | `uhifadhi/registry-bundle` | the module catalogue, the per-area install ledger, parking, declared permissions |
 | `ShellBundle` | `uhifadhi/shell-bundle` | the document, the page frame, navigation, the theme, widget surfaces |
+| `TeamBundle` | `uhifadhi/team-bundle` | people: the account, positions, departments, the sign-in and invitation screens |
 | `AtlasBundle` | `uhifadhi/atlas-bundle` | maps, charts and the chrome every one of them wears |
 
-`TeamBundle` (people) and `AreaBundle` (areas, zones, the overview) join them.
+`AreaBundle` (areas, zones, the overview) joins them.
 
 The contracts stay a package of their own so a capability module can depend on
 interfaces alone, and stay MIT while the runtime around them is AGPL: an
