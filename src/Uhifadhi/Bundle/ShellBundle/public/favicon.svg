@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Uhifadhi">
+    <!-- THE TAB ICON: the full masterbrand mark — the knockout "U" tile with the
+         EMPTY child tile seated in the cut corner. Both paths are the mark's own,
+         copied from templates/_brand_mark.html.twig rather than re-authored: the
+         geometry is the ruled system and exists in one form, at every size.
+
+         THE PAINT IS WRITTEN IN, and this is the one place in the platform where
+         the brand colours are restated. A favicon is fetched on its own — no
+         shell.css, no `html.dark`, no tokens reach it — so the two palettes are
+         here as literals, and they are the literals the c-acc and c-cv tokens
+         resolve to: deep jade on bone paper, mint on the night canvas.
+         Anything else would be a second brand after dark. -->
+    <style>
+        .bm-tile { fill: #0f8a68; }
+        .bm-child { fill: #f3f2eb; }
+        .bm-ring { fill: none; stroke: #0f8a68; }
+        @media (prefers-color-scheme: dark) {
+            .bm-tile { fill: #3ed9a8; }
+            .bm-child { fill: #0c1310; }
+            .bm-ring { stroke: #3ed9a8; }
+        }
+    </style>
+    <path class="bm-tile" fill-rule="evenodd" d="M18 0H82A18 18 0 0 1 100 18V64L64 100H18A18 18 0 0 1 0 82V18A18 18 0 0 1 18 0ZM23 20V50A27 27 0 0 0 77 50V20H62V50A12 12 0 0 1 38 50V20Z"/>
+    <g transform="translate(52,52) scale(0.48)">
+        <path class="bm-child" d="M18 0H82A18 18 0 0 1 100 18V64L64 100H18A18 18 0 0 1 0 82V18A18 18 0 0 1 18 0Z"/>
+        <path class="bm-ring" d="M18 0H82A18 18 0 0 1 100 18V64L64 100H18A18 18 0 0 1 0 82V18A18 18 0 0 1 18 0Z" stroke-width="11"/>
+    </g>
+</svg>

@@ -1,0 +1,108 @@
+{# THE PAGE A FRESH INSTALLATION HAS BEFORE IT HAS ANYTHING ELSE.
+
+   A fresh installation is the registry and the shell and nothing else: no modules
+   and no pages of its own. Without this screen `/` answers with Symfony's
+   welcome-404 — a correct installation looking like a broken one, and the first
+   thing a new operator sees.
+
+   The shell ships the page, the controller behind it and the route that
+   addresses it, and loads none of them. The application imports the shell's
+   route resource in its own config/routes/shell.yaml; that import is what makes
+   this reachable, and editing or removing it is how the application replaces
+   the homepage.
+
+   WHO READS IT IS NOT THIS PAGE'S QUESTION. With no firewall installed the page
+   is open because nothing is closed; on an installation that has identity, whose
+   security.yaml is default-closed, the same page is a signed-in view and a
+   stranger asking for `/` lands on the sign-in screen instead. This template is
+   the same either way — it asks for no viewer and gates nothing.
+
+   ITS DATA ARRIVES AS VARIABLES, from Uhifadhi\Bundle\ShellBundle\Controller\WelcomeController.
+   The list below is `packages`, not a global function call: one page's data
+   belongs to that page.
+
+   ONE LIST, ONE SOURCE OF TRUTH. What is installed is read from composer at
+   render time, never written here: this page's whole job is to report on an
+   installation, and a page that reported a list somebody typed was wrong the
+   first time anybody followed the one instruction it gives. The shell adds a
+   line of description to the two packages it can honestly speak for — itself,
+   and the registry it renders beside — and prints every other package by name and
+   version, because a shell that described a module would be a shell that knew
+   what modules are.
+
+   THIS TEMPLATE NAMES NO MODULE, and the boundary sweep reads it like every
+   other file here.
+
+   It types no furniture: it fills sockets, like any module page should. #}
+{% extends '@Shell/page.html.twig' %}
+
+{% block title %}Welcome{% endblock %}
+
+{% block shell_page_title %}A fresh uhifadhi installation{% endblock %}
+{% block shell_page_subtitle %}
+    What is installed, why the sidebar beside it is empty, and what to do next.
+{% endblock %}
+
+{% block shell_page %}
+    <div class="welcome">
+        <p class="wlead">The whole platform in one sentence: <b>a module registers
+           with the registry and renders in the shell.</b> Everything a deployment can
+           actually do arrives as a module on top of those two.</p>
+
+        <h2 class="zone">What is installed</h2>
+
+        <div class="wpkgs">
+            {%- for package in packages -%}
+                <div class="wpkg-row">
+                    <span class="mono wpkg">{{ package.name }}</span>
+                    <span class="chip {{ package.note is null ? 'idle' : 'acc' }}">{{ package.version }}</span>
+                    {%- if package.note %}<span class="wpkg-note">{{ package.note }}</span>{% endif -%}
+                </div>
+            {%- endfor -%}
+        </div>
+
+        <p>Read live from composer, so this list is what this installation
+           actually has. A package with no rows in the sidebar is not a broken
+           one: some of them are machinery other modules draw with rather than
+           screens of their own.</p>
+
+        <h2 class="zone">Why the sidebar is empty</h2>
+
+        <p>Because nothing has contributed a row to it yet. The sidebar and the
+           module grid are drawn live from what is installed and what it offers,
+           and neither is a placeholder waiting to be filled in by hand — an
+           installation with nothing in it honestly shows nothing. Zero of
+           everything is a working installation, not a half-finished one.</p>
+
+        <h2 class="zone">What to do next</h2>
+
+        <p>Install a module. Each one is an ordinary Composer package named
+           <code class="mono">uhifadhi/&lt;name&gt;-module</code>:</p>
+
+        <pre class="wpre mono">composer require uhifadhi/&lt;name&gt;-module</pre>
+
+        <p>Symfony Flex registers the bundle and writes its configuration, the
+           module registers itself with the registry, and its rows appear in the
+           sidebar the next time you load a page. There is no list to edit and
+           no menu to wire up — including the list above, which is why it is
+           right. Removing the package takes its rows away again the same day.</p>
+
+        <h2 class="zone">About this page</h2>
+
+        <p>The route is the shell's: it ships one, named
+           <code class="mono">welcome</code>, at <code class="mono">/</code>.
+           The shell does not load it. This page is reachable because your
+           application <em>imports</em> it, in one line in a file that belongs to
+           your application:</p>
+
+        <pre class="wpre mono"># config/routes/shell.yaml
+shell:
+    resource: '@ShellBundle/config/routes/welcome.php'</pre>
+
+        <p>That line is the whole of the shell's claim on a URL, and it is yours
+           to withdraw. Point <code class="mono">/</code> at your own home screen
+           by editing that file, or delete the import and the address is your
+           application's again — nothing in the shell depends on this page being
+           reachable, or on the route name.</p>
+    </div>
+{% endblock %}

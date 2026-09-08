@@ -1,0 +1,742 @@
+/* ============================================================================
+   THE SHELL'S STYLESHEET — the token set, and the furniture the shell draws.
+
+   THREE THINGS ARE HERE AND A FOURTH IS DELIBERATELY NOT.
+
+   Here: the BOX MODEL every page is measured in, the twenty-three THEME TOKENS,
+   and the plain CSS for the classes this bundle's own templates emit. Tokens
+   are values — custom properties, resolved
+   by the browser — so nothing has to be built for them to exist, and a bundle
+   that shipped them any other way would be a bundle that only themed hosts with
+   the right build. The furniture is hand-written plain CSS for the same reason:
+   a reusable bundle cannot run an application's asset pipeline, and a
+   stylesheet that needed one would not be a stylesheet.
+
+   Not here: utility classes. An application's Tailwind build maps these tokens
+   into utilities (bg-canvas, text-fog, border-line …) in its own app.css, which
+   is where a build-time concern belongs. That file reads `rgb(var(--c-cv))` at
+   runtime, so it keeps working as long as this sheet lands first — which the
+   contract guarantees and a test enforces.
+
+   LIGHT AND DARK ARE BOTH FIRST-CLASS: two complete palettes, not a filter over
+   one. Every colour token carries a dark value. The brand trio does not, on
+   purpose — it rides the channels of --c-acc and --c-cv, landing deep jade on
+   the light canvas and mint on the dark one with no override, because a second
+   definition is a second place the brand colour is decided.
+
+   A token a module can read is a token a module will read, so anything the
+   shell declares that is NOT in the contract is prefixed --_ as private, and a
+   test sweeps this file to keep that true.
+   ========================================================================== */
+
+/* ==================== THE BOX MODEL ====================
+   PADDING AND BORDER ARE MEASURED INSIDE THE WIDTH. This is the frame's, not
+   each module's, and it is the first thing in the sheet because everything
+   under it is written assuming it.
+
+   IT IS NOT A HOUSE STYLE — IT IS THE MEASUREMENT THE DESIGNS ARE DRAWN IN. The
+   design workspace's replicas open with the same reset, so every number a
+   design hands a module is a BORDER box: a 78px calendar cell is 78px including
+   its padding and its rule. Port that faithfully into a platform whose frame
+   reset nothing and the cell comes out 108px — correct in the replica, wrong in
+   the product, and wrong by an amount that differs per rule. The fleet paid for
+   that twice before this line existed: a position rail that hung 24px out of
+   the column it lived in, and a sign-in card floating on 52px of scroll that
+   was not there.
+
+   ONE PLACE, BECAUSE NINE PLACES IS NINE CHANCES TO FORGET. A module may still
+   write `box-sizing: border-box` on a rule where it wants the assumption said
+   out loud; it no longer has to, and it must never write `content-box`.
+
+   The pseudo-elements are named on purpose: `*` does not reach them, and a
+   ::before measured differently from the element it decorates is the hairline
+   that will not line up. */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+/* ==================== THE TOKENS — light (bone paper) ==================== */
+:root {
+    --c-cv: 243 242 235;     /* canvas: the page behind everything */
+    --c-p1: 255 255 255;     /* plate, gradient high */
+    --c-p2: 251 250 246;     /* plate, gradient low */
+    --c-raised: 236 235 226; /* chips, fields, anything on a plate */
+    --c-tx: 27 38 32;        /* primary text */
+    --c-fog: 87 100 90;      /* secondary — darkened for light-theme legibility */
+    --c-dim: 118 132 122;    /* tertiary */
+    --c-acc: 15 138 104;     /* the jade accent: live and CTA, nothing else */
+    --c-accT: 255 255 255;   /* text that survives on the accent */
+    --c-ok: 30 122 70;
+    --c-warn: 154 107 20;
+    --c-fail: 186 66 39;
+    --c-ln: rgba(23, 38, 30, 0.11);
+    --c-ln2: rgba(23, 38, 30, 0.20);
+    --glass: rgba(255, 255, 255, 0.85);
+    --shadow: 0 6px 22px rgba(23, 38, 30, 0.10);
+    --accGlow: rgba(15, 138, 104, 0.13);
+    --logo-tile: rgb(var(--c-acc));
+    --logo-child: rgb(var(--c-cv));
+    --logo-accent: rgb(var(--c-acc));
+    --font-display: "Archivo", "Avenir Next", ui-sans-serif, system-ui, sans-serif;
+    --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+
+    /* ---- DERIVED ALIASES — the design-system vocabulary components reference
+       (.fld, .mchip, charts, the modules' own rules), mapped ONCE from the
+       --c-* channels above. Modules USE these and must not re-bridge them; a
+       module that redefines one is drift (the conformance check will flag it).
+       They ride the channels, so they follow light/dark automatically and need
+       no html.dark duplicate. The design's global uhifadhi.css is the source. */
+    --cv: rgb(var(--c-cv));
+    --p1: rgb(var(--c-p1));
+    --p2: rgb(var(--c-p2));
+    --raised: rgb(var(--c-raised));
+    --tx: rgb(var(--c-tx));
+    --fog: rgb(var(--c-fog));
+    --dim: rgb(var(--c-dim));
+    --acc: rgb(var(--c-acc));
+    --accT: rgb(var(--c-accT));
+    --ok: rgb(var(--c-ok));
+    --warn: rgb(var(--c-warn));
+    --fail: rgb(var(--c-fail));
+    --ln: var(--c-ln);
+    --ln2: var(--c-ln2);
+}
+
+/* ==================== THE TOKENS — dark (night canvas) ====================
+   The selector is part of the contract: module stylesheets across the platform
+   write `html.dark .their-card { … }` too, so a move to a data attribute would
+   silently unstyle every one of them. The class is put on <html> by the inline
+   script in the document head, before the first paint. */
+html.dark {
+    --c-cv: 12 19 16;
+    --c-p1: 21 32 25;
+    --c-p2: 17 26 20;
+    --c-raised: 28 41 33;
+    --c-tx: 234 242 236;
+    --c-fog: 150 168 156;    /* lifted so muted text is not too dark */
+    --c-dim: 124 140 129;
+    --c-acc: 62 217 168;
+    --c-accT: 12 19 16;
+    --c-ok: 99 201 127;
+    --c-warn: 219 163 63;
+    --c-fail: 224 91 65;
+    --c-ln: rgba(216, 236, 224, 0.09);
+    --c-ln2: rgba(216, 236, 224, 0.17);
+    --glass: rgba(12, 19, 15, 0.78);
+    --shadow: 0 8px 26px rgba(0, 0, 0, 0.34);
+    --accGlow: rgba(62, 217, 168, 0.18);
+}
+
+/* ==================== BASE ==================== */
+html { scrollbar-gutter: stable; scrollbar-width: thin; scrollbar-color: color-mix(in srgb, rgb(var(--c-fog)) 45%, transparent) transparent; }
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: color-mix(in srgb, rgb(var(--c-fog)) 40%, transparent); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, rgb(var(--c-fog)) 65%, transparent); }
+
+body {
+    background: rgb(var(--c-cv));
+    color: rgb(var(--c-tx));
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    position: relative;
+    margin: 0;
+}
+/* A faint survey grid on the canvas: identity, never an encoding. */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.5;
+    z-index: 0;
+    background:
+        linear-gradient(color-mix(in srgb, rgb(var(--c-fog)) 8%, transparent) 1px, transparent 1px),
+        linear-gradient(90deg, color-mix(in srgb, rgb(var(--c-fog)) 8%, transparent) 1px, transparent 1px);
+    background-size: 72px 72px;
+}
+.mono { font-family: var(--font-mono); }
+.disp { font-family: var(--font-display); letter-spacing: -0.02em; }
+.fog { color: rgb(var(--c-fog)); }
+.acc { color: rgb(var(--c-acc)); }
+
+/* ==================== THE SHELL: SIDEBAR + MAIN COLUMN ====================
+   Left nav (full width, or an icon-only rail), a fluid main column, and a
+   main-area top header for account and utility chrome. */
+.shell { display: flex; min-height: 100vh; }
+
+.side {
+    width: 264px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 14px 12px;
+    border-right: 1px solid var(--c-ln);
+    background: rgb(var(--c-p2));
+    transition: width .18s ease;
+    z-index: 30;
+    box-sizing: border-box;
+}
+/* THE COLLAPSED RAIL is drawn from either of two classes, and the second one is
+   the interesting one. `.side.rail` is the sidebar's own state, set by its
+   controller on click. `html.shell-rail` is the same fact on the one element
+   that exists BEFORE the sidebar is parsed, set by the document's inline
+   pre-paint script — without it a remembered rail is applied when the
+   controller connects, and a 236px sidebar visibly jumps to 66px on every load.
+   Every rule below therefore reads from both, and the controller keeps them in
+   step. */
+.side.rail, html.shell-rail .side { width: 66px; }
+.side-top { display: flex; align-items: center; gap: 8px; padding: 2px 2px 16px; }
+.side .brand { display: flex; align-items: center; gap: 10px; flex: 1; padding: 4px; text-decoration: none; color: rgb(var(--c-tx)); overflow: hidden; }
+.side .brand .brandmark { width: 32px; height: 32px; flex-shrink: 0; display: block; }
+.side .brand b { font-family: var(--font-display); font-weight: 600; font-size: 14px; letter-spacing: .1em; white-space: nowrap; }
+
+/* The mark's paint, from the derived tokens. Never ink, never black. */
+.brandmark .bm-tile { fill: var(--logo-tile); }
+.brandmark .bm-child { fill: var(--logo-child); }
+.brandmark .bm-ring { fill: none; stroke: var(--logo-accent); }
+
+.collapse-btn {
+    display: grid; place-items: center; width: 30px; height: 30px; flex-shrink: 0;
+    border: 0; background: none; color: rgb(var(--c-fog)); border-radius: 8px; cursor: pointer;
+}
+.collapse-btn:hover { background: rgb(var(--c-raised)); color: rgb(var(--c-tx)); }
+.collapse-btn svg { width: 18px; height: 18px; transition: transform .18s ease; }
+
+.side .nav { display: flex; flex-direction: column; gap: 5px; margin-top: 4px; }
+.nav-item {
+    display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 9px;
+    color: rgb(var(--c-fog)); text-decoration: none; font-size: 13px; white-space: nowrap; overflow: hidden;
+}
+.nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+.nav-item:hover { background: rgb(var(--c-raised)); color: rgb(var(--c-tx)); }
+.nav-item.on { background: rgb(var(--c-acc) / .13); color: rgb(var(--c-tx)); font-weight: 600; }
+.nav-item.on svg { color: rgb(var(--c-acc)); }
+/* A row with nowhere to go: visible, dimmed, inert — a promise about the
+   future, never a hole where a planned surface used to be named. */
+.nav-item.off { color: rgb(var(--c-dim)); cursor: default; }
+.nav-item.off:hover { background: none; color: rgb(var(--c-dim)); }
+
+.side-foot { margin-top: auto; display: flex; flex-direction: column; gap: 6px; padding-top: 12px; border-top: 1px solid var(--c-ln); }
+.side .row {
+    display: flex; align-items: center; gap: 10px; padding: 7px 11px; border-radius: 9px;
+    color: rgb(var(--c-fog)); font-size: 12px; background: none; border: 0; font-family: inherit;
+    cursor: pointer; white-space: nowrap; overflow: hidden; text-align: left; width: 100%; text-decoration: none;
+}
+.side .row:hover { background: rgb(var(--c-raised)); color: rgb(var(--c-tx)); }
+.side .row svg { width: 17px; height: 17px; flex-shrink: 0; }
+
+/* The collapsed rail: labels have nowhere to go, so they go. */
+:is(.side.rail, html.shell-rail .side) .brand b,
+:is(.side.rail, html.shell-rail .side) .nav-item span,
+:is(.side.rail, html.shell-rail .side) .row span { display: none; }
+:is(.side.rail, html.shell-rail .side) .side-top { flex-direction: column; gap: 10px; }
+:is(.side.rail, html.shell-rail .side) .collapse-btn svg { transform: rotate(180deg); }
+:is(.side.rail, html.shell-rail .side) .nav-item,
+:is(.side.rail, html.shell-rail .side) .row { justify-content: center; padding-left: 0; padding-right: 0; gap: 0; }
+:is(.side.rail, html.shell-rail .side) .brand { justify-content: center; padding-left: 0; padding-right: 0; }
+
+.main { flex: 1; min-width: 0; position: relative; display: flex; flex-direction: column; }
+.main > .page { width: 100%; }
+
+/* THE TOP BAR IS FULL-BLEED, ITS CONTENT IS NOT. The rule and the blur reach
+   both edges of the main column, but the account cluster obeys the SAME measure
+   as `.page` — max-width 1280, centred, a 22px gutter — so the top bar's content
+   edge lands flush with the content grid below it rather than 26px out from it.
+   Without this the cluster sits at the window edge while the grid is centred,
+   and that contract reads as a "cut grid". Written as `.topbar > .tb-right` so it
+   out-ranks the margin-left:auto it replaces. */
+.topbar {
+    display: flex; align-items: center; height: 56px; padding: 0; border-bottom: 1px solid var(--c-ln);
+    background: color-mix(in srgb, rgb(var(--c-cv)) 85%, transparent); backdrop-filter: blur(10px);
+    position: sticky; top: 0; z-index: 25;
+}
+.topbar > .tb-right {
+    width: 100%; max-width: 1280px; margin: 0 auto; padding: 0 22px; box-sizing: border-box;
+    display: flex; align-items: center; justify-content: flex-end; gap: 14px;
+}
+.tb-icon {
+    position: relative; display: grid; place-items: center; width: 34px; height: 34px; border: 0;
+    background: none; color: rgb(var(--c-fog)); border-radius: 9px; cursor: pointer; font-family: inherit;
+    text-decoration: none;
+}
+.tb-icon:hover { background: rgb(var(--c-raised)); color: rgb(var(--c-tx)); }
+.tb-icon svg { width: 18px; height: 18px; }
+/* An inert placeholder — the alerts bell until its backend lands — reads as a
+   thing that is coming, not a control that is broken: dimmed, no hover lift, no
+   pointer. The nav's `.off` says the same at the row scale. */
+.tb-icon.off { color: rgb(var(--c-dim)); cursor: default; }
+.tb-icon.off:hover { background: none; color: rgb(var(--c-dim)); }
+/* The count on a live top-bar icon. No element carries it yet — the shell emits
+   none without a real number behind it — but the treatment is the contract, so
+   the day a contract supplies one it lands styled. */
+.tb-icon .badge {
+    position: absolute; top: 1px; right: 1px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 99px;
+    background: rgb(var(--c-fail)); color: #fff; font-family: var(--font-mono); font-size: 8.5px; font-weight: 700;
+    display: grid; place-items: center; line-height: 1;
+}
+
+/* The viewer's card: the mark, the name, and the quiet org·role line under it. */
+.user { display: flex; align-items: center; gap: 9px; padding: 4px 6px 4px 4px; border-radius: 10px; cursor: pointer; }
+.user:hover { background: rgb(var(--c-raised)); }
+.uinfo { display: flex; flex-direction: column; line-height: 1.25; }
+.uinfo b { font-size: 12.5px; color: rgb(var(--c-tx)); font-weight: 600; }
+.uinfo em { font-style: normal; font-size: 10px; color: rgb(var(--c-fog)); }
+/* On a narrow viewport the words step aside and the mark stands alone. */
+@media (max-width: 640px) { .uinfo { display: none; } }
+
+/* The footer row. NOT `.page`: the frame owns that class and owns exactly one
+   of them per screen, so this carries its own and borrows the measure. */
+.shell-foot { position: relative; z-index: 1; max-width: 1280px; width: 100%; margin: auto auto 0; padding: 0 22px 26px; box-sizing: border-box; }
+.footer { margin-top: 44px; border-top: 1px solid var(--c-ln); padding-top: 18px; color: rgb(var(--c-dim)); font-size: 11.5px; max-width: 96ch; line-height: 1.6; }
+
+/* ==================== THE NAV: SECTIONS + LOCATION TREE ====================
+   Two parts. Section labels group the org level — mono, tracked, muted; they
+   group, they never compete with the rows under them. And the location TREE:
+   ONE line grammar applied at every depth, a rail dropping out of a parent row
+   at that parent's content centre and ticking sideways into each child. The
+   indent steps 12px per level and the rail sits at the previous level's centre
+   (21 → 33 → 45 for rails, 38 → 50 → 62 for content), which is what makes the
+   levels read as one drawing rather than three lists.
+
+   Both are meaningless in the icon rail, where a word has nowhere to go. */
+.nav-hd {
+    font-family: var(--font-mono); font-size: 9.5px; font-weight: 600; letter-spacing: .14em;
+    text-transform: uppercase; color: rgb(var(--c-dim));
+    padding: 10px 12px 3px; white-space: nowrap; overflow: hidden;
+}
+.nav .nav-hd:first-child { padding-top: 2px; }
+:is(.side.rail, html.shell-rail .side) .nav-hd,
+:is(.side.rail, html.shell-rail .side) .ntree { display: none; }
+
+.ntree { position: relative; margin: 1px 0 4px; }
+.ntree a, .ntree span.nta, .ntree span.ntt, .ntree span.ntm {
+    display: flex; align-items: center; gap: 8px; position: relative;
+    text-decoration: none; border-left: 2px solid transparent;
+}
+/* FOLDING IS ONE WORD AT EVERY DEPTH. A caret folds the group that follows its
+   row, whichever level that row is on, and `closed` is the only state — so a
+   folded branch is always still in the document and always reopens. */
+.ntree.closed, .nta-group.closed, .ntgroup.closed { display: none; }
+
+/* DEPTH 2 — A PLACE. The branch of its screens hangs from it. */
+.ntree .nta { padding: 6px 12px 6px 40px; font-size: 12.5px; color: rgb(var(--c-tx)); }
+.ntree .nta b { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ntree .nta::before { content: ""; position: absolute; left: 23px; top: -4px; bottom: 50%; width: 1px; background: var(--c-ln2); }
+.ntree .nta::after { content: ""; position: absolute; left: 23px; top: 50%; width: 9px; height: 1px; background: var(--c-ln2); }
+.ntree .nta:hover { background: rgb(var(--c-raised)); }
+/* The place the viewer is inside: named and weighted, but NOT the accent — the
+   accent is reserved for the leaf they are actually on. `.cur` is the design's
+   name for this ancestor state; `.on` is what the single-`current` model emits. */
+.ntree .nta.on, .ntree .nta.cur { color: rgb(var(--c-tx)); font-weight: 600; }
+
+/* DEPTH 3 — an area's own sibling screens (Overview / Modules / Zones / Settings). */
+.ntree .ntt { padding: 5px 12px 5px 52px; font-size: 11.5px; color: rgb(var(--c-fog)); }
+.ntree .ntt::before { content: ""; position: absolute; left: 35px; top: 0; bottom: 0; width: 1px; background: var(--c-ln2); }
+.ntree .ntt:last-child::before { bottom: auto; height: 50%; }
+.ntree .ntt::after { content: ""; position: absolute; left: 35px; top: 50%; width: 9px; height: 1px; background: var(--c-ln2); }
+.ntree .ntt:hover { color: rgb(var(--c-tx)); background: rgb(var(--c-raised)); }
+.ntree .ntt.on { color: rgb(var(--c-acc)); background: rgb(var(--c-acc) / .12); border-left-color: rgb(var(--c-acc)); font-weight: 600; }
+/* A tab that carries a branch (Modules) takes the parent affordance: weight + caret. */
+.ntree .ntt.par { color: rgb(var(--c-tx)); font-weight: 600; display: flex; align-items: center; }
+/* A stub — a place whose page is not built yet: read as a word, but inert. */
+.ntree .ntt.stub { color: rgb(var(--c-dim)); cursor: default; }
+.ntree .ntt.stub:hover { color: rgb(var(--c-dim)); background: none; }
+
+/* DEPTH 4 AND BELOW — the module rows under a tab. Each wears its module's
+   identity dot, and the indent/rail steps once more so the levels read as one
+   drawing rather than three lists. */
+.ntree .ntm {
+    padding: 4.5px 12px 4.5px 64px; font-size: 11px; color: rgb(var(--c-fog));
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ntree .ntm::before { content: ""; position: absolute; left: 47px; top: -3px; bottom: 50%; width: 1px; background: var(--c-ln2); }
+.ntree .ntm::after { content: ""; position: absolute; left: 47px; top: 50%; width: 9px; height: 1px; background: var(--c-ln2); }
+.ntree .ntm:hover { color: rgb(var(--c-tx)); background: rgb(var(--c-raised)); }
+.ntree .ntm.on { color: rgb(var(--c-acc)); background: rgb(var(--c-acc) / .12); border-left-color: rgb(var(--c-acc)); font-weight: 600; }
+/* THE MODULE IDENTITY DOT. The shell draws it and defaults it to jade; a module
+   carries its OWN hue the map-legend way — it declares `.ntree .ntm .mdot.<tone>`
+   in its own stylesheet, and the host hands that tone through NavItem::$tone. The
+   shell names no module (BoundaryTest), so it ships no per-module hue of its own. */
+.ntree .ntm .mdot { width: 6px; height: 6px; border-radius: 2px; background: rgb(var(--c-acc)); flex: none; }
+
+/* Carets: every node with children carries one, it only ever folds (the label
+   navigates), and a folded caret points at what it would reveal. One unified
+   rule at every depth, in place of the design's three near-copies. */
+.nav .chev {
+    margin-left: auto; display: flex; align-items: center; padding: 2px; border: 0; background: none;
+    color: rgb(var(--c-dim)); cursor: pointer; transition: transform .15s ease;
+}
+.nav .chev svg { width: 13px; height: 13px; }
+.nav .chev:hover { color: rgb(var(--c-tx)); }
+.nav .nav-item.closed > .chev,
+.nav .nta.closed > .chev,
+.nav .ntt.closed > .chev { transform: rotate(-90deg); }
+:is(.side.rail, html.shell-rail .side) .nav .chev { display: none; }
+
+/* ==================== THE PAGE FRAME ==================== */
+.page { position: relative; z-index: 1; max-width: 1280px; margin: 0 auto; padding: 26px 22px 90px; width: 100%; box-sizing: border-box; }
+.crumb {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: rgb(var(--c-fog));
+    margin: 2px 0 6px;
+}
+.crumb a { color: rgb(var(--c-acc)); text-decoration: none; }
+/* Title and subtitle left, the page's own actions right. */
+.pghead { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
+h1.pg { font-family: var(--font-display); font-size: 27px; font-weight: 700; letter-spacing: -.02em; margin: 0 0 4px; }
+.pgsub { color: rgb(var(--c-fog)); font-size: 14.5px; margin: 0 0 22px; max-width: 96ch; line-height: 1.6; }
+.pgsub b { color: rgb(var(--c-tx)); }
+.pgact { flex-shrink: 0; padding-top: 4px; }
+.pgact .cta { display: inline-flex; align-items: center; gap: 7px; }
+.pgact .cta svg { width: 15px; height: 15px; }
+
+/* The module's own content, and the only rule the frame imposes on it. A
+   wrapper with no styles is not neutral: the first element a module puts here
+   collapses its top margin THROUGH the wrapper and into the frame, so the gap
+   under a page's tabs moved depending on whether the module led with a heading,
+   a paragraph or a card. `flow-root` ends the collapsing, and zeroing the first
+   child's top margin means the frame — not the module — decides where a page's
+   content starts. Nothing else: what goes in here is the module's business. */
+.pgbody { display: flow-root; }
+.pgbody > :first-child { margin-top: 0; }
+
+h2.zone {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: rgb(var(--c-fog));
+    margin: 38px 0 22px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+h2.zone::after { content: ""; flex: 1; height: 1px; background: var(--c-ln2); }
+
+.grid { display: grid; gap: 20px; margin-bottom: 20px; }
+.g2 { grid-template-columns: 1fr 1fr; }
+.g3 { grid-template-columns: 1fr 1fr 1fr; }
+.g4 { grid-template-columns: repeat(4, 1fr); }
+.g32 { grid-template-columns: 1.5fr 1fr; }
+@media (max-width: 980px) {
+    .g2, .g3, .g32 { grid-template-columns: 1fr; }
+    .g4 { grid-template-columns: 1fr 1fr; }
+}
+
+/* The tab strip: sibling screens, underlined, left-aligned; the one you are on
+   carries the accent. */
+.atabs { display: flex; gap: 24px; border-bottom: 1px solid var(--c-ln); margin: 0 0 26px; }
+.atabs a {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: rgb(var(--c-fog));
+    text-decoration: none;
+    padding: 9px 1px 12px;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color .15s, border-color .15s;
+}
+.atabs a:hover { color: rgb(var(--c-tx)); }
+.atabs a.on { color: rgb(var(--c-tx)); border-bottom-color: rgb(var(--c-acc)); }
+
+/* Flashes: one markup, once, from the frame — so every screen says "saved" the
+   same way. The label is a data attribute, not a class list, because the
+   vocabulary of messages belongs to the application. */
+.flashes { display: flex; flex-direction: column; gap: 10px; margin: 0 0 20px; }
+.flashes .c { padding: 12px 16px; font-size: 13px; }
+.flashes .c::before { content: "\2713"; color: rgb(var(--c-acc)); font-weight: 700; margin-right: 9px; }
+.flashes .c[data-shell-flash="error"] { border-color: color-mix(in srgb, rgb(var(--c-fail)) 45%, transparent); }
+.flashes .c[data-shell-flash="error"]::before { content: "\0021"; color: rgb(var(--c-fail)); }
+
+/* ==================== THE PLATE, AND THE THINGS ON IT ====================
+   The card every surface in the platform is built from, and the two vocabularies
+   that ride it: chips and the call to action. They live in the shell because a
+   chip must read identically on a host page and inside a module. */
+.c {
+    background: linear-gradient(180deg, rgb(var(--c-p1)), rgb(var(--c-p2)));
+    border: 1px solid var(--c-ln);
+    border-radius: 14px;
+    padding: 24px 16px 14px;
+    position: relative;
+    box-shadow: var(--shadow);
+    box-sizing: border-box;
+}
+.cta {
+    background: rgb(var(--c-acc));
+    color: rgb(var(--c-accT));
+    border-radius: 9px;
+    padding: 7px 15px;
+    font-weight: 800;
+    font-size: 12px;
+    text-decoration: none;
+    display: inline-block;
+    border: none;
+    cursor: pointer;
+}
+
+/* ---- SHARED FORM INPUT (.fld) — every text/number/date field the app renders.
+   Design-system vocabulary from the global uhifadhi.css; lives here so a module's
+   filter form (telemetry, files, …) styles from shell without re-shipping it. */
+.fld {
+    background: var(--raised);
+    border: 1px solid var(--ln2);
+    border-radius: 10px;
+    padding: 10px 13px;
+    color: var(--tx);
+    font-size: 13px;
+    width: 100%;
+    font-family: inherit;
+}
+.fld::placeholder { color: var(--dim); }
+.fld:focus { outline: none; border-color: var(--fog); }
+.chip {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 6px;
+    padding: 2.5px 9px;
+    border: 1px solid;
+    white-space: nowrap;
+    display: inline-block;
+}
+.chip.ok { color: rgb(var(--c-ok)); border-color: color-mix(in srgb, rgb(var(--c-ok)) 40%, transparent); }
+.chip.warn { color: rgb(var(--c-warn)); border-color: color-mix(in srgb, rgb(var(--c-warn)) 40%, transparent); }
+.chip.fail { color: rgb(var(--c-fail)); border-color: color-mix(in srgb, rgb(var(--c-fail)) 40%, transparent); }
+.chip.idle { color: rgb(var(--c-dim)); border: 1px dashed color-mix(in srgb, rgb(var(--c-fog)) 45%, transparent); font-weight: 600; }
+.chip.acc { color: rgb(var(--c-acc)); border-color: color-mix(in srgb, rgb(var(--c-acc)) 45%, transparent); }
+
+/* The MINI CHIP: a compact pill that carries an interactive control rather than
+   a status word — a width toggle, a pinned item, a removable selection. It is
+   the shell's because more than one surface draws one, and a class two sheets
+   define renders differently depending on which loaded last. */
+.mchip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 5px 10px;
+    border: 1px solid var(--ln2);
+    border-radius: 99px;
+    color: rgb(var(--c-tx));
+    background: rgb(var(--c-cv));
+}
+.mchip:hover { border-color: rgb(var(--c-fog)); }
+.mchip.on { border-color: rgb(var(--c-acc)); color: rgb(var(--c-acc)); }
+
+/* ==================== THE COMPONENT VOCABULARY ====================
+   The classes a module writes on its own elements: the card's tab, the KPI
+   plate, the register table, the pager, the person's mark and the two quiet
+   buttons. Ported from the design workspace's vendor sheet, which is where the
+   platform's shared vocabulary has always lived — the design keeps them in one
+   file and every screen's own sheet says "not repeated here".
+
+   THEY SHIP HERE BECAUSE THEY WERE NOWHERE. A module that needed `.kpi` restated
+   it in its own stylesheet, marked "on loan", and the modules that did not
+   restate it drew a strip of plates as one line of running text. One definition,
+   in the frame, is the difference between a design system and four of them.
+
+   THE LINE THE LIST WAS DRAWN ON: could a third-party module use this class
+   without the shell knowing that module exists? Everything below passes. What
+   does not pass stays in the module's own sheet however generic it looks, and
+   what does pass hoists under a generic name however specific it was named.
+
+   UNSCOPED, on purpose: a module's sheet loads after this one and may override,
+   but it must never have to opt in. And EVERY RULE SPENDS TOKENS — no rule below
+   names a colour — which is what makes all of it correct in both palettes
+   without a single html.dark override. */
+
+/* ---- THE CARD'S TAB — a widget says what it is on its own top edge -------
+   A card header is not a heading inside the plate: it is a small mono pill that
+   straddles the border, which is what makes a screen of cards scannable. The
+   trailing `.src` is the qualifier — "Roster · the table" — in sentence case, so
+   the two halves read as label and note rather than as one shout. */
+.c > .tab {
+    position: absolute; top: -9px; left: 13px; z-index: 2;
+    background: rgb(var(--c-cv)); border: 1px solid var(--c-ln2); border-radius: 7px;
+    padding: 3px 10px;
+    font-family: var(--font-mono); font-size: 9.5px; font-weight: 600;
+    letter-spacing: .18em; text-transform: uppercase; color: rgb(var(--c-fog));
+    display: flex; gap: 8px; align-items: center;
+    white-space: nowrap; max-width: 92%; overflow: hidden;
+}
+.c > .tab .src { letter-spacing: .03em; color: rgb(var(--c-dim)); text-transform: none; }
+
+/* The line under a widget that says what it is FOR. Prose, so it is set at
+   reading size and not in the tab's mono. */
+.use { font-size: 12.5px; color: rgb(var(--c-fog)); margin: 10px 2px 4px; line-height: 1.55; }
+.use b { color: rgb(var(--c-tx)); }
+
+/* ---- THE KPI PLATE — a label on the tab, one number, one sub-line --------
+   The number is display type at 30px and BLOCK, and the block is the whole
+   composition: as an inline run the label, the count and the sub-line collapse
+   into a sentence ("People 2 2 active") that states a number nobody can find. */
+.kpi b, .kpi .disp {
+    font-family: var(--font-display); font-size: 30px; font-weight: 700; letter-spacing: -.035em;
+    display: block; line-height: 1; font-variant-numeric: tabular-nums;
+}
+/* The unit or denominator, which is not the number and must not be read as it. */
+.kpi b em, .kpi .disp em {
+    font-style: normal; font-size: 13px; color: rgb(var(--c-fog)); font-weight: 500; margin-left: 4px;
+}
+.kpi .sub {
+    font-family: var(--font-mono); font-size: 9.5px; color: rgb(var(--c-dim));
+    margin-top: 8px; display: flex; align-items: center; gap: 9px;
+}
+/* One plate in a strip may be the one that matters. Exactly one. */
+.kpi.hot b, .kpi.hot .disp { color: rgb(var(--c-acc)); }
+
+/* A strip of plates is not the page's four-up: the same strip has to sit in
+   twelve columns and in six, so the plates fold on their own content width
+   rather than on the page's breakpoint. A modifier on `.grid`, never alone. */
+.kstrip { grid-template-columns: repeat(auto-fit, minmax(196px, 1fr)); }
+
+/* ---- THE REGISTER TABLE -------------------------------------------------
+   Header cells are mono small-caps and LEFT aligned; the browser's centred bold
+   default is the single loudest thing on an unstyled page. Numbers are mono and
+   right-aligned through `.num`, so a column of them can be compared by eye. */
+table.tbl { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+table.tbl th {
+    font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase;
+    color: rgb(var(--c-fog)); text-align: left; padding: 8px 10px;
+    border-bottom: 1px solid var(--c-ln2); font-weight: 600;
+}
+table.tbl td {
+    padding: 9px 10px;
+    border-bottom: 1px dashed color-mix(in srgb, rgb(var(--c-fog)) 18%, transparent);
+    font-variant-numeric: tabular-nums;
+}
+table.tbl tr:hover td { background: color-mix(in srgb, rgb(var(--c-acc)) 4%, transparent); }
+table.tbl a { color: rgb(var(--c-acc)); text-decoration: none; font-weight: 600; }
+table.tbl .num { text-align: right; font-family: var(--font-mono); font-size: 12px; }
+
+/* ---- THE PAGER, and the foot it sits in --------------------------------- */
+.rdf-foot {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 8px 14px; border-top: 1px solid var(--c-ln2);
+    color: rgb(var(--c-fog)); font-size: 10.5px; font-family: var(--font-mono);
+}
+.rdf-page { display: inline-flex; align-items: center; gap: 6px; }
+.rdf-page a, .rdf-page button {
+    background: none; border: 1px solid var(--c-ln2); color: rgb(var(--c-fog)); border-radius: 6px;
+    width: 22px; height: 22px; cursor: pointer; font-size: 12px; line-height: 1;
+    display: inline-flex; align-items: center; justify-content: center; text-decoration: none;
+}
+.rdf-page a:hover, .rdf-page button:hover { border-color: rgb(var(--c-fog)); color: rgb(var(--c-tx)); }
+/* The page you are on, which is a fact and not a control. */
+.rdf-page .pg { color: rgb(var(--c-tx)); font-weight: 700; }
+
+/* ---- THE PERSON'S MARK, and the two quiet buttons ----------------------- */
+.avatar {
+    width: 30px; height: 30px; border-radius: 9px;
+    background: rgb(var(--c-acc)); color: rgb(var(--c-accT));
+    font-family: var(--font-display); font-weight: 700; font-size: 12px;
+    display: grid; place-items: center; flex-shrink: 0;
+}
+/* The always-visible row affordance, so a register row reads as openable. It
+   fills on the row's hover, not its own: the target is the row. */
+.open-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: .06em;
+    color: rgb(var(--c-acc)); text-decoration: none; white-space: nowrap;
+    border: 1px solid color-mix(in srgb, rgb(var(--c-acc)) 45%, transparent);
+    border-radius: 7px; padding: 4px 10px; background: none; cursor: pointer;
+}
+table.tbl tr:hover .open-btn {
+    background: rgb(var(--c-acc)); color: rgb(var(--c-accT)); border-color: rgb(var(--c-acc));
+}
+/* The secondary to .cta: same row, deliberately quieter. */
+.tgl {
+    border: 1px solid var(--c-ln2); background: none; color: rgb(var(--c-fog));
+    border-radius: 8px; padding: 5px 11px; font-size: 11px; cursor: pointer;
+    font-family: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 7px;
+}
+.tgl:hover { color: rgb(var(--c-tx)); border-color: rgb(var(--c-fog)); }
+.tgl svg { width: 15px; height: 15px; flex: none; }
+
+/* ---- THE COLOUR WORDS ----------------------------------------------------
+   Single letters the design uses inline to colour ONE word of a sentence. They
+   are the palette's own names — `.fog` and `.acc` above are the same idea — and
+   not the beginning of a utility set: a fifth grey belongs in the token list or
+   nowhere. */
+.g { color: rgb(var(--c-ok)); }
+.w { color: rgb(var(--c-warn)); }
+.r { color: rgb(var(--c-fail)); }
+.d { color: rgb(var(--c-dim)); }
+.muted { color: rgb(var(--c-dim)); }
+
+/* ==================== THE CATALOGUE PICTURE ==================== */
+.mtile { display: flex; flex-direction: column; gap: 9px; padding: 15px 16px; text-decoration: none; transition: border-color .15s, transform .12s; }
+.mtile:hover { border-color: color-mix(in srgb, rgb(var(--c-acc)) 45%, transparent); transform: translateY(-1px); }
+/* A tile with nowhere to go does not lift and does not pretend to be a link. */
+.mtile-inert:hover { border-color: var(--c-ln); transform: none; }
+.mtile-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.mtile-title { font-weight: 700; font-size: 14px; color: rgb(var(--c-tx)); }
+.mtile-source { margin-top: auto; padding-top: 5px; }
+.mtile-source .mono { font-size: 9px; letter-spacing: .06em; color: rgb(var(--c-dim)); }
+
+/* The marker on a group a department leads — and only then. A department is a
+   lens, never a gate: a marker on every group would say nothing at all. */
+.lens-led {
+    display: inline-flex; align-items: center; gap: 5px; margin-left: 10px;
+    font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: .12em;
+    text-transform: uppercase; line-height: 1; padding: 4px 9px 3px;
+    border: 1px solid color-mix(in srgb, rgb(var(--c-acc)) 45%, transparent); border-radius: 999px;
+    color: rgb(var(--c-acc)); background: color-mix(in srgb, rgb(var(--c-acc)) 7%, transparent);
+}
+.lens-led svg { width: 11px; height: 11px; }
+
+/* Zero of anything is a working installation — a sentence, not a blank plate. */
+.shell-empty { padding: 44px 32px; text-align: center; }
+.shell-empty p { font-size: 13px; margin: 0; }
+
+/* ==================== THE WELCOME PAGE ====================
+   The one screen a fresh installation has before it has anything else. It is
+   prose, so it needs a measure and a reading size, and neither belongs to the
+   page frame: a frame that set a line length would set it for every module
+   page, including the ones that are tables and maps. These rules are scoped to
+   this page's own wrapper and are the only place in this sheet that styles a
+   paragraph of text. */
+.welcome p { font-size: 14.5px; line-height: 1.7; color: rgb(var(--c-fog)); max-width: 78ch; margin: 0 0 14px; }
+.welcome p b { color: rgb(var(--c-tx)); font-weight: 700; }
+.welcome .wlead { margin-top: 22px; }
+.welcome .wcard { padding: 18px 18px 16px; }
+.welcome .wcard p { margin: 0; max-width: none; font-size: 13.5px; }
+.welcome .wcard-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.welcome .wpkg { font-size: 13px; font-weight: 700; color: rgb(var(--c-tx)); }
+/* WHAT THIS INSTALLATION IS MADE OF: one row per package, read from composer.
+   A list, not tiles — it is a fact to scan, and it grows with every module. */
+.welcome .wpkgs { display: flex; flex-direction: column; gap: 6px; margin: 0 0 18px; }
+.welcome .wpkg-row {
+    display: flex; align-items: center; gap: 10px; padding: 9px 13px;
+    border: 1px solid var(--c-ln); border-radius: 10px; background: rgb(var(--c-p2));
+}
+.welcome .wpkg-note { font-size: 11.5px; color: rgb(var(--c-dim)); margin-left: auto; }
+.welcome code { font-size: 12.5px; color: rgb(var(--c-tx)); background: rgb(var(--c-raised)); border-radius: 5px; padding: 2px 6px; }
+.welcome .wpre {
+    font-size: 13px;
+    color: rgb(var(--c-tx));
+    background: rgb(var(--c-raised));
+    border: 1px solid var(--c-ln);
+    border-radius: 10px;
+    padding: 13px 16px;
+    margin: 0 0 16px;
+    overflow-x: auto;
+}
+
+@media (max-width: 640px) {
+    .side { position: fixed; transform: translateX(-100%); }
+    .page { padding-left: 16px; padding-right: 16px; }
+}

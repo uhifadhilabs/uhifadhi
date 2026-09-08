@@ -1,0 +1,9 @@
+{# THE BOTTOM RUNG: the document, with no furniture at all.
+
+   A print view, a PDF export, an embedded panel. It still carries the theme —
+   the tokens, the fonts, and the inline resolve-before-paint script — because a
+   printed page with no tokens is black Times New Roman on white and does not
+   look like the product it came from. #}
+{% extends '@Shell/document.html.twig' %}
+
+{% block body %}<article>a printed thing</article>{% endblock %}

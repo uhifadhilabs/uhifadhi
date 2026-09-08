@@ -1,0 +1,13 @@
+{# THE MIDDLE RUNG: the shell, without the page frame.
+
+   What a full-bleed screen needs — a map that reaches the edges, a split view.
+   If this rung did not exist, such a page would extend the frame anyway and
+   then fight `.page` with negative margins, which is how a layout contract
+   starts being worked around instead of used.
+
+   `content` is the shell's main slot, and it is the socket every host page and
+   every module bundle already fills today — kept by name so the extraction does
+   not break five repositories in one commit. #}
+{% extends '@Shell/shell.html.twig' %}
+
+{% block content %}<div id="bare-slot">edge to edge</div>{% endblock %}

@@ -1,0 +1,46 @@
+{# THE CATALOGUE PICTURE — cards in category groups, and nothing else.
+
+   THE RULING, in one line: the shell claims the picture, not the grouping, not
+   the URL, and not the customize screen.
+
+   The picture lives alone perfectly well given a list of groups, and it is the
+   same picture wherever it appears — a place's catalogue tab, a department's
+   page, a future search result. WHICH cards, in WHICH groups, in WHICH order,
+   and which department leads one, is a reading of the catalogue for a
+   particular viewer in a particular place: it needs the place, the viewer and
+   the department lens, none of which the shell has or should acquire.
+
+   A CARD WITH NOWHERE TO GO IS NOT A LINK. A catalogue row whose bundle
+   declares no entry route has no pages yet; its tile is informational. The host
+   learned this by shipping tiles that 404'd, and the rule is kept here as a
+   nullable url on the value object, so a template cannot forget to check.
+
+   AND THERE IS NO FORM HERE. The customize screen looked like this picture's
+   neighbour and is its opposite in kind: it WRITES per-area install state — a
+   post, a token, an authorization decision, a flush. The shell has no writes
+   anywhere in it, and the first one would end "the layout renders from a
+   fixture with no database". A test greps these files to keep it that way. #}
+{%- for group in groups -%}
+    <h2 class="zone">{{ group.label }}
+        {%- if group.department %}<span class="lens-led">{{ ux_icon('shell:focus') }}led by {{ group.department }}</span>{% endif -%}
+    </h2>
+    <div class="grid g4">
+        {%- for card in group.cards -%}
+            {%- set _chip = {'live': 'ok', 'template': 'warn'}[card.status]|default('idle') -%}
+            {%- set _word = {'live': 'live', 'template': 'template'}[card.status]|default('planned') -%}
+            {% if card.url is not null %}<a class="c mtile" href="{{ card.url }}">{% else %}<div class="c mtile mtile-inert">{% endif %}
+                <div class="mtile-head">
+                    <span class="mtile-title">{{ card.title }}</span>
+                    <span class="chip {{ _chip }}">{{ _word }}</span>
+                </div>
+                <div class="mtile-source"><span class="mono">{{ card.source }}</span></div>
+            {% if card.url is not null %}</a>{% else %}</div>{% endif %}
+        {%- endfor -%}
+    </div>
+{%- else -%}
+    {# ZERO IS A WORKING INSTALLATION, at the surface where a person meets it:
+       a sentence, not a blank plate and not an error. #}
+    <div class="c shell-empty">
+        <p class="fog">No modules here yet.</p>
+    </div>
+{%- endfor -%}

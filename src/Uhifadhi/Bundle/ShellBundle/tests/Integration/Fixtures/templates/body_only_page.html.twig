@@ -1,0 +1,9 @@
+{# THE MINIMUM A MODULE MAY WRITE: one socket.
+
+   Everything else — the shell, the sidebar, the top bar, the `.page` wrapper,
+   the area's tab strip, the flashes, the footer — arrives because the frame is
+   the frame. If this file ever has to grow a second line to render a correct
+   platform page, the contract has failed. #}
+{% extends '@Shell/page.html.twig' %}
+
+{% block shell_page %}the body{% endblock %}

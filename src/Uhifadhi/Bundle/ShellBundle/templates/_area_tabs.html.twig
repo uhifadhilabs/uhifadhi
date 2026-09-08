@@ -1,0 +1,21 @@
+{# THE TAB STRIP — the sibling screens of wherever the viewer is.
+
+   The shell owns the strip and not one tab in it. That sibling screens are an
+   underlined row, that the row sits between the page head and the page body,
+   that exactly one tab is lit, and that one tab is no strip at all: those are
+   layout decisions with no second opinion worth having. WHICH screens a place
+   has is the host's model of that place, and a shell carrying the list would
+   need a release every time the host grew a screen.
+
+   A TAB THE VIEWER MAY NOT HAVE IS ABSENT. Not greyed, not inert — absent. A
+   greyed tab tells a ranger that a screen exists and they are not trusted with
+   it, which is a worse product than not mentioning it; and the value object has
+   no url-less form, so there is nothing here to grey out even by accident. The
+   withholding happens in the source, before the shell ever sees the list. #}
+{%- if tabs|length > 0 -%}
+    <div class="atabs">
+        {%- for tab in tabs -%}
+            <a href="{{ tab.url }}"{{ tab.current ? ' class="on"' : '' }}>{{ tab.label }}</a>
+        {%- endfor -%}
+    </div>
+{%- endif -%}

@@ -1,0 +1,18 @@
+{# The masterbrand: the knockout "U" tile with the EMPTY child tile seated in the
+   cut corner (parent × 0.48 at 52,52). The geometry is the ruled system — never
+   redraw it.
+
+   Paint comes from the --logo-* tokens and is ALWAYS the theme's accent green:
+   the tokens ride the channels of --c-acc and --c-cv, so dark lands mint on the
+   night canvas and light lands deep jade on the bone paper, with no per-theme
+   override anywhere. A second definition would be a second place the brand
+   colour is decided, and the two would drift.
+
+   The mark never degrades: the same full mark renders at every size. #}
+<svg class="brandmark" viewBox="0 0 100 100" width="{{ size|default(32) }}" height="{{ size|default(32) }}" role="img" aria-label="{{ label|default('Uhifadhi') }}">
+    <path class="bm-tile" fill-rule="evenodd" d="M18 0H82A18 18 0 0 1 100 18V64L64 100H18A18 18 0 0 1 0 82V18A18 18 0 0 1 18 0ZM23 20V50A27 27 0 0 0 77 50V20H62V50A12 12 0 0 1 38 50V20Z"/>
+    <g transform="translate(52,52) scale(0.48)">
+        <path class="bm-child" d="M18 0H82A18 18 0 0 1 100 18V64L64 100H18A18 18 0 0 1 0 82V18A18 18 0 0 1 18 0Z"/>
+        <path class="bm-ring" d="M18 0H82A18 18 0 0 1 100 18V64L64 100H18A18 18 0 0 1 0 82V18A18 18 0 0 1 18 0Z" stroke-width="11"/>
+    </g>
+</svg>

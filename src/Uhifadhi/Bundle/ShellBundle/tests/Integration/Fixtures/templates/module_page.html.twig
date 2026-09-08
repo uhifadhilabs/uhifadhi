@@ -1,0 +1,32 @@
+{# A MODULE PAGE, WRITTEN THE WAY ONE SHOULD BE WRITTEN AFTER THE EXTRACTION.
+
+   Compare it with what every module bundle ships today: a base that extends the
+   host's layout, re-declares `{% block content %}`, types `<div class="page">`,
+   loops app.flashes with its own class name, and then the page itself hand-rolls
+   a `.crumb` and a `.pghead` copied from whichever host template was open at the
+   time. Five copies of the frame, drifting.
+
+   Here there is no furniture at all — only sockets. That is the entire thesis of
+   this bundle, and this file is the proof obligation. #}
+{% extends '@Shell/page.html.twig' %}
+
+{% block title %}a fixture page{% endblock %}
+
+{% block stylesheets %}
+    {# parent() FIRST: the shell's sheet defines the tokens this one reads. #}
+    {{ parent() }}
+    <link rel="stylesheet" href="/fixture-module.css">
+{% endblock %}
+
+{% block shell_breadcrumbs %}<a href="/">uhifadhi</a> / fixtures{% endblock %}
+
+{% block shell_page_title %}a fixture page{% endblock %}
+{% block shell_page_subtitle %}what it is for{% endblock %}
+
+{% block shell_page_actions %}
+    <a class="cta" href="/do">Do the thing</a>
+{% endblock %}
+
+{% block shell_page %}
+    <p>the body</p>
+{% endblock %}

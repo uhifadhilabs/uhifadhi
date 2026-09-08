@@ -1,0 +1,44 @@
+{# ONE ROW OF THE NAV, AT ANY DEPTH — and its branch, if it has one.
+
+   Recursive on purpose: the source decides the nesting and the shell renders
+   whatever nesting it is given, because how deep a location tree goes is not
+   something a layout can know. Three treatments, by depth:
+
+     1. a section's own row     — icon + label, the collapsed rail's only survivor
+     2. a place inside it       — the emphasised row the branch hangs from
+     3. and below               — the rows of the place you are in
+
+   A ROW WITH NOWHERE TO GO RENDERS INERT rather than vanishing. The host needs
+   this — a surface whose route has not merged yet — and the honest treatment is
+   the one the design settled: visible, dimmed, not a link, carrying its own
+   explanation in a title. The product says "this is coming" instead of
+   pretending it was never planned.
+
+   FOUR TREATMENTS, BY DEPTH — the design distinguishes them and so must the
+   shell: a section row (1), the place the branch hangs from (2), that place's
+   own sibling screens (3, `ntt`, with `par` on the one that carries modules),
+   and the module rows under it (4+, `ntm`, each with its identity dot). #}
+{%- set _tag = item.url is null ? 'span' : 'a' -%}
+{%- set _kids = item.children|length > 0 -%}
+{%- set _row = depth == 1 ? 'nav-item' : (depth == 2 ? 'nta' : (depth == 3 ? 'ntt' : 'ntm')) -%}
+{%- set _group = depth == 1 ? 'ntree' : (depth == 2 ? 'nta-group' : 'ntgroup') -%}
+
+<{{ _tag }} class="{{ _row }}{{ depth == 3 and _kids ? ' par' }}{{ item.current ? ' on' }}{{ item.url is null ? ' off' }}{{ _kids and not item.open ? ' closed' }}"
+    {%- if item.url is not null %} href="{{ item.url }}"{% endif %}
+    {%- if item.hint is not null %} title="{{ item.hint }}"{% endif %}>
+    {%- if item.icon is not null %}{{ ux_icon(item.icon) }}{% endif -%}
+    {%- if depth == 1 %}<span>{{ item.label }}</span>
+    {%- elseif depth == 2 %}<b>{{ item.label }}</b>
+    {%- elseif depth == 3 %}{{ item.label }}
+    {%- else %}<i class="mdot{{ item.tone is not null ? ' ' ~ item.tone }}"></i>{{ item.label }}{% endif -%}
+    {%- if _kids %}<button class="chev" type="button" aria-label="Fold {{ item.label }}"
+            data-action="uhifadhi--shell-bundle--sidebar-tree#fold">{{ ux_icon('shell:chevron-down') }}</button>{% endif -%}
+</{{ _tag }}>
+
+{%- if _kids %}
+    <div class="{{ _group }}{{ item.open ? '' : ' closed' }}">
+        {%- for child in item.children -%}
+            {{ include('@Shell/_nav_item.html.twig', {item: child, depth: depth + 1}, with_context: false) }}
+        {%- endfor -%}
+    </div>
+{% endif -%}

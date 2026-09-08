@@ -1,0 +1,10 @@
+{# Attributes on <body> are not content, so no block can put them there. A host
+   sets them at the top of a template, outside any block, and the document's tag
+   picks them up — which is how a platform-wide setting every map controller
+   reads rides on a document the shell owns without the shell knowing that maps
+   exist. #}
+{% extends '@Shell/document.html.twig' %}
+
+{% set shell_body_attributes = 'data-basemap="esri" data-basemap-key=""' %}
+
+{% block body %}<article>a page that needed something on the body tag</article>{% endblock %}

@@ -1,0 +1,23 @@
+{# THE SIDEBAR'S SHAPE — sections, rows, and the location tree.
+
+   The shell owns every line of this drawing and not one word in it. Sections and
+   rows arrive as data from the tagged sources; whatever a source hands over is
+   what renders, and no name is ever recognised.
+
+   ONE LINE GRAMMAR, APPLIED AT EVERY DEPTH: a rail drops out of the bottom of a
+   parent row at that parent's content centre and ticks sideways into each child.
+   The indent steps once per level and the rail always sits at the previous
+   level's centre, which is what makes the levels read as one drawing rather than
+   three lists.
+
+   FOLDING IS A CLASS, NEVER AN OMISSION. A caret that folds by not rendering its
+   children has nothing to reopen, and the row becomes a one-way door. Children
+   are always in the document; `closed` hides them. #}
+<nav class="nav" data-controller="uhifadhi--shell-bundle--sidebar-tree">
+    {% for section in sections %}
+        <div class="nav-hd">{{ section.label }}</div>
+        {% for item in section.items %}
+            {{ include('@Shell/_nav_item.html.twig', {item: item, depth: 1}, with_context: false) }}
+        {% endfor %}
+    {% endfor %}
+</nav>

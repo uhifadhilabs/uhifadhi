@@ -1,0 +1,63 @@
+{# THE TOP RUNG — the page frame, and the reason this bundle exists.
+
+   A module page extends THIS and fills sockets. It types no furniture: no
+   `<div class="page">`, no crumb markup, no flash loop of its own. Before the
+   shell, every module carried a copy of all three, and a change to the
+   frame reached the copies somebody remembered.
+
+   THE VERTICAL ORDER IS PART OF THE CONTRACT — trail, page head, tabs, flashes,
+   body — because a module filling shell_page_actions has to know its buttons
+   land beside the title and above the tabs, or it will place them itself.
+
+   AN UNFILLED SOCKET LEAVES NOTHING BEHIND. Every region below is captured
+   first and rendered only if it has content, so a page with no subtitle gets no
+   empty paragraph and no 24px gap it did not ask for. That is the difference
+   between a frame you can trust and a frame every author reaches around. #}
+{% extends '@Shell/shell.html.twig' %}
+
+{% block content %}
+    {%- set _crumbs %}{% block shell_breadcrumbs %}{% endblock %}{% endset -%}
+    {%- set _title %}{% block shell_page_title %}{% endblock %}{% endset -%}
+    {%- set _subtitle %}{% block shell_page_subtitle %}{% endblock %}{% endset -%}
+    {%- set _actions %}{% block shell_page_actions %}{% endblock %}{% endset -%}
+    {%- set _tabs %}
+        {%- block shell_page_tabs -%}
+            {# THE DEFAULT IS THE AREA SHELL, and that is the defect this fixes:
+               today a module page inside an area loses the area's tabs entirely,
+               because the strip lives in a partial the host includes by hand.
+               Here a module page that fills only its body still shows you where
+               you are. A page outside any place says so by saying nothing —
+               fill this socket with nothing to opt out. #}
+            {%- include '@Shell/_area_tabs.html.twig' with {tabs: shell_tabs()} only -%}
+        {%- endblock -%}
+    {% endset -%}
+    {%- set _flashes %}
+        {%- block shell_flashes -%}
+            {# ONE FLASH MARKUP, RENDERED ONCE, BY THE FRAME. This block is
+               overridable and a module overriding it is a bug report: before the
+               shell, the host said "saved" one way, and two modules said
+               it two other ways, each with its own class and its own tick. #}
+            {%- include '@Shell/_flashes.html.twig' with {flashes: app.flashes} only -%}
+        {%- endblock -%}
+    {% endset -%}
+
+    <div class="page">
+        {%- if _crumbs|trim is not empty %}<div class="crumb">{{ _crumbs }}</div>{% endif -%}
+
+        {%- set _head %}{% block shell_page_head %}
+            {%- if _title|trim is not empty or _subtitle|trim is not empty or _actions|trim is not empty -%}
+                <div>
+                    {%- if _title|trim is not empty %}<h1 class="pg">{{ _title }}</h1>{% endif -%}
+                    {%- if _subtitle|trim is not empty %}<p class="pgsub">{{ _subtitle }}</p>{% endif -%}
+                </div>
+                {%- if _actions|trim is not empty %}<div class="pgact">{{ _actions }}</div>{% endif -%}
+            {%- endif -%}
+        {% endblock %}{% endset -%}
+        {%- if _head|trim is not empty %}<div class="pghead">{{ _head }}</div>{% endif -%}
+
+        {{- _tabs -}}
+        {{- _flashes -}}
+
+        <div class="pgbody">{% block shell_page %}{% endblock %}</div>
+    </div>
+{% endblock %}

@@ -1,0 +1,140 @@
+{# THE MIDDLE RUNG — the furniture.
+
+   Sidebar, top bar, footer, and one slot in the middle. A page that extends
+   THIS rung gets the platform around it and no page frame inside it: a
+   full-bleed map, a split view, anything that must reach the edges. Without
+   this rung such a page would extend the frame anyway and then fight `.page`
+   with negative margins, which is how a layout contract starts being worked
+   around instead of used.
+
+   EVERY SOCKET HERE IS THE HOST'S. A module fills none of them, because they
+   all need something only an application knows: who is signed in, whether this
+   response is an impersonation, what the deployment calls itself. The shell
+   asks for none of that and renders honestly without it — a fresh installation
+   with no user, no routes and no nav sources still gets a branded, navigable
+   shell, and the ring gate is the test of it.
+
+   ON THE data-controller ATTRIBUTES: the shell ships the markup AND the
+   behaviour. It used to ship only the markup, naming controllers the host was
+   expected to write — so on a fresh installation the theme toggle toggled nothing and
+   the collapse button collapsed nothing, which is furniture that looks operable
+   and is not. The controllers now live in this bundle's own assets/, are
+   enabled in the host's assets/controllers.json by Flex on install, and are
+   addressed by StimulusBundle's namespaced identifier for a UX package —
+   `uhifadhi--shell-bundle--<controller>`. Nothing is built and nothing is
+   copied into an application. #}
+{% extends '@Shell/document.html.twig' %}
+
+{% block body %}
+    <div class="shell">
+        {% block shell_sidebar %}
+            <aside class="side" id="side" data-controller="uhifadhi--shell-bundle--sidebar">
+                <div class="side-top">
+                    {% block shell_sidebar_brand %}
+                        {%- set _brand = shell_brand() -%}
+                        <a class="brand" href="{{ _brand.url }}">
+                            {%- include '@Shell/_brand_mark.html.twig' with {size: 32} only -%}
+                            <b>{{ _brand.name|upper }}</b>
+                        </a>
+                    {% endblock %}
+                    <button class="collapse-btn" type="button" data-action="uhifadhi--shell-bundle--sidebar#toggle"
+                            title="Collapse sidebar" aria-label="Collapse sidebar">{{ ux_icon('shell:chevrons-left') }}</button>
+                </div>
+
+                {% block shell_sidebar_nav %}
+                    {# The nav CONTRACT. Overriding this block opts out of it entirely —
+                       which is supported, and is almost always the wrong answer:
+                       the registry is what lets a bundle contribute a row. #}
+                    {% include '@Shell/_nav.html.twig' with {sections: shell_nav()} only %}
+                {% endblock %}
+
+                {%- set _sidefoot %}{% block shell_sidebar_footer %}{% endblock %}{% endset -%}
+                {% if _sidefoot|trim is not empty %}<div class="side-foot">{{ _sidefoot }}</div>{% endif %}
+            </aside>
+        {% endblock %}
+
+        {% block shell_main %}
+            <main class="main">
+                {% block shell_banner %}{% endblock %}
+
+                {% block shell_topbar %}
+                    <header class="topbar">
+                        <span class="tb-right">
+                            {# THE SOCKET'S DEFAULT CONTENT IS THE WHOLE TOP-BAR ROW —
+                               the alerts bell, the theme toggle, and the viewer's
+                               card — not a bare toggle a host bolts things beside. A
+                               host that adds its own chrome decides where its
+                               additions sit by where it calls parent():
+
+                                 {% block shell_topbar_actions %}
+                                     {{ parent() }}
+                                     …something of the host's…
+                                 {% endblock %}
+
+                               Each default is honest on an installation that has not
+                               grown a team yet: the toggle needs no viewer, the bell
+                               is a placeholder either way, and the card renders only
+                               when a source names someone (below). #}
+                            {% block shell_topbar_actions %}
+                                {# THE ALERTS BELL — a placeholder, and honestly one.
+                                   Alerts is a planned feature with no backend yet
+                                   (the nav shows the row "Alerts — planned"), so the
+                                   bell renders in the platform's SETTLED treatment for
+                                   a thing that is coming: visible, dimmed, not a
+                                   control, carrying its own explanation in a title —
+                                   the same treatment _nav_item gives a row with
+                                   nowhere to go. It carries NO count: a badge with a
+                                   number nothing produces is furniture pretending to
+                                   work, which is exactly what this shell's wired
+                                   controls exist to end. When the alerts backend
+                                   lands, the count arrives the way every datum does —
+                                   through a contract — and the bell becomes a live
+                                   button then, not before. #}
+                                <span class="tb-icon off" title="Alerts — planned"
+                                      aria-label="Alerts — planned">{{ ux_icon('shell:bell') }}</span>
+
+                                {# THE THEME TOGGLE. Wired to the shell's own
+                                   controller, which writes the choice the document's
+                                   pre-paint script reads (Theme::CHOICE_KEY). #}
+                                <button class="tb-icon" type="button" data-controller="uhifadhi--shell-bundle--theme"
+                                        data-action="uhifadhi--shell-bundle--theme#toggle"
+                                        title="Toggle theme" aria-label="Toggle theme">{{ ux_icon('shell:sun') }}</button>
+
+                                {# THE VIEWER'S CARD — from the user-badge contract, and
+                                   only when it has someone to name. The shell composes
+                                   no identity: a host that knows who is signed in fills
+                                   the registry with a name, initials and an optional
+                                   context line ("NCAA · operator"); an installation
+                                   with no such source — fresh, a sign-in page, an
+                                   anonymous request — renders no card rather than an
+                                   empty one. #}
+                                {%- set _badge = shell_user_badge() -%}
+                                {%- if _badge is not null -%}
+                                    <span class="user">
+                                        <span class="avatar">{{ _badge.initials }}</span>
+                                        <span class="uinfo"><b>{{ _badge.name }}</b>
+                                            {%- if _badge.context is not null %}<em>{{ _badge.context }}</em>{% endif -%}
+                                        </span>
+                                    </span>
+                                {%- endif -%}
+                            {% endblock %}
+                        </span>
+                    </header>
+                {% endblock %}
+
+                {# THE COMPATIBILITY SOCKET, named for compatibility rather than for
+                   clarity and kept on purpose: every host page and every module
+                   bundle already fills it. Renaming it would break five
+                   repositories in one commit — exactly the casual rewiring this
+                   bundle exists to end. The page frame fills it with a framed page;
+                   a full-bleed screen fills it directly. #}
+                {% block content %}{% endblock %}
+
+                {# NOT `.page`: the frame owns that class and owns exactly one of
+                   them per screen, so the footer row carries its own. #}
+                {%- set _foot %}{% block shell_footer %}{% endblock %}{% endset -%}
+                {% if _foot|trim is not empty %}<div class="shell-foot"><div class="footer">{{ _foot }}</div></div>{% endif %}
+            </main>
+        {% endblock %}
+    </div>
+{% endblock %}

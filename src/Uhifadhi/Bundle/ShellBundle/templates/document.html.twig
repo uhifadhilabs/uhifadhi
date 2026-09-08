@@ -1,0 +1,110 @@
+{# THE BOTTOM RUNG — the document.
+
+   The four standard block names, unchanged, because a module author who knows
+   Twig already knows them and renaming them to shell_* would have bought
+   consistency with confusion.
+
+   A page may extend THIS rung directly: a print view, a PDF export, an embedded
+   panel. It still carries the theme, because a printed page with no tokens is
+   black Times New Roman on white and does not look like the product it came
+   from. #}
+<!DOCTYPE html>
+<html lang="{{ shell_lang|default('en') }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    {# The page says what it is; the shell says where it is and whose it is. #}
+    {%- set _page %}{% block title %}{% endblock %}{% endset -%}
+    <title>{{ shell_title(_page) }}</title>
+
+    {# THE TAB ICON. Declared here rather than left to the host, because a
+       document that declares none is a document every browser asks
+       `/favicon.ico` for — and a fresh installation answered that with a 404 on its
+       first minute. It is the full masterbrand mark as a single SVG: one file
+       at every size, both palettes inside it. A deployment with a brand of its
+       own overrides `stylesheets` and links its own after this one. #}
+    <link rel="icon" type="image/svg+xml" href="{{ asset('bundles/shell/favicon.svg') }}">
+
+    {# THE THEME, BEFORE THE FIRST PAINT — not by a controller that connects
+       after the first frame. A visitor who chose dark must never be shown a
+       white page first, and "system" is a real third answer rather than a
+       synonym for light: somebody who told their operating system which they
+       want has already answered.
+
+       This is inline, in the head, ABOVE the stylesheet, on purpose. It is the
+       one script in the shell, it is four lines, and every one of them is load-
+       bearing. #}
+    <script>
+        (function () {
+            try {
+                // Four answers, in the order they outrank each other: what this
+                // link asked for, what the visitor chose, what the deployment
+                // defaults to, and — if that default is "system" — what the
+                // operating system prefers. The link override is here rather
+                // than in a controller so that a screenshot or a projector gets
+                // the palette it asked for on the FIRST frame.
+                var asked = new URLSearchParams(window.location.search).get('theme');
+                var choice = asked || localStorage.getItem('shell-theme')
+                    || '{{ shell_default_theme()|e('js') }}';
+                var dark = choice === 'dark' || (choice === 'system'
+                    && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                document.documentElement.classList.toggle('dark', dark);
+
+                // THE SIDEBAR'S WIDTH IS THE SAME KIND OF FACT, and it is
+                // resolved here for the same reason: a remembered rail applied
+                // when the sidebar's controller connects is a 236px sidebar
+                // that jumps to 66px after the first frame, on every load.
+                // <html> is the only element that exists this early, so the
+                // stylesheet draws the rail from a class on it as well.
+                document.documentElement.classList.toggle('shell-rail',
+                    localStorage.getItem('shell-sidebar') === 'rail');
+            } catch (e) { /* a browser that refuses to remember still gets a themed page */ }
+        })();
+    </script>
+
+    {% block stylesheets %}
+        {# The shell's sheet, first. A module base calls parent() and then adds
+           its own, because its rules are written to override these. #}
+        <link rel="stylesheet" href="{{ asset('bundles/shell/shell.css') }}">
+    {% endblock %}
+
+    {% block javascripts %}
+        {# THE IMPORTMAP, RENDERED BY DEFAULT — and this is a change of mind the
+           bug report earned. The socket was declared empty on the reasoning
+           that a bundle cannot contribute an importmap entry. True, and beside
+           the point: a shell whose own controls need Stimulus and whose own
+           document never emits the importmap ships furniture that cannot work,
+           which is precisely what a fresh installation had. The shell requires
+           symfony/asset-mapper and symfony/stimulus-bundle, so `app` is the
+           entrypoint every installation of it has.
+
+           A host with a different entrypoint fills this socket with its own
+           line; the socket is unchanged and so is its name. #}
+        {% block importmap %}{{ importmap('app') }}{% endblock %}
+    {% endblock %}
+</head>
+{# `shell_body_attributes` — the one variable, rather than block, in the whole
+   contract, and it exists because attributes on <body> are not content: a block
+   cannot put them there. A host or a module sets it at the top of a template,
+   outside any block, and it reaches this tag:
+
+     {% set shell_body_attributes = map_basemap_attributes() %}
+
+   That is how a platform-wide setting every map controller reads — the one
+   place a deployment's basemap is decided — rides on a document the shell owns
+   without the shell knowing that maps exist.
+
+   IT IS EMITTED AS MARKUP, because attributes are markup and an escaped
+   `data-x="y"` is a broken tag. Whatever a host puts here is its own to escape:
+   build it from values you control, never from a request. #}
+{# `localtime` on the <body> the shell owns, not on any element a module draws:
+   the frame localises every `<time datetime>` on the page to the reader's own
+   zone, so a module names no controller and its templates stay portable to a
+   host that renders through this same frame. `shell_body_attributes` never
+   carries a second `data-controller` (it is basemap data only), so the two do
+   not collide. See docs/theming.md, "A time reads in the reader's zone". #}
+<body data-controller="uhifadhi--shell-bundle--localtime"{% if shell_body_attributes is defined %} {{ shell_body_attributes|raw }}{% endif %}>
+{% block body %}{% endblock %}
+</body>
+</html>

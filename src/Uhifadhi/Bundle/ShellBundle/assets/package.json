@@ -1,0 +1,30 @@
+{
+    "name": "@uhifadhi/shell-bundle",
+    "description": "Front-end behaviour of the shell — the furniture's Stimulus controllers, mapped into hosts via AssetMapper.",
+    "license": "AGPL-3.0-or-later",
+    "symfony": {
+        "controllers": {
+            "theme": {
+                "main": "controllers/theme_controller.js",
+                "fetch": "eager",
+                "enabled": true
+            },
+            "sidebar": {
+                "main": "controllers/sidebar_controller.js",
+                "fetch": "eager",
+                "enabled": true
+            },
+            "sidebar-tree": {
+                "main": "controllers/sidebar_tree_controller.js",
+                "fetch": "eager",
+                "enabled": true
+            },
+            "localtime": {
+                "main": "controllers/localtime_controller.js",
+                "fetch": "eager",
+                "enabled": true
+            }
+        },
+        "importmap": {}
+    }
+}
