@@ -171,7 +171,7 @@ final class DepartmentScopeChangeTest extends IntegrationTestCase
         self::assertNull($trail[0]->getChangedBy());
     }
 
-    /** The scope-change table is prefixed, like every table this module owns. */
+    /** The scope-change table is prefixed, like every table this bundle owns. */
     public function testTheTableIsPrefixed(): void
     {
         self::assertSame(

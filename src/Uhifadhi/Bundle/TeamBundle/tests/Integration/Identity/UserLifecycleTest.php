@@ -30,7 +30,7 @@ use Uhifadhi\Bundle\TeamBundle\Tests\Integration\IntegrationTestCase;
  * recorded keeps its author, so leaving is DEACTIVATION: `isActive` goes false,
  * `disabledAt` records when, the row stays in every list under an inactive
  * filter, and coming back is one click. There is no destructive control
- * anywhere in this module.
+ * anywhere in this bundle.
  *
  * A separate `deletedAt` exists and nothing writes it. It is reserved so a
  * future recycle bin — removed records, listed, with an explicit purge — is not

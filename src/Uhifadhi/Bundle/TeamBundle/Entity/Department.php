@@ -64,7 +64,7 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
  * The area is referenced through the platform's {@see AreaInterface} contract
  * (published by uhifadhi/contracts) and
  * resolved by whichever package provides the installation's area entity
- * (AreaBundle), so this module points at an area without ever requiring
+ * (AreaBundle), so this bundle points at an area without ever requiring
  * an area package — the same arrangement by which a module points at a person.
  *
  * THE SCOPE IS CHANGEABLE, AND EVERY CHANGE IS AUDITED. {@see changeScopeTo()}
@@ -74,9 +74,8 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
  * re-scopes everything under it — so the transition leaves a record the current
  * state could never reconstruct.
  *
- * THE SCOPE IS ALSO AUTHORITY NOW. docs/area-scoped-authority.md
- * (the contracts) rules that an area-level department is the unit that confines
- * a Staff member's authority, and the area-aware
+ * THE SCOPE IS ALSO AUTHORITY. An area-level department is the unit that
+ * confines a Staff member's authority, and the area-aware
  * {@see \Uhifadhi\Bundle\TeamBundle\Security\PermissionVoter} reads exactly this chain:
  * `authority-area(person) = person.position.department.scope`, org-level (null)
  * meaning every area. So confining a department, or promoting one, now moves the

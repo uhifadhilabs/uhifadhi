@@ -22,7 +22,7 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
 
 /**
  * WHAT THE SIGNED-IN ADMINISTRATOR'S REACH IS — the read side of area-scoped
- * `team.manage` (DECISIONS §5.6, docs/area-scoped-authority.md §7.6).
+ * `team.manage`.
  *
  * The voter answers "may this person do X here?" for a single permission. This
  * answers the coarser structural question the department writes need: is the

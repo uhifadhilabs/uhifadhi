@@ -62,8 +62,8 @@ use Uhifadhi\Bundle\TeamBundle\Service\SuperAdminInvariant;
  * no such thing. Authority lives on the position; giving one person an exception
  * would mean giving them a position of their own.
  *
- * ASSIGNING A POSITION IS AREA-SCOPED (docs/area-scoped-authority.md §7.6,
- * DECISIONS §5.6(a)). `#[IsGranted(team.manage)]` is the coarse gate; the
+ * ASSIGNING A POSITION IS AREA-SCOPED
+ * . `#[IsGranted(team.manage)]` is the coarse gate; the
  * position write REFINES it. A bounded (area-X) administrator may reassign only
  * among positions their authority reaches — the one the person holds now and the
  * one they move to must both be in their area — and the picker offers only those.

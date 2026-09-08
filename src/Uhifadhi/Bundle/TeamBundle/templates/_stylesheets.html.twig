@@ -2,15 +2,14 @@
    needs the same two and getting the list wrong is invisible until somebody
    opens the page.
 
-   THE WIDGET MODULE'S SHEET IS NOT OPTIONAL HERE. Both team surfaces are widget
-   dashboards and both widget libraries are the widget module's own component,
-   so `.w-grid`, `.w-cell`, `.w-span-*` and the whole `.w-card` / `.w-preset`
-   chrome are drawn by that bundle's stylesheet — which its own header says must
-   be linked by the page that renders the library. It was not, and the result
-   was a twelve-column grid with nothing declaring a span (every widget one
-   column wide) and a widget library with no styling at all.
+   THE WIDGET SHEET IS NOT OPTIONAL HERE. Both team surfaces are widget
+   dashboards and both widget libraries are the shell's own component, so
+   `.w-grid`, `.w-cell`, `.w-span-*` and the whole `.w-card` / `.w-preset`
+   chrome are drawn by the shell's widget stylesheet, which the page rendering
+   a library has to link. Without it the grid has nothing declaring a span —
+   every widget one column wide — and the library has no styling at all.
 
-   Ordered shell → widget → team, weakest to strongest: this module's sheet is
-   the one allowed to override, and it is last. #}
+   Ordered widget → team, weakest to strongest: this bundle's sheet is the one
+   allowed to override, and it is last. #}
 <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Bundle\\ShellBundle\\ShellBundle::WIDGET_STYLESHEET')) }}">
 <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Bundle\\TeamBundle\\TeamBundle::STYLESHEET')) }}">

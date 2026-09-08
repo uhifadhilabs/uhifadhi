@@ -85,7 +85,7 @@ final readonly class TeamOverview
      * spells a containment test differently; a bundle does not get to assume
      * which database an installation runs. There are as many positions as an
      * organisation has jobs, so the list this walks is tens of rows and the
-     * query it replaces would have been the one thing in this module that only
+     * query it replaces would have been the one thing in this bundle that only
      * worked on Postgres.
      */
     private function countAdministratorsByPermission(): int

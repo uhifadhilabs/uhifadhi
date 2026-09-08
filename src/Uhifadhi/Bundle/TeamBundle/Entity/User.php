@@ -65,7 +65,7 @@ class User implements ModuleUserInterface, PasswordAuthenticatedUserInterface, U
     use UuidTrait;
 
     /**
-     * The one rule this module enforces on a password, stated once so the three
+     * The one rule this bundle enforces on a password, stated once so the three
      * doors into an account cannot disagree about it: the bootstrap command, the
      * invitation-acceptance screen and the reset screen all check this number,
      * and the two screens print it.
@@ -74,7 +74,7 @@ class User implements ModuleUserInterface, PasswordAuthenticatedUserInterface, U
      * very little entropy and reliably produces "Password1!", while length buys
      * a great deal. Everything stronger than a floor — breach-list checks, a
      * strength meter's opinion — is an installation's own policy to add, and
-     * this module does not pretend to have made it.
+     * this bundle does not pretend to have made it.
      */
     public const int PASSWORD_MIN_LENGTH = 12;
 
@@ -363,7 +363,7 @@ class User implements ModuleUserInterface, PasswordAuthenticatedUserInterface, U
      * cannot count its own siblings, and an invariant that only holds when the
      * caller remembers to ask is not one — so the check lives in
      * {@see \Uhifadhi\Bundle\TeamBundle\Service\SuperAdminInvariant}, which every write path
-     * in this module goes through.
+     * in this bundle goes through.
      */
     public function deactivate(?\DateTimeImmutable $at = null): static
     {

@@ -64,8 +64,8 @@ use Uhifadhi\Bundle\TeamBundle\Service\Mail;
  * is for a thing that will NEVER exist, and this one is an environment variable
  * away.
  *
- * WHICHEVER WAY IN, THE POSITION IS AREA-SCOPED (docs/area-scoped-authority.md
- * §7.6, DECISIONS §5.6(a)). A bounded (area-X) administrator adds people only
+ * WHICHEVER WAY IN, THE POSITION IS AREA-SCOPED
+ * . A bounded (area-X) administrator adds people only
  * into positions their authority reaches, so the picker offers only those and
  * {@see assignPosition()} refuses a pick past their boundary (a 403). A tier or
  * org-level holder is unbounded and adds anyone anywhere. Leaving the position

@@ -1,4 +1,4 @@
-{# POSITIONS AND PERMISSIONS — a widget surface, and the heart of this module. #}
+{# POSITIONS AND PERMISSIONS — a widget surface, and the heart of this bundle. #}
 {% extends '@Shell/page.html.twig' %}
 {% import '@Team/team/_bits.html.twig' as bits %}
 {% import '@Team/positions/_bits.html.twig' as pm %}
@@ -53,7 +53,7 @@
 
 {% block shell_page %}
     {{ include('@Team/team/_scope_banner.html.twig') }}
-    {# See the team page: these are the widget module's cell classes, and the
+    {# See the team page: these are the shell's cell classes, and the
        span is `.w-span-N` because bare `w-N` is Tailwind's width scale. #}
     <div class="w-grid">
         {% for widget in widgets %}

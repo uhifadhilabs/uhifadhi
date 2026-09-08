@@ -22,7 +22,7 @@ use Uhifadhi\Bundle\TeamBundle\Tests\Integration\IntegrationTestCase;
 use Uhifadhi\Contracts\Entity\AreaInterface;
 
 /**
- * THE {uuid} → AREA CONVENIENCE (DECISIONS §5.1). The voter's subject is passed
+ * THE {uuid} → AREA CONVENIENCE. The voter's subject is passed
  * explicitly; this resolver is the sugar that fills an AreaInterface-typed
  * controller argument from the route's uuid, reaching the area through the
  * contract (never an area package).

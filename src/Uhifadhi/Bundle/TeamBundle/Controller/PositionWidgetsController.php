@@ -31,7 +31,7 @@ use Uhifadhi\Bundle\TeamBundle\Widget\PositionWidgets;
 /**
  * THE WIDGET LIBRARY for the permission-matrix surface.
  *
- * THE PAGE IS CHROME; everything inside it is the widget module's shared preset
+ * THE PAGE IS CHROME; everything inside it is the shell's shared widget preset
  * component, handed this surface's catalogue, this surface's partial name and
  * this surface's routes. There are no team-specific widget mechanics anywhere,
  * which is the whole point of riding the framework: adopting a direction here
@@ -97,7 +97,7 @@ final readonly class PositionWidgetsController
         return $this->afterWrite(
             $request,
             $this->endpoint->reset($request, new PositionWidgets()->catalog()),
-            'Your matrix is back to the direction this module ships with.',
+            'Your matrix is back to the direction this bundle ships with.',
         );
     }
 
@@ -168,7 +168,7 @@ final readonly class PositionWidgetsController
         return $this->afterWrite(
             $request,
             $this->endpoint->deleteCustomPreset($request, new PositionWidgets()->catalog(), Uuid::fromString($presetUuid)),
-            'Design deleted. Your matrix is back on the direction this module ships with.',
+            'Design deleted. Your matrix is back on the direction this bundle ships with.',
         );
     }
 

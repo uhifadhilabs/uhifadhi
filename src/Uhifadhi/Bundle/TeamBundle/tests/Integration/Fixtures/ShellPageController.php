@@ -18,7 +18,7 @@ use Twig\Environment;
 
 /**
  * SOMEBODY ELSE'S PAGE, in the shell's frame — a stand-in for whatever screen an
- * installation happens to be on when it is not on one of this module's.
+ * installation happens to be on when it is not on one of this bundle's.
  *
  * The sidebar suite needs one, because the interesting questions about a nav row
  * are asked from OFF it: does a colleague without team.manage see it, and is it
@@ -45,7 +45,7 @@ final class ShellPageController
         $template = $this->twig->createTemplate(
             "{% extends '@Shell/page.html.twig' %}\n"
             ."{% block shell_page_title %}Somewhere else{% endblock %}\n"
-            .'{% block shell_page %}a page that is not this module\'s{% endblock %}'
+            .'{% block shell_page %}a page that is not this bundle\'s{% endblock %}'
         );
 
         return new Response($template->render());

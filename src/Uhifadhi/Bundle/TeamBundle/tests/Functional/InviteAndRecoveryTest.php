@@ -21,7 +21,7 @@ use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
  * BOTH WAYS IN, AND THE THREE SCREENS A STRANGER REACHES.
  *
  * THE SUITE RUNS WITH NO MAILER, which is not a limitation of the test kernel
- * but the state this module cares most about being honest in: a fresh
+ * but the state this bundle cares most about being honest in: a fresh
  * installation has no transport, and what the product does then is the thing
  * that was ruled. Invite-by-email is OFFERED AND REFUSED — form visible, button
  * inert, reason written on it — and the forgot-password screen says the

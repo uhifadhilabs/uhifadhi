@@ -25,7 +25,7 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
  * NULLABLE AREA.
  *
  * The area is referenced through the platform's {@see AreaInterface} contract (the contracts) and
- * resolved to a host entity by the kernel — never by this module — exactly as a
+ * resolved to a host entity by the kernel — never by this bundle — exactly as a
  * real installation resolves it through AreaBundle. So these tests are
  * also the proof that a department can point at an area without this bundle
  * requiring an area package.
@@ -75,7 +75,7 @@ final class DepartmentScopeTest extends IntegrationTestCase
     /**
      * THE AREA ASSOCIATION IS TO THE CONTRACT, NOT TO A CONCRETE CLASS — the
      * property the whole arrangement rests on. The mapping targets
-     * AreaInterface, which the installation resolves; this module names no area
+     * AreaInterface, which the installation resolves; this bundle names no area
      * entity of its own anywhere in the mapping.
      */
     public function testTheAreaAssociationTargetsTheAreaContract(): void

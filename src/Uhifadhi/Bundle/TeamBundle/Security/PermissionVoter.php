@@ -33,7 +33,7 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
  * abstains so the role voters can decide them, which also means a permission of an
  * UNINSTALLED module is simply no longer decidable here.
  *
- * AREA-SCOPED (docs/area-scoped-authority.md §4, the contracts). A permission now answers
+ * AREA-SCOPED. A permission now answers
  * "may this person do X *here*?" A Staff member's authority-area is a DERIVED fact — the scope
  * of their position's department (`user.getDepartment()?.getArea()`), org-level when null —
  * and nothing else stores it. The voter compares the passed target area against it:
@@ -50,7 +50,7 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
  *      area, with the real per-area gate applying once an area is known. Otherwise the target
  *      area must equal the authority area.
  *
- * The subject is PASSED EXPLICITLY (DECISIONS §5.1), which is what makes the voter
+ * The subject is PASSED EXPLICITLY, which is what makes the voter
  * unit-testable and usable off-route (commands, the API); {@see AreaValueResolver} is the
  * convenience that turns a `{uuid}` route param into the Area for controllers that want it.
  *

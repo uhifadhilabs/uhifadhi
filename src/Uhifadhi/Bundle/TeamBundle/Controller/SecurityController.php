@@ -22,7 +22,7 @@ use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 use Twig\Environment;
 
 /**
- * SIGN IN AND SIGN OUT — the two addresses this module owns.
+ * SIGN IN AND SIGN OUT — the two addresses this bundle owns.
  *
  * AUTHENTICATION ITSELF HAPPENS NOWHERE IN THIS CLASS. The `form_login`
  * firewall — which the installation writes in its own security.yaml, because

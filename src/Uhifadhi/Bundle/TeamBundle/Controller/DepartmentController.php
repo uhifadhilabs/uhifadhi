@@ -63,8 +63,8 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
  * changes where its people's authority reaches; neither is itself a grant.
  * Capability arrives through a position's permissions, composed one screen over.
  *
- * team.manage IS AREA-SCOPED NOW (docs/area-scoped-authority.md §7.6, DECISIONS
- * §5.6), so `#[IsGranted(team.manage)]` on every route here is the coarse gate,
+ * team.manage IS AREA-SCOPED, so `#[IsGranted(team.manage)]` on every route
+ * here is the coarse gate,
  * and the controller REFINES it against the escalation ruling: an area-X admin
  * (a team.manage holder confined to one area) may create, rename and deactivate
  * area-level departments in X, but may NOT mint an org-level department, change
@@ -496,8 +496,8 @@ final readonly class DepartmentController
      *
      * The concrete class is whatever the platform's {@see AreaInterface} was
      * resolved to (AreaBundle, or the host's own), read off the
-     * association this module already declares on {@see Department::$area}. So the
-     * picker knows the installation's areas without this module ever naming the
+     * association this bundle already declares on {@see Department::$area}. So the
+     * picker knows the installation's areas without this bundle ever naming the
      * class that holds them.
      *
      * @return list<AreaInterface>

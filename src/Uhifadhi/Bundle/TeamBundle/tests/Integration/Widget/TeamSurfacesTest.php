@@ -21,7 +21,7 @@ use Uhifadhi\Bundle\TeamBundle\Widget\PositionWidgets;
 use Uhifadhi\Bundle\TeamBundle\Widget\TeamWidgets;
 
 /**
- * BOTH TEAM SCREENS ARE WIDGET SURFACES, and this module hard-requires
+ * BOTH TEAM SCREENS ARE WIDGET SURFACES, and this bundle hard-requires
  * ShellBundle to make that true.
  *
  * The standing workspace rule is that a drawn direction ships as a built-in

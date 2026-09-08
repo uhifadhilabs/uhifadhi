@@ -28,7 +28,7 @@ use Uhifadhi\Bundle\TeamBundle\Entity\Position;
  * the thing that collects one, so the header renders the field the button
  * submits — prefilled with the name it is about. The alternative was a button
  * that opens something nobody has designed yet, or a button that does nothing,
- * and the second is the failure this module has already shipped once.
+ * and the second is the failure this bundle has already shipped once.
  *
  * DELETE IS NOT HERE. The design draws it next to Rename and its semantics are
  * a question nobody has answered — what happens to the people holding the

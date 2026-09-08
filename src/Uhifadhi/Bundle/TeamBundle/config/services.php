@@ -241,16 +241,16 @@ return static function (ContainerConfigurator $container): void {
      *
      * Team is the ring that owns the account, the position and the tier, so it
      * is the ring that fills the card the shell draws. The interface lives
-     * in the contracts (a hard dependency of this module), NOT in the shell,
+     * in the contracts (a hard dependency of this bundle), NOT in the shell,
      * which is why this needs no interface_exists guard the way the nav row does
      * and why it is registered unconditionally: implementing the contract costs
-     * a contracts dependency this module already carries and a security service
+     * a contracts dependency this bundle already carries and a security service
      * it already has, never a dependency on the shell.
      *
      * IT TAKES `security.token_storage`, NOT `security.helper`. The helper is a
      * SecurityBundle class; the storage is security-core's, and it is the whole
      * question this source asks — who does the current token name. The service
-     * id is SecurityBundle's either way, and this module's screens are
+     * id is SecurityBundle's either way, and this bundle's screens are
      * registered only where a firewall exists.
      *
      * ALIASED, NOT TAGGED. The shell reads one id, `shell.user_badge_source`,
@@ -296,7 +296,7 @@ return static function (ContainerConfigurator $container): void {
     /*
      * THE TWO DASHBOARD SURFACES. Both team screens ride the widget framework
      * rather than a copy of it, which is why ShellBundle is a hard
-     * requirement of this module and not a suggestion: the roster and the matrix
+     * requirement of this bundle and not a suggestion: the roster and the matrix
      * are widget surfaces, and a surface with no framework under it is a page
      * whose six drawn directions can never be adopted.
      *
@@ -330,7 +330,7 @@ return static function (ContainerConfigurator $container): void {
     $services->alias(TeamController::class, 'team.controller.team')->public();
 
     /*
-     * THE ROSTER'S WIDGET LIBRARY — chrome around the widget module's shared
+     * THE ROSTER'S WIDGET LIBRARY — chrome around the shell's shared
      * preset component. It takes the roster controller itself, because the
      * library previews the REAL widgets on REAL data and a second, thinner
      * context for the preview would be the one place the two screens could
@@ -390,9 +390,8 @@ return static function (ContainerConfigurator $container): void {
 
     /*
      * THE ORG CHART'S HOME — departments, and the three writes that shape them.
-     * It is the screen that closes the loop the Department entity opened in
-     * v0.3.0: the model shipped, the matrix grouped by it, the roster banded by
-     * it, and nothing in the product could make one.
+     * The matrix groups by a department and the roster bands by one, so this is
+     * the screen where a department is made in the first place.
      *
      * NOT A WIDGET SURFACE, so no widget service and no surface tag. The roster
      * and the matrix ride the framework because directions were DRAWN for them;
@@ -467,7 +466,7 @@ return static function (ContainerConfigurator $container): void {
     /*
      * THE SELF-SERVICE SCREENS. Public by route and by design: they are the
      * three a stranger reaches with nobody to ask, so they are the one part of
-     * this module that must work with no session at all.
+     * this bundle that must work with no session at all.
      */
     $services->set('team.controller.reset', PasswordResetController::class)
         ->args([

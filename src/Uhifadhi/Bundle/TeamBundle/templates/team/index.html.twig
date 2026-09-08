@@ -42,7 +42,7 @@
 
 {% block shell_page %}
     {{ include('@Team/team/_scope_banner.html.twig') }}
-    {# THE CELL CLASSES ARE THE WIDGET MODULE'S, not this module's shorthand.
+    {# THE CELL CLASSES ARE THE SHELL'S, not a shorthand of this bundle's.
        Its grid is `.w-grid > .w-cell.w-span-N`, and the span is deliberately
        NOT spelled `.w-12`: bare `w-<number>` is Tailwind's width scale, so a
        host compiling Tailwind would render a full-width widget 48 pixels wide.

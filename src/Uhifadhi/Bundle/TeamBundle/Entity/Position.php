@@ -31,7 +31,7 @@ use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
  * The previous release enforced `unique(name)` across the whole installation
  * and said in this very docblock that the rule it wanted was department-scoped
  * but could not be written, because a department was somebody else's entity.
- * It is this module's entity now ({@see Department}) for exactly that reason: a
+ * It is this bundle's entity now ({@see Department}) for exactly that reason: a
  * constraint cannot be spelled across a module boundary. So the index is
  * `unique(department, name)`, and *Ecology / Analyst* and *Protection Service /
  * Analyst* are two jobs that share a word.
@@ -130,7 +130,7 @@ class Position
      * THE RAW GRANTED VALUES — the only reading surface, because it is the only
      * one that can tell the truth. An enum-typed accessor drops every
      * module-declared permission on the floor, since a module's value is not a
-     * case of an enum this module owns.
+     * case of an enum this bundle owns.
      *
      * @return list<string>
      */

@@ -27,7 +27,7 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
  * route parameter into the platform's area, so a controller can write
  * `isGranted('patrols.record', $area)` with `$area` resolved for it.
  *
- * The voter's subject is PASSED EXPLICITLY (DECISIONS §5.1, docs/area-scoped-authority.md §7.1):
+ * The voter's subject is PASSED EXPLICITLY:
  * the area is an argument, not something the voter reaches into the request stack
  * for. That is what makes the voter unit-testable and usable off-route (a
  * console command, an API call naming an area). This resolver is the sugar that
@@ -37,7 +37,7 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
  * IT REACHES THE AREA THROUGH THE CONTRACT, NEVER AN AREA PACKAGE — the same
  * arrangement {@see \Uhifadhi\Bundle\TeamBundle\Controller\DepartmentController} uses: the
  * concrete class is whatever the installation resolved {@see AreaInterface} to
- * (AreaBundle, or the host's own), read off the association this module
+ * (AreaBundle, or the host's own), read off the association this bundle
  * already declares on {@see Department::$area}. So the resolver knows how to load
  * an area without ever naming the class that holds one.
  *

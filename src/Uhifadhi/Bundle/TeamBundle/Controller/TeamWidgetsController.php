@@ -31,7 +31,7 @@ use Uhifadhi\Bundle\TeamBundle\Widget\TeamWidgets;
 /**
  * THE WIDGET LIBRARY for the roster surface — the one editing screen.
  *
- * THE PAGE IS CHROME; everything inside it is the widget module's shared preset
+ * THE PAGE IS CHROME; everything inside it is the shell's shared widget preset
  * component, handed this surface's catalogue, this surface's partial name and
  * this surface's routes. There are no team-specific widget mechanics anywhere,
  * which is the whole point of riding the framework: adopting a direction here
@@ -168,7 +168,7 @@ final readonly class TeamWidgetsController
         return $this->afterWrite(
             $request,
             $this->endpoint->deleteCustomPreset($request, new TeamWidgets()->catalog(), Uuid::fromString($presetUuid)),
-            'Design deleted. Your team page is back on the one this module ships with.',
+            'Design deleted. Your team page is back on the one this bundle ships with.',
         );
     }
 

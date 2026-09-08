@@ -24,7 +24,7 @@ use Uhifadhi\Contracts\Shell\UserBadgeSourceInterface;
  * Team is the ring that owns the account, its position and its tier, so it is
  * the ring that can fold them into the card the shell draws. It reaches the
  * shell through {@see UserBadgeSourceInterface}, which lives in
- * the contracts precisely so this module can implement it depending only on
+ * the contracts precisely so this bundle can implement it depending only on
  * contracts — the shell stays in team's require-dev, never its require, exactly
  * as the nav row does.
  *

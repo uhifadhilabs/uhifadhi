@@ -75,7 +75,7 @@ final readonly class TeamNavigation implements NavigationSourceInterface
      */
     public const int POSITION = 20;
 
-    /** The roster: this module's front door, and the row's destination. */
+    /** The roster: this bundle's front door, and the row's destination. */
     public const string ROUTE = 'team_index';
 
     /** The org chart's home — org-wide, and addressed as such. */
@@ -151,7 +151,7 @@ final readonly class TeamNavigation implements NavigationSourceInterface
      * WHETHER THE VIEWER IS ON THIS ROW'S SCREEN, or on one underneath it.
      *
      * Compared as PATHS rather than route names, because the addresses belong to
-     * the application: it may mount this module under a prefix, and a list of
+     * the application: it may mount this bundle under a prefix, and a list of
      * route names typed out here would go stale the first time a screen was
      * added. The generated url carries the base url when the installation lives
      * in a subdirectory, so the request's is put back on before comparing.

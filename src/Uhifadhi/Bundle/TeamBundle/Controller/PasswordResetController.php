@@ -59,7 +59,7 @@ use Uhifadhi\Bundle\TeamBundle\Service\Mail;
  * left after those two is a token, an hour and a lookup — about forty lines,
  * below the line where a dependency pays for itself. The security-relevant part
  * is not the plumbing but the neutral answer and the single use, and both are
- * this module's own rules either way.
+ * this bundle's own rules either way.
  */
 final readonly class PasswordResetController
 {
@@ -319,7 +319,7 @@ final readonly class PasswordResetController
      * Symfony's own mechanism for it is the session's invalidation plus the
      * token being dropped, and the password hash changing is what makes every
      * OTHER remembered session fail its check: `remember_me` signs its cookie
-     * with the hash, so rehashing invalidates the lot without this module
+     * with the hash, so rehashing invalidates the lot without this bundle
      * keeping a session registry it would then have to prune.
      */
     private function signEveryOtherSessionOut(Request $request): void

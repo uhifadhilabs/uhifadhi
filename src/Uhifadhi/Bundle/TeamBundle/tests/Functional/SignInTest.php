@@ -94,7 +94,7 @@ final class SignInTest extends WebTestCase
         // filename carries a hash that changes with the file.
         self::assertMatchesRegularExpression('#bundles/shell/shell[-.][^"]*\.css#', $html);
         self::assertMatchesRegularExpression('#bundles/shell/favicon[-.][^"]*\.svg#', $html);
-        // And this module's own sheet, for the card the shell knows nothing about.
+        // And this bundle's own sheet, for the card the shell knows nothing about.
         self::assertMatchesRegularExpression('#bundles/team/team[-.][^"]*\.css#', $html);
 
         // NO NAVIGATION. A stranger gets no sidebar and no top bar: there is
@@ -120,7 +120,7 @@ final class SignInTest extends WebTestCase
         $this->client->submit($form);
 
         // The firewall's default_target_path, which is the installation's front
-        // door — not a page this module owns.
+        // door — not a page this bundle owns.
         self::assertResponseRedirects('http://localhost/');
 
         // AND THE SESSION HOLDS, which is the actual claim. Asserted by walking

@@ -107,7 +107,7 @@ final class ResolutionKernel extends Kernel
                 // The host's area, so a department's nullable area association
                 // can be built. This is the area contract, answered here the
                 // way a real installation answers it through AreaBundle — never
-                // by this module.
+                // by this bundle.
                 'TeamTestArea' => [
                     'type' => 'attribute',
                     'dir' => \dirname(__DIR__).'/Area',

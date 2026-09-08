@@ -44,7 +44,7 @@ use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
  *
  * WHY A SERVICE AND NOT THE ENTITY: an entity cannot count its own siblings,
  * and an invariant that only holds when the caller remembers to ask is not an
- * invariant. Every write path in this module goes through here.
+ * invariant. Every write path in this bundle goes through here.
  */
 final readonly class SuperAdminInvariant
 {

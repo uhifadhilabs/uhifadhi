@@ -61,7 +61,7 @@ final class ActiveUserChecker implements UserCheckerInterface
 
     public function checkPostAuth(UserInterface $user, ?TokenInterface $token = null): void
     {
-        // Nothing to check once the password is right: everything this module
+        // Nothing to check once the password is right: everything this bundle
         // gates on is known before the credentials are.
     }
 }

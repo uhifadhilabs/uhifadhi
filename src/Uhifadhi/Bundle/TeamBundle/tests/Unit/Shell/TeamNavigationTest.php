@@ -28,11 +28,11 @@ use Uhifadhi\Bundle\TeamBundle\Shell\TeamNavigation;
 
 /**
  * THE TWO ANSWERS THAT ARE HARD TO STAGE IN A BROWSER — an installation that
- * unmounted this module's routes, and a render with no security context at all.
+ * unmounted this bundle's routes, and a render with no security context at all.
  *
  * Both are the same kind of failure and it is the worst kind a nav source has:
  * an exception thrown while building the sidebar takes down EVERY page in the
- * installation, including the ones that had nothing to do with this module. So
+ * installation, including the ones that had nothing to do with this bundle. So
  * they are asserted here rather than reasoned about.
  *
  * What a viewer actually sees is asserted where it belongs, against real markup
@@ -44,7 +44,7 @@ final class TeamNavigationTest extends TestCase
     /**
      * THE ADDRESSES BELONG TO THE APPLICATION. The recipe's
      * config/routes/team.yaml is the installation's file and it may edit or
-     * delete it; when it does, this module loses its screens — and losing your
+     * delete it; when it does, this bundle loses its screens — and losing your
      * screens must not mean losing everybody's.
      */
     public function testAnInstallationThatUnmountedTheRoutesGetsNoRowRatherThanAnError(): void
@@ -110,7 +110,7 @@ final class TeamNavigationTest extends TestCase
     /**
      * AND THE ROWS THEMSELVES ARE VALUES, not renderings — the section's
      * heading, its declared position and the ORDER of what is in it are part of
-     * what this module promises the shell, so they are stated somewhere that
+     * what this bundle promises the shell, so they are stated somewhere that
      * fails when they change.
      *
      * DEPARTMENTS COMES FIRST, and that is the drawing rather than a

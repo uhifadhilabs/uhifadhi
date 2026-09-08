@@ -18,7 +18,7 @@ use Uhifadhi\Bundle\TeamBundle\Service\PermissionCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\IntegrationTestCase;
 
 /**
- * ONE CATALOGUE, TWO SOURCES. The seven permissions this module owns, then
+ * ONE CATALOGUE, TWO SOURCES. The seven permissions this bundle owns, then
  * whatever the installed modules declared through the registry's tag — in that
  * order, because core always precedes and a module may never shadow it.
  *
@@ -105,7 +105,7 @@ final class PermissionCatalogueTest extends IntegrationTestCase
     /**
      * EVERY ROW WEARS ITS CONTRIBUTOR, and that is the thing that makes this
      * matrix different from every other permission matrix: the list of
-     * permissions is NOT FIXED. Seven are this module's and will always be
+     * permissions is NOT FIXED. Seven are this bundle's and will always be
      * there; the rest arrive when a bundle is installed and leave when it is
      * removed. A row that could not say where it came from would leave an
      * administrator unable to tell a power the product has from a power a

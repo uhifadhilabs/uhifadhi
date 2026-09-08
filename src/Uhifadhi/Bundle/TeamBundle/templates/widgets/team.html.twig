@@ -1,11 +1,11 @@
-{# THE WIDGET LIBRARY for the roster surface — chrome around the widget module's
+{# THE WIDGET LIBRARY for the roster surface — chrome around the shell's
    shared preset component.
 
    Nothing team-shaped happens inside that component: it is handed this
    surface's catalogue, this surface's partial name and this surface's routes,
    and it renders the strips, the toolbar and the canvas. Arranging a dashboard
    here works exactly as it does on every other surface in the installation,
-   which is the whole reason this module rides the framework rather than
+   which is the whole reason this bundle rides the framework rather than
    carrying a copy of it. #}
 {% extends '@Shell/page.html.twig' %}
 {% import '@Team/team/_bits.html.twig' as bits %}

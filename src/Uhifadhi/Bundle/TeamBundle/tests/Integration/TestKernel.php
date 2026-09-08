@@ -185,7 +185,7 @@ final class TestKernel extends Kernel
                 'naming_strategy' => 'doctrine.orm.naming_strategy.underscore',
                 // NO resolve_target_entities FOR THE USER CONTRACT HERE,
                 // DELIBERATELY. The bundle prepends it, and this kernel is the
-                // proof: the widget module keeps a layout per PERSON and points
+                // proof: the shell keeps a widget layout per PERSON and points
                 // at the contract to do it, so if the prepend ever stopped
                 // happening the schema would stop before it reached a single
                 // team_ table and every test in this suite would say so at once.
@@ -210,7 +210,7 @@ final class TestKernel extends Kernel
             ],
         ]);
 
-        // No extra twig paths: every template this module renders is its own,
+        // No extra twig paths: every template this bundle renders is its own,
         // reached through the @Team namespace the bundle registers.
 
         $container->extension('ux_icons', [
@@ -234,7 +234,7 @@ final class TestKernel extends Kernel
         // The thing behind the firewall (see configureRoutes).
         $container->services()->set(GuardedController::class)->public();
 
-        // A page in the shell's frame that is NOT this module's, so the sidebar
+        // A page in the shell's frame that is NOT this bundle's, so the sidebar
         // suite can ask what a viewer sees from somewhere else.
         $container->services()->set(ShellPageController::class)
             ->args([new Reference('twig')])

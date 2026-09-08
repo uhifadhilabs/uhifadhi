@@ -20,7 +20,7 @@ use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
 /**
  * THE ONE FACT THE "SCOPED TO <AREA>" BANNER NEEDS — the name of the area a
  * bounded administrator is confined to, or nothing at all when they are
- * unbounded (DECISIONS §5.6, docs/area-scoped-authority.md §7.6).
+ * unbounded.
  *
  * The area-admin design draws a banner ("You are scoped to Southern Reserve") on the
  * team / department / position management chrome, shown to a bounded (area-X)

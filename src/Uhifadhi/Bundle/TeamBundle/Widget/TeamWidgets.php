@@ -51,7 +51,7 @@ final class TeamWidgets implements WidgetSurfaceInterface
     /** What a stored preference row is keyed by — stable across releases. */
     public const string SURFACE = 'team';
 
-    /** What the composition this module ships with is CALLED when it leads the strip. */
+    /** What the composition this bundle ships with is CALLED when it leads the strip. */
     public const string DEFAULT_LABEL = 'The team roster';
 
     public const string DEFAULT_DESCRIPTION = 'The counts, what needs a decision, the dense roster table and the note that tier and permission are two different things — the composition a fresh installation opens on.';

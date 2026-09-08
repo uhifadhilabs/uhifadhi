@@ -20,7 +20,7 @@ use Uhifadhi\Contracts\ModuleProviderInterface;
 
 /**
  * THE SINGLE CATALOGUE OF EVERY PERMISSION THAT EXISTS IN THIS DEPLOYMENT:
- * the seven this module owns ({@see PermissionEnum}), plus whatever the
+ * the seven this bundle owns ({@see PermissionEnum}), plus whatever the
  * installed modules DECLARE through {@see ModuleProviderInterface::permissions()}.
  *
  * Declaring makes a permission assignable — it appears in the matrix and the
@@ -34,7 +34,7 @@ use Uhifadhi\Contracts\ModuleProviderInterface;
  * the matrix prints a row without asking where it came from.
  *
  * CORE ALWAYS WINS. A module redeclaring one of the seven is ignored, so no
- * module can relabel or shadow a permission this module owns; between two
+ * module can relabel or shadow a permission this bundle owns; between two
  * modules colliding on a value the earlier registration holds. Never a merge,
  * never a fatal at boot — a third-party module must not be able to take an
  * installation down by picking a string.
@@ -142,7 +142,7 @@ final readonly class PermissionCatalogue
 
     /**
      * WHETHER A PERMISSION IS AREA-SCOPED — the axis the area-aware voter reads
-     * (docs/area-scoped-authority.md §2/§3 in the contracts).
+     *.
      *
      * A CORE permission answers from its own enum ({@see PermissionEnum::isAreaScoped()});
      * only `area.create` is global. A MODULE-DECLARED permission answers with the

@@ -33,7 +33,7 @@ use Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceInterface;
  *
  * WHAT EVERY DIRECTION HAS TO MAKE VISIBLE, because it is the thing that makes
  * this matrix different from every other permission matrix: THE LIST OF
- * PERMISSIONS IS NOT FIXED. Seven are this module's and will always be there;
+ * PERMISSIONS IS NOT FIXED. Seven are this bundle's and will always be there;
  * the rest arrive when a bundle is installed and leave when it is removed. So
  * every row wears its contributor, and three honest states are drawn rather
  * than described — an installed module that declares nothing, a permission

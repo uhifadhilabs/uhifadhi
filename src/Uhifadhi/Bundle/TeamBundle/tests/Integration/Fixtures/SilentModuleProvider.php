@@ -22,7 +22,7 @@ use Uhifadhi\Contracts\ModuleProviderTrait;
  *
  * Most modules gate nothing beyond what the host already does, so their
  * permissions() returns the trait's empty list. Leaving them off the matrix
- * would read as "this module is not installed", which is a different and wrong
+ * would read as "this bundle is not installed", which is a different and wrong
  * fact; the matrix says instead that it is here and has nothing to grant.
  */
 final class SilentModuleProvider implements ModuleProviderInterface

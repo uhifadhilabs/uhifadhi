@@ -24,7 +24,7 @@ use Uhifadhi\Contracts\Entity\UserInterface as ModuleUserInterface;
  * arrangement: a module that type-hinted `Uhifadhi\Bundle\TeamBundle\Entity\User` would be a
  * module no installation could run without this one.
  *
- * A FIXTURE RATHER THAN THE WIDGET MODULE'S OWN ENTITY, deliberately. Widget's
+ * A FIXTURE RATHER THAN THE SHELL'S OWN ENTITY, deliberately. The shell's
  * `WidgetPreference` does exactly this and is present in require-dev, so the
  * whole suite already proves the resolution works — but a test that asserted it
  * THROUGH widget would be a test about widget, and would go quiet the day this

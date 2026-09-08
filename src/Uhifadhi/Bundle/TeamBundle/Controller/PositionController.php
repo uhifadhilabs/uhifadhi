@@ -44,7 +44,7 @@ use Uhifadhi\Bundle\TeamBundle\Widget\PositionWidgets;
 use Uhifadhi\Contracts\Entity\UserInterface as ModuleUserInterface;
 
 /**
- * POSITIONS AND PERMISSIONS — the heart of this module.
+ * POSITIONS AND PERMISSIONS — the heart of this bundle.
  *
  * A POSITION IS THE ONLY THING THAT GRANTS A STAFF MEMBER ANY CAPABILITY AT
  * ALL, and this is where one is composed. It belongs to a department and its
@@ -56,7 +56,7 @@ use Uhifadhi\Contracts\Entity\UserInterface as ModuleUserInterface;
  * core case — which is why the page that grants it is gated on it.
  *
  * THE LIST OF PERMISSIONS IS NOT FIXED, and every direction has to make that
- * visible. Seven are this module's and will always be there; the rest arrive
+ * visible. Seven are this bundle's and will always be there; the rest arrive
  * when a bundle is installed and leave when it is removed. So the page hands
  * every rendering the same three honest states: an installed module that
  * declares nothing, a value whose module is not installed here, and an ORPHANED

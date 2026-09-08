@@ -31,7 +31,7 @@ final class UnknownPermissionException extends \InvalidArgumentException
     public function __construct(public readonly array $values)
     {
         parent::__construct(\sprintf(
-            'Refusing to grant %s: %s in this installation\'s permission catalogue, and not already held by this position. A permission exists because this module declares it or an installed module does — check the value, or check the module is installed.',
+            'Refusing to grant %s: %s in this installation\'s permission catalogue, and not already held by this position. A permission exists because this bundle declares it or an installed module does — check the value, or check the module is installed.',
             implode(', ', array_map(static fn (string $v): string => '"'.$v.'"', $values)),
             1 === \count($values) ? 'it is not' : 'they are not',
         ));

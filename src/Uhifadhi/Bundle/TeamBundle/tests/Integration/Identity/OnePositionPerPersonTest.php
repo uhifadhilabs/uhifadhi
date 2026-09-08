@@ -26,7 +26,7 @@ use Uhifadhi\Bundle\TeamBundle\Tests\Integration\IntegrationTestCase;
  * Multi-position was rejected: a person's authority-area, once the area-aware
  * voter is wired, must read from a single department's scope, and a union of
  * scopes across two positions is a different model with its own open verdicts
- * (docs/area-scoped-authority.md §7.8). These tests lock the single association
+ *. These tests lock the single association
  * in as a decision, so a later collection would fail loudly here rather than
  * silently widen the model.
  */

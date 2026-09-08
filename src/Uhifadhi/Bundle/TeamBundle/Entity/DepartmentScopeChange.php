@@ -26,7 +26,7 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
  * Changing a department's scope is not like renaming it. Confining an org-wide
  * department to a single area re-scopes everything filed under it, and — now the
  * area-aware voter reads the department's scope as authority
- * (docs/area-scoped-authority.md) — promoting an area-level department to
+ * — promoting an area-level department to
  * org-wide hands every one of its people authority in every area. A change with
  * that reach is not something the current state can
  * explain after the fact: the department ends up org-wide either way, and the row
@@ -42,7 +42,7 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
  *
  * THE ACTOR AND THE AREA ARE NULLED, NEVER CASCADED. `changedBy` is SET NULL
  * because the person who confined a department may themselves be deactivated
- * later, and this module never deletes an account anyway — but even a future
+ * later, and this bundle never deletes an account anyway — but even a future
  * purge must not take the history of what they did with them. The `area` is SET
  * NULL for the same reason: the audit outlives the area it names. Only the
  * department cascades, because a scope-change history belongs to its department
@@ -74,7 +74,7 @@ class DepartmentScopeChange
      * The area on the area-side of the transition — the one it was confined to
      * when going org→area, or the one it left behind when going area→org. Null
      * only if the area has since been removed. Mapped to the platform's area contract (the contracts), so
-     * this module points at an area without ever requiring an area package.
+     * this bundle points at an area without ever requiring an area package.
      */
     #[ORM\ManyToOne(targetEntity: AreaInterface::class)]
     #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]

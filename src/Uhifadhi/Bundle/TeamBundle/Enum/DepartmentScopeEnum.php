@@ -29,8 +29,8 @@ namespace Uhifadhi\Bundle\TeamBundle\Enum;
  * and a `from`/`to` pair of these cases is how it says which way the change went.
  *
  * IT GRANTS NOTHING BY ITSELF. An area-level department is the unit that WILL
- * confine a Staff member's authority once the area-aware voter is wired (see
- * docs/area-scoped-authority.md), but that enforcement is not in this module yet.
+ * confine a Staff member's authority once the area-aware voter is wired, but
+ * that enforcement is not in this bundle yet.
  * Today the scope shapes emphasis and reach on a screen; it never gates data.
  */
 enum DepartmentScopeEnum: string

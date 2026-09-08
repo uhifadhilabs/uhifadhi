@@ -134,8 +134,8 @@ final class TeamBundle extends AbstractBundle
                      * because a module that type-hinted the latter would be a
                      * module no installation could run without this one. So
                      * something has to say what the interface means, and for as
-                     * long as this module is installed the answer is not in
-                     * doubt: it is this module's User.
+                     * long as this bundle is installed the answer is not in
+                     * doubt: it is this bundle's User.
                      *
                      * IT IS NOT A HAND-STEP. A hand-step is for a decision
                      * only the installation can make; this is not one — the
