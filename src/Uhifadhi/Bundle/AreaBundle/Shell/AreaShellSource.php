@@ -40,7 +40,7 @@ use Uhifadhi\Bundle\ShellBundle\Model\AreaTab;
  * trusted with it.
  *
  * ROUTE-TOLERANT, and that is what lets ONE implementation cover screens this
- * module does not ship. The module grid is the registry's page, not this bundle's:
+ * bundle does not ship. The module grid is the registry's page, not this bundle's:
  * where an installation mounts it the tab appears, and where it does not the
  * strip is simply shorter. The alternative — every bundle claiming to know where
  * you are — is the disagreement the shell's alias exists to prevent.

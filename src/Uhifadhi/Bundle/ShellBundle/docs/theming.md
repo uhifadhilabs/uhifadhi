@@ -80,7 +80,7 @@ list must be prefixed `--_` as private, because a token a module can read is a
 token a module will read.
 
 Deliberately **not** here: the map chrome tokens (`--z-ink`, `--z-paper`,
-`--z-imagery`, `--z-aoi`). They belong to `AtlasBundle`, the module that
+`--z-imagery`, `--z-aoi`). They belong to `AtlasBundle`, the bundle that
 owns how a layer draws; a legend palette in the shell could not be changed
 without a shell release.
 

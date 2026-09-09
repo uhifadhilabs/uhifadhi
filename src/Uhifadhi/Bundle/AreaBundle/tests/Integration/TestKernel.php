@@ -43,7 +43,7 @@ use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_it
  *
  * PostGIS IS NOT OPTIONAL HERE either: the boundary is a multipolygon column, so
  * a kernel that dropped the bundle would fail at CREATE TABLE and prove nothing
- * about what the module actually stores.
+ * about what the bundle actually stores.
  */
 class TestKernel extends Kernel
 {

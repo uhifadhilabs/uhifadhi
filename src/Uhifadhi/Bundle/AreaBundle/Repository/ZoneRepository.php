@@ -22,7 +22,7 @@ use Uhifadhi\Bundle\AreaBundle\Entity\Zone;
  * Zone lookups, including the two predicates the zone invariant is built on.
  * Both are DE-9IM / coverage questions the PostGIS bundle's DQL surface does not
  * expose, so they are expressed as native SQL — here, in the repository, and
- * nowhere else in the module.
+ * nowhere else in the bundle.
  *
  * @extends SpatialEntityRepository<Zone>
  */

@@ -19,7 +19,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  * PHP (not YAML) on purpose: a reusable bundle must not force symfony/yaml onto
  * hosts, and FQCN references stay refactor-safe and phpstan-checked. Imported by
  * AtlasBundle::loadExtension(), which keeps the config-DRIVEN
- * definitions (the satellite source, the Twig contract, the module provider).
+ * definitions (the satellite source and the Twig contract).
  *
  * Everything is defined EXPLICITLY — no autowire(), no autoconfigure(), and ids
  * prefixed with the bundle alias — because this bundle is installed by other

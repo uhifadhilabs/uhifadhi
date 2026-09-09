@@ -55,7 +55,7 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
  * (create, and confine-to-area) enumerate the installation's areas by asking the
  * ORM for the entity the platform's {@see AreaInterface} resolves to — the class
  * whichever area package (AreaBundle) named in
- * `doctrine.orm.resolve_target_entities`. This module points at an area exactly
+ * `doctrine.orm.resolve_target_entities`. This bundle points at an area exactly
  * as it points at a person, and requires neither package to do it.
  *
  * A DEPARTMENT GRANTS NOTHING DIRECTLY, scope or no scope. Filing a position

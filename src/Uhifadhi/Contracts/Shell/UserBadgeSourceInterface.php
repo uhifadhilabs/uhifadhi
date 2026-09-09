@@ -19,7 +19,7 @@ namespace Uhifadhi\Contracts\Shell;
  * Note the shape of the question, and that it mirrors the area contract's: the shell
  * passes nothing. It holds no security service, has no token to read and asks
  * nothing about the viewer, so the source resolves the current request itself —
- * which a host or a team-aware module is already positioned to do — and hands
+ * which a host or a team-aware bundle is already positioned to do — and hands
  * back an already-composed {@see UserBadge}: a name, its initials and an
  * optional context line like "NCAA · operator".
  *
@@ -27,8 +27,8 @@ namespace Uhifadhi\Contracts\Shell;
  * all not the package that defines a user, so this contract cannot traffic in a
  * UserInterface. Whoever knows who is signed in folds the account, its
  * organisation and its role into the three fields the card draws — a reading for
- * a person on a page, which is the job of whichever module owns the account by the
- * same argument the navigation contract uses.
+ * a person on a page, which is the job of whichever bundle owns the account by
+ * the same argument the navigation contract uses.
  *
  * WHERE THE RICHER LINE COMES FROM. A bare source that knows only a name builds
  * a badge with {@see UserBadge::fromName()} and gets derived initials and no

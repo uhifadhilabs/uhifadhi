@@ -22,8 +22,8 @@ use Uhifadhi\Contracts\Shell\UserBadgeSourceInterface;
  * load-bearing thing to prove is what it hands back: a {@see UserBadge} value
  * object, plain strings, and NOT a UserInterface. That is what lets the shell
  * draw a viewer's card without requiring the package that defines an account,
- * and lets any module that knows who is signed in — a host, or a team-aware
- * core bundle — implement the contract depending only on this package.
+ * and lets anything that knows who is signed in — a host, or a team-aware core
+ * bundle — implement the contract depending only on this package.
  */
 final class UserBadgeSourceInterfaceTest extends TestCase
 {

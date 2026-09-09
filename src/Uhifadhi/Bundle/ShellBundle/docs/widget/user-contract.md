@@ -3,7 +3,7 @@
 Every stored layout points at `Uhifadhi\Contracts\Entity\UserInterface`
 rather than at any bundle's account class — a module that named one would be a
 module nobody can install without it. So something has to say what the interface
-means, and **this module is not the one that can**: it stores layouts, it does
+means, and **the shell is not the one that can**: it stores layouts, it does
 not know who your people are.
 
 **If `TeamBundle` is installed, it is already answered and you write

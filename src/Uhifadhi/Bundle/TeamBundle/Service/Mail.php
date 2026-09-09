@@ -18,7 +18,7 @@ use Symfony\Component\Mime\Email;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 
 /**
- * THE TWO LETTERS THIS MODULE SENDS, and the one question every screen that
+ * THE TWO LETTERS THIS BUNDLE SENDS, and the one question every screen that
  * offers to send one has to ask first: is there anything to send them with.
  *
  * THE MAILER IS OPTIONAL AND THE NULL IS THE ANSWER. `symfony/mailer` is a

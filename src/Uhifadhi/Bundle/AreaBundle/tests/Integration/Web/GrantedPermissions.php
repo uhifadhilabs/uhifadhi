@@ -18,7 +18,7 @@ use Symfony\Component\Security\Core\Authorization\Voter\Vote;
 use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
 
 /**
- * THE VOTER THE TEAM MODULE WOULD BE.
+ * THE VOTER THE TEAM BUNDLE WOULD BE.
  *
  * These screens are gated on `area.view`, `area.create`, `area.edit`,
  * `area.delete`, `module.view` and `module.create` — strings in the platform's

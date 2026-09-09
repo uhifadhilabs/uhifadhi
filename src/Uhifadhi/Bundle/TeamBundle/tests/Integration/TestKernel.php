@@ -194,7 +194,7 @@ final class TestKernel extends Kernel
                 // host, minimally — answers it, exactly as a real installation
                 // does through AreaBundle. A department carries a
                 // nullable area, so its metadata cannot be built until the
-                // platform's AreaInterface (the contracts) resolves to a concrete entity. This module never
+                // platform's AreaInterface (the contracts) resolves to a concrete entity. This bundle never
                 // resolves it itself; it only points at it.
                 'resolve_target_entities' => [
                     \Uhifadhi\Contracts\Entity\AreaInterface::class => Fixtures\Area\HostArea::class,

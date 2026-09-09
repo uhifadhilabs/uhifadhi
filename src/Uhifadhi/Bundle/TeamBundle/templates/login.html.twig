@@ -14,7 +14,7 @@
 
 {% block stylesheets %}
     {{ parent() }}
-    {# This module's own sheet, by the bundle's constant rather than a literal:
+    {# This bundle's own sheet, by the bundle's constant rather than a literal:
        the card is not the shell's furniture, so its rules ship here. #}
     <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Bundle\\TeamBundle\\TeamBundle::STYLESHEET')) }}">
 {% endblock %}

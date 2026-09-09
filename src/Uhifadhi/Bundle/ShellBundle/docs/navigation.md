@@ -61,6 +61,7 @@ where you are. And "absent, not disabled" is now a rule the value object
 enforces — `AreaTab` has no url-less form, so there is nothing to grey out.
 
 *Why not an area module?* The strip has no behaviour to own: it is markup plus a
-rule about lighting, and a bundle whose entire content is one Twig partial is a
-dependency, not a module. If an area module is ever created, it implements this
+rule about lighting, and carving it into a bundle of its own would only give the
+shell something to require — and the shell requires nothing it renders. If an
+area module is ever created, it implements this
 source; it does not take the strip.

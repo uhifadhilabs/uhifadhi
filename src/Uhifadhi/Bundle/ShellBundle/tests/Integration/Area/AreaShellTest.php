@@ -44,8 +44,9 @@ use Uhifadhi\Bundle\ShellBundle\Tests\Integration\Fixtures\HostKernel;
  *
  * WHY IT IS NOT AN AREABUNDLE'S. It was worth asking, since "area" sounds like
  * a domain and the platform has room for an area bundle. The answer is that the
- * strip has no behaviour to own: it is markup plus a rule about lighting, and a
- * bundle whose entire content is one Twig partial is a dependency, not a module.
+ * strip has no behaviour to own: it is markup plus a rule about lighting, and
+ * carving it into a bundle of its own would only give the shell something to
+ * require — and the shell requires nothing it renders.
  * If an area module is ever created, it implements this source; it does not
  * take the strip.
  */

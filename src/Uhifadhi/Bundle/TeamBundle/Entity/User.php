@@ -27,7 +27,7 @@ use Uhifadhi\Contracts\Entity\UserInterface as ModuleUserInterface;
  * no STI, no party isolation. Two authorization axes — a {@see TeamRoleEnum} tier and, for
  * Staff, an assigned {@see Position} bundling granular permissions.
  *
- * THE TABLE IS `team_user`, not `user`. Every module bundle prefixes its tables with its own
+ * THE TABLE IS `team_user`, not `user`. Every bundle prefixes its tables with its own
  * name, and identity is no exception: an installation's schema has to say which package owns
  * a table, and `user` is additionally a reserved word every installation would have
  * had to quote.

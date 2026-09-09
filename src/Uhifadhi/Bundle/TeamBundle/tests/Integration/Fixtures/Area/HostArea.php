@@ -24,7 +24,7 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
  * An area belongs to the host application; a real installation resolves
  * {@see AreaInterface} to its own entity with
  * `doctrine.orm.resolve_target_entities`, and `AreaBundle` is the
- * package that answers it. This module never resolves the interface itself — it
+ * package that answers it. This bundle never resolves the interface itself — it
  * only points at it, exactly as its {@see \Uhifadhi\Bundle\TeamBundle\Entity\Department}
  * points a nullable association at it. So the suites need a host to play, and
  * this is it: a real entity implementing the interface, resolved to by the two

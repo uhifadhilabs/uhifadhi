@@ -30,7 +30,7 @@ use Uhifadhi\Bundle\TeamBundle\TeamBundle;
  *
  * SMALLEST does not mean fewest bundles — it means nothing present that could
  * ANSWER the question on team's behalf. Every bundle here is one team requires
- * outright: it draws screens (twig), a team module in an installation with no
+ * outright: it draws screens (twig), a team bundle in an installation with no
  * firewall would be a user table nobody can ever become (security), and both
  * its surfaces are widget surfaces (widget). A kernel that dropped any of them
  * would compile nothing and prove nothing.

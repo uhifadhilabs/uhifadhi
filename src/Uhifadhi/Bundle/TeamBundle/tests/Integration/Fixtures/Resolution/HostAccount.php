@@ -19,7 +19,7 @@ use Uhifadhi\Contracts\Entity\UserInterface as ModuleUserInterface;
 /**
  * AN INSTALLATION THAT HAS ITS OWN ACCOUNT CLASS — the escape hatch.
  *
- * This module prepends a resolution so that nobody has to write one, and
+ * This bundle prepends a resolution so that nobody has to write one, and
  * prepended configuration LOSES to the application's own by Symfony's design.
  * That is not a limitation being worked around: it is exactly the property that
  * makes the default safe to ship. An installation whose people are its own

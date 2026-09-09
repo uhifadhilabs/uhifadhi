@@ -24,7 +24,7 @@ use Uhifadhi\Bundle\ShellBundle\Model\NavSection;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 
 /**
- * THE ONE ROW THIS MODULE PUTS IN THE SIDEBAR.
+ * THE ONE ROW THIS BUNDLE PUTS IN THE SIDEBAR.
  *
  * Team is the platform-wide row the shell's navigation contract is documented to expect
  * from a module: "the rare platform-wide row that belongs to nobody's area". It

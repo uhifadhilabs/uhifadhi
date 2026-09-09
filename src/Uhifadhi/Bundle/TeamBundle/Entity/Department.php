@@ -27,7 +27,7 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
  * A part of the organisation that owns positions — Ecology, Protection Service,
  * Administration.
  *
- * THIS MODULE OWNS IT. Treating a department as an organizational lens owned
+ * THIS BUNDLE OWNS IT. Treating a department as an organizational lens owned
  * elsewhere makes a position's name unique across the whole installation, which
  * is wrong about the organisations this product is for. Ecology has an Analyst
  * and Protection Service has an Analyst: two different jobs, different

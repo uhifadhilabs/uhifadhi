@@ -51,7 +51,7 @@ use Uhifadhi\Bundle\TeamBundle\Service\Mail;
  * WHY THIS IS HAND-ROLLED AND NOT symfonycasts/reset-password-bundle. That
  * bundle is the standard and it was the first thing considered. Three things
  * decided against it. The columns this flow writes — `passwordResetToken` and
- * `passwordResetRequestedAt` — SHIPPED IN THIS MODULE'S FIRST RELEASE and are
+ * `passwordResetRequestedAt` — SHIPPED IN THIS BUNDLE'S FIRST RELEASE and are
  * what every design annotation names; adopting the bundle would mean a second
  * table, a second lifetime, and two places an installation could read the state
  * of one reset. It does not invalidate other sessions, which is a ruled

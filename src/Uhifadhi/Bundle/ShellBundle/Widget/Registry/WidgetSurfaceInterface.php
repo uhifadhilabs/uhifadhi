@@ -22,7 +22,7 @@ use Uhifadhi\Bundle\ShellBundle\Widget\Model\WidgetCatalog;
  *
  * The same plug-point pattern a module registers everything else through — a
  * class implementing a published interface, tagged in the module's own
- * extension — so this module never has to know which dashboards exist and a
+ * extension — so the shell never has to know which dashboards exist and a
  * module written by somebody else declares one without either of them changing.
  *
  * A MODULE IS NOT AUTOCONFIGURED. A reusable bundle's services are wired

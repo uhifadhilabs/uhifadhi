@@ -30,7 +30,7 @@ a person may adopt in a click — and tags the service. That is the same
 plug-point pattern a module registers everything else through: a published
 interface, a tag, and nothing that has to be edited on the other side.
 
-**2. This module COLLECTS AND STORES.** The registry reads every tagged
+**2. The shell COLLECTS AND STORES.** The registry reads every tagged
 declaration live from the container, so an installation's set of dashboards is
 exactly the set of modules it has. The two tables hold what each person adopted
 — which preset is on, and the layout it produced. The resolver merges a
@@ -53,17 +53,17 @@ however many modules happen to be installed.
 ## Widgets are module-specific; machinery is not
 
 **What a widget shows belongs entirely to the module that declared it** — its
-query, its template, its numbers, its words. This module never sees any of them.
+query, its template, its numbers, its words. The shell never sees any of them.
 It knows a widget's id, its label, the section it files under and how wide it may
 sit, because those are the things ARRANGING a dashboard needs, and it knows
 nothing else.
 
-So **this module ships zero widgets of its own**, exactly as the registry ships zero
+So **the shell ships zero widgets of its own**, exactly as the registry ships zero
 modules and for the same reason: a mechanism that also supplies content is a
 mechanism competing with the things it serves.
 
 State it plainly, because it is the boundary a future contributor will be
-tempted by: **a KPI card added here would be this module breaking its own
+tempted by: **a KPI card added here would be the shell breaking its own
 boundary.** If a widget seems to belong to "the platform", it belongs to whichever
 module owns the surface it appears on — and if no module owns that surface, the
 widget has nowhere to be declared, which is the answer.

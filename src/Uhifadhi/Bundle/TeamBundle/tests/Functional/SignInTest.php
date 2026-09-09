@@ -23,7 +23,7 @@ use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\TestKernel;
 
 /**
- * THE ONE SCREEN THIS MODULE DRAWS, exercised end to end: it answers, it is the
+ * THE ONE SCREEN THIS BUNDLE DRAWS, exercised end to end: it answers, it is the
  * shell's document (not a bare form on a white page), and posting the right
  * credentials into it actually signs somebody in.
  */

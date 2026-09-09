@@ -21,8 +21,8 @@ use Uhifadhi\Contracts\Shell\UserBadgeSourceInterface;
 /**
  * WHO THE TOP BAR NAMES — team's answer to the shell's user-badge contract.
  *
- * Team is the module that owns the account, its position and its tier, so it is
- * the module that can fold them into the card the shell draws. It reaches the
+ * Team is the core bundle that owns the account, its position and its tier, so
+ * it is the bundle that can fold them into the card the shell draws. It reaches the
  * shell through {@see UserBadgeSourceInterface}, which lives in
  * the contracts precisely so this bundle can implement it depending only on
  * contracts — the shell stays in team's require-dev, never its require, exactly

@@ -18,7 +18,7 @@ it. Postgres counts NULLs as distinct in a unique index, so an org-wide surface
 (one with no area) needs a second, partial index of its own; both tables carry
 the pair.
 
-**The module ships entities, not migrations.** The tables are this module's, but
+**The shell ships entities, not migrations.** The tables are the shell's, but
 the migration history is the installation's.
 
 ## Contents

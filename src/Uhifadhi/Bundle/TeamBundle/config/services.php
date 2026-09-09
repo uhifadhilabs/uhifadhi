@@ -239,8 +239,8 @@ return static function (ContainerConfigurator $container): void {
     /*
      * WHO THE TOP BAR NAMES — team's answer to the shell's user-badge contract.
      *
-     * Team is the module that owns the account, the position and the tier, so
-     * it is the module that fills the card the shell draws. The interface lives
+     * Team is the core bundle that owns the account, the position and the tier,
+     * so it is the bundle that fills the card the shell draws. The interface lives
      * in the contracts (a hard dependency of this bundle), NOT in the shell,
      * which is why this needs no interface_exists guard the way the nav row does
      * and why it is registered unconditionally: implementing the contract costs
@@ -425,7 +425,7 @@ return static function (ContainerConfigurator $container): void {
     $services->alias(PositionWidgetsController::class, 'team.controller.position_widgets')->public();
 
     /*
-     * THE TWO LETTERS THIS MODULE SENDS, and the one question every screen that
+     * THE TWO LETTERS THIS BUNDLE SENDS, and the one question every screen that
      * offers to send one asks first.
      *
      * THE MAILER IS OPTIONAL AND nullOnInvalid() IS THE WHOLE MECHANISM:
@@ -486,7 +486,7 @@ return static function (ContainerConfigurator $container): void {
     /*
      * The sign-in screen. Registered unconditionally: this bundle requires
      * symfony/security-bundle outright, unlike a module that merely benefits
-     * from one — a team module in an installation with no firewall would be a
+     * from one — a team bundle in an installation with no firewall would be a
      * user table nobody can ever become.
      *
      * The alias is what makes `SecurityController::login` resolvable from the

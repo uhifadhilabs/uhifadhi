@@ -20,7 +20,7 @@ use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\IntegrationTestCase;
 
 /**
- * A DEPARTMENT IS A REAL ENTITY AND THIS MODULE OWNS IT.
+ * A DEPARTMENT IS A REAL ENTITY AND THIS BUNDLE OWNS IT.
  *
  * The previous release argued the opposite: a department was called an
  * organizational lens another module owns, and a position's name was therefore
