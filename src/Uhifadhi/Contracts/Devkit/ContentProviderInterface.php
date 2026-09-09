@@ -36,6 +36,13 @@ namespace Uhifadhi\Contracts\Devkit;
  *
  *     incident-module ──implements──▶ ContentProviderInterface ◀──reads── devkit-module
  *
+ * THE TAG IS `uhifadhi.devkit.content_provider`, and a module writes it as a
+ * LITERAL STRING in its own service definition — never as a constant of
+ * devkit's, which would load a class that is not installed in production. It is
+ * named here, in the package both ends always have, so the two can agree on it
+ * without either naming the other. {@see CommandProviderInterface} is collected
+ * by `uhifadhi.devkit.command_provider` for the same reasons.
+ *
  * IT ASKS FOUR QUESTIONS AND OFFERS ONE VERB. devkit has to identify each
  * contribution (key, label, description), order it against the others
  * (dependsOn), and run it (load). Ordering is expressed as DEPENDENCIES, not a

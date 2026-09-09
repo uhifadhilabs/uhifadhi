@@ -13,11 +13,10 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Devkit;
 
-use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
-use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
-use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
+use Uhifadhi\Bundle\TeamBundle\Exception\EmailAlreadyUsedException;
+use Uhifadhi\Bundle\TeamBundle\Exception\PasswordTooShortException;
+use Uhifadhi\Bundle\TeamBundle\Service\UserService;
 use Uhifadhi\Contracts\Devkit\CommandDescriptor;
 use Uhifadhi\Contracts\Devkit\CommandProviderInterface;
 
@@ -49,6 +48,12 @@ use Uhifadhi\Contracts\Devkit\CommandProviderInterface;
  * the one an installation is bootstrapped with — and a first administrator who
  * could not administer would leave an installation with nobody who can.
  *
+ * IT WRITES NOTHING ITSELF. Making an account is one set of rules, held by
+ * {@see UserService} and called by every screen that adds somebody; a command
+ * with its own hasher and its own entity manager would be a second copy of them,
+ * drifting from the first the moment either changed. This parses a tail and
+ * calls that service.
+ *
  * THE PASSWORD IS READ FROM STANDARD INPUT WHEN IT IS NOT GIVEN, so it need
  * never appear in a shell history or a process list:
  *
@@ -66,9 +71,7 @@ final readonly class TeamCommandProvider implements CommandProviderInterface
     ];
 
     public function __construct(
-        private EntityManagerInterface $em,
-        private UserRepository $users,
-        private UserPasswordHasherInterface $hasher,
+        private UserService $accounts,
     ) {
     }
 
@@ -100,10 +103,6 @@ final readonly class TeamCommandProvider implements CommandProviderInterface
             return self::refuse(\sprintf('Unknown tier "%s". Use one of: %s.', $tierToken, implode(', ', array_keys(self::TIERS))));
         }
 
-        if (null !== $this->users->findOneByEmail($email)) {
-            return self::refuse(\sprintf('An account already answers to "%s". Accounts are never duplicated; reset that one\'s password instead.', $email));
-        }
-
         $password = $options['password'] ?? self::readPassword();
         if ('' === trim($password)) {
             return self::refuse('A password is required. Pass --password=… or write it on standard input.');
@@ -111,17 +110,15 @@ final readonly class TeamCommandProvider implements CommandProviderInterface
 
         // VERIFIED AND ACTIVE, unlike an invited account: this is the
         // credential somebody signs in with in the installation's first minute,
-        // not an invitation waiting to be accepted.
-        $user = new User()
-            ->setEmail($email)
-            ->setFirstName($firstName)
-            ->setLastName($lastName)
-            ->setTeamRole($tier)
-            ->setVerified(true);
-        $user->setPassword($this->hasher->hashPassword($user, $password));
-
-        $this->em->persist($user);
-        $this->em->flush();
+        // not an invitation waiting to be accepted. That is what create() means,
+        // so the tier is the only thing this has to say.
+        try {
+            $user = $this->accounts->create($email, $firstName, $lastName, $password, $tier);
+        } catch (EmailAlreadyUsedException $taken) {
+            return self::refuse(\sprintf('An account already answers to "%s". Accounts are never duplicated; reset that one\'s password instead.', $taken->email));
+        } catch (PasswordTooShortException $short) {
+            return self::refuse($short->getMessage());
+        }
 
         self::say(\sprintf('Created %s <%s> as %s.', $user->getFullName(), $user->getUserIdentifier(), $tier->label()));
 

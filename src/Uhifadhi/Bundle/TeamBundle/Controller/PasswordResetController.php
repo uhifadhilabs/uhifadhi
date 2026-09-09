@@ -13,11 +13,9 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Controller;
 
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
@@ -27,6 +25,7 @@ use Twig\Environment;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Service\Mail;
+use Uhifadhi\Bundle\TeamBundle\Service\PasswordResetService;
 
 /**
  * THE SELF-SERVICE SCREENS — the three a stranger reaches with nobody to ask.
@@ -67,14 +66,13 @@ final readonly class PasswordResetController
     public const string CSRF_RESET = 'team_reset';
     public const string CSRF_ACCEPT = 'team_accept';
 
-    /** ONE HOUR. Symfony's own recommended default, and the screens say so before you ask. */
-    public const int LIFETIME_SECONDS = 3600;
+    /** ONE HOUR, as {@see PasswordResetService::LIFETIME_SECONDS} counts it, in the unit the cards print. */
+    private const int LIFETIME_HOURS = PasswordResetService::LIFETIME_SECONDS / 3600;
 
     public function __construct(
         private Environment $twig,
         private UserRepository $users,
-        private UserPasswordHasherInterface $hasher,
-        private EntityManagerInterface $entityManager,
+        private PasswordResetService $resets,
         private CsrfTokenManagerInterface $csrf,
         private UrlGeneratorInterface $router,
         private TokenStorageInterface $tokens,
@@ -88,7 +86,7 @@ final readonly class PasswordResetController
     {
         return new Response($this->twig->render('@Team/auth/forgot.html.twig', [
             'state' => $this->mail->isConfigured() ? 'ask' : 'nomail',
-            'lifetimeHours' => (int) (self::LIFETIME_SECONDS / 3600),
+            'lifetimeHours' => self::LIFETIME_HOURS,
             'csrfToken' => $this->csrf->getToken(self::CSRF_REQUEST)->getValue(),
         ]));
     }
@@ -112,7 +110,7 @@ final readonly class PasswordResetController
             // worst failure this flow has.
             return new Response($this->twig->render('@Team/auth/forgot.html.twig', [
                 'state' => 'nomail',
-                'lifetimeHours' => (int) (self::LIFETIME_SECONDS / 3600),
+                'lifetimeHours' => self::LIFETIME_HOURS,
                 'csrfToken' => $this->csrf->getToken(self::CSRF_REQUEST)->getValue(),
             ]));
         }
@@ -124,13 +122,11 @@ final readonly class PasswordResetController
         if (null !== $user && $user->isActive()) {
             // ASKING AGAIN REPLACES THE PREVIOUS LINK, so an old email in an
             // inbox stops working the moment a new one is sent.
-            $user->setPasswordResetToken(bin2hex(random_bytes(32)));
-            $user->setPasswordResetRequestedAt(new \DateTimeImmutable());
-            $this->entityManager->flush();
+            $token = $this->resets->begin($user);
 
             $this->mail->sendPasswordReset($user, $this->router->generate(
                 'team_reset',
-                ['token' => (string) $user->getPasswordResetToken()],
+                ['token' => $token],
                 UrlGeneratorInterface::ABSOLUTE_URL,
             ));
         }
@@ -138,7 +134,7 @@ final readonly class PasswordResetController
         return new Response($this->twig->render('@Team/auth/forgot.html.twig', [
             'state' => 'sent',
             'address' => $email,
-            'lifetimeHours' => (int) (self::LIFETIME_SECONDS / 3600),
+            'lifetimeHours' => self::LIFETIME_HOURS,
             'csrfToken' => $this->csrf->getToken(self::CSRF_REQUEST)->getValue(),
         ]));
     }
@@ -187,13 +183,9 @@ final readonly class PasswordResetController
             ]), Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        $user->setPassword($this->hasher->hashPassword($user, $password));
         // SINGLE USE: consuming the token spends it, so the same link cannot be
         // walked back to by anybody holding the email.
-        $user->setPasswordResetToken(null);
-        $user->setPasswordResetRequestedAt(null);
-        $user->setVerified(true);
-        $this->entityManager->flush();
+        $this->resets->complete($user, $password);
 
         $this->signEveryOtherSessionOut($request);
 
@@ -251,21 +243,9 @@ final readonly class PasswordResetController
             ]), Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        // ONE FIELD, SPLIT ONCE. Asking for "first name" and "last name"
-        // separately is a Western assumption about names; asking for the name
-        // and taking the last word as the family name is a smaller one, and it
-        // is the one the two stored columns force.
-        $parts = preg_split('/\s+/', $name) ?: [$name];
-        $last = \count($parts) > 1 ? (string) array_pop($parts) : '';
-        $user->setFirstName(implode(' ', $parts));
-        $user->setLastName($last);
-
-        $user->setPassword($this->hasher->hashPassword($user, $password));
         // SETTING A PASSWORD IS WHAT MARKS THE ACCOUNT VERIFIED, and it spends
         // the token: the invitation has done its job.
-        $user->setVerified(true);
-        $user->setVerificationToken(null);
-        $this->entityManager->flush();
+        $this->resets->accept($user, $name, $password);
 
         $this->signEveryOtherSessionOut($request);
 
@@ -286,16 +266,8 @@ final readonly class PasswordResetController
     private function liveResetFor(string $token): ?User
     {
         $user = $this->users->findOneBy(['passwordResetToken' => $token]);
-        if (!$user instanceof User || !$user->isActive()) {
-            return null;
-        }
 
-        $requestedAt = $user->getPasswordResetRequestedAt();
-        if (null === $requestedAt) {
-            return null;
-        }
-
-        return $requestedAt->getTimestamp() + self::LIFETIME_SECONDS >= time() ? $user : null;
+        return $user instanceof User && $this->resets->isLive($user, $token) ? $user : null;
     }
 
     /** The one rule, stated on the card so nobody meets it only on submit. */

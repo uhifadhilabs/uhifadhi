@@ -32,6 +32,7 @@ use Uhifadhi\Bundle\TeamBundle\Security\ApiTokenAuthenticator;
 use Uhifadhi\Bundle\TeamBundle\TeamBundle;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\DeclaringModuleProvider;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\DevkitCommandCollector;
+use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\DevkitContentCollector;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\GuardedController;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\ShellPageController;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\SilentModuleProvider;
@@ -270,6 +271,13 @@ final class TestKernel extends Kernel
             ->args([new TaggedIteratorArgument('uhifadhi.devkit.command_provider')])
             ->public();
 
+        // The same stand-in for the other half of the devkit contracts: the
+        // collector that orders content providers and seeds them.
+        $container->services()
+            ->set('test_public.devkit_content', DevkitContentCollector::class)
+            ->args([new TaggedIteratorArgument('uhifadhi.devkit.content_provider')])
+            ->public();
+
         // Public aliases so a test can hold the bundle's private services.
         foreach ([
             \Uhifadhi\Bundle\TeamBundle\Service\PermissionCatalogue::class => 'team.permissions',
@@ -286,6 +294,7 @@ final class TestKernel extends Kernel
             \Uhifadhi\Bundle\TeamBundle\Service\UserService::class => 'team.accounts',
             \Uhifadhi\Bundle\TeamBundle\Service\PositionService::class => 'team.positions',
             \Uhifadhi\Bundle\TeamBundle\Service\DepartmentService::class => 'team.departments',
+            \Uhifadhi\Bundle\TeamBundle\Service\PasswordResetService::class => 'team.password_reset',
             \Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceRegistry::class => 'shell.widget.surfaces',
         ] as $class => $serviceId) {
             $container->services()->alias('test_public.'.$class, $serviceId)->public();

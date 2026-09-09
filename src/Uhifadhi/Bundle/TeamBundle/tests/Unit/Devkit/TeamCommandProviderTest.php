@@ -13,9 +13,12 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Tests\Unit\Devkit;
 
+use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Uhifadhi\Bundle\TeamBundle\Devkit\TeamCommandProvider;
+use Uhifadhi\Bundle\TeamBundle\Service\UserService;
 use Uhifadhi\Contracts\Devkit\CommandDescriptor;
 use Uhifadhi\Contracts\Devkit\CommandProviderInterface;
 
@@ -68,6 +71,25 @@ final class TeamCommandProviderTest extends TestCase
 
         self::assertSame('array', (string) $handler->getParameters()[0]->getType());
         self::assertSame('int', (string) $handler->getReturnType());
+    }
+
+    /**
+     * IT PERSISTS NOTHING ITSELF. Making an account is one set of rules — the
+     * address is the identifier, the credential is hashed, the tier decides who
+     * can administer — and a command that reached for an entity manager would
+     * hold a second copy of them, drifting from the screens' the first time
+     * either changed. So the provider parses a tail and calls the service the
+     * screens call; an entity manager or a hasher in this constructor is that
+     * drift beginning.
+     */
+    public function testItWritesThroughTheAccountServiceAndNotThroughStorage(): void
+    {
+        $parameters = new \ReflectionClass(TeamCommandProvider::class)->getConstructor()?->getParameters() ?? [];
+        $types = array_map(static fn (\ReflectionParameter $parameter): string => (string) $parameter->getType(), $parameters);
+
+        self::assertContains(UserService::class, $types);
+        self::assertNotContains(EntityManagerInterface::class, $types);
+        self::assertNotContains(UserPasswordHasherInterface::class, $types);
     }
 
     /** Built with no collaborators, exactly as a declaration may not need any. */

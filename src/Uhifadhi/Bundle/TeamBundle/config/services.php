@@ -27,6 +27,7 @@ use Uhifadhi\Bundle\TeamBundle\Controller\SecurityController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamWidgetsController;
 use Uhifadhi\Bundle\TeamBundle\Devkit\TeamCommandProvider;
+use Uhifadhi\Bundle\TeamBundle\Devkit\TeamContentProvider;
 use Uhifadhi\Bundle\TeamBundle\EventListener\ApiErrorListener;
 use Uhifadhi\Bundle\TeamBundle\Repository\ApiTokenRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
@@ -41,6 +42,7 @@ use Uhifadhi\Bundle\TeamBundle\Service\ApiTokenManager;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentService;
 use Uhifadhi\Bundle\TeamBundle\Service\FieldSignIn;
 use Uhifadhi\Bundle\TeamBundle\Service\Mail;
+use Uhifadhi\Bundle\TeamBundle\Service\PasswordResetService;
 use Uhifadhi\Bundle\TeamBundle\Service\PermissionCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionService;
 use Uhifadhi\Bundle\TeamBundle\Service\SuperAdminInvariant;
@@ -82,10 +84,12 @@ use Uhifadhi\Bundle\TeamBundle\Widget\TeamWidgets;
  *   team.accounts               every way an account comes into being or changes
  *   team.positions              what a position is, and what it grants
  *   team.departments            the org chart's shape, and its audited scope changes
+ *   team.password_reset         a recovery link issued, spent, or an invitation accepted
  *   team.user_checker           the sign-in refusal for a deactivated account
  *   team.overview               the roster's counts and its attention rows
  *   team.widget_surface.*       the roster and the matrix, as dashboard surfaces
  *   team.devkit.commands        what devkit materialises into commands in a dev install
+ *   team.devkit.content         the demo organisation devkit seeds in a dev install
  *   team.controller.security    the sign-in screen
  *   team.controller.team        the roster
  *   team.controller.team_widgets  its widget library
@@ -157,12 +161,21 @@ return static function (ContainerConfigurator $container): void {
      * always-installed side names the promise, never the tool.
      */
     $services->set('team.devkit.commands', TeamCommandProvider::class)
-        ->args([
-            service('doctrine.orm.entity_manager'),
-            service(UserRepository::class),
-            service('security.user_password_hasher'),
-        ])
+        ->args([service('team.accounts')])
         ->tag('uhifadhi.devkit.command_provider');
+
+    /*
+     * A SMALL ORGANISATION TO LOOK AT, offered the same way and collected by
+     * the same absent tool. It writes through this bundle's own services, so
+     * the content it leaves is content somebody could have built by clicking.
+     */
+    $services->set('team.devkit.content', TeamContentProvider::class)
+        ->args([
+            service('team.accounts'),
+            service('team.positions'),
+            service('team.departments'),
+        ])
+        ->tag('uhifadhi.devkit.content_provider');
 
     /*
      * ONE FAILURE DOCUMENT FOR EVERYTHING UNDER `/api`, whoever refused.
@@ -379,6 +392,17 @@ return static function (ContainerConfigurator $container): void {
         ->args([service('doctrine.orm.entity_manager')]);
 
     /*
+     * THE THREE WRITES BEHIND THE DOORS A STRANGER REACHES. It knows nothing
+     * about the request: signing every OTHER session out is a fact about the
+     * browser in hand and stays with the screen.
+     */
+    $services->set('team.password_reset', PasswordResetService::class)
+        ->args([
+            service('doctrine.orm.entity_manager'),
+            service('security.user_password_hasher'),
+        ]);
+
+    /*
      * The sign-in refusal for a deactivated account. NOT tagged: a user checker
      * is named by the FIREWALL (`user_checker:`), which is the installation's
      * file — so the service is registered and public here, and the README's
@@ -579,8 +603,7 @@ return static function (ContainerConfigurator $container): void {
         ->args([
             service('twig'),
             service(UserRepository::class),
-            service('security.user_password_hasher'),
-            service('doctrine.orm.entity_manager'),
+            service('team.password_reset'),
             service('security.csrf.token_manager'),
             service('router'),
             service('security.token_storage'),
