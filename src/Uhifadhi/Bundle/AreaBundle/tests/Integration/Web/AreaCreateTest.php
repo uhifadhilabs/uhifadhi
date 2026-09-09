@@ -96,7 +96,7 @@ final class AreaCreateTest extends WebTestCase
         self::assertSame('/areas/'.$area->getUuidString(), $response->headers->get('Location'));
     }
 
-    /** The screen offers the choice the whole ring is about: add now, or add later. */
+    /** The screen offers the choice the create flow is about: add now, or add later. */
     public function testTheFormOffersTheAddNowOrAddLaterChoice(): void
     {
         $this->boot();

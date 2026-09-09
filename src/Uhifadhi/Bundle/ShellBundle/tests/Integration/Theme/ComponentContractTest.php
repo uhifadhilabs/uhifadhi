@@ -119,9 +119,9 @@ final class ComponentContractTest extends ContractTestCase
 
     /**
      * Every promised class is actually styled. The list is a promise; the
-     * stylesheet is the keeping of it — and the failure this catches is the one
-     * that started the ring: a live page whose KPI plates rendered as one line
-     * of running text because the class was written and defined nowhere.
+     * stylesheet is the keeping of it. The failure this catches is a live page
+     * whose KPI plates render as one line of running text because the class is
+     * written and defined nowhere.
      */
     #[DataProvider('components')]
     public function testEveryPromisedComponentIsStyled(string $class): void

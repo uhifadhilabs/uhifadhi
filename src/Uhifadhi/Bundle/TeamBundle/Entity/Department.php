@@ -27,14 +27,13 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
  * A part of the organisation that owns positions — Ecology, Protection Service,
  * Administration.
  *
- * THIS MODULE OWNS IT, and the previous release argued that it should not. A
- * department was called an organizational lens belonging to whichever ring
- * introduced it, and a position's name was therefore unique across the whole
- * installation. That was wrong about the organisations this product is for.
- * Ecology has an Analyst and Protection Service has an Analyst: two different
- * jobs, different permission sets, one word between them. A model that forbade
- * the pair would force one of them to be renamed to something nobody in the
- * building says out loud.
+ * THIS MODULE OWNS IT. Treating a department as an organizational lens owned
+ * elsewhere makes a position's name unique across the whole installation, which
+ * is wrong about the organisations this product is for. Ecology has an Analyst
+ * and Protection Service has an Analyst: two different jobs, different
+ * permission sets, one word between them. A model that forbids the pair forces
+ * one of them to be renamed to something nobody in the building says out
+ * loud.
  *
  * So the department lives here, beside the position whose name it scopes,
  * because a constraint cannot be spelled across a module boundary:

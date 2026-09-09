@@ -32,9 +32,9 @@ use Uhifadhi\Bundle\ShellBundle\Tests\Integration\ContractTestCase;
  * once, per rule, silently — a team rail hanging 24px out of its own column, a
  * sign-in card sitting on 52px of phantom scroll.
  *
- * SO IT MOVES INTO THE FRAME. Not into every module's sheet: a rule nine sheets
+ * SO IT LIVES IN THE FRAME. Not in every module's sheet: a rule nine sheets
  * restate is a rule with nine chances to be forgotten, which is the same
- * argument that brought the component vocabulary here in the previous ring.
+ * argument that puts the component vocabulary here.
  *
  * WHAT A MODULE MAY NOW STOP WRITING. `box-sizing: border-box` on its own
  * rules. Keeping it is harmless and, where a module wants the guarantee spelled
