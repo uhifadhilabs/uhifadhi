@@ -38,10 +38,16 @@ declare(strict_types=1);
  * itself with `config.vendor-dir` pointing at the overlay. The published
  * composer.json stays free of a path that only makes sense before the split.
  *
- * The whitelist in composer-require-checker.dist.json exists for one reason: a
- * PHP service file declares the configurator's own namespace, so `service()`,
+ * The whitelist in composer-require-checker.dist.json exists for two reasons.
+ * A PHP service file declares the configurator's own namespace, so `service()`,
  * `param()` and `tagged_iterator()` are written unqualified and no scan can
- * attribute them to the package that defines them.
+ * attribute them to the package that defines them. And a bundle that ships a
+ * test base for its CONSUMERS to extend names PHPUnit's TestCase from src/,
+ * without requiring PHPUnit: the base is inert for anybody who is not running
+ * tests, and a package that put a test framework in its `require` would put it
+ * in every installation.
+ * @see vendor/symfony/framework-bundle/Test/KernelTestCase.php, shipped in src/
+ *      the same way, with no phpunit requirement in that package's manifest.
  */
 
 $root = __DIR__;

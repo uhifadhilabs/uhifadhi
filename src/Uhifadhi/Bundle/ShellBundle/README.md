@@ -12,6 +12,7 @@ installed on its own as `uhifadhi/shell-bundle`.
 - [Installation](#installation)
 - [Getting started](#getting-started)
 - [Icons](#icons)
+- [Vocabulary conformance](#vocabulary-conformance)
 - [Learn more](#learn-more)
 - [License](#license)
 
@@ -129,6 +130,38 @@ The glyph list, how one is imported and the attribution are in
 [`assets/icons/README.md`](assets/icons/README.md).
 
 <https://symfony.com/bundles/ux-icons/current/index.html#full-configuration>
+
+## Vocabulary conformance
+
+A class no sheet defines and an icon no file answers to both render without
+throwing — as browser defaults and as an empty box — so no functional test
+catches either. This bundle ships the test that does:
+**`Uhifadhi\Bundle\ShellBundle\Test\VocabularyConformanceTestCase`**, in `src/`
+rather than in this package's suite, so a module can autoload it.
+
+It asks two things of the bundle that extends it. Every class its templates
+write is shipped by the CSS chain its pages link or named in its own
+JavaScript, and its sheet redefines no selector the chain already carries. And
+every icon it references uses a prefix it may use — its own alias and `shell:`,
+never a public library's — with every own-prefix name resolving from the
+directory it ships.
+
+A bundle adopts it in one file:
+
+```php
+final class VocabularyConformanceTest extends VocabularyConformanceTestCase
+{
+    protected static function bundlePath(): string { return \dirname(__DIR__, 2); }
+
+    protected static function alias(): string { return 'sightings'; }
+
+    protected static function ownStylesheets(): array { return ['sightings.css']; }
+}
+```
+
+The full account — what each check asks, the prefix rule, and the two further
+hooks — is in
+[Vocabulary conformance](../../Contracts/docs/module-development.md#vocabulary-conformance).
 
 ## Learn more
 

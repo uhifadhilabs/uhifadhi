@@ -9,7 +9,8 @@
         "expr",
         "inline_service",
         "service_closure",
-        "service_locator"
+        "service_locator",
+        "PHPUnit\\Framework\\TestCase"
     ],
     "php-core-extensions": [
         "Core",

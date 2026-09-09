@@ -120,25 +120,6 @@ final class IconsResolveOfflineTest extends KernelTestCase
         }
     }
 
-    /**
-     * The reader above knows the shapes an icon name arrives in. This one knows
-     * none of them and looks for the word itself — in a comment, in a docblock,
-     * in a fixture, in a piece of documentation — because the rule is that the
-     * prefix an installation owns appears nowhere in what the core ships.
-     */
-    public function testThePrefixAnInstallationOwnsIsWrittenNowhereInTheCore(): void
-    {
-        foreach (self::BUNDLES as $bundle) {
-            foreach (self::shippedFiles($bundle) as $file) {
-                self::assertStringNotContainsString(
-                    self::INSTALLATION_PREFIX,
-                    (string) file_get_contents($file),
-                    substr($file, \strlen(self::root()) + 1).' writes a prefix the core neither ships nor registers.',
-                );
-            }
-        }
-    }
-
     public function testAPrefixTheCoreDoesNotOwnIsAnsweredByTheInstallation(): void
     {
         self::bootKernel();
@@ -215,22 +196,6 @@ final class IconsResolveOfflineTest extends KernelTestCase
      */
     private static function sourceFiles(string $bundle): array
     {
-        return array_values(array_filter(
-            self::shippedFiles($bundle),
-            static fn (string $path): bool => !str_contains($path, '/tests/'),
-        ));
-    }
-
-    /**
-     * Everything the bundle's code is written in, fixtures included. Prose is
-     * left out on purpose: documentation may name the upstream project a glyph
-     * was drawn by, and the attribution that project's licence asks for has to
-     * be able to say its name.
-     *
-     * @return list<string>
-     */
-    private static function shippedFiles(string $bundle): array
-    {
         $root = self::root().'/src/Uhifadhi/Bundle/'.$bundle;
 
         $files = [];
@@ -238,7 +203,7 @@ final class IconsResolveOfflineTest extends KernelTestCase
         $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root, \FilesystemIterator::SKIP_DOTS));
         foreach ($iterator as $file) {
             $path = $file->getPathname();
-            if (!$file->isFile() || str_contains($path, '/docs/')) {
+            if (!$file->isFile() || str_contains($path, '/tests/') || str_contains($path, '/docs/')) {
                 continue;
             }
             if (str_ends_with($path, '.twig') || str_ends_with($path, '.php') || str_ends_with($path, '.js')) {

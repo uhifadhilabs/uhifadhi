@@ -1273,6 +1273,67 @@ suites never collide:
 If your bundle owns no entities, say so in a comment where the URL would have been and ship no
 database at all — an absence that is explained is not an omission.
 
+### Vocabulary conformance
+
+Two of the things a module draws with are not its own: the CSS classes in the sheets a page links,
+and the icons in the sets somebody registered. Both fail **silently**, and neither is caught by a
+functional test, because both render a 200.
+
+- A class no sheet defines does not throw. The element falls back to browser defaults, which look
+  almost right on your machine — where the design's own sheet happens to be open in another tab —
+  and plainly wrong on an installation.
+- An icon whose file nothing ships does not throw either, on a deployment with fetching disabled.
+  It is an empty box.
+
+Only the build can catch those before a deploy, so the core ships a test that does.
+
+**What the two checks ask.**
+
+*The stylesheet check.* Does every class this bundle's templates write exist somewhere in the CSS
+chain the page actually loads — the shell's sheet, your own, and any dependency's sheet your pages
+link beside them — or in your own JavaScript, because a hook a controller toggles is shipped as
+surely as a rule is? And does your sheet **redefine no selector the chain already ships**? Two
+definitions of one control load in whichever order the page happens to link them, and the same
+control renders differently on two screens.
+
+*The icon check.* Does every icon this bundle references use a prefix it is allowed to use? And does
+every reference under **your own** prefix resolve to a file in the directory your bundle registers,
+with nothing to fetch from?
+
+**The rule for a module.** The prefixes you may use are **your own alias** and **`shell:`** — your
+pages render inside the shell, so the core's glyphs are yours to reuse rather than copy. **Any other
+prefix fails the build, `lucide:` included.** A public library's prefix belongs to the installation,
+which may answer it with its own artwork or not answer it at all. Ship any glyph you need under your
+own prefix: copy the SVG into the directory you register as
+`ux_icons.icon_sets.<your alias>.path` (see [Icons: one prefix per package](#icons-one-prefix-per-package))
+and draw it as `<your alias>:<name>`.
+
+**How to adopt it.** The core ships `Uhifadhi\Bundle\ShellBundle\Test\VocabularyConformanceTestCase`
+in `src/`, so your suite can autoload it. Add one file:
+
+```php
+// tests/Unit/VocabularyConformanceTest.php
+use Uhifadhi\Bundle\ShellBundle\Test\VocabularyConformanceTestCase;
+
+final class VocabularyConformanceTest extends VocabularyConformanceTestCase
+{
+    protected static function bundlePath(): string { return \dirname(__DIR__, 2); }
+
+    protected static function alias(): string { return 'sightings'; }
+
+    protected static function ownStylesheets(): array { return ['sightings.css']; }
+}
+```
+
+`bundlePath()` is the directory your `composer.json` sits in — `templates/`, `assets/` and
+`public/` are read from it. `ownStylesheets()` names your sheets relative to `public/`; a bundle
+that ships none omits it and only the icon half applies. Two more hooks exist when you need them:
+`linkedStylesheets()`, which defaults to the shell's sheet alone and is where you add a
+dependency's if your pages link one, and `iconDirectory()`, which defaults to
+`assets/icons/<your alias>`.
+
+That is the whole adoption. It runs in `composer check` with the rest of your suite.
+
 ---
 
 ## 8. CI
