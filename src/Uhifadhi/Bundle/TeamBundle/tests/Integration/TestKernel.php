@@ -18,6 +18,7 @@ use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Bundle\SecurityBundle\SecurityBundle;
 use Symfony\Bundle\TwigBundle\TwigBundle;
+use Symfony\Component\DependencyInjection\Argument\TaggedIteratorArgument;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\HttpKernel\Kernel;
@@ -30,6 +31,7 @@ use Uhifadhi\Bundle\ShellBundle\ShellBundle;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\TeamBundle;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\DeclaringModuleProvider;
+use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\DevkitCommandCollector;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\GuardedController;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\ShellPageController;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\SilentModuleProvider;
@@ -243,6 +245,15 @@ final class TestKernel extends Kernel
         // The framework's own hasher, made reachable: a suite proving a stored
         // password verifies has to use the same service the firewall does.
         $container->services()->alias('test_public.hasher', 'security.user_password_hasher')->public();
+
+        // DEVKIT, STANDING IN. devkit installs through require-dev and is no
+        // dependency of the core, so the collecting half of the seam is a
+        // fixture here: the same tagged iterator devkit builds, over the same
+        // tag string this bundle writes by hand.
+        $container->services()
+            ->set('test_public.devkit_commands', DevkitCommandCollector::class)
+            ->args([new TaggedIteratorArgument('uhifadhi.devkit.command_provider')])
+            ->public();
 
         // Public aliases so a test can hold the bundle's private services.
         foreach ([

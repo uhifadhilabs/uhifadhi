@@ -83,6 +83,27 @@ nullable **area**, and that is what makes a department org-level or area-level �
 `team_api_token`. This bundle ships no migration versions: the tables are the
 bundle's, the migration history is the installation's.
 
+### Then the first administrator
+
+Every screen is behind the sign-in an installation does not have yet, so the one
+account that cannot be made through a screen is made from the console:
+
+```bash
+printf '%s' "$PASSPHRASE" | bin/console team:user:create ada@example.test Ada Mwangi
+```
+
+The account is a **Super Admin**, verified and active — somebody who can sign in
+and compose everything else. `--tier=super-admin|admin|staff` names another
+tier, and `--password=…` passes the passphrase inline instead of on standard
+input.
+
+**That command exists in a development install only.** This bundle ships no
+console commands; it ships an inert *provider* that names one, and
+`uhifadhi/devkit-module` — installed through `require-dev` — is what collects it
+and turns it into a real command. A production build has no devkit and no
+`team:user:create`, so the first administrator is made where the deployment is
+built and the account travels in the database.
+
 ## Modules point at your people
 
 A module that keeps a record with a person on it type-hints the contract, never

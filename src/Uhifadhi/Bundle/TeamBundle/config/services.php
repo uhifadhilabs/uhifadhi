@@ -26,6 +26,7 @@ use Uhifadhi\Bundle\TeamBundle\Controller\PositionWidgetsController;
 use Uhifadhi\Bundle\TeamBundle\Controller\SecurityController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamWidgetsController;
+use Uhifadhi\Bundle\TeamBundle\Devkit\TeamCommandProvider;
 use Uhifadhi\Bundle\TeamBundle\Repository\ApiTokenRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentScopeChangeRepository;
@@ -75,7 +76,7 @@ use Uhifadhi\Contracts\Security\ApiTokenResolverInterface;
  *   team.user_checker           the sign-in refusal for a deactivated account
  *   team.overview               the roster's counts and its attention rows
  *   team.widget_surface.*       the roster and the matrix, as dashboard surfaces
- *   team.command.create_user    the bootstrap console command
+ *   team.devkit.commands        what devkit materialises into commands in a dev install
  *   team.controller.security    the sign-in screen
  *   team.controller.team        the roster
  *   team.controller.team_widgets  its widget library
@@ -136,6 +137,25 @@ return static function (ContainerConfigurator $container): void {
         ->args([service(ApiTokenRepository::class), service('doctrine.orm.entity_manager')]);
 
     $services->alias(ApiTokenResolverInterface::class, 'team.api_token.manager');
+
+    /*
+     * THE FIRST ADMINISTRATOR, OFFERED RATHER THAN SHIPPED. The core ships no
+     * console command; devkit — dev-only, installed through require-dev — is
+     * what turns this inert declaration into one. In a production build devkit
+     * is absent, nothing collects this service, and it is never asked anything.
+     *
+     * THE TAG IS A LITERAL STRING, not a constant of devkit's. Reading
+     * UhifadhiDevkitBundle::COMMAND_PROVIDER_TAG would load a class that is not
+     * installed in production, which is the whole arrangement inverted: the
+     * always-installed side names the promise, never the tool.
+     */
+    $services->set('team.devkit.commands', TeamCommandProvider::class)
+        ->args([
+            service('doctrine.orm.entity_manager'),
+            service(UserRepository::class),
+            service('security.user_password_hasher'),
+        ])
+        ->tag('uhifadhi.devkit.command_provider');
 
     /*
      * WHETHER AN IDENTIFIER AND A PASSCODE NAME SOMEBODY WHO MAY SIGN IN — the
