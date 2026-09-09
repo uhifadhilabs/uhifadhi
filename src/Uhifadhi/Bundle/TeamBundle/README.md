@@ -199,6 +199,35 @@ No such person, the wrong passcode and a deactivated account answer identically:
 telling them apart would turn the one endpoint reachable without a credential
 into a directory of who works here.
 
+### Every `/api` failure is that same document
+
+Not only this endpoint's. A 401 from the firewall, a 404 from routing, a 422
+from validation and a 500 from anywhere each answer in their own way, which for
+a refusal is an HTML error page — and a client parsing that gets a stack trace
+where it expected a `code`. So the document is a property of the **URL space**:
+anything failing under `/api` is answered as `{code, message, retryable,
+details}`, with the status left exactly as whoever refused set it.
+
+| status | `code` | `retryable` |
+|---|---|---|
+| 400 | `invalid_request` | false |
+| 401 | `unauthorized` | false |
+| 403 | `forbidden` | false |
+| 404 | `not_found` | false |
+| 405 | `method_not_allowed` | false |
+| 406 | `not_acceptable` | false |
+| 409 | `conflict` | false |
+| 415 | `unsupported_media_type` | false |
+| 422 | `invalid_payload` | false |
+| 429 | `rate_limited` | **true** |
+| 5xx | `server_error` | **true** |
+
+An endpoint that can say something more precise throws
+`Uhifadhi\Bundle\TeamBundle\Exception\ApiProblemException`, which carries its
+own code, its own `retryable` and any `details` a client can act on, and is
+answered verbatim. Everything a page renders keeps its own error handling: this
+is the machine door only.
+
 ### It is throttled, and it throttles itself
 
 Having no firewall means nothing upstream counts attempts for it, so it counts

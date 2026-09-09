@@ -19,6 +19,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
+use Uhifadhi\Bundle\TeamBundle\Exception\ApiProblemException;
 use Uhifadhi\Bundle\TeamBundle\Service\ApiTokenManager;
 use Uhifadhi\Bundle\TeamBundle\Service\FieldSignIn;
 use Uhifadhi\Bundle\TeamBundle\Service\PermissionCatalogue;
@@ -36,6 +37,11 @@ use Uhifadhi\Bundle\TeamBundle\Service\PermissionCatalogue;
  * rather than serialized from an object: a released client reads these exact
  * names and cannot be redeployed because a serializer was reconfigured. The
  * suite asserts the literal document for the same reason.
+ *
+ * A REFUSAL IS THROWN, NOT RETURNED. Every failure under `/api` is answered in
+ * one document by {@see \Uhifadhi\Bundle\TeamBundle\EventListener\ApiErrorListener},
+ * and the way to say something more precise than a status code can is to throw
+ * an {@see ApiProblemException}, which that listener answers verbatim.
  */
 final class ApiAuthController
 {
@@ -63,32 +69,24 @@ final class ApiAuthController
     {
         $payload = json_decode($request->getContent(), true);
         if (!\is_array($payload) || array_is_list($payload)) {
-            return self::problem(Response::HTTP_BAD_REQUEST, 'invalid_request', 'The request body is not a JSON object.');
+            throw new ApiProblemException(Response::HTTP_BAD_REQUEST, 'invalid_request', 'The request body is not a JSON object.');
         }
 
         $identifier = self::text($payload, 'rangerId');
         $passcode = self::text($payload, 'passcode');
         if ('' === $identifier || '' === $passcode) {
-            return self::problem(Response::HTTP_UNPROCESSABLE_ENTITY, 'invalid_payload', 'A service number and a passcode are both required.');
+            throw new ApiProblemException(Response::HTTP_UNPROCESSABLE_ENTITY, 'invalid_payload', 'A service number and a passcode are both required.');
         }
 
         if (!$this->withinBudget($identifier, $request)) {
-            return self::problem(
-                Response::HTTP_TOO_MANY_REQUESTS,
-                'rate_limited',
-                'Too many sign-in attempts — wait a minute and try again.',
-                // THE ONE REFUSAL WORTH REPEATING. Everything else this
-                // endpoint refuses needs a person to act; this one only needs
-                // time, so a client may queue the request and try again.
-                retryable: true,
-            );
+            throw new ApiProblemException(Response::HTTP_TOO_MANY_REQUESTS, 'rate_limited', 'Too many sign-in attempts — wait a minute and try again.', /* THE ONE REFUSAL WORTH REPEATING. Everything else this */ /* endpoint refuses needs a person to act; this one only needs */ /* time, so a client may queue the request and try again. */ retryable: true);
         }
 
         $user = $this->signIn->authenticate($identifier, $passcode);
         if (!$user instanceof User) {
             // ONE SENTENCE FOR EVERY REFUSAL — see FieldSignIn. 401 is never
             // retried in a loop: the person has to act.
-            return self::problem(Response::HTTP_UNAUTHORIZED, 'invalid_credentials', 'That service number and passcode do not match an account.');
+            throw new ApiProblemException(Response::HTTP_UNAUTHORIZED, 'invalid_credentials', 'That service number and passcode do not match an account.');
         }
 
         [$plaintext, $token] = $this->tokens->issue(
@@ -124,22 +122,6 @@ final class ApiAuthController
              */
             'permissions' => $this->permissions->heldBy($user),
         ]);
-    }
-
-    /**
-     * The failure document every field endpoint answers in: a code a client
-     * switches on, a sentence it may show, and whether trying again could ever
-     * help. `details` is an object even when empty, so a client's parser meets
-     * one shape.
-     */
-    private static function problem(int $status, string $code, string $message, bool $retryable = false): JsonResponse
-    {
-        return new JsonResponse([
-            'code' => $code,
-            'message' => $message,
-            'retryable' => $retryable,
-            'details' => new \stdClass(),
-        ], $status);
     }
 
     /**

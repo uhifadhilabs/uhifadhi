@@ -27,6 +27,7 @@ use Uhifadhi\Bundle\TeamBundle\Controller\SecurityController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamWidgetsController;
 use Uhifadhi\Bundle\TeamBundle\Devkit\TeamCommandProvider;
+use Uhifadhi\Bundle\TeamBundle\EventListener\ApiErrorListener;
 use Uhifadhi\Bundle\TeamBundle\Repository\ApiTokenRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentScopeChangeRepository;
@@ -69,6 +70,7 @@ use Uhifadhi\Bundle\TeamBundle\Widget\TeamWidgets;
  *
  *   team.api_token.manager      the credential a field client carries: issue, find, note, withdraw
  *   team.api_token.authenticator  the bearer token a field client presents, and the 401 for none
+ *   team.api_error_listener     one failure document for everything under /api
  *   team.field_sign_in          identifier + passcode -> the person, or nobody
  *   team.controller.api_auth    where a field client signs in
  *   team.permissions            the catalogue: this bundle's seven + what modules declared
@@ -155,6 +157,25 @@ return static function (ContainerConfigurator $container): void {
             service('security.user_password_hasher'),
         ])
         ->tag('uhifadhi.devkit.command_provider');
+
+    /*
+     * ONE FAILURE DOCUMENT FOR EVERYTHING UNDER `/api`, whoever refused.
+     *
+     * Two listeners on one object. The exception pass answers a thrown
+     * ApiProblemException verbatim and stops there, at a priority above the
+     * firewall's exception listener and the framework's own, so nothing
+     * downstream reshapes a code a client switches on. The response pass is the
+     * safety net for every other failure — the firewall's 401, routing's 404, a
+     * 500 from anywhere — and runs last, once the status is settled, replacing
+     * the body and never the status.
+     *
+     * TAGGED BY HAND, twice: a reusable bundle is not autoconfigured, so the
+     * #[AsEventListener] attribute would never be read and the document would
+     * silently be whatever each layer felt like.
+     */
+    $services->set('team.api_error_listener', ApiErrorListener::class)
+        ->tag('kernel.event_listener', ['event' => 'kernel.exception', 'method' => 'onException', 'priority' => 512])
+        ->tag('kernel.event_listener', ['event' => 'kernel.response', 'method' => 'onResponse', 'priority' => -1024]);
 
     /*
      * THE BEARER TOKEN A FIELD CLIENT PRESENTS — the machine door's
