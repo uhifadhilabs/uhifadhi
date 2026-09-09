@@ -33,7 +33,7 @@
             <h2 class="w-modaltitle">Add a widget</h2>
             <input type="search" class="fld w-picksearch" data-pick-search
                    placeholder="Search widgets" aria-label="Search widgets">
-            <button type="button" class="tb-icon" data-picker-close aria-label="Close">{{ ux_icon('lucide:x') }}</button>
+            <button type="button" class="tb-icon" data-picker-close aria-label="Close">{{ ux_icon('shell:x') }}</button>
         </div>
         <div class="w-modalbody">
             {# The rail. A side list, not tabs across the top: it keeps its shape
@@ -85,9 +85,9 @@
                                                 {# data-pick-for, not data-pick-add: it names the widget without
                                                    offering to add it, so assets/widgets.js can turn it back into
                                                    an Add button when the composition stops holding it. #}
-                                                <span class="w-pickadded" data-pick-for="{{ id }}">{{ ux_icon('lucide:check') }}In this layout</span>
+                                                <span class="w-pickadded" data-pick-for="{{ id }}">{{ ux_icon('shell:check') }}In this layout</span>
                                             {% else %}
-                                                <button type="button" class="cta w-pickadd" data-pick-add="{{ id }}">{{ ux_icon('lucide:plus') }}Add</button>
+                                                <button type="button" class="cta w-pickadd" data-pick-add="{{ id }}">{{ ux_icon('shell:plus') }}Add</button>
                                             {% endif %}
                                         </figcaption>
                                     </figure>

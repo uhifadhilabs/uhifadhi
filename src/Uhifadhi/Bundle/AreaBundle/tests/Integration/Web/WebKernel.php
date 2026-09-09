@@ -113,7 +113,7 @@ final class WebKernel extends Kernel
         ]);
 
         /*
-         * THE ICONS ARE LOCAL, and they come from the shell: `lucide:` is an
+         * THE ICONS ARE LOCAL, and they come from the shell: `shell:` is an
          * icon SET the shell registers, and a set is answered only from its own
          * directory. So this kernel keeps an empty icon directory of its own —
          * an application always has one — and on-demand fetching is off, which

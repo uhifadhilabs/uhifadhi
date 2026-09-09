@@ -1199,7 +1199,7 @@ export function initWidgetLibrary(root = document.querySelector(ROOT_SELECTOR)) 
     /* ---- small helpers ---------------------------------------------------- */
 
     /* The handful of icons the FRAMEWORK itself draws, mirroring
-     * {{ ux_icon('lucide:<name>') }} one path at a time — a widget's own markup
+     * {{ ux_icon('shell:<name>') }} one path at a time — a widget's own markup
      * carries its own icons, and these are only for the chrome this file builds
      * after the page was rendered. */
     const ICONS = {

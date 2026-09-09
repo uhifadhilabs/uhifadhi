@@ -112,8 +112,8 @@ final readonly class TeamNavigation implements NavigationSourceInterface
          * section, so an empty list yields nothing at all.
          */
         $items = array_values(array_filter([
-            $this->row('Departments', self::DEPARTMENTS_ROUTE, 'lucide:building-2'),
-            $this->row('Team', self::ROUTE, 'lucide:users'),
+            $this->row('Departments', self::DEPARTMENTS_ROUTE, 'shell:building-2'),
+            $this->row('Team', self::ROUTE, 'shell:users'),
         ]));
 
         if ([] === $items) {

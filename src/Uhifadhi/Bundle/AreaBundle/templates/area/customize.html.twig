@@ -80,7 +80,7 @@
                     <span class="mchip a-pin pinned">{{ row.name }}<span class="mono pinlabel">pinned</span></span>
                 {% else %}
                     <span class="mchip a-pin" data-uhifadhi--area-bundle--module-order-target="row" data-slug="{{ row.slug }}">
-                        <span class="grip" data-uhifadhi--area-bundle--module-order-target="handle" title="drag to reorder">{{ ux_icon('lucide:grip-vertical') }}</span>{{ row.name }}
+                        <span class="grip" data-uhifadhi--area-bundle--module-order-target="handle" title="drag to reorder">{{ ux_icon('shell:grip-vertical') }}</span>{{ row.name }}
                         {{ shop.park(area, row, token, '&times;', 'remove module', 'rm') }}
                     </span>
                 {% endif %}
@@ -115,7 +115,7 @@
                                 <span class="mod-spacer"></span>
                                 <span class="mod-pin">always on &middot; pinned</span>
                             {% else %}
-                                <span class="mod-grip" data-uhifadhi--area-bundle--module-order-target="handle" title="drag to reorder">{{ ux_icon('lucide:grip-vertical') }}</span>
+                                <span class="mod-grip" data-uhifadhi--area-bundle--module-order-target="handle" title="drag to reorder">{{ ux_icon('shell:grip-vertical') }}</span>
                                 <span class="mod-name">{{ row.name }}</span>
                                 {{ shop.chip(row.status) }}
                                 <span class="mod-spacer"></span>

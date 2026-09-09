@@ -12,7 +12,7 @@
         <p class="pgsub">The register as a worklist &mdash; areas grouped by what needs the operator. The ones raising a flag come first, the ones running steady next, the ones not yet live last. A good day is allowed to look like one.</p>
     </div>
     {% if is_granted('area.create') %}
-        <div class="pgact"><a class="cta" href="{{ path('area_new') }}">{{ ux_icon('lucide:plus') }} New area</a></div>
+        <div class="pgact"><a class="cta" href="{{ path('area_new') }}">{{ ux_icon('shell:plus') }} New area</a></div>
     {% endif %}
 </div>
 
@@ -33,7 +33,7 @@
             <span class="ax-triside">
                 <span class="chip warn">{{ row.alertCount }} open alert{{ row.alertCount == 1 ? '' : 's' }}</span>
                 {% if row.lastActivity %}<span class="mono ax-triwhen">last contact <time datetime="{{ row.lastActivity|date('c') }}">{{ row.lastActivityLabel }}</time></span>{% endif %}
-                <span class="ax-open">Open {{ ux_icon('lucide:arrow-right') }}</span>
+                <span class="ax-open">Open {{ ux_icon('shell:arrow-right') }}</span>
             </span>
         </a>
         <div class="ax-triatts">
@@ -58,7 +58,7 @@
 
 <h2 class="zone">Running steady &middot; {{ runningSteady|length }}</h2>
 {% if runningSteady is empty %}
-    <div class="ax-steadyempty">{{ ux_icon('lucide:circle-check') }}<span>No area is both live and quiet right now. An active area with nothing overdue would sit here &mdash; its pulse visible, but nothing asking for you.</span></div>
+    <div class="ax-steadyempty">{{ ux_icon('shell:circle-check') }}<span>No area is both live and quiet right now. An active area with nothing overdue would sit here &mdash; its pulse visible, but nothing asking for you.</span></div>
 {% else %}
     {% for preset in runningSteady %}
         {% set row = preset.row %}
@@ -75,7 +75,7 @@
                 <span class="ax-triside">
                     <span class="chip ok">steady</span>
                     {% if row.lastActivity %}<span class="mono ax-triwhen">last contact <time datetime="{{ row.lastActivity|date('c') }}">{{ row.lastActivityLabel }}</time></span>{% endif %}
-                    <span class="ax-open">Open {{ ux_icon('lucide:arrow-right') }}</span>
+                    <span class="ax-open">Open {{ ux_icon('shell:arrow-right') }}</span>
                 </span>
             </a>
             <div class="ax-tristats mono">{{ row.liveModules }} modules live{% for stat in row.stats %} &middot; {{ stat.value }} {{ stat.label }}{% endfor %}</div>
@@ -100,6 +100,6 @@
         </a>
     {% endfor %}
     {% if is_granted('area.create') %}
-        <a class="ax-tcard add" href="{{ path('area_new') }}">{{ ux_icon('lucide:plus') }} New area</a>
+        <a class="ax-tcard add" href="{{ path('area_new') }}">{{ ux_icon('shell:plus') }} New area</a>
     {% endif %}
 </div>

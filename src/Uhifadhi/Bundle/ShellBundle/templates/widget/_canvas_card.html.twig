@@ -34,7 +34,7 @@
      {{ DOM.widget }}="{{ widget.id }}" {{ DOM.on }}="1" {{ DOM.cols }}="{{ widget.cols }}">
     <div class="w-head">
         {% if editable %}
-            <b class="w-grip" {{ DOM.grip }} title="Drag to set the widget’s place on the dashboard">{{ ux_icon('lucide:grip-vertical') }}</b>
+            <b class="w-grip" {{ DOM.grip }} title="Drag to set the widget’s place on the dashboard">{{ ux_icon('shell:grip-vertical') }}</b>
         {% endif %}
         <span class="w-name">{{ widget.label }}</span>
         {% if group is not null %}
@@ -53,7 +53,7 @@
                 {% endfor %}
             </span>
             <button type="button" class="tgl w-tgl w-remove" {{ DOM.toggle }} title="Remove from this layout">
-                {{ ux_icon('lucide:x') }}<span {{ DOM.toggleLabel }}>Remove</span>
+                {{ ux_icon('shell:x') }}<span {{ DOM.toggleLabel }}>Remove</span>
             </button>
         {% endif %}
     </div>

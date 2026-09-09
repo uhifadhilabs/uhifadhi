@@ -1,47 +1,63 @@
 # The glyphs the core draws
 
-Two prefixes, both registered by `ShellBundle::prependExtension()` and both
-resolved from these files, so every core screen draws itself on an installation
-that has configured no icon set at all and has no network access.
+One prefix — `shell:` — registered by `ShellBundle::prependExtension()` and
+resolved from the files beside this page, so every core screen draws itself on
+an installation that has configured no icon set at all and has no network
+access.
 
 ## Contents
 
-- [`shell:` — the furniture's own marks](#shell--the-furnitures-own-marks)
-- [`lucide:` — the set every core screen shares](#lucide--the-set-every-core-screen-shares)
-- [Why one directory per prefix](#why-one-directory-per-prefix)
+- [`shell:` — every glyph the core draws](#shell--every-glyph-the-core-draws)
+- [One prefix per package](#one-prefix-per-package)
 - [Adding one](#adding-one)
 
-## `shell:` — the furniture's own marks
+## `shell:` — every glyph the core draws
 
-The glyphs the shell's own chrome needs: the sidebar's collapse chevron, the
-tree's caret, the theme toggle, the alerts bell and the module grid's lens
-marker. They are **not** a design system — a deployment names its own icons in
-its own set.
+Two kinds of mark share the directory because they are reached by the same
+name: the furniture's own — the sidebar's collapse chevron, the tree's caret,
+the theme toggle, the alerts bell and the module grid's lens marker — and the
+drawn vocabulary the shell, the team screens and the area screens all use.
 
-## `lucide:` — the set every core screen shares
-
-The drawn vocabulary the shell, the team screens and the area screens all use.
 Every file here answers a name some template or navigation row asks for, and
 `tests/Core/IconsResolveOfflineTest.php` fails the build if a name is added
 without its file — with on-demand fetching off, so what is proved is that these
 files alone are enough.
 
-## Why one directory per prefix
+They are **not** a design system. A deployment names its own icons in its own
+set.
 
-`ux_icons.icon_dir` is a single scalar and an icon set is **one path per
-prefix**, so `lucide:` cannot be answered from three bundles at once. The shell
-is the bundle the others already depend on, so the shared set lives here.
+## One prefix per package
 
-A consequence worth knowing: a prefix registered as an icon set is answered
-**only** from its directory — `LocalSvgIconRegistry::get()` does not fall back
-to the application's `icon_dir` for it. So anything needing a glyph outside the
-shipped set ships a **prefix of its own**, exactly as `shell:` is one, rather
-than dropping a file into an application's `assets/icons/lucide/`.
+An icon set maps a prefix to a single `path`, and a prefix mapped that way is
+answered **only** from that path: `LocalSvgIconRegistry::get()` does not fall
+back to the application's `icon_dir` for it. Registering a prefix is therefore
+taking that word away from everybody else in the installation.
+
+So the core claims exactly one, and it is its own. Every well-known public
+prefix stays free, which is what lets an installation answer one from its
+`assets/icons/…` and lets an installer drop files there.
+
+A module does the same in its own bundle, under its own alias:
+
+```php
+$container->extension('ux_icons', [
+    'icon_sets' => [
+        'sightings' => ['path' => __DIR__.'/assets/icons/sightings'],
+    ],
+]);
+```
+
+and then draws with `ux_icon('sightings:binoculars')`. A glyph it wants from a
+public icon library is **copied into that directory**, never reached for under
+the library's own prefix.
+
+<https://symfony.com/bundles/ux-icons/current/index.html#full-configuration>
 
 ## Adding one
 
 Import it with the command that wrote these, pointing the icon directory at
-this one, and commit the result — that is what ux-icons calls *locking* an icon:
+this one, then commit the result under the bare name so it is drawn as
+`shell:<name>` — committing it is what ux-icons calls *locking* an icon:
 
 ```bash
 bin/console ux:icons:import lucide:<name>

@@ -15,7 +15,7 @@
         <p class="pgsub">The register with geography as the ground &mdash; the one view about <b>where the org works</b>. Every area a point on the map, the live one bold, the rest awaiting setup; the list docks beside it so &ldquo;where&rdquo; and &ldquo;what&rsquo;s happening&rdquo; are read in one glance.</p>
     </div>
     {% if is_granted('area.create') %}
-        <div class="pgact"><a class="cta" href="{{ path('area_new') }}">{{ ux_icon('lucide:plus') }} New area</a></div>
+        <div class="pgact"><a class="cta" href="{{ path('area_new') }}">{{ ux_icon('shell:plus') }} New area</a></div>
     {% endif %}
 </div>
 
@@ -80,7 +80,7 @@
             {% endfor %}
         </div>
         {% if is_granted('area.create') %}
-            <a class="ax-dockadd" href="{{ path('area_new') }}">{{ ux_icon('lucide:plus') }} New area</a>
+            <a class="ax-dockadd" href="{{ path('area_new') }}">{{ ux_icon('shell:plus') }} New area</a>
         {% endif %}
     </div>
 </div>

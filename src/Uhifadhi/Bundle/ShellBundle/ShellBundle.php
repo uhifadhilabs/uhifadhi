@@ -169,21 +169,22 @@ final class ShellBundle extends AbstractBundle
      *
      * A deployment turns ux-icons' on-demand fetching off, so a name no file
      * answers to is a blank square rather than a round trip to a remote API.
-     * The core's own chrome may depend on neither: the sidebar's collapse
-     * chevron, the tree's caret, the theme toggle and the catalogue's lens
-     * marker are the shell's under `shell:`, and the drawn set every core
-     * screen shares is shipped under `lucide:` — imported with
-     * `ux:icons:import` and committed, which is what that command calls
-     * locking an icon.
+     * The core's own chrome may depend on neither, so every glyph it draws —
+     * the sidebar's collapse chevron, the tree's caret, the theme toggle, the
+     * catalogue's lens marker and the whole drawn vocabulary the shell, the
+     * team screens and the area screens share — is a file in one directory
+     * here, reached under `shell:`.
      *
-     * THE SHARED SET IS THIS BUNDLE'S BECAUSE A PREFIX HAS EXACTLY ONE
-     * DIRECTORY. `ux_icons.icon_dir` is a single scalar and an icon set is one
-     * path per prefix, so `lucide:` cannot be answered from three bundles at
-     * once. The shell is the bundle the others already depend on, so the shared
-     * set lives here; anything needing a glyph outside it ships a prefix of its
-     * own, exactly as `shell:` is one.
+     * ONE PREFIX, AND IT IS THE ONLY ONE THE CORE CLAIMS. An icon set maps a
+     * prefix to a single `path`, and a prefix so mapped is answered ONLY from
+     * that path: the lookup never falls back to an application's `icon_dir`.
+     * Registering a second prefix here would therefore take that word away from
+     * every installation and every module that installs into one. Each package
+     * answers for its own alias and no other — this one for `shell:`, a module
+     * for the alias it ships, an application for whatever it keeps in
+     * `assets/icons/`.
      *
-     * @see https://symfony.com/bundles/ux-icons/current/index.html#configuration
+     * @see https://symfony.com/bundles/ux-icons/current/index.html#full-configuration
      * @see https://symfony.com/bundles/ux-icons/current/index.html#importing-icons
      * @see vendor/symfony/ux-icons/src/Registry/LocalSvgIconRegistry.php
      */
@@ -193,7 +194,6 @@ final class ShellBundle extends AbstractBundle
             $container->extension('ux_icons', [
                 'icon_sets' => [
                     'shell' => ['path' => __DIR__.'/assets/icons/shell'],
-                    'lucide' => ['path' => __DIR__.'/assets/icons/lucide'],
                 ],
             ]);
         }

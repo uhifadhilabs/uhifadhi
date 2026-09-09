@@ -40,7 +40,7 @@ final class NavItem
      *
      * @param string      $label    what the row says
      * @param string|null $url      where it goes, or null for an inert row
-     * @param string|null $icon     a ux-icons name, e.g. "lucide:map"
+     * @param string|null $icon     a ux-icons name, e.g. "shell:map"
      * @param string|null $hint     the title attribute — why a row is inert
      * @param bool        $current  whether this is the row the viewer is on
      * @param bool        $open     whether this row's children are unfolded

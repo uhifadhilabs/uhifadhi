@@ -13,7 +13,7 @@
         <p class="pgsub">The portfolio read &mdash; the org&rsquo;s primary area featured large with its full live pulse, everything else on a secondary strip below. It says which area is the work without hiding the rest.</p>
     </div>
     {% if is_granted('area.create') %}
-        <div class="pgact"><a class="cta" href="{{ path('area_new') }}">{{ ux_icon('lucide:plus') }} New area</a></div>
+        <div class="pgact"><a class="cta" href="{{ path('area_new') }}">{{ ux_icon('shell:plus') }} New area</a></div>
     {% endif %}
 </div>
 
@@ -35,7 +35,7 @@
                         {{ row.areaKm2|number_format }} km&sup2;{% if row.lastActivityLabel %} &middot; last contact {{ row.lastActivityLabel }}{% endif %}
                     </div>
                 </div>
-                <a class="cta" href="{{ path('area_show', {uuid: row.area.uuidString}) }}">Open the area {{ ux_icon('lucide:arrow-right') }}</a>
+                <a class="cta" href="{{ path('area_show', {uuid: row.area.uuidString}) }}">Open the area {{ ux_icon('shell:arrow-right') }}</a>
             </div>
 
             <span class="factband">
@@ -80,7 +80,7 @@
         </div>
     </div>
 {% else %}
-    <div class="ax-steadyempty">{{ ux_icon('lucide:circle-check') }}<span>No area is live yet, so there is no flagship to feature. Once an area has a module switched on it becomes the hero here, with the rest on the strip below.</span></div>
+    <div class="ax-steadyempty">{{ ux_icon('shell:circle-check') }}<span>No area is live yet, so there is no flagship to feature. Once an area has a module switched on it becomes the hero here, with the rest on the strip below.</span></div>
 {% endif %}
 
 <h2 class="zone">The rest of the register &middot; {{ flagshipRest|length }}</h2>
@@ -100,6 +100,6 @@
         </a>
     {% endfor %}
     {% if is_granted('area.create') %}
-        <a class="ax-scard add" href="{{ path('area_new') }}">{{ ux_icon('lucide:plus') }}<span>New area</span></a>
+        <a class="ax-scard add" href="{{ path('area_new') }}">{{ ux_icon('shell:plus') }}<span>New area</span></a>
     {% endif %}
 </div>

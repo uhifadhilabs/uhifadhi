@@ -11,6 +11,7 @@ installed on its own as `uhifadhi/shell-bundle`.
 - [What it is](#what-it-is)
 - [Installation](#installation)
 - [Getting started](#getting-started)
+- [Icons](#icons)
 - [Learn more](#learn-more)
 - [License](#license)
 
@@ -102,6 +103,32 @@ know: the deployment's name, the host's route names, a first-visit preference.
 There is deliberately **no key listing nav entries, area tabs or modules** —
 those arrive as data through the contracts, because a YAML nav is a nav no permission
 check ever reaches.
+
+## Icons
+
+**The core draws with one prefix, `shell:`, and registers no other.** Every
+glyph any core screen uses is a file in this bundle's `assets/icons/shell/`,
+registered as an icon set in `ShellBundle::prependExtension()`, so the whole
+core renders on an installation with no icon configuration and no network.
+
+A prefix registered as an icon set is answered **only** from that set's
+directory — the lookup never falls back to an application's `icon_dir`. Claiming
+a second one here would take that word away from every installation and every
+module. So the rule is one prefix per package:
+
+- **An application** answers whatever it keeps in `assets/icons/`, including any
+  public library it vendors there.
+- **A module** registers `ux_icons.icon_sets.<its alias>.path` in its own bundle
+  and draws with `<alias>:…`; a glyph it wants from a public icon library is
+  copied into that directory rather than reached for under the library's own
+  prefix.
+- **Never an inline `<svg>` in a template, and never an emoji.** A drawing that
+  is not a locked icon file is a drawing nothing can check.
+
+The glyph list, how one is imported and the attribution are in
+[`assets/icons/README.md`](assets/icons/README.md).
+
+<https://symfony.com/bundles/ux-icons/current/index.html#full-configuration>
 
 ## Learn more
 

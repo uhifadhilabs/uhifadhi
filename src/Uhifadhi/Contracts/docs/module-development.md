@@ -806,7 +806,7 @@ final readonly class SightingsNavigation implements NavigationSourceInterface
             new NavItem(
                 label: 'Sightings',
                 url: $url,
-                icon: 'lucide:binoculars',
+                icon: 'sightings:binoculars',
                 current: $this->viewerIsHere($url),
             ),
         ], position: 10);
@@ -1042,16 +1042,54 @@ A module's chrome is not a free canvas — a person moving between Patrols, Inci
 meet the *same* controls in the *same* clothes. Two that are settled and must be identical everywhere:
 
 - **The widget-library entry point.** Every module dashboard reaches its widget library through one
-  standard link — **`<a class="tgl w-act" …>{{ ux_icon('lucide:layout-grid') }} Widget library</a>`**.
+  standard link — **`<a class="tgl w-act" …>{{ ux_icon('shell:layout-grid') }} Widget library</a>`**.
   Not "Customize widgets", not a plus icon, not a module-private action class. The label is
-  "Widget library", the icon is `lucide:layout-grid`, the class is `tgl w-act`.
+  "Widget library", the icon is `shell:layout-grid`, the class is `tgl w-act`.
 - **Filters are grouped dropdowns.** Filter bars use the grouped-**dropdown** pattern (a closed chip
   that opens a floating panel of options with live counts — the incidents filter is the reference),
   not a sprawling row of always-expanded chips.
 
-And a convention that catches the eye instantly when broken: **icons are `ux_icon('lucide:…')`, never
-inline `<svg>` in app templates.** (The static design files keep inline SVGs; the app does not — it
-has lucide vendored through `symfony/ux-icons`.) An inline SVG in a module template is drift.
+### Icons: one prefix per package
+
+**Every drawing is a locked icon file reached by name — never an inline `<svg>` in an app template,
+never an emoji.** (The static design files keep inline SVGs; the app does not.) An inline SVG in a
+module template is drift.
+
+An icon set maps a prefix to a **single directory**, and a prefix mapped that way is answered *only*
+from that directory — the lookup never falls back to the application's `icon_dir`. Registering a
+prefix therefore takes that word away from everybody else in the installation, so each package
+answers for its own alias and no other.
+
+- **The core draws with `shell:`** and registers nothing else. Those glyphs are shipped by
+  `ShellBundle` and are yours to reuse: a module renders inside the shell, so `shell:plus` on a
+  module page is the same mark as `shell:plus` on a core page.
+- **Your module registers its own alias** and draws with `<alias>:…`:
+
+```php
+// src/YourVendorSightingsBundle.php
+public function prependExtension(ContainerConfigurator $container, ContainerBuilder $builder): void
+{
+    if ($builder->hasExtension('ux_icons')) {
+        $container->extension('ux_icons', [
+            'icon_sets' => [
+                'sightings' => ['path' => __DIR__.'/assets/icons/sightings'],
+            ],
+        ]);
+    }
+}
+```
+
+  and then `{{ ux_icon('sightings:binoculars') }}`.
+
+- **A glyph from a public icon library is copied into your own directory**, under whatever name you
+  draw it by. Import it, commit the file, draw it under your alias. Never reference a public
+  library's prefix — `lucide:` included — from a bundle: that prefix belongs to the installation,
+  which may answer it with its own artwork or not answer it at all, and on a deployment with
+  fetching disabled an unanswered name is an empty box.
+- **An application** is the one place a public prefix is legitimately answered, from its own
+  `assets/icons/…`.
+
+<https://symfony.com/bundles/ux-icons/current/index.html#full-configuration>
 
 ---
 

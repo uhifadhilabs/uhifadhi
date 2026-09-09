@@ -49,11 +49,11 @@
        will live. A literal href rather than path(), on purpose: the route is not
        mounted yet, so generating it would fail — this is the same "the door is
        named before it is built" is the reassurance the New area button carries. #}
-    <a class="tgl w-act" href="/areas/widgets">{{ ux_icon('lucide:layout-grid') }} Widget library</a>
+    <a class="tgl w-act" href="/areas/widgets">{{ ux_icon('shell:layout-grid') }} Widget library</a>
     {# THE BUTTON CARRIES THE PERMISSION, not just the screen behind it: a control
        that opens onto a refusal teaches somebody the product is broken. #}
     {% if is_granted('area.create') %}
-        <a class="cta" href="{{ path('area_new') }}">{{ ux_icon('lucide:plus') }} New area</a>
+        <a class="cta" href="{{ path('area_new') }}">{{ ux_icon('shell:plus') }} New area</a>
     {% endif %}
 {% endblock %}
 
@@ -67,7 +67,7 @@
                 so nothing else has anywhere to go until one exists.</p>
             <p class="zeb"><span class="mono d" style="font-size:10.5px">Areas arrive from whatever seeds this installation, or from a boundary import.</span></p>
             {% if is_granted('area.create') %}
-                <p class="zeb"><a class="cta" href="{{ path('area_new') }}">{{ ux_icon('lucide:plus') }} New area</a></p>
+                <p class="zeb"><a class="cta" href="{{ path('area_new') }}">{{ ux_icon('shell:plus') }} New area</a></p>
             {% endif %}
         </div>
     {% else %}

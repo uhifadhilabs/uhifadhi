@@ -174,7 +174,7 @@
                 {% for preset in builtins %}
                     <form method="post" action="{{ urls.preset|replace({(constant('Uhifadhi\\Bundle\\ShellBundle\\Widget\\Model\\WidgetDom::ID_PLACEHOLDER')): preset.id}) }}">
                         <input type="hidden" name="_token" value="{{ csrfToken }}">
-                        <button type="submit" class="tgl w-presetapply">{{ ux_icon('lucide:layout-template') }}Apply “{{ preset.label }}”</button>
+                        <button type="submit" class="tgl w-presetapply">{{ ux_icon('shell:layout-template') }}Apply “{{ preset.label }}”</button>
                     </form>
                 {% endfor %}
             </div>
@@ -218,7 +218,7 @@
                 {% for preset in customPresets %}
                     <form method="post" action="{{ urls.apply|replace({(constant('Uhifadhi\\Bundle\\ShellBundle\\Widget\\Model\\WidgetDom::ID_PLACEHOLDER')): preset.id}) }}">
                         <input type="hidden" name="_token" value="{{ csrfToken }}">
-                        <button type="submit" class="tgl w-presetapply">{{ ux_icon('lucide:layout-template') }}Apply “{{ preset.label }}”</button>
+                        <button type="submit" class="tgl w-presetapply">{{ ux_icon('shell:layout-template') }}Apply “{{ preset.label }}”</button>
                     </form>
                 {% endfor %}
             </div>
@@ -234,7 +234,7 @@
        here. The script rewrites this row as the selection changes; what is
        rendered is the row for the ACTIVE preset. #}
     <div class="w-previewbar w-previewbar-active" role="status">
-        <span class="w-barstatus">{{ ux_icon('lucide:check') }}<span>
+        <span class="w-barstatus">{{ ux_icon('shell:check') }}<span>
             {% if editable %}
                 Your dashboard shows <b>{{ active.label }}</b>. Edits below go straight into it.
             {% else %}
@@ -259,7 +259,7 @@
                             data-confirm-modal-title-value="Delete “{{ active.label }}”?"
                             data-confirm-modal-message-value="This saved layout is thrown away, and your dashboard goes back to the design this surface ships with. This cannot be undone."
                             data-confirm-modal-confirm-label-value="Delete preset"
-                            data-confirm-modal-danger-value="true">{{ ux_icon('lucide:trash-2') }}Delete</button>
+                            data-confirm-modal-danger-value="true">{{ ux_icon('shell:trash-2') }}Delete</button>
                 </form>
             </div>
         {% else %}
@@ -268,7 +268,7 @@
                    edit that. #}
                 <form method="post" action="{{ urls.copy|replace({(constant('Uhifadhi\\Bundle\\ShellBundle\\Widget\\Model\\WidgetDom::ID_PLACEHOLDER')): activeId}) }}">
                     <input type="hidden" name="_token" value="{{ csrfToken }}">
-                    <button type="submit" class="cta" data-preset-copy>{{ ux_icon('lucide:copy') }}Make a copy to customize</button>
+                    <button type="submit" class="cta" data-preset-copy>{{ ux_icon('shell:copy') }}Make a copy to customize</button>
                 </form>
             </div>
         {% endif %}
@@ -316,7 +316,7 @@
 
         {% if editable %}
             {# The dashed ghost add-tile, the platform's one add affordance. #}
-            <button type="button" class="w-addtile w-addwidget" data-picker-open>{{ ux_icon('lucide:plus') }}<span>Add widget</span></button>
+            <button type="button" class="w-addtile w-addwidget" data-picker-open>{{ ux_icon('shell:plus') }}<span>Add widget</span></button>
         {% endif %}
     </div>
 

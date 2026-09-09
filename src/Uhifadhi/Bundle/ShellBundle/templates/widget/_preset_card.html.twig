@@ -28,7 +28,7 @@
     <div class="w-presettop">
         <span class="w-presetname">{{ label }}</span>
         {% if active %}
-            <span class="w-presetflag w-presetflag-active">{{ ux_icon('lucide:check') }}Active</span>
+            <span class="w-presetflag w-presetflag-active">{{ ux_icon('shell:check') }}Active</span>
         {% endif %}
     </div>
     {# The whole line, wrapped — a trade-off cut off mid-sentence is worse than no
@@ -36,6 +36,6 @@
     <p class="w-presetsub">{{ description }}</p>
     <div class="w-presetmeta">
         <span class="w-presetcount">{{ count }} widget{{ count == 1 ? '' : 's' }}</span>
-        <span class="w-presetgo">{{ active ? 'On your dashboard' : 'Preview' }}{{ ux_icon('lucide:arrow-right') }}</span>
+        <span class="w-presetgo">{{ active ? 'On your dashboard' : 'Preview' }}{{ ux_icon('shell:arrow-right') }}</span>
     </div>
 </div>

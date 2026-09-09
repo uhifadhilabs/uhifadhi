@@ -140,12 +140,12 @@ final class TeamNavigationTest extends TestCase
 
         self::assertSame('Departments', $section->items[0]->label);
         self::assertSame('/departments', $section->items[0]->url);
-        self::assertSame('lucide:building-2', $section->items[0]->icon);
+        self::assertSame('shell:building-2', $section->items[0]->icon);
         self::assertFalse($section->items[0]->current);
 
         self::assertSame('Team', $section->items[1]->label);
         self::assertSame('/team', $section->items[1]->url);
-        self::assertSame('lucide:users', $section->items[1]->icon);
+        self::assertSame('shell:users', $section->items[1]->icon);
         self::assertFalse($section->items[1]->current);
     }
 

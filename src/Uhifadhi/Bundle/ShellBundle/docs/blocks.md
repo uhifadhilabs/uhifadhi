@@ -107,7 +107,7 @@ a subtitle you never wrote:
 {% block shell_page_subtitle %}Every record this month, by observer.{% endblock %}
 
 {% block shell_page_actions %}
-    <a class="cta" href="{{ path('sighting_new') }}">{{ ux_icon('lucide:plus') }}New</a>
+    <a class="cta" href="{{ path('sighting_new') }}">{{ ux_icon('shell:plus') }}New</a>
 {% endblock %}
 
 {% block shell_page %}

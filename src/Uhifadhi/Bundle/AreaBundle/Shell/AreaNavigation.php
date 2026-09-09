@@ -125,7 +125,7 @@ final readonly class AreaNavigation implements NavigationSourceInterface
             $rows[] = new NavItem(
                 label: (string) $area->getName(),
                 url: $url,
-                icon: 'lucide:map',
+                icon: 'shell:map',
                 current: $hereArea && [] === array_filter(
                     $children,
                     static fn (NavItem $c): bool => $c->current,
@@ -141,7 +141,7 @@ final readonly class AreaNavigation implements NavigationSourceInterface
             new NavItem(
                 label: 'Areas',
                 url: $register,
-                icon: 'lucide:layers',
+                icon: 'shell:layers',
                 current: $this->viewerIsExactly($register),
                 children: $rows,
             ),

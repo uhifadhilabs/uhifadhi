@@ -49,7 +49,7 @@
                     {% if row.isLive %}
                         <span class="ax-live"><i></i>live</span>
                         {% if row.hasAlerts %}
-                            <span class="ax-alertflag">{{ ux_icon('lucide:bell') }} {{ row.alertCount }} alert{{ row.alertCount == 1 ? '' : 's' }}</span>
+                            <span class="ax-alertflag">{{ ux_icon('shell:bell') }} {{ row.alertCount }} alert{{ row.alertCount == 1 ? '' : 's' }}</span>
                         {% endif %}
                     {% else %}
                         <span class="ax-flag mono">not active yet</span>
@@ -58,7 +58,7 @@
                 <div class="ax-body">
                     <div class="ax-head">
                         <div class="ax-name">{{ row.area.name }}</div>
-                        <span class="ax-open">Open {{ ux_icon('lucide:arrow-right') }}</span>
+                        <span class="ax-open">Open {{ ux_icon('shell:arrow-right') }}</span>
                     </div>
                     <div class="ax-meta mono">
                         {%- if row.area.iucnCategory %}IUCN {{ row.area.iucnCategory }} &middot; {% endif -%}
@@ -76,7 +76,7 @@
                         </div>
                         <div class="ax-foot">
                             {% if row.liveNow %}
-                                <span class="chip ok">{{ ux_icon('lucide:circle-check') }} {{ row.liveNow.value }} {{ row.liveNow.label }}</span>
+                                <span class="chip ok">{{ ux_icon('shell:circle-check') }} {{ row.liveNow.value }} {{ row.liveNow.label }}</span>
                             {% endif %}
                             {% if row.lastActivity %}
                                 <span class="ax-when mono">last check-in <time datetime="{{ row.lastActivity|date('c') }}">{{ row.lastActivityLabel }}</time></span>
@@ -95,7 +95,7 @@
         {% endfor %}
         {% if is_granted('area.create') %}
             <a class="ax-card ax-addcard" data-tail href="{{ path('area_new') }}">
-                <span class="ax-addmk">{{ ux_icon('lucide:plus') }}</span>
+                <span class="ax-addmk">{{ ux_icon('shell:plus') }}</span>
                 <span class="t">New area</span>
                 <span class="d">Draw a boundary, name it, choose the modules it starts with.</span>
             </a>

@@ -14,11 +14,12 @@ declare(strict_types=1);
 namespace Uhifadhi\Core\Tests\Core;
 
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Symfony\UX\Icons\Exception\IconNotFoundException;
 use Symfony\UX\Icons\IconRendererInterface;
 use Uhifadhi\Core\Tests\Application\Kernel;
 
 /**
- * EVERY GLYPH THE CORE DRAWS IS A FILE THE CORE SHIPS.
+ * EVERY GLYPH THE CORE DRAWS IS A FILE THE CORE SHIPS, UNDER THE ONE PREFIX IT OWNS.
  *
  * ux-icons will happily fetch an unknown icon from a remote API and cache it,
  * which makes a missing icon invisible on a developer's machine and a blank
@@ -28,11 +29,18 @@ use Uhifadhi\Core\Tests\Application\Kernel;
  * with nothing to fetch from, does every name the core's own templates and
  * navigation ask for still draw?
  *
+ * The second half is the boundary. A prefix registered as an icon set is
+ * answered ONLY from that set's directory, so a package that registers one
+ * takes the name away from everybody else. The core therefore claims exactly
+ * one — `shell:` — and every other prefix, an installation's `lucide:` above
+ * all, is left to whoever owns it.
+ *
  * The names are READ OFF THE SOURCE rather than listed here. A list would be a
  * second place to maintain, and the failure it is meant to catch is exactly the
  * one where somebody adds a name and forgets the second place.
  *
  * @see https://symfony.com/bundles/ux-icons/current/index.html#icons-on-demand
+ * @see https://symfony.com/bundles/ux-icons/current/index.html#full-configuration
  */
 final class IconsResolveOfflineTest extends KernelTestCase
 {
@@ -88,9 +96,83 @@ final class IconsResolveOfflineTest extends KernelTestCase
     }
 
     /**
+     * The prefix the core registers and draws with. It is one word because a
+     * prefix is one directory: `icon_sets` maps a prefix to a single `path`,
+     * so a second core prefix would be a second directory nobody can merge.
+     */
+    private const string PREFIX = 'shell:';
+
+    /**
+     * A prefix the core must leave alone, and the glyph an installation reaches
+     * for first. Named here so the assertion below is about a real name rather
+     * than an invented one.
+     */
+    private const string INSTALLATION_PREFIX = 'lucide:';
+
+    public function testTheCoreDrawsWithItsOwnPrefixAndNoOther(): void
+    {
+        foreach (self::referencedIcons() as $name => $where) {
+            self::assertStringStartsWith(
+                self::PREFIX,
+                $name,
+                $name.' is drawn by '.$where.' under a prefix the core does not own.',
+            );
+        }
+    }
+
+    /**
+     * The reader above knows the shapes an icon name arrives in. This one knows
+     * none of them and looks for the word itself — in a comment, in a docblock,
+     * in a fixture, in a piece of documentation — because the rule is that the
+     * prefix an installation owns appears nowhere in what the core ships.
+     */
+    public function testThePrefixAnInstallationOwnsIsWrittenNowhereInTheCore(): void
+    {
+        foreach (self::BUNDLES as $bundle) {
+            foreach (self::shippedFiles($bundle) as $file) {
+                self::assertStringNotContainsString(
+                    self::INSTALLATION_PREFIX,
+                    (string) file_get_contents($file),
+                    substr($file, \strlen(self::root()) + 1).' writes a prefix the core neither ships nor registers.',
+                );
+            }
+        }
+    }
+
+    public function testAPrefixTheCoreDoesNotOwnIsAnsweredByTheInstallation(): void
+    {
+        self::bootKernel();
+
+        $renderer = self::getContainer()->get(IconRendererInterface::class);
+        self::assertInstanceOf(IconRendererInterface::class, $renderer);
+
+        try {
+            $renderer->renderIcon(self::INSTALLATION_PREFIX.'map');
+            self::fail('The core answers '.self::INSTALLATION_PREFIX.' itself, so an installation cannot.');
+        } catch (IconNotFoundException $exception) {
+            // The message carries the file that was looked for, and that file
+            // is the proof: an icon set would have sent the lookup into a
+            // bundle directory, and nothing else sends it into the
+            // application's own.
+            self::assertStringContainsString(
+                self::iconDir().'/lucide/map.svg',
+                $exception->getMessage(),
+            );
+        }
+    }
+
+    /** The directory an application keeps its own icons in, this one included. */
+    private static function iconDir(): string
+    {
+        return self::root().'/tests/Application/assets/icons';
+    }
+
+    /**
      * Every icon name the five bundles ask for, mapped to one place it is asked
-     * from. Templates name them literally; navigation rows carry them as data,
-     * so the PHP sources are read for the same two prefixes.
+     * from. Templates name them literally; navigation rows and the widget
+     * canvas carry them as data, so the PHP and JavaScript sources are read for
+     * any prefixed name at all — a reader tied to the prefixes of the day could
+     * never see one arriving.
      *
      * @return array<string, string>
      */
@@ -113,8 +195,10 @@ final class IconsResolveOfflineTest extends KernelTestCase
                     continue;
                 }
 
-                preg_match_all('/\'((?:lucide|shell):[a-z0-9-]+)\'/', $contents, $data);
-                foreach ($data[1] as $name) {
+                preg_match_all('/ux_icon\(\s*\'([a-z0-9-]+:[a-z0-9-]+)\'/', $contents, $drawn);
+                preg_match_all('/icon:\s*\'([a-z0-9-]+:[a-z0-9-]+)\'/', $contents, $data);
+                preg_match_all('/\$this->row\([^)]*\'([a-z0-9-]+:[a-z0-9-]+)\'/', $contents, $rows);
+                foreach ([...$drawn[1], ...$data[1], ...$rows[1]] as $name) {
                     $names[$name] ??= $short;
                 }
             }
@@ -131,6 +215,22 @@ final class IconsResolveOfflineTest extends KernelTestCase
      */
     private static function sourceFiles(string $bundle): array
     {
+        return array_values(array_filter(
+            self::shippedFiles($bundle),
+            static fn (string $path): bool => !str_contains($path, '/tests/'),
+        ));
+    }
+
+    /**
+     * Everything the bundle's code is written in, fixtures included. Prose is
+     * left out on purpose: documentation may name the upstream project a glyph
+     * was drawn by, and the attribution that project's licence asks for has to
+     * be able to say its name.
+     *
+     * @return list<string>
+     */
+    private static function shippedFiles(string $bundle): array
+    {
         $root = self::root().'/src/Uhifadhi/Bundle/'.$bundle;
 
         $files = [];
@@ -138,10 +238,10 @@ final class IconsResolveOfflineTest extends KernelTestCase
         $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root, \FilesystemIterator::SKIP_DOTS));
         foreach ($iterator as $file) {
             $path = $file->getPathname();
-            if (!$file->isFile() || str_contains($path, '/tests/') || str_contains($path, '/docs/')) {
+            if (!$file->isFile() || str_contains($path, '/docs/')) {
                 continue;
             }
-            if (str_ends_with($path, '.twig') || str_ends_with($path, '.php')) {
+            if (str_ends_with($path, '.twig') || str_ends_with($path, '.php') || str_ends_with($path, '.js')) {
                 $files[] = $path;
             }
         }

@@ -69,10 +69,10 @@ final class NavigationContractTest extends ContractTestCase
     {
         HostKernel::$navSources = [
             'observatory' => new NavSection('Observatory', [
-                new NavItem(label: 'Areas', url: '/areas', icon: 'lucide:map'),
+                new NavItem(label: 'Areas', url: '/areas', icon: 'shell:map'),
             ]),
             'ferries' => new NavSection('Fleet', [
-                new NavItem(label: 'Ferries', url: '/ferries', icon: 'lucide:ship'),
+                new NavItem(label: 'Ferries', url: '/ferries', icon: 'shell:ship'),
             ]),
         ];
 
@@ -119,10 +119,10 @@ final class NavigationContractTest extends ContractTestCase
     {
         HostKernel::$navSources = [
             'files' => new NavSection('System', [
-                new NavItem(label: 'Files', url: '/files', icon: 'lucide:image'),
+                new NavItem(label: 'Files', url: '/files', icon: 'shell:image'),
             ], position: 30),
             'telemetry' => new NavSection('System', [
-                new NavItem(label: 'Telemetry', url: '/telemetry', icon: 'lucide:activity'),
+                new NavItem(label: 'Telemetry', url: '/telemetry', icon: 'shell:activity'),
             ], position: 90),
         ];
 
@@ -153,7 +153,7 @@ final class NavigationContractTest extends ContractTestCase
     {
         HostKernel::$navSources = [
             'org' => new NavSection('Organization', [
-                new NavItem(label: 'Departments', url: '/departments', icon: 'lucide:building'),
+                new NavItem(label: 'Departments', url: '/departments', icon: 'shell:building'),
             ]),
         ];
 
@@ -180,7 +180,7 @@ final class NavigationContractTest extends ContractTestCase
     {
         HostKernel::$navSources = [
             'system' => new NavSection('System', [
-                new NavItem(label: 'Alerts', url: null, icon: 'lucide:bell', hint: 'Alerts — planned'),
+                new NavItem(label: 'Alerts', url: null, icon: 'shell:bell', hint: 'Alerts — planned'),
             ]),
         ];
 
@@ -203,7 +203,7 @@ final class NavigationContractTest extends ContractTestCase
     {
         HostKernel::$navSources = [
             'obs' => new NavSection('Observatory', [
-                new NavItem(label: 'Areas', url: '/areas', icon: 'lucide:map', children: [
+                new NavItem(label: 'Areas', url: '/areas', icon: 'shell:map', children: [
                     new NavItem(label: 'Test Area', url: '/areas/x', current: true, children: [
                         new NavItem(label: 'Modules', url: '/areas/x/modules', children: [
                             new NavItem(label: 'Sightings', url: '/areas/x/modules/sightings'),

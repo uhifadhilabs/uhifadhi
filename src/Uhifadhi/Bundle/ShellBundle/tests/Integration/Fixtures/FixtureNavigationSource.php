@@ -42,7 +42,7 @@ final class FixtureNavigationSource implements NavigationSourceInterface
         // which is the point of the assertion that reads it back. Two hand-kept
         // copies is what the host has today.
         yield new NavSection('Observatory', [
-            new NavItem(label: 'Areas', url: '/areas', icon: 'lucide:map', children: [
+            new NavItem(label: 'Areas', url: '/areas', icon: 'shell:map', children: [
                 new NavItem(
                     label: 'Test Area',
                     url: '/areas/x',
