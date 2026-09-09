@@ -52,7 +52,7 @@ final class Installation
     private const string VENDOR = 'uhifadhi/';
 
     /**
-     * Every uhifadhi package on disk, the two the shell can describe first and
+     * Every uhifadhi package on disk, the one the shell can describe first and
      * the rest in composer's own order — a reading of the vendor directory, and
      * therefore an answer that changes the same day an installation does.
      *
@@ -60,24 +60,63 @@ final class Installation
      */
     public function packages(): array
     {
+        return $this->packagesIn(InstalledVersions::getAllRawData());
+    }
+
+    /**
+     * THE READING, GIVEN WHAT COMPOSER KNOWS — the raw data rather than the
+     * convenient list, because the convenient list is the wrong list.
+     *
+     * `getInstalledPackages()` reports every name Composer can RESOLVE, and a
+     * package that `replace`s others answers to all of them: the core alone
+     * would print a row for each of the names it can be split into, all at the
+     * core's own version, none of them a directory anybody has. What an
+     * operator is being shown is what this installation is MADE of, and it is
+     * made of directories.
+     *
+     * The raw data tells the two apart plainly: a real install carries an
+     * `install_path`, and a merely-replaced name carries a `replaced` list and
+     * no path, because there is nothing to point at.
+     *
+     * @see https://getcomposer.org/doc/07-runtime.md#installed-versions
+     *
+     * @param list<array{versions?: array<string, array<string, mixed>>}> $rawData
+     *
+     * @return list<InstalledPackage>
+     */
+    public function packagesIn(array $rawData): array
+    {
         $described = [];
         $rest = [];
+        $seen = [];
 
-        foreach (InstalledVersions::getInstalledPackages() as $name) {
-            if (!str_starts_with($name, self::VENDOR)) {
-                continue;
-            }
+        foreach ($rawData as $set) {
+            foreach ($set['versions'] ?? [] as $name => $entry) {
+                // One directory, one row: a package can appear in more than one
+                // raw-data set when several autoloaders are in play.
+                if (!str_starts_with($name, self::VENDOR) || isset($seen[$name])) {
+                    continue;
+                }
 
-            $package = new InstalledPackage(
-                name: $name,
-                version: InstalledVersions::getPrettyVersion($name) ?? 'dev',
-                note: self::NOTES[$name] ?? null,
-            );
+                // No path is no install — the name is one this installation's
+                // packages answer to, not a thing it has.
+                if (!\is_string($entry['install_path'] ?? null)) {
+                    continue;
+                }
 
-            if (null !== $package->note) {
-                $described[] = $package;
-            } else {
-                $rest[] = $package;
+                $seen[$name] = true;
+
+                $package = new InstalledPackage(
+                    name: $name,
+                    version: \is_string($entry['pretty_version'] ?? null) ? $entry['pretty_version'] : 'dev',
+                    note: self::NOTES[$name] ?? null,
+                );
+
+                if (null !== $package->note) {
+                    $described[] = $package;
+                } else {
+                    $rest[] = $package;
+                }
             }
         }
 

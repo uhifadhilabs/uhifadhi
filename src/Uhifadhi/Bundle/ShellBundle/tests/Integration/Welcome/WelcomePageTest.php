@@ -67,29 +67,49 @@ final class WelcomePageTest extends ShellKernelTestCase
      * told, on the platform's own welcome screen, that the module they had just
      * installed was not there.
      *
-     * The list comes from Composer\InstalledVersions: every uhifadhi/* package
-     * this installation has, with its version. Naming a package is still not
-     * naming a module — nothing here is recognised, compared or switched on;
-     * the shell prints whatever the vendor directory reports.
+     * INSTALLED MEANS A DIRECTORY, not a name Composer can resolve. The core
+     * `replace`s the packages it can be split into, so those names all resolve
+     * to it; a list built from the resolvable names would print a row for each,
+     * at the core's version, none of them anything an operator has. The raw
+     * data separates them: a real install carries an `install_path`.
+     *
+     * Naming a package is still not naming a module — nothing here is
+     * recognised, compared or switched on; the shell prints whatever the vendor
+     * directory reports.
+     *
+     * @see https://getcomposer.org/doc/07-runtime.md#installed-versions
      */
     public function testItListsEveryInstalledUhifadhiPackage(): void
     {
         $rows = $this->get('/')->filter('div.pgbody .wpkgs .wpkg-row');
 
-        $installed = array_values(array_filter(
-            \Composer\InstalledVersions::getInstalledPackages(),
-            static fn (string $package): bool => str_starts_with($package, 'uhifadhi/'),
-        ));
+        $installed = [];
+        $replaced = [];
+        foreach (\Composer\InstalledVersions::getAllRawData() as $set) {
+            foreach ($set['versions'] as $package => $entry) {
+                if (!str_starts_with($package, 'uhifadhi/')) {
+                    continue;
+                }
+                if (\is_string($entry['install_path'] ?? null)) {
+                    $installed[$package] = true;
+                } else {
+                    $replaced[$package] = true;
+                }
+            }
+        }
 
         self::assertNotSame([], $installed, 'The suite runs inside an installation of this very package.');
-        self::assertCount(\count($installed), $rows, 'The list is Composer\'s, not a list somebody typed.');
+        self::assertNotSame([], $replaced, 'and that installation replaces the names it can be split into');
+        self::assertCount(\count($installed), $rows, 'The list is what is on disk, not every name Composer can resolve.');
 
-        // Every row's text, not just the first — the install carries more than
-        // one uhifadhi/* package (the shell requires the contracts package for
-        // the user-badge contract), so the list has more than one row to check.
         $text = implode("\n", $rows->each(static fn ($row): string => $row->text()));
-        foreach ($installed as $package) {
+        foreach (array_keys($installed) as $package) {
             self::assertStringContainsString($package, $text);
+        }
+
+        // And not one row for a name that is only replaced.
+        foreach (array_keys($replaced) as $package) {
+            self::assertStringNotContainsString($package, $text);
         }
     }
 
