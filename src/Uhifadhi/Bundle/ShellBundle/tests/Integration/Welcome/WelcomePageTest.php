@@ -230,28 +230,20 @@ final class WelcomePageTest extends ShellKernelTestCase
 
     /**
      * THE TEACHING IS ON THE LIST, not beside it. "The registry" and "the shell"
-     * are words that mean nothing on a first day, so the two packages the shell
-     * can honestly speak for carry a line saying what they are — as annotations
-     * on their own rows. There is no second inventory anywhere on the page: one
-     * list, one source of truth, and the descriptions live on it.
+     * are words that mean nothing on a first day, so the one package the shell
+     * can honestly speak for carries a line saying what it is — as an annotation
+     * on its own row. There is no second inventory anywhere on the page: one
+     * list, one source of truth, and the description lives on it.
      */
-    public function testTheTwoPackagesTheShellCanSpeakForAreDescribedOnTheirOwnRows(): void
+    public function testTheOnePackageTheShellCanSpeakForIsDescribedOnItsOwnRow(): void
     {
         $described = $this->get('/')->filter('div.pgbody .wpkgs .wpkg-row:has(.wpkg-note)');
-        self::assertGreaterThan(0, $described->count());
 
-        foreach ($described as $row) {
-            $name = trim((new Crawler($row))->filter('.wpkg')->text());
-            self::assertContains($name, ['uhifadhi/uhifadhi', 'uhifadhi/uhifadhi'], \sprintf(
-                'The shell described %s. It can speak for itself and for the registry, and for nothing else.',
-                $name,
-            ));
-        }
-
-        self::assertStringContainsString(
+        self::assertCount(1, $described, 'The shell speaks for the core it ships in, and for nothing else.');
+        self::assertSame(
             'uhifadhi/uhifadhi',
-            $described->text(),
-            'This suite runs inside an installation of the shell, so the shell describes itself here.',
+            trim($described->filter('.wpkg')->text()),
+            'This suite runs inside an installation of the core, so the shell describes it here.',
         );
     }
 
