@@ -33,8 +33,8 @@ use Uhifadhi\Bundle\RegistryBundle\Tests\Integration\InstallationTestCase;
  * are one-line mistakes to make and neither is visible until somebody's screen
  * changes overnight.
  *
- * These are the specifications the retired catalogue-seed command carried;
- * the mechanism moved to a cache warmer, the promises did not move at all.
+ * The sync runs from a cache warmer, so a deploy reconciles the catalogue by
+ * clearing the cache and nothing has to be remembered on the command line.
  */
 final class RegistrySyncTest extends InstallationTestCase
 {

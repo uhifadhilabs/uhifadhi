@@ -84,8 +84,8 @@ composer check   # cs:check -> phpstan (max) -> require-check -> the suite
 ## Versioning
 
 One tag on this repository is the platform version. `replace … self.version`
-makes every bundle name — the future split names and the retired `*-module`
-names — report it, so an existing `require` line resolves against the core.
+makes every name Composer resolves to this package report that version, so a
+`require` line naming one bundle resolves against the core.
 
 The root [CHANGELOG-1.0.md](CHANGELOG-1.0.md) and [UPGRADE-1.0.md](UPGRADE-1.0.md)
 are the release notes; each bundle also keeps its own `CHANGELOG.md`.

@@ -1,7 +1,7 @@
 {
     "name": "uhifadhi/contracts",
     "type": "library",
-    "description": "The contracts a uhifadhi module declares itself with: the module provider, the permissions it declares, the area and user entity contracts, the user badge and the devkit seam.",
+    "description": "The contracts a uhifadhi module declares itself with: the module provider, the permissions it declares, the area and user entity contracts, the user badge and the devkit contracts.",
     "keywords": [
         "abstractions",
         "contract",

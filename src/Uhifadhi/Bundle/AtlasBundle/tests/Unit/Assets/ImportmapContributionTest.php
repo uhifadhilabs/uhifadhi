@@ -19,13 +19,11 @@ use Uhifadhi\Bundle\AtlasBundle\AtlasBundle;
 use Uhifadhi\Bundle\AtlasBundle\Tests\Integration\Asset\AssetContractTest;
 
 /**
- * THE MODULE'S LAST HAND-STEP, RETIRED.
+ * NOBODY TYPES THIS BUNDLE'S IMPORTMAP ENTRIES BY HAND.
  *
- * Installing this bundle used to end with an instruction: open importmap.php and
- * type three lines. The reasoning was that "a bundle cannot contribute an
- * importmap entry" — which is true of AssetMapper and was never the whole story,
- * because the thing that writes a host's importmap.php on install is not
- * AssetMapper, it is Flex.
+ * "A bundle cannot contribute an importmap entry" is true of AssetMapper and is
+ * not the whole story, because the thing that writes an application's
+ * importmap.php on install is not AssetMapper, it is Flex.
  *
  * Flex's PackageJsonSynchronizer reads a package's assets/package.json and, when
  * the host has an importmap.php, runs `importmap:require` once per entry of the
