@@ -103,6 +103,13 @@ abstract class WebTestCase extends KernelTestCase
     protected function tearDown(): void
     {
         if (isset($this->em)) {
+            // THE GEOMETRY TABLES DO NOT OUTLIVE THIS SUITE. One database
+            // carries every package's suite, and a kernel without the PostGIS
+            // bundle in it cannot introspect a `geometry` column — so a table
+            // left behind here breaks a sibling's suite the moment somebody
+            // runs it on its own.
+            new SchemaTool($this->em)->dropSchema($this->em->getMetadataFactory()->getAllMetadata());
+
             $this->em->close();
         }
         parent::tearDown();
