@@ -12,6 +12,7 @@ patrols, incidents, rosters — arrives as **modules**, each its own package.
 - [What the core is](#what-the-core-is)
 - [The packages](#the-packages)
 - [Installation](#installation)
+- [The controllers an installation registers](#the-controllers-an-installation-registers)
 - [Development](#development)
 - [Versioning](#versioning)
 - [License](#license)
@@ -58,6 +59,37 @@ bin/console cache:clear                   # the registry reconciles itself
 The core ships **no console commands** and **no migration versions**: the tables
 are the core's, the migration history is the installation's, and devkit — a
 development-only package — owns every command the platform has.
+
+## The controllers an installation registers
+
+The core's Stimulus controllers reach an application through its
+`assets/controllers.json`, under **one** name — the package's own:
+
+```json
+{
+    "controllers": {
+        "@uhifadhi/uhifadhi": {
+            "theme": { "enabled": true, "fetch": "eager" },
+            "sidebar": { "enabled": true, "fetch": "eager" }
+        }
+    }
+}
+```
+
+That name is the only one that can appear there. StimulusBundle resolves a
+`controllers.json` key by stripping the `@`, asking Composer for the install
+path of the package left over, and reading `assets/package.json` underneath it
+(`Symfony\UX\StimulusBundle\Ux\UxPackageReader::readPackageMetadata()`). The
+names in this package's `replace` block have no install path of their own, so
+only `uhifadhi/uhifadhi` resolves — and the root [`assets/package.json`](assets/package.json)
+is where every core controller is declared, each `main` pointing into the bundle
+that owns the file.
+
+Each entry also declares the `name` the markup uses, so a controller is called
+`uhifadhi--shell-bundle--theme` whether it was resolved through this manifest or
+through the bundle's own — which is why each bundle keeps its `assets/package.json`
+too: after a split, that file is what the bundle's own package answers with, and
+the templates do not change.
 
 ## Development
 

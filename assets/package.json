@@ -1,0 +1,81 @@
+{
+    "name": "@uhifadhi/uhifadhi",
+    "description": "Front-end behaviour of the core — every Stimulus controller the registry, the shell, the team screens and the area screens ship, mapped into an installation through AssetMapper.",
+    "license": "AGPL-3.0-or-later",
+    "symfony": {
+        "controllers": {
+            "theme": {
+                "main": "../src/Uhifadhi/Bundle/ShellBundle/assets/controllers/theme_controller.js",
+                "name": "uhifadhi--shell-bundle--theme",
+                "fetch": "eager",
+                "enabled": true
+            },
+            "sidebar": {
+                "main": "../src/Uhifadhi/Bundle/ShellBundle/assets/controllers/sidebar_controller.js",
+                "name": "uhifadhi--shell-bundle--sidebar",
+                "fetch": "eager",
+                "enabled": true
+            },
+            "sidebar-tree": {
+                "main": "../src/Uhifadhi/Bundle/ShellBundle/assets/controllers/sidebar_tree_controller.js",
+                "name": "uhifadhi--shell-bundle--sidebar-tree",
+                "fetch": "eager",
+                "enabled": true
+            },
+            "localtime": {
+                "main": "../src/Uhifadhi/Bundle/ShellBundle/assets/controllers/localtime_controller.js",
+                "name": "uhifadhi--shell-bundle--localtime",
+                "fetch": "eager",
+                "enabled": true
+            },
+            "permission-group": {
+                "main": "../src/Uhifadhi/Bundle/TeamBundle/assets/controllers/permission_group_controller.js",
+                "name": "uhifadhi--team-bundle--permission-group",
+                "fetch": "lazy",
+                "enabled": true
+            },
+            "department": {
+                "main": "../src/Uhifadhi/Bundle/TeamBundle/assets/controllers/department_controller.js",
+                "name": "uhifadhi--team-bundle--department",
+                "fetch": "lazy",
+                "enabled": true
+            },
+            "area-register": {
+                "main": "../src/Uhifadhi/Bundle/AreaBundle/assets/controllers/area_register_controller.js",
+                "name": "uhifadhi--area-bundle--area-register",
+                "fetch": "eager",
+                "enabled": true
+            },
+            "area-upload": {
+                "main": "../src/Uhifadhi/Bundle/AreaBundle/assets/controllers/area_upload_controller.js",
+                "name": "uhifadhi--area-bundle--area-upload",
+                "fetch": "eager",
+                "enabled": true
+            },
+            "area-map": {
+                "main": "../src/Uhifadhi/Bundle/AreaBundle/assets/controllers/area_map_controller.js",
+                "name": "uhifadhi--area-bundle--area-map",
+                "fetch": "eager",
+                "enabled": true
+            },
+            "area-index-map": {
+                "main": "../src/Uhifadhi/Bundle/AreaBundle/assets/controllers/area_index_map_controller.js",
+                "name": "uhifadhi--area-bundle--area-index-map",
+                "fetch": "eager",
+                "enabled": true
+            },
+            "area-presets": {
+                "main": "../src/Uhifadhi/Bundle/AreaBundle/assets/controllers/area_presets_controller.js",
+                "name": "uhifadhi--area-bundle--area-presets",
+                "fetch": "eager",
+                "enabled": true
+            },
+            "module-order": {
+                "main": "../src/Uhifadhi/Bundle/AreaBundle/assets/controllers/module_order_controller.js",
+                "name": "uhifadhi--area-bundle--module-order",
+                "fetch": "eager",
+                "enabled": true
+            }
+        }
+    }
+}
