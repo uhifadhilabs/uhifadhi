@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Uhifadhi\Bundle\RegistryBundle\Security;
+namespace Uhifadhi\Bundle\TeamBundle\Security;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -23,15 +23,17 @@ use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
 use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
 use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPassport;
 use Symfony\Component\Security\Http\EntryPoint\AuthenticationEntryPointInterface;
-use Uhifadhi\Contracts\Security\ApiTokenResolverInterface;
+use Uhifadhi\Bundle\TeamBundle\Service\ApiTokenManager;
 
 /**
  * AUTHENTICATES A FIELD CLIENT: `Authorization: Bearer <token>`.
  *
- * It is mechanism, and it knows nothing about people. Who a presented string
- * names is asked of {@see ApiTokenResolverInterface}, whose implementation
- * keeps the credential beside the account it belongs to; nothing about a hash,
- * an expiry or a device reaches this class.
+ * IT LIVES BESIDE THE CREDENTIAL IT READS. A bearer token is a credential OF A
+ * PERSON — issued, rotated and withdrawn beside the account, exactly as a
+ * password is — so the thing that authenticates one belongs in the same bundle
+ * as the store that keeps it. It still knows nothing about a row: who a
+ * presented string names is asked of {@see ApiTokenManager}, and no hash, no
+ * expiry and no device reaches this class.
  *
  * STATELESS BY THE FIREWALL THAT NAMES IT. No session is started and none is
  * read, so every request stands on its own — which is what a client that syncs
@@ -52,13 +54,13 @@ final class ApiTokenAuthenticator extends AbstractAuthenticator implements Authe
     private const string SCHEME = 'Bearer ';
 
     /**
-     * @param ApiTokenResolverInterface|null $tokens the credential store, absent
-     *                                               where nothing in this installation keeps API tokens — in which
-     *                                               case nothing authenticates and every request answers 401, which
-     *                                               is the safe reading of "nobody can say who this is"
+     * @param ApiTokenManager|null $tokens the credential store, absent where this
+     *                                     installation keeps no API tokens — in which case nothing
+     *                                     authenticates and every request answers 401, the safe reading of
+     *                                     "nobody can say who this is"
      */
     public function __construct(
-        private readonly ?ApiTokenResolverInterface $tokens,
+        private readonly ?ApiTokenManager $tokens,
     ) {
     }
 

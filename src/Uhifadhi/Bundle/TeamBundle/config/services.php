@@ -33,6 +33,7 @@ use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentScopeChangeRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Security\ActiveUserChecker;
+use Uhifadhi\Bundle\TeamBundle\Security\ApiTokenAuthenticator;
 use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
 use Uhifadhi\Bundle\TeamBundle\Security\PermissionVoter;
 use Uhifadhi\Bundle\TeamBundle\Service\ApiTokenManager;
@@ -46,7 +47,6 @@ use Uhifadhi\Bundle\TeamBundle\Shell\UserBadgeSource;
 use Uhifadhi\Bundle\TeamBundle\Twig\AreaScopeExtension;
 use Uhifadhi\Bundle\TeamBundle\Widget\PositionWidgets;
 use Uhifadhi\Bundle\TeamBundle\Widget\TeamWidgets;
-use Uhifadhi\Contracts\Security\ApiTokenResolverInterface;
 
 /*
  * The bundle's static service wiring.
@@ -68,6 +68,7 @@ use Uhifadhi\Contracts\Security\ApiTokenResolverInterface;
  * should be; anything that wants one aliases it.
  *
  *   team.api_token.manager      the credential a field client carries: issue, find, note, withdraw
+ *   team.api_token.authenticator  the bearer token a field client presents, and the 401 for none
  *   team.field_sign_in          identifier + passcode -> the person, or nobody
  *   team.controller.api_auth    where a field client signs in
  *   team.permissions            the catalogue: this bundle's seven + what modules declared
@@ -129,14 +130,12 @@ return static function (ContainerConfigurator $container): void {
      * credential OF A PERSON, kept, rotated and withdrawn beside the account it
      * belongs to — exactly as a password is.
      *
-     * ALIASED TO THE RESOLVER CONTRACT, which is the whole of what anything
-     * authenticating a request may ask of it: who does this string name, and
-     * note that it was seen. Issuing is wider than the contract and stays here.
+     * THE AUTHENTICATOR IS ITS NEIGHBOUR, not a stranger reaching through an
+     * interface: a credential and the thing that reads it belong in one bundle,
+     * so the store is injected directly.
      */
     $services->set('team.api_token.manager', ApiTokenManager::class)
         ->args([service(ApiTokenRepository::class), service('doctrine.orm.entity_manager')]);
-
-    $services->alias(ApiTokenResolverInterface::class, 'team.api_token.manager');
 
     /*
      * THE FIRST ADMINISTRATOR, OFFERED RATHER THAN SHIPPED. The core ships no
@@ -156,6 +155,25 @@ return static function (ContainerConfigurator $container): void {
             service('security.user_password_hasher'),
         ])
         ->tag('uhifadhi.devkit.command_provider');
+
+    /*
+     * THE BEARER TOKEN A FIELD CLIENT PRESENTS — the machine door's
+     * authenticator and its entry point in one class, so a request with NO
+     * token is answered 401 rather than the 403 an access listener would give.
+     *
+     * PUBLIC, AND ALIASED FROM THE CLASS NAME, because the thing that names it
+     * is the installation's own security file: a firewall's
+     * `custom_authenticators` and `entry_point` are written as class names, and
+     * a bundle's services are private by default.
+     *
+     * nullOnInvalid() KEEPS THE DENY-BY-DEFAULT READING. Where nothing in the
+     * container keeps API tokens the store is null, the authenticator claims
+     * nothing, and every request falls to the entry point and 401 — which is
+     * the safe reading of "nobody can say who this is".
+     */
+    $services->set('team.api_token.authenticator', ApiTokenAuthenticator::class)
+        ->args([service('team.api_token.manager')->nullOnInvalid()]);
+    $services->alias(ApiTokenAuthenticator::class, 'team.api_token.authenticator')->public();
 
     /*
      * WHETHER AN IDENTIFIER AND A PASSCODE NAME SOMEBODY WHO MAY SIGN IN — the

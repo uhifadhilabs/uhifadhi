@@ -18,7 +18,6 @@ use Uhifadhi\Bundle\TeamBundle\Entity\ApiToken;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Repository\ApiTokenRepository;
 use Uhifadhi\Contracts\Entity\UserInterface;
-use Uhifadhi\Contracts\Security\ApiTokenResolverInterface;
 
 /**
  * MINTS AND CHECKS A FIELD CLIENT'S BEARER TOKENS — the only place a token
@@ -36,7 +35,7 @@ use Uhifadhi\Contracts\Security\ApiTokenResolverInterface;
  * credential needs the person and their password, and belongs to the package
  * that owns the account.
  */
-final class ApiTokenManager implements ApiTokenResolverInterface
+final class ApiTokenManager
 {
     /**
      * Six months. Long enough to cover a posting; short enough that a handset

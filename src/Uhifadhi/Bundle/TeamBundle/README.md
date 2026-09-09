@@ -153,10 +153,12 @@ lower the last one is refused before anything is stored.
 A field client signs in once and then carries a bearer token, because somebody
 working out of signal cannot re-authenticate on demand. That token is a
 **credential of a person**, so it lives here beside the account — issued,
-rotated and withdrawn like a password. Deciding whether a request carrying one
-is authenticated is mechanism, and that lives in `RegistryBundle`; the two meet
-at `Uhifadhi\Contracts\Security\ApiTokenResolverInterface`, which this bundle
-answers.
+rotated and withdrawn like a password — and so does the authenticator that
+reads one: `Uhifadhi\Bundle\TeamBundle\Security\ApiTokenAuthenticator`, which
+an installation names in its firewall as both `custom_authenticators` and
+`entry_point`. The entry point is what makes "no token at all" a **401** rather
+than the 403 an access rule would give, and a client shows a person different
+things for the two.
 
 `POST /api/auth/token` is the one endpoint reachable without a token, and it is
 firewall-free on purpose: a handset whose token has expired still holds it and

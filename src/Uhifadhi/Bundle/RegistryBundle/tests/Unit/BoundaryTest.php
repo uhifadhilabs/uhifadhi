@@ -210,6 +210,47 @@ final class BoundaryTest extends TestCase
     }
 
     /**
+     * THE REGISTRY IS NOT A SECURITY PACKAGE, and its composer.json is where
+     * that is true or not.
+     *
+     * Authenticating a request is mechanism, and mechanism about PEOPLE belongs
+     * with the people: a credential and the thing that reads it live in one
+     * bundle, beside the account they are a credential of. Nothing the registry
+     * does needs a firewall — it holds a catalogue, a ledger and the permission
+     * strings modules declared — so a security requirement appearing here is
+     * the boundary moving, and it moves in a composer.json long before it moves
+     * in any class.
+     */
+    public function testTheRegistryRequiresNoSecurityPackage(): void
+    {
+        $manifest = file_get_contents(self::BUNDLE.'/composer.json');
+        \assert(false !== $manifest);
+
+        /** @var array{require: array<string, string>, require-dev?: array<string, string>} $composer */
+        $composer = json_decode($manifest, true, 512, \JSON_THROW_ON_ERROR);
+
+        $security = array_filter(
+            array_keys([...$composer['require'], ...$composer['require-dev'] ?? []]),
+            static fn (string $package): bool => str_starts_with($package, 'symfony/security'),
+        );
+
+        self::assertSame([], array_values($security), 'The registry decides nothing about who is asking.');
+    }
+
+    /** And no security symbol reaches its shipped source either. */
+    public function testTheRegistryNamesNoSecuritySymbol(): void
+    {
+        $offenders = [];
+        foreach (self::sources() as $path => $code) {
+            if (str_contains($code, 'Symfony\\Component\\Security\\')) {
+                $offenders[] = $path;
+            }
+        }
+
+        self::assertSame([], $offenders, 'Authenticating a request is the team bundle\'s, beside the credential it reads.');
+    }
+
+    /**
      * @return array<string, string> relative path => source
      */
     private static function sources(): array

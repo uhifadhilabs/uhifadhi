@@ -19,7 +19,6 @@ use Uhifadhi\Bundle\RegistryBundle\EventListener\ParkedModuleListener;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
 use Uhifadhi\Bundle\RegistryBundle\Repository\AreaModuleRepository;
 use Uhifadhi\Bundle\RegistryBundle\Repository\ModuleRepository;
-use Uhifadhi\Bundle\RegistryBundle\Security\ApiTokenAuthenticator;
 use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleLedger;
 use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleService;
 use Uhifadhi\Bundle\RegistryBundle\Service\ModuleCatalogue;
@@ -28,7 +27,6 @@ use Uhifadhi\Bundle\RegistryBundle\Service\ModulePermissionCatalogue;
 use Uhifadhi\Bundle\RegistryBundle\Service\ModuleRouteGate;
 use Uhifadhi\Bundle\RegistryBundle\Service\ProviderCatalogueMapper;
 use Uhifadhi\Bundle\RegistryBundle\Service\RegistrySyncService;
-use Uhifadhi\Contracts\Security\ApiTokenResolverInterface;
 
 /*
  * The bundle's static service wiring.
@@ -59,7 +57,6 @@ use Uhifadhi\Contracts\Security\ApiTokenResolverInterface;
  *   registry.module_route_gate     is this request for a module the area parked?
  *   registry.parked_module_listener  the gate, applied to every incoming request
  *   registry.permissions           the permissions installed modules declare
- *   registry.api_token_authenticator  the bearer token a field client presents
  *   registry.sync                  the create-only reconciliation itself
  *   registry.sync_warmer           the deploy hook that runs it
  */
@@ -128,26 +125,6 @@ return static function (ContainerConfigurator $container): void {
 
     $services->set('registry.permissions', ModulePermissionCatalogue::class)
         ->args([$providers]);
-
-    /*
-     * THE BEARER TOKEN A FIELD CLIENT PRESENTS. Mechanism, so it lives here;
-     * the credential itself belongs beside the account, which is why the
-     * argument is a CONTRACT and this package knows nothing that keeps people.
-     *
-     * PUBLIC, and aliased from its class name, because a firewall names an
-     * authenticator by FQCN and the container is asked for exactly that.
-     * @see https://symfony.com/doc/current/security/custom_authenticator.html
-     *
-     * nullOnInvalid(): this package installs without one that keeps accounts,
-     * and where no credential store answers the contract the authenticator
-     * claims nothing and every request meets its entry point — 401, which is
-     * the safe reading of "nobody can say who this is".
-     */
-    $services->set('registry.api_token_authenticator', ApiTokenAuthenticator::class)
-        ->args([service(ApiTokenResolverInterface::class)->nullOnInvalid()])
-        ->public();
-
-    $services->alias(ApiTokenAuthenticator::class, 'registry.api_token_authenticator')->public();
 
     /*
      * THE DEPLOY HOOK. The core ships no console command; reconciling the

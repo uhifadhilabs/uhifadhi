@@ -19,9 +19,9 @@ use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 use Symfony\Component\HttpKernel\Kernel as BaseKernel;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
-use Uhifadhi\Bundle\RegistryBundle\Security\ApiTokenAuthenticator;
 use Uhifadhi\Bundle\ShellBundle\ShellBundle;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
+use Uhifadhi\Bundle\TeamBundle\Security\ApiTokenAuthenticator;
 
 /**
  * THE THROWAWAY APPLICATION the core's own functional tests run inside.
