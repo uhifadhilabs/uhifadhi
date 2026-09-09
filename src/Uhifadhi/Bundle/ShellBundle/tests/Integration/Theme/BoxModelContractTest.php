@@ -39,7 +39,7 @@ use Uhifadhi\Bundle\ShellBundle\Tests\Integration\ContractTestCase;
  *
  * WHAT A MODULE MAY NOW STOP WRITING. `box-sizing: border-box` on its own
  * rules. Keeping it is harmless and, where a module wants the guarantee spelled
- * out at the point of use, honest — but it is no longer load-bearing.
+ * out at the point of use, honest — but it carries no weight.
  */
 final class BoxModelContractTest extends ContractTestCase
 {

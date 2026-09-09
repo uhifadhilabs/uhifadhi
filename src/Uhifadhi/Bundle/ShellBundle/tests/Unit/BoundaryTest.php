@@ -103,11 +103,11 @@ final class BoundaryTest extends TestCase
     /**
      * THE SHELL REMEMBERS ONE THING, AND IT IS FURNITURE.
      *
-     * The shell used to remember nothing at all, and that rule was worth every
-     * line it cost — until the widget machinery folded in. Which widgets a
-     * person adopted on which surface is the same kind of fact as which theme
-     * they chose: it is about the frame, not about a domain, and every module
-     * with a dashboard would otherwise reinvent the storage for it.
+     * A shell that remembers nothing at all is worth every line it costs, and
+     * the widget machinery is the one exception. Which widgets a person adopted
+     * on which surface is the same kind of fact as which theme they chose: it
+     * is about the frame, not about a domain, and every module with a dashboard
+     * would otherwise reinvent the storage for it.
      *
      * So the rule narrows rather than dissolves: persistence lives under
      * Widget/, and the sweep below is what keeps it there. An Entity/ directory

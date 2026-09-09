@@ -17,16 +17,16 @@ atlas:
 ## `esri` — the default, and keyless
 
 Esri World Imagery. No key, no session, no account, nothing that can be refused. This is what a
-host gets for free, and it is a deliberate change from the platform's Google-first past: every map
-on every page used to open by asking Google's Map Tiles API for a session token, and for an
-EEA-billed account Google answers
+host gets for free, and it is the default deliberately. A Google-first default makes every map on
+every page open by asking Google's Map Tiles API for a session token, and for an EEA-billed
+account Google answers
 
 ```
 403 · "satellite tiles and 3D tiles are not available for your account and region"
 ```
 
-so the whole product ran on the fallback while filling the console with refusals for an answer it
-had already accepted. Defaulting to the source that works removes that entire class of noise.
+so the whole product runs on the fallback while filling the console with refusals for an answer it
+has already accepted. Defaulting to the source that works removes that entire class of noise.
 
 ## `google` — opted into by name
 

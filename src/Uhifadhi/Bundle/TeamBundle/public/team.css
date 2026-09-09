@@ -1652,11 +1652,10 @@ td .qual { white-space: nowrap; }
 }
 .tm-code { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 11px; color: rgb(var(--c-fog)); }
 .tm-code.none { color: rgb(var(--c-dim)); }
-/* ---- THE ROW RULE, AND WHY IT USED TO BREAK -------------------------------
-   BUG, measured: this cell was `display: flex`. A <td> given a flex display
-   stops being a table-cell, so it no longer stretches to the row's height — it
-   shrank to its content and drew its border-bottom 34px above every other cell
-   in the same row, which is exactly the visible break in the dashed rule at the
+/* ---- THE ROW RULE: THIS CELL IS NEVER A FLEX CONTAINER --------------------
+   A <td> given `display: flex` stops being a table-cell and stops stretching to
+   the row's height: it shrinks to its content and draws its border-bottom 34px
+   above every other cell in the same row, breaking the dashed rule at the
    actions column.
 
    A table cell has to stay a table cell. The buttons are laid out by text
@@ -2237,9 +2236,8 @@ tr.tm-bandrow.vacant .tm-band b { color: rgb(var(--c-fog)); }
    deactivation: the row stays, everything the person recorded keeps its author,
    and they stay on the list under an inactive filter.
 
-   `.mb-drow.absent` survives, and its meaning has inverted — it no longer marks
-   a control waiting for a column, it marks a control the product has decided it
-   will never have.
+   `.mb-drow.absent` marks a control the product has decided it will never
+   have, not one waiting for a column.
    ======================================================================== */
 
 .mb-state.off {
@@ -2263,16 +2261,14 @@ body[data-life="off"] .mb-band .avatar { opacity: .6; }
  * THE TWO-FIELD CREATE FORM: department first, because the name is only unique
  * once the department is chosen — beside the two links that leave the page.
  *
- * IT IS STATED HERE, AND THAT IS A CORRECTION. This block used to be one line
- * setting the select's height, on the belief that the row itself was laid out
- * for us: the design draws this header as `.pgact.w-pgact` and ShellBundle's
- * `.w-pgact` is what makes it a row. But the wrapper is rendered by the SHELL
- * (`page.html.twig` writes `<div class="pgact">`), a module filling
- * `shell_page_actions` cannot add a class to it, and `.pgact` alone is
- * `flex-shrink: 0` and nothing else. So the form stayed a block on its own
- * line, `.fld`'s `width: 100%` let the name field swallow the column, and the
- * select, the field and the button came out stacked — a real installation
- * reported the header "squished into a column", and it was.
+ * THE ROW IS LAID OUT HERE, NOT INHERITED. The design draws this header as
+ * `.pgact.w-pgact` and ShellBundle's `.w-pgact` is what makes it a row, but the
+ * wrapper is rendered by the SHELL (`page.html.twig` writes
+ * `<div class="pgact">`), a module filling `shell_page_actions` cannot add a
+ * class to it, and `.pgact` alone is `flex-shrink: 0` and nothing else. Left to
+ * that, the form is a block on its own line, `.fld`'s `width: 100%` lets the
+ * name field swallow the column, and the select, the field and the button come
+ * out stacked into a squished column.
  *
  * The rule the design states is that EVERY CONTROL IN THE ROW IS THE SAME
  * HEIGHT: a .tgl at 11px/5px beside a .cta at 12px/7px beside a .fld at

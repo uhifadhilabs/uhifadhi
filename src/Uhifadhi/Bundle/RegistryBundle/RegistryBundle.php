@@ -89,7 +89,7 @@ final class RegistryBundle extends AbstractBundle
      * whose class lives at the root — templates/ and public/ would be looked
      * for outside the package.
      *
-     * @see vendor/symfony/dependency-injection/Kernel/AbstractBundle.php
+     * @see vendor/symfony/http-kernel/Bundle/AbstractBundle.php
      */
     public function getPath(): string
     {

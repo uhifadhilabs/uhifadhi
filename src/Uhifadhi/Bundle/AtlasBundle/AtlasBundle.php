@@ -82,10 +82,9 @@ final class AtlasBundle extends AbstractBundle
      * The chrome markup this bundle's chrome.js builds — the zoom column, the DIM
      * pill, the base-layer menu, the scroll-bargain hint — and Leaflet's own
      * controls need styling, and there must be exactly ONE copy of those rules or
-     * two maps on the platform drift apart. The rules used to live only in a host
-     * app.css, which meant a fresh installation that drew a map (with no such
-     * host CSS) rendered unstyled chrome; the styles belong beside the markup
-     * that emits them. This sheet also carries the .viewer imagery frame and the
+     * two maps on the platform drift apart. They live beside the markup that
+     * emits them rather than in a host app.css, so a fresh installation that
+     * draws a map gets styled chrome without writing any CSS of its own. This sheet also carries the .viewer imagery frame and the
      * .zone-label halo, so any consumer that frames a plate gets them for free.
      * A consumer links it alongside LEAFLET_CSS; it is served, versioned, out of
      * this bundle's public/ dir the same way Leaflet is.
@@ -113,7 +112,7 @@ final class AtlasBundle extends AbstractBundle
      * whose class lives at the root — public/ would be looked for outside the
      * package, and the Leaflet build with it.
      *
-     * @see vendor/symfony/dependency-injection/Kernel/AbstractBundle.php
+     * @see vendor/symfony/http-kernel/Bundle/AbstractBundle.php
      */
     public function getPath(): string
     {

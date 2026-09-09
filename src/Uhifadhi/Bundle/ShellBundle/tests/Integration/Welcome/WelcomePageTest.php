@@ -61,19 +61,18 @@ final class WelcomePageTest extends ShellKernelTestCase
 
     /**
      * IT LISTS WHAT IS ACTUALLY INSTALLED, and it asks Composer rather than
-     * remembering. The page used to state that two packages were installed and
-     * name them both in prose — true of the installation it was written for and wrong
-     * the moment anybody ran a `composer require`, which is the one instruction
-     * the page itself gives. A first-day operator would then be told, on the
-     * platform's own welcome screen, that the module they had just installed
-     * was not there.
+     * remembering. Naming packages in prose would be true of one installation
+     * and wrong the moment anybody ran a `composer require`, which is the one
+     * instruction the page itself gives — a first-day operator would then be
+     * told, on the platform's own welcome screen, that the module they had just
+     * installed was not there.
      *
      * The list comes from Composer\InstalledVersions: every uhifadhi/* package
      * this installation has, with its version. Naming a package is still not
      * naming a module — nothing here is recognised, compared or switched on;
      * the shell prints whatever the vendor directory reports.
      */
-    public function testItListsEveryInstalledPackageRatherThanTheTwoItWasWrittenFor(): void
+    public function testItListsEveryInstalledUhifadhiPackage(): void
     {
         $rows = $this->get('/')->filter('div.pgbody .wpkgs .wpkg-row');
 
@@ -85,8 +84,8 @@ final class WelcomePageTest extends ShellKernelTestCase
         self::assertNotSame([], $installed, 'The suite runs inside an installation of this very package.');
         self::assertCount(\count($installed), $rows, 'The list is Composer\'s, not a list somebody typed.');
 
-        // Every row's text, not just the first — the install now carries more
-        // than one uhifadhi/* package (the shell requires the contracts package for
+        // Every row's text, not just the first — the install carries more than
+        // one uhifadhi/* package (the shell requires the contracts package for
         // the user-badge contract), so the list has more than one row to check.
         $text = implode("\n", $rows->each(static fn ($row): string => $row->text()));
         foreach ($installed as $package) {
@@ -97,13 +96,12 @@ final class WelcomePageTest extends ShellKernelTestCase
     /**
      * THE LIST REACHES THE TEMPLATE AS A PLAIN VARIABLE, from the controller.
      *
-     * It used to reach it through a `shell_packages()` Twig function, which put
-     * a global on every render in the platform to serve one page in the bundle
-     * that declared it. The controller earns its keep here: the page has real
-     * logic, the logic has one caller, and a template variable is where a
-     * page's own data belongs. The function is gone, and its absence is
-     * asserted rather than assumed — a leftover global is invisible until
-     * somebody uses it.
+     * A `shell_packages()` Twig function would put a global on every render in
+     * the platform to serve one page in the bundle that declared it. The
+     * controller earns its keep instead: the page has real logic, the logic has
+     * one caller, and a template variable is where a page's own data belongs.
+     * No such function is declared, and that absence is asserted rather than
+     * assumed — a stray global is invisible until somebody uses it.
      */
     public function testTheControllerSuppliesTheListRatherThanAGlobalTwigFunction(): void
     {

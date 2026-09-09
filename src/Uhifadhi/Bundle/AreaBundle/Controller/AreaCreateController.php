@@ -44,8 +44,7 @@ use Uhifadhi\Bundle\AreaBundle\Service\BoundaryImport;
  * same screen: add it now (the file is imported as the area is created) or add
  * it later (the area is created bare and lands on its overview's no-boundary
  * state, where the same import waits inline). {@see AreaCreator} makes the area;
- * {@see BoundaryImport} puts the edge on it. The create flow no longer makes the
- * import BE the creation.
+ * {@see BoundaryImport} puts the edge on it. The import is never the creation.
  *
  * NO FORM COMPONENT. A handful of fields, one of which is a file, is not worth
  * putting symfony/form and symfony/validator into every installation that wants

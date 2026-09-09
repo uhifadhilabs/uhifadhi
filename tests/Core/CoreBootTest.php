@@ -15,9 +15,11 @@ namespace Uhifadhi\Core\Tests\Core;
 
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\HttpKernel\CacheWarmer\CacheWarmerAggregate;
+use Uhifadhi\Bundle\AreaBundle\AreaBundle;
 use Uhifadhi\Bundle\AtlasBundle\AtlasBundle;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
 use Uhifadhi\Bundle\ShellBundle\ShellBundle;
+use Uhifadhi\Bundle\TeamBundle\TeamBundle;
 use Uhifadhi\Core\Tests\Application\Kernel;
 
 /**
@@ -59,7 +61,7 @@ final class CoreBootTest extends KernelTestCase
     {
         $kernel = self::bootKernel();
 
-        foreach ([RegistryBundle::class, ShellBundle::class, AtlasBundle::class] as $bundle) {
+        foreach ([RegistryBundle::class, ShellBundle::class, AtlasBundle::class, TeamBundle::class, AreaBundle::class] as $bundle) {
             self::assertArrayHasKey(
                 substr($bundle, (int) strrpos($bundle, '\\') + 1),
                 $kernel->getBundles(),
@@ -69,22 +71,29 @@ final class CoreBootTest extends KernelTestCase
     }
 
     /**
-     * EACH BUNDLE'S CONFIG IS KEYED BY ITS OWN WORD, and the three cannot
-     * collide because they are three words. An installation writes
-     * config/packages/registry.yaml, shell.yaml and atlas.yaml, one per bundle,
-     * exactly as it would if each were its own package.
+     * EACH BUNDLE'S CONFIG IS KEYED BY ITS OWN WORD, and the five cannot
+     * collide because they are five words. An installation writes
+     * config/packages/registry.yaml, shell.yaml, atlas.yaml, team.yaml and
+     * area.yaml, one per bundle, exactly as it would if each were its own
+     * package.
      */
     public function testEachBundleKeepsItsOwnConfigurationRoot(): void
     {
         $kernel = self::bootKernel();
 
         $aliases = [];
-        foreach (['RegistryBundle', 'ShellBundle', 'AtlasBundle'] as $name) {
+        foreach (['RegistryBundle', 'ShellBundle', 'AtlasBundle', 'TeamBundle', 'AreaBundle'] as $name) {
             $aliases[$name] = $kernel->getBundle($name)->getContainerExtension()?->getAlias();
         }
 
         self::assertSame(
-            ['RegistryBundle' => 'registry', 'ShellBundle' => 'shell', 'AtlasBundle' => 'atlas'],
+            [
+                'RegistryBundle' => 'registry',
+                'ShellBundle' => 'shell',
+                'AtlasBundle' => 'atlas',
+                'TeamBundle' => 'team',
+                'AreaBundle' => 'area',
+            ],
             $aliases,
         );
     }

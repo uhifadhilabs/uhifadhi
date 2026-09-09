@@ -39,21 +39,19 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
  * installation resolves the contract to; where its own rows are kept is nobody's
  * business but this suite's, so it keeps them under a name no package claims.
  *
- * A STUB, AND IT IMPERSONATES A REAL FQCN. `Uhifadhi\Entity\AreaOfInterest` is
+ * A STAND-IN THAT IMPERSONATES A REAL FQCN. `Uhifadhi\Entity\AreaOfInterest` is
  * the uhifadhi host application's own class, spelled here byte-for-byte so the
- * suite exercises the registry a real installation exercises. It is marked as a stub
- * three ways: by location (tests/Integration/Fixtures/ under the impersonated
- * tree), by the autoload-dev mapping that scopes it to the dev autoloader, and
- * by this paragraph. It has now sat still through TWO renames of the bundle
- * around it: this package's own code went `UhifadhiLabs\Trunk\` →
- * `Uhifadhi\Trunk\` → `Uhifadhi\Bundle\RegistryBundle\`, and this class did not move once,
- * because a stub follows the class it impersonates and the host was never
- * renamed. The `use` statement above DID follow — that is the platform's area
- * contract (the contracts package), not the impersonation. Sweeping the namespace on line 14 into a
- * rename would break nothing and fail nothing; it would simply stop testing
- * what this file exists to test. A project installed
- * from the skeleton names its area `App\Entity\AreaOfInterest` instead; either
- * spelling resolves through the same interface, which is the whole point.
+ * suite exercises the registry a real installation exercises. It is marked as a
+ * stand-in three ways: by location (tests/Integration/Fixtures/ under the
+ * impersonated tree), by the autoload-dev mapping that scopes it to the dev
+ * autoloader, and by this paragraph. Its namespace belongs to the host, not to
+ * this bundle, so it stays fixed whatever this bundle's own namespace is; only
+ * the `use` statement above tracks the platform's area contract. It carries
+ * exactly the fields the registry reads — the identity it maps its AreaModule
+ * association to, the uuid its route gate resolves an area from, and a name —
+ * and nothing else the host may happen to hold. A project installed from the
+ * skeleton names its area `App\Entity\AreaOfInterest` instead; either spelling
+ * resolves through the same interface, which is the whole point.
  *
  * The alternative — storing a bare area id or uuid on the row — was considered
  * and rejected: it would make every "the modules of this area" query a manual
@@ -74,9 +72,9 @@ class AreaOfInterest implements AreaInterface
     /**
      * ADDRESSED PUBLICLY BY UUID, like the class it impersonates — the host's
      * area carries a UUIDv7 and its routes are `/areas/{uuid}/…`, never the
-     * sequential id. The stub grew this column when the registry learned to close a
-     * parked module's routes: that gate reads an area out of a URL, so the field
-     * the URL carries is part of what the suite has to exercise.
+     * sequential id. The registry's gate on a parked module's routes reads an
+     * area out of a URL, so the field the URL carries is part of what this
+     * suite has to exercise.
      */
     #[ORM\Column(type: 'uuid', unique: true)]
     private ?Uuid $uuid = null;

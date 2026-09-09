@@ -62,10 +62,10 @@ final class ShellRuntime implements RuntimeExtensionInterface
     /**
      * THE PAGE TITLE, COMPOSED ONCE: "<page> — <place> — <brand>".
      *
-     * Every page in the platform used to type this join itself, which is why
-     * some of them used a hyphen, some an em dash, and some forgot the brand.
-     * A page now says only what it is; the shell says where it is and whose it
-     * is, because those are the two parts a page cannot know reliably.
+     * A platform where every page types this join itself is a platform where
+     * some pages use a hyphen, some an em dash, and some forget the brand. A
+     * page says only what it is; the shell says where it is and whose it is,
+     * because those are the two parts a page cannot know reliably.
      */
     public function title(string $page = ''): string
     {

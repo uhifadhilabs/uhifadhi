@@ -16,7 +16,7 @@ repository, and how to work on it.
 [`uhifadhi/uhifadhi`](https://github.com/uhifadhilabs/uhifadhi) is the project
 skeleton — copied once, never updated; everything else arrives as a module,
 updated forever. A module **registers with the registry**
-([`uhifadhi/uhifadhi`](https://github.com/uhifadhilabs/the registry)) and
+([`RegistryBundle`](../../RegistryBundle/README.md)) and
 **renders in the shell** (`ShellBundle`
 — this repository); everything a deployment can do — patrols, incidents,
 rosters — is a module.

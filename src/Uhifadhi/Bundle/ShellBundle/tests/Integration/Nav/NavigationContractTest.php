@@ -36,7 +36,7 @@ use Uhifadhi\Bundle\ShellBundle\Tests\Integration\Fixtures\HostKernel;
  *     The host has the areas, the viewer, the permission voters and the contract's
  *     per-area ledger; folding those four into "these rows, in this order" is a
  *     reading for a person on a page, which is the host's job by the same
- *     argument the registry used to hand the module grid away.
+ *     argument by which the registry hands the module grid away.
  *   - a MODULE BUNDLE may implement one too, tagged shell.nav_section, for the
  *     rare platform-wide row that belongs to nobody's area.
  *

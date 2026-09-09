@@ -37,9 +37,10 @@ wrong by a different amount in every rule. Two shipped bugs came from exactly
 that — a position rail that hung 24px out of the column it lived in, and a
 sign-in card floating on 52px of scroll that was not there.
 
-**What a module may stop writing:** `box-sizing: border-box` on its own rules.
-Keeping it is harmless, and where a module wants the assumption said out loud at
-the point of use it is honest — it is simply no longer load-bearing.
+**What a module need not write:** `box-sizing: border-box` on its own rules.
+The platform reset already guarantees it, so a module's own copy carries no
+weight; keeping it is harmless, and where a module wants the assumption said out
+loud at the point of use it is honest.
 
 **What a module must never write:** `box-sizing: content-box`. A sheet that
 takes the guarantee back for part of a page leaves the platform with a box model

@@ -28,12 +28,12 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
  * `composer create-project` and following the instructions as written. Neither
  * survived the walk, and the recipe's comments now say what these tests say.
  *
- * 1. AN AREA IS REQUIRED, NOT OPTIONAL. The recipe used to describe
- *    `resolve_target_entities` as the step that buys you the per-area half,
- *    implying an installation without it simply had less. It has less *and* no
- *    schema at all: every tool that resolves the association stops on the
- *    unresolved interface. The claim under test is the honest one — a bundle
- *    that boots without an answer and cannot be schema'd without one.
+ * 1. AN AREA IS REQUIRED, NOT OPTIONAL. Reading `resolve_target_entities` as
+ *    the step that merely buys you the per-area half implies an installation
+ *    without it simply has less. It has less *and* no schema at all: every tool
+ *    that resolves the association stops on the unresolved interface. The claim
+ *    under test is the honest one — a bundle that boots without an answer and
+ *    cannot be schema'd without one.
  *
  * 2. THE TOOL THAT CREATES THOSE TABLES SHIPS WITH THE BUNDLE THAT ADDS THEM.
  *    An installed project had no `doctrine:migrations:*` commands, because

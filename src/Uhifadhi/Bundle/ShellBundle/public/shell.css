@@ -46,7 +46,7 @@
 
    ONE PLACE, BECAUSE NINE PLACES IS NINE CHANCES TO FORGET. A module may still
    write `box-sizing: border-box` on a rule where it wants the assumption said
-   out loud; it no longer has to, and it must never write `content-box`.
+   out loud; it does not have to, and it must never write `content-box`.
 
    The pseudo-elements are named on purpose: `*` does not reach them, and a
    ::before measured differently from the element it decorates is the hairline
@@ -220,7 +220,7 @@ body::before {
 .nav-item.on { background: rgb(var(--c-acc) / .13); color: rgb(var(--c-tx)); font-weight: 600; }
 .nav-item.on svg { color: rgb(var(--c-acc)); }
 /* A row with nowhere to go: visible, dimmed, inert — a promise about the
-   future, never a hole where a planned surface used to be named. */
+   future, never a hole where a planned surface should be named. */
 .nav-item.off { color: rgb(var(--c-dim)); cursor: default; }
 .nav-item.off:hover { background: none; color: rgb(var(--c-dim)); }
 

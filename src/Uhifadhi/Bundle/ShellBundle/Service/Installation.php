@@ -19,10 +19,10 @@ use Uhifadhi\Bundle\ShellBundle\Model\InstalledPackage;
 /**
  * WHAT THIS INSTALLATION IS MADE OF, asked of Composer rather than remembered.
  *
- * The welcome screen used to state which packages were installed by naming them
- * in prose — accurate for the installation it was written against, wrong the
- * first time anybody followed the instruction that same page gives. A screen
- * that reports on an installation has to read the installation.
+ * Naming the installed packages in prose is accurate for exactly one
+ * installation and wrong the first time anybody follows the instruction the
+ * welcome screen itself gives. A screen that reports on an installation has to
+ * read the installation.
  *
  * IT IS STILL NOT A CATALOGUE. This reads the vendor directory, not the registry:
  * it knows which packages are on disk and nothing whatever about what they can

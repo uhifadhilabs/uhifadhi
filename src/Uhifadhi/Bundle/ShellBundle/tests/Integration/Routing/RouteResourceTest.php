@@ -80,8 +80,7 @@ final class RouteResourceTest extends TestCase
 
     /**
      * A HOST THAT HAS NOT IMPORTED IT HAS NO SUCH ROUTE. This is the half of
-     * the boundary that a "the shell owns no routes" rule used to cover, and it
-     * is the half that actually matters: registering the bundle does not put
+     * the boundary that actually matters: registering the bundle does not put
      * anything at any address.
      */
     public function testRegisteringTheBundleClaimsNothing(): void

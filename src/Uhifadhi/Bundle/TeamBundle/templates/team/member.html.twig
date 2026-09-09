@@ -139,12 +139,12 @@
     <span class="tab">Tier<span class="src">&middot; who stands above the matrix</span></span>
 
     <p class="use" style="margin-top:2px">Three cards rather than a dropdown, because the words do not explain
-    themselves and this list is <b>shorter than it used to be</b>. There was a fourth tier, <i>Manager</i>, and it
-    has been removed: it named a job rather than a system level, and it created the model&rsquo;s single most
-    misread rule &mdash; a Manager could administer the team and yet hold no capability at all. <b>Administering
-    the team is now a permission like any other</b>, <code>team.manage</code>, granted through a position. So a
-    &ldquo;manager&rdquo; is something an administrator <i>composes</i> &mdash; visible in the matrix, countable,
-    and revocable in one click, none of which was true of a tier.</p>
+    themselves and the list is <b>deliberately short</b>. There is no <i>Manager</i> tier: that names a job
+    rather than a system level, and it would carry the model&rsquo;s single most misread rule &mdash; somebody
+    who administers the team and yet holds no capability at all. <b>Administering the team is a permission like
+    any other</b>, <code>team.manage</code>, granted through a position. So a &ldquo;manager&rdquo; is something
+    an administrator <i>composes</i> &mdash; visible in the matrix, countable, and revocable in one click, none
+    of which is true of a tier.</p>
 
     <form method="post" action="{{ path('team_member_tier', {uuid: member.uuidString}) }}">
         <input type="hidden" name="_token" value="{{ csrfToken }}">

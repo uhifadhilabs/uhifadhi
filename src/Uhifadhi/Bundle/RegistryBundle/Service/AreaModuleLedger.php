@@ -21,11 +21,11 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
  *
  * Several surfaces want this pair: a list of what an area is running, and,
  * muted underneath it, what the deployment has that this area has not taken.
- * They used to walk the catalogue separately, which is exactly how a card comes
- * to say "8 in the catalogue" over two rows: two readings of one table, made a
- * query apart, disagreeing about what the catalogue is. The catalogue is walked
- * once here and split, so the count and the rows can never describe two
- * different tables.
+ * Walking the catalogue once per surface is exactly how a card comes to say
+ * "8 in the catalogue" over two rows: two readings of one table, made a query
+ * apart, disagreeing about what the catalogue is. The catalogue is walked once
+ * here and split, so the count and the rows can never describe two different
+ * tables.
  *
  * THE PROMISE THIS KEEPS. Every contribution a module makes to a shared surface
  * is keyed by its slug, and the promise the platform makes to an area manager is

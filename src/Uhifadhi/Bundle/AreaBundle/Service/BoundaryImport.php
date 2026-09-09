@@ -61,7 +61,7 @@ final readonly class BoundaryImport
 
     /**
      * A BOUNDARY, ONTO AN AREA THAT ALREADY EXISTS — the one operation this
-     * service performs now that creating an area no longer means importing one.
+     * service performs, because creating an area does not mean importing one.
      *
      * The area is created from its identity first; the boundary is added here,
      * now (straight after creation) or later (from the overview's no-boundary

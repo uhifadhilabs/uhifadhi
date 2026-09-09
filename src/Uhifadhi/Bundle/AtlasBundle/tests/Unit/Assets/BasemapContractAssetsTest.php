@@ -131,9 +131,9 @@ final class BasemapContractAssetsTest extends TestCase
     }
 
     /**
-     * The key is no longer read off a Google-shaped attribute of its own: it
-     * arrives inside the provider payload, so a page that draws Esri carries no
-     * Google key at all.
+     * The key is not read off a Google-shaped attribute of its own: it arrives
+     * inside the provider payload, so a page that draws Esri carries no Google
+     * key at all.
      */
     public function testTheContractReadsNoGoogleShapedAttribute(): void
     {

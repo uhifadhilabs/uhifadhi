@@ -24,9 +24,9 @@ namespace Uhifadhi\Bundle\AreaBundle\Overview;
  *
  * WHAT IS ON BY DEFAULT IS OPERATIONAL — boundary, stations, today's tracks,
  * open incidents. WHAT IS OFF BY DEFAULT IS SCIENTIFIC — tree-cover loss, fire
- * detections. The science is not deleted: it is one click away in the layer
- * list, with its legend, exactly where it was. It is simply no longer the first
- * thing an area manager is shown at 07:00.
+ * detections. The science is not withheld: it is one click away in the layer
+ * list, with its legend. It is simply not the first thing an area manager is
+ * shown at 07:00.
  *
  * THE GEOMETRY TRAVELS AS GEOJSON, in a FeatureCollection the layer builds for
  * one area. A layer with nothing to draw returns an empty collection and still
