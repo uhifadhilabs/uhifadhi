@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures;
 
 use Uhifadhi\Contracts\Devkit\CommandDescriptor;
+use Uhifadhi\Contracts\Devkit\CommandIo;
 use Uhifadhi\Contracts\Devkit\CommandProviderInterface;
 
 /**
@@ -69,9 +70,17 @@ final readonly class DevkitCommandCollector
         throw new \InvalidArgumentException(\sprintf('No installed provider offers the command "%s".', $name));
     }
 
-    /** @param list<string> $arguments */
-    public function run(string $name, array $arguments): int
+    /**
+     * Run a command the way devkit's wrapper does: the argument tail in, the
+     * streams to speak through alongside it, the returned int as the exit
+     * status. The io is optional here only so that the tests asserting the row
+     * rather than the message need not name one; devkit always passes the
+     * console's.
+     *
+     * @param list<string> $arguments
+     */
+    public function run(string $name, array $arguments, ?CommandIo $io = null): int
     {
-        return ($this->get($name)->handler)($arguments);
+        return ($this->get($name)->handler)($arguments, $io ?? new RecordingCommandIo());
     }
 }

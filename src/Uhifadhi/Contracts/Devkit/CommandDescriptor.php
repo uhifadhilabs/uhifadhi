@@ -33,15 +33,24 @@ namespace Uhifadhi\Contracts\Devkit;
  *
  * THE HANDLER IS THE PROCESS CONTRACT, NOT THE CONSOLE ONE. It is a closure that
  * takes the argument tail a person typed — a `list<string>`, everything after
- * the command name — and returns a POSIX exit code (0 = success). That is the
- * lowest common denominator of "run a command", and it needs nothing from a
- * framework. devkit's generated wrapper collects the raw tokens into that array,
- * calls the handler, and uses the returned int as the command's exit status. A
- * command that wants richer input parses the tail itself, or injects what it
- * needs through the service the closure closes over; the contract deliberately
- * does not model options and arguments, because doing so would mean
- * reimplementing an InputDefinition here — exactly the console coupling this
- * object exists to avoid.
+ * the command name — plus the {@see CommandIo} it may speak through, and returns
+ * a POSIX exit code (0 = success). Tail in, streams to talk on, status out: that
+ * is the lowest common denominator of "run a command", and it needs nothing from
+ * a framework. devkit's generated wrapper collects the raw tokens into that
+ * array, passes an io wired to the real console, calls the handler, and uses the
+ * returned int as the command's exit status. A command that wants richer input
+ * parses the tail itself, or injects what it needs through the service the
+ * closure closes over; the contract deliberately does not model options and
+ * arguments, because doing so would mean reimplementing an InputDefinition here
+ * — exactly the console coupling this object exists to avoid.
+ *
+ * THE IO IS PART OF THAT PROCESS CONTRACT, NOT A CONCESSION TO THE CONSOLE. A
+ * handler given only a tail and an exit code has nowhere to say what it did, so
+ * its only recourse is \STDOUT and \STDIN directly — and a handler writing there
+ * has escaped the process it was handed: its output ignores `--quiet`, is
+ * invisible to a caller capturing the command's output, and turns up uninvited
+ * in a test run. Three verbs on {@see CommandIo} close that hole while importing
+ * nothing.
  *
  * Like {@see \Uhifadhi\Contracts\ModulePermission}, every field is required
  * and validated in the constructor: a command with no name cannot be registered,
@@ -51,11 +60,16 @@ namespace Uhifadhi\Contracts\Devkit;
 final readonly class CommandDescriptor
 {
     /**
-     * @param string                     $name        the console name devkit registers, namespaced
-     *                                                by convention (e.g. "patrol:demo:reset")
-     * @param string                     $description one line of help, shown in `list` and `--help`
-     * @param \Closure(list<string>):int $handler     does the work: receives the argument tail and
-     *                                                returns a POSIX exit code (0 = success)
+     * @param string                                $name        the console name devkit registers,
+     *                                                           namespaced by convention
+     *                                                           (e.g. "patrol:demo:reset")
+     * @param string                                $description one line of help, shown in `list`
+     *                                                           and `--help`
+     * @param \Closure(list<string>, CommandIo):int $handler     does the work: receives the argument
+     *                                                           tail and the streams to
+     *                                                           speak through, and returns
+     *                                                           a POSIX exit code
+     *                                                           (0 = success)
      */
     public function __construct(
         public string $name,

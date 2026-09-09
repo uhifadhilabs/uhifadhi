@@ -19,6 +19,7 @@ use Uhifadhi\Bundle\TeamBundle\Devkit\TeamCommandProvider;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\DevkitCommandCollector;
+use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\RecordingCommandIo;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\IntegrationTestCase;
 
 /**
@@ -138,6 +139,77 @@ final class FirstAdministratorTest extends IntegrationTestCase
 
         self::assertSame(1, $exit);
         self::assertNull($this->users()->findOneByEmail('ada@example.test'));
+    }
+
+    /**
+     * WHAT IT CREATED IS SAID ON STANDARD OUTPUT, through the channel the
+     * descriptor hands the handler — not written to \STDOUT behind the
+     * console's back, where it would ignore `--quiet` and be invisible to
+     * anything collecting the command's output.
+     */
+    public function testWhatItCreatedIsSaidOnStandardOutput(): void
+    {
+        $io = new RecordingCommandIo();
+
+        $this->collector()->run('team:user:create', [
+            'ada@example.test', 'Ada', 'Mwangi', '--password=a-long-enough-passphrase',
+        ], $io);
+
+        self::assertStringContainsString('Ada Mwangi', $io->output());
+        self::assertStringContainsString('ada@example.test', $io->output());
+        self::assertSame('', $io->diagnostics(), 'A command that succeeded has nothing to say on the error stream.');
+    }
+
+    /**
+     * WHY IT REFUSED IS SAID ON STANDARD ERROR, the other stream — so a person
+     * still reads it when the command's output is being piped somewhere, and so
+     * it never lands in that pipe.
+     */
+    public function testWhyItRefusedIsSaidOnStandardError(): void
+    {
+        $io = new RecordingCommandIo();
+
+        $exit = $this->collector()->run('team:user:create', [
+            'ada@example.test', 'Ada', 'Mwangi', '--tier=emperor', '--password=a-long-enough-passphrase',
+        ], $io);
+
+        self::assertSame(1, $exit);
+        self::assertStringContainsString('emperor', $io->diagnostics());
+        self::assertSame('', $io->output(), 'A refusal is a diagnostic, and nothing goes to the output stream.');
+    }
+
+    /**
+     * THE PASSPHRASE IS READ THROUGH THE CHANNEL when the option is absent, so
+     * it need never appear in a shell history or a process list — and so the
+     * handler reaches for no \STDIN of its own, which is the same escape from
+     * the given process that the output channel closes.
+     */
+    public function testThePasswordIsReadFromStandardInputWhenTheOptionIsAbsent(): void
+    {
+        $io = new RecordingCommandIo(['a-piped-passphrase']);
+
+        $exit = $this->collector()->run('team:user:create', ['ada@example.test', 'Ada', 'Mwangi'], $io);
+
+        self::assertSame(0, $exit);
+
+        $user = $this->users()->findOneByEmail('ada@example.test');
+        self::assertNotNull($user);
+
+        /** @var UserPasswordHasherInterface $hasher */
+        $hasher = static::getContainer()->get('test_public.hasher');
+        self::assertTrue($hasher->isPasswordValid($user, 'a-piped-passphrase'));
+    }
+
+    /** Input that ended without offering a line is no password given, and is refused. */
+    public function testAnInputThatOffersNothingIsRefused(): void
+    {
+        $io = new RecordingCommandIo();
+
+        $exit = $this->collector()->run('team:user:create', ['ada@example.test', 'Ada', 'Mwangi'], $io);
+
+        self::assertSame(1, $exit);
+        self::assertNull($this->users()->findOneByEmail('ada@example.test'));
+        self::assertStringContainsString('password', strtolower($io->diagnostics()));
     }
 
     private function collector(): DevkitCommandCollector

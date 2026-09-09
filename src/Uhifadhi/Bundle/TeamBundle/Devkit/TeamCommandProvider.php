@@ -18,6 +18,7 @@ use Uhifadhi\Bundle\TeamBundle\Exception\EmailAlreadyUsedException;
 use Uhifadhi\Bundle\TeamBundle\Exception\PasswordTooShortException;
 use Uhifadhi\Bundle\TeamBundle\Service\UserService;
 use Uhifadhi\Contracts\Devkit\CommandDescriptor;
+use Uhifadhi\Contracts\Devkit\CommandIo;
 use Uhifadhi\Contracts\Devkit\CommandProviderInterface;
 
 /**
@@ -33,9 +34,12 @@ use Uhifadhi\Contracts\Devkit\CommandProviderInterface;
  * is data waiting for a tool that is not there.
  *
  * NOTHING HERE NEEDS symfony/console, and that is the point of the descriptor.
- * A name, a help line, and a closure taking the argument tail and returning an
- * exit code — the process contract rather than the console one. So this bundle
- * does not carry a console runtime to offer a command.
+ * A name, a help line, and a closure taking the argument tail and the streams to
+ * speak through, returning an exit code — the process contract rather than the
+ * console one. So this bundle does not carry a console runtime to offer a
+ * command, and still says what it did somewhere a console can hear: everything
+ * below talks through {@see CommandIo} and touches no file descriptor of its
+ * own.
  *
  * THE HANDLER PARSES ITS OWN TAIL, because the contract deliberately models no
  * options and no arguments: doing so would mean reimplementing an input
@@ -81,18 +85,18 @@ final readonly class TeamCommandProvider implements CommandProviderInterface
             new CommandDescriptor(
                 'team:user:create',
                 'Create an account and set its password — the administrator an installation is bootstrapped with. Usage: <email> <first name> <last name> [--tier=super-admin|admin|staff] [--password=…]; the password is read from standard input when the option is absent.',
-                fn (array $arguments): int => $this->createUser($arguments),
+                fn (array $arguments, CommandIo $io): int => $this->createUser($arguments, $io),
             ),
         ];
     }
 
     /** @param list<string> $arguments */
-    private function createUser(array $arguments): int
+    private function createUser(array $arguments, CommandIo $io): int
     {
         [$options, $positional] = self::split($arguments);
 
         if (3 !== \count($positional)) {
-            return self::refuse('Give an email address, a first name and a last name: team:user:create <email> <first name> <last name> [--tier=super-admin|admin|staff] [--password=…].');
+            return self::refuse($io, 'Give an email address, a first name and a last name: team:user:create <email> <first name> <last name> [--tier=super-admin|admin|staff] [--password=…].');
         }
 
         [$email, $firstName, $lastName] = $positional;
@@ -100,12 +104,12 @@ final readonly class TeamCommandProvider implements CommandProviderInterface
         $tierToken = $options['tier'] ?? 'super-admin';
         $tier = self::TIERS[$tierToken] ?? null;
         if (null === $tier) {
-            return self::refuse(\sprintf('Unknown tier "%s". Use one of: %s.', $tierToken, implode(', ', array_keys(self::TIERS))));
+            return self::refuse($io, \sprintf('Unknown tier "%s". Use one of: %s.', $tierToken, implode(', ', array_keys(self::TIERS))));
         }
 
-        $password = $options['password'] ?? self::readPassword();
+        $password = $options['password'] ?? self::readPassword($io);
         if ('' === trim($password)) {
-            return self::refuse('A password is required. Pass --password=… or write it on standard input.');
+            return self::refuse($io, 'A password is required. Pass --password=… or write it on standard input.');
         }
 
         // VERIFIED AND ACTIVE, unlike an invited account: this is the
@@ -115,12 +119,12 @@ final readonly class TeamCommandProvider implements CommandProviderInterface
         try {
             $user = $this->accounts->create($email, $firstName, $lastName, $password, $tier);
         } catch (EmailAlreadyUsedException $taken) {
-            return self::refuse(\sprintf('An account already answers to "%s". Accounts are never duplicated; reset that one\'s password instead.', $taken->email));
+            return self::refuse($io, \sprintf('An account already answers to "%s". Accounts are never duplicated; reset that one\'s password instead.', $taken->email));
         } catch (PasswordTooShortException $short) {
-            return self::refuse($short->getMessage());
+            return self::refuse($io, $short->getMessage());
         }
 
-        self::say(\sprintf('Created %s <%s> as %s.', $user->getFullName(), $user->getUserIdentifier(), $tier->label()));
+        $io->write(\sprintf('Created %s <%s> as %s.', $user->getFullName(), $user->getUserIdentifier(), $tier->label()));
 
         return 0;
     }
@@ -156,25 +160,26 @@ final readonly class TeamCommandProvider implements CommandProviderInterface
 
     /**
      * One line from standard input, so a passphrase need never appear in a
-     * shell history or a process list. An empty read is an empty password and
-     * is refused above.
+     * shell history or a process list. It comes through the channel rather than
+     * off \STDIN directly: the handler is given a process to run inside, and a
+     * command reading the file descriptor itself would be reading past whatever
+     * the console was actually wired to. An input that has ended offers nothing,
+     * which is an empty password and is refused above.
      */
-    private static function readPassword(): string
+    private static function readPassword(CommandIo $io): string
     {
-        $line = fgets(\STDIN);
-
-        return \is_string($line) ? rtrim($line, "\r\n") : '';
+        return $io->readLine() ?? '';
     }
 
-    private static function refuse(string $why): int
+    /**
+     * A refusal on the ERROR stream, because it says why nothing happened
+     * rather than what did — so it survives a pipeline that is collecting this
+     * command's output, and does not corrupt it.
+     */
+    private static function refuse(CommandIo $io, string $why): int
     {
-        self::say($why);
+        $io->error($why);
 
         return 1;
-    }
-
-    private static function say(string $line): void
-    {
-        fwrite(\STDOUT, $line."\n");
     }
 }

@@ -16,6 +16,7 @@ namespace Uhifadhi\Contracts\Tests\Devkit;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Uhifadhi\Contracts\Devkit\CommandDescriptor;
+use Uhifadhi\Contracts\Devkit\CommandIo;
 use Uhifadhi\Contracts\Devkit\CommandProviderInterface;
 
 /**
@@ -102,7 +103,7 @@ final class CommandProviderInterfaceTest extends TestCase
                     new CommandDescriptor(
                         'demo:reset',
                         'Wipe and reseed the demo content for a clean slate.',
-                        static fn (array $arguments): int => [] === $arguments ? 0 : 1,
+                        static fn (array $arguments, CommandIo $io): int => [] === $arguments ? 0 : 1,
                     ),
                 ];
             }
@@ -113,10 +114,25 @@ final class CommandProviderInterfaceTest extends TestCase
         self::assertInstanceOf(CommandDescriptor::class, $commands[0]);
         self::assertSame('demo:reset', $commands[0]->name);
 
-        // devkit's wrapper hands the token tail to the handler and returns its
-        // exit code as the command's exit code.
+        // devkit's wrapper hands the token tail and the console's streams to the
+        // handler, and returns its exit code as the command's exit code.
+        $io = new class implements CommandIo {
+            public function write(string $line): void
+            {
+            }
+
+            public function error(string $line): void
+            {
+            }
+
+            public function readLine(): ?string
+            {
+                return null;
+            }
+        };
+
         $handler = $commands[0]->handler;
-        self::assertSame(0, $handler([]), 'The handler returns a POSIX exit code — 0 for success.');
-        self::assertSame(1, $handler(['--unexpected']));
+        self::assertSame(0, $handler([], $io), 'The handler returns a POSIX exit code — 0 for success.');
+        self::assertSame(1, $handler(['--unexpected'], $io));
     }
 }

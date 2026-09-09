@@ -109,6 +109,7 @@ real console command — in dev only.
 ```php
 // src/Devkit/PatrolCommandProvider.php (patrol-module)
 use Uhifadhi\Contracts\Devkit\CommandDescriptor;
+use Uhifadhi\Contracts\Devkit\CommandIo;
 use Uhifadhi\Contracts\Devkit\CommandProviderInterface;
 
 final class PatrolCommandProvider implements CommandProviderInterface
@@ -119,7 +120,7 @@ final class PatrolCommandProvider implements CommandProviderInterface
             new CommandDescriptor(
                 'patrol:demo:reset',
                 'Wipe and reseed the patrol demo content.',
-                fn (array $arguments): int => $this->reset($arguments),
+                fn (array $arguments, CommandIo $io): int => $this->reset($arguments, $io),
             ),
         ];
     }
@@ -128,9 +129,38 @@ final class PatrolCommandProvider implements CommandProviderInterface
 
 A `CommandDescriptor` is a name, a one-line help string, and a **closure** — deliberately **not** a
 `Symfony\Component\Console\Command`. The handler is the process contract, not the console one: it
-receives the argument tail a person typed (`list<string>`, everything after the command name) and
-returns a POSIX exit code (`0` = success). devkit's generated wrapper collects the raw tokens into
-that array, calls the handler, and uses the returned int as the command's exit status.
+receives the argument tail a person typed (`list<string>`, everything after the command name) and a
+`CommandIo` to speak through, and returns a POSIX exit code (`0` = success). devkit's generated
+wrapper collects the raw tokens into that array, passes an io wired to the real console, calls the
+handler, and uses the returned int as the command's exit status.
+
+### `CommandIo` — the three streams, and not an `OutputInterface`
+
+```php
+interface CommandIo
+{
+    public function write(string $line): void;   // the result, on stdout
+    public function error(string $line): void;   // why it refused, on stderr
+    public function readLine(): ?string;         // one line of stdin; null at end of input
+}
+```
+
+**A handler needs somewhere to talk, and the alternative to giving it one is worse than console
+coupling.** Handed only a tail and an exit code, a command that creates something has no way to say
+what it created — so it writes to `\STDOUT` itself, and that output has escaped the process it was
+given: it ignores `--quiet`, a caller capturing the command's output cannot see it, and it turns up
+uninvited in a test run. A passphrase read straight off `\STDIN` is the same escape in the other
+direction. Three verbs close both.
+
+**It is deliberately not shaped like an `OutputInterface`.** No verbosity, no formatter, no
+sections, no `write`/`writeln` distinction — modelling those would be reimplementing the console in
+this package, the same refusal that keeps an `InputDefinition` out of the descriptor. Verbosity is
+not lost by leaving it out; it is *honoured* by leaving it out, because devkit's adapter writes
+through the real output, which applies `--quiet` and `-v` itself.
+
+**The two output verbs are separate because the streams are.** What a command produced goes to
+stdout, where a pipeline can read it; why it refused goes to stderr, where it survives that pipeline
+rather than corrupting it.
 
 Every field of the descriptor is required and validated in the constructor, the same discipline
 [`ModulePermission`](module-provider.md) uses: an unnamed command cannot be registered, and one
