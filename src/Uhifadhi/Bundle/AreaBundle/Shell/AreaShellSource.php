@@ -58,7 +58,7 @@ final class AreaShellSource implements AreaShellSourceInterface
      */
     private const array SCREENS = [
         ['Overview', 'area_show', null],
-        ['Modules', 'seam_area_modules', 'module.view'],
+        ['Modules', 'area_modules', 'module.view'],
         ['Zones', 'area_zones', null],
         ['Settings', 'area_settings', 'area.edit'],
     ];

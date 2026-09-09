@@ -33,7 +33,7 @@ use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleService;
  * THE PER-AREA MODULES SCREEN — the grid of what this area has switched on, and
  * the shop it is composed in.
  *
- * `seam_area_modules` IS THE ROUTE NAME, AND THAT IS A FLEET CONTRACT rather
+ * `area_modules` IS THE ROUTE NAME, AND THAT IS A FLEET CONTRACT rather
  * than a local choice. Three consumers already generate it blind and degrade
  * when nothing answers: this bundle's own {@see \Uhifadhi\Bundle\AreaBundle\Shell\AreaShellSource}
  * drops the Modules tab, and the patrol module's breadcrumb and dashboard
@@ -87,7 +87,7 @@ final readonly class AreaModulesController
      * AreaShellSource recognises the Modules tab without knowing one route name
      * — so the grid sits at its root.
      */
-    #[Route('/areas/{uuid}/modules', name: 'seam_area_modules', requirements: ['uuid' => Requirement::UUID], methods: ['GET'])]
+    #[Route('/areas/{uuid}/modules', name: 'area_modules', requirements: ['uuid' => Requirement::UUID], methods: ['GET'])]
     #[IsGranted(self::VIEW)]
     public function grid(
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,

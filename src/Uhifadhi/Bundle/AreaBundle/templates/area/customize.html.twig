@@ -35,7 +35,7 @@
     <a href="{{ path('area_index') }}">uhifadhi</a> /
     <a href="{{ path('area_index') }}">areas</a> /
     <a href="{{ path('area_show', {uuid: area.uuidString}) }}">{{ area.name|lower }}</a> /
-    <a href="{{ path('seam_area_modules', {uuid: area.uuidString}) }}">modules</a> / customize
+    <a href="{{ path('area_modules', {uuid: area.uuidString}) }}">modules</a> / customize
 {% endblock %}
 
 {% block shell_page_title %}{{ area.name }} &mdash; Customize modules{% endblock %}
@@ -50,7 +50,7 @@
    changed — sending "Done" past it to the overview skips the page the work was
    about. #}
 {% block shell_page_actions %}
-    <a class="tgl" href="{{ path('seam_area_modules', {uuid: area.uuidString}) }}">Done</a>
+    <a class="tgl" href="{{ path('area_modules', {uuid: area.uuidString}) }}">Done</a>
 {% endblock %}
 
 {% macro chip(status) %}

@@ -206,7 +206,7 @@ remove.
 | The register's widget library | `area_widgets` · `/areas/widgets` | `area.view` |
 | Create an area | `area_new` · `GET,POST /areas/new` | `area.create` |
 | One area's overview | `area_show` · `/areas/{uuid}` | `area.view` |
-| Its module grid | `seam_area_modules` · `/areas/{uuid}/modules` | `module.view` |
+| Its module grid | `area_modules` · `/areas/{uuid}/modules` | `module.view` |
 | Its module shop | `area_module_customize` · `/areas/{uuid}/modules/customize` | `module.create` |
 | Its zones | `area_zones` · `/areas/{uuid}/zones` | `area.view` |
 | Its settings | `area_settings` · `/areas/{uuid}/settings` | `area.edit` |

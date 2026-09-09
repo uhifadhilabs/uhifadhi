@@ -17,6 +17,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Uhifadhi\Bundle\AreaBundle\Controller\AreaModulesController;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaComposition;
@@ -30,7 +31,7 @@ use Uhifadhi\Bundle\ShellBundle\Model\NavItem;
  * THE PER-AREA MODULES SCREEN — what this area has switched on, and the shop it
  * is composed in.
  *
- * THE ROUTE NAME IS THE CONTRACT, not the path. `seam_area_modules` is the name
+ * THE ROUTE NAME IS THE CONTRACT, not the path. `area_modules` is the name
  * three other packages already generate blind: this bundle's own tab strip lists
  * it, and the patrol module's breadcrumb and dashboard back-button ask for it and
  * print plain text when it does not answer. Mounting it here is what lights all
@@ -109,8 +110,27 @@ final class AreaModulesTest extends WebTestCase
     }
 
     /**
-     * THE TAB IS THE ROUTE'S, NOT THE STRIP'S. AreaShellSource lists a
-     * `seam_area_modules` tab and drops it silently where no route answers, so
+     * THE NAME OTHER PACKAGES GENERATE. A module's breadcrumb and its dashboard
+     * back-button ask the router for `area_modules`; the path is this bundle's
+     * convention and may move, the name may not.
+     */
+    public function testTheGridAnswersToItsContractRouteName(): void
+    {
+        $this->boot(self::ALL);
+        $area = $this->anArea();
+
+        /** @var UrlGeneratorInterface $urls */
+        $urls = static::getContainer()->get('router');
+
+        self::assertSame(
+            $this->modulesPath($area),
+            $urls->generate('area_modules', ['uuid' => $area->getUuidString()]),
+        );
+    }
+
+    /**
+     * THE TAB IS THE ROUTE'S, NOT THE STRIP'S. AreaShellSource lists an
+     * `area_modules` tab and drops it silently where no route answers, so
      * an installation that unmounts the screen gets a shorter strip rather than
      * a broken page — and mounting it lights the tab with no edit anywhere.
      */
