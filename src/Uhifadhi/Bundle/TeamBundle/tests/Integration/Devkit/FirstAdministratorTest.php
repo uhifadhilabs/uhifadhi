@@ -40,7 +40,7 @@ use Uhifadhi\Bundle\TeamBundle\Tests\Integration\IntegrationTestCase;
 #[CoversClass(TeamCommandProvider::class)]
 final class FirstAdministratorTest extends IntegrationTestCase
 {
-    public function testTheBundleOffersTheCommandThroughTheDevkitSeam(): void
+    public function testTheBundleOffersTheCommandThroughTheDevkitContracts(): void
     {
         self::assertContains('team:user:create', $this->collector()->names());
     }

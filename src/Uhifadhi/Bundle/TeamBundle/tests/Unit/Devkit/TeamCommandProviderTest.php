@@ -51,7 +51,7 @@ final class TeamCommandProviderTest extends TestCase
         }
     }
 
-    /** The seam it is collected through, and the only one. */
+    /** The contract it is collected through, and the only one. */
     public function testItIsACommandProvider(): void
     {
         self::assertInstanceOf(CommandProviderInterface::class, self::undressed());

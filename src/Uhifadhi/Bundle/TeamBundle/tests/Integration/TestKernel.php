@@ -262,9 +262,9 @@ final class TestKernel extends Kernel
         $container->services()->alias('test_public.hasher', 'security.user_password_hasher')->public();
 
         // DEVKIT, STANDING IN. devkit installs through require-dev and is no
-        // dependency of the core, so the collecting half of the seam is a
-        // fixture here: the same tagged iterator devkit builds, over the same
-        // tag string this bundle writes by hand.
+        // dependency of the core, so the half of the devkit contracts that
+        // COLLECTS is a fixture here: the same tagged iterator devkit builds,
+        // over the same tag string this bundle writes by hand.
         $container->services()
             ->set('test_public.devkit_commands', DevkitCommandCollector::class)
             ->args([new TaggedIteratorArgument('uhifadhi.devkit.command_provider')])

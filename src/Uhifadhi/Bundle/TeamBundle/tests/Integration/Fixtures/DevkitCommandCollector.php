@@ -17,7 +17,8 @@ use Uhifadhi\Contracts\Devkit\CommandDescriptor;
 use Uhifadhi\Contracts\Devkit\CommandProviderInterface;
 
 /**
- * DEVKIT, STANDING IN — the half of the seam that is not this bundle's.
+ * DEVKIT, STANDING IN — the half of the devkit contracts that is not this
+ * bundle's.
  *
  * devkit installs through `require-dev` and is not a dependency of the core, so
  * nothing here can boot the real collector. What the real one does is exactly
