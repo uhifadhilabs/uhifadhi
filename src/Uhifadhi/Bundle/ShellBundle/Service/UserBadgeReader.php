@@ -25,7 +25,7 @@ use Uhifadhi\Contracts\Shell\UserBadgeSourceInterface;
  * a renderer with opinions about the account model would be the second place in
  * the platform where "who is signed in" is interpreted.
  *
- * The source is OPTIONAL, which is the ring gate written into the reader: a
+ * The source is OPTIONAL, which is the stand-alone rule written into the reader: a
  * fresh installation declares none, and a page then draws a top bar with no card
  * rather than a container that will not compile.
  *

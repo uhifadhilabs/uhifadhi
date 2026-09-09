@@ -96,7 +96,7 @@ final class ShellRuntime implements RuntimeExtensionInterface
     /**
      * The wordmark and where the tile links.
      *
-     * ROUTE-TOLERANT, and this is the ring gate's lesson written into the
+     * ROUTE-TOLERANT, and this is the stand-alone rule written into the
      * shell: a fresh installation has no home route yet, and a shell
      * that generated one unconditionally would 500 the very first page of every
      * new install. Home is then the site root, which is true and reachable.

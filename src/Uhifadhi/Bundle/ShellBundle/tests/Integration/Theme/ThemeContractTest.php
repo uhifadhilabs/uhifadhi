@@ -35,7 +35,7 @@ use Uhifadhi\Bundle\ShellBundle\Tests\Integration\ContractTestCase;
  * which are not colours) are named as such rather than left to be noticed.
  *
  * WHAT IS DELIBERATELY NOT HERE: the map chrome tokens (--z-ink, --z-paper,
- * --z-imagery, --z-aoi). They belong to AtlasBundle, which is the ring
+ * --z-imagery, --z-aoi). They belong to AtlasBundle, which is the bundle
  * that owns how a layer draws, and a legend palette that lived in the shell
  * would be a palette the map bundle could not change without a shell release.
  * See the map legend contract.

@@ -27,7 +27,7 @@ use Uhifadhi\Contracts\Shell\UserBadge;
 
 /**
  * TEAM'S ANSWER TO "WHO DOES THE TOP BAR NAME". Team owns the account, the
- * position and the tier, so it is the ring that folds them into the card the
+ * position and the tier, so it is the module that folds them into the card the
  * shell draws — a name, its derived initials, and a context line that is the
  * position for Staff and the tier label for everyone else.
  *

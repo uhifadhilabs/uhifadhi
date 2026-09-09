@@ -77,8 +77,8 @@ return static function (ContainerConfigurator $container): void {
      * know where the viewer is, is exactly the disagreement this bundle exists
      * to prevent.
      *
-     * nullOnInvalid() is the ring gate written into the container: a freshly
-     * installation declares no such source, and it must get pages with
+     * nullOnInvalid() is the stand-alone rule written into the container: a
+     * fresh installation declares no such source, and it must get pages with
      * no tab strip rather than a container that will not compile.
      */
     $services->set('shell.area_shell', AreaShell::class)
@@ -90,7 +90,7 @@ return static function (ContainerConfigurator $container): void {
      * area contract's reason: two things claiming to know who is signed in is the
      * disagreement this bundle exists to prevent.
      *
-     * nullOnInvalid() is the ring gate written into the container: a fresh
+     * nullOnInvalid() is the stand-alone rule written into the container: a fresh
      * installation declares no such source, and it must get a top bar with no
      * card rather than a container that will not compile.
      */

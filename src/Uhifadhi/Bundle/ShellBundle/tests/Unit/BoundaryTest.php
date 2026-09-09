@@ -41,7 +41,7 @@ use PHPUnit\Framework\TestCase;
  *     application imports it in one line, or does not, and owns the address
  *     either way. The area URL space, its permission gates and its entity
  *     resolution stay the host's.
- *  5. THE SHELL REQUIRES NO OTHER RING. Least obvious and most load-bearing:
+ *  5. THE SHELL REQUIRES NO OTHER BUNDLE. Least obvious and most load-bearing:
  *     see docs/boundaries.md on why the shell does not depend on the
  *     contract even though it draws the contract's answers.
  */
@@ -185,7 +185,7 @@ final class BoundaryTest extends TestCase
      * Those arrive through the tagged source interfaces in src/Contract, the
      * same way the sidebar's rows do, and the same way they will for whatever
      * page comes next. testTheShellOwnsNoData and
-     * testTheShellRequiresNoOtherRingOfTheTree are the other two faces of this
+     * testTheShellRequiresNoOtherBundle are the other two faces of this
      * rule; this one says it about the layer where it is easiest to break.
      */
     public function testItsControllersReadNothingButTheShellsOwnState(): void
@@ -221,7 +221,7 @@ final class BoundaryTest extends TestCase
      * moved here from the shell: an implementing module (team) keeps the shell
      * in require-dev.
      */
-    public function testTheShellRequiresNoOtherRingOfTheTree(): void
+    public function testTheShellRequiresNoOtherBundle(): void
     {
         // the contracts package is the one uhifadhi/* dependency allowed: it is a
         // package of pure interfaces and value objects with no runtime of its

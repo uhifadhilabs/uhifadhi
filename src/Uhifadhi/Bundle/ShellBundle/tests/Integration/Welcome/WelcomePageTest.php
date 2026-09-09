@@ -201,8 +201,8 @@ final class WelcomePageTest extends ShellKernelTestCase
 
     /**
      * It renders with no contracts implemented at all — no nav sources, no tabs, no
-     * place — because the installation it greets has none. This is the ring
-     * gate, asserted on the one page that is guaranteed to be looked at first.
+     * place — because the installation it greets has none. This is the
+     * stand-alone rule, asserted on the one page that is guaranteed to be looked at first.
      */
     public function testItRendersOnAnInstallationThatHasNothingUnderItYet(): void
     {

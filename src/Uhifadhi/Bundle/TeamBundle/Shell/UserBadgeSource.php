@@ -21,8 +21,8 @@ use Uhifadhi\Contracts\Shell\UserBadgeSourceInterface;
 /**
  * WHO THE TOP BAR NAMES — team's answer to the shell's user-badge contract.
  *
- * Team is the ring that owns the account, its position and its tier, so it is
- * the ring that can fold them into the card the shell draws. It reaches the
+ * Team is the module that owns the account, its position and its tier, so it is
+ * the module that can fold them into the card the shell draws. It reaches the
  * shell through {@see UserBadgeSourceInterface}, which lives in
  * the contracts precisely so this bundle can implement it depending only on
  * contracts — the shell stays in team's require-dev, never its require, exactly
@@ -33,7 +33,7 @@ use Uhifadhi\Contracts\Shell\UserBadgeSourceInterface;
  * "who is this on the page"; Super Admin and Admin hold their standing by tier,
  * not a position, so they get the tier's label. A Staff account with no position
  * yet, or a position with no name, falls through to the tier label rather than
- * an empty line — the same ring-gate instinct the whole contract layer keeps.
+ * an empty line — the same stand-alone instinct the whole contract layer keeps.
  *
  * NO VIEWER, NO CARD. An anonymous request — the sign-in screen, a fresh
  * installation with nobody signed in — is not a {@see User}, and the source

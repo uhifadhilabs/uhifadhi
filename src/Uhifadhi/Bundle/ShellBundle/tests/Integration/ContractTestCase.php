@@ -107,8 +107,8 @@ abstract class ContractTestCase extends ShellKernelTestCase
      *
      * Note what this does NOT do: it never invents a user. There is no security
      * bundle under this kernel and no token storage in it, so `app.user` would
-     * throw if the shell touched it — which is exactly the guarantee the ring
-     * gate needs and the reason the shell's own furniture asks for no viewer.
+     * throw if the shell touched it — which is exactly the guarantee the
+     * stand-alone rule needs and the reason the shell's own furniture asks for no viewer.
      */
     private function seedTheHostsRequest(): void
     {

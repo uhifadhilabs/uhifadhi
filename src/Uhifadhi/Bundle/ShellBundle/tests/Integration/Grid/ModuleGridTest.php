@@ -59,7 +59,7 @@ use Uhifadhi\Bundle\ShellBundle\Tests\Integration\ContractTestCase;
  * never to read its domain data and never for its views. The
  * shell would be requiring the registry to read data, and the moment a contract
  * entity is in scope inside a template, somebody writes
- * `{% if module.slug == 'overview' %}` and the module-blindness both rings
+ * `{% if module.slug == 'overview' %}` and the module-blindness both bundles
  * promise is gone. A value object cannot be interrogated that way.
  */
 final class ModuleGridTest extends ContractTestCase

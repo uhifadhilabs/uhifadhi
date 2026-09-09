@@ -239,8 +239,8 @@ return static function (ContainerConfigurator $container): void {
     /*
      * WHO THE TOP BAR NAMES — team's answer to the shell's user-badge contract.
      *
-     * Team is the ring that owns the account, the position and the tier, so it
-     * is the ring that fills the card the shell draws. The interface lives
+     * Team is the module that owns the account, the position and the tier, so
+     * it is the module that fills the card the shell draws. The interface lives
      * in the contracts (a hard dependency of this bundle), NOT in the shell,
      * which is why this needs no interface_exists guard the way the nav row does
      * and why it is registered unconditionally: implementing the contract costs

@@ -169,8 +169,8 @@ final class ShellBundle extends AbstractBundle
      *
      * Four icons — the sidebar's collapse chevron, the tree's caret, the theme
      * toggle and the catalogue's lens marker — shipped with the bundle and
-     * resolved from disk. This is the ring gate's lesson in the container: a
-     * fresh installation has configured no icon set, and a shell
+     * resolved from disk. This is the stand-alone rule in the container: a fresh
+     * installation has configured no icon set, and a shell
      * whose own chrome needed a network round trip to draw itself would not be
      * a shell that works out of the box.
      *

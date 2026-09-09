@@ -20,7 +20,7 @@ use Uhifadhi\Contracts\Shell\UserBadgeSourceInterface;
 
 /**
  * THE READER, ON ITS OWN. The integration side proves the frame draws the card;
- * this proves the ring gate — a shell with no source registered is a working
+ * this proves the stand-alone rule — a shell with no source registered is a working
  * shell, not a broken one.
  */
 final class UserBadgeReaderTest extends TestCase

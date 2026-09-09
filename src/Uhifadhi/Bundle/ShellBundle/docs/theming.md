@@ -130,7 +130,7 @@ Three consequences worth naming:
   Every installation has the shell, so the shell is where the platform's asset
   pipeline is declared; a module that adds controllers later requires the same
   packages and composer resolves one copy. This is the one place the "requires no
-  other ring" ruling does not reach: those are Symfony's rings, not uhifadhi's.
+  other uhifadhi package" ruling does not reach: they are Symfony's, not uhifadhi's.
 - **The document renders `importmap('app')`** as the default content of the
   `importmap` socket. A document whose furniture needs Stimulus and which never
   emits an importmap ships controls that cannot work.
