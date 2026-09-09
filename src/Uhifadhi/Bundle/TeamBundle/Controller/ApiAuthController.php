@@ -16,6 +16,7 @@ namespace Uhifadhi\Bundle\TeamBundle\Controller;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Service\ApiTokenManager;
@@ -52,6 +53,8 @@ final class ApiAuthController
         private readonly FieldSignIn $signIn,
         private readonly ApiTokenManager $tokens,
         private readonly PermissionCatalogue $permissions,
+        private readonly RateLimiterFactoryInterface $perIdentifier,
+        private readonly RateLimiterFactoryInterface $perAddress,
     ) {
     }
 
@@ -67,6 +70,18 @@ final class ApiAuthController
         $passcode = self::text($payload, 'passcode');
         if ('' === $identifier || '' === $passcode) {
             return self::problem(Response::HTTP_UNPROCESSABLE_ENTITY, 'invalid_payload', 'A service number and a passcode are both required.');
+        }
+
+        if (!$this->withinBudget($identifier, $request)) {
+            return self::problem(
+                Response::HTTP_TOO_MANY_REQUESTS,
+                'rate_limited',
+                'Too many sign-in attempts — wait a minute and try again.',
+                // THE ONE REFUSAL WORTH REPEATING. Everything else this
+                // endpoint refuses needs a person to act; this one only needs
+                // time, so a client may queue the request and try again.
+                retryable: true,
+            );
         }
 
         $user = $this->signIn->authenticate($identifier, $passcode);
@@ -117,14 +132,41 @@ final class ApiAuthController
      * help. `details` is an object even when empty, so a client's parser meets
      * one shape.
      */
-    private static function problem(int $status, string $code, string $message): JsonResponse
+    private static function problem(int $status, string $code, string $message, bool $retryable = false): JsonResponse
     {
         return new JsonResponse([
             'code' => $code,
             'message' => $message,
-            'retryable' => false,
+            'retryable' => $retryable,
             'details' => new \stdClass(),
         ], $status);
+    }
+
+    /**
+     * TWO BUDGETS, AND THE PAIR IS THE POINT. Per-identifier stops a targeted
+     * guess against one person's account; per-address stops a spray across
+     * many, which the first would never see because each account is only tried
+     * a few times. Either alone leaves the other attack untouched.
+     *
+     * COUNTED BEFORE THE CREDENTIAL IS WEIGHED, so a valid credential replayed
+     * in a storm is throttled like any other traffic — and so a caller learns
+     * nothing about whether an identifier exists from how it was refused.
+     *
+     * BOTH ARE CONSUMED, never short-circuited: `&&` would leave the second
+     * budget untouched whenever the first was already spent, and an attacker
+     * would get the address budget back for free.
+     *
+     * The web form's twin of this is `login_throttling`, which the firewall
+     * does; this door has no firewall, which is why it counts for itself.
+     *
+     * @see https://symfony.com/doc/current/rate_limiter.html
+     */
+    private function withinBudget(string $identifier, Request $request): bool
+    {
+        $identifierAccepted = $this->perIdentifier->create(mb_strtolower($identifier))->consume()->isAccepted();
+        $addressAccepted = $this->perAddress->create($request->getClientIp() ?? 'unknown')->consume()->isAccepted();
+
+        return $identifierAccepted && $addressAccepted;
     }
 
     /**

@@ -55,6 +55,22 @@ skeleton — and this bundle gives that file the three things it needs to name:
 the provider entity above, `team.user_checker`, and the routes the sign-in form
 posts to (`team_login`, `team_logout`).
 
+**Throttling the form is that file's too.** Five attempts a minute blunts the
+credential-stuffing surface, and it is one line on the firewall the form lives
+on:
+
+```yaml
+# config/packages/security.yaml (your application)
+security:
+    firewalls:
+        main:
+            form_login: { login_path: team_login, check_path: team_login, enable_csrf: true }
+            login_throttling: { max_attempts: 5 }
+```
+
+The field endpoint is throttled differently, because it has no firewall to do it
+— see [Signing a field client in](#signing-a-field-client-in).
+
 Enforcement of a granular permission is not an access rule either: a permission
 answers "may this person do X *here*", which a path pattern cannot express. It
 is decided against the person the current token names, per action and per area.
@@ -180,6 +196,27 @@ empty — an empty array is a refusal, and a *missing* field would read as
 No such person, the wrong passcode and a deactivated account answer identically:
 telling them apart would turn the one endpoint reachable without a credential
 into a directory of who works here.
+
+### It is throttled, and it throttles itself
+
+Having no firewall means nothing upstream counts attempts for it, so it counts
+for itself: **five a minute per identifier and twenty a minute per address**,
+spent before the credential is weighed — so a valid credential replayed in a
+storm is throttled like any other traffic. Two budgets rather than one, because
+per-identifier stops a targeted guess against one account and per-address stops
+a spray across many, and either alone leaves the other attack untouched.
+
+```jsonc
+// 429 — the one refusal worth repeating, because only time fixes it
+{ "code": "rate_limited", "message": "…", "retryable": true, "details": {} }
+```
+
+The bundle **prepends** the two limiters, so an installation writes no
+rate-limiter configuration; a deployment that wants other numbers names them in
+its own `framework.yaml` and its answer wins, with nothing to switch off first.
+
+The web form's twin of this is `login_throttling`, which the firewall does —
+see below.
 
 Signing in again on the same handset **rotates** that handset's row rather than
 adding another, so a wipe leaves no trail of live credentials. A different

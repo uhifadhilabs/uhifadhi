@@ -146,6 +146,17 @@ final class TestKernel extends Kernel
                         'enable_csrf' => true,
                         'default_target_path' => '/',
                     ],
+                    /*
+                     * BLUNTING THE CREDENTIAL-STUFFING SURFACE — five attempts
+                     * a minute per address and identifier, counted by the
+                     * FIREWALL rather than by anything this bundle wrote. It is
+                     * the installation's security file that carries this line;
+                     * it is written here so the behaviour is proved against the
+                     * shape an installation actually has.
+                     *
+                     * @see https://symfony.com/doc/current/security.html#limiting-login-attempts
+                     */
+                    'login_throttling' => ['max_attempts' => 5],
                     'logout' => [
                         'path' => 'team_logout',
                         'target' => 'team_login',
@@ -241,6 +252,10 @@ final class TestKernel extends Kernel
         $container->services()->set(ShellPageController::class)
             ->args([new Reference('twig')])
             ->public();
+
+        // WHERE THE LIMITERS COUNT. A suite that has to start with a full
+        // budget needs the pool the limiters actually write to, not a copy.
+        $container->services()->alias('test_public.rate_limiter_pool', 'cache.rate_limiter')->public();
 
         // The framework's own hasher, made reachable: a suite proving a stored
         // password verifies has to use the same service the firewall does.

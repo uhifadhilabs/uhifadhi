@@ -15,6 +15,7 @@ namespace Uhifadhi\Bundle\TeamBundle\Tests\Functional;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
+use Psr\Cache\CacheItemPoolInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
@@ -61,6 +62,20 @@ abstract class WebTestCaseWithSchema extends WebTestCase
         $metadata = $this->em->getMetadataFactory()->getAllMetadata();
         $tool->dropSchema($metadata);
         $tool->createSchema($metadata);
+
+        // EVERY TEST STARTS WITH A FULL RATE-LIMIT BUDGET. The limiters count
+        // into a FILESYSTEM pool, as a deployment's do, so a window outlives
+        // the process that opened it: two runs inside one minute would share
+        // one budget and the second would fail for reasons that have nothing to
+        // do with the code under test — every request here comes from the same
+        // address, and the address budget is twenty a minute. The pool is
+        // CLEARED rather than swapped for an in-memory one, because the
+        // throttling suite needs a count that survives the kernel reboot
+        // between its own requests; an in-memory store would be wiped by each
+        // and the sixth attempt would never be throttled at all.
+        $pool = static::getContainer()->get('test_public.rate_limiter_pool');
+        \assert($pool instanceof CacheItemPoolInterface);
+        $pool->clear();
     }
 
     protected function tearDown(): void

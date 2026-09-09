@@ -171,7 +171,16 @@ return static function (ContainerConfigurator $container): void {
      * the endpoint checks the credentials itself.
      */
     $services->set('team.controller.api_auth', ApiAuthController::class)
-        ->args([service('team.field_sign_in'), service('team.api_token.manager'), service('team.permissions')])
+        ->args([
+            service('team.field_sign_in'),
+            service('team.api_token.manager'),
+            service('team.permissions'),
+            // The two budgets the endpoint spends before it weighs a
+            // credential. The ids are the framework's own naming of the
+            // limiters this bundle prepends — see TeamBundle::prependExtension.
+            service('limiter.team_token_id'),
+            service('limiter.team_token_ip'),
+        ])
         ->tag('controller.service_arguments');
     $services->alias(ApiAuthController::class, 'team.controller.api_auth')->public();
 

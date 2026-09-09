@@ -18,6 +18,7 @@ use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Uhifadhi\Bundle\TeamBundle\DependencyInjection\TeamConfiguration;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Contracts\Entity\UserInterface as ContractUserInterface;
@@ -161,6 +162,33 @@ final class TeamBundle extends AbstractBundle
                     'resolve_target_entities' => [
                         ContractUserInterface::class => User::class,
                     ],
+                ],
+            ], prepend: true);
+        }
+
+        /*
+         * THE TWO BUDGETS THE FIELD DOOR SPENDS, so an installation writes no
+         * rate-limiter configuration at all.
+         *
+         * PREPENDED, which makes them a DEFAULT rather than a decree: an
+         * installation that wants other numbers writes them in its own
+         * framework.yaml and its answer wins, with nothing to switch off first.
+         * Guarded on the extension because a bundle may not assume the
+         * framework's configuration exists in whatever kernel it was put in.
+         *
+         * FIXED WINDOW, not sliding: what an operator is told is "wait a
+         * minute", and a fixed window is the policy that makes that sentence
+         * true. Five per identifier is a targeted guess stopped; twenty per
+         * address is a spray stopped, and both are far above what a person
+         * mistyping a passcode ever reaches.
+         *
+         * @see https://symfony.com/doc/current/rate_limiter.html
+         */
+        if ($builder->hasExtension('framework') && interface_exists(RateLimiterFactoryInterface::class)) {
+            $container->extension('framework', [
+                'rate_limiter' => [
+                    'team_token_id' => ['policy' => 'fixed_window', 'limit' => 5, 'interval' => '1 minute'],
+                    'team_token_ip' => ['policy' => 'fixed_window', 'limit' => 20, 'interval' => '1 minute'],
                 ],
             ], prepend: true);
         }
