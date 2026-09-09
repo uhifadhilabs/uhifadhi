@@ -20,13 +20,13 @@ use Twig\TwigFunction;
  * Declares the shell's Twig functions. Nothing more — every one of them is
  * built by {@see ShellRuntime}.
  *
- * THE SPLIT IS NOT DECORATION, and the host learned it the hard way. Twig
- * constructs every EXTENSION as soon as the `twig` service is built, and an
- * image build does exactly that: asset compilation fires an event, UX Icons
- * warms its cache off it, and the icon finder needs Twig. A build stage has no
- * database and no request, so an extension holding anything that reads either
- * kills the BUILD rather than a page. A runtime is constructed lazily, on the
- * first call — which is a render, which is a request.
+ * THE SPLIT IS NOT DECORATION. Twig constructs every EXTENSION as soon as the
+ * `twig` service is built, and an image build does exactly that: asset
+ * compilation fires an event, UX Icons warms its cache off it, and the icon
+ * finder needs Twig. A build stage has no database and no request, so an
+ * extension holding anything that reads either kills the BUILD rather than a
+ * page. A runtime is constructed lazily, on the first call — which is a render,
+ * which is a request.
  */
 final class ShellExtension extends AbstractExtension
 {

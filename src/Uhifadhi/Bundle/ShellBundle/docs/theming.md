@@ -33,9 +33,9 @@ design workspace's replicas open with the same reset, so every number a design
 hands a module is a border box — a 78px calendar cell is 78px *including* its
 padding and its rule. Port that faithfully into a frame that reset nothing and
 the cell comes out 108px: correct in the replica, wrong in the product, and
-wrong by a different amount in every rule. Two shipped bugs came from exactly
-that — a position rail that hung 24px out of the column it lived in, and a
-sign-in card floating on 52px of scroll that was not there.
+wrong by a different amount in every rule. Nothing reports it — it surfaces as a
+position rail hanging 24px out of the column it lives in, or a sign-in card
+floating on 52px of scroll that is not there.
 
 **What a module need not write:** `box-sizing: border-box` on its own rules.
 The platform reset already guarantees it, so a module's own copy carries no

@@ -29,9 +29,8 @@ use Uhifadhi\Bundle\ShellBundle\Tests\Integration\ContractTestCase;
  * platform whose frame shipped no reset, gets a box that is correct in the
  * replica and too big in the product, by exactly its padding and border. That
  * is not a bug a module can be careful about: it is a bug the fleet inherits
- * once, per rule, silently, and it has already been paid for twice — the team
- * rail that hung 24px out of its own column, and a sign-in card sitting on 52px
- * of phantom scroll.
+ * once, per rule, silently — a team rail hanging 24px out of its own column, a
+ * sign-in card sitting on 52px of phantom scroll.
  *
  * SO IT MOVES INTO THE FRAME. Not into every module's sheet: a rule nine sheets
  * restate is a rule with nine chances to be forgotten, which is the same

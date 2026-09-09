@@ -994,8 +994,7 @@ page extend `layout.html.twig` directly:
 That way your stylesheet loads only where your module renders, and the host's stylesheet never
 mentions you.
 
-A rule the platform learned the hard way, worth inheriting: **the host's stylesheet is loaded on
-your pages too.** A bare one-word class in either sheet (`.who`, `.day`, `.feed`) will eventually
+A rule worth inheriting: **the host's stylesheet is loaded on your pages too.** A bare one-word class in either sheet (`.who`, `.day`, `.feed`) will eventually
 collide across the repository boundary and the cascade decides who wins by load order. Qualify your
 selectors with an element or a prefix, and never write a second copy of a vocabulary the host
 already defines — two copies loaded in either order render differently, which is exactly what the

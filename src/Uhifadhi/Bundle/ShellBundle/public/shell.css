@@ -39,10 +39,9 @@
    design hands a module is a BORDER box: a 78px calendar cell is 78px including
    its padding and its rule. Port that faithfully into a platform whose frame
    reset nothing and the cell comes out 108px — correct in the replica, wrong in
-   the product, and wrong by an amount that differs per rule. The fleet paid for
-   that twice before this line existed: a position rail that hung 24px out of
-   the column it lived in, and a sign-in card floating on 52px of scroll that
-   was not there.
+   the product, and wrong by an amount that differs per rule. Nothing reports it:
+   it surfaces as a position rail hanging 24px out of the column it lives in, or
+   a sign-in card floating on 52px of scroll that is not there.
 
    ONE PLACE, BECAUSE NINE PLACES IS NINE CHANCES TO FORGET. A module may still
    write `box-sizing: border-box` on a rule where it wants the assumption said
