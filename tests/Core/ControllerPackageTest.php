@@ -49,6 +49,52 @@ final class ControllerPackageTest extends TestCase
     }
 
     /**
+     * AND THE MANIFEST IS READ, which is a second thing and a separate keyword.
+     *
+     * On install it is Flex, not StimulusBundle, that copies a package's
+     * controllers into the application's `assets/controllers.json`, and it opens
+     * `assets/package.json` only for a package whose composer manifest declares
+     * the keyword `symfony-ux`
+     * ({@see vendor/symfony/flex/src/PackageJsonSynchronizer.php} —
+     * `resolvePackageJson()` returns null before it looks at any directory, and
+     * `synchronizeForAssetMapper()` therefore registers nothing for it).
+     *
+     * The keyword lives on the package an installation INSTALLS. Every bundle
+     * here declares it already, and no installation has any of them: they are
+     * names this repository `replace`s, with no install path for Flex or anybody
+     * else to open. The root package is the one on disk, so the root manifest is
+     * the one whose keyword decides whether twelve controllers arrive or none —
+     * silently, with a green install either way.
+     */
+    public function testTheInstalledPackageIsMarkedAsAUxPackageOrFlexNeverOpensTheManifest(): void
+    {
+        $keywords = self::composer()['keywords'] ?? null;
+
+        self::assertIsArray($keywords);
+        self::assertContains(
+            'symfony-ux',
+            $keywords,
+            'Without it Flex skips assets/package.json and an installation gets no controllers at all.',
+        );
+    }
+
+    /**
+     * AND EACH BUNDLE THAT SHIPS CONTROLLERS KEEPS ITS OWN, because the day one
+     * of them is split out it is the installed package and the same sentence
+     * applies to it. A keyword dropped from a bundle costs nothing today, which
+     * is exactly why it would go unnoticed until the split.
+     */
+    public function testEveryBundleThatShipsControllersIsMarkedTooForTheDayItIsSplit(): void
+    {
+        foreach (self::BUNDLES as $bundle) {
+            $keywords = self::composer(self::ROOT.'/src/Uhifadhi/Bundle/'.$bundle)['keywords'] ?? null;
+
+            self::assertIsArray($keywords);
+            self::assertContains('symfony-ux', $keywords, $bundle.' ships controllers nothing would register once it is a package of its own.');
+        }
+    }
+
+    /**
      * EVERY CONTROLLER FILE IS LISTED, and the path is a real file. A `main`
      * that points at nothing throws only when an installation compiles its
      * asset map, which is somebody else's machine.
@@ -140,6 +186,22 @@ final class ControllerPackageTest extends TestCase
         }
 
         return $controllers;
+    }
+
+    /**
+     * A composer manifest, the root's unless another directory is named.
+     *
+     * @return array<mixed>
+     */
+    private static function composer(?string $directory = null): array
+    {
+        $path = ($directory ?? self::ROOT).'/composer.json';
+        self::assertFileExists($path);
+
+        $data = json_decode((string) file_get_contents($path), true, 512, \JSON_THROW_ON_ERROR);
+        self::assertIsArray($data);
+
+        return $data;
     }
 
     /** @return array<mixed> */
