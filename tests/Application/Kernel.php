@@ -76,6 +76,17 @@ final class Kernel extends BaseKernel
             'session' => ['storage_factory_id' => 'session.storage.factory.mock_file'],
         ]);
 
+        // WHAT A DEPLOYMENT SETS, AND WHY IT IS HERE. With on-demand fetching
+        // on, a name no file answers to is fetched from a remote API and
+        // cached, so a missing glyph stays invisible until the deployment that
+        // has no outbound network draws a blank square. An installation turns
+        // it off, and this application is an installation.
+        //
+        // @see https://symfony.com/bundles/ux-icons/current/index.html#icons-on-demand
+        $container->extension('ux_icons', [
+            'iconify' => ['on_demand' => false],
+        ]);
+
         $container->extension('doctrine', [
             'dbal' => ['url' => '%env(UHIFADHI_TEST_DATABASE_URL)%'],
             'orm' => ['controller_resolver' => ['auto_mapping' => false]],

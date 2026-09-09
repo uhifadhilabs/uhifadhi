@@ -165,18 +165,27 @@ final class ShellBundle extends AbstractBundle
     }
 
     /**
-     * THE SHELL'S OWN GLYPHS, registered under the `shell:` prefix.
+     * EVERY GLYPH THE CORE DRAWS, SHIPPED WITH IT AND RESOLVED FROM DISK.
      *
-     * Four icons — the sidebar's collapse chevron, the tree's caret, the theme
-     * toggle and the catalogue's lens marker — shipped with the bundle and
-     * resolved from disk. This is the stand-alone rule in the container: a fresh
-     * installation has configured no icon set, and a shell
-     * whose own chrome needed a network round trip to draw itself would not be
-     * a shell that works out of the box.
+     * A deployment turns ux-icons' on-demand fetching off, so a name no file
+     * answers to is a blank square rather than a round trip to a remote API.
+     * The core's own chrome may depend on neither: the sidebar's collapse
+     * chevron, the tree's caret, the theme toggle and the catalogue's lens
+     * marker are the shell's under `shell:`, and the drawn set every core
+     * screen shares is shipped under `lucide:` — imported with
+     * `ux:icons:import` and committed, which is what that command calls
+     * locking an icon.
      *
-     * It is a PREFIX OF ITS OWN, not an addition to the host's set: a bundle
-     * that quietly extended `lucide:` would be a bundle that decides what a
-     * host's icon names mean.
+     * THE SHARED SET IS THIS BUNDLE'S BECAUSE A PREFIX HAS EXACTLY ONE
+     * DIRECTORY. `ux_icons.icon_dir` is a single scalar and an icon set is one
+     * path per prefix, so `lucide:` cannot be answered from three bundles at
+     * once. The shell is the bundle the others already depend on, so the shared
+     * set lives here; anything needing a glyph outside it ships a prefix of its
+     * own, exactly as `shell:` is one.
+     *
+     * @see https://symfony.com/bundles/ux-icons/current/index.html#configuration
+     * @see https://symfony.com/bundles/ux-icons/current/index.html#importing-icons
+     * @see vendor/symfony/ux-icons/src/Registry/LocalSvgIconRegistry.php
      */
     public function prependExtension(ContainerConfigurator $container, ContainerBuilder $builder): void
     {
@@ -184,6 +193,7 @@ final class ShellBundle extends AbstractBundle
             $container->extension('ux_icons', [
                 'icon_sets' => [
                     'shell' => ['path' => __DIR__.'/assets/icons/shell'],
+                    'lucide' => ['path' => __DIR__.'/assets/icons/lucide'],
                 ],
             ]);
         }

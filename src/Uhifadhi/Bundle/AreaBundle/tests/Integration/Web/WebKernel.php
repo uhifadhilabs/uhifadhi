@@ -113,14 +113,17 @@ final class WebKernel extends Kernel
         ]);
 
         /*
-         * THE ICONS ARE LOCAL. An installation vendors its lucide set into
-         * assets/icons/; without a local set ux-icons tries to FETCH them from
-         * ux.symfony.com at render time, which is a network call in the middle
-         * of a page and fails closed. The two this bundle names are vendored
-         * beside this kernel so the suite proves the sidebar renders rather than
-         * proving the machine has internet.
+         * THE ICONS ARE LOCAL, and they come from the shell: `lucide:` is an
+         * icon SET the shell registers, and a set is answered only from its own
+         * directory. So this kernel keeps an empty icon directory of its own —
+         * an application always has one — and on-demand fetching is off, which
+         * is what makes the suite prove that the screens render rather than
+         * that the machine has internet.
          */
-        $container->extension('ux_icons', ['icon_dir' => __DIR__.'/icons']);
+        $container->extension('ux_icons', [
+            'icon_dir' => __DIR__.'/icons',
+            'iconify' => ['on_demand' => false],
+        ]);
 
         // STRICT: a template that reads a variable the controller did not pass
         // fails here rather than rendering a blank cell in an installation.
