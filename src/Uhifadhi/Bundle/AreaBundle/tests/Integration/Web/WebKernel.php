@@ -26,6 +26,7 @@ use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 use Symfony\UX\Icons\UXIconsBundle;
 use Uhifadhi\Bundle\AreaBundle\AreaBundle;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web\Fixtures\HostUser;
+use Uhifadhi\Bundle\AtlasBundle\AtlasBundle;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
 use Uhifadhi\Bundle\ShellBundle\ShellBundle;
 use Uhifadhi\Contracts\Entity\UserInterface;
@@ -82,6 +83,10 @@ final class WebKernel extends Kernel
         // requirement of the shell, so an installation that has the shell has it.
         yield new UXIconsBundle();
         yield new ShellBundle();
+        // The atlas: these pages link its Leaflet build and its map sheet by
+        // the constants it publishes, so an installation that draws an area's
+        // boundary has it and so does this kernel.
+        yield new AtlasBundle();
         yield new AreaBundle();
     }
 
