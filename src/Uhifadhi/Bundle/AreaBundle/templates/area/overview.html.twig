@@ -69,7 +69,7 @@
         {# THE RIGHT-NOW STRIP. Every tile is a module's; the host lays them out
            and orders them and counts nothing itself. #}
         {% if nowTiles is not empty %}
-            <div class="grid w-flush dp-kstrip">
+            <div class="grid dp-kstrip">
                 {% for tile in nowTiles %}
                     <div class="c kpi{{ tile.tone == 'hot' ? ' hot' : '' }}{{ tile.tone == 'bad' ? ' bad' : '' }}">
                         <span class="tab">{{ tile.label }}{% if tile.live %}<span class="src">&middot; <span class="ao-live"><i></i></span></span>{% endif %}</span>
@@ -83,7 +83,7 @@
         {# NEEDS ATTENTION — sorted by urgency, never by module. #}
         <div class="c">
             <span class="tab">Needs attention<span class="src">&middot; {{ attention|length }} item{{ attention|length == 1 ? '' : 's' }} &middot; every installed module</span></span>
-            <span class="ao-by host"><i></i>host &middot; module items</span>
+            <span class="ao-by"><i></i>host &middot; module items</span>
             <div class="use" style="margin:0 2px 8px">Sorted by urgency, not by module. An item leaves this list when
                 the thing that raised it is dealt with &mdash; nobody dismisses one by hand, because the host did not raise it.</div>
 

@@ -164,21 +164,6 @@
 .reg-meta { font-size: 9px; color: rgb(var(--c-dim)); margin-top: 2px; }
 .reg-open { text-align: right; white-space: nowrap; }
 
-.open-btn {
-    display: inline-block;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: .06em;
-    color: rgb(var(--c-acc));
-    text-decoration: none;
-    border: 1px solid var(--c-ln2);
-    border-radius: 7px;
-    padding: 5px 10px;
-}
-
-.open-btn:hover { border-color: rgb(var(--c-acc)); }
-
 /* ── The identity band ────────────────────────────────────────────────────── */
 .factband {
     display: flex;
@@ -223,7 +208,10 @@
 @media (max-width: 900px) { .factband .f + .f::before { display: none; } }
 
 /* ── The right-now strip ──────────────────────────────────────────────────── */
-.dp-kstrip { display: grid; grid-template-columns: repeat(auto-fit, minmax(168px, 1fr)); gap: 20px; }
+/* The KPI strip is a `.grid`, and the shell's grid carries the card-gap rhythm
+   as its own margin-bottom. Here the strip is the first band of a stack that
+   sets its own spacing, so it gives that margin back. */
+.dp-kstrip { display: grid; grid-template-columns: repeat(auto-fit, minmax(168px, 1fr)); gap: 20px; margin-bottom: 0; }
 
 .c.kpi { display: flex; flex-direction: column; gap: 0; }
 .c.kpi .disp { font-family: var(--font-display); font-size: 30px; font-weight: 700; letter-spacing: -.035em; line-height: 1; font-variant-numeric: tabular-nums; }
@@ -332,9 +320,6 @@
     flex: none;
 }
 
-/* ── The footnote and the labelled line ───────────────────────────────────── */
-.use { font-size: 12.5px; color: rgb(var(--c-fog)); line-height: 1.55; margin: 10px 2px 4px; }
-
 /* rln metrics match the design (uhifadhi.css); the app draws these as
    standalone labelled lines, so it keeps a top rule rather than the design's
    in-list bottom rule (which would erase the divider on a lone/last row). */
@@ -375,24 +360,6 @@
 .zeb .d { color: rgb(var(--c-dim)); }
 
 /* ── The create screen: a name, and a plate to drop a boundary on ──────────── */
-
-/* THE FIELD, UNSCOPED. The register's search box was the only text input this
-   module had, so `.fld` was written under `.reg-bar`; the create form needs the
-   same field outside it. The rules are lifted here and the register's copy now
-   only holds what is peculiar to a toolbar — its width. */
-.fld {
-    background: rgb(var(--c-cv));
-    border: 1px solid var(--c-ln2);
-    border-radius: 10px;
-    padding: 10px 13px;
-    font-family: inherit;
-    font-size: 12px;
-    color: rgb(var(--c-tx));
-    width: 100%;
-}
-
-.fld::placeholder { color: rgb(var(--c-dim)); }
-.fld:focus { outline: none; border-color: rgb(var(--c-acc)); }
 
 /* A LABEL, NOT A DIV. The plate wraps a real file input, so a click opens the
    picker and a keyboard reaches it — no JavaScript is load-bearing here. */
@@ -655,38 +622,22 @@
 .mtile-add .t { display: flex; align-items: center; gap: 8px; }
 .mtile-add .d { font-weight: 400; font-size: 11.5px; color: rgb(var(--c-fog)); }
 
-/* THE EMPTY-STATE PLATE STANDS IN FOR A GRID. When an area has no modules the
-   shell draws its "no modules here yet" plate where a `.grid` would be, and the
-   add tile follows straight below it. A `.grid` carries the fleet's 20px
-   card-gap rhythm as its own margin-bottom (shell.css `.grid`); the empty plate
-   is a bare `.c` and carries none, so the two cards touch. Give it that same
-   rhythm so the gap matches every other stacked card on the page. */
-.shell-empty { margin-bottom: 20px; }
+/* THE PIN: one module in the compact reading of the active set, above the
+   detailed rows. The pill itself is the shell's mini chip and is worn, not
+   restated — `class="mchip a-pin"` — because a chip defined twice renders
+   differently depending on which sheet the page linked last. What is this
+   surface's alone is what makes the pill a PIN: it can be dragged into a new
+   order, it can be pinned so it cannot move, and it carries the control that
+   parks its module. */
+.a-pin-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 22px; }
 
-/* The pills: the compact reading of the active set, above the detailed rows. */
-.mchip-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 22px; }
-
-.mchip {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    padding: 5px 10px;
-    border: 1px solid var(--c-ln2);
-    border-radius: 99px;
-    color: rgb(var(--c-tx));
-    background: rgb(var(--c-cv));
-}
-
-.mchip:hover { border-color: rgb(var(--c-fog)); }
-.mchip.pinned { opacity: .75; background: rgb(var(--c-raised)); }
-.mchip.dragging { opacity: .5; border-style: dashed; border-color: rgb(var(--c-acc)); }
-.mchip .grip { display: inline-flex; cursor: grab; color: rgb(var(--c-fog)); }
-.mchip .grip svg { display: block; height: 12px; width: auto; }
-.mchip .pinlabel { font-size: 8px; opacity: .7; letter-spacing: .08em; }
-.mchip form { display: inline-flex; }
-.mchip .rm { border: 0; background: none; cursor: pointer; padding: 0 0 0 2px; font-family: inherit; color: inherit; }
+.a-pin.pinned { opacity: .75; background: rgb(var(--c-raised)); }
+.a-pin.dragging { opacity: .5; border-style: dashed; border-color: rgb(var(--c-acc)); }
+.a-pin .grip { display: inline-flex; cursor: grab; color: rgb(var(--c-fog)); }
+.a-pin .grip svg { display: block; height: 12px; width: auto; }
+.a-pin .pinlabel { font-size: 8px; opacity: .7; letter-spacing: .08em; }
+.a-pin form { display: inline-flex; }
+.a-pin .rm { border: 0; background: none; cursor: pointer; padding: 0 0 0 2px; font-family: inherit; color: inherit; }
 
 .mod-banner { border-left: 3px solid rgb(var(--c-acc)); padding: 14px 18px; margin-bottom: 20px; }
 .mod-banner .t { font-size: 13.5px; font-weight: 600; }
@@ -838,26 +789,6 @@
    toned ground; the static satellite raster the design also asks for is deferred
    (see src/Service/AreaThumbnailer.php), so the ground is a tokenised gradient
    rather than live imagery. */
-
-/* The Widget-library adopt-control — the outlined secondary beside the New area
-   CTA, the same control in the same place as every widget surface. */
-.tgl {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    font-size: 12px;
-    font-weight: 700;
-    text-decoration: none;
-    color: rgb(var(--c-dim));
-    border: 1px solid var(--c-ln2);
-    border-radius: 9px;
-    padding: 6px 13px;
-}
-.tgl:hover { color: rgb(var(--c-tx)); border-color: rgb(var(--c-fog)); }
-.tgl svg { width: 15px; height: 15px; }
-/* The New area CTA carries an icon here, so it lines its glyph up with its text. */
-.cta { display: inline-flex; align-items: center; gap: 7px; }
-.cta svg { width: 15px; height: 15px; }
 
 .ax-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px; }
 

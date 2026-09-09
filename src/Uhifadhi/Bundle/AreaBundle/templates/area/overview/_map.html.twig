@@ -26,7 +26,7 @@
          data-controller="uhifadhi--area-bundle--area-map"
          data-uhifadhi--area-bundle--area-map-payload-value="{{ mapPayload|merge({layers: mapLayers})|json_encode }}">
         <span class="tab">Where<span class="src">&middot; the area &amp; its zones</span></span>
-        <span class="ao-by host"><i></i>host plate &middot; module layers</span>
+        <span class="ao-by"><i></i>host plate &middot; module layers</span>
 
         <div class="viewer">
             <div class="map-canvas"
@@ -41,7 +41,7 @@
            installed module that draws a layer adds its own group beneath it. #}
         <div class="ao-legend">
             <div class="grp">
-                <b><i class="host"></i>The area</b>
+                <b><i></i>The area</b>
                 <a class="lay" href="#"
                    data-action="uhifadhi--area-bundle--area-map#toggleLayer"
                    data-uhifadhi--area-bundle--area-map-layer-param="area.boundary">
@@ -73,7 +73,7 @@
     {# NO BOUNDARY IS A STATE, NOT A BROKEN MAP. #}
     <div class="c" data-w="map">
         <span class="tab">Where<span class="src">&middot; the area &amp; its zones</span></span>
-        <span class="ao-by host"><i></i>host plate &middot; module layers</span>
+        <span class="ao-by"><i></i>host plate &middot; module layers</span>
         <div class="ao-slot" style="margin-top:8px">
             <div class="ao-slotrow">
                 <span class="nm">The map</span>

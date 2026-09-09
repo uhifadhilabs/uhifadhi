@@ -74,12 +74,12 @@
          data-uhifadhi--area-bundle--module-order-url-value="{{ path('area_module_reorder', {uuid: area.uuidString}) }}"
          data-uhifadhi--area-bundle--module-order-token-value="{{ token }}">
 
-        <div class="mchip-bar" data-uhifadhi--area-bundle--module-order-target="list">
+        <div class="a-pin-bar" data-uhifadhi--area-bundle--module-order-target="list">
             {% for row in active %}
                 {% if row.pinned %}
-                    <span class="mchip pinned">{{ row.name }}<span class="mono pinlabel">pinned</span></span>
+                    <span class="mchip a-pin pinned">{{ row.name }}<span class="mono pinlabel">pinned</span></span>
                 {% else %}
-                    <span class="mchip" data-uhifadhi--area-bundle--module-order-target="row" data-slug="{{ row.slug }}">
+                    <span class="mchip a-pin" data-uhifadhi--area-bundle--module-order-target="row" data-slug="{{ row.slug }}">
                         <span class="grip" data-uhifadhi--area-bundle--module-order-target="handle" title="drag to reorder">{{ ux_icon('lucide:grip-vertical') }}</span>{{ row.name }}
                         {{ shop.park(area, row, token, '&times;', 'remove module', 'rm') }}
                     </span>
