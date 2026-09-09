@@ -7,6 +7,11 @@ and one tag on this repository is the platform version.
 The core arrives whole and is never picked apart. What a deployment can *do* —
 patrols, incidents, rosters — arrives as **modules**, each its own package.
 
+New to uhifadhi? Start with [uhifadhi/skeleton](https://github.com/uhifadhilabs/skeleton),
+which says what the platform is and how an installation is created. This
+repository is the core that installation runs on, written for the developer who
+updates it or builds a module against it.
+
 ## Contents
 
 - [What the core is](#what-the-core-is)
