@@ -38,9 +38,11 @@ use Uhifadhi\Bundle\TeamBundle\Security\ApiTokenAuthenticator;
 use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
 use Uhifadhi\Bundle\TeamBundle\Security\PermissionVoter;
 use Uhifadhi\Bundle\TeamBundle\Service\ApiTokenManager;
+use Uhifadhi\Bundle\TeamBundle\Service\DepartmentService;
 use Uhifadhi\Bundle\TeamBundle\Service\FieldSignIn;
 use Uhifadhi\Bundle\TeamBundle\Service\Mail;
 use Uhifadhi\Bundle\TeamBundle\Service\PermissionCatalogue;
+use Uhifadhi\Bundle\TeamBundle\Service\PositionService;
 use Uhifadhi\Bundle\TeamBundle\Service\SuperAdminInvariant;
 use Uhifadhi\Bundle\TeamBundle\Service\TeamOverview;
 use Uhifadhi\Bundle\TeamBundle\Service\UserService;
@@ -78,6 +80,8 @@ use Uhifadhi\Bundle\TeamBundle\Widget\TeamWidgets;
  *   team.permission_voter       who holds which of them
  *   team.super_admin_invariant  the refusal that keeps one active Super Admin
  *   team.accounts               every way an account comes into being or changes
+ *   team.positions              what a position is, and what it grants
+ *   team.departments            the org chart's shape, and its audited scope changes
  *   team.user_checker           the sign-in refusal for a deactivated account
  *   team.overview               the roster's counts and its attention rows
  *   team.widget_surface.*       the roster and the matrix, as dashboard surfaces
@@ -357,6 +361,24 @@ return static function (ContainerConfigurator $container): void {
         ]);
 
     /*
+     * WHAT A POSITION IS AND WHAT IT GRANTS. The catalogue is a collaborator
+     * rather than an argument, because what may be granted is a fact about the
+     * installation's installed modules and not about the screen that is asking.
+     */
+    $services->set('team.positions', PositionService::class)
+        ->args([
+            service('doctrine.orm.entity_manager'),
+            service('team.permissions'),
+        ]);
+
+    /*
+     * THE ORG CHART'S SHAPE. The audit line a scope change leaves is the
+     * entity's own doing; this supplies who and why, and stores the result.
+     */
+    $services->set('team.departments', DepartmentService::class)
+        ->args([service('doctrine.orm.entity_manager')]);
+
+    /*
      * The sign-in refusal for a deactivated account. NOT tagged: a user checker
      * is named by the FIREWALL (`user_checker:`), which is the installation's
      * file — so the service is registered and public here, and the README's
@@ -462,7 +484,7 @@ return static function (ContainerConfigurator $container): void {
             service(DepartmentRepository::class),
             service(UserRepository::class),
             service('team.permissions'),
-            service('doctrine.orm.entity_manager'),
+            service('team.positions'),
             service('security.csrf.token_manager'),
             service('router'),
             service('security.token_storage'),
@@ -489,6 +511,8 @@ return static function (ContainerConfigurator $container): void {
             service(PositionRepository::class),
             service(UserRepository::class),
             service('doctrine.orm.entity_manager'),
+            service('team.departments'),
+            service('team.positions'),
             service('security.csrf.token_manager'),
             service('router'),
             service('security.token_storage'),

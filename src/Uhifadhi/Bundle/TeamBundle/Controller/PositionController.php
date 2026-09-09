@@ -13,8 +13,6 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Controller;
 
-use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -34,12 +32,14 @@ use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
+use Uhifadhi\Bundle\TeamBundle\Exception\NameNotUniqueException;
 use Uhifadhi\Bundle\TeamBundle\Exception\UnknownPermissionException;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
 use Uhifadhi\Bundle\TeamBundle\Service\PermissionCatalogue;
+use Uhifadhi\Bundle\TeamBundle\Service\PositionService;
 use Uhifadhi\Bundle\TeamBundle\Widget\PositionWidgets;
 use Uhifadhi\Contracts\Entity\UserInterface as ModuleUserInterface;
 
@@ -74,7 +74,7 @@ final readonly class PositionController
         private DepartmentRepository $departments,
         private UserRepository $users,
         private PermissionCatalogue $catalogue,
-        private EntityManagerInterface $entityManager,
+        private PositionService $positionWrites,
         private CsrfTokenManagerInterface $csrf,
         private UrlGeneratorInterface $router,
         private TokenStorageInterface $tokens,
@@ -119,12 +119,9 @@ final readonly class PositionController
         // org-level holder is unbounded and passes.
         $this->assertMayFile($department);
 
-        $position = new Position()->setName($name)->setDepartment($department);
-        $this->entityManager->persist($position);
-
         try {
-            $this->entityManager->flush();
-        } catch (UniqueConstraintViolationException) {
+            $position = $this->positionWrites->create($name, $department);
+        } catch (NameNotUniqueException) {
             // The index would have said this in SQL. The person who typed the
             // name wants the sentence — and the sentence has to name the
             // DEPARTMENT, because the same word in another one is fine.
@@ -168,12 +165,10 @@ final readonly class PositionController
         $granted = $this->withinGrantAuthority($position, $granted);
 
         try {
-            $position->setPermissionValues($granted, $this->catalogue->values());
+            $this->positionWrites->setPermissions($position, $granted);
         } catch (UnknownPermissionException $refusal) {
             return $this->back($request, $refusal->getMessage(), 'error', $position);
         }
-
-        $this->entityManager->flush();
 
         $reaches = $this->users->countActiveHoldingAnyPosition([$position]);
 
@@ -203,11 +198,9 @@ final readonly class PositionController
             return $this->back($request, 'A position needs a name.', 'error', $position);
         }
 
-        $position->setName($name);
-
         try {
-            $this->entityManager->flush();
-        } catch (UniqueConstraintViolationException) {
+            $this->positionWrites->rename($position, $name);
+        } catch (NameNotUniqueException) {
             return $this->back($request, \sprintf('That department already has a position called “%s”.', $name), 'error');
         }
 

@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Controller;
 
-use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -34,10 +33,13 @@ use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Exception\MissingScopeChangeReasonException;
+use Uhifadhi\Bundle\TeamBundle\Exception\NameNotUniqueException;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
+use Uhifadhi\Bundle\TeamBundle\Service\DepartmentService;
+use Uhifadhi\Bundle\TeamBundle\Service\PositionService;
 use Uhifadhi\Contracts\Entity\AreaInterface;
 
 /**
@@ -100,6 +102,8 @@ final readonly class DepartmentController
         private PositionRepository $positions,
         private UserRepository $users,
         private EntityManagerInterface $entityManager,
+        private DepartmentService $departmentWrites,
+        private PositionService $positionWrites,
         private CsrfTokenManagerInterface $csrf,
         private UrlGeneratorInterface $router,
         private TokenStorageInterface $tokens,
@@ -211,12 +215,11 @@ final readonly class DepartmentController
             return $this->back($request, 'A department needs a name.', 'error');
         }
 
-        $department = new Department()->setName($name);
-
         // AREA-LEVEL unless org-wide was chosen. An empty or missing scope is
         // treated as area-first only when an area is actually named; a scope of
         // "area" with no area is a mis-post and falls back to org rather than
         // erroring, because a department with a name is worth keeping.
+        $area = null;
         if ('org' !== $request->request->get('scope')) {
             $areaUuid = trim((string) $request->request->get('area'));
             if ('' !== $areaUuid) {
@@ -224,7 +227,6 @@ final readonly class DepartmentController
                 if (null === $area) {
                     return $this->back($request, 'That area is not one this installation has.', 'error');
                 }
-                $department->setArea($area);
             }
         }
 
@@ -232,21 +234,19 @@ final readonly class DepartmentController
         // must land in an area the administrator's authority reaches. An area-X
         // admin creating an org department, or a department in another area, is
         // escalation.
-        $this->assertMayCreate($department->getArea());
-
-        $this->entityManager->persist($department);
+        $this->assertMayCreate($area);
 
         try {
-            $this->entityManager->flush();
-        } catch (UniqueConstraintViolationException) {
+            $department = $this->departmentWrites->create($name, $area);
+        } catch (NameNotUniqueException) {
             // UNIQUE WITHIN ITS SCOPE. Two org-wide departments of one name, or
             // two in the same area, would be the same department entered twice. A
             // name may still repeat FROM ONE AREA TO ANOTHER — two areas may each
             // run an Anti-Poaching unit — the way a position name repeats across
             // departments.
-            return $this->back($request, null === $department->getArea()
+            return $this->back($request, null === $area
                 ? \sprintf('There is already an organisation-wide department called “%s”. A name may repeat from one area to another, but the organisation-wide ones each stand alone.', $name)
-                : \sprintf('%s already has a department called “%s”. Another area may share the name, but not this one twice.', (string) $department->getArea()->getName(), $name),
+                : \sprintf('%s already has a department called “%s”. Another area may share the name, but not this one twice.', (string) $area->getName(), $name),
                 'error');
         }
 
@@ -269,11 +269,10 @@ final readonly class DepartmentController
         }
 
         $was = (string) $department->getName();
-        $department->setName($name);
 
         try {
-            $this->entityManager->flush();
-        } catch (UniqueConstraintViolationException) {
+            $this->departmentWrites->rename($department, $name);
+        } catch (NameNotUniqueException) {
             return $this->back($request, \sprintf('There is already a department called “%s” in that scope.', $name), 'error');
         }
 
@@ -322,14 +321,10 @@ final readonly class DepartmentController
         $people = $this->footprint($department)['people'];
 
         try {
-            $department->changeScopeTo($newArea, $this->signedIn(), $reason);
+            $this->departmentWrites->changeScope($department, $newArea, $this->signedIn(), $reason);
         } catch (MissingScopeChangeReasonException) {
             return $this->back($request, 'A scope change needs a reason — it is recorded to the audit trail.', 'error');
-        }
-
-        try {
-            $this->entityManager->flush();
-        } catch (UniqueConstraintViolationException) {
+        } catch (NameNotUniqueException) {
             // Confining into an area that already runs a department of this name
             // would collapse two into one. Refuse, and name the clash.
             return $this->back($request, \sprintf(
@@ -383,8 +378,7 @@ final readonly class DepartmentController
         $this->assertMayManage($department);
 
         $footprint = $this->footprint($department);
-        $department->deactivate();
-        $this->entityManager->flush();
+        $this->departmentWrites->deactivate($department);
 
         return $this->back($request, \sprintf(
             '“%s” is deactivated — hidden from the pickers and greyed in the register, %s. Nothing is deleted: its history stays, and it is one click from coming back.',
@@ -409,8 +403,7 @@ final readonly class DepartmentController
         $this->assertCsrf($request);
         $this->assertMayManage($department);
 
-        $department->reactivate();
-        $this->entityManager->flush();
+        $this->departmentWrites->reactivate($department);
 
         return $this->back($request, \sprintf('“%s” is active again — back in the pickers and the register.', (string) $department->getName()));
     }
@@ -447,11 +440,9 @@ final readonly class DepartmentController
             $this->assertMayManage($department);
         }
 
-        $position->setDepartment($department);
-
         try {
-            $this->entityManager->flush();
-        } catch (UniqueConstraintViolationException) {
+            $this->positionWrites->file($position, $department);
+        } catch (NameNotUniqueException) {
             return $this->back($request, \sprintf(
                 '%s already has a position called “%s”. Two departments may own the same word — that is the point — but one department may not own it twice. Rename one of them first.',
                 $department?->getName() ?? 'The unassigned group',
