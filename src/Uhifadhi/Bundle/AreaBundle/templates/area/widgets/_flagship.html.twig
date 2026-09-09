@@ -1,0 +1,105 @@
+{# PREVIEW: THE FLAGSHIP — the portfolio read. The org's primary area is featured
+   large with its full live pulse; everything else rides a secondary strip below.
+   The honest shape for an org with one busy area and a handful still being brought
+   online &mdash; it says which area is the work without hiding the rest.
+
+   THE HERO'S PULSE IS CONTRIBUTED. The factband is the area's own gazetted facts
+   and its zone count (the host's); the KPIs and the attention list are the same
+   module now-tiles and attention items every other preset reads. The flagship is
+   simply the most recently active live area. #}
+<div class="pghead">
+    <div>
+        <h1 class="pg">Areas</h1>
+        <p class="pgsub">The portfolio read &mdash; the org&rsquo;s primary area featured large with its full live pulse, everything else on a secondary strip below. It says which area is the work without hiding the rest.</p>
+    </div>
+    {% if is_granted('area.create') %}
+        <div class="pgact"><a class="cta" href="{{ path('area_new') }}">{{ ux_icon('lucide:plus') }} New area</a></div>
+    {% endif %}
+</div>
+
+{% if flagship %}
+    {% set row = flagship.row %}
+    <div class="c ax-hero">
+        <div class="ax-hero-map{{ row.thumbnail.hasBoundary ? '' : ' none' }}"{% if row.thumbnail.hasBoundary %} style="background-image:url('{{ row.thumbnail.imageUrl }}')"{% endif %}>
+            {% if row.thumbnail.hasBoundary %}
+                <svg class="ax-outline" viewBox="{{ constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\AreaThumbnail::VIEW_BOX') }}" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><path d="{{ row.thumbnail.path }}"/></svg>
+            {% endif %}
+            <span class="ax-live"><i></i>live now</span>
+        </div>
+        <div class="ax-hero-main">
+            <div class="ax-hero-head">
+                <div>
+                    <div class="ax-hero-nm">{{ row.area.name }}</div>
+                    <div class="mono ax-hero-meta">
+                        {%- if row.area.iucnCategory %}IUCN {{ row.area.iucnCategory }} &middot; {% endif -%}
+                        {{ row.areaKm2|number_format }} km&sup2;{% if row.lastActivityLabel %} &middot; last contact {{ row.lastActivityLabel }}{% endif %}
+                    </div>
+                </div>
+                <a class="cta" href="{{ path('area_show', {uuid: row.area.uuidString}) }}">Open the area {{ ux_icon('lucide:arrow-right') }}</a>
+            </div>
+
+            <span class="factband">
+                {% if row.area.iucnCategory %}<span class="f"><span class="k">Category</span><span class="v">IUCN {{ row.area.iucnCategory }}</span></span>{% endif %}
+                {% if row.area.establishedYear %}<span class="f"><span class="k">Established</span><span class="v">{{ row.area.establishedYear }}</span></span>{% endif %}
+                <span class="f"><span class="k">Extent</span><span class="v">{{ row.areaKm2|number_format }}<em>km&sup2;</em></span></span>
+                <span class="f"><span class="k">Zones</span><span class="v">{% if flagship.zoneCount > 0 %}{{ flagship.zoneCount }}{% else %}&mdash;<em>none yet</em>{% endif %}</span></span>
+                <span class="f"><span class="k">Modules</span><span class="v">{{ row.liveModules }}<em>live</em></span></span>
+            </span>
+
+            <div class="grid ax-hero-kpis">
+                {% for stat in row.stats %}
+                    <div class="c kpi{{ loop.first ? ' hot' : '' }}">
+                        <span class="tab">{{ stat.label }}</span>
+                        <b class="disp">{{ stat.value }}</b>
+                        {% if loop.first and row.liveNow %}<span class="sub">{{ row.liveNow.value }} {{ row.liveNow.label }}</span>{% endif %}
+                    </div>
+                {% endfor %}
+                <div class="c kpi">
+                    <span class="tab">Modules live</span>
+                    <b class="disp">{{ row.liveModules }}</b>
+                </div>
+            </div>
+
+            {% if flagship.attention is not empty %}
+                <div class="ax-hero-att">
+                    <div class="ax-hero-atthd mono">Needs attention &middot; {{ flagship.attention|length }}</div>
+                    {% for item in flagship.attention %}
+                        <a class="ao-att {{ item.severity.cssClass }}" href="{{ item.url }}">
+                            <span class="sev"></span>
+                            <span class="bd">
+                                <span class="t"><b>{{ item.headline }}</b>{% if item.detail %} {{ item.detail }}{% endif %}</span>
+                                <span class="m"><i></i>{{ item.moduleLabel }} &middot; {{ item.kind }}
+                                    {%- for fact in item.meta %}<span>{{ fact }}</span>{% endfor -%}
+                                </span>
+                            </span>
+                            <span class="age">{{ item.ageLabel }}</span>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% else %}
+    <div class="ax-steadyempty">{{ ux_icon('lucide:circle-check') }}<span>No area is live yet, so there is no flagship to feature. Once an area has a module switched on it becomes the hero here, with the rest on the strip below.</span></div>
+{% endif %}
+
+<h2 class="zone">The rest of the register &middot; {{ flagshipRest|length }}</h2>
+<div class="ax-strip">
+    {% for preset in flagshipRest %}
+        {% set row = preset.row %}
+        <a class="ax-scard" href="{{ path('area_show', {uuid: row.area.uuidString}) }}">
+            <span class="ax-sthumb{{ row.thumbnail.hasBoundary ? '' : ' none' }}"{% if row.thumbnail.hasBoundary %} style="background-image:url('{{ row.thumbnail.imageUrl }}')"{% endif %}></span>
+            <span class="ax-sbd">
+                <span class="ax-snm">{{ row.area.name }}</span>
+                <span class="ax-smeta mono">
+                    {%- if row.area.iucnCategory %}IUCN {{ row.area.iucnCategory }} &middot; {% endif -%}
+                    {{ row.areaKm2|number_format }} km&sup2;
+                </span>
+                {% if row.isLive %}<span class="chip ok">live</span>{% else %}<span class="chip idle">not active yet</span>{% endif %}
+            </span>
+        </a>
+    {% endfor %}
+    {% if is_granted('area.create') %}
+        <a class="ax-scard add" href="{{ path('area_new') }}">{{ ux_icon('lucide:plus') }}<span>New area</span></a>
+    {% endif %}
+</div>

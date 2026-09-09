@@ -1,0 +1,85 @@
+{# THE OPERATIONAL MAP PLATE — the host/area's own base content: the boundary,
+   always drawn, and the area's zones drawn beside it.
+
+   Design: areas/<area>/index.html and overview.widgets.js (the `map` widget).
+
+   THE PLATE IS INFRASTRUCTURE. The AOI boundary is drawn whenever the area has
+   one, whichever modules are installed — so this card is here on a brand-new
+   area with nothing switched on. Operational layers (patrol tracks, open
+   incidents, stations) are a module's, and arrive later through the map-layer
+   seam, each adding its own legend group beneath "The area".
+
+   ONE MAP, EVERYWHERE. The imagery, the boundary treatment and the chrome (zoom,
+   base-layer toggle, scale, attribution) are the platform's, from the map
+   module — the same map renders identically on a patrol plate and here. This
+   template only frames it and states the area's own legend group.
+
+   hasBoundary DRIVES THE PLATE. With a boundary the card is a live map; with
+   none it says there is nothing to draw yet, rather than a grey empty box. #}
+{% if area.hasBoundary %}
+    {# THE CONTROLLER WRAPS THE WHOLE CARD, not just the canvas: the legend rows
+       below are toggles, and a Stimulus action only reaches targets inside its
+       own element. The stored boundary and zones travel to the browser as GeoJSON
+       on the payload, and every module layer travels with them under `layers`, so
+       one controller draws the whole plate and one click switches any row. #}
+    <div class="c" data-w="map"
+         data-controller="uhifadhi--area-bundle--area-map"
+         data-uhifadhi--area-bundle--area-map-payload-value="{{ mapPayload|merge({layers: mapLayers})|json_encode }}">
+        <span class="tab">Where<span class="src">&middot; the area &amp; its zones</span></span>
+        <span class="ao-by host"><i></i>host plate &middot; module layers</span>
+
+        <div class="viewer">
+            <div class="map-canvas"
+                 data-uhifadhi--area-bundle--area-map-target="canvas"
+                 role="img"
+                 aria-label="{{ area.name }} &mdash; boundary{% if zoneCount > 0 %} and zones{% endif %}"></div>
+        </div>
+
+        {# EVERY LAYER SHIPS A LEGEND, grouped by the contributor, and every row is
+           a toggle: clicking it shows or hides that layer on the plate above.
+           "The area" is the host/area's own group and is always present; each
+           installed module that draws a layer adds its own group beneath it. #}
+        <div class="ao-legend">
+            <div class="grp">
+                <b><i class="host"></i>The area</b>
+                <a class="lay" href="#"
+                   data-action="uhifadhi--area-bundle--area-map#toggleLayer"
+                   data-uhifadhi--area-bundle--area-map-layer-param="area.boundary">
+                    <span class="sw ln" style="color:#49E6B4"></span>Boundary<span class="tog">on</span></a>
+                <a class="lay{{ zoneCount > 0 ? '' : ' off' }}" href="#"
+                   data-action="uhifadhi--area-bundle--area-map#toggleLayer"
+                   data-uhifadhi--area-bundle--area-map-layer-param="area.zones">
+                    <span class="sw ln" style="color:#B9C8BD"></span>Zones &middot; {{ zoneCount }}<span class="tog">{{ zoneCount > 0 ? 'on' : 'off' }}</span></a>
+            </div>
+
+            {# THE MODULE GROUPS. The layers arrive already ordered by contributor
+               — a provider's layers come back together — so each contributor's
+               name heads one group of its own rows. A colour is data, so the
+               group's dot and each swatch are the module's own, the same in light
+               and dark. #}
+            {% for group in mapLayerGroups %}
+                <div class="grp"><b><i style="background:{{ group.swatch }}"></i>{{ group.label }}</b>
+                    {% for layer in group.layers %}
+                        <a class="lay{{ layer.on ? '' : ' off' }}" href="#"
+                           data-action="uhifadhi--area-bundle--area-map#toggleLayer"
+                           data-uhifadhi--area-bundle--area-map-layer-param="{{ layer.id }}">
+                            <span class="sw{{ layer.style == 'line' ? ' ln' }}" style="{{ layer.style == 'line' ? 'color:' ~ layer.swatch : 'background:' ~ layer.swatch }}"></span>{{ layer.label }}{% if layer.count is not null %} &middot; {{ layer.count }}{% endif %}<span class="tog">{{ layer.on ? 'on' : 'off' }}</span></a>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% else %}
+    {# NO BOUNDARY IS A STATE, NOT A BROKEN MAP. #}
+    <div class="c" data-w="map">
+        <span class="tab">Where<span class="src">&middot; the area &amp; its zones</span></span>
+        <span class="ao-by host"><i></i>host plate &middot; module layers</span>
+        <div class="ao-slot" style="margin-top:8px">
+            <div class="ao-slotrow">
+                <span class="nm">The map</span>
+                <span class="wd">This area has <b>no boundary on file</b> yet, so there is nothing to draw. Import one and this plate opens on it, with the zones and every module&rsquo;s layers over it.</span>
+                <span class="st"><a href="{{ path('area_edit', {uuid: area.uuidString}) }}">Add a boundary &rarr;</a></span>
+            </div>
+        </div>
+    </div>
+{% endif %}

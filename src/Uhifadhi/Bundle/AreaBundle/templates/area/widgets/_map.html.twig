@@ -1,0 +1,86 @@
+{# PREVIEW: MAP OF THE NETWORK — the register with geography as the ground. Every
+   area is a point on the org's map, the live ones drawn bold and the rest quiet;
+   the list docks beside it so "where" and "what's happening" are answered
+   together.
+
+   ONE MAP, EVERYWHERE. The plate is the platform's real map — self-hosted Leaflet
+   over the map module's satellite imagery, the shared chrome (zoom, base toggle,
+   scale, fullscreen) mounted on it — the same map the overview and zones draw,
+   not a bespoke one. It reuses map-module and adds only the one thing this view
+   owns: the org's areas as boundaries and points. The dock beside it is the same
+   register rows, searchable in place. #}
+<div class="pghead">
+    <div>
+        <h1 class="pg">Areas</h1>
+        <p class="pgsub">The register with geography as the ground &mdash; the one view about <b>where the org works</b>. Every area a point on the map, the live one bold, the rest awaiting setup; the list docks beside it so &ldquo;where&rdquo; and &ldquo;what&rsquo;s happening&rdquo; are read in one glance.</p>
+    </div>
+    {% if is_granted('area.create') %}
+        <div class="pgact"><a class="cta" href="{{ path('area_new') }}">{{ ux_icon('lucide:plus') }} New area</a></div>
+    {% endif %}
+</div>
+
+<div class="ax-maplayout">
+    <div class="ax-mapwrap c">
+        {# THE STANDARD MAP PLATE — reused from map-module, exactly as the overview
+           wires it: the canvas is the controller's target, and each area travels
+           to the browser as GeoJSON on the payload for it to draw and fit. #}
+        <div class="viewer"
+             data-controller="uhifadhi--area-bundle--area-index-map"
+             data-uhifadhi--area-bundle--area-index-map-areas-value="{{ mapAreas|json_encode }}">
+            <div class="map-canvas"
+                 data-uhifadhi--area-bundle--area-index-map-target="canvas"
+                 role="img"
+                 aria-label="The organisation&rsquo;s areas over satellite imagery"></div>
+        </div>
+        <div class="ax-maplegend">
+            <b>Areas</b>
+            <span class="lay"><span class="sw ln live"></span>Live &middot; active &middot; {{ counts.live }}</span>
+            <span class="lay"><span class="sw ln quiet"></span>Boundary only &middot; {{ counts.setup }}</span>
+        </div>
+    </div>
+
+    <div class="ax-dock c" data-controller="uhifadhi--area-bundle--area-register">
+        <div class="ax-dockhd">
+            <input class="fld" data-uhifadhi--area-bundle--area-register-target="search" placeholder="Search areas&hellip;" aria-label="Search areas">
+            <span class="mono ax-dockcount"><span data-uhifadhi--area-bundle--area-register-target="count">{{ counts.all }}</span> areas</span>
+        </div>
+        <div class="ax-docklist" data-uhifadhi--area-bundle--area-register-target="list">
+            {% for row in rows %}
+                <a class="ax-dockrow{{ row.isLive ? ' on' : '' }}" data-row
+                   href="{{ path('area_show', {uuid: row.area.uuidString}) }}"
+                   data-name="{{ row.area.name|lower }}"
+                   data-live="{{ row.isLive ? '1' : '0' }}"
+                   data-alerts="{{ row.hasAlerts ? '1' : '0' }}"
+                   data-activity="{{ row.activityRank }}">
+                    <span class="ax-dot{{ row.isLive ? ' live' : '' }}"></span>
+                    <span class="ax-dk-bd">
+                        <span class="ax-dk-nm">{{ row.area.name }}</span>
+                        <span class="ax-dk-meta mono">
+                            {%- if row.area.iucnCategory %}IUCN {{ row.area.iucnCategory }} &middot; {% endif -%}
+                            {%- if row.area.establishedYear %}est. {{ row.area.establishedYear }} &middot; {% endif -%}
+                            {{ row.areaKm2|number_format }} km&sup2;
+                        </span>
+                        {% if row.isLive %}
+                            <span class="ax-dk-stats mono">{{ row.liveModules }} modules{% for stat in row.stats %} &middot; {{ stat.value }} {{ stat.label }}{% endfor %}</span>
+                        {% else %}
+                            <span class="ax-dk-stats mono d">boundary only &middot; not active yet</span>
+                        {% endif %}
+                    </span>
+                    <span class="ax-dk-side">
+                        {% if row.hasAlerts %}
+                            <span class="chip warn">{{ row.alertCount }} alert{{ row.alertCount == 1 ? '' : 's' }}</span>
+                            {% if row.lastActivityLabel %}<span class="mono ax-dk-when">{{ row.lastActivityLabel }}</span>{% endif %}
+                        {% elseif row.isLive %}
+                            <span class="chip ok">steady</span>
+                        {% else %}
+                            <span class="chip idle">test area</span>
+                        {% endif %}
+                    </span>
+                </a>
+            {% endfor %}
+        </div>
+        {% if is_granted('area.create') %}
+            <a class="ax-dockadd" href="{{ path('area_new') }}">{{ ux_icon('lucide:plus') }} New area</a>
+        {% endif %}
+    </div>
+</div>

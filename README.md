@@ -34,8 +34,7 @@ a word for developers. An admin installs *the core* and then *modules*.
 | `ShellBundle` | `uhifadhi/shell-bundle` | the document, the page frame, navigation, the theme, widget surfaces |
 | `TeamBundle` | `uhifadhi/team-bundle` | people: the account, positions, departments, the sign-in and invitation screens |
 | `AtlasBundle` | `uhifadhi/atlas-bundle` | maps, charts and the chrome every one of them wears |
-
-`AreaBundle` (areas, zones, the overview) joins them.
+| `AreaBundle` | `uhifadhi/area-bundle` | the ground: areas, their boundaries, the zones inside them and the overview |
 
 The contracts stay a package of their own so a capability module can depend on
 interfaces alone, and stay MIT while the runtime around them is AGPL: an

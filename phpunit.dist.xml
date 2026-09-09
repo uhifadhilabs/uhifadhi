@@ -9,6 +9,13 @@
          failOnWarning="true">
     <php>
         <!--
+            One process holds every bundle's kernels at once — several compiled
+            containers, each with its own cache — and 128M is not enough for
+            that. The limit is raised here rather than on a command line so a
+            local run and CI are the same run.
+        -->
+        <ini name="memory_limit" value="512M"/>
+        <!--
             No KERNEL_CLASS. The core is one repository with one phpunit config
             and several bundles, so an env var can only ever name one of their
             kernels; every test base names its own in code instead.
@@ -45,6 +52,9 @@
         </testsuite>
         <testsuite name="AtlasBundle">
             <directory>src/Uhifadhi/Bundle/AtlasBundle/tests</directory>
+        </testsuite>
+        <testsuite name="AreaBundle">
+            <directory>src/Uhifadhi/Bundle/AreaBundle/tests</directory>
         </testsuite>
     </testsuites>
     <source restrictNotices="true" restrictWarnings="true">

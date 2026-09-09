@@ -1,0 +1,64 @@
+{# AREA SETTINGS — what this area is, and what an installation may change about
+   it.
+
+   GATED ON `area.edit`, so reaching this page at all is the permission. The page
+   states what is editable and what is not rather than offering fields that do
+   nothing: the boundary is not re-drawn here, because importing one is a
+   surface this module does not ship yet and pretending otherwise would be a
+   form that fails on submit. #}
+{% extends '@Shell/page.html.twig' %}
+
+{% block title %}Settings{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {{ include('@Area/_stylesheets.html.twig') }}
+{% endblock %}
+
+{% block shell_breadcrumbs %}
+    <a href="{{ path('area_index') }}">uhifadhi</a> / <a href="{{ path('area_show', {uuid: area.uuidString}) }}">{{ area.name }}</a> / settings
+{% endblock %}
+
+{% block shell_page_title %}{{ area.name }} &mdash; Settings{% endblock %}
+
+{% block shell_page_subtitle %}What this area is, and where its boundary came from.{% endblock %}
+
+{% block shell_page %}
+    <div class="grid">
+        <div class="c">
+            <span class="tab">The record<span class="src">&middot; area_of_interest</span></span>
+
+            {# READ-ONLY HERE, EDITED ON ITS OWN SCREEN. The record below is the
+               lead; the one action is the door to the edit screen — including the
+               boundary, which is never re-drawn on this page. #}
+            <div class="id-head">
+                <span class="id-lead">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    <span><b>Read-only here.</b> These facts are edited on their own screen &mdash; including the boundary.</span>
+                </span>
+                <a class="cta id-edit" href="{{ path('area_edit', {uuid: area.uuidString}) }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Edit area
+                </a>
+            </div>
+
+            <table class="tbl">
+                <tr><th>Name</th><td>{{ area.name }}</td></tr>
+                <tr><th>Boundary source</th><td>{% if area.hasBoundary %}{{ area.source }}{% else %}<span class="chip">&mdash;</span>{% endif %}</td></tr>
+                <tr><th>Size</th><td class="num">{{ areaKm2|number_format }} km&sup2;</td></tr>
+                <tr><th>Zones</th><td class="num">{{ zoneCount > 0 ? zoneCount : '—' }}</td></tr>
+                <tr>
+                    <th>IUCN category</th>
+                    <td>{% if area.iucnCategory %}{{ area.iucnCategory }}{% else %}<span class="chip">&mdash;</span>{% endif %}</td>
+                </tr>
+                <tr>
+                    <th>Established</th>
+                    <td>{% if area.establishedYear %}{{ area.establishedYear }}{% else %}<span class="chip">&mdash;</span>{% endif %}</td>
+                </tr>
+                <tr><th>Identifier</th><td class="mono">{{ area.uuidString }}</td></tr>
+            </table>
+            <div class="use">The registry fields are optional and a dash means UNRECORDED, not zero:
+                an installation that drew its own boundary has no IUCN category and no gazettement
+                year, and must not be made to invent them to save a record.</div>
+        </div>
+    </div>
+{% endblock %}

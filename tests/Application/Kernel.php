@@ -153,5 +153,9 @@ final class Kernel extends BaseKernel
         // Every screen TeamBundle draws, mounted where an installation's own
         // config/routes/team.yaml mounts it.
         $routes->import('@TeamBundle/Controller/', 'attribute');
+
+        // The same for the area screens: the register, an area's overview, its
+        // zones and the pages that compose it.
+        $routes->import('@AreaBundle/Controller/', 'attribute');
     }
 }

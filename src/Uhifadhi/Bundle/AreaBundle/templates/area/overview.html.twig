@@ -1,0 +1,146 @@
+{# THE AREA OVERVIEW — what is happening in this area right now, composed from
+   every module installed here.
+
+   Design: areas/<area>/index.html and overview.widgets.js.
+
+   THE HOST OWNS THE SURFACE AND WRITES NONE OF THE OPERATIONAL CONTENT. The
+   identity band below is this module's, because an area's size and gazettement
+   are what an area IS. Everything else on the page is contributed: the tiles in
+   the right-now strip, the rows in "Needs attention", the layers on the map. A
+   module installed in this area puts them there; uninstall it and they leave.
+
+   ABSENT IS NOT ZERO, EVERYWHERE. A strip nobody contributed to is not drawn at
+   all — it is not drawn full of noughts, which would claim six measurements
+   nobody took. An empty attention list is a good day, and a good day is allowed
+   to look like one.
+
+   NO WIDGET INDICES. The design file prints one in each plate's tab (AO·04,
+   PL·N1); that is the workspace's referencing system and not product. See
+   tests/Unit/Template/NoWorkshopLabelsTest.php. #}
+{% extends '@Shell/page.html.twig' %}
+
+{% block title %}{{ area.name }}{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {# The platform's one map stylesheet — Leaflet, then the shared plate/chrome
+       rules from the map module, before this module's own sheet so the overview
+       can build on them. The same map renders identically everywhere. #}
+    <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Bundle\\AtlasBundle\\AtlasBundle::LEAFLET_CSS')) }}">
+    <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Bundle\\AtlasBundle\\AtlasBundle::STYLESHEET')) }}">
+    {{ include('@Area/_stylesheets.html.twig') }}
+{% endblock %}
+
+{% block javascripts %}
+    {# Leaflet as a classic script FIRST, so window.L is published before the
+       deferred importmap modules (the area-map controller among them) connect.
+       parent() renders the importmap. #}
+    <script src="{{ asset(constant('Uhifadhi\\Bundle\\AtlasBundle\\AtlasBundle::LEAFLET_JS')) }}"></script>
+    {{ parent() }}
+{% endblock %}
+
+{% block shell_breadcrumbs %}
+    <a href="{{ path('area_index') }}">uhifadhi</a> / <a href="{{ path('area_index') }}">areas</a> / {{ area.name }}
+{% endblock %}
+
+{% block shell_page_title %}{{ area.name }}{% endblock %}
+
+{% block shell_page_subtitle %}What is happening in this area right now &mdash; composed from every module installed here. Each module&rsquo;s own dashboard is a click away on the Modules tab.{% endblock %}
+
+{% block shell_page %}
+    {# THE IDENTITY BAND — the area itself, and the only thing on this page the
+       host measured. `.factband` is the platform's, so a module page wears the
+       same band. #}
+    <div class="factband">
+        <span class="f"><span class="k">Area</span><span class="v">{{ areaKm2|number_format }}<em>km&sup2;</em></span></span>
+        <span class="f"><span class="k">Zones</span><span class="v">
+            {%- if zoneCount > 0 -%}{{ zoneCount }}{%- else -%}&mdash;<em>none yet</em>{%- endif -%}
+        </span></span>
+        {% if area.iucnCategory %}<span class="f"><span class="k">IUCN</span><span class="v">{{ area.iucnCategory }}</span></span>{% endif %}
+        {% if area.establishedYear %}<span class="f"><span class="k">Established</span><span class="v">{{ area.establishedYear }}</span></span>{% endif %}
+        <span class="f"><span class="k">Boundary</span><span class="v">
+            {%- if area.hasBoundary -%}on file{%- else -%}&mdash;<em>not set</em>{%- endif -%}
+        </span></span>
+        <span class="sp"></span>
+        <a class="more" href="{{ path('area_settings', {uuid: area.uuidString}) }}">Area settings &rarr;</a>
+    </div>
+
+    <div class="grid" style="margin-top:20px">
+        {# THE RIGHT-NOW STRIP. Every tile is a module's; the host lays them out
+           and orders them and counts nothing itself. #}
+        {% if nowTiles is not empty %}
+            <div class="grid w-flush dp-kstrip">
+                {% for tile in nowTiles %}
+                    <div class="c kpi{{ tile.tone == 'hot' ? ' hot' : '' }}{{ tile.tone == 'bad' ? ' bad' : '' }}">
+                        <span class="tab">{{ tile.label }}{% if tile.live %}<span class="src">&middot; <span class="ao-live"><i></i></span></span>{% endif %}</span>
+                        <b class="disp">{{ tile.value }}{% if tile.unit %}<em>{{ tile.unit }}</em>{% endif %}</b>
+                        {% if tile.subline %}<span class="sub">{{ tile.subline }}{% if tile.alarm %} &middot; <span class="r">{{ tile.alarm }}</span>{% endif %}</span>{% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {# NEEDS ATTENTION — sorted by urgency, never by module. #}
+        <div class="c">
+            <span class="tab">Needs attention<span class="src">&middot; {{ attention|length }} item{{ attention|length == 1 ? '' : 's' }} &middot; every installed module</span></span>
+            <span class="ao-by host"><i></i>host &middot; module items</span>
+            <div class="use" style="margin:0 2px 8px">Sorted by urgency, not by module. An item leaves this list when
+                the thing that raised it is dealt with &mdash; nobody dismisses one by hand, because the host did not raise it.</div>
+
+            {% for item in attention %}
+                <a class="ao-att {{ item.severity.cssClass }}" href="{{ item.url }}">
+                    <span class="sev"></span>
+                    <span class="bd">
+                        <span class="t"><b>{{ item.headline }}</b>{% if item.detail %} {{ item.detail }}{% endif %}</span>
+                        <span class="m"><i></i>{{ item.moduleLabel }} &middot; {{ item.kind }}
+                            {%- for fact in item.meta %}<span>{{ fact }}</span>{% endfor -%}
+                        </span>
+                    </span>
+                    <span class="age">{{ item.ageLabel }}</span>
+                </a>
+            {% else %}
+                {# A GOOD DAY IS ALLOWED TO LOOK LIKE ONE. #}
+                <p class="zeb">Nothing is asking for attention in this area.
+                    {% if installedSlugs is empty %}No module is switched on here yet, so nothing is watching.{% endif %}</p>
+            {% endfor %}
+        </div>
+
+        {# THE OPERATIONAL MAP — the host/area's own plate: the boundary, always
+           drawn, and the area's zones. Module layers arrive over it through the
+           map-layer seam. Infrastructure, so it is here whichever modules are on. #}
+        {{ include('@Area/area/overview/_map.html.twig') }}
+
+        {# NOT INSTALLED HERE — the honest-absent card. Nothing below is drawn
+           with invented data, because there is none. #}
+        {% if installedSlugs is empty %}
+            <div class="c">
+                <span class="tab">Not installed in this area<span class="src">&middot; nothing switched on yet</span></span>
+                <span class="ao-by next"><i></i>the seam</span>
+                <div class="use" style="margin:0 2px 12px">Nothing here is drawn with invented data, because there is none.
+                    An area with no modules is new, not broken: this page is the frame every module's contribution lands in,
+                    and it is empty until one is switched on.</div>
+                <div class="ao-slot">
+                    <div class="ao-slotrow">
+                        <span class="nm">Right now</span>
+                        <span class="wd">A tile per module with something happening this minute, in that module&rsquo;s own words. Contributed through <b>the now-tile seam</b>.</span>
+                        <span class="st">awaiting a module</span>
+                    </div>
+                    <div class="ao-slotrow">
+                        <span class="nm">Needs attention</span>
+                        <span class="wd">A row per thing a module says somebody has to act on, sorted by urgency across all of them. Contributed through <b>the attention seam</b>.</span>
+                        <span class="st">awaiting a module</span>
+                    </div>
+                    <div class="ao-slotrow">
+                        <span class="nm">Map layers</span>
+                        <span class="wd">The plate above already draws the area&rsquo;s own boundary and zones. One plate, many owners: each module adds the data it owns as its own layer, with its own legend entry. Contributed through <b>the map-layer seam</b>.</span>
+                        <span class="st">awaiting a module</span>
+                    </div>
+                </div>
+                <div class="rln" style="margin-top:12px">
+                    <span class="fog">What installing one changes in this module</span>
+                    <span class="mono acc" style="font-size:11px">nothing &mdash; new tagged provider classes only</span>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

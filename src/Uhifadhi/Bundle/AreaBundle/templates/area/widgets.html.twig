@@ -1,0 +1,128 @@
+{# THE AREAS-INDEX WIDGET LIBRARY — the five whole-page layouts the areas landing
+   ships, each previewable inline, one adoptable as the landing for everyone.
+
+   Design: areas/widgets.html in the design workspace (the graduated preset
+   library, source presets/areas-index/).
+
+   FULL-PAGE LAYOUT DIRECTIONS, NOT WIDGET COMPOSITIONS. The areas-index presets
+   are five whole ways to draw the landing — a wall, a register, a map, an
+   attention board, a flagship — so this library follows the graduated page's own
+   mechanic: the five layouts are embedded below and a card's PREVIEW swaps the
+   FULL layout inline on this page, rather than the data-widget-root framework the
+   overview surface uses to compose a dashboard out of many widgets.
+
+   ADOPT-ONLY, AND SELF-CONTAINED. The surface ships exactly these five to adopt —
+   there is no compose-your-own, no "my presets". Each layout is rendered here
+   from the same real rows the register reads; nothing links out to the design
+   scratchboard the layouts were graduated from. "Wall of workspaces" is the
+   org's shipped default; adopting another makes it the landing and retires none
+   of the rest. The preview and adoption are the page's own client-side concern
+   in this slice (the area-presets controller), persisted so an adoption survives
+   a reload the way a widget-preference row would.
+
+   NO WIDGET INDICES. The design file prints one on each preset card and in the
+   register/flagship plates (AX·01, AX·P1); that is the workspace's referencing
+   system and not product. See tests/Unit/Template/NoWorkshopLabelsTest.php. #}
+{% extends '@Shell/page.html.twig' %}
+
+{% block title %}Areas &middot; widget library{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {# The map-of-the-network preview is a real Leaflet plate, so the library
+       carries the platform's one map stylesheet, exactly as the overview does. #}
+    <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Bundle\\AtlasBundle\\AtlasBundle::LEAFLET_CSS')) }}">
+    <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Bundle\\AtlasBundle\\AtlasBundle::STYLESHEET')) }}">
+    {{ include('@Area/_stylesheets.html.twig') }}
+{% endblock %}
+
+{% block javascripts %}
+    {# Leaflet as a classic script FIRST, so window.L is published before the
+       deferred importmap modules connect — the map preview's controller among them. #}
+    <script src="{{ asset(constant('Uhifadhi\\Bundle\\AtlasBundle\\AtlasBundle::LEAFLET_JS')) }}"></script>
+    {{ parent() }}
+{% endblock %}
+
+{# The library is not inside an area, so it fills the tab socket with nothing
+   rather than inheriting an area strip. #}
+{% block shell_page_tabs %}{% endblock %}
+
+{% block shell_breadcrumbs %}<a href="{{ path('area_index') }}">uhifadhi</a> / <a href="{{ path('area_index') }}">areas</a> / widget library{% endblock %}
+
+{% block shell_page_title %}Areas &middot; widget library{% endblock %}
+
+{% block shell_page_subtitle %}Adopt one of the five layouts the areas landing ships. Preview any of them here &mdash; the real page at full size, exactly as the landing renders it &mdash; then apply it to make it the landing for everyone. <b>Wall of workspaces</b> is the org&rsquo;s shipped default; adopting another retires none of the rest.{% endblock %}
+
+{% block shell_page_actions %}
+    {# Reset drops the adopted layout back to the shipped default. The button
+       lives in the page header; the area-presets controller finds it wherever it
+       sits, so the whole page need not nest inside the controller. #}
+    <button type="button" class="tgl w-act" data-area-presets-reset>{{ ux_icon('lucide:rotate-ccw') }} Reset to the shipped default</button>
+    <a class="cta" href="{{ path('area_index') }}">{{ ux_icon('lucide:chevron-left') }} Back to areas</a>
+{% endblock %}
+
+{% block shell_page %}
+    <div data-controller="uhifadhi--area-bundle--area-presets"
+         data-uhifadhi--area-bundle--area-presets-default-value="{{ defaultKey }}">
+
+        <div class="w-galnote">{{ ux_icon('lucide:search') }}<div><b>The directions are presets, not a ballot.</b> The areas index is drawn as a wall of workspaces, as an operational register, as a map of the network, as an attention board, and as a flagship portfolio. None of them became a separate screen: each is one of this surface&rsquo;s ruled presets, and adopting one makes it the landing for everyone. Areas ships these five to adopt &mdash; there is no compose-your-own here; <b>Wall of workspaces</b> is the shipped default.</div></div>
+
+        {# THE PRESET STRIP — the five ruled layouts, in adopt-only form. A card's
+           PREVIEW swaps the FULL layout inline below; APPLY adopts it. The cards
+           never link out; the layouts are the [data-preset-view] blocks further
+           down. #}
+        <section class="w-presets">
+            <h2 class="w-presethead">Start from a design</h2>
+            <p class="w-presetintro">The five layouts this surface ships. Preview one to see it whole below; adopting one makes it the areas landing for everyone &mdash; it retires none of the others.</p>
+            <div class="w-presetrow">
+                {% for preset in presets %}
+                    <div class="w-preset{{ preset.default ? ' w-preset-active' : '' }}"
+                         data-uhifadhi--area-bundle--area-presets-target="card"
+                         data-action="click->uhifadhi--area-bundle--area-presets#select keydown->uhifadhi--area-bundle--area-presets#key"
+                         data-view="{{ preset.key }}" data-name="{{ preset.name }}"
+                         role="button" tabindex="0" aria-pressed="{{ preset.default ? 'true' : 'false' }}">
+                        <div class="w-presettop" data-uhifadhi--area-bundle--area-presets-target="top">
+                            <span class="w-presetname">{{ preset.name }}</span>
+                            {% if preset.default %}<span class="w-presetflag w-presetflag-active">{{ ux_icon('lucide:check') }} Active</span>{% endif %}
+                        </div>
+                        <p class="w-presetsub">{{ preset.summary }}</p>
+                        <div class="w-presetmeta">
+                            <span class="w-presetcount">Full areas layout</span>
+                            <span class="w-presetgo" data-uhifadhi--area-bundle--area-presets-target="go">{{ preset.default ? 'On your dashboard' : 'Preview' }} {{ ux_icon('lucide:arrow-right') }}</span>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        {# THE PREVIEW BAR — rests on the adopted layout (active styling, no
+           actions); previewing another fills it with the previewing status and
+           the Apply / Cancel pair. It sticks under the top bar so the pair stays
+           in reach while a long layout scrolls. Rendered here for a no-script
+           viewer; the controller re-renders it. #}
+        <div class="w-previewbar w-previewbar-active" data-uhifadhi--area-bundle--area-presets-target="bar" role="status">
+            <span class="w-barstatus">{{ ux_icon('lucide:check') }}<span>The areas landing shows <b>Wall of workspaces</b>. It is the org&rsquo;s shipped default &mdash; preview any design above to see it whole, then apply it to make it the landing.</span></span>
+        </div>
+
+        {# THE INLINE PREVIEWS — each layout's FULL markup, at full size, exactly
+           as the landing renders it. Only one shows at a time, toggled by the
+           controller; the shipped default opens visible for a no-script viewer. #}
+        <div class="ax-views">
+            <div class="ax-view" data-uhifadhi--area-bundle--area-presets-target="view" data-view="wall">
+                {{ include('@Area/area/widgets/_wall.html.twig') }}
+            </div>
+            <div class="ax-view" data-uhifadhi--area-bundle--area-presets-target="view" data-view="register" hidden>
+                {{ include('@Area/area/widgets/_register.html.twig') }}
+            </div>
+            <div class="ax-view" data-uhifadhi--area-bundle--area-presets-target="view" data-view="map" hidden>
+                {{ include('@Area/area/widgets/_map.html.twig') }}
+            </div>
+            <div class="ax-view" data-uhifadhi--area-bundle--area-presets-target="view" data-view="attention" hidden>
+                {{ include('@Area/area/widgets/_attention.html.twig') }}
+            </div>
+            <div class="ax-view" data-uhifadhi--area-bundle--area-presets-target="view" data-view="flagship" hidden>
+                {{ include('@Area/area/widgets/_flagship.html.twig') }}
+            </div>
+        </div>
+    </div>
+{% endblock %}

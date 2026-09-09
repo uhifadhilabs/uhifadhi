@@ -1,0 +1,218 @@
+{# THE EDIT SCREEN — an area's identity and its boundary, on one page.
+
+   Design: areas/<area>/edit.html in the design workspace.
+
+   TWO WRITES THAT ARE NOTHING ALIKE. The identity card (name, IUCN category,
+   established year) is plain metadata with no geometric dependency — saved in
+   place. The boundary card is the one dangerous action: a replace supersedes the
+   geometry every zone and record references, so it runs the import pipeline, is
+   validated before it commits, and asks for an explicit confirmation the sidebar
+   guard spells out. Deactivate, never destroy.
+
+   hasBoundary DRIVES THE SCREEN. With a boundary: the boundary card REPLACES,
+   the sidebar previews the current geometry on the shared map plate and carries
+   the heads-up guard. With none: the boundary card ADDS a first one (nothing to
+   supersede, so no confirm), and the sidebar is the no-boundary state.
+
+   THE PREVIEW IS THE SHARED PLATE. The map is the platform's one map — the same
+   imagery, boundary treatment and chrome as the overview and a patrol plate,
+   drawn by the area-map controller from the same payload. This template only
+   frames it.
+
+   NO WIDGET INDICES. The design's PL· labels are the workspace's referencing
+   system, not product. See tests/Unit/Template/NoWorkshopLabelsTest.php. #}
+{% extends '@Shell/page.html.twig' %}
+
+{% block title %}Edit area{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {# The platform's one map stylesheet — Leaflet, then the shared plate/chrome
+       rules, before this module's sheet: the preview is the same map everywhere. #}
+    {% if area.hasBoundary %}
+        <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Bundle\\AtlasBundle\\AtlasBundle::LEAFLET_CSS')) }}">
+        <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Bundle\\AtlasBundle\\AtlasBundle::STYLESHEET')) }}">
+    {% endif %}
+    {{ include('@Area/_stylesheets.html.twig') }}
+{% endblock %}
+
+{% block javascripts %}
+    {% if area.hasBoundary %}
+        {# Leaflet as a classic script FIRST, so window.L is published before the
+           deferred area-map controller connects. parent() renders the importmap. #}
+        <script src="{{ asset(constant('Uhifadhi\\Bundle\\AtlasBundle\\AtlasBundle::LEAFLET_JS')) }}"></script>
+    {% endif %}
+    {{ parent() }}
+{% endblock %}
+
+{% block shell_breadcrumbs %}
+    <a href="{{ path('area_index') }}">uhifadhi</a> / <a href="{{ path('area_index') }}">areas</a> /
+    <a href="{{ path('area_show', {uuid: area.uuidString}) }}">{{ area.name }}</a> /
+    <a href="{{ path('area_settings', {uuid: area.uuidString}) }}">settings</a> / edit
+{% endblock %}
+
+{% block shell_page_title %}Edit area{% endblock %}
+
+{% block shell_page_subtitle %}The area's identity &mdash; name, IUCN category, established year &mdash; and its boundary. The boundary is the one dangerous action here: a replace supersedes the current geometry, it never deletes what references it.{% endblock %}
+
+{% block shell_page_actions %}
+    <a class="tgl" href="{{ path('area_settings', {uuid: area.uuidString}) }}">&larr; Back to settings</a>
+{% endblock %}
+
+{% block shell_page %}
+    <div class="grid g32" style="align-items:start">
+        <div class="ed-maincol">
+            {# IDENTITY — plain metadata, no geometric dependency, saved in place. #}
+            <div class="c" id="identity">
+                <span class="tab">Identity<span class="src">&middot; area_of_interest</span></span>
+
+                <div class="ed-cardhd">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                    <span>Plain area metadata &mdash; <b>no geometric dependency</b>. Saved in place. IUCN is the fixed enumeration Ia&hellip;VI; established is a year. These are the facts the overview identity band reads.</span>
+                </div>
+
+                <form method="post" action="{{ path('area_edit', {uuid: area.uuidString}) }}">
+                    <input type="hidden" name="_token" value="{{ identityToken }}" data-token="area_edit">
+
+                    {% if identityError %}
+                        <p class="import-error" role="alert">{{ identityError }}</p>
+                    {% endif %}
+
+                    <label class="fldlab" for="area-name">Name</label>
+                    <input class="fld" id="area-name" name="name" value="{{ area.name }}" required
+                           aria-label="Area name" style="margin-bottom:14px">
+
+                    <div class="grid g2" style="gap:14px;margin-bottom:0">
+                        <div>
+                            <label class="fldlab" for="area-iucn">IUCN category</label>
+                            <select class="fld" id="area-iucn" name="iucn" aria-label="IUCN category">
+                                {% for cat in ['Ia', 'Ib', 'II', 'III', 'IV', 'V', 'VI'] %}
+                                    <option{{ area.iucnCategory == cat ? ' selected' : '' }}>{{ cat }}</option>
+                                {% endfor %}
+                                <option value=""{{ area.iucnCategory is empty ? ' selected' : '' }}>Not assigned</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="fldlab" for="area-established">Established</label>
+                            <input class="fld" id="area-established" name="established" value="{{ area.establishedYear }}"
+                                   inputmode="numeric" aria-label="Established year">
+                        </div>
+                    </div>
+
+                    <div class="rln" style="margin-top:16px">
+                        <span class="fog">Area (derived from boundary)</span>
+                        <span class="mono d">{% if area.hasBoundary %}{{ areaKm2|number_format }} km&sup2; &middot; not editable{% else %}&mdash; &middot; no boundary yet{% endif %}</span>
+                    </div>
+                    <div class="rln">
+                        <span class="fog">Boundary source</span>
+                        <span class="mono d">{% if area.hasBoundary %}{{ area.source }}{% else %}&mdash;{% endif %}</span>
+                    </div>
+
+                    <div class="form-foot">
+                        <a class="tgl" href="{{ path('area_settings', {uuid: area.uuidString}) }}">Cancel</a>
+                        <button type="submit" class="cta">Save identity</button>
+                    </div>
+                </form>
+
+                <div class="use">Plain metadata, saved in place. The boundary and its derived size are changed by the import below &mdash; never typed here.</div>
+            </div>
+
+            {# BOUNDARY — replace (or add the first one). Runs the same import
+               pipeline as New area; a replace confirms before it supersedes. #}
+            <div class="c card-bound" id="boundary">
+                <span class="tab">Boundary<span class="src">&middot; {% if area.hasBoundary %}replace &middot; {{ area.source }} &middot; deactivate, never destroy{% else %}add the first one{% endif %}</span></span>
+
+                <div class="ed-cardhd">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></svg>
+                    <span>{% if area.hasBoundary %}An area always has a boundary &mdash; you can <b>replace</b> it, never remove it. A replace runs the import pipeline, then confirms before it supersedes; the preview and consequences are on the right.{% else %}This area has <b>no boundary on file</b> yet. Add one and it is imported straight onto the area &mdash; nothing to supersede, so nothing to confirm.{% endif %}</span>
+                </div>
+
+                <form method="post" action="{{ path('area_boundary_replace', {uuid: area.uuidString}) }}"
+                      enctype="multipart/form-data" data-controller="uhifadhi--area-bundle--area-upload">
+                    <input type="hidden" name="_token" value="{{ boundaryToken }}" data-token="area_boundary_replace">
+
+                    {% if boundaryError %}
+                        <p class="import-error" role="alert">{{ boundaryError }}</p>
+                    {% endif %}
+
+                    <div class="drop-wrap">
+                        <label class="drop" data-uhifadhi--area-bundle--area-upload-target="drop"
+                               data-action="dragover->uhifadhi--area-bundle--area-upload#over dragleave->uhifadhi--area-bundle--area-upload#leave drop->uhifadhi--area-bundle--area-upload#drop">
+                            <input type="file" name="boundary" accept=".geojson,.json,application/geo+json,application/json"
+                                   data-uhifadhi--area-bundle--area-upload-target="file" data-action="uhifadhi--area-bundle--area-upload#chosen" aria-label="Boundary file">
+                            <span data-uhifadhi--area-bundle--area-upload-target="label">Drop a{% if area.hasBoundary %} replacement{% endif %} boundary here &mdash; or click to choose</span>
+                            <span class="mono">GeoJSON &mdash; a Polygon, a MultiPolygon, a Feature or a FeatureCollection; several features are merged into one boundary</span>
+                        </label>
+                    </div>
+
+                    {% if area.hasBoundary %}
+                        {# THE EXPLICIT CONFIRM. Not a hard block — a considered
+                           acknowledgement that a replace supersedes geometry
+                           everything references. The consequences are named in
+                           the guard on the right. #}
+                        <label class="bconfirm">
+                            <input type="checkbox" name="confirm" value="1">
+                            <span>I understand this supersedes the current boundary. The zones and records that reference it keep their rows &mdash; nothing is deleted.</span>
+                        </label>
+                    {% endif %}
+
+                    <div class="form-foot">
+                        <span class="mono" style="font-size:11px;color:rgb(var(--c-dim))">{% if area.hasBoundary %}Replace runs the same import pipeline as New area, then supersedes on confirm.{% else %}Add runs the same import pipeline as New area.{% endif %}</span>
+                        {% if area.hasBoundary %}
+                            <button type="submit" class="btn-replace">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>Replace boundary
+                            </button>
+                        {% else %}
+                            <button type="submit" class="cta">Add boundary</button>
+                        {% endif %}
+                    </div>
+                </form>
+
+                <div class="use">Reuses the boundary import; on confirm a replace supersedes the current boundary version rather than overwriting it.</div>
+            </div>
+        </div>
+
+        {# THE PREVIEW / GUARD SIDEBAR. #}
+        <aside class="c" id="boundary-preview">
+            <span class="tab">Current boundary<span class="src">&middot; {% if area.hasBoundary %}preview &middot; what a replace affects{% else %}nothing to preview yet{% endif %}</span></span>
+
+            {% if area.hasBoundary %}
+                {# The stored geometry travels to the browser on the payload; the
+                   area-map controller draws it over the imagery, the same plate
+                   as the overview. #}
+                <div class="viewer" style="min-height:300px;margin-bottom:12px"
+                     data-controller="uhifadhi--area-bundle--area-map"
+                     data-uhifadhi--area-bundle--area-map-payload-value="{{ mapPayload|json_encode }}">
+                    <div class="map-canvas"
+                         data-uhifadhi--area-bundle--area-map-target="canvas"
+                         role="img"
+                         aria-label="{{ area.name }} &mdash; current boundary{% if zoneCount > 0 %} and zones{% endif %}"></div>
+                </div>
+
+                <div class="rln"><span class="fog">Current boundary</span><span class="mono d">{{ area.source }} &middot; {{ areaKm2|number_format }} km&sup2;</span></div>
+                <div class="rln"><span class="fog">Referenced by</span><span class="mono w" style="font-size:11px">{{ zoneCount }} zone{{ zoneCount == 1 ? '' : 's' }} &middot; every module filed against this area</span></div>
+
+                {# THE HEADS-UP GUARD — honest, warning-toned, deactivate-never-destroy.
+                   It names the area's own dependency (its zones) truthfully and
+                   speaks generally about everything else that references the
+                   boundary; this module does not invent another module's counts. #}
+                <div class="replace-guard" style="margin:14px 0 0;--fail:rgb(var(--c-warn))">
+                    <span class="rg-badge">HEADS UP</span>
+                    <div class="rg-body">
+                        <b>Replacing the boundary affects everything that references it.</b>
+                        <em>Its <b>{{ zoneCount }} zone{{ zoneCount == 1 ? '' : 's' }}</b> and every record filed against this area keep their rows &mdash; <b>nothing is deleted</b>. The current boundary is kept as a superseded version; coverage figures recompute against the new geometry, and the old figures stay with the old boundary. Zones that fall outside the new boundary are flagged for review, not dropped.</em>
+                    </div>
+                </div>
+            {% else %}
+                {# NO BOUNDARY IS A STATE, NOT A BROKEN MAP. #}
+                <div class="ao-slot" style="margin-top:8px">
+                    <div class="ao-slotrow">
+                        <span class="nm">The preview</span>
+                        <span class="wd">This area has <b>no boundary on file</b> yet, so there is nothing to preview. Add one on the left and it appears here, with its size and the zones over it.</span>
+                        <span class="st">awaiting a boundary</span>
+                    </div>
+                </div>
+            {% endif %}
+        </aside>
+    </div>
+{% endblock %}

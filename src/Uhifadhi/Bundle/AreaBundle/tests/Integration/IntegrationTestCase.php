@@ -1,0 +1,129 @@
+<?php
+
+declare(strict_types=1);
+
+/*
+ * This file is part of the Uhifadhi core.
+ *
+ * (c) Ezekiel Mjema <https://github.com/eemjema>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace Uhifadhi\Bundle\AreaBundle\Tests\Integration;
+
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Tools\SchemaTool;
+use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\AreaBundle\Entity\Zone;
+
+/**
+ * Symfony-standard kernel testing: KernelTestCase booting {@see TestKernel} with
+ * debug=true, so the container self-invalidates when test config changes. The
+ * kernel is named here rather than through a KERNEL_CLASS env var, because one
+ * repository holding several packages has more than one kernel to name.
+ *
+ * The schema is rebuilt per test against the REAL PostGIS database, so every
+ * assertion is about what was actually stored — a module whose boundary column
+ * was only ever asserted against a mock would be a module nobody has proved
+ * persists.
+ */
+abstract class IntegrationTestCase extends KernelTestCase
+{
+    protected EntityManagerInterface $em;
+
+    protected static function getKernelClass(): string
+    {
+        return TestKernel::class;
+    }
+
+    protected function setUp(): void
+    {
+        self::bootKernel();
+
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get('doctrine.orm.entity_manager');
+        $this->em = $em;
+
+        $schemaTool = new SchemaTool($this->em);
+        $metadata = $this->em->getMetadataFactory()->getAllMetadata();
+        $schemaTool->dropSchema($metadata);
+        $schemaTool->createSchema($metadata);
+    }
+
+    protected function tearDown(): void
+    {
+        $this->em->close();
+        parent::tearDown();
+
+        // The framework's debug error handler is registered during the test and
+        // never popped; PHPUnit flags that as risky. Pop whatever is left.
+        while (true) {
+            $previous = set_exception_handler(static fn () => null);
+            restore_exception_handler();
+            if (null === $previous) {
+                break;
+            }
+            restore_exception_handler();
+        }
+    }
+
+    /** The NCA-shaped rectangle every spatial assertion here is measured on. */
+    protected const string A_BOUNDARY = '{"type":"MultiPolygon","coordinates":[[[[-30.0,-3.6],[-29.0,-3.6],[-29.0,-2.8],[-30.0,-2.8],[-30.0,-3.6]]]]}';
+
+    /*
+     * FOUR SUBDIVISIONS OF THAT RECTANGLE, chosen so the zone invariant can be
+     * stated in geometry rather than in prose. West and East split it at -29.5
+     * and so SHARE AN EDGE — the legal case that a naive overlap test would
+     * wrongly reject. The straddler crosses that line and so shares interior
+     * with both. The inner square sits wholly within West, which ST_Overlaps
+     * calls false and the invariant calls a conflict.
+     */
+
+    /** -30.0–-29.5: the western half. */
+    protected const string A_WEST_HALF = '{"type":"MultiPolygon","coordinates":[[[[-30.0,-3.6],[-29.5,-3.6],[-29.5,-2.8],[-30.0,-2.8],[-30.0,-3.6]]]]}';
+
+    /** -29.5–-29.0: the eastern half, meeting the western along -29.5. */
+    protected const string A_EAST_HALF = '{"type":"MultiPolygon","coordinates":[[[[-29.5,-3.6],[-29.0,-3.6],[-29.0,-2.8],[-29.5,-2.8],[-29.5,-3.6]]]]}';
+
+    /** -29.75–-29.25: crosses the seam, so it shares interior with both halves. */
+    protected const string A_STRADDLING_MIDDLE = '{"type":"MultiPolygon","coordinates":[[[[-29.75,-3.6],[-29.25,-3.6],[-29.25,-2.8],[-29.75,-2.8],[-29.75,-3.6]]]]}';
+
+    /** Wholly inside the western half — containment is a conflict, not a nesting. */
+    protected const string A_INSIDE_WEST = '{"type":"MultiPolygon","coordinates":[[[[-29.9,-3.5],[-29.6,-3.5],[-29.6,-2.9],[-29.9,-2.9],[-29.9,-3.5]]]]}';
+
+    protected function anArea(string $name = 'Sample Area', string $source = 'WDPA'): AreaOfInterest
+    {
+        $area = new AreaOfInterest()
+            ->setName($name)
+            ->setGeom(self::A_BOUNDARY)
+            ->setSource($source);
+
+        $this->em->persist($area);
+        $this->em->flush();
+
+        return $area;
+    }
+
+    /**
+     * A zone persisted DIRECTLY, bypassing the invariant in
+     * {@see \Uhifadhi\Bundle\AreaBundle\Service\ZoneService} — for the tests that are about
+     * storage (the table, the cascade, the unique name) rather than about the
+     * rule. Tests of the rule go through the service, which is the only
+     * supported way to give a zone a geometry.
+     */
+    protected function aZone(AreaOfInterest $area, string $name, string $geom): Zone
+    {
+        $zone = new Zone()
+            ->setArea($area)
+            ->setName($name)
+            ->setGeom($geom);
+
+        $this->em->persist($zone);
+        $this->em->flush();
+
+        return $zone;
+    }
+}

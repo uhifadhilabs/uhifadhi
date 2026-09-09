@@ -1,0 +1,104 @@
+{# THE WALL OF WORKSPACES — the card gallery, shared by the register landing and
+   the widget library's "Wall of workspaces" preview so the two never drift.
+
+   Design: areas/index.html (source presets/areas-index/a.html) and the wall view
+   of areas/widgets.html.
+
+   THE HOST OWNS THE FRAME, A MODULE OWNS THE CONTENT. A card's face, identity,
+   "modules live" count and "last check-in" are the host's; every operational
+   figure — the stat cells, the "out right now" chip, the alert flag — arrived
+   through the overview seams and is laid out without the host understanding it.
+
+   THE CARD FACE is the area's real boundary outlined over a real Esri World
+   Imagery snippet (a keyless `<img>`, rendered on demand — see
+   src/Model/AreaThumbnail.php). A boundary-less area shows the neutral ground.
+
+   Search, the filter pills with live counts and the fixed activity sort narrow
+   the SAME rendered cards on the client — the register reads the same at four
+   cards or forty. #}
+<div data-controller="uhifadhi--area-bundle--area-register">
+    <div class="reg-bar">
+        <input class="fld" data-uhifadhi--area-bundle--area-register-target="search"
+               placeholder="Search areas&hellip;" aria-label="Search areas">
+        <span class="subnav">
+            <a class="on" href="#" data-action="uhifadhi--area-bundle--area-register#filter" data-filter="all">All &middot; <span data-uhifadhi--area-bundle--area-register-target="count">{{ counts.all }}</span></a>
+            <a href="#" data-action="uhifadhi--area-bundle--area-register#filter" data-filter="live">Live &middot; {{ counts.live }}</a>
+            <a href="#" data-action="uhifadhi--area-bundle--area-register#filter" data-filter="alerts">With alerts &middot; {{ counts.alerts }}</a>
+            <a href="#" data-action="uhifadhi--area-bundle--area-register#filter" data-filter="setup">Awaiting setup &middot; {{ counts.setup }}</a>
+        </span>
+        {# The card gallery has no sortable column headers; sort is fixed at
+           last-activity, and the chip states it rather than offering a dead control. #}
+        <span class="reg-sort mono"><span class="chip acc">sort: last activity &darr;</span></span>
+    </div>
+
+    <div class="ax-cards" data-uhifadhi--area-bundle--area-register-target="list">
+        {% for row in rows %}
+            <a class="ax-card{{ row.isLive ? '' : ' quiet' }}" data-row
+               href="{{ path('area_show', {uuid: row.area.uuidString}) }}"
+               data-name="{{ row.area.name|lower }}"
+               data-live="{{ row.isLive ? '1' : '0' }}"
+               data-alerts="{{ row.hasAlerts ? '1' : '0' }}"
+               data-activity="{{ row.activityRank }}">
+                <div class="ax-thumb{{ row.thumbnail.hasBoundary ? '' : ' none' }}">
+                    {% if row.thumbnail.hasBoundary %}
+                        {# The satellite ground — a keyless Esri export for the boundary bbox,
+                           rendered on demand — with the real gazetted outline over it. #}
+                        <img class="ax-sat" src="{{ row.thumbnail.imageUrl }}" alt="" loading="lazy" decoding="async">
+                        <svg class="ax-outline" viewBox="{{ constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\AreaThumbnail::VIEW_BOX') }}" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><path d="{{ row.thumbnail.path }}"/></svg>
+                    {% endif %}
+                    {% if row.isLive %}
+                        <span class="ax-live"><i></i>live</span>
+                        {% if row.hasAlerts %}
+                            <span class="ax-alertflag">{{ ux_icon('lucide:bell') }} {{ row.alertCount }} alert{{ row.alertCount == 1 ? '' : 's' }}</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="ax-flag mono">not active yet</span>
+                    {% endif %}
+                </div>
+                <div class="ax-body">
+                    <div class="ax-head">
+                        <div class="ax-name">{{ row.area.name }}</div>
+                        <span class="ax-open">Open {{ ux_icon('lucide:arrow-right') }}</span>
+                    </div>
+                    <div class="ax-meta mono">
+                        {%- if row.area.iucnCategory %}IUCN {{ row.area.iucnCategory }} &middot; {% endif -%}
+                        {%- if row.area.establishedYear %}est. {{ row.area.establishedYear }} &middot; {% endif -%}
+                        {{ row.areaKm2|number_format }} km&sup2;
+                    </div>
+                    {% if row.isLive %}
+                        {# Cell one is the host's own count; the rest are module now-tiles,
+                           laid out without the host knowing what they measure. #}
+                        <div class="ax-stats">
+                            <div class="ax-st"><b>{{ row.liveModules }}</b><span>modules live</span></div>
+                            {% for stat in row.stats %}
+                                <div class="ax-st"><b>{{ stat.value }}</b><span>{{ stat.label }}</span></div>
+                            {% endfor %}
+                        </div>
+                        <div class="ax-foot">
+                            {% if row.liveNow %}
+                                <span class="chip ok">{{ ux_icon('lucide:circle-check') }} {{ row.liveNow.value }} {{ row.liveNow.label }}</span>
+                            {% endif %}
+                            {% if row.lastActivity %}
+                                <span class="ax-when mono">last check-in <time datetime="{{ row.lastActivity|date('c') }}">{{ row.lastActivityLabel }}</time></span>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        {# NOT-LIVE IS A HONEST STATE, NOT A GRID OF NOUGHTS. #}
+                        <div class="ax-empty mono">{{ row.area.hasBoundary ? 'Boundary set · no modules yet' : 'No boundary · no modules yet' }}</div>
+                        <div class="ax-foot">
+                            <span class="chip idle">awaiting setup</span>
+                            <span class="ax-when mono">set up a module to begin</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </a>
+        {% endfor %}
+        {% if is_granted('area.create') %}
+            <a class="ax-card ax-addcard" data-tail href="{{ path('area_new') }}">
+                <span class="ax-addmk">{{ ux_icon('lucide:plus') }}</span>
+                <span class="t">New area</span>
+                <span class="d">Draw a boundary, name it, choose the modules it starts with.</span>
+            </a>
+        {% endif %}
+    </div>
+</div>

@@ -1,0 +1,70 @@
+{
+    "name": "uhifadhi/area-bundle",
+    "type": "symfony-bundle",
+    "description": "The uhifadhi area: the named piece of ground an installation manages — its gazetted boundary as a PostGIS multipolygon, the zones inside it, the overview every module contributes to, and the answer to the platform's area contract.",
+    "keywords": [
+        "boundary",
+        "conservation",
+        "geospatial",
+        "postgis",
+        "protected-area",
+        "symfony",
+        "symfony-ux",
+        "uhifadhi",
+        "zones"
+    ],
+    "license": "AGPL-3.0-or-later",
+    "authors": [
+        {
+            "name": "Ezekiel Mjema",
+            "homepage": "https://github.com/eemjema"
+        }
+    ],
+    "require": {
+        "php": ">=8.4",
+        "doctrine/dbal": "^4.0",
+        "doctrine/doctrine-bundle": "^3.0",
+        "doctrine/orm": "^3.5",
+        "doctrine/persistence": "^3.1 || ^4.0",
+        "fundistadi/postgis-bundle": "^0.5.1",
+        "symfony/asset-mapper": "^7.3 || ^8.0",
+        "symfony/dependency-injection": "^7.3 || ^8.0",
+        "symfony/doctrine-bridge": "^7.3 || ^8.0",
+        "symfony/framework-bundle": "^7.3 || ^8.0",
+        "symfony/http-foundation": "^7.3 || ^8.0",
+        "symfony/http-kernel": "^7.3 || ^8.0",
+        "symfony/routing": "^7.3 || ^8.0",
+        "symfony/security-core": "^7.3 || ^8.0",
+        "symfony/security-csrf": "^7.3 || ^8.0",
+        "symfony/security-http": "^7.3 || ^8.0",
+        "symfony/uid": "^7.3 || ^8.0",
+        "twig/twig": "^3.14",
+        "uhifadhi/atlas-bundle": "^1.0",
+        "uhifadhi/contracts": "^1.0",
+        "uhifadhi/registry-bundle": "^1.0",
+        "uhifadhi/shell-bundle": "^1.0"
+    },
+    "require-dev": {
+        "symfony/security-bundle": "^7.3 || ^8.0",
+        "symfony/twig-bundle": "^7.3 || ^8.0"
+    },
+    "suggest": {
+        "symfony/security-bundle": "The bundle that reads config/packages/security.yaml. Every screen here is registered only where it is in the kernel, so an installation without it gets the area model and no pages.",
+        "symfony/twig-bundle": "The engine these screens render in. Without it the area entity, its repository and the services around it still work; the pages are not registered."
+    },
+    "autoload": {
+        "psr-4": {
+            "Uhifadhi\\Bundle\\AreaBundle\\": ""
+        },
+        "exclude-from-classmap": [
+            "/tests/"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Uhifadhi\\Bundle\\AreaBundle\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

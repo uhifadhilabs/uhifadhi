@@ -1,0 +1,60 @@
+{# THE ZONES OF ONE AREA — the spatial lens, listed.
+
+   Design: areas/<area>/zones/index.html. The empty plate below is that
+   design's own `zempty`, and it is the state a fresh installation is actually
+   in: most areas have no zones, and the page says what a zone IS rather than
+   rendering a table with no rows.
+
+   A LENS, NOT A FENCE. Reading the scheme is for anybody who may see the area;
+   the writes are gated on `area.edit` where they are offered. #}
+{% extends '@Shell/page.html.twig' %}
+
+{% block title %}Zones{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {{ include('@Area/_stylesheets.html.twig') }}
+{% endblock %}
+
+{% block shell_breadcrumbs %}
+    <a href="{{ path('area_index') }}">uhifadhi</a> / <a href="{{ path('area_show', {uuid: area.uuidString}) }}">{{ area.name }}</a> / zones
+{% endblock %}
+
+{% block shell_page_title %}{{ area.name }} &mdash; Zones{% endblock %}
+
+{% block shell_page_subtitle %}How this area is subdivided &mdash; the spatial lens every module can group by.{% endblock %}
+
+{% block shell_page %}
+    {% if zones is empty %}
+        <div class="c zempty">
+            <span class="zeh">This area has no zones yet</span>
+            <p class="zeb">A zone is <b>a lens, not a fence</b>: it gives every module a second way to
+                group what it already shows &mdash; its own records, by zone &mdash; and never hides
+                or blocks a record.</p>
+            <p class="zeb">Until then {{ area.name }} simply has none: no zone column, no zone filter,
+                no zone map layer anywhere in the product. That is the normal state and not a
+                configuration anybody forgot.</p>
+        </div>
+    {% else %}
+        <div class="grid">
+            <div class="c">
+                <span class="tab">The {{ zones|length }} zone{{ zones|length == 1 ? '' : 's' }}<span class="src">&middot; zone</span></span>
+                <table class="tbl">
+                    <tr>
+                        <th>Zone</th>
+                        <th style="text-align:right">km&sup2;</th>
+                    </tr>
+                    {% for zone in zones %}
+                        <tr>
+                            <td>{{ zone.name }}</td>
+                            <td class="num">{{ zoneKm2[zone.id]|default(0)|number_format }}</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+                <div class="use">Sibling zones may touch along an edge and may leave gaps between them,
+                    but never share interior &mdash; the invariant is measured by PostGIS on every write,
+                    so a scheme that overlaps is refused rather than stored and discovered later.</div>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}

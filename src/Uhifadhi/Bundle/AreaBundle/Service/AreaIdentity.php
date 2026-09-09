@@ -1,0 +1,71 @@
+<?php
+
+declare(strict_types=1);
+
+/*
+ * This file is part of the Uhifadhi core.
+ *
+ * (c) Ezekiel Mjema <https://github.com/eemjema>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace Uhifadhi\Bundle\AreaBundle\Service;
+
+use Doctrine\ORM\EntityManagerInterface;
+use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\AreaBundle\Exception\AreaIdentityException;
+
+/**
+ * AN AREA'S IDENTITY, EDITED IN PLACE — the name, the IUCN category and the
+ * gazettement year, changed on an area that already exists. The boundary is
+ * deliberately NOT here: it is geometry everything else references, so replacing
+ * it goes through {@see BoundaryImport} with a guard in front of it, never
+ * through a plain field save.
+ *
+ * THE SIBLING OF {@see AreaCreator}, AND FOR THE SAME REASONS. Registered beside
+ * the entity rather than with the screens, because editing an area is a model
+ * concern a console command or a fixture loader with no twig would want too. It
+ * holds the ONE invariant a name has — that it is not blank — the same rule
+ * creation enforces, because an area cannot be left nameless any more than it
+ * can be born nameless.
+ *
+ * THE GAZETTED FACTS ARE OPTIONAL, AND CLEARING THEM IS A VALID EDIT. An area
+ * whose IUCN category or established year was recorded in error can have it set
+ * back to unrecorded — a blank is UNRECORDED, never zero — so both take null and
+ * null is written through.
+ */
+final readonly class AreaIdentity
+{
+    public function __construct(private EntityManagerInterface $entityManager)
+    {
+    }
+
+    /**
+     * Save an area's identity. The name is required and trimmed; the gazetted
+     * facts are optional and a null clears them back to unrecorded.
+     *
+     * @throws AreaIdentityException when the name is blank
+     */
+    public function update(
+        AreaOfInterest $area,
+        string $name,
+        ?string $iucnCategory,
+        ?int $establishedYear,
+    ): AreaOfInterest {
+        $name = trim($name);
+        if ('' === $name) {
+            throw new AreaIdentityException('An area needs a name — as its official record names it.');
+        }
+
+        $area
+            ->setName($name)
+            ->setIucnCategory($iucnCategory)
+            ->setEstablishedYear($establishedYear);
+
+        $this->entityManager->flush();
+
+        return $area;
+    }
+}

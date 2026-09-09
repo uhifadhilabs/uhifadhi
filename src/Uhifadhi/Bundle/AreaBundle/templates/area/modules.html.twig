@@ -1,0 +1,72 @@
+{# THE MODULE GRID — every module switched on for this area, one card, one page.
+
+   Design: areas/<area>/modules.html in the design workspace.
+
+   THE PICTURE IS THE SHELL'S PARTIAL, included with `with_context: false`
+   because it takes exactly one variable and reading anything else off this
+   page's context would couple the two. The catalogue picture has to be the same
+   picture wherever it appears — this tab, a department page, a search result —
+   and the way to guarantee that is to have one copy of it.
+
+   THE TILES CARRY NO HEADLINE FIGURE, and that is a MISSING SEAM rather than a
+   missing style. The design draws a statistic, a sparkline and a one-line
+   summary on every tile ("3,214 ha lost · 01–23"). Every one of those is a
+   module's own reading of its own data, and there is no contribution seam for
+   them: the catalogue publishes a slug, a name, a category, a status and a data
+   source, and that is all anybody can honestly print. Inventing the numbers
+   would be this module deciding what a forest-loss module measures — the exact
+   coupling src/Overview's seams exist to prevent. When a module can contribute a
+   tile figure the way it already contributes an overview widget, the tiles grow
+   one and this template does not change: the shell's ModuleCard does.
+
+   THE PLATE CARRIES NO WIDGET INDEX — the design file's plate numbers are the
+   workspace's referencing system and not product. See
+   tests/Unit/Template/NoWorkshopLabelsTest.php. #}
+{% extends '@Shell/page.html.twig' %}
+
+{% block title %}Modules{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {{ include('@Area/_stylesheets.html.twig') }}
+{% endblock %}
+
+{% block shell_breadcrumbs %}
+    <a href="{{ path('area_index') }}">uhifadhi</a> /
+    <a href="{{ path('area_index') }}">areas</a> /
+    <a href="{{ path('area_show', {uuid: area.uuidString}) }}">{{ area.name|lower }}</a> / modules
+{% endblock %}
+
+{% block shell_page_title %}{{ area.name }} &mdash; Modules{% endblock %}
+
+{% block shell_page_subtitle %}Every module switched on for this area &mdash; one card, one page. Open a card to view it; edit or run its data from there.{% endblock %}
+
+{% block shell_page_actions %}
+    {# THE AFFORDANCE CARRIES THE PERMISSION. Composing an area is `module.create`
+       — see AreaModulesController for why that string and not a role. #}
+    {% if is_granted('module.create') %}
+        <a class="cta" href="{{ path('area_module_customize', {uuid: area.uuidString}) }}">{{ ux_icon('lucide:sliders-horizontal') }} Customize</a>
+    {% endif %}
+{% endblock %}
+
+{% block shell_page %}
+    {{ include('@Shell/_module_grid.html.twig', {groups: groups}, with_context: false) }}
+
+    {% if is_granted('module.create') %}
+        {# THE HONEST ADD AFFORDANCE — the shop, not a dead plus, and it says how
+           many modules are actually waiting in it rather than implying there is
+           always something to add. #}
+        <div class="grid g4">
+            <a class="c mtile-add" href="{{ path('area_module_customize', {uuid: area.uuidString}) }}">
+                <span class="t">{{ ux_icon('lucide:plus') }} Add a module</span>
+                <span class="d">
+                    {%- if parkedCount > 0 -%}
+                        {{ parkedCount }} in the catalogue {{ parkedCount == 1 ? 'is' : 'are' }} parked on this area.
+                    {%- else -%}
+                        Every module in the catalogue is switched on here.
+                    {%- endif -%}
+                </span>
+            </a>
+        </div>
+    {% endif %}
+{% endblock %}

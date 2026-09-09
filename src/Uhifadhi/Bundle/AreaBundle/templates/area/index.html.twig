@@ -1,0 +1,85 @@
+{# THE REGISTER — every area this installation manages, drawn as a wall of
+   workspaces: one card per area, its live operational pulse on the face and its
+   sub-app one click behind. It reads the same at four cards or forty.
+
+   Design: areas/index.html in the design workspace (the graduated card gallery,
+   source presets/areas-index/a.html).
+
+   THE HOST OWNS THE FRAME, A MODULE OWNS THE CONTENT. A card's face, its
+   identity line, its "modules live" count and its "last check-in" are the
+   host's; every operational figure — the stat cells, the "out right now" chip,
+   the alert flag — arrived through the overview seams and is laid out without the
+   host understanding it. That is what lets a card read honestly when a module
+   leaves: its figures stop arriving and no hard-coded cell is left behind. See
+   src/Service/AreaRegister.php.
+
+   THE CARD FACE is the area's real boundary, framed to its own bounding box and
+   drawn as an outline over a neutral imagery-toned ground. The graduated design
+   asks for that outline over a STATIC SATELLITE snippet, cached per area; the
+   satellite raster half is deferred (map-module exposes no server-side static
+   render yet) — see src/Service/AreaThumbnailer.php. A boundary-less area shows
+   the neutral ground alone.
+
+   THE PLATE CARRIES NO WIDGET INDEX. The design file prints one in the tab
+   (`PL·31`); that is the workspace's referencing system and not product. See
+   tests/Unit/Template/NoWorkshopLabelsTest.php. #}
+{% extends '@Shell/page.html.twig' %}
+
+{% block title %}Areas{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {{ include('@Area/_stylesheets.html.twig') }}
+{% endblock %}
+
+{# The register is not inside an area, so it fills the tab socket with nothing
+   rather than inheriting the area strip. #}
+{% block shell_page_tabs %}{% endblock %}
+
+{% block shell_breadcrumbs %}<a href="{{ path('area_index') }}">uhifadhi</a> / areas{% endblock %}
+
+{% block shell_page_title %}Areas{% endblock %}
+
+{% block shell_page_subtitle %}The org&rsquo;s register of protected areas, drawn as a wall of workspaces. Each card is an area you manage &mdash; its live operational pulse on the face, its sub-app one click behind.{% endblock %}
+
+{% block shell_page_actions %}
+    {# THE WIDGET-LIBRARY ADOPT-CONTROL — the same control, in the same place, as
+       every widget surface. Its library (the five preset directions this register
+       was drawn in) is a follow-up slice; the button is wired to where that route
+       will live. A literal href rather than path(), on purpose: the route is not
+       mounted yet, so generating it would fail — this is the same "the door is
+       named before it is built" the New area button carried before v0.5.0. #}
+    <a class="tgl w-act" href="/areas/widgets">{{ ux_icon('lucide:layout-grid') }} Widget library</a>
+    {# THE BUTTON CARRIES THE PERMISSION, not just the screen behind it: a control
+       that opens onto a refusal teaches somebody the product is broken. #}
+    {% if is_granted('area.create') %}
+        <a class="cta" href="{{ path('area_new') }}">{{ ux_icon('lucide:plus') }} New area</a>
+    {% endif %}
+{% endblock %}
+
+{% block shell_page %}
+    {% if rows is empty %}
+        {# AN INSTALLATION WITH NO AREAS IS NEW, NOT BROKEN. An empty wall reads
+           as a page that failed to load; this says what is true and what to do. #}
+        <div class="c">
+            <p class="zeb">No areas yet. An area is the named piece of ground this
+                installation manages &mdash; the axis everything else is filed under,
+                so nothing else has anywhere to go until one exists.</p>
+            <p class="zeb"><span class="mono d" style="font-size:10.5px">Areas arrive from whatever seeds this installation, or from a boundary import.</span></p>
+            {% if is_granted('area.create') %}
+                <p class="zeb"><a class="cta" href="{{ path('area_new') }}">{{ ux_icon('lucide:plus') }} New area</a></p>
+            {% endif %}
+        </div>
+    {% else %}
+        {# SEARCH, THE FILTER PILLS WITH THEIR LIVE COUNTS, AND THE SORT STATE —
+           all three narrow the SAME rendered cards on the client, drawn by the
+           shared wall partial the widget library's "Wall of workspaces" preview
+           renders too, so the register landing and its preset can never drift.
+
+           THE PILLS ARE ONLY THE ONES THAT CAN MOVE. Live and awaiting-setup are
+           the seam's ledger; alerts is the attention seam. All three change with
+           the installation, so none is a filter that can only ever return
+           everything or nothing. #}
+        {{ include('@Area/area/_register_cards.html.twig') }}
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,12 @@
+{# THE SHEETS EVERY AREA SCREEN NEEDS.
+
+   Ordered shell → area, weakest to strongest: this module's sheet is the one
+   allowed to override the platform's frame, so it is last. The shell's own
+   sheet is linked by the shell's document; this adds only the area vocabulary
+   on top of it — the plate tab, the identity band, the register's rows, the
+   attention list and the honest-absent slot.
+
+   Named through the bundle's constant rather than typed out, because anyone
+   theming these screens has to be able to name the file and a path spelled
+   twice is a path that goes stale once. #}
+<link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Bundle\\AreaBundle\\AreaBundle::STYLESHEET')) }}">

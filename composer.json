@@ -87,6 +87,7 @@
     },
     "autoload-dev": {
         "psr-4": {
+            "Uhifadhi\\Bundle\\AreaBundle\\Tests\\": "src/Uhifadhi/Bundle/AreaBundle/tests/",
             "Uhifadhi\\Bundle\\AtlasBundle\\Tests\\": "src/Uhifadhi/Bundle/AtlasBundle/tests/",
             "Uhifadhi\\Bundle\\RegistryBundle\\Tests\\": "src/Uhifadhi/Bundle/RegistryBundle/tests/",
             "Uhifadhi\\Bundle\\ShellBundle\\Tests\\": "src/Uhifadhi/Bundle/ShellBundle/tests/",

@@ -33,6 +33,12 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
  * minimally — a real entity in the host's namespace, implementing the contract,
  * autoloaded in this suite alone (see composer.json autoload-dev).
  *
+ * ITS TABLE IS THE SUITE'S, NOT A BUNDLE'S. The one database the core's suites
+ * share has exactly one owner per table name, and `area_of_interest` belongs to
+ * AreaBundle. What this fixture has to impersonate is the CLASS NAME an
+ * installation resolves the contract to; where its own rows are kept is nobody's
+ * business but this suite's, so it keeps them under a name no package claims.
+ *
  * A STUB, AND IT IMPERSONATES A REAL FQCN. `Uhifadhi\Entity\AreaOfInterest` is
  * the uhifadhi host application's own class, spelled here byte-for-byte so the
  * suite exercises the registry a real installation exercises. It is marked as a stub
@@ -56,7 +62,7 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
  * on this association prevents today.
  */
 #[ORM\Entity]
-#[ORM\Table(name: 'area_of_interest')]
+#[ORM\Table(name: 'fixture_area_of_interest')]
 #[ORM\HasLifecycleCallbacks]
 class AreaOfInterest implements AreaInterface
 {

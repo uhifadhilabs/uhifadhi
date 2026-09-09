@@ -1,0 +1,87 @@
+{# PREVIEW: THE REGISTER — the working table, its science columns retired for
+   operational ones and its search / filter / sort muscle kept. The columns are
+   the host's "modules live" and the modules' own now-tiles — the SAME figures the
+   wall's cards show, in a denser frame — so the host names none of them: the stat
+   headers are whatever labels the now-tile seam handed back. #}
+<div class="pghead">
+    <div>
+        <h1 class="pg">Areas</h1>
+        <p class="pgsub">The register &mdash; the working list the landing already is, with its science columns retired. The muscle stays: search, the filter pills with live counts, sortable headers, the whole row clickable. What each column reports is now <b>operational</b>, gathered through the same seams the cards read.</p>
+    </div>
+    {% if is_granted('area.create') %}
+        <div class="pgact"><a class="cta" href="{{ path('area_new') }}">{{ ux_icon('lucide:plus') }} New area</a></div>
+    {% endif %}
+</div>
+
+{% if rows is empty %}
+    <div class="c"><p class="zeb">No areas yet &mdash; the register fills as areas are added.</p></div>
+{% else %}
+    <div data-controller="uhifadhi--area-bundle--area-register">
+        <div class="reg-bar">
+            <input class="fld" data-uhifadhi--area-bundle--area-register-target="search"
+                   placeholder="Search areas&hellip;" aria-label="Search areas">
+            <span class="subnav">
+                <a class="on" href="#" data-action="uhifadhi--area-bundle--area-register#filter" data-filter="all">All &middot; <span data-uhifadhi--area-bundle--area-register-target="count">{{ counts.all }}</span></a>
+                <a href="#" data-action="uhifadhi--area-bundle--area-register#filter" data-filter="live">Live &middot; {{ counts.live }}</a>
+                <a href="#" data-action="uhifadhi--area-bundle--area-register#filter" data-filter="alerts">With alerts &middot; {{ counts.alerts }}</a>
+                <a href="#" data-action="uhifadhi--area-bundle--area-register#filter" data-filter="setup">Awaiting setup &middot; {{ counts.setup }}</a>
+            </span>
+            <span class="reg-sort mono"><span class="chip acc" data-uhifadhi--area-bundle--area-register-target="sortlabel">sort: last activity &darr;</span></span>
+        </div>
+
+        <div class="c">
+            <span class="tab">All areas<span class="src">&middot; register &mdash; operational columns</span></span>
+            <table class="tbl ax-reg" data-uhifadhi--area-bundle--area-register-target="list">
+                <tr>
+                    <th class="sortable" data-action="uhifadhi--area-bundle--area-register#sort" data-sortcol="name" data-label="protected area">Protected area<span class="mono sarrow">&darr;</span></th>
+                    <th class="sortable" data-action="uhifadhi--area-bundle--area-register#sort" data-sortcol="modules" data-label="modules" style="text-align:right">modules<span class="mono sarrow">&darr;</span></th>
+                    {% for label in statColumns %}
+                        <th class="sortable" data-action="uhifadhi--area-bundle--area-register#sort" data-sortcol="s{{ loop.index0 }}" data-label="{{ label }}" style="text-align:right">{{ label }}<span class="mono sarrow">&darr;</span></th>
+                    {% endfor %}
+                    <th class="sortable sorted" data-action="uhifadhi--area-bundle--area-register#sort" data-sortcol="activity" data-label="last activity">last activity<span class="mono sarrow">&darr;</span></th>
+                    <th>alerts</th>
+                    <th></th>
+                </tr>
+                {% for row in rows %}
+                    <tr data-row data-href="{{ path('area_show', {uuid: row.area.uuidString}) }}"
+                        data-name="{{ row.area.name|lower }}"
+                        data-live="{{ row.isLive ? '1' : '0' }}"
+                        data-alerts="{{ row.hasAlerts ? '1' : '0' }}"
+                        data-modules="{{ row.liveModules }}"
+                        data-activity="{{ row.activityRank }}"
+                        {% for stat in row.stats %}data-s{{ loop.index0 }}="{{ stat.value }}" {% endfor %}>
+                        <td>
+                            <div class="reg-id">
+                                <div class="thumb{{ row.thumbnail.hasBoundary ? '' : ' none' }}"{% if row.thumbnail.hasBoundary %} style="background-image:url('{{ row.thumbnail.imageUrl }}')"{% endif %}></div>
+                                <div>
+                                    <div class="reg-name"><a href="{{ path('area_show', {uuid: row.area.uuidString}) }}">{{ row.area.name }}</a></div>
+                                    <div class="mono reg-meta">
+                                        {%- if row.area.iucnCategory %}IUCN {{ row.area.iucnCategory }} &middot; {% endif -%}
+                                        {%- if row.area.establishedYear %}est. {{ row.area.establishedYear }} &middot; {% endif -%}
+                                        {{ row.areaKm2|number_format }} km&sup2;
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        {% if row.isLive %}
+                            <td class="num">{{ row.liveModules }}</td>
+                            {% for label in statColumns %}
+                                <td class="num">{{ row.stats[loop.index0] ? row.stats[loop.index0].value : '&mdash;'|raw }}</td>
+                            {% endfor %}
+                            <td class="mono ax-time"><time datetime="{{ row.lastActivity ? row.lastActivity|date('c') : '' }}">{{ row.lastActivityLabel ?? '&mdash;'|raw }}</time></td>
+                            <td>{% if row.hasAlerts %}<span class="chip warn">{{ row.alertCount }} open</span>{% else %}<span class="chip ok">steady</span>{% endif %}</td>
+                        {% else %}
+                            <td class="num d">0</td>
+                            {% for label in statColumns %}
+                                <td class="num"><span class="mono ax-none">not active yet</span></td>
+                            {% endfor %}
+                            <td class="mono ax-time d">&mdash;</td>
+                            <td><span class="chip idle">awaiting setup</span></td>
+                        {% endif %}
+                        <td class="reg-open"><a class="open-btn" href="{{ path('area_show', {uuid: row.area.uuidString}) }}">Open &rarr;</a></td>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+{% endif %}
