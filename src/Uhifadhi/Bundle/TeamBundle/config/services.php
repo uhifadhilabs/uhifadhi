@@ -43,6 +43,7 @@ use Uhifadhi\Bundle\TeamBundle\Service\Mail;
 use Uhifadhi\Bundle\TeamBundle\Service\PermissionCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Service\SuperAdminInvariant;
 use Uhifadhi\Bundle\TeamBundle\Service\TeamOverview;
+use Uhifadhi\Bundle\TeamBundle\Service\UserService;
 use Uhifadhi\Bundle\TeamBundle\Shell\TeamNavigation;
 use Uhifadhi\Bundle\TeamBundle\Shell\UserBadgeSource;
 use Uhifadhi\Bundle\TeamBundle\Twig\AreaScopeExtension;
@@ -76,6 +77,7 @@ use Uhifadhi\Bundle\TeamBundle\Widget\TeamWidgets;
  *   team.permissions            the catalogue: this bundle's seven + what modules declared
  *   team.permission_voter       who holds which of them
  *   team.super_admin_invariant  the refusal that keeps one active Super Admin
+ *   team.accounts               every way an account comes into being or changes
  *   team.user_checker           the sign-in refusal for a deactivated account
  *   team.overview               the roster's counts and its attention rows
  *   team.widget_surface.*       the roster and the matrix, as dashboard surfaces
@@ -341,6 +343,20 @@ return static function (ContainerConfigurator $container): void {
         ->args([service(UserRepository::class)]);
 
     /*
+     * EVERY WAY AN ACCOUNT COMES INTO BEING OR CHANGES. Four callers — the two
+     * add-somebody forms, the record page and the console an installation is
+     * bootstrapped from — share one set of rules rather than each keeping a
+     * copy. It asks nothing about who is signed in, which is what lets the
+     * console call it when there is nobody to be.
+     */
+    $services->set('team.accounts', UserService::class)
+        ->args([
+            service('doctrine.orm.entity_manager'),
+            service('security.user_password_hasher'),
+            service('team.super_admin_invariant'),
+        ]);
+
+    /*
      * The sign-in refusal for a deactivated account. NOT tagged: a user checker
      * is named by the FIREWALL (`user_checker:`), which is the installation's
      * file — so the service is registered and public here, and the README's
@@ -426,7 +442,7 @@ return static function (ContainerConfigurator $container): void {
             service(PositionRepository::class),
             service('team.permissions'),
             service('team.super_admin_invariant'),
-            service('doctrine.orm.entity_manager'),
+            service('team.accounts'),
             service('security.csrf.token_manager'),
             service('router'),
             service('security.token_storage'),
@@ -520,8 +536,7 @@ return static function (ContainerConfigurator $container): void {
             service('twig'),
             service(UserRepository::class),
             service(PositionRepository::class),
-            service('security.user_password_hasher'),
-            service('doctrine.orm.entity_manager'),
+            service('team.accounts'),
             service('security.csrf.token_manager'),
             service('router'),
             service('security.token_storage'),

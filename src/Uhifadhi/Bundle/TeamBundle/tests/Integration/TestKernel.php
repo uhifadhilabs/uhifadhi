@@ -283,6 +283,7 @@ final class TestKernel extends Kernel
             \Uhifadhi\Bundle\TeamBundle\Service\ApiTokenManager::class => 'team.api_token.manager',
             \Uhifadhi\Bundle\TeamBundle\Service\SuperAdminInvariant::class => 'team.super_admin_invariant',
             \Uhifadhi\Bundle\TeamBundle\Service\TeamOverview::class => 'team.overview',
+            \Uhifadhi\Bundle\TeamBundle\Service\UserService::class => 'team.accounts',
             \Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceRegistry::class => 'shell.widget.surfaces',
         ] as $class => $serviceId) {
             $container->services()->alias('test_public.'.$class, $serviceId)->public();

@@ -13,13 +13,11 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Controller;
 
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\FlashBagAwareSessionInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
@@ -29,12 +27,14 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Uid\Uuid;
 use Twig\Environment;
+use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
 use Uhifadhi\Bundle\TeamBundle\Service\Mail;
+use Uhifadhi\Bundle\TeamBundle\Service\UserService;
 
 /**
  * ADDING SOMEBODY — and BOTH WAYS SHIP.
@@ -67,7 +67,7 @@ use Uhifadhi\Bundle\TeamBundle\Service\Mail;
  * WHICHEVER WAY IN, THE POSITION IS AREA-SCOPED
  * . A bounded (area-X) administrator adds people only
  * into positions their authority reaches, so the picker offers only those and
- * {@see assignPosition()} refuses a pick past their boundary (a 403). A tier or
+ * {@see assignablePosition()} refuses a pick past their boundary (a 403). A tier or
  * org-level holder is unbounded and adds anyone anywhere. Leaving the position
  * empty is always fine — a position-less account grants nothing to police.
  */
@@ -80,8 +80,7 @@ final readonly class InviteController
         private Environment $twig,
         private UserRepository $users,
         private PositionRepository $positions,
-        private UserPasswordHasherInterface $hasher,
-        private EntityManagerInterface $entityManager,
+        private UserService $accounts,
         private CsrfTokenManagerInterface $csrf,
         private UrlGeneratorInterface $router,
         private TokenStorageInterface $tokens,
@@ -126,23 +125,14 @@ final readonly class InviteController
             return $this->back($request, \sprintf('A password must be at least %d characters.', User::PASSWORD_MIN_LENGTH), 'error');
         }
 
-        $user = (new User())
-            ->setEmail($email)
-            ->setFirstName(trim((string) $request->request->get('firstName')))
-            ->setLastName(trim((string) $request->request->get('lastName')))
-            ->setRangerCode(trim((string) $request->request->get('rangerCode')))
-            // VERIFIED THE MOMENT THEY EXIST: an administrator who typed the
-            // password has already proved the account is real, which is more
-            // than an email round-trip proves.
-            ->setVerified(true);
-        $user->setPassword($this->hasher->hashPassword($user, $password));
-        $this->assignPosition($user, (string) $request->request->get('position'));
-
-        // invitedAt STAYS NULL. Nobody invited them, and the roster reads that
-        // null as "created directly · no invitation" — the honest difference
-        // between the two paths.
-        $this->entityManager->persist($user);
-        $this->entityManager->flush();
+        $user = $this->accounts->create(
+            $email,
+            (string) $request->request->get('firstName'),
+            (string) $request->request->get('lastName'),
+            $password,
+            position: $this->assignablePosition((string) $request->request->get('position')),
+            rangerCode: trim((string) $request->request->get('rangerCode')),
+        );
 
         return $this->toMember($request, $user, \sprintf('%s exists and can sign in now. The password is hashed and the product cannot show it again, so hand it over before you close this.', $user->getFullName()));
     }
@@ -169,30 +159,13 @@ final readonly class InviteController
             return $this->back($request, \sprintf('An account with the email %s already exists.', $email), 'error');
         }
 
-        $user = (new User())
-            ->setEmail($email)
-            // NO NAME. It comes from the person when they accept: an
-            // administrator guessing at somebody's own spelling of their own
-            // name is a small indignity the product does not need to cause.
-            ->setFirstName('')
-            ->setLastName('')
-            // Unusable until they set one. Not empty — an empty hash is a hash
-            // some verifier somewhere will one day accept.
-            ->setPassword($this->hasher->hashPassword(new User(), bin2hex(random_bytes(32))))
-            ->setVerified(false)
-            ->setVerificationToken(bin2hex(random_bytes(32)));
-
-        $this->assignPosition($user, (string) $request->request->get('position'));
-
-        $inviter = $this->signedIn();
-        if (null !== $inviter) {
+        $user = $this->accounts->invite(
+            $email,
+            $this->assignablePosition((string) $request->request->get('position')),
             // RULED IN, so the roster can say who invited somebody and when
             // rather than only that they have not arrived.
-            $user->markInvitedBy($inviter);
-        }
-
-        $this->entityManager->persist($user);
-        $this->entityManager->flush();
+            $this->signedIn(),
+        );
 
         $this->mail->sendInvitation($user, $this->router->generate(
             'team_invite_accept',
@@ -203,13 +176,13 @@ final readonly class InviteController
         return $this->toMember($request, $user, \sprintf('Invitation sent to %s. They set their own password from the link, so nobody here ever knows it.', $email));
     }
 
-    private function assignPosition(User $user, string $chosen): void
+    private function assignablePosition(string $chosen): ?Position
     {
         $chosen = trim($chosen);
         if ('' === $chosen || !Uuid::isValid($chosen)) {
             // OPTIONAL, AND HONESTLY SO: leaving it empty creates somebody who
             // can sign in and do nothing. Better than guessing.
-            return;
+            return null;
         }
 
         $position = $this->positions->findOneByUuid(Uuid::fromString($chosen));
@@ -224,7 +197,7 @@ final readonly class InviteController
             throw new AccessDeniedException('An area administrator may add people only into positions in their own area.');
         }
 
-        $user->setPosition($position);
+        return $position;
     }
 
     private function signedIn(): ?User

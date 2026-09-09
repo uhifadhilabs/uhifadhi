@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Controller;
 
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -39,6 +38,7 @@ use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
 use Uhifadhi\Bundle\TeamBundle\Service\PermissionCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Service\SuperAdminInvariant;
+use Uhifadhi\Bundle\TeamBundle\Service\UserService;
 
 /**
  * ONE PERSON'S RECORD — the four fields the table has, the tier that decides
@@ -90,7 +90,7 @@ final readonly class MemberController
         private PositionRepository $positions,
         private PermissionCatalogue $catalogue,
         private SuperAdminInvariant $invariant,
-        private EntityManagerInterface $entityManager,
+        private UserService $accounts,
         private CsrfTokenManagerInterface $csrf,
         private UrlGeneratorInterface $router,
         private TokenStorageInterface $tokens,
@@ -135,13 +135,13 @@ final readonly class MemberController
         $this->assertCsrf($request);
         $this->assertMayManage($member);
 
-        $member
-            ->setFirstName(trim((string) $request->request->get('firstName')))
-            ->setLastName(trim((string) $request->request->get('lastName')))
-            ->setEmail(trim((string) $request->request->get('email')))
-            ->setRangerCode(trim((string) $request->request->get('rangerCode')));
-
-        $this->entityManager->flush();
+        $this->accounts->updateRecord(
+            $member,
+            (string) $request->request->get('firstName'),
+            (string) $request->request->get('lastName'),
+            (string) $request->request->get('email'),
+            trim((string) $request->request->get('rangerCode')),
+        );
 
         return $this->back($request, $member, 'Saved.');
     }
@@ -167,13 +167,10 @@ final readonly class MemberController
         }
 
         try {
-            $this->invariant->assertMayChangeTier($member, $tier);
+            $this->accounts->changeTier($member, $tier);
         } catch (LastSuperAdminException $refusal) {
             return $this->back($request, $member, $refusal->getMessage(), 'error');
         }
-
-        $member->setTeamRole($tier);
-        $this->entityManager->flush();
 
         return $this->back($request, $member, \sprintf('%s is now %s.', $member->getFullName(), $tier->label()));
     }
@@ -192,8 +189,7 @@ final readonly class MemberController
             // §5.6(a): unassigning is still touching a person, so a bounded
             // administrator may do it only to somebody already in their area.
             $this->assertMayAssign($member->getPosition(), null);
-            $member->setPosition(null);
-            $this->entityManager->flush();
+            $this->accounts->assignPosition($member, null);
 
             return $this->back($request, $member, \sprintf('%s now holds no position, and therefore no permissions at all.', $member->getFullName()));
         }
@@ -208,8 +204,7 @@ final readonly class MemberController
         // both be in their own area.
         $this->assertMayAssign($member->getPosition(), $position);
 
-        $member->setPosition($position);
-        $this->entityManager->flush();
+        $this->accounts->assignPosition($member, $position);
 
         return $this->back($request, $member, \sprintf('%s now holds %s.', $member->getFullName(), $position->getQualifiedName()));
     }
@@ -228,13 +223,10 @@ final readonly class MemberController
         $this->assertMayManage($member);
 
         try {
-            $this->invariant->assertMayDeactivate($member);
+            $this->accounts->deactivate($member);
         } catch (LastSuperAdminException $refusal) {
             return $this->back($request, $member, $refusal->getMessage(), 'error');
         }
-
-        $member->deactivate();
-        $this->entityManager->flush();
 
         return $this->back($request, $member, \sprintf('%s can no longer sign in. Nothing has been deleted — everything they recorded keeps its author, and they stay on the roster under the inactive filter.', $member->getFullName()));
     }
@@ -247,8 +239,7 @@ final readonly class MemberController
         $this->assertCsrf($request);
         $this->assertMayManage($member);
 
-        $member->reactivate();
-        $this->entityManager->flush();
+        $this->accounts->reactivate($member);
 
         return $this->back($request, $member, \sprintf('%s can sign in again.', $member->getFullName()));
     }
