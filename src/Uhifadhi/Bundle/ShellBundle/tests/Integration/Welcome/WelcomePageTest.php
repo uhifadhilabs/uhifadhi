@@ -155,6 +155,62 @@ final class WelcomePageTest extends ShellKernelTestCase
     }
 
     /**
+     * THE CORE'S ROW OPENS ONTO ITS PARTS. One row reading `uhifadhi/uhifadhi`
+     * is honest about what was installed and silent about what it contains, so
+     * the parts hang beneath it — each named and described by its own manifest.
+     */
+    public function testTheCoreRowCarriesTheCoresOwnPartsBeneathIt(): void
+    {
+        $names = $this->corePartRows()->each(static fn (Crawler $row): string => trim($row->filter('.wpkg-sub-name')->text()));
+
+        self::assertContains('uhifadhi/contracts', $names);
+        self::assertContains('uhifadhi/shell-bundle', $names);
+    }
+
+    /**
+     * INSTALLED MEANS REGISTERED. Every part of the core is on disk in this very
+     * repository, and this kernel boots one of them; a page that listed the rest
+     * would tell an operator that screens exist where none do.
+     */
+    public function testAPartOfTheCoreThisKernelDoesNotBootIsNotListed(): void
+    {
+        $names = $this->corePartRows()->each(static fn (Crawler $row): string => trim($row->filter('.wpkg-sub-name')->text()));
+
+        self::assertNotContains('uhifadhi/area-bundle', $names);
+        self::assertNotContains('uhifadhi/team-bundle', $names);
+    }
+
+    /**
+     * NO VERSION ON A PART, and the page says why once rather than per row: the
+     * parts ride with the core, and a version beside each would invite somebody
+     * to update one alone.
+     */
+    public function testTheCoresPartsCarryNoVersionOfTheirOwn(): void
+    {
+        foreach ($this->corePartRows() as $row) {
+            self::assertCount(0, new Crawler($row)->filter('.chip'));
+        }
+
+        self::assertStringContainsString('ride with the core', $this->get('/')->filter('div.pgbody .wpkg-cap')->text());
+    }
+
+    /** Each part says what it is, in the one line its own manifest carries. */
+    public function testEachPartIsDescribedByItsOwnManifest(): void
+    {
+        foreach ($this->corePartRows() as $row) {
+            self::assertNotSame('', trim(new Crawler($row)->filter('.wpkg-note')->text()));
+        }
+    }
+
+    private function corePartRows(): Crawler
+    {
+        $rows = $this->get('/')->filter('div.pgbody .wpkgs .wpkg-tree .wpkg-sub');
+        self::assertGreaterThan(0, $rows->count(), 'The core is installed here, so it has parts to show.');
+
+        return $rows;
+    }
+
+    /**
      * THE TEACHING IS ON THE LIST, not beside it. "The registry" and "the shell"
      * are words that mean nothing on a first day, so the two packages the shell
      * can honestly speak for carry a line saying what they are — as annotations

@@ -58,6 +58,19 @@
                     <span class="chip {{ package.note is null ? 'idle' : 'acc' }}">{{ package.version }}</span>
                     {%- if package.note %}<span class="wpkg-note">{{ package.note }}</span>{% endif -%}
                 </div>
+                {%- if package.name == core and coreParts is not empty -%}
+                    <div class="wpkg-tree">
+                        {%- for part in coreParts -%}
+                            <div class="wpkg-sub">
+                                <span class="mono wpkg-sub-name">{{ part.name }}</span>
+                                <span class="wpkg-note">{{ part.description }}</span>
+                            </div>
+                        {%- endfor -%}
+                    </div>
+                    <p class="wpkg-cap">The parts of the core, as this installation registers
+                       them. None carries a version of its own: they ride with the core, at
+                       the version on its row.</p>
+                {%- endif -%}
             {%- endfor -%}
         </div>
 

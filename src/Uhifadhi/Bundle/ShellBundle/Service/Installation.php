@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\ShellBundle\Service;
 
 use Composer\InstalledVersions;
+use Uhifadhi\Bundle\ShellBundle\Model\CorePart;
 use Uhifadhi\Bundle\ShellBundle\Model\InstalledPackage;
 
 /**
@@ -50,6 +51,16 @@ final class Installation
 
     /** Everything the platform ships is a composer package under this vendor. */
     private const string VENDOR = 'uhifadhi/';
+
+    /** The one package whose insides the shell may open, because it is inside it. */
+    public const string CORE = 'uhifadhi/uhifadhi';
+
+    /**
+     * The namespace a core bundle's class sits under. It is the test for
+     * whether a registered bundle is part of the core: everything else in a
+     * kernel belongs to somebody the shell knows nothing about.
+     */
+    private const string CORE_NAMESPACE = 'Uhifadhi\\Bundle\\';
 
     /**
      * Every uhifadhi package on disk, the one the shell can describe first and
@@ -121,5 +132,86 @@ final class Installation
         }
 
         return array_merge($described, $rest);
+    }
+
+    /**
+     * Where composer put the core, or null on an installation where it cannot
+     * say — a package resolved through a `replace` has no directory to point
+     * at, and neither does one nobody installed.
+     */
+    public function coreInstallPath(): ?string
+    {
+        return InstalledVersions::isInstalled(self::CORE) ? InstalledVersions::getInstallPath(self::CORE) : null;
+    }
+
+    /**
+     * WHAT THE CORE IS MADE OF — one entry per part of it this installation
+     * actually runs.
+     *
+     * The core is one install and one row, and one row says nothing about the
+     * parts inside it. Each part carries its own manifest, so what is printed
+     * is what that part says about itself: the package name it would answer to
+     * on its own, and its own one-line description. No version: they ride with
+     * the core, and a version beside each would invite somebody to update one
+     * alone.
+     *
+     * INSTALLED MEANS REGISTERED. A part is listed only when the kernel boots
+     * it — a directory nothing registers is a directory, and telling an
+     * operator otherwise is telling them a screen exists where none does. The
+     * contracts are the exception and always lead the list: they are what every
+     * other part is written against rather than a bundle anything registers.
+     *
+     * @param string|null           $installPath where composer put the core, or null when it cannot say
+     * @param array<string, string> $bundles     the kernel's registered bundles, name => class name
+     *
+     * @return list<CorePart>
+     */
+    public function coreParts(?string $installPath, array $bundles): array
+    {
+        if (null === $installPath) {
+            return [];
+        }
+
+        $parts = [];
+        $contracts = $this->partAt($installPath.'/src/Uhifadhi/Contracts/composer.json');
+        if (null !== $contracts) {
+            $parts[] = $contracts;
+        }
+
+        foreach ($bundles as $class) {
+            if (!str_starts_with($class, self::CORE_NAMESPACE)) {
+                continue;
+            }
+
+            $directory = substr($class, \strlen(self::CORE_NAMESPACE), strrpos($class, '\\') - \strlen(self::CORE_NAMESPACE));
+            $part = $this->partAt($installPath.'/src/Uhifadhi/Bundle/'.$directory.'/composer.json');
+            if (null !== $part) {
+                $parts[] = $part;
+            }
+        }
+
+        return $parts;
+    }
+
+    /**
+     * One manifest, read. Anything unreadable or unnamed is left out rather
+     * than printed half-known: a page that reports on an installation reports
+     * what it can read.
+     */
+    private function partAt(string $manifest): ?CorePart
+    {
+        if (!is_file($manifest)) {
+            return null;
+        }
+
+        $json = json_decode((string) file_get_contents($manifest), true);
+        if (!\is_array($json) || !\is_string($json['name'] ?? null)) {
+            return null;
+        }
+
+        return new CorePart(
+            name: $json['name'],
+            description: \is_string($json['description'] ?? null) ? $json['description'] : '',
+        );
     }
 }

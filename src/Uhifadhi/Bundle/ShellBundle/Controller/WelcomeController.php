@@ -45,9 +45,13 @@ use Uhifadhi\Bundle\ShellBundle\Service\Installation;
  */
 final class WelcomeController
 {
+    /**
+     * @param array<string, string> $bundles the kernel's registered bundles, name => class name
+     */
     public function __construct(
         private readonly Environment $twig,
         private readonly Installation $installation,
+        private readonly array $bundles = [],
     ) {
     }
 
@@ -65,6 +69,12 @@ final class WelcomeController
     {
         return new Response($this->twig->render('@Shell/welcome.html.twig', [
             'packages' => $this->installation->packages(),
+            // THE CORE'S OWN ROW OPENS. It is one install and one row, and one
+            // row says nothing about the parts inside it; the parts are read
+            // from their own manifests, and only the ones this kernel actually
+            // boots are there.
+            'core' => Installation::CORE,
+            'coreParts' => $this->installation->coreParts($this->installation->coreInstallPath(), $this->bundles),
         ]));
     }
 }

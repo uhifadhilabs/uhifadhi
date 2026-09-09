@@ -124,6 +124,10 @@ return static function (ContainerConfigurator $container): void {
         ->args([
             service('twig'),
             service('shell.installation'),
+            // WHAT THE KERNEL ACTUALLY BOOTS. A core bundle on disk that
+            // nothing registers is a directory, and the page may not report it
+            // as something this installation has.
+            param('kernel.bundles'),
         ])
         ->tag('controller.service_arguments');
 
