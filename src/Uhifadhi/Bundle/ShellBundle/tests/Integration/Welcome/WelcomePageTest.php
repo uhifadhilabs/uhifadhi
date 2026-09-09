@@ -198,7 +198,25 @@ final class WelcomePageTest extends ShellKernelTestCase
     public function testEachPartIsDescribedByItsOwnManifest(): void
     {
         foreach ($this->corePartRows() as $row) {
-            self::assertNotSame('', trim(new Crawler($row)->filter('.wpkg-note')->text()));
+            self::assertNotSame('', trim(new Crawler($row)->filter('.wpkg-sub-note')->text()));
+        }
+    }
+
+    /**
+     * A PART'S DESCRIPTION IS A COLUMN, NOT A TRAILING NOTE. The annotation on a
+     * package row is pushed to the far end of that row, which is right for one
+     * line beside one name; six of them beneath each other are a list, and a list
+     * whose descriptions hang off the right margin is read by hopping — and the
+     * longest name in it loses the fight for the line and wraps.
+     *
+     * So a part's description carries its own class rather than borrowing the
+     * row's: the two are laid out differently, and one name for both would make
+     * that impossible to state in the sheet.
+     */
+    public function testAPartsDescriptionIsItsOwnColumnRatherThanTheRowsTrailingNote(): void
+    {
+        foreach ($this->corePartRows() as $row) {
+            self::assertCount(0, new Crawler($row)->filter('.wpkg-note'), 'A part is not annotated like a package row.');
         }
     }
 
