@@ -95,6 +95,15 @@ final readonly class TeamCommandProvider implements CommandProviderInterface
     {
         [$options, $positional] = self::split($arguments);
 
+        // FIRST, BECAUSE IT IS THE ACCURATE ANSWER. A token that looks like an
+        // option but carries no value is not a name, and letting it fall
+        // through to the count below tells a person who typed `--password x`
+        // that they left a name out when they had given all three.
+        $bare = self::bareOptions($arguments);
+        if ([] !== $bare) {
+            return self::refuse($io, \sprintf('Options take the form --tier=admin or --password=…, with the value joined on by "="; got %s.', implode(', ', $bare)));
+        }
+
         if (3 !== \count($positional)) {
             return self::refuse($io, 'Give an email address, a first name and a last name: team:user:create <email> <first name> <last name> [--tier=super-admin|admin|staff] [--password=…].');
         }
@@ -156,6 +165,34 @@ final readonly class TeamCommandProvider implements CommandProviderInterface
         }
 
         return [$options, $positional];
+    }
+
+    /**
+     * The option-looking tokens that carry no value, in the order they were
+     * written.
+     *
+     * WHAT IS ACCEPTED IS UNCHANGED by this — `--name=value` and nothing else,
+     * because a two-token form would need to know which options take a value,
+     * which is the input definition this contract refuses to grow. This only
+     * makes the refusal say so. A short `-v` is left alone: nothing ever
+     * promised short options, and a lone dash is likelier to be somebody's odd
+     * name than a flag.
+     *
+     * @param list<string> $arguments
+     *
+     * @return list<string>
+     */
+    private static function bareOptions(array $arguments): array
+    {
+        $bare = [];
+
+        foreach ($arguments as $argument) {
+            if (str_starts_with($argument, '--') && !str_contains($argument, '=')) {
+                $bare[] = $argument;
+            }
+        }
+
+        return $bare;
     }
 
     /**

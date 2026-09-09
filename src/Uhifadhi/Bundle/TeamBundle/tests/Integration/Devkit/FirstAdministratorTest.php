@@ -142,6 +142,61 @@ final class FirstAdministratorTest extends IntegrationTestCase
     }
 
     /**
+     * AN OPTION WRITTEN WITH A SPACE IS TOLD WHAT FORM TO TAKE.
+     *
+     * Only `--name=value` is parsed, because a two-token form would mean
+     * knowing which options carry a value — the input definition this contract
+     * refuses to grow. That narrowness is fine; misdiagnosing it was not. A
+     * person who typed `--password x` had given all three names, so the
+     * positional count came to five and they were told "Give an email address,
+     * a first name and a last name" — an answer to a question they had not
+     * asked. The stray token is named instead, and named first.
+     */
+    public function testAnOptionWrittenWithASpaceIsToldTheFormItShouldTake(): void
+    {
+        $io = new RecordingCommandIo();
+
+        $exit = $this->collector()->run('team:user:create', [
+            'ada@example.test', 'Ada', 'Mwangi', '--password', 'a-long-enough-passphrase',
+        ], $io);
+
+        self::assertSame(1, $exit);
+        self::assertNull($this->users()->findOneByEmail('ada@example.test'));
+
+        self::assertStringContainsString('--password', $io->diagnostics());
+        self::assertStringContainsString('--tier=', $io->diagnostics(), 'The refusal shows the form an option takes.');
+        self::assertStringNotContainsString('Give an email address', $io->diagnostics(), 'The names were all given; the missing-names guard is the wrong one to fire.');
+    }
+
+    /** Every stray token is named, not only the first one met. */
+    public function testEveryOptionWrittenWithASpaceIsNamed(): void
+    {
+        $io = new RecordingCommandIo();
+
+        $exit = $this->collector()->run('team:user:create', [
+            'ada@example.test', 'Ada', 'Mwangi', '--tier', 'staff', '--password', 'a-long-enough-passphrase',
+        ], $io);
+
+        self::assertSame(1, $exit);
+        self::assertStringNotContainsString('Give an email address', $io->diagnostics());
+        self::assertMatchesRegularExpression('/--tier\b(?!=)/', $io->diagnostics(), 'The stray --tier is named as itself, not as part of the usage line.');
+        self::assertMatchesRegularExpression('/--password\b(?!=)/', $io->diagnostics());
+    }
+
+    /** What is accepted is unchanged: the guard does not catch the `=` form. */
+    public function testTheEqualsFormIsUntouchedByTheGuard(): void
+    {
+        $io = new RecordingCommandIo();
+
+        $exit = $this->collector()->run('team:user:create', [
+            'ada@example.test', 'Ada', 'Mwangi', '--tier=staff', '--password=a-long-enough-passphrase',
+        ], $io);
+
+        self::assertSame(0, $exit, $io->diagnostics());
+        self::assertSame(TeamRoleEnum::Staff, $this->users()->findOneByEmail('ada@example.test')?->getTeamRole());
+    }
+
+    /**
      * WHAT IT CREATED IS SAID ON STANDARD OUTPUT, through the channel the
      * descriptor hands the handler — not written to \STDOUT behind the
      * console's back, where it would ignore `--quiet` and be invisible to
