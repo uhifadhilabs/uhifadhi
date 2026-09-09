@@ -53,6 +53,15 @@ abstract class WebTestCase extends KernelTestCase
         $metadata = $this->em->getMetadataFactory()->getAllMetadata();
         $schemaTool->dropSchema($metadata);
         $schemaTool->createSchema($metadata);
+
+        // THE IDENTITY MAP IS EMPTIED WITH THE TABLES. Booting the kernel warms
+        // the cache, and the registry reconciles itself there — reading rows
+        // through this very entity manager. Those managed objects outlive the
+        // schema this method has just dropped and recreated, so the first area
+        // the test persists takes an id the map already holds and Doctrine
+        // refuses it. Clearing after a truncate is the documented answer, and
+        // the collision message names it.
+        $this->em->clear();
     }
 
     /**

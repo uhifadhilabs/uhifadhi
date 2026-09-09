@@ -43,7 +43,7 @@ use Uhifadhi\Contracts\Entity\UserInterface;
  * {@see \Uhifadhi\Bundle\AreaBundle\Tests\Integration\TestKernel} is still the bare one.
  *
  * THE FIREWALL IS REAL. The permissions these screens are gated on are answered
- * by the team module's voter in a real installation, and team is not a
+ * by TeamBundle's voter in a real installation, and team is not a
  * dependency of this one. So the suite ships its own voter over the same
  * permission strings: what is being tested here is that the screens ASK, not
  * what somebody else answers.
@@ -111,7 +111,7 @@ final class WebKernel extends Kernel
          * THE ICONS ARE LOCAL. An installation vendors its lucide set into
          * assets/icons/; without a local set ux-icons tries to FETCH them from
          * ux.symfony.com at render time, which is a network call in the middle
-         * of a page and fails closed. The two this module names are vendored
+         * of a page and fails closed. The two this bundle names are vendored
          * beside this kernel so the suite proves the sidebar renders rather than
          * proving the machine has internet.
          */
@@ -156,7 +156,7 @@ final class WebKernel extends Kernel
         $services = $container->services();
 
         /*
-         * A CATALOGUE WITH BUNDLES BEHIND IT. The seam's catalogue is the
+         * A CATALOGUE WITH BUNDLES BEHIND IT. The registry's catalogue is the
          * intersection of `module` rows and REGISTERED PROVIDERS, so rows alone
          * would read as an empty catalogue. These stand in for module bundles
          * this one must never depend on — see InstallableModule.
@@ -176,11 +176,11 @@ final class WebKernel extends Kernel
         }
 
         /*
-         * A MODULE'S LAYERS ON THE HOST'S PLATE, STOOD IN FOR. The overview
+         * A MODULE'S LAYERS ON THE AREA PAGE'S PLATE, STOOD IN FOR. The overview
          * gathers map layers from every module switched on in the area, through
-         * the `uhifadhi.map.layer` seam — patrol tracks, incident points — and
-         * this module must depend on none of them. These fakes contribute over
-         * the same seam so the suite can prove the host draws a contributed
+         * the `uhifadhi.map.layer` contribution — patrol tracks, incident points — and
+         * this bundle must depend on none of them. These fakes contribute over
+         * the same contribution so the suite can prove the area page draws a contributed
          * layer's geometry and its legend group where its module is on, and
          * leaves both out where it is off.
          */
@@ -192,12 +192,12 @@ final class WebKernel extends Kernel
             ->tag('uhifadhi.map.layer');
 
         /*
-         * A MODULE'S REGISTER-CARD FIGURES, STOOD IN FOR. The overview seams the
+         * A MODULE'S REGISTER-CARD FIGURES, STOOD IN FOR. The overview contributions the
          * register card reads its operational figures through — now-tiles (its
          * stat cells and "out right now" chip), attention (its alert flag) and
-         * pulse (its "last check-in") — are the same seams the overview draws
-         * from, and this module depends on no real module. These fakes contribute
-         * over those seams for `patrols` so the suite can prove the host lays out
+         * pulse (its "last check-in") — are the same contributions the overview draws
+         * from, and this bundle depends on no real module. These fakes contribute
+         * over those contributions for `patrols` so the suite can prove the area page lays out
          * a contributed figure on a card where its module is on, and shows the
          * boundary-only card where it is off.
          */
@@ -211,7 +211,7 @@ final class WebKernel extends Kernel
             ->args(['patrols'])
             ->tag('uhifadhi.overview.pulse');
 
-        // The suite's own voter, standing in for the team module's. It answers
+        // The suite's own voter, standing in for TeamBundle's. It answers
         // the same permission strings, which is the whole of what these screens
         // depend on.
         $services->set(GrantedPermissions::class)
@@ -242,7 +242,7 @@ final class WebKernel extends Kernel
         );
 
         /*
-         * A MODULE'S OWN PAGE, STOOD IN FOR. A tile links where the seam's entry
+         * A MODULE'S OWN PAGE, STOOD IN FOR. A tile links where the registry's entry
          * resolver names a route the application actually mounted; in a real
          * installation that is the patrol module's dashboard. This suite mounts
          * one route with that shape so the linked and the inert tile can both be

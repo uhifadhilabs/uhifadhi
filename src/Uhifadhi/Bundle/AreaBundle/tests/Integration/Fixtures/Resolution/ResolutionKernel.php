@@ -24,10 +24,10 @@ use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
 
 /**
  * THE SMALLEST INSTALLATION THE QUESTION CAN HONESTLY BE ASKED IN: framework,
- * doctrine, PostGIS, the seam and this bundle.
+ * doctrine, PostGIS, the registry and this bundle.
  *
  * SMALLEST does not mean fewest bundles — it means nothing present that could
- * ANSWER the question on this bundle's behalf. The seam is here because the seam
+ * ANSWER the question on this bundle's behalf. The registry is here because the registry
  * is what ASKS: its `AreaModule` row points at `AreaInterface` and its own
  * bundle prepends no resolution. PostGIS is here because this bundle's entity
  * has a multipolygon column and a kernel without the type would not compile.

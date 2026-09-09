@@ -32,19 +32,17 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
  *
  * THE PLATFORM'S AREA CONTRACT, ANSWERED. Modules that point at an area map the
  * association at {@see AreaInterface} — the contract published by
- * uhifadhi/module-contracts — because they hold their tables for installations
- * whose area model is their own (the seam's per-area rows are the oldest such
+ * uhifadhi/contracts — because they hold their tables for installations
+ * whose area model is their own (the registry's per-area rows are the oldest such
  * table). This class is the answer, and the bundle states the resolution itself —
  * the installation writes no `resolve_target_entities` line unless it wants to
  * disagree. See {@see \Uhifadhi\Bundle\AreaBundle\AreaBundle::prependExtension()}.
  *
- * THE TABLE NAME IS A COMPATIBILITY PROMISE. `area_of_interest` is what an
- * installation that followed the old hand-step already has: the documented
- * placeholder was a class called `AreaOfInterest` in `src/Entity/`, which under
- * the skeleton's underscore naming strategy is this table. Adopting this module
- * therefore never asks for a rename migration. It is stated explicitly rather
- * than derived from the class name, and pinned by
- * Unit\Entity\AreaContractTest, so it cannot drift.
+ * THE TABLE NAME IS PART OF THE PROMISE. `area_of_interest` is stated
+ * explicitly rather than left to be derived from the class name under whatever
+ * naming strategy an installation runs, and it is pinned by
+ * Unit\Entity\AreaContractTest so it cannot drift: an installation's migration
+ * history is written against this name.
  *
  * THE REGISTRY FIELDS ARE OPTIONAL, and that is honest rather than lax: an
  * installation that drew its own boundary on a map has no IUCN category and no

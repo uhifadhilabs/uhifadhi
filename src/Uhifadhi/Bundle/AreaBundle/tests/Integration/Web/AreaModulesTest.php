@@ -31,13 +31,13 @@ use Uhifadhi\Bundle\ShellBundle\Model\NavItem;
  * is composed in.
  *
  * THE ROUTE NAME IS THE CONTRACT, not the path. `seam_area_modules` is the name
- * three other packages already generate blind: this module's own tab strip lists
+ * three other packages already generate blind: this bundle's own tab strip lists
  * it, and the patrol module's breadcrumb and dashboard back-button ask for it and
  * print plain text when it does not answer. Mounting it here is what lights all
  * three, which is why {@see testTheTabStripLightsTheModulesTab} exists at all.
  *
- * THE LEDGER IS THE SEAM'S. Nothing here writes an `area_module` row by hand —
- * every switch goes through the seam's published service, because the invariant
+ * THE LEDGER IS THE REGISTRY'S. Nothing here writes an `area_module` row by hand —
+ * every switch goes through the registry's published service, because the invariant
  * that a pinned module cannot be parked lives there and a second writer would
  * eventually disagree with it.
  */
@@ -65,7 +65,7 @@ final class AreaModulesTest extends WebTestCase
         self::assertStringNotContainsString('Incidents', $body);
     }
 
-    /** The category heading the seam files the module under, not one invented here. */
+    /** The category heading the registry files the module under, not one invented here. */
     public function testTheGridGroupsTilesByCatalogueCategory(): void
     {
         $this->boot(self::ALL);
@@ -109,10 +109,10 @@ final class AreaModulesTest extends WebTestCase
     }
 
     /**
-     * THE PREDICTION THE PATROL RING MADE, AND THIS MODULE'S OWN HALF OF IT.
-     * AreaShellSource has listed a `seam_area_modules` tab since v0.4.0 and
-     * dropped it silently because no route answered. Mounting the route is the
-     * whole change; the tab strip needed no edit.
+     * THE TAB IS THE ROUTE'S, NOT THE STRIP'S. AreaShellSource lists a
+     * `seam_area_modules` tab and drops it silently where no route answers, so
+     * an installation that unmounts the screen gets a shorter strip rather than
+     * a broken page — and mounting it lights the tab with no edit anywhere.
      */
     public function testTheTabStripLightsTheModulesTab(): void
     {
@@ -151,7 +151,7 @@ final class AreaModulesTest extends WebTestCase
     /**
      * A ROW WHOSE BUNDLE IS GONE IS NOT A MODULE ANY MORE.
      *
-     * The seam's catalogue is an INTERSECTION — rows in the table AND providers
+     * The registry's catalogue is an INTERSECTION — rows in the table AND providers
      * registered — precisely so uninstalling a bundle removes its capability
      * without deleting anybody's data. The `area_module` row survives that, and
      * a screen reading rows straight would keep drawing a tile for a module the
@@ -371,10 +371,10 @@ final class AreaModulesTest extends WebTestCase
     // ── Fixtures and helpers ──────────────────────────────────────────────
 
     /**
-     * A CATALOGUE OF ROWS ONLY. The seam's ModuleCatalogue intersects rows with
+     * A CATALOGUE OF ROWS ONLY. The registry's ModuleCatalogue intersects rows with
      * registered providers, so this kernel registers the matching providers —
-     * see {@see WebKernel}. What is asserted is this module's reading of the
-     * ledger, not the seam's own catalogue rules.
+     * see {@see WebKernel}. What is asserted is this bundle's reading of the
+     * ledger, not the registry's own catalogue rules.
      */
     private function aCatalogue(): void
     {
@@ -397,7 +397,7 @@ final class AreaModulesTest extends WebTestCase
     /**
      * A `module` row with no provider behind it, switched on for this area — the
      * state an installation is in the moment it removes a module bundle. Written
-     * directly because the seam's own install() refuses a slug the catalogue
+     * directly because the registry's own install() refuses a slug the catalogue
      * cannot see, which is the rule being relied on here.
      */
     private function aGhostRow(AreaOfInterest $area): void

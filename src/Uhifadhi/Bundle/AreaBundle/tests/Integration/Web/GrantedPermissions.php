@@ -23,8 +23,8 @@ use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
  * These screens are gated on `area.view`, `area.create`, `area.edit`,
  * `area.delete`, `module.view` and `module.create` — strings in the platform's
  * permission catalogue, answered
- * in a real installation by the team module's voter. Team is NOT a dependency of
- * this module and must not become one: what this module owes is that its screens
+ * in a real installation by TeamBundle's voter. Team is NOT a dependency of
+ * this bundle and must not become one: what this bundle owes is that its screens
  * ASK the question, and what somebody else answers is somebody else's suite.
  *
  * So the suite ships the smallest thing that answers: a voter holding a list of

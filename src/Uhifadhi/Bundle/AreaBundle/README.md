@@ -303,7 +303,7 @@ which is a worse product than not mentioning it.
 
 A capability module carries the `uhifadhi.module` tag and takes a tile in the
 catalogue. That catalogue is indexed **by area** — the registry's `area_module`
-row says "this area has this module switched on" — so a provider here would
+row says "this area has this bundle switched on" — so a provider here would
 write a row for every area saying that the area has areas: switchable,
 meaningless, and shown in the module grid of the page it is the subject of.
 

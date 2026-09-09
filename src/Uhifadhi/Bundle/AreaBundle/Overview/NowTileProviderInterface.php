@@ -16,11 +16,11 @@ namespace Uhifadhi\Bundle\AreaBundle\Overview;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 
 /**
- * THE SEAM A MODULE PUTS A TILE IN THE HOST'S RIGHT-NOW STRIP THROUGH.
+ * THE CONTRACT A MODULE PUTS A TILE IN AN AREA'S RIGHT-NOW STRIP THROUGH.
  *
  * "Right now" and "Needs attention" are the two widgets a page like this always
  * grows, and they are exactly the two that would become a hard-coded list of
- * every module the product has ever shipped. So the host draws neither: it lays
+ * every module the product has ever shipped. So the area page draws neither: it lays
  * out and orders CONTRIBUTED PARTS, and knows nothing about what they count.
  *
  * The same tiles are what the duty board draws at board density — one set of

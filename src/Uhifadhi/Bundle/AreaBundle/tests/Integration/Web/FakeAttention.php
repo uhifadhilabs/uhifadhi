@@ -23,8 +23,8 @@ use Uhifadhi\Bundle\AreaBundle\Overview\AttentionSeverity;
  *
  * The register card's alert flag and the "With alerts" pill both count what is
  * asking for attention in an area, gathered through {@see AttentionProviderInterface}.
- * This module depends on no real module, so the suite ships its own contributor
- * over the seam: what is tested is that the host COUNTS a contributed item where
+ * This bundle depends on no real module, so the suite ships its own contributor
+ * over the registry: what is tested is that the area page COUNTS a contributed item where
  * the module is switched on, not what any module raises.
  *
  * It raises two items, so the flag reads a plural count.

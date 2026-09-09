@@ -20,14 +20,14 @@ use Uhifadhi\Bundle\RegistryBundle\Enum\ModuleCategory;
 use Uhifadhi\Bundle\RegistryBundle\Enum\ModuleStatus;
 
 /**
- * MODULE LAYERS ON THE HOST'S ONE PLATE — gathered through the map-layer seam,
+ * MODULE LAYERS ON THE AREA PAGE'S ONE PLATE — gathered through the map-layer contribution,
  * drawn over the area's own boundary, and each with its own legend group.
  *
- * ONE PLATE, MANY OWNERS. The host draws the map and owns the boundary and the
+ * ONE PLATE, MANY OWNERS. The area page draws the map and owns the boundary and the
  * zones; every operational layer over it belongs to the module that owns the
  * data and arrives through {@see \Uhifadhi\Bundle\AreaBundle\Overview\MapLayerProviderInterface}.
  * A layer is asked for ONLY where its module is switched on, so uninstalling a
- * module takes its layer AND its legend group off the plate with no host edit.
+ * module takes its layer AND its legend group off the plate with no edit to the area page.
  *
  * EVERY LAYER SHIPS A LEGEND, and the legend is grouped by contributor — the only
  * way a person can tell why a layer vanished. A layer on by default is drawn; one
@@ -134,7 +134,7 @@ final class AreaMapLayersTest extends WebTestCase
     }
 
     /**
-     * EVERY LEGEND ROW IS A TOGGLE. The host's own boundary and zones rows and
+     * EVERY LEGEND ROW IS A TOGGLE. The area page's own boundary and zones rows and
      * every module layer row carry the wiring that shows and hides that layer —
      * toggling a legend entry is how "every layer ships a legend" becomes
      * something a person can act on.
@@ -150,7 +150,7 @@ final class AreaMapLayersTest extends WebTestCase
 
         // The controller lives on the map card, so the legend rows are in scope.
         self::assertStringContainsString('data-controller="uhifadhi--area-bundle--area-map"', $body);
-        // The host's own boundary/zones rows toggle...
+        // The area page's own boundary/zones rows toggle...
         self::assertStringContainsString('area-map-layer-param="area.boundary"', $body);
         self::assertStringContainsString('area-map-layer-param="area.zones"', $body);
         // ...and so does a contributed layer.
@@ -161,7 +161,7 @@ final class AreaMapLayersTest extends WebTestCase
 
     /**
      * A MODULE THAT DRAWS NOTHING PUTS NOTHING ON THE PLATE. An area with a
-     * boundary but no module switched on renders the host's own "The area" group
+     * boundary but no module switched on renders the area page's own "The area" group
      * and no contributed group at all.
      */
     public function testWithNoModuleOnThePlateShowsOnlyTheAreasOwnGroup(): void

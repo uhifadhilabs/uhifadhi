@@ -21,9 +21,9 @@ use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Fixtures\CollectedModules;
  * `uhifadhi.module` tag, and the absence is pinned rather than left to be
  * noticed.
  *
- * Every other bundle in the fleet declares a module and the seam files it in a
- * catalogue. The catalogue is indexed BY AREA: the seam's `area_module` row says
- * "this area has this module switched on". A provider here would put an entry in
+ * Every capability module declares itself and the registry files it in a
+ * catalogue. The catalogue is indexed BY AREA: the registry's `area_module` row says
+ * "this area has this bundle switched on". A provider here would put an entry in
  * that table for every area saying that the area has areas — a row that means
  * nothing, that an admin could switch off with no effect, and that would appear
  * in the module grid of the very page it is the subject of.
@@ -33,10 +33,10 @@ use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Fixtures\CollectedModules;
  * rather than parked" (the map is one), and it is still a capability an area
  * has. This is the thing an area IS.
  *
- * WHAT THE BUNDLE REGISTERS WITH THE SEAM INSTEAD is the only thing the seam
- * ever asked of a host: the answer to its area contract, prepended (see
+ * WHAT THE BUNDLE ANSWERS FOR THE REGISTRY INSTEAD is the only thing the registry
+ * ever asked of an installation: the answer to its area contract, prepended (see
  * Resolution\ResolveTargetEntitiesTest). That is a deeper integration than a
- * catalogue tile, not a shallower one — without it the seam has no schema at
+ * catalogue tile, not a shallower one — without it the registry has no schema at
  * all.
  */
 final class CatalogueAbstentionTest extends KernelTestCase

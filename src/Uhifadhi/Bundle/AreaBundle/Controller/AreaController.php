@@ -33,8 +33,8 @@ use Uhifadhi\Bundle\AreaBundle\Service\AreaRegister;
  * reach into a container through a base class. See config/services.php.
  *
  * GATED ON THE PLATFORM'S OWN PERMISSION STRINGS — `area.view`, `area.edit` —
- * and on nothing else. The strings are in the catalogue the team module ships,
- * and team's voter answers them at runtime; this module names them and does not
+ * and on nothing else. The strings are in the catalogue TeamBundle ships,
+ * and team's voter answers them at runtime; this bundle names them and does not
  * depend on team, which is what lets an installation swap the answering module
  * without touching a screen.
  *
@@ -76,7 +76,7 @@ final readonly class AreaController
     /**
      * ONE AREA'S OVERVIEW. The widgets on it are not written here — every
      * operational one arrives from a module installed in this area, through the
-     * seams in src/Overview. What this action owns is the area's identity and
+     * contribution contracts in src/Overview. What this action owns is the area's identity and
      * the honest-absent state for everything nobody contributed.
      */
     #[Route('/areas/{uuid}', name: 'area_show', requirements: ['uuid' => Requirement::UUID], methods: ['GET'])]

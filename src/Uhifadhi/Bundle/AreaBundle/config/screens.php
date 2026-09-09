@@ -28,7 +28,7 @@ use Uhifadhi\Bundle\ShellBundle\Contract\NavigationSourceInterface;
 use Uhifadhi\Bundle\ShellBundle\Model\ModuleGroup;
 
 /*
- * THE SCREENS, AND THE SEAMS THAT FRAME THEM — imported ONLY where an
+ * THE SCREENS, AND THE CONTRACTS THAT FRAME THEM — imported ONLY where an
  * installation can actually render a page.
  *
  * SEPARATE FROM services.php BECAUSE THE ENTITY MUST OUTLIVE THE SCREENS. This
@@ -139,7 +139,7 @@ return static function (ContainerConfigurator $container): void {
     }
 
     /*
-     * THE SHELL SEAMS, AND THEY ARE GUARDED. The shell is a `suggest`, not a
+     * THE SHELL CONTRACTS, AND THEY ARE GUARDED. The shell is a `suggest`, not a
      * `require`: these screens render in its frame where an installation has one
      * and render unframed where it does not, so this file has to be readable in
      * an installation that has no shell at all.

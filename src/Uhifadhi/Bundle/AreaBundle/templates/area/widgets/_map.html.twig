@@ -4,9 +4,9 @@
    together.
 
    ONE MAP, EVERYWHERE. The plate is the platform's real map — self-hosted Leaflet
-   over the map module's satellite imagery, the shared chrome (zoom, base toggle,
+   over AtlasBundle's satellite imagery, the shared chrome (zoom, base toggle,
    scale, fullscreen) mounted on it — the same map the overview and zones draw,
-   not a bespoke one. It reuses map-module and adds only the one thing this view
+   not a bespoke one. It reuses the atlas's and adds only the one thing this view
    owns: the org's areas as boundaries and points. The dock beside it is the same
    register rows, searchable in place. #}
 <div class="pghead">
@@ -21,7 +21,7 @@
 
 <div class="ax-maplayout">
     <div class="ax-mapwrap c">
-        {# THE STANDARD MAP PLATE — reused from map-module, exactly as the overview
+        {# THE STANDARD MAP PLATE — the atlas's, exactly as the overview
            wires it: the canvas is the controller's target, and each area travels
            to the browser as GeoJSON on the payload for it to draw and fit. #}
         <div class="viewer"

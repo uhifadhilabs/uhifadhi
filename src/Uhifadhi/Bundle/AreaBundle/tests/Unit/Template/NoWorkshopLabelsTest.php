@@ -46,9 +46,9 @@ final class NoWorkshopLabelsTest extends TestCase
      * The chip's own class, the identifier itself in the three spellings a
      * template can carry it, and the workspace furniture that is not product.
      *
-     * The prefixes are every contributor the area surfaces draw: the host's own
-     * AO, the not-installed seam's NX, and the module prefixes whose widgets are
-     * rendered by THIS module's templates on the overview.
+     * The prefixes are every contributor the area surfaces draw: the area page's own
+     * AO, the not-installed marker's NX, and the module prefixes whose widgets are
+     * rendered by THIS bundle's templates on the overview.
      */
     private const array FORBIDDEN = [
         'idx-chip' => '/class="[^"]*\bidx\b[^"]*"/',
@@ -65,8 +65,8 @@ final class NoWorkshopLabelsTest extends TestCase
     {
         $root = \dirname(__DIR__, 3).'/templates';
         if (!is_dir($root)) {
-            // This ring ships no templates yet. The rule still stands, and the
-            // moment the directory appears every file in it is scanned.
+            // A bundle with no templates still answers the rule, and the moment
+            // the directory appears every file in it is scanned.
             yield 'no templates yet' => [''];
 
             return;

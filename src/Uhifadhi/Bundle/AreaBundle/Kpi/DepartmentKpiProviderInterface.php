@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\AreaBundle\Kpi;
 
 /**
- * THE seam a module bundle implements to put figures on a department's
+ * THE CONTRACT a module bundle implements to put figures on a department's
  * performance surfaces.
  *
  * The model canon, restated as a contract:
@@ -35,7 +35,7 @@ namespace Uhifadhi\Bundle\AreaBundle\Kpi;
  * module's, and nothing published describes one; see {@see DepartmentRef} for
  * why a provider is handed id, uuid and name instead of somebody's class. A
  * provider that needs to know WHOSE rows these are reads the org chart the way
- * the fleet already does — off the mapping, through the class the installation
+ * the platform already does — off the mapping, through the class the installation
  * resolved the user contract to — and never through a `getPosition()` no
  * contract promises.
  *

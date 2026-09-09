@@ -52,9 +52,9 @@ final class ZonePersistenceTest extends IntegrationTestCase
     }
 
     /**
-     * THE TABLE NAME IS PRESERVED FROM THE OLD SCHEMA, the same compatibility
-     * promise `area_of_interest` carries: an installation that already holds
-     * zones keeps its rows when it adopts this module.
+     * THE TABLE NAME IS PART OF THE PROMISE, the same one `area_of_interest`
+     * carries: an installation's migration history is written against it, so it
+     * is stated rather than derived and asserted rather than assumed.
      */
     public function testItStoresInTheZoneTable(): void
     {

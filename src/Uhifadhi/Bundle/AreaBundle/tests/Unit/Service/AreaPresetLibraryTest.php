@@ -27,7 +27,7 @@ use Uhifadhi\Bundle\AreaBundle\Service\AreaPresetLibrary;
  * These are the decisions each denser layout leans on: which areas are asking for
  * the operator, which are running steady, which are not yet live, and which single
  * area is the flagship. They are static and pure, so they are pinned here without
- * a kernel; the enrichment that reaches the overview seams and the page that
+ * a kernel; the enrichment that reaches the overview contributions and the page that
  * renders the five are proved in the web suite.
  */
 final class AreaPresetLibraryTest extends TestCase

@@ -22,8 +22,7 @@ use Uhifadhi\Bundle\AreaBundle\Service\AreaCreator;
 use Uhifadhi\Bundle\AreaBundle\Service\BoundaryImport;
 
 /**
- * CREATING AN AREA THROUGH THE REAL SCREEN — the one thing an installation could
- * not do before this ring, and the reason the register's button used to 404.
+ * CREATING AN AREA THROUGH THE REAL SCREEN.
  *
  * Every case here goes through the HTTP layer with a real upload and a real
  * PostGIS insert, because the interesting failures are all at the joins: a file
@@ -294,10 +293,9 @@ final class AreaCreateTest extends WebTestCase
 
     /**
      * A WRITE IS A WRITE. Creating an area is the most consequential thing on
-     * this module's screens, and it was the one POST without a token while the
-     * module shop's three all carried one — an inconsistency inside a single
-     * bundle, which is the shape a hole usually comes in. Found by the v0.5.0
-     * install gate rather than by this suite, so the suite gets it.
+     * this bundle's screens, so it carries a token like the module shop's three
+     * writes do. One POST without one, inside a bundle whose other writes all
+     * have one, is the shape a hole usually comes in.
      */
     public function testTheFormMintsATokenAndAPostWithoutOneIsRefused(): void
     {

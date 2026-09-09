@@ -24,7 +24,7 @@ namespace Uhifadhi\Bundle\AreaBundle\Model;
  *     Imagery export endpoint for the boundary's padded bbox ({@see thumbnailUrl}).
  *     Esri renders the raster on demand, so there is no static-tile stitch to run
  *     and nothing to cache — the template writes one `<img src>` and the browser
- *     fetches it. The technique is ported verbatim from the host's own
+ *     fetches it. The technique is ported verbatim from the area page's own
  *     AreaCardService, which already does exactly this.
  *   - THE BOUNDARY OUTLINE is projected from the stored geometry into the card's
  *     viewBox and drawn over that ground.
@@ -202,7 +202,7 @@ final readonly class AreaThumbnail
     /**
      * A real Esri World Imagery URL for the boundary's bbox — the bbox is padded
      * and fitted to the face's aspect so the export is not stretched. Ported from
-     * the host's AreaCardService; the raster is Esri's to render, so this is a URL
+     * the area page's AreaCardService; the raster is Esri's to render, so this is a URL
      * and never a fetch.
      */
     private static function thumbnailUrl(float $minLon, float $minLat, float $maxLon, float $maxLat): string

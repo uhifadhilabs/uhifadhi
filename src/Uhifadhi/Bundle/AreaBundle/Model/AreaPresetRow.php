@@ -26,8 +26,8 @@ use Uhifadhi\Bundle\AreaBundle\Overview\AttentionItem;
  * areas by whether they are asking for the operator and prints each area's items
  * in full; the flagship features one area with its zone count in the factband.
  * Neither figure belongs on the card model, so this wraps the row rather than
- * fattening it — and both still arrive through the same overview seams, so the
- * host names no module's content here either.
+ * fattening it — and both still arrive through the same overview contributions, so the
+ * the area page names no module's content here either.
  */
 final readonly class AreaPresetRow
 {

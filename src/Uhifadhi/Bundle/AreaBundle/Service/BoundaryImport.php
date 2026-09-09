@@ -23,15 +23,14 @@ use Uhifadhi\Bundle\AreaBundle\Exception\BoundaryImportException;
  * gazetted edge from outside. The area exists already; this adds or replaces
  * its geometry, whether that happens the moment it is created or long after.
  *
- * GEOJSON, AND THIS MODULE SAYS SO PLAINLY. The application this was ported from
- * accepted zipped Shapefiles, GeoPackages, KML/KMZ and File Geodatabases too, by
- * shelling out to GDAL's `ogr2ogr` — which means an installation that has not
- * got the `gdal` binaries on its host cannot import at all. A reusable bundle
- * must not put a system package between an installation and its first area, so
- * the format list here is the one format that needs nothing but PHP, and the
- * screen's caption names it rather than listing five and failing on four. The
- * conversion path is a later ring's work and belongs behind an optional
- * collaborator, not behind a hard dependency.
+ * GEOJSON, AND THIS BUNDLE SAYS SO PLAINLY. Zipped Shapefiles, GeoPackages,
+ * KML/KMZ and File Geodatabases all need GDAL's `ogr2ogr`, and a deployment
+ * without those binaries could then not import at all. A reusable bundle must
+ * not put a system package between an installation and its first area, so the
+ * one format accepted here is the one that needs nothing but PHP, and the
+ * screen's caption names it rather than listing five and failing on four. A
+ * conversion path belongs behind an optional collaborator, never behind a hard
+ * dependency.
  *
  * NOTHING IS REPROJECTED, and that is a statement rather than an omission. RFC
  * 7946 defines GeoJSON as WGS84 and nothing else, so a GeoJSON boundary is

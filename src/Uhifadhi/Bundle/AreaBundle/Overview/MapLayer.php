@@ -17,7 +17,7 @@ namespace Uhifadhi\Bundle\AreaBundle\Overview;
  * ONE LAYER OF THE OPERATIONAL PLATE, WITH ITS LEGEND.
  *
  * THE MAP-LEGEND CONTRACT: every layer ships a legend, and the same layer
- * renders identically everywhere it is drawn. The host holds one plate; each
+ * renders identically everywhere it is drawn. The area page holds one plate; each
  * layer on it is contributed by the module that owns the data, carries its own
  * swatch, and the legend is grouped by contributor — which is the only way a
  * person can tell why a layer vanished.
@@ -42,10 +42,10 @@ final readonly class MapLayer
     /**
      * THE AREA'S OWN OUTLINE, drawn the platform's one way: a white casing under
      * a jade line, with everything outside it dimmed by a scrim the map's DIM
-     * control switches. Those numbers live once, in the map module's boundary.js, and
+     * control switches. Those numbers live once, in AtlasBundle's boundary.js, and
      * every map in the product reads them from there — so a layer that IS the
      * boundary says so rather than asking for a 2px line and quietly reading
-     * differently from every other plate. Only the host declares one: a module
+     * differently from every other plate. Only the area page declares one: a module
      * does not own where the area ends.
      */
     public const string STYLE_BOUNDARY = 'boundary';
@@ -82,7 +82,7 @@ final readonly class MapLayer
         }
         // AND ITS `features` LIST, WHICH GEOJSON REQUIRES. The plate, the dock
         // and the legend all walk it; a collection without one would not fail
-        // here, where the module built it, but inside the host's template, on
+        // here, where the module built it, but inside the area page's template, on
         // the page an area manager opens at 07:00.
         if (!\is_array($features['features'] ?? null)) {
             throw new \InvalidArgumentException(\sprintf('Map layer "%s" must carry a GeoJSON FeatureCollection, empty if it has nothing to draw — its "features" list is missing.', $id));

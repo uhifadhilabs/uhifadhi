@@ -16,7 +16,7 @@ namespace Uhifadhi\Bundle\AreaBundle\Tests\Integration\Fixtures;
 use Uhifadhi\Contracts\ModuleProviderInterface;
 
 /**
- * Stands in for the seam's catalogue: it collects everything tagged
+ * Stands in for the registry's catalogue: it collects everything tagged
  * `uhifadhi.module`. Tagged services are private, so a collector is what makes a
  * bundle's contribution — or its deliberate absence — observable at all.
  */

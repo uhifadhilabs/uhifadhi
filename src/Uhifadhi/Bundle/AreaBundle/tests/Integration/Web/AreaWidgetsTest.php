@@ -124,10 +124,10 @@ final class AreaWidgetsTest extends WebTestCase
 
     /**
      * THE REGISTER LAYOUT'S OPERATIONAL COLUMNS ARE THE MODULES' NOW-TILES, not a
-     * science table and not a figure the host names. The columns are whatever
-     * labels the now-tile seam handed back.
+     * science table and not a figure the area page names. The columns are whatever
+     * labels the now-tile contribution handed back.
      */
-    public function testTheRegisterLayoutDrawsTheOperationalColumnsFromTheSeam(): void
+    public function testTheRegisterLayoutDrawsTheOperationalColumnsFromTheContributions(): void
     {
         $this->boot();
         $this->aLiveArea();
@@ -142,8 +142,8 @@ final class AreaWidgetsTest extends WebTestCase
     }
 
     /**
-     * THE MAP LAYOUT IS THE PLATFORM'S REAL MAP — reused from map-module, wired to
-     * the index-map controller, each area travelling as GeoJSON for it to draw.
+     * THE MAP LAYOUT IS THE PLATFORM'S REAL MAP — the atlas's, wired to the
+     * index-map controller, each area travelling as GeoJSON for it to draw.
      * The dock beside it lists the same rows.
      */
     public function testTheMapLayoutReusesTheRealMapPlateAndDocksTheList(): void
@@ -160,7 +160,7 @@ final class AreaWidgetsTest extends WebTestCase
 
     /**
      * THE ATTENTION BOARD GROUPS AREAS BY WHAT NEEDS THE OPERATOR, and prints an
-     * area's actual attention items — the same seam the overview reads.
+     * area's actual attention items — the same contribution the overview reads.
      */
     public function testTheAttentionBoardGroupsAndListsTheItems(): void
     {
@@ -185,7 +185,7 @@ final class AreaWidgetsTest extends WebTestCase
         $body = $this->body('/areas/widgets');
 
         self::assertStringContainsString('ax-hero', $body);
-        // The factband is the area's own facts (the host's), not a module's.
+        // The factband is the area's own facts (the area page's), not a module's.
         self::assertStringContainsString('Extent', $body);
     }
 

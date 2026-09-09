@@ -22,7 +22,7 @@ namespace Uhifadhi\Bundle\AreaBundle\Overview;
  * time, a record, what happened, and who did it. That is why one component can
  * draw all of them and why a new module needs no work on this widget.
  *
- * The host merges and sorts by time, groups by day, and prints the contributor's
+ * The area page merges and sorts by time, groups by day, and prints the contributor's
  * name on every row. It does not interpret `$move`.
  */
 final readonly class PulseEvent

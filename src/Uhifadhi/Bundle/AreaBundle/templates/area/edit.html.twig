@@ -28,7 +28,7 @@
 {% block stylesheets %}
     {{ parent() }}
     {# The platform's one map stylesheet — Leaflet, then the shared plate/chrome
-       rules, before this module's sheet: the preview is the same map everywhere. #}
+       rules, before this bundle's sheet: the preview is the same map everywhere. #}
     {% if area.hasBoundary %}
         <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Bundle\\AtlasBundle\\AtlasBundle::LEAFLET_CSS')) }}">
         <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Bundle\\AtlasBundle\\AtlasBundle::STYLESHEET')) }}">
@@ -195,7 +195,7 @@
                 {# THE HEADS-UP GUARD — honest, warning-toned, deactivate-never-destroy.
                    It names the area's own dependency (its zones) truthfully and
                    speaks generally about everything else that references the
-                   boundary; this module does not invent another module's counts. #}
+                   boundary; this bundle does not invent another module's counts. #}
                 <div class="replace-guard" style="margin:14px 0 0;--fail:rgb(var(--c-warn))">
                     <span class="rg-badge">HEADS UP</span>
                     <div class="rg-body">

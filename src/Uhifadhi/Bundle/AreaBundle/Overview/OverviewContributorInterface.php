@@ -18,17 +18,17 @@ use Uhifadhi\Bundle\ShellBundle\Widget\Model\Widget;
 use Uhifadhi\Bundle\ShellBundle\Widget\Model\WidgetGroup;
 
 /**
- * THE SEAM A MODULE PUTS WIDGETS ON AN AREA'S OVERVIEW THROUGH.
+ * THE CONTRACT A MODULE PUTS WIDGETS ON AN AREA'S OVERVIEW THROUGH.
  *
  * `/areas/{uuid}` is the first surface in the product whose widgets are not
- * written by whoever owns the page. The HOST owns the surface, the grid, the
+ * written by whoever owns the page. THIS BUNDLE owns the surface, the grid, the
  * preset framework and the identity of the area; EVERY OPERATIONAL WIDGET
  * arrives here, from a module installed in that area.
  *
  * THE OPEN/CLOSED RULE, WRITTEN DOWN. Installing `uhifadhi/permits-module`
  * in an area adds a headed section to the library, its widgets, and — through
  * the three sibling interfaces — its tiles, its items and its layers. It does
- * not touch this file, the host's overview controller, the grid, or any other
+ * not touch this file, the overview controller, the grid, or any other
  * module. Uninstalling it removes exactly the same things, and a saved preset
  * that named one of its widgets skips it: the catalogue is assembled per area
  * and the resolver is tolerant.
@@ -50,7 +50,7 @@ use Uhifadhi\Bundle\ShellBundle\Widget\Model\WidgetGroup;
  * HOW AN IMPLEMENTOR IS COLLECTED. {@see \Uhifadhi\Bundle\AreaBundle\Service\AreaOverviewCatalogue}
  * reads the {@see TAG}, and the tag is applied EXPLICITLY at both ends: a module
  * bundle tags its contributor in its extension, because a reusable bundle is not
- * autoconfigured; a host service carries `#[AutoconfigureTag(self::TAG)]` ON ITS
+ * autoconfigured; a service in an application carries `#[AutoconfigureTag(self::TAG)]` ON ITS
  * OWN CLASS, because Symfony reads autoconfigure attributes off the definition's
  * own class and PHP does not inherit attributes from an interface — an
  * `#[AutoconfigureTag]` written here would be silently dead. The same constraint
@@ -63,10 +63,10 @@ interface OverviewContributorInterface
 
     /**
      * The slug of the module these widgets belong to — the same slug its
-     * ModuleProviderInterface declares. The host asks a contributor for widgets
+     * ModuleProviderInterface declares. The area page asks a contributor for widgets
      * ONLY when the area has that module switched on, which is what makes an
      * uninstalled module's widgets disappear from the library rather than go
-     * blank. The host's own contributor answers {@see HostOverviewContributor::SLUG}.
+     * blank. The area page's own contributor answers the area's own slug.
      */
     public function moduleSlug(): string;
 
@@ -86,12 +86,12 @@ interface OverviewContributorInterface
 
     /**
      * A sprintf pattern naming the Twig partial for one widget id, e.g.
-     * `'@UhifadhiPatrol/overview/_w_%s.html.twig'`.
+     * `'@Patrol/overview/_w_%s.html.twig'`.
      *
      * A PATTERN PER CONTRIBUTOR, not per surface: on every other surface one
      * module wrote every widget, so one pattern was enough. Here each plate is
      * rendered from its own bundle's template namespace, which is also why the
-     * host template can contain no widget markup at all.
+     * the area page's template can contain no widget markup at all.
      */
     public function partialPattern(): string;
 

@@ -22,13 +22,13 @@ use Uhifadhi\Bundle\AreaBundle\Overview\NowTileProviderInterface;
  *
  * The register card's operational figures — its stat cells and its "out right
  * now" chip — are the same now-tiles the area overview draws, gathered through
- * {@see NowTileProviderInterface}. This module must depend on no real module, so
- * the suite ships its own contributor over the seam. What is being tested is that
- * the host LAYS OUT a contributed figure on a card where the module is switched
+ * {@see NowTileProviderInterface}. This bundle must depend on no real module, so
+ * the suite ships its own contributor over the registry. What is being tested is that
+ * the area page LAYS OUT a contributed figure on a card where the module is switched
  * on — not what any particular module counts.
  *
  * It returns three standing figures (the four-up grid fills with these beside the
- * host's "modules live") and one LIVE figure (the card foots with it), so both
+ * the area page's own "modules live") and one LIVE figure (the card foots with it), so both
  * the stat cells and the "out right now" chip are exercised.
  */
 final readonly class FakeNowTiles implements NowTileProviderInterface

@@ -19,18 +19,18 @@ use Uhifadhi\Bundle\RegistryBundle\Enum\ModuleCategory;
 use Uhifadhi\Bundle\RegistryBundle\Enum\ModuleStatus;
 
 /**
- * THE REGISTER CARD'S OPERATIONAL PULSE, GATHERED THROUGH THE OVERVIEW SEAMS —
- * and through nothing this module wrote.
+ * THE REGISTER CARD'S OPERATIONAL PULSE, GATHERED THROUGH THE OVERVIEW CONTRIBUTIONS —
+ * and through nothing this bundle wrote.
  *
- * The host owns a card's frame, its identity, its "modules live" count and its
+ * The area page owns a card's frame, its identity, its "modules live" count and its
  * face; every operational figure on it arrives from a module switched on in the
- * area — the stat cells and "out right now" chip from the now-tile seam, the
- * alert flag from the attention seam, "last check-in" from the pulse seam. What
- * is proved here is that the host LAYS OUT a contributed figure where its module
+ * area — the stat cells and "out right now" chip from the now-tile contribution, the
+ * alert flag from the attention contribution, "last check-in" from the pulse contribution. What
+ * is proved here is that the area page LAYS OUT a contributed figure where its module
  * is on and shows the honest boundary-only card where it is off: the same
  * open/closed discipline the overview keeps, at register density. The suite ships
  * its own contributors ({@see FakeNowTiles}, {@see FakeAttention},
- * {@see FakePulse}) because this module must depend on no real module.
+ * {@see FakePulse}) because this bundle must depend on no real module.
  */
 final class AreaRegisterCardsTest extends WebTestCase
 {
@@ -61,11 +61,11 @@ final class AreaRegisterCardsTest extends WebTestCase
     }
 
     /**
-     * A CARD'S STAT CELLS ARE THE MODULE'S NOW-TILES, laid out beside the host's
-     * own "modules live". The host prints "23" and "patrols this wk" without
-     * knowing either is a patrol figure — it lays out what the seam handed back.
+     * A CARD'S STAT CELLS ARE THE MODULE'S NOW-TILES, laid out beside the area page's
+     * own "modules live". The area page prints "23" and "patrols this wk" without
+     * knowing either is a patrol figure — it lays out what the registry handed back.
      */
-    public function testTheStatCellsFlowFromTheNowTileSeam(): void
+    public function testTheStatCellsFlowFromTheNowTileContribution(): void
     {
         $this->boot();
         $area = $this->anArea('Northern Conservation Reserve');
@@ -74,7 +74,7 @@ final class AreaRegisterCardsTest extends WebTestCase
 
         $body = $this->body('/areas');
 
-        // The host's own cell...
+        // The area page's own cell...
         self::assertStringContainsString('modules live', $body);
         // ...and the module's contributed figures beside it.
         self::assertStringContainsString('23', $body);
@@ -101,11 +101,11 @@ final class AreaRegisterCardsTest extends WebTestCase
     }
 
     /**
-     * THE ALERT FLAG COUNTS THE ATTENTION SEAM. Two contributed items make the
+     * THE ALERT FLAG COUNTS THE ATTENTION CONTRIBUTION. Two contributed items make the
      * card's flag read a plural count, and the "With alerts" pill counts this
      * area among those asking for attention.
      */
-    public function testTheAlertFlagCountsTheAttentionSeam(): void
+    public function testTheAlertFlagCountsTheAttentionContribution(): void
     {
         $this->boot();
         $area = $this->anArea('Northern Conservation Reserve');
@@ -120,11 +120,11 @@ final class AreaRegisterCardsTest extends WebTestCase
     }
 
     /**
-     * "LAST CHECK-IN" IS THE PULSE SEAM'S MOST RECENT MOVE, with the exact
+     * "LAST CHECK-IN" IS THE PULSE CONTRIBUTION'S MOST RECENT MOVE, with the exact
      * instant on a machine-readable `<time>` and a plain relative label for a
      * person.
      */
-    public function testTheLastCheckInFlowsFromThePulseSeam(): void
+    public function testTheLastCheckInFlowsFromThePulseContribution(): void
     {
         $this->boot();
         $area = $this->anArea('Northern Conservation Reserve');

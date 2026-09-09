@@ -87,7 +87,7 @@ final readonly class AreaCreateController
 
         /*
          * CHECKED BEFORE THE FILE IS TOUCHED. Creating an area is the most
-         * consequential write on this module's screens, and it was the one POST
+         * consequential write on this bundle's screens, and it was the one POST
          * here without a token while the module shop's three all carried one —
          * an inconsistency inside a single bundle, which is the shape a hole
          * usually comes in. `area.create` answers WHO may create; this answers

@@ -22,7 +22,7 @@ use Uhifadhi\Bundle\AreaBundle\Overview\NowTile;
 /**
  * WHAT A CONTRIBUTION REFUSES TO BE. These are the rules that decide whether a
  * bad contribution fails in the module that built it — where somebody can fix
- * it — or in the host's template, on the page an area manager opens at 07:00.
+ * it — or in the area page's template, on the page an area manager opens at 07:00.
  */
 final class ContributionValueTest extends TestCase
 {
@@ -103,7 +103,7 @@ final class ContributionValueTest extends TestCase
     /**
      * A LAYER WITH NOTHING TO DRAW STILL SHIPS ITS LEGEND — so the empty answer
      * is an empty FeatureCollection, and anything that is not one is refused
-     * here rather than walked in the host's template.
+     * here rather than walked in the area page's template.
      */
     public function testAMapLayerWithNothingToDrawIsAnEmptyCollectionNotAnAbsence(): void
     {

@@ -16,9 +16,9 @@ namespace Uhifadhi\Bundle\AreaBundle\Overview;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 
 /**
- * THE SEAM A MODULE PUTS A LAYER ON THE HOST'S OPERATIONAL PLATE THROUGH.
+ * THE CONTRACT A MODULE PUTS A LAYER ON AN AREA'S OPERATIONAL PLATE THROUGH.
  *
- * One plate, many owners. The host draws the map — Leaflet, self-hosted, the
+ * One plate, many owners. The area page draws the map — Leaflet, self-hosted, the
  * same instrument every map in the product wears — and each layer on it belongs
  * to the module that owns the data. The legend is grouped by contributor, which
  * is the only way a person can tell why a layer vanished.

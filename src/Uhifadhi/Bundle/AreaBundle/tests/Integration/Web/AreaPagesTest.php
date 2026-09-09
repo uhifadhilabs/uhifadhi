@@ -121,9 +121,9 @@ final class AreaPagesTest extends WebTestCase
     }
 
     /**
-     * THE REGISTER SHOWS ONLY WHAT THIS MODULE OWNS. Forest cover, tree-cover
+     * THE REGISTER SHOWS ONLY WHAT THIS BUNDLE OWNS. Forest cover, tree-cover
      * loss, the trend and the alerts chip are a future ingestion module's
-     * figures; a column reserved for them here would be this module knowing what
+     * figures; a column reserved for them here would be this bundle knowing what
      * that module measures. Absent, not empty — there is not even a dashed cell.
      */
     public function testTheRegisterReservesNoFigureAnotherModuleOwns(): void
@@ -134,8 +134,8 @@ final class AreaPagesTest extends WebTestCase
         $body = $this->body('/areas');
 
         // No module is switched on here, so no operational figure is drawn — and
-        // the host names none of a specific module's figures on its own. "Alerts"
-        // is host vocabulary now (the attention seam), not a module's figure, so
+        // the area page names none of a specific module's figures on its own. "Alerts"
+        // is this bundle's vocabulary now (the attention contribution), not a module's figure, so
         // it is allowed; a module's own labels are not hard-coded here.
         foreach (['forest', 'no ingest yet', 'ha/yr', 'patrols this wk', 'open incidents'] as $foreign) {
             self::assertStringNotContainsStringIgnoringCase(
@@ -147,11 +147,10 @@ final class AreaPagesTest extends WebTestCase
     }
 
     /**
-     * THE "NEW AREA" BUTTON LEADS SOMEWHERE NOW. It used to render a literal
-     * href that 404'd — a chosen reminder that no create screen existed. The
-     * screen exists as of v0.5.0, so the button is a generated route and the
-     * click is served. Its permission gate and the import itself are
-     * {@see AreaCreateTest}'s.
+     * THE "NEW AREA" BUTTON LEADS SOMEWHERE. Its href is a generated route
+     * rather than a literal, and the click is served — so a button that stopped
+     * being answered fails here rather than in somebody's browser. Its
+     * permission gate and the import itself are {@see AreaCreateTest}'s.
      */
     public function testTheNewAreaButtonRendersAndItsDestinationIsServed(): void
     {
@@ -179,9 +178,9 @@ final class AreaPagesTest extends WebTestCase
 
     /**
      * THE PILLS ARE THE GRADUATED DESIGN'S FOUR, AND EACH CAN MOVE. All, Live,
-     * With alerts and Awaiting setup — live and setup from the seam's ledger,
-     * alerts from the attention seam. None is a pill for one specific module,
-     * which would be the host knowing what that module measures.
+     * With alerts and Awaiting setup — live and setup from the registry's ledger,
+     * alerts from the attention contribution. None is a pill for one specific module,
+     * which would be the area page knowing what that module measures.
      */
     public function testTheFilterPillsAreTheOnesThatCanMove(): void
     {
@@ -269,7 +268,7 @@ final class AreaPagesTest extends WebTestCase
      * THE PLATE IS INFRASTRUCTURE, AND THE BOUNDARY IS ALWAYS DRAWN. An area
      * with a boundary on file opens on a real map — the operational plate, wired
      * to the area-map controller, carrying the stored geometry for the browser
-     * to draw. This is host/area base content: it is there whether or not any
+     * to draw. This is the area's own base content: it is there whether or not any
      * module is switched on.
      */
     public function testTheOverviewDrawsTheBoundaryPlateWhenTheAreaHasABoundary(): void

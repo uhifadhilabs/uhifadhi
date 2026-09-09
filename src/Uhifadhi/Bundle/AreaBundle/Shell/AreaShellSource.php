@@ -33,14 +33,14 @@ use Uhifadhi\Bundle\ShellBundle\Model\AreaTab;
  * two hand-kept copies eventually would.
  *
  * WHAT THIS DECIDES AND THE SHELL DOES NOT: which screens an area has, and which
- * of them this viewer may reach. Both are this module's model of an area, and
+ * of them this viewer may reach. Both are this bundle's model of an area, and
  * neither is a layout's business. A tab the viewer may not have is simply absent
  * from what this returns — never a greyed-out word, because a disabled
  * "Settings" tells a ranger that a settings screen exists and they are not
  * trusted with it.
  *
  * ROUTE-TOLERANT, and that is what lets ONE implementation cover screens this
- * module does not ship. The module grid is the seam's page, not this module's:
+ * module does not ship. The module grid is the registry's page, not this bundle's:
  * where an installation mounts it the tab appears, and where it does not the
  * strip is simply shorter. The alternative — every bundle claiming to know where
  * you are — is the disagreement the shell's alias exists to prevent.
@@ -131,7 +131,7 @@ final class AreaShellSource implements AreaShellSourceInterface
      * on none of them.
      *
      * The modules space is recognised by the URL SPACE it owns rather than by a
-     * route-name allowlist, and that is what keeps this module blind to the rest:
+     * route-name allowlist, and that is what keeps this bundle blind to the rest:
      * a module's own pages are its own bundle's routes, and this class must light
      * "Modules" for all of them without knowing one of their names. Every
      * area-scoped module page lives under `/areas/{uuid}/modules/`, which is the

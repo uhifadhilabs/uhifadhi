@@ -19,13 +19,13 @@ import { mountMapChrome } from 'uhifadhi/map-chrome';
  * ONE MAP, EVERYWHERE. The imagery (uhifadhi/basemaps), the boundary treatment
  * (uhifadhi/boundary) and the chrome — zoom, DIM, base-layer toggle, live scale,
  * attribution, fullscreen, the Ctrl/-scroll bargain — (uhifadhi/map-chrome) all
- * come from the map module, so this plate reads identically to a patrol plate.
+ * come from AtlasBundle, so this plate reads identically to a patrol plate.
  * This controller draws no chrome and holds no second opinion about what
  * satellite or a boundary looks like; it only stitches the shared pieces and
  * adds the one thing that is the area's own: its zones.
  *
  * Leaflet is self-hosted and read off window.L (the overview template loads it
- * as a classic <script>, from the map module's public/leaflet, before this
+ * as a classic <script>, from AtlasBundle's public/leaflet, before this
  * deferred module connects). MapLibre is deliberately not used — raster tiles
  * plus GeoJSON need no WebGL, and WebGL failed silently in constrained setups.
  */
@@ -106,7 +106,7 @@ export default class extends Controller {
 
     /**
      * The area's own base content — the boundary and the zones — then every
-     * module layer the seam handed down. Each drawn layer is kept by its legend
+     * module layer the registry handed down. Each drawn layer is kept by its legend
      * id, so a legend row can switch it on and off; a layer off by default is
      * BUILT but not added, so its first toggle draws it with no round-trip.
      */
@@ -149,7 +149,7 @@ export default class extends Controller {
         }
         this.layers['area.zones'] = zones;
 
-        // MODULE LAYERS — one plate, many owners. The host draws each from the
+        // MODULE LAYERS — one plate, many owners. The area page draws each from the
         // colour and style the module stated and knows nothing of what the
         // geometry IS; a per-feature `color` overrides the layer swatch where a
         // module colours its features individually (a track by patrol type).

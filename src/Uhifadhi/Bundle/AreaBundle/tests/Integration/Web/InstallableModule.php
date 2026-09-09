@@ -19,16 +19,16 @@ use Uhifadhi\Contracts\ModuleProviderTrait;
 /**
  * A MODULE BUNDLE, STOOD IN FOR.
  *
- * The seam's catalogue is the INTERSECTION of rows in the `module` table and
+ * The registry's catalogue is the INTERSECTION of rows in the `module` table and
  * providers currently registered — a row whose bundle was uninstalled keeps its
  * data and leaves the catalogue. So a suite that only inserted rows would get an
  * empty catalogue and prove nothing. This is the other half: the registered
  * provider that makes a row real.
  *
- * IT IS NOT A REAL MODULE AND MUST NOT BECOME ONE. Depending on the patrol
- * module to test the area module's grid would put the fleet's dependency graph
- * in a loop; what this module owes is that it reads the ledger correctly, for
- * whatever is in it.
+ * IT IS NOT A REAL MODULE AND MUST NOT BECOME ONE. Depending on a capability
+ * module to test this bundle's grid would point the dependency graph backwards;
+ * what this bundle owes is that it reads the ledger correctly, for whatever is
+ * in it.
  */
 final readonly class InstallableModule implements ModuleProviderInterface
 {

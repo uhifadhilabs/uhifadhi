@@ -27,7 +27,7 @@ use Uhifadhi\Bundle\RegistryBundle\Repository\AreaModuleRepository;
  * WHAT AN AREA'S OVERVIEW IS MADE OF — gathered from every module installed in
  * the area, and from nothing else.
  *
- * THE HOST OWNS THE SURFACE AND WRITES NONE OF THE OPERATIONAL CONTENT. This
+ * THE AREA PAGE OWNS THE SURFACE AND WRITES NONE OF THE OPERATIONAL CONTENT. This
  * class asks each contributor for its parts, keeps the ones whose module is
  * actually switched on here, and orders them. It does not know what a patrol is
  * and must not: the day it does, uninstalling a module leaves a hard-coded row
@@ -111,16 +111,16 @@ final readonly class AreaOverview
     }
 
     /**
-     * EVERY MODULE LAYER FOR THE HOST'S ONE PLATE, in provider order then the
+     * EVERY MODULE LAYER FOR THE AREA PAGE'S ONE PLATE, in provider order then the
      * order each provider lists its own layers — never sorted, because a layer's
      * place in the legend is the module's to decide and a stable order is what
      * lets a person find the same row twice.
      *
      * Asked only where the module is switched on, exactly like the tiles and the
      * attention rows: a layer from a module that is off here is not gathered, so
-     * its legend group leaves the plate rather than lingering empty. The host
+     * its legend group leaves the plate rather than lingering empty. The area page
      * draws these from their own colour and style and knows nothing of what a
-     * patrol track or an incident point IS — the day it does, the seam is broken.
+     * patrol track or an incident point IS — the day it does, the registry is broken.
      *
      * @return list<MapLayer>
      */
@@ -147,10 +147,10 @@ final readonly class AreaOverview
      * nothing moved.
      *
      * The register card's "last check-in" and its "last activity" sort read this.
-     * It is the pulse seam asked the same way as everything else — only where a
-     * module is switched on — so the host learns WHEN an area last did something
+     * It is the pulse contribution asked the same way as everything else — only where a
+     * module is switched on — so the area page learns WHEN an area last did something
      * without knowing WHAT: the day a module leaves, its moves stop counting
-     * toward the area's recency with no host edit. Null is a legitimate answer
+     * toward the area's recency with no edit to the area page. Null is a legitimate answer
      * and the card says "no recent activity" rather than inventing a time.
      */
     public function latestActivityFor(AreaOfInterest $area, \DateTimeImmutable $since, \DateTimeImmutable $now): ?\DateTimeImmutable
@@ -206,7 +206,7 @@ final readonly class AreaOverview
     /**
      * The slugs of the modules this area has switched on.
      *
-     * READ FROM THE SEAM'S LEDGER, never from what happens to be installed in
+     * READ FROM THE REGISTRY'S LEDGER, never from what happens to be installed in
      * the container: a module present in the application but switched off for
      * THIS area contributes nothing here, which is what makes the per-area
      * switch mean anything.

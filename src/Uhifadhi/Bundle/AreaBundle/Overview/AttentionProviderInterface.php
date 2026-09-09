@@ -16,9 +16,9 @@ namespace Uhifadhi\Bundle\AreaBundle\Overview;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 
 /**
- * THE SEAM A MODULE PUTS A ROW IN THE HOST'S "NEEDS ATTENTION" LIST THROUGH.
+ * THE CONTRACT A MODULE PUTS A ROW IN AN AREA'S "NEEDS ATTENTION" LIST THROUGH.
  *
- * The host merges every installed module's items, sorts them by urgency — never
+ * The area page merges every installed module's items, sorts them by urgency — never
  * by module — and draws them all identically. It does not know what a snare line
  * is and must not: the day it does, uninstalling a module leaves a row behind.
  *

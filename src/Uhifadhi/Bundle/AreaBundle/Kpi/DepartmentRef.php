@@ -16,16 +16,16 @@ namespace Uhifadhi\Bundle\AreaBundle\Kpi;
 /**
  * A DEPARTMENT, NAMED WITHOUT NAMING ANYBODY'S CLASS.
  *
- * Departments belong to the team module, and NO PACKAGE PUBLISHES A CONTRACT
- * FOR ONE — there is no `DepartmentInterface` in module-contracts and none in
- * team. A KPI seam typed against `Uhifadhi\Team\Entity\Department` would
- * therefore make every module that reports a figure hard-require team, and a
- * seam typed against nothing would hand providers an `object` to guess at.
+ * Departments belong to TeamBundle, and NO PACKAGE PUBLISHES A CONTRACT
+ * FOR ONE — there is no `DepartmentInterface` in the contracts and none in
+ * team. A KPI contract typed against TeamBundle's own entity would therefore
+ * make every module that reports a figure depend on TeamBundle, and a contract
+ * typed against nothing would hand providers an `object` to guess at.
  *
  * So the caller — whoever holds the department, which is the surface rendering
  * the page — resolves it to this: the id a provider files rows under, the uuid a
  * URL names it by, and the name a plate prints. That is the whole of what a
- * figure needs, and it is the SAME DISCIPLINE the fleet already applies to
+ * figure needs, and it is the SAME DISCIPLINE the platform already applies to
  * reading a person's department: walk the mapping, never the type.
  *
  * It is deliberately not an entity and not persisted. A ref is made for one

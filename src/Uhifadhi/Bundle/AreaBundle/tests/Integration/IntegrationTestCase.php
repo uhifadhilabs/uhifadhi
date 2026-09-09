@@ -51,6 +51,11 @@ abstract class IntegrationTestCase extends KernelTestCase
         $metadata = $this->em->getMetadataFactory()->getAllMetadata();
         $schemaTool->dropSchema($metadata);
         $schemaTool->createSchema($metadata);
+
+        // Anything the boot left managed belongs to the schema that has just
+        // been dropped; ids restart at 1 and a stale object would collide with
+        // the first row this test writes.
+        $this->em->clear();
     }
 
     protected function tearDown(): void
@@ -88,7 +93,7 @@ abstract class IntegrationTestCase extends KernelTestCase
     /** -29.5–-29.0: the eastern half, meeting the western along -29.5. */
     protected const string A_EAST_HALF = '{"type":"MultiPolygon","coordinates":[[[[-29.5,-3.6],[-29.0,-3.6],[-29.0,-2.8],[-29.5,-2.8],[-29.5,-3.6]]]]}';
 
-    /** -29.75–-29.25: crosses the seam, so it shares interior with both halves. */
+    /** -29.75–-29.25: crosses the registry, so it shares interior with both halves. */
     protected const string A_STRADDLING_MIDDLE = '{"type":"MultiPolygon","coordinates":[[[[-29.75,-3.6],[-29.25,-3.6],[-29.25,-2.8],[-29.75,-2.8],[-29.75,-3.6]]]]}';
 
     /** Wholly inside the western half — containment is a conflict, not a nesting. */

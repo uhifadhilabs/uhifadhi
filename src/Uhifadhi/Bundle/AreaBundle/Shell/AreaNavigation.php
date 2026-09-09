@@ -54,10 +54,10 @@ final readonly class AreaNavigation implements NavigationSourceInterface
     /** The heading the rows file under, as the design draws it. */
     public const string SECTION = 'Observatory';
 
-    /** Above the organisation rows the team module contributes at 20. */
+    /** Above the organisation rows TeamBundle contributes at 20. */
     public const int POSITION = 10;
 
-    /** The register: this module's front door, and the section's own row. */
+    /** The register: this bundle's front door, and the section's own row. */
     public const string ROUTE = 'area_index';
 
     public function __construct(
@@ -219,7 +219,7 @@ final readonly class AreaNavigation implements NavigationSourceInterface
      * WHETHER THE VIEWER IS ON THIS ROW'S SCREEN, or on one underneath it.
      *
      * Compared as PATHS rather than route names, because the addresses belong to
-     * the application: it may mount this module under a prefix, and a list of
+     * the application: it may mount this bundle under a prefix, and a list of
      * route names typed out here would go stale the first time a screen was
      * added.
      */

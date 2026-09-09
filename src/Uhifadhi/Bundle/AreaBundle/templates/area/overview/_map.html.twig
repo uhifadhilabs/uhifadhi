@@ -1,4 +1,4 @@
-{# THE OPERATIONAL MAP PLATE — the host/area's own base content: the boundary,
+{# THE OPERATIONAL MAP PLATE — the area's own base content: the boundary,
    always drawn, and the area's zones drawn beside it.
 
    Design: areas/<area>/index.html and overview.widgets.js (the `map` widget).
@@ -7,7 +7,7 @@
    one, whichever modules are installed — so this card is here on a brand-new
    area with nothing switched on. Operational layers (patrol tracks, open
    incidents, stations) are a module's, and arrive later through the map-layer
-   seam, each adding its own legend group beneath "The area".
+   contribution, each adding its own legend group beneath "The area".
 
    ONE MAP, EVERYWHERE. The imagery, the boundary treatment and the chrome (zoom,
    base-layer toggle, scale, attribution) are the platform's, from the map
@@ -26,7 +26,7 @@
          data-controller="uhifadhi--area-bundle--area-map"
          data-uhifadhi--area-bundle--area-map-payload-value="{{ mapPayload|merge({layers: mapLayers})|json_encode }}">
         <span class="tab">Where<span class="src">&middot; the area &amp; its zones</span></span>
-        <span class="ao-by"><i></i>host plate &middot; module layers</span>
+        <span class="ao-by"><i></i>the area plate &middot; module layers</span>
 
         <div class="viewer">
             <div class="map-canvas"
@@ -37,7 +37,7 @@
 
         {# EVERY LAYER SHIPS A LEGEND, grouped by the contributor, and every row is
            a toggle: clicking it shows or hides that layer on the plate above.
-           "The area" is the host/area's own group and is always present; each
+           "The area" is the area's own group and is always present; each
            installed module that draws a layer adds its own group beneath it. #}
         <div class="ao-legend">
             <div class="grp">
@@ -73,7 +73,7 @@
     {# NO BOUNDARY IS A STATE, NOT A BROKEN MAP. #}
     <div class="c" data-w="map">
         <span class="tab">Where<span class="src">&middot; the area &amp; its zones</span></span>
-        <span class="ao-by"><i></i>host plate &middot; module layers</span>
+        <span class="ao-by"><i></i>the area plate &middot; module layers</span>
         <div class="ao-slot" style="margin-top:8px">
             <div class="ao-slotrow">
                 <span class="nm">The map</span>

@@ -17,7 +17,7 @@ import { mountMapChrome } from 'uhifadhi/map-chrome';
  *
  * ONE MAP, EVERYWHERE. The imagery (uhifadhi/basemaps) and the chrome — zoom,
  * base-layer toggle, live scale, attribution, fullscreen (uhifadhi/map-chrome) —
- * are the map module's, so this plate reads identically to the overview's. This
+ * are AtlasBundle's, so this plate reads identically to the overview's. This
  * controller reuses those shared pieces and adds only the one thing this view
  * owns: the org's areas, each boundary drawn and a marker dropped on it, the
  * whole set fitted into view. It is NOT a new map — it is the shared map, with a

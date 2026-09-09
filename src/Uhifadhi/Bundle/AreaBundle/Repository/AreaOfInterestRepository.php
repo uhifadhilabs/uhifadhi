@@ -21,7 +21,7 @@ use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 /**
  * Extends the PostGIS bundle's repository base rather than
  * `ServiceEntityRepository` — the extend-when-you-need-it rule. The `St` methods
- * (`stAreaKm2()`, `findStIntersecting()`) just exist, so this module ships no
+ * (`stAreaKm2()`, `findStIntersecting()`) just exist, so this bundle ships no
  * DQL and no SQL of its own for the two things everything holding an area asks:
  * how big is it, and what does it touch.
  *

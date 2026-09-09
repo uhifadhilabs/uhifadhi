@@ -4,10 +4,10 @@
    Design: areas/index.html (source presets/areas-index/a.html) and the wall view
    of areas/widgets.html.
 
-   THE HOST OWNS THE FRAME, A MODULE OWNS THE CONTENT. A card's face, identity,
-   "modules live" count and "last check-in" are the host's; every operational
+   THE AREA PAGE OWNS THE FRAME, A MODULE OWNS THE CONTENT. A card's face, identity,
+   "modules live" count and "last check-in" are the area page's; every operational
    figure — the stat cells, the "out right now" chip, the alert flag — arrived
-   through the overview seams and is laid out without the host understanding it.
+   through the overview contributions and is laid out without the area page understanding it.
 
    THE CARD FACE is the area's real boundary outlined over a real Esri World
    Imagery snippet (a keyless `<img>`, rendered on demand — see
@@ -66,8 +66,8 @@
                         {{ row.areaKm2|number_format }} km&sup2;
                     </div>
                     {% if row.isLive %}
-                        {# Cell one is the host's own count; the rest are module now-tiles,
-                           laid out without the host knowing what they measure. #}
+                        {# Cell one is the area page's own count; the rest are module now-tiles,
+                           laid out without the area page knowing what they measure. #}
                         <div class="ax-stats">
                             <div class="ax-st"><b>{{ row.liveModules }}</b><span>modules live</span></div>
                             {% for stat in row.stats %}

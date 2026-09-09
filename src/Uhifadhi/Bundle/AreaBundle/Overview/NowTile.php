@@ -14,15 +14,15 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\AreaBundle\Overview;
 
 /**
- * ONE TILE OF THE RIGHT-NOW STRIP — the clearest place the seam shows.
+ * ONE TILE OF THE RIGHT-NOW STRIP — the clearest place the registry shows.
  *
- * The host draws the strip and orders it. It writes no tile it does not own:
+ * The area page draws the strip and orders it. It writes no tile it does not own:
  * install a module and its tiles join the row, uninstall it and they leave.
  * The same tiles are what the duty board draws at board density, so a number
  * can never read one way in the strip and another on the wall.
  *
  * THE INDEX IS PROVENANCE. `PL·N1` is the patrols module's first now-tile;
- * `AO·N1` is the host's own. It is printed on the plate because provenance has
+ * `AO·N1` is the area page's own. It is printed on the plate because provenance has
  * to survive a screenshot.
  *
  * ABSENT IS NOT ZERO. A module with nothing to say returns no tile — it does

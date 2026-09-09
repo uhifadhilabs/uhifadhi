@@ -31,14 +31,14 @@ use Uhifadhi\Bundle\AreaBundle\Overview\PulseProviderInterface;
  * package that may not be on its build classpath. The literal and the constant
  * therefore have to be kept equal by something, and that something is this test.
  *
- * Change a string below and every module in the fleet contributes into a tag
+ * Change a string below and every module contributes into a tag
  * nobody collects: the widgets simply stop appearing, with no error anywhere.
  * That is precisely the failure this file exists to make loud.
  */
-final class ContributionSeamContractTest extends TestCase
+final class ContributionContractTest extends TestCase
 {
     /**
-     * The literals the fleet already ships, copied from the module bundles'
+     * The literals a module bundle writes by hand, copied from those bundles'
      * own extensions rather than from the constants — the whole point is that
      * the two are written down independently and compared here.
      *
@@ -62,7 +62,7 @@ final class ContributionSeamContractTest extends TestCase
 
     /**
      * EVERY CONTRIBUTION IS ASKED PER MODULE. A provider names the module it
-     * speaks for, and the host asks it only where that module is switched on —
+     * speaks for, and the area page asks it only where that module is switched on —
      * which is what makes an uninstalled module's widgets DISAPPEAR rather than
      * go blank.
      */

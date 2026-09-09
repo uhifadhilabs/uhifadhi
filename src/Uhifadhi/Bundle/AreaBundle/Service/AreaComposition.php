@@ -28,13 +28,13 @@ use Uhifadhi\Bundle\ShellBundle\Model\ModuleGroup;
  * AN AREA'S COMPOSITION, READ — what is switched on here, what is parked, and
  * where each tile goes.
  *
- * THE READ MODEL ONLY. Every write goes straight to the seam's
+ * THE READ MODEL ONLY. Every write goes straight to the registry's
  * {@see AreaModuleService} from the controller and never through this class: the
  * invariants — a pinned module cannot be parked, position 0 is the pinned one's
- * — live in the seam because the seam owns the table, and a second writer in
+ * — live in the registry because the registry owns the table, and a second writer in
  * this bundle would eventually disagree with the first.
  *
- * THE CATALOGUE IS THE SEAM'S TOO, and it is an INTERSECTION rather than a
+ * THE CATALOGUE IS THE REGISTRY'S TOO, and it is an INTERSECTION rather than a
  * table: a `module` row whose bundle has been uninstalled keeps its data and
  * leaves the catalogue. That is why "parked" is derived here from
  * catalogue-minus-active rather than read off a column — an area does not have
@@ -61,7 +61,7 @@ final readonly class AreaComposition
 
     /**
      * THE GRID, GROUPED THE WAY THE CATALOGUE FILES THINGS. The headings are the
-     * seam's own category labels, not a list written here: a category added to
+     * registry's own category labels, not a list written here: a category added to
      * the platform appears without this file changing.
      *
      * @return list<ModuleGroup>
@@ -86,7 +86,7 @@ final readonly class AreaComposition
 
     /**
      * THE ACTIVE SET IN ITS OWN ORDER — the order the shop's rows and pills are
-     * drawn in, and the order the area shows its modules in. The seam keeps it
+     * drawn in, and the order the area shows its modules in. The registry keeps it
      * on `position`; nothing is re-sorted here.
      *
      * @return list<ModuleRow>
@@ -127,7 +127,7 @@ final readonly class AreaComposition
      * order.
      *
      * THE INTERSECTION IS THE WHOLE POINT, and getting it wrong is a bug that
-     * cannot be cleared from the product. The seam's catalogue is deliberately
+     * cannot be cleared from the product. The registry's catalogue is deliberately
      * `rows AND registered providers`, so removing a bundle removes the
      * capability WITHOUT deleting anybody's data — the `area_module` row
      * survives, ready for the day the bundle comes back. Read straight from the

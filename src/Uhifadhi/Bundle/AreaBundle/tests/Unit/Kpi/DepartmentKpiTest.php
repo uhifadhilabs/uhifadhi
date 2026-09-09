@@ -102,13 +102,13 @@ final class DepartmentKpiTest extends TestCase
     }
 
     /**
-     * THE SEAM NEVER NAMES TEAM'S CLASS. Departments are the team module's
+     * THE CONTRACT NEVER NAMES TEAM'S CLASS. Departments are TeamBundle's
      * entity and no package publishes a contract for one, so a provider is
      * handed a REF the caller resolved — id, uuid and name, which is everything
-     * a figure is filed under. That is the same discipline the fleet already
+     * a figure is filed under. That is the same discipline the platform already
      * applies to reading a person's department: walk the mapping, never the type.
      */
-    public function testTheSeamHandsAProviderARefRatherThanAnEntity(): void
+    public function testTheContractHandsAProviderARefRatherThanAnEntity(): void
     {
         $method = new \ReflectionMethod(DepartmentKpiProviderInterface::class, 'kpisFor');
         $first = $method->getParameters()[0]->getType();

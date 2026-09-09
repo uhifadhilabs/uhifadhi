@@ -14,26 +14,26 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\AreaBundle\Overview;
 
 /**
- * THE SEAM A MODULE PUTS ITS OWN WORDS INTO A HOST SENTENCE THROUGH — the fifth
+ * THE CONTRACT A MODULE PUTS ITS OWN WORDS INTO AN AREA'S SENTENCE THROUGH — the fifth
  * member of the family that already holds now-tiles, attention items, map layers
  * and pulse events.
  *
- * WHY A SEAM FOR PROSE. Two of the host's own strings named module vocabulary
+ * WHY A CONTRACT FOR PROSE. Two of the area page's own strings named module vocabulary
  * outright, copied verbatim from the design: the operational map's picker note
  * said "today's tracks and open incidents", and the "Map as ground" thesis said
  * a person could spot "a stranded patrol". They read perfectly — and they were
- * the host knowing what a patrol is, on a page whose whole argument is that it
+ * the area page knowing what a patrol is, on a page whose whole argument is that it
  * does not. Uninstall incidents and the map's own note went on promising open
  * incidents to an area that had none to draw.
  *
  * A FRAGMENT, NEVER A SENTENCE. A module contributes a NOUN PHRASE — "today's
- * tracks", "a stranded patrol" — and the host builds the sentence around it:
- * the punctuation, the conjunction and the clause order are the host's copy,
+ * tracks", "a stranded patrol" — and the area page builds the sentence around it:
+ * the punctuation, the conjunction and the clause order are the area page's copy,
  * because they belong to a sentence no single module can see the whole of. That
  * is also what lets the sentence degrade honestly: with one module installed it
- * simply says less, and with none it says only what the host can draw.
+ * simply says less, and with none it says only what the area page can draw.
  *
- * WHAT IS NOT SEAM-FED. The future-module slot names candidate modules by name
+ * WHAT IS NOT CONTRIBUTED. The future-module slot names candidate modules by name
  * on purpose — naming what the catalogue holds IS that widget's job, and there
  * is no installed module to ask.
  *
@@ -45,7 +45,7 @@ interface OverviewCopyProviderInterface
     public const string TAG = 'uhifadhi.overview.copy';
 
     /**
-     * WHAT THIS MODULE PUTS ON THE OPERATIONAL PLATE, as the picker note names
+     * WHAT A MODULE PUTS ON THE OPERATIONAL PLATE, as the picker note names
      * it — "today's tracks", "open incidents". One phrase per layer group worth
      * naming, in the module's own order.
      *
@@ -56,13 +56,13 @@ interface OverviewCopyProviderInterface
     public const string SLOT_MAP_LAYERS = 'map.layers';
 
     /**
-     * WHAT THIS MODULE MAKES A MAP-LED PAGE WORTH ADOPTING FOR — the thing a
+     * WHAT A MODULE MAKES A MAP-LED PAGE WORTH ADOPTING FOR — the thing a
      * person spots on a full-height plate that they would not spot in a list:
      * "a stranded patrol", "an unwatched corner".
      *
-     * The direction's thesis is the host's, and it is the design's own compare
+     * The direction's thesis is the area page's, and it is the design's own compare
      * line verbatim. What the modules supply is the list of things being spotted,
-     * because a host that wrote "a stranded patrol" itself would be a host that
+     * because an area page that wrote "a stranded patrol" itself would be a page that
      * knows what a patrol is.
      */
     public const string SLOT_MAP_GROUND_SPOTTING = 'map_ground.spotting';
@@ -74,7 +74,7 @@ interface OverviewCopyProviderInterface
      * The module's phrases for one slot, in its own order — `[]` for a slot it
      * has nothing to say in, which is an ordinary answer and not a gap.
      *
-     * Lower case and unpunctuated: the host decides where the sentence starts
+     * Lower case and unpunctuated: the area page decides where the sentence starts
      * and where it ends.
      *
      * @return list<string>

@@ -78,7 +78,7 @@ return static function (ContainerConfigurator $container): void {
 
     /*
      * What the register knows about each area — the measurements PostGIS makes
-     * and the live count the seam keeps, read once here rather than assembled in
+     * and the live count the registry keeps, read once here rather than assembled in
      * a template.
      */
     $services->set('area.register', AreaRegister::class)
@@ -92,15 +92,15 @@ return static function (ContainerConfigurator $container): void {
 
     /*
      * THE OVERVIEW'S CONTRIBUTED CONTENT. The tag strings are written out rather
-     * than read from the interfaces' own constants, because they are the fleet's
+     * than read from the interfaces' own constants, because they are the platform's
      * published contract and a module bundle writes them the same way — see
-     * tests/Unit/Overview/ContributionSeamContractTest.php, which keeps the two
+     * tests/Unit/Overview/ContributionContractTest.php, which keeps the two
      * spellings equal.
      */
     /*
      * THE OPERATIONAL MAP'S BASE CONTENT — the area's own boundary and zones, as
      * the GeoJSON the browser plate draws. Kept apart from the overview's
-     * contributed content above because it is the host/area's, not a module's:
+     * contributed content above because it is the area's, not a module's:
      * the boundary is always drawn and the zones are the area's own polygons.
      */
     $services->set('area.map_payload', AreaMapPayload::class)
@@ -110,7 +110,7 @@ return static function (ContainerConfigurator $container): void {
     /*
      * THE AREAS-INDEX WIDGET LIBRARY — the five whole-page layouts the landing
      * ships, and the register rows enriched with what the denser of them read.
-     * Reads the same overview seams the register does, so it names no module's
+     * Reads the same overview contributions the register does, so it names no module's
      * content; kept apart from the register because it is the LIBRARY's reading,
      * not the wall's.
      */
@@ -171,15 +171,15 @@ return static function (ContainerConfigurator $container): void {
     $services->alias(BoundaryImport::class, 'area.boundary_import');
 
     /*
-     * AN AREA'S COMPOSITION, READ FROM THE SEAM'S OWN SERVICES. The three ids
-     * asked for here are PRIVATE in the seam and that is fine — private means
+     * AN AREA'S COMPOSITION, READ FROM THE REGISTRY'S OWN SERVICES. The three ids
+     * asked for here are PRIVATE in the registry and that is fine — private means
      * "not fetchable from the container at runtime", never "not injectable". The
-     * seam publishes no aliases deliberately, so a consumer names the ids; they
-     * are its published surface either way.
+     * registry publishes no aliases deliberately, so a consumer names the ids;
+     * they are its published surface either way.
      *
      * REGISTERED HERE RATHER THAN WITH THE SCREENS because the reading is not a
-     * screen's: a console command reporting what an installation has switched on
-     * would want exactly this and has no twig.
+     * screen's: an installation that carries the model and mounts no page reads
+     * its own composition too, and has no twig.
      */
     $services->set('area.composition', AreaComposition::class)
         ->args([

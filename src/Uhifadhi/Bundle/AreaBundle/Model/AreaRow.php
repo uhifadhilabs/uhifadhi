@@ -17,13 +17,13 @@ use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 
 /**
  * ONE AREA AS THE REGISTER DRAWS IT — a card: the entity's identity, the two
- * facts the host owns about its operations (how many modules are live, and when
+ * facts the area page owns about its operations (how many modules are live, and when
  * it was last touched), and the operational figures a module contributed for it.
  *
- * THE HOST OWNS THE FRAME, A MODULE OWNS THE CONTENT. The card's face, its
- * identity line, its "modules live" count and its "last check-in" are the host's;
+ * THE AREA PAGE OWNS THE FRAME, A MODULE OWNS THE CONTENT. The card's face, its
+ * identity line, its "modules live" count and its "last check-in" are the area page's;
  * every operational figure on it — the stat cells, the "out right now" chip, the
- * alert count — arrived through the overview seams and is a value the host lays
+ * alert count — arrived through the overview contributions and is a value the area page lays
  * out without understanding. That is what lets a card read honestly when a module
  * leaves: its figures simply stop arriving, and no hard-coded cell is left behind.
  *
@@ -34,12 +34,12 @@ final readonly class AreaRow
 {
     /**
      * @param list<CardStat> $stats      the operational figures for the four-up grid, in the
-     *                                   order the modules' now-tiles arrived — the host's own
+     *                                   order the modules' now-tiles arrived — the area page's own
      *                                   "modules live" is prepended by the template, not here
      * @param CardStat|null  $liveNow    the one "right now" figure a card foots with, from a
      *                                   module's live now-tile, or null when nothing is live here
      * @param int            $alertCount how many things are asking for attention here, from the
-     *                                   attention seam — the card's alert flag and the "With
+     *                                   attention contribution — the card's alert flag and the "With
      *                                   alerts" pill both read it
      */
     public function __construct(

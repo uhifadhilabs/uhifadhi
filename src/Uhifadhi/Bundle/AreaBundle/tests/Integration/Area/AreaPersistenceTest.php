@@ -113,13 +113,13 @@ final class AreaPersistenceTest extends IntegrationTestCase
     /**
      * AN AREA CARRIES NO OTHER MODULE'S READING.
      *
-     * `treeCoverPct` was a single ingestion-shaped module's figure persisted on
-     * the entity every other module is filed under — the monolith's coupling,
-     * carried across in the port because it was already in the table. Nothing in
-     * the fleet ever wrote it and nothing read it.
+     * A figure like tree cover is one ingestion-shaped module's reading, and
+     * persisting it on the entity every other module is filed under would make
+     * this bundle know what that module measures — precisely the coupling the
+     * contribution contracts exist to prevent.
      *
-     * It is gone rather than deprecated: a field nobody may use is still a field
-     * everybody has to read past, and the column is one line of migration to be
+     * It is absent rather than deprecated: a field nobody may use is still a
+     * field everybody has to read past, and a column is one line of migration to be
      * rid of. When an ingestion module lands it will OWN this figure and
      * contribute it the way a module already contributes an overview widget.
      *

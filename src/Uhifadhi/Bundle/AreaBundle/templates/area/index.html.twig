@@ -5,18 +5,18 @@
    Design: areas/index.html in the design workspace (the graduated card gallery,
    source presets/areas-index/a.html).
 
-   THE HOST OWNS THE FRAME, A MODULE OWNS THE CONTENT. A card's face, its
+   THE AREA PAGE OWNS THE FRAME, A MODULE OWNS THE CONTENT. A card's face, its
    identity line, its "modules live" count and its "last check-in" are the
-   host's; every operational figure — the stat cells, the "out right now" chip,
-   the alert flag — arrived through the overview seams and is laid out without the
-   host understanding it. That is what lets a card read honestly when a module
+   the area page's; every operational figure — the stat cells, the "out right now" chip,
+   the alert flag — arrived through the overview contributions and is laid out without the
+   the area page understanding it. That is what lets a card read honestly when a module
    leaves: its figures stop arriving and no hard-coded cell is left behind. See
    src/Service/AreaRegister.php.
 
    THE CARD FACE is the area's real boundary, framed to its own bounding box and
    drawn as an outline over a neutral imagery-toned ground. The graduated design
    asks for that outline over a STATIC SATELLITE snippet, cached per area; the
-   satellite raster half is deferred (map-module exposes no server-side static
+   satellite raster half is deferred (the atlas exposes no server-side static
    render yet) — see src/Service/AreaThumbnailer.php. A boundary-less area shows
    the neutral ground alone.
 
@@ -48,7 +48,7 @@
        was drawn in) is a follow-up slice; the button is wired to where that route
        will live. A literal href rather than path(), on purpose: the route is not
        mounted yet, so generating it would fail — this is the same "the door is
-       named before it is built" the New area button carried before v0.5.0. #}
+       named before it is built" is the reassurance the New area button carries. #}
     <a class="tgl w-act" href="/areas/widgets">{{ ux_icon('lucide:layout-grid') }} Widget library</a>
     {# THE BUTTON CARRIES THE PERMISSION, not just the screen behind it: a control
        that opens onto a refusal teaches somebody the product is broken. #}
@@ -77,7 +77,7 @@
            renders too, so the register landing and its preset can never drift.
 
            THE PILLS ARE ONLY THE ONES THAT CAN MOVE. Live and awaiting-setup are
-           the seam's ledger; alerts is the attention seam. All three change with
+           the registry's ledger; alerts is the attention contribution. All three change with
            the installation, so none is a filter that can only ever return
            everything or nothing. #}
         {{ include('@Area/area/_register_cards.html.twig') }}

@@ -35,16 +35,16 @@ use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleService;
  *
  * `seam_area_modules` IS THE ROUTE NAME, AND THAT IS A FLEET CONTRACT rather
  * than a local choice. Three consumers already generate it blind and degrade
- * when nothing answers: this module's own {@see \Uhifadhi\Bundle\AreaBundle\Shell\AreaShellSource}
+ * when nothing answers: this bundle's own {@see \Uhifadhi\Bundle\AreaBundle\Shell\AreaShellSource}
  * drops the Modules tab, and the patrol module's breadcrumb and dashboard
  * back-button print plain text. Mounting it here lights all three with no change
  * to any of them — which is what the name existing before the route was for.
  *
- * THIS MODULE OWNS THE SCREEN AND THE SEAM STAYS UI-LESS. The grid is a reading
- * of the seam's catalogue against an area's ledger, and "an area" is this
- * module's word: the seam holds that table for installations whose area model is
+ * THIS BUNDLE OWNS THE SCREEN AND THE REGISTRY STAYS UI-LESS. The grid is a reading
+ * of the registry's catalogue against an area's ledger, and "an area" is this
+ * module's word: the registry holds that table for installations whose area model is
  * their own and cannot name an area class, let alone draw a page about one. So
- * the seam publishes the data and this module draws it. A test in the seam greps
+ * the registry publishes the data and this bundle draws it. A test in the registry greps
  * its own source to keep it that way.
  *
  * THE PICTURE IS THE SHELL'S. The tiles are rendered by the shell's
@@ -56,12 +56,11 @@ use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleService;
  *
  * TWO PERMISSIONS, AND THE MAPPING IS DELIBERATE. `module.view` to see the grid;
  * `module.create` — the catalogue's "Modules / Add" — to reach the shop and to
- * move anything in it. The application this was ported from gated its customize
- * screen on ROLE_ADMIN while its own docblock claimed `module.create`; the
- * catalogue string is the honest one, because composing an area is exactly the
- * capability that permission describes and a role is not grantable to a position.
+ * move anything in it. A catalogue string rather than a role, because composing
+ * an area is exactly the capability that permission describes and a role is not
+ * grantable to a position.
  *
- * EVERY WRITE IS A POST WITH A TOKEN, and every write goes through the seam's
+ * EVERY WRITE IS A POST WITH A TOKEN, and every write goes through the registry's
  * {@see AreaModuleService} rather than touching a row: the rule that a pinned
  * module cannot be parked lives there.
  */
@@ -103,7 +102,7 @@ final readonly class AreaModulesController
     /**
      * MOUNTED WITH A PRIORITY, and it is load-bearing. `/areas/{uuid}/modules`
      * cannot swallow this one, but a module bundle mounting its own page at
-     * `/areas/{uuid}/modules/{slug}` could — and the shop is this module's, not
+     * `/areas/{uuid}/modules/{slug}` could — and the shop is this bundle's, not
      * a module called "customize".
      */
     #[Route('/areas/{uuid}/modules/customize', name: 'area_module_customize', requirements: ['uuid' => Requirement::UUID], methods: ['GET'], priority: 1)]
@@ -145,7 +144,7 @@ final readonly class AreaModulesController
     /**
      * PARK A MODULE. Its data stays — the row survives switched off, which is
      * what the shop's own caption promises. A pinned module is silently refused
-     * by the seam rather than half-parked here.
+     * by the registry rather than half-parked here.
      */
     #[Route('/areas/{uuid}/modules/customize/uninstall', name: 'area_module_uninstall', requirements: ['uuid' => Requirement::UUID], methods: ['POST'], priority: 1)]
     #[IsGranted(self::COMPOSE)]

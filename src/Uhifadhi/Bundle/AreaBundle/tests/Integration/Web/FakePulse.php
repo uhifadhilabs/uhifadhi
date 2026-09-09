@@ -22,8 +22,8 @@ use Uhifadhi\Bundle\AreaBundle\Overview\PulseProviderInterface;
  *
  * The register card's "last check-in" and its "last activity" sort read the most
  * recent move any installed module made in the area, through
- * {@see PulseProviderInterface}. This module depends on no real module, so the
- * suite ships its own contributor over the seam: what is tested is that the host
+ * {@see PulseProviderInterface}. This bundle depends on no real module, so the
+ * suite ships its own contributor over the registry: what is tested is that the area page
  * learns WHEN an area was last touched where the module is on, not WHAT moved.
  *
  * It returns one move, six minutes before now, so the card's "last check-in"

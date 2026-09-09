@@ -52,7 +52,7 @@
 .c .tab .src { color: rgb(var(--c-fog)); font-weight: 500; }
 
 /* WHO DREW THIS PLATE. The mirror of the tab, top-right: on a surface whose
-   whole argument is that the host owns the frame and modules own the content,
+   whole argument is that the area page owns the frame and modules own the content,
    provenance has to survive a screenshot. */
 .ao-by {
     position: absolute;
@@ -600,7 +600,7 @@
 /* THE SHELL DRAWS THE TILES. `.mtile`, `.zone`, `.chip` and the grid itself are
    the shell's, because the catalogue picture has to be identical wherever it is
    shown. What is here is only what the shell has no reason to carry: the add
-   affordance that leads to this module's shop, and the shop itself. */
+   affordance that leads to this bundle's shop, and the shop itself. */
 .mtile-add {
     display: flex;
     flex-direction: column;
@@ -755,10 +755,10 @@
 /* ---- the operational map's legend --------------------------------------- */
 /* EVERY LAYER SHIPS A LEGEND, and the legend is grouped by the contributor that
    drew the layer, because that is what makes the plate composable. "The area"
-   is the host/area's own group — the boundary and the zones — and is always
+   is the area's own group — the boundary and the zones — and is always
    present; a module adds its own group beneath it when it draws a layer. The
    entry is also the switch, so what the legend says and what the map draws
-   cannot drift. The chrome and imagery themselves are the map module's shared
+   cannot drift. The chrome and imagery themselves are AtlasBundle's shared
    sheet; this is only the overview's legend beneath the plate. */
 .ao-legend { display: flex; gap: 22px; flex-wrap: wrap; margin-top: 12px; }
 .ao-legend .grp { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
@@ -974,7 +974,7 @@ a.ax-card:hover .ax-open { opacity: 1; transform: none; }
    .ax-* layouts) and widgets.css (the .w-preset*/.w-previewbar preset chrome).
    The design workspace and the app share the survey-plate tokens, so the .w-*
    rules port verbatim; the .ax-* rules are retoned from the design's bare
-   aliases (--acc) onto the host's channel tokens (rgb(var(--c-acc))).
+   aliases (--acc) onto the area page's channel tokens (rgb(var(--c-acc))).
    ========================================================================== */
 
 /* ---- the preset strip (widgets.css, verbatim) ---------------------------- */

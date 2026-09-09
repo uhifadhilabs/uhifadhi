@@ -20,10 +20,10 @@ use Uhifadhi\Bundle\AreaBundle\Overview\MapLayerProviderInterface;
 /**
  * A MODULE'S MAP-LAYER CONTRIBUTION, STOOD IN FOR.
  *
- * The real patrol and incident modules put their layers on the host's plate
- * through {@see MapLayerProviderInterface}; this module must never depend on
- * them, so the suite ships its own contributor over the same seam. What is being
- * tested is that the host GATHERS a layer from a module switched on here and
+ * The real patrol and incident modules put their layers on the area page's plate
+ * through {@see MapLayerProviderInterface}; this bundle must never depend on
+ * them, so the suite ships its own contributor over the same contribution. What is being
+ * tested is that the area page GATHERS a layer from a module switched on here and
  * RENDERS its legend group and its geometry — not what any particular module
  * draws.
  *

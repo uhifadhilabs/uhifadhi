@@ -16,14 +16,14 @@ namespace Uhifadhi\Bundle\AreaBundle\Overview;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 
 /**
- * THE SEAM A MODULE WRITES INTO THE AREA PULSE THROUGH.
+ * THE CONTRACT A MODULE WRITES INTO THE AREA PULSE THROUGH.
  *
  * The platform-wide move log the roadmap plans (Symfony Workflow plus an audit
  * trail) does not exist yet — but every module already keeps its own: the
  * patrols module has patrol events, the incidents module has incident events.
  * They have the same shape, so the pulse asks each module for its moves in a
  * window and merges them, rather than waiting for a log that has not been built.
- * When the platform log lands, this seam is what it fills.
+ * When the platform log lands, this contract is what it fills.
  *
  * Tagged explicitly at both ends, for the reason
  * {@see OverviewContributorInterface} spells out.
@@ -36,7 +36,7 @@ interface PulseProviderInterface
     public function moduleSlug(): string;
 
     /**
-     * Every move this module made in the area between `$since` and `$now`.
+     * Every move this bundle made in the area between `$since` and `$now`.
      *
      * @return list<PulseEvent>
      */

@@ -20,19 +20,19 @@ namespace Uhifadhi\Bundle\AreaBundle\Overview;
  * Everywhere else in the product this does not arise: a module's pages extend
  * the module's own layout, which links the module's own CSS. The area overview
  * is the one surface where a module's markup is rendered by SOMEBODY ELSE'S
- * template — so unless the host loads each installed module's stylesheet, every
+ * template — so unless the area page loads each installed module's stylesheet, every
  * chip, badge and status colour on a contributed widget renders naked.
  *
  * A SECOND, OPTIONAL INTERFACE rather than a method on
- * {@see OverviewContributorInterface}: the host's own contributor and the
- * not-installed-here seam have no stylesheet of their own, and a contract that
+ * {@see OverviewContributorInterface}: the area page's own contributor and the
+ * not-installed-here marker have no stylesheet of their own, and a contract that
  * makes them answer a question they have no answer to is a contract that has
  * started guessing. A contributor that ships no CSS simply does not implement
- * this, and the host asks it nothing.
+ * this, and the area page asks it nothing.
  *
  * The path is what the asset mapper serves the bundle's public/ under, e.g.
  * `bundles/uhifadhiincident/incidents.css` — the module knows its own
- * bundle's name and the host must not have to derive it.
+ * bundle's name and the area page must not have to derive it.
  */
 interface ContributesStylesheetInterface
 {

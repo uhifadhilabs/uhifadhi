@@ -23,7 +23,7 @@ use Uhifadhi\Bundle\ShellBundle\Model\NavSection;
  * THE AREAS SECTION OF THE SIDEBAR — the register, and under it every area with
  * its own screens unfolded.
  *
- * GATING IS THIS MODULE'S JOB, not the shell's: the shell holds no
+ * GATING IS THIS BUNDLE'S JOB, not the shell's: the shell holds no
  * authorization service and asks nothing about the viewer. A row somebody may
  * not have is ABSENT from what this returns, never hidden — a hidden row is a
  * row that leaks its existence to whoever reads the HTML.

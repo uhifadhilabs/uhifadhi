@@ -52,7 +52,7 @@ final class AreaShellSourceTest extends WebTestCase
             $matched = $router->match($path);
             $request->attributes->add($matched);
         } catch (\Throwable) {
-            // A path this module does not serve: the source must cope, not throw.
+            // A path this bundle does not serve: the source must cope, not throw.
         }
         $stack->push($request);
 

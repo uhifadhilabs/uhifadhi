@@ -19,7 +19,7 @@ use Uhifadhi\Bundle\RegistryBundle\Entity\Module;
  * ONE LINE OF THE MODULE SHOP — a module as the customize screen prints it.
  *
  * A FLAT ROW RATHER THAN THE ENTITY, so the template reads values instead of
- * walking a graph: `row.status` is the seam's word, not
+ * walking a graph: `row.status` is the registry's word, not
  * `assignment.module.status.value`, and a template that cannot reach through an
  * association cannot trigger a lazy load in the middle of a render.
  *
@@ -33,7 +33,7 @@ final readonly class ModuleRow
     public function __construct(
         public string $slug,
         public string $name,
-        /** The seam's own word — "live", "template" — which the chip is styled from. */
+        /** The registry's own word — "live", "template" — which the chip is styled from. */
         public string $status,
         /** Where the module's figures come from, as a stamp. */
         public string $source,

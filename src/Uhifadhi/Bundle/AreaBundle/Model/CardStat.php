@@ -15,13 +15,13 @@ namespace Uhifadhi\Bundle\AreaBundle\Model;
 
 /**
  * ONE FIGURE ON A REGISTER CARD — a value and what it counts, and nothing the
- * host understands about either.
+ * the area page understands about either.
  *
- * The register card carries a handful of these: the host's own "modules live",
+ * The register card carries a handful of these: the area page's own "modules live",
  * and the operational figures a module contributed for the area. They are the
  * SAME now-tiles the area overview draws, read at register density — a value and
  * a short label — so a number can never read one way on a card and another on
- * the overview. The host lays them out; it does not know that "23" is patrols
+ * the overview. The area page lays them out; it does not know that "23" is patrols
  * and "7" is incidents, which is what lets a module leave without a hard-coded
  * cell behind.
  */

@@ -28,11 +28,11 @@ use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
 
 /**
- * AN INSTALLATION, MINIMALLY — framework, doctrine, PostGIS, the seam and this
+ * AN INSTALLATION, MINIMALLY — framework, doctrine, PostGIS, the registry and this
  * bundle, against a REAL PostGIS database (UHIFADHI_TEST_DATABASE_URL, see
  * phpunit.dist.xml).
  *
- * THE SEAM IS HERE ON PURPOSE, and it is the whole point of the suite. The seam
+ * THE REGISTRY IS HERE ON PURPOSE, and it is the whole point of the suite. The registry
  * owns a per-area table with a NOT NULL foreign key to an area it does not
  * define; every installation that has ever carried it has had to answer that
  * association by hand. This kernel answers it with NOTHING: there is no
@@ -91,7 +91,7 @@ class TestKernel extends Kernel
         $services->alias('test_public.area.zones', 'area.zones')->public();
         $services->alias('test_public.area.zone_repository', ZoneRepository::class)->public();
 
-        // Stands in for the seam's catalogue. It is here to record an ABSENCE —
+        // Stands in for the registry's catalogue. It is here to record an ABSENCE —
         // see CatalogueAbstentionTest for why an area is not a module of itself.
         $services->set(CollectedModules::class)
             ->args([tagged_iterator('uhifadhi.module')])
@@ -100,7 +100,9 @@ class TestKernel extends Kernel
 
     protected function configureRoutes(RoutingConfigurator $routes): void
     {
-        // This ring ships no screens. See the README's "Not here yet".
+        // This kernel mounts no screens: it is the bare installation, the one
+        // that carries the model and renders nothing. The screens have their own
+        // kernel — see Web\WebKernel.
     }
 
     public function getCacheDir(): string

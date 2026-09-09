@@ -22,9 +22,9 @@ use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
  *
  * This is the plate's INFRASTRUCTURE, not a module's layer: the AOI boundary is
  * always drawn, and the zones are the area's own polygons, so both belong to the
- * host/area rather than to anything installed. Operational layers — patrol
+ * the area itself rather than to anything installed. Operational layers — patrol
  * tracks, open incidents, stations — arrive separately through the map-layer
- * seam and are not this service's concern.
+ * contributions and are not this service's concern.
  *
  * The geometry travels as GeoJSON text exactly as the database returns it
  * (ST_AsGeoJSON, via the postgis type); it is never parsed in PHP. The plate's

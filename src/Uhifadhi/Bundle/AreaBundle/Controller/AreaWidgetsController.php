@@ -84,7 +84,7 @@ final readonly class AreaWidgetsController
 
     /**
      * THE REGISTER TABLE'S OPERATIONAL COLUMN HEADERS — the labels the now-tile
-     * seam handed back, read from the first live area (they are uniform across
+     * contributions handed back, read from the first live area (they are uniform across
      * areas, one module contributing the same tiles to each). Empty when nothing
      * is live, so the table draws no column for a figure no module contributed —
      * the same absent-not-zero discipline the wall keeps, in a table.

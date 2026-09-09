@@ -22,9 +22,9 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
  * module exists to make, pinned so the documentation cannot quietly become a
  * lie.
  *
- * The seam's own `InstallabilityTest` pins the other side of the same fact: the
- * seam alone boots and CANNOT be given a schema, because its per-area row has a
- * NOT NULL foreign key to an area it does not define. Until this module existed
+ * The registry's own `InstallabilityTest` pins the other side of the same fact: the
+ * registry alone boots and CANNOT be given a schema, because its per-area row has a
+ * NOT NULL foreign key to an area it does not define. Until this bundle existed
  * an installation closed that by hand — a placeholder class it wrote itself and
  * a `resolve_target_entities` line it uncommented — and a bare installation that
  * had not done both reached `doctrine:migrations:diff` and stopped.
@@ -40,8 +40,8 @@ final class InstallabilityTest extends KernelTestCase
     }
 
     /**
-     * THE ONE THAT USED TO BE IMPOSSIBLE. Every table the installation needs is
-     * in the create-schema SQL — the seam's two and this module's one — from a
+     * NOTHING IS LEFT FOR AN INSTALLATION TO WRITE. Every table it needs is
+     * in the create-schema SQL — the registry's two and this bundle's one — from a
      * kernel whose doctrine config names neither an area class nor a mapping.
      */
     public function testTheSchemaBuildsWithNoDoctrineConfigurationAtAll(): void
@@ -60,7 +60,7 @@ final class InstallabilityTest extends KernelTestCase
 
     /**
      * THE BOUNDARY COLUMNS ARE NULLABLE, so an area can be created from its
-     * identity alone and get its edge later. This module ships no migrations —
+     * identity alone and get its edge later. This bundle ships no migrations —
      * the installation owns its history — so this is the bundle's own proof that
      * the schema it emits is the widening: the entity declares `geom` and
      * `source` nullable, and the create-schema SQL an installation diffs against
@@ -92,7 +92,7 @@ final class InstallabilityTest extends KernelTestCase
 
     /**
      * And the per-area row really points AT an area — the foreign key exists,
-     * which is the whole reason the seam refused to build a schema without one.
+     * which is the whole reason the registry refused to build a schema without one.
      */
     public function testThePerAreaLedgerIsWiredToTheArea(): void
     {
@@ -107,13 +107,13 @@ final class InstallabilityTest extends KernelTestCase
     }
 
     /**
-     * THE SEED'S PRECONDITION, stated as its own assertion because the failure
-     * is silent rather than loud: `seam:catalogue:seed` finds every area by
-     * reading the resolved target class off the association, and treats an
-     * unresolved interface as "no areas to backfill". An installation in that
-     * state gets a catalogue and no per-area rows, with a success message.
+     * THE RECONCILIATION'S PRECONDITION, stated as its own assertion because
+     * the failure is silent rather than loud: the registry finds every area by
+     * reading the resolved target class off the association, and an unresolved
+     * interface reads as "no areas to backfill". An installation in that state
+     * gets a catalogue, no per-area rows, and no complaint anywhere.
      */
-    public function testTheSeedCanDiscoverAreasBecauseTheInterfaceIsResolvedToAClass(): void
+    public function testTheRegistryCanDiscoverAreasBecauseTheInterfaceIsResolvedToAClass(): void
     {
         self::bootKernel();
 
@@ -127,7 +127,7 @@ final class InstallabilityTest extends KernelTestCase
     }
 
     /**
-     * THIS MODULE SHIPS ENTITIES, NOT MIGRATIONS — the fleet rule. The tables
+     * THIS BUNDLE SHIPS ENTITIES, NOT MIGRATIONS. The tables
      * are the bundle's; the migration history belongs to the installation, and a
      * vendor replaying its own versions into it would fight every
      * `doctrine:migrations:diff` the installation ever runs.

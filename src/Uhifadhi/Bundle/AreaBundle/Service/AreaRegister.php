@@ -24,13 +24,13 @@ use Uhifadhi\Bundle\RegistryBundle\Repository\AreaModuleRepository;
  * WHAT THE REGISTER KNOWS ABOUT EACH AREA — read once, here, rather than
  * assembled in a template.
  *
- * THE HOST'S OWN FACTS, AND THE MODULES' FIGURES, GATHERED IN ONE PLACE. The
- * host owns an area's size (ST_Area on the spheroid, the way a surveyor measures
+ * THE AREA PAGE'S OWN FACTS, AND THE MODULES' FIGURES, GATHERED IN ONE PLACE. The
+ * the area page owns an area's size (ST_Area on the spheroid, the way a surveyor measures
  * it rather than by multiplying degrees), how many modules it has switched on
- * (the seam's ledger, so switching one off changes the register the same day),
+ * (the registry's ledger, so switching one off changes the register the same day),
  * and its boundary's face. Every operational figure on a card — the stat cells,
  * the "out right now" chip, the alert flag, the last check-in — is a MODULE's,
- * gathered through the overview seams {@see AreaOverview} already owns. This
+ * gathered through the overview contributions {@see AreaOverview} already owns. This
  * service knows what a patrol is no more than the overview does: it lays out
  * contributed values and never names one.
  *
@@ -83,7 +83,7 @@ final readonly class AreaRegister
     {
         // The now-tiles the overview already gathers, split the way a card reads
         // them: the standing figures fill the grid, the one "right now" figure
-        // foots the card. Both come from installed modules; the host names none.
+        // foots the card. Both come from installed modules; the area page names none.
         $standing = [];
         $liveNow = null;
         foreach ($this->overview->nowTilesFor($area, $now) as $tile) {
@@ -113,7 +113,7 @@ final readonly class AreaRegister
      * What the register's pills count.
      *
      * ONLY THE ONES THAT CAN MOVE. Live and awaiting-setup are read from the
-     * seam's ledger and alerts from the attention seam, so all three change with
+     * registry's ledger and alerts from the attention contribution, so all three change with
      * the installation rather than being furniture stuck at a constant. A filter
      * that can only ever return everything or nothing teaches somebody the
      * control is broken, so the register draws none such.

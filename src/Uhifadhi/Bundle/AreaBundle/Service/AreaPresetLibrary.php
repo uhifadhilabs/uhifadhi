@@ -31,9 +31,9 @@ use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
  * live is a per-person preference the widget-preference framework holds, and in
  * this slice the preview and adoption are the page's own client-side concern.
  *
- * IT NAMES NO MODULE'S CONTENT. The enrichment is the same overview seams the
+ * IT NAMES NO MODULE'S CONTENT. The enrichment is the same overview contributions the
  * register already reads — the attention items are gathered, not invented — so
- * the host lays out what a module contributed and knows what a patrol is no more
+ * the area page lays out what a module contributed and knows what a patrol is no more
  * here than anywhere else.
  */
 final readonly class AreaPresetLibrary

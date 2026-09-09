@@ -23,24 +23,20 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
 /**
  * AREA — the named piece of ground an installation manages.
  *
- * The skeleton is the application, the seam carries the modules, the shell is
+ * The skeleton is the application, the registry carries the modules, the shell is
  * what you see, team is who is looking, and this is WHERE. An area is the axis
  * the whole product is filed under: a patrol happens in one, an incident is
- * reported in one, a module is switched on for one. Until this module existed
- * every installation wrote its own, because the platform asked for an area and
- * shipped none.
+ * reported in one, a module is switched on for one.
  *
- * ZERO-CONFIG, AND THERE IS NO HAND-STEP LEFT. Registering the bundle maps its
- * own entity (no doctrine mappings block for `area_of_interest`) and ANSWERS THE
- * SEAM'S AREA CONTRACT (no `resolve_target_entities` either). With this bundle
- * and team installed, a bare installation reaches
- * `doctrine:migrations:diff` with zero doctrine edits — which is the whole
- * point, and was not true of any installation before this ring.
+ * ZERO-CONFIG, AND THERE IS NO HAND-STEP. Registering the bundle maps its own
+ * entity (no doctrine mappings block for `area_of_interest`) and ANSWERS THE
+ * PLATFORM'S AREA CONTRACT (no `resolve_target_entities` either), so a bare
+ * installation reaches `doctrine:migrations:diff` with zero doctrine edits.
  *
- * IT DECLARES NO MODULE, deliberately. Every other bundle in the fleet carries
+ * IT DECLARES NO MODULE, deliberately. Every capability module carries
  * the `uhifadhi.module` tag and takes a tile in the catalogue. The catalogue is
- * indexed BY AREA — the seam's `area_module` row says "this area has this module
- * switched on" — so a provider here would write a row for every area saying the
+ * indexed BY AREA — the registry's `area_module` row says "this area has this
+ * module switched on" — so a provider here would write a row for every area saying the
  * area has areas: switchable, meaningless, and shown in the module grid of the
  * page it is the subject of. Areas are the AXIS the catalogue is indexed by, not
  * an entry in it. That is a different thing from being a BASE module, which is
@@ -50,7 +46,7 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
  * NO CONFIG TREE, EITHER. There is nothing here an installation would set: the
  * entity has no options, the table name is a compatibility promise rather than a
  * preference, and the one decision anybody could want to make — "my areas are my
- * own class" — is made by Symfony's own override rule below and not by a key
+ * own class" — is answered by the configuration rule below and not by a key
  * invented here. So there is no `configure()`, no `Configuration`, and the
  * recipe ships no `config/packages/area.yaml` to sit empty.
  */
@@ -159,26 +155,24 @@ final class AreaBundle extends AbstractBundle
                 /*
                  * WHOEVER KNOWS THE ANSWER STATES THE RESOLUTION.
                  *
-                 * The seam owns the record of which modules an area has switched
+                 * The registry owns the record of which modules an area has switched
                  * on, and CANNOT name an area class: it holds that table for
                  * installations whose area model is their own. So it maps the
                  * association at a contract and somebody has to close the loop.
-                 * For as long as this module is installed the answer is not in
-                 * doubt — it is this module's AreaOfInterest — and the package
+                 * For as long as this bundle is installed the answer is not in
+                 * doubt — it is this bundle's AreaOfInterest — and the package
                  * that provides the answer is the package that states it.
                  *
-                 * IT USED TO BE A DOCUMENTED HAND-STEP, and it was the fleet's
-                 * oldest: write a placeholder class, then uncomment a block in
-                 * config/packages/seam.yaml. Wrong shape twice over. A hand-step
-                 * is for a decision only the installation can make, and "what is
-                 * an area" was only a decision because nothing shipped one. And
-                 * its cost was real, because forgetting either half fails a long
-                 * way from its cause: the container compiles, the kernel boots,
-                 * and `doctrine:migrations:diff` stops on "Class
+                 * IT IS NOT A HAND-STEP. A hand-step is for a decision only the
+                 * installation can make, and this is not one: the line says
+                 * exactly one thing and has one right value. Left to the
+                 * installation its cost is real, because forgetting it fails a
+                 * long way from its cause — the container compiles, the kernel
+                 * boots, and `doctrine:migrations:diff` stops on "Class
                  * 'Uhifadhi\Contracts\Entity\AreaInterface' does not exist" with
                  * nothing pointing back at the paragraph that was missed.
                  *
-                 * THE ESCAPE HATCH IS SYMFONY'S OWN RULE and not a switch
+                 * THE ESCAPE HATCH IS THE CONFIGURATION RULE and not a switch
                  * invented here: prepended configuration LOSES to the
                  * application's. An installation whose areas are its own entity
                  * names that class under `doctrine.orm.resolve_target_entities`
@@ -207,7 +201,7 @@ final class AreaBundle extends AbstractBundle
         /*
          * THE SCREENS ARE CONDITIONAL, AND THE ENTITY IS NOT.
          *
-         * This module is a model an installation persists AND a set of pages.
+         * This bundle is a model an installation persists AND a set of pages.
          * The model has no opinion about twig: an installation that wants only
          * the area entity — a console importer, an API, this bundle's own bare
          * test kernel — must still boot. A controller registered there would

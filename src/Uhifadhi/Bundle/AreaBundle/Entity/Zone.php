@@ -43,7 +43,7 @@ use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
  *
  * THE TABLE NAME IS A COMPATIBILITY PROMISE, the same one `area_of_interest`
  * carries: `zone` is what an installation that wrote this entity by hand
- * already has, so adopting this module keeps its rows.
+ * already has, so adopting this bundle keeps its rows.
  */
 #[ORM\Entity(repositoryClass: ZoneRepository::class)]
 #[ORM\Table(name: 'zone')]

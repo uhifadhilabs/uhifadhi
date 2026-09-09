@@ -33,8 +33,8 @@ use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
  *   - THE SATELLITE RASTER GROUND. Not a static-tile stitch and not a cache — the
  *     bbox of the same simplified boundary becomes a keyless Esri World Imagery
  *     export URL ({@see AreaThumbnail::ESRI_EXPORT}), which the browser renders as
- *     a plain `<img>` on demand. This is the host's own AreaCardService technique,
- *     ported: no server round-trip, no imagery seam needed.
+ *     a plain `<img>` on demand. This is the area page's own AreaCardService technique,
+ *     ported: no server round-trip, no imagery service needed.
  *
  * A boundary-less area carries neither and falls back to the neutral ground.
  */

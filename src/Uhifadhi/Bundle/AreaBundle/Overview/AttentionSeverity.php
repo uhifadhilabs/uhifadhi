@@ -17,7 +17,7 @@ namespace Uhifadhi\Bundle\AreaBundle\Overview;
  * How loudly one {@see AttentionItem} asks.
  *
  * THREE STEPS, NOT A NUMBER. A module says which of three things it means and
- * the host sorts by it — a free integer would let two modules invent
+ * the area page sorts by it — a free integer would let two modules invent
  * incompatible scales and the merged list would be sorted by nothing.
  *
  * The words are the module's promise about time, not about importance: `Now`
@@ -30,7 +30,7 @@ enum AttentionSeverity: string
     case Soon = 'soon';
     case Watch = 'watch';
 
-    /** Loudest first — the order the host's one list is sorted in. */
+    /** Loudest first — the order the area page's one list is sorted in. */
     public function rank(): int
     {
         return match ($this) {

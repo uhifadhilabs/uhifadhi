@@ -23,26 +23,24 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
 
 /**
  * WHOEVER KNOWS THE ANSWER STATES THE RESOLUTION — and for the area contract,
- * that is this module.
+ * that is this bundle.
  *
- * The seam owns the record of which modules an area has switched on, and it
+ * The registry owns the record of which modules an area has switched on, and it
  * cannot name an area class: it holds the per-area table for installations whose
  * area model is their own. So it maps the association at
  * `Uhifadhi\Contracts\Entity\AreaInterface` and somebody has to close the loop. For
- * as long as this module is installed the answer is not in doubt — it is this
- * module's `AreaOfInterest` — so this module says so and an installation writes
+ * as long as this bundle is installed the answer is not in doubt — it is this
+ * bundle's `AreaOfInterest` — so this bundle says so and an installation writes
  * nothing.
  *
- * IT USED TO BE A DOCUMENTED HAND-STEP, and it was the fleet's oldest one: write
- * a placeholder class, then uncomment a block in `config/packages/seam.yaml`.
- * That was the wrong shape twice over. A hand-step is for a decision only the
- * installation can make, and "what is an area" was only a decision because
- * nothing shipped one; and its cost was real, because forgetting it fails a long
- * way from its cause — the container compiles, the kernel boots, and
+ * IT IS NOT A HAND-STEP. A hand-step is for a decision only the installation can
+ * make, and this is not one: the line says exactly one thing and has one right
+ * value. Left to the installation its cost is real, because forgetting it fails
+ * a long way from its cause — the container compiles, the kernel boots, and
  * `doctrine:migrations:diff` stops on "Class 'Uhifadhi\Contracts\Entity\AreaInterface'
  * does not exist" with nothing pointing back at the paragraph that was missed.
  *
- * THE ESCAPE HATCH IS SYMFONY'S OWN RULE, not a switch this module invented:
+ * THE ESCAPE HATCH IS THE CONFIGURATION RULE, not a switch this bundle invented:
  * prepended configuration LOSES to the application's. An installation whose
  * areas are its own entity names that class in its own config and its answer
  * wins, with nothing here to disable first. That property is precisely what
@@ -65,10 +63,10 @@ final class ResolveTargetEntitiesTest extends TestCase
 
     /**
      * AN INSTALLATION THAT WRITES NOTHING GETS THE RIGHT ANSWER. This is the
-     * whole ruling: the association the seam declared against its contract
-     * resolves to this module's area, with no doctrine edit anywhere.
+     * whole ruling: the association the registry declared against its contract
+     * resolves to this bundle's area, with no doctrine edit anywhere.
      */
-    public function testTheSeamsAreaResolvesToThisModulesAreaWithNothingConfigured(): void
+    public function testTheContractsAreaResolvesToThisBundlesAreaWithNothingConfigured(): void
     {
         $em = $this->metadataFor([], 'plain');
 
