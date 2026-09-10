@@ -120,7 +120,8 @@ applies:
 - a package's versions run after the versions of every package it requires;
 - the timestamp orders versions that belong to the same package;
 - versions an installation keeps itself run last;
-- two packages that require each other are refused by name.
+- two packages that both ship migrations and require each other are refused by
+  name; a cycle anywhere else in the graph is not looked at.
 
 The graph comes from the `require` and `replace` blocks of each installed
 package's own `composer.json`, at the install path

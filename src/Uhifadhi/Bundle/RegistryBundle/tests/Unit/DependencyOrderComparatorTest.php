@@ -173,22 +173,92 @@ final class DependencyOrderComparatorTest extends TestCase
         );
     }
 
-    public function testPackagesThatRequireEachOtherAreRefusedByName(): void
+    public function testPackagesShippingMigrationsThatRequireEachOtherAreRefusedByName(): void
     {
         $comparator = new DependencyOrderComparator(
             $this->configuration(),
             [
-                $this->package('acme/left', self::VENDOR.'acme/left', ['acme/right']),
-                $this->package('acme/right', self::VENDOR.'acme/right', ['acme/left']),
+                $this->package('acme/first-module', self::VENDOR.'acme/first-module', ['acme/second-module']),
+                $this->package('acme/second-module', self::VENDOR.'acme/second-module', ['acme/first-module']),
             ],
         );
 
         $this->expectException(\LogicException::class);
-        $this->expectExceptionMessage('acme/left, acme/right');
+        $this->expectExceptionMessage('acme/first-module, acme/second-module');
 
         $comparator->compare(
-            new Version('Acme\\Core\\Area\\Migrations\\Version20260101000100'),
             new Version('Acme\\First\\Migrations\\Version20200101000000'),
+            new Version('Acme\\Second\\Migrations\\Version20100101000000'),
+        );
+    }
+
+    /**
+     * A cycle between packages that ship no migrations is not this comparator's
+     * business, and refusing to migrate over one would refuse over a shape real
+     * installations have: `league/flysystem` and `league/flysystem-local`
+     * require each other, and either can be somewhere under a module.
+     */
+    public function testACycleBetweenPackagesThatShipNoMigrationsIsNotRefused(): void
+    {
+        $comparator = new DependencyOrderComparator(
+            $this->configuration(),
+            [
+                ...$this->packages(),
+                $this->package('league/flysystem', self::VENDOR.'league/flysystem', ['league/flysystem-local']),
+                $this->package('league/flysystem-local', self::VENDOR.'league/flysystem-local', ['league/flysystem']),
+            ],
+        );
+
+        $versions = array_map(
+            static fn (string $name): Version => new Version($name),
+            [
+                'Acme\\First\\Migrations\\Version20200101000000',
+                'Acme\\Core\\Area\\Migrations\\Version20260101000100',
+            ],
+        );
+
+        usort($versions, $comparator->compare(...));
+
+        self::assertSame(
+            [
+                'Acme\\Core\\Area\\Migrations\\Version20260101000100',
+                'Acme\\First\\Migrations\\Version20200101000000',
+            ],
+            array_map(strval(...), $versions),
+        );
+    }
+
+    /**
+     * The dependency between two packages may run through packages that ship no
+     * migrations at all, and it still places them.
+     */
+    public function testAPackageIsPlacedBehindOneItReachesThroughAPackageWithNoMigrations(): void
+    {
+        $comparator = new DependencyOrderComparator(
+            $this->configuration(),
+            [
+                $this->package('acme/core', self::VENDOR.'acme/core', []),
+                $this->package('acme/plumbing', self::VENDOR.'acme/plumbing', ['acme/core']),
+                $this->package('acme/first-module', self::VENDOR.'acme/first-module', ['acme/plumbing']),
+            ],
+        );
+
+        $versions = array_map(
+            static fn (string $name): Version => new Version($name),
+            [
+                'Acme\\First\\Migrations\\Version20200101000000',
+                'Acme\\Core\\Shell\\Migrations\\Version20260101000400',
+            ],
+        );
+
+        usort($versions, $comparator->compare(...));
+
+        self::assertSame(
+            [
+                'Acme\\Core\\Shell\\Migrations\\Version20260101000400',
+                'Acme\\First\\Migrations\\Version20200101000000',
+            ],
+            array_map(strval(...), $versions),
         );
     }
 

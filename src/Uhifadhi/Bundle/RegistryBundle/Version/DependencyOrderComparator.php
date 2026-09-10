@@ -22,7 +22,7 @@ use Doctrine\Migrations\Version\Version;
  * THE RULE: a package's versions run after the versions of every package it
  * requires. The timestamp orders versions that belong to the SAME package, and
  * decides nothing between two packages. Versions an installation keeps itself
- * run last.
+ * run last. Only packages that ship migrations are ordered at all.
  *
  * A version's identity in doctrine/migrations is its full class name — the
  * repository builds one as `new Version($migrationClassName)` — and the shipped
@@ -94,6 +94,14 @@ final class DependencyOrderComparator implements Comparator
      * @var array<string, int>|null
      */
     private ?array $depths = null;
+
+    /**
+     * Version class name => the package it belongs to. `compare()` is called
+     * once per pair, so the same name arrives many times over.
+     *
+     * @var array<string, string>
+     */
+    private array $owners = [];
 
     /**
      * @param list<array{name: string, path: string, require: list<string>, replace: list<string>}> $packages
@@ -199,15 +207,21 @@ final class DependencyOrderComparator implements Comparator
     }
 
     /**
-     * HOW DEEP EACH PACKAGE SITS: one more than the deepest package it
-     * requires, so a package is always strictly deeper than everything it
-     * depends on and the depth alone is a runnable order.
+     * HOW DEEP EACH PACKAGE THAT SHIPS MIGRATIONS SITS: one more than the
+     * deepest such package it reaches, so it is always strictly deeper than
+     * everything it depends on and the depth alone is a runnable order.
+     *
+     * ONLY PACKAGES THAT SHIP MIGRATIONS ARE ORDERED. A cycle elsewhere in an
+     * installation's graph is nothing to do with the order tables are created
+     * in, and refusing to migrate over one would refuse over a shape real
+     * installations have — `league/flysystem` and `league/flysystem-local`
+     * require each other.
      *
      * @return array<string, int>
      */
     private function depths(): array
     {
-        $requires = $this->requires();
+        $requires = $this->reachable($this->shipping(), $this->requires());
 
         $depths = [];
         $pending = array_keys($requires);
@@ -233,11 +247,77 @@ final class DependencyOrderComparator implements Comparator
             if (!$settled) {
                 sort($pending);
 
-                throw new \LogicException(\sprintf('The migrations cannot be ordered: these installed packages require each other in a cycle: %s.', implode(', ', $pending)));
+                throw new \LogicException(\sprintf('The migrations cannot be ordered: these installed packages ship migrations and require each other in a cycle: %s.', implode(', ', $pending)));
             }
         }
 
         return $depths;
+    }
+
+    /**
+     * The packages that own a registered migrations directory. They are the
+     * only ones there is anything to order.
+     *
+     * @return list<string>
+     */
+    private function shipping(): array
+    {
+        $shipping = [];
+
+        foreach ($this->configuration->getMigrationDirectories() as $directory) {
+            $owner = $this->ownerOf($this->normalise($directory));
+
+            if ('' !== $owner) {
+                $shipping[$owner] = true;
+            }
+        }
+
+        return array_keys($shipping);
+    }
+
+    /**
+     * Each of those packages, pointed at the others it reaches — through
+     * however many packages that ship nothing lie between them.
+     *
+     * @param list<string>                $shipping
+     * @param array<string, list<string>> $requires
+     *
+     * @return array<string, list<string>>
+     */
+    private function reachable(array $shipping, array $requires): array
+    {
+        $ships = array_fill_keys($shipping, true);
+        $graph = [];
+
+        foreach ($shipping as $package) {
+            $found = [];
+            $walked = [$package => true];
+            $frontier = $requires[$package] ?? [];
+
+            while ([] !== $frontier) {
+                $next = array_pop($frontier);
+
+                if (isset($walked[$next])) {
+                    continue;
+                }
+
+                $walked[$next] = true;
+
+                if (isset($ships[$next])) {
+                    $found[$next] = true;
+
+                    // A package that ships migrations is placed by its own
+                    // requirements; walking past it would only rediscover them.
+                    continue;
+                }
+
+                $frontier = [...$frontier, ...$requires[$next] ?? []];
+            }
+
+            $graph[$package] = array_keys($found);
+        }
+
+        return $graph;
     }
 
     /**
@@ -280,12 +360,23 @@ final class DependencyOrderComparator implements Comparator
      */
     private function packageOf(Version $version): string
     {
-        $directory = $this->directoryOf((string) $version);
+        $class = (string) $version;
 
-        if (null === $directory) {
-            return '';
+        if (!isset($this->owners[$class])) {
+            $directory = $this->directoryOf($class);
+            $this->owners[$class] = null === $directory ? '' : $this->ownerOf($directory);
         }
 
+        return $this->owners[$class];
+    }
+
+    /**
+     * The installed package whose install path contains a directory, longest
+     * match first because the root package's path contains every vendor path,
+     * or the empty name for a directory no installed package contains.
+     */
+    private function ownerOf(string $directory): string
+    {
         $owner = '';
         $longest = 0;
 

@@ -1237,8 +1237,8 @@ Date a new version with the current timestamp anyway — `doctrine:migrations:di
 and it is what orders your own versions among themselves. It just no longer has to be later than
 anybody else's.
 
-If two installed packages require each other, `doctrine:migrations:migrate` stops and names them
-rather than picking an order.
+If two packages that both ship migrations require each other, `doctrine:migrations:migrate` stops
+and names them rather than picking an order. A cycle anywhere else in the graph is not looked at.
 
 ### The three rules
 

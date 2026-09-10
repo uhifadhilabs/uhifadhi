@@ -104,8 +104,11 @@ Two consequences worth having in mind:
 - **A module that requires `uhifadhi/registry-bundle` is placed behind the whole
   core**, because the core is the one package that answers to that name.
 
-If two installed packages require each other, `doctrine:migrations:migrate`
-stops and names them rather than picking an order.
+If two packages that both ship migrations require each other,
+`doctrine:migrations:migrate` stops and names them rather than picking an
+order. A cycle anywhere else in the graph is not looked at — `league/flysystem`
+and `league/flysystem-local` require each other, and no schema depends on which
+of them is imagined to come first.
 
 ## Upgrading
 
