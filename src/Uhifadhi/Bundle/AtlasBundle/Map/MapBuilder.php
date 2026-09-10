@@ -14,6 +14,8 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\AtlasBundle\Map;
 
 use Symfony\UX\Map\Bridge\Leaflet\LeafletOptions;
+use Symfony\UX\Map\Bridge\Leaflet\Option\AttributionControlOptions;
+use Symfony\UX\Map\Bridge\Leaflet\Option\ControlPosition;
 use Symfony\UX\Map\Map as UxMap;
 use Symfony\UX\Map\Point;
 use Uhifadhi\Bundle\AtlasBundle\Model\AtlasMap;
@@ -61,13 +63,22 @@ final class MapBuilder implements MapBuilderInterface
      * place, looking the same on every map in the product. Leaflet's own zoom
      * buttons in the opposite corner are a second answer to a settled question.
      *
-     * The attribution control stays on: it is a licence obligation, not chrome.
+     * The attribution control stays on — it is a licence obligation, not chrome
+     * — but it moves to the BOTTOM-LEFT corner, along with the scale bar the
+     * chrome mounts there. Bottom-right is where the plate floats its legend,
+     * and Leaflet puts both of those controls there by default; a scale bar
+     * under a legend is a scale bar nobody can read.
      *
      * @see vendor/symfony/ux-leaflet-map/src/LeafletOptions.php
      * @see vendor/symfony/ux-leaflet-map/assets/src/map_controller.ts
+     * @see assets/chrome.js — the scale bar's own corner
      */
     private static function bridgeOptions(): LeafletOptions
     {
-        return new LeafletOptions(tileLayer: false, zoomControl: false);
+        return new LeafletOptions(
+            tileLayer: false,
+            attributionControlOptions: new AttributionControlOptions(ControlPosition::BOTTOM_LEFT, prefix: false),
+            zoomControl: false,
+        );
     }
 }

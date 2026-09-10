@@ -33,10 +33,12 @@ function modifierLabel() {
     return /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent) ? '⌘' : 'Ctrl';
 }
 
-function button({ label, title, html, text, pressed }) {
+function button({ label, html, text, pressed }) {
     const el = document.createElement('button');
     el.type = 'button';
-    el.title = title ?? label;
+    // The tooltip and the accessible name are the same words: a control's name
+    // is what it does, and a tooltip that explains the layout instead ages badly.
+    el.title = label;
     el.setAttribute('aria-label', label);
     if (pressed !== undefined) {
         el.setAttribute('aria-pressed', pressed ? 'true' : 'false');
@@ -106,7 +108,7 @@ export function mountMapChrome(L, map, frame, { bases = {}, scrim = null, scrimO
     const menu = document.createElement('div');
     menu.className = 'map-chrome-menu';
     menu.hidden = true;
-    const layersBtn = button({ label: 'Base layer', title: 'Base layer: satellite or map', html: ICONS.layers });
+    const layersBtn = button({ label: 'Base layer', html: ICONS.layers });
     layersBtn.setAttribute('aria-expanded', 'false');
 
     const setMenu = (open) => {
@@ -143,7 +145,6 @@ export function mountMapChrome(L, map, frame, { bases = {}, scrim = null, scrimO
     if (withFullscreen) {
         const fullscreenBtn = button({
             label: 'Fullscreen',
-            title: 'Fullscreen — the legend floats bottom-right',
             html: ICONS.fullscreen,
         });
         fullscreenBtn.addEventListener('click', () => {
@@ -158,8 +159,10 @@ export function mountMapChrome(L, map, frame, { bases = {}, scrim = null, scrimO
 
     frame.append(column, menu);
 
-    // A live scale bar: a map that zooms cannot wear a printed distance.
-    const scaleControl = L.control.scale({ imperial: false, position: 'bottomright' }).addTo(map);
+    // A live scale bar: a map that zooms cannot wear a printed distance. It sits
+    // bottom-LEFT, beside the attribution, because the plate's legend floats over
+    // the opposite corner.
+    const scaleControl = L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(map);
     map.attributionControl?.setPrefix(false);
 
     /*

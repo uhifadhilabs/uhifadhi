@@ -15,6 +15,7 @@ namespace Uhifadhi\Bundle\AtlasBundle\Tests\Unit\Map;
 
 use PHPUnit\Framework\TestCase;
 use Symfony\UX\Map\Bridge\Leaflet\LeafletOptions;
+use Symfony\UX\Map\Bridge\Leaflet\Option\ControlPosition;
 use Uhifadhi\Bundle\AtlasBundle\Map\MapBuilder;
 use Uhifadhi\Bundle\AtlasBundle\Map\MapBuilderInterface;
 use Uhifadhi\Bundle\AtlasBundle\Model\AtlasMap;
@@ -67,6 +68,26 @@ final class MapBuilderTest extends TestCase
         $array = $options->toArray();
         self::assertFalse($array['tileLayer']);
         self::assertArrayNotHasKey('zoomControlOptions', $array);
+    }
+
+    /**
+     * THE LEGEND OWNS THE BOTTOM-RIGHT CORNER, so the two controls Leaflet puts
+     * there by default are moved to the opposite one. Bottom-right is where the
+     * plate floats its legend, and a scale bar under a legend is a scale bar
+     * nobody can read.
+     *
+     * @see vendor/symfony/ux-leaflet-map/src/Option/AttributionControlOptions.php
+     */
+    public function testTheAttributionSitsBottomLeftWhereTheLegendIsNot(): void
+    {
+        $options = new MapBuilder()->createMap()->ux()->getOptions();
+
+        self::assertInstanceOf(LeafletOptions::class, $options);
+
+        self::assertSame(
+            ['position' => ControlPosition::BOTTOM_LEFT->value, 'prefix' => false],
+            $options->toArray()['attributionControlOptions'] ?? null,
+        );
     }
 
     public function testTheMapItReturnsIsAnAtlasMap(): void
