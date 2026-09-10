@@ -91,6 +91,10 @@ composer check   # cs:check -> phpstan (max) -> require-check -> the suite
 - **[Building a uhifadhi module](docs/module-development.md)** — the full guide from
   `composer.json` to a Flex recipe, written for someone building a custom module against these
   contracts.
+- **[The module frame](docs/module-development.md#8-the-module-frame-tabs-and-the-configure-page)** —
+  `Shell\ModuleTabsInterface` and `Shell\ConfigurationSectionsInterface`: the two lists a module
+  declares so the shell draws its tab strip, its rung of the sidebar tree, its one `Configure`
+  action and its one configure page.
 - **[`ModuleProviderInterface`](docs/module-provider.md)** — the full metadata surface, and the
   base-versus-installable tier that decides whether your module arrives switched on.
 - **[`Entity\UserInterface`](docs/user-interface.md)** — the seven questions it asks, and the rule

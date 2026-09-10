@@ -28,10 +28,11 @@ is the instruction: it says where you create it.
 - [5. Templates and Twig namespaces](#5-templates-and-twig-namespaces)
 - [6. Using the atlas: maps, charts and calendars](#6-using-the-atlas-maps-charts-and-calendars)
 - [7. Contributing to the overview](#7-contributing-to-the-overview)
-- [8. Shipping migrations](#8-shipping-migrations)
-- [9. Testing](#9-testing)
-- [10. CI](#10-ci)
-- [11. Flex recipe and activation](#11-flex-recipe-and-activation)
+- [8. The module frame: tabs and the configure page](#8-the-module-frame-tabs-and-the-configure-page)
+- [9. Shipping migrations](#9-shipping-migrations)
+- [10. Testing](#10-testing)
+- [11. CI](#11-ci)
+- [12. Flex recipe and activation](#12-flex-recipe-and-activation)
 
 ---
 
@@ -1355,7 +1356,181 @@ Three rules that keep these contribution points honest:
 
 ---
 
-## 8. Shipping migrations
+## 8. The module frame: tabs and the configure page
+
+**Your module does not draw its own navigation.** It declares two lists and the shell draws both:
+the data places it has, and what is on its configure page. Everything that used to be a
+`_tabs.html.twig`, a Settings button and a "Back to dashboard" link in each module is one frame now,
+and a module written after this one gets the same frame without agreeing to anything.
+
+### The two rules
+
+1. **A tab is a place where DATA lives.** Patrols has an overview and a list of patrols, so patrols
+   has two tabs. Nothing that CONFIGURES the module is a tab — not settings, not the kinds a ranger
+   picks from, not the widget library. A strip that mixes places to look at with screens that change
+   how the module behaves has stopped meaning anything.
+2. **One `Configure` button, one configure page.** Your module gets exactly one configuration entry:
+   a `Configure` action in the page head, which the SHELL renders, and one page behind it whose
+   sections you declare. No Settings button anywhere else, no kinds link anywhere else, no widget
+   library button anywhere else, and no "Back to dashboard" — the Configure action is lit on the
+   configure page and takes you back, and the crumb is there too.
+
+### Declaring your data places
+
+```php
+namespace UhifadhiLabs\PatrolBundle\Shell;
+
+use Uhifadhi\Contracts\Shell\ModuleTab;
+use Uhifadhi\Contracts\Shell\ModuleTabsInterface;
+
+final class PatrolModuleTabs implements ModuleTabsInterface
+{
+    public function slug(): string
+    {
+        return 'patrols';
+    }
+
+    public function tabs(): array
+    {
+        return [
+            new ModuleTab('Overview', 'patrol_dashboard'),
+            // A LIST AND ITS DETAIL SCREEN ARE ONE PLACE: opening a record does not
+            // leave the place the record lives in, so both routes light this tab.
+            new ModuleTab('Patrols', 'patrol_list', lightsFor: ['patrol_list', 'patrol_detail']),
+        ];
+    }
+}
+```
+
+Tag it by hand — your services are not autoconfigured:
+
+```php
+$services->set('patrol.module_tabs', PatrolModuleTabs::class)
+    ->tag(ModuleTabsInterface::TAG);
+```
+
+What the shell then renders, with nothing further from you:
+
+- the `.atabs` strip under your page head, on every one of your pages, with exactly one tab lit;
+- your module's children in the sidebar's location tree — the fourth rung, under your module's row,
+  which becomes the open ancestor while one of your places is lit.
+
+`lightsFor` takes route names; an entry ending in `*` lights every route with that prefix, so a
+module with a family of screens names the family rather than every member. A tab's `parameters` are
+merged over the area of the request the viewer is in, so you never carry a router or an area uuid.
+
+**A tab the viewer may not have is WITHHELD, never greyed out.** A disabled tab tells a ranger that
+a screen exists and they are not trusted with it, which is a worse product than not mentioning it.
+The value object has no url-less form, so there is nothing to grey out even by accident.
+
+### Declaring your configure page
+
+A section is exactly one of two shapes. `page()` is the ordinary one: the shell renders it, inside
+the configure page, from a template you name — you write no head, no strip, no page frame, no way
+back. `screen()` is for a section that already has an address of its own, and the strip links out
+to it.
+
+```php
+namespace UhifadhiLabs\PatrolBundle\Shell;
+
+use Uhifadhi\Contracts\Shell\ConfigurationSection;
+use Uhifadhi\Contracts\Shell\ConfigurationSectionsInterface;
+
+final class PatrolConfigurationSections implements ConfigurationSectionsInterface
+{
+    public function __construct(
+        private readonly RequestStack $requests,
+        private readonly PatrolSettingsService $settings,
+    ) {
+    }
+
+    public function slug(): string
+    {
+        return 'patrols';
+    }
+
+    /** The whole heading; the shell adds " · configure". */
+    public function heading(): string
+    {
+        return $this->area()?->getName().' — Patrols';
+    }
+
+    public function summary(): ?string
+    {
+        return 'Everything this module is set up with in this area, in one place: how its dashboard '
+            .'is composed, the words a ranger picks from, and the numbers the module runs on.';
+    }
+
+    public function sections(): array
+    {
+        $area = $this->area();
+
+        return [
+            ConfigurationSection::page(
+                ConfigurationSection::WIDGETS,
+                'Widget library',
+                '@UhifadhiLabsPatrol/configure/_widgets.html.twig',
+            ),
+            // THE WORD IS YOURS. The shell prints "Observation kinds" because you
+            // said so; it has no vocabulary of its own to impose.
+            ConfigurationSection::page(
+                'kinds',
+                'Observation kinds',
+                '@UhifadhiLabsPatrol/configure/_kinds.html.twig',
+                ['kinds' => $this->settings->kindsFor($area)],
+            ),
+            ConfigurationSection::page(
+                ConfigurationSection::SETTINGS,
+                'Settings',
+                '@UhifadhiLabsPatrol/configure/_settings.html.twig',
+                ['settings' => $this->settings->forArea($area)],
+            ),
+        ];
+    }
+}
+```
+
+```php
+$services->set('patrol.configuration_sections', PatrolConfigurationSections::class)
+    ->args([service('request_stack'), service('patrol.settings')])
+    ->tag(ConfigurationSectionsInterface::TAG);
+```
+
+What the shell then renders:
+
+| It draws | You supply |
+|---|---|
+| `/areas/{uuid}/modules/patrols/configure` and `…/configure/{section}` | nothing — the addresses are the shell's |
+| the crumb, the heading `<name> · configure`, the summary | `heading()`, `summary()` |
+| the `.atabs` section strip, with the current section lit | the labels, through `sections()` |
+| the `Configure` action, lit, linking back to your first tab | nothing |
+| the section body | the template you named, given exactly the variables you handed it |
+
+**The order is ruled, not declared.** The strip runs Widget library first and Settings last whatever
+order you write, and whatever you file between them keeps the order you gave it. That is why the two
+anchoring ids are constants: file your kinds in the middle and you get the platform's order for free.
+
+**The bare configure address is your LAST rendered section** — Settings, by that order — and every
+other rendered section hangs one segment below it. So `…/configure` is your settings and
+`…/configure/kinds` is your kinds, and the `Configure` action opens the bare one.
+
+### What a module stops shipping
+
+- a `_tabs.html.twig` of its own, or any per-module tab partial;
+- a Settings page with its own route, head and frame;
+- a `Settings`, `Observation kinds`, `Incident kinds` or `Widget library` button anywhere;
+- a "Back to dashboard" link — the first data tab, the lit Configure action and the crumb are the
+  three ways back, and there is no fourth;
+- any definition of `.srow`, `.sact`, `.sadd`, `.sout`, `.frow`, `.save-row`, `.pgr`, `.lfilt`,
+  `.lsearch`, `.recgrid`, `.upl-*` or `.cal-*`. Those are the platform's vocabulary and the shell's
+  stylesheet defines them; a module that redefines one is drift, and the conformance test says so.
+
+A module with nothing to configure declares no sections and gets no Configure action, which is the
+right answer rather than an empty page.
+
+---
+
+## 9. Shipping migrations
 
 **Your module owns its tables, so it ships the statements that create them.** An installation
 runs `doctrine:migrations:migrate` and writes no version for you — the same way it writes none
@@ -1509,7 +1684,7 @@ data-safe undo. Data survives `up()`.
 
 ---
 
-## 9. Testing
+## 10. Testing
 
 Tests first — the platform's modules are built that way and the contracts assume it.
 
@@ -1719,7 +1894,7 @@ That is the whole adoption. It runs in `composer check` with the rest of your su
 
 ---
 
-## 10. CI
+## 11. CI
 
 One job, the same command a developer runs:
 
@@ -1751,7 +1926,7 @@ var at it.
 
 ---
 
-## 11. Flex recipe and activation
+## 12. Flex recipe and activation
 
 Installing a module should not be a checklist. A Flex recipe turns it into `composer require`.
 
