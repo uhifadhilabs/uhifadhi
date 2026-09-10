@@ -74,18 +74,38 @@ owns every command the platform has.
 
 ### The order versions run in
 
-A migration's identity in doctrine/migrations is its **full class name**, and the
-comparator that ships with it is a `strcmp` over that name
-(`vendor/doctrine/migrations/src/Version/AlphabeticalComparator.php`). With one
-namespace that is the same thing as sorting by date; with a namespace per
-package it is not, and a package whose name sorts early would create a table
-before the table its foreign key points at. So the core registers a comparator
-that reads the trailing `YmdHis` instead, through
-`doctrine_migrations.services`, the seam the migrations bundle documents for it.
+**A package's versions run after the versions of every package it requires.**
+The date in the class name orders versions inside one package and decides
+nothing between two. Your own versions run last, because your application
+requires everything.
 
-The consequence for anyone writing migrations in the same installation — yours,
-or a module's — is the one you would expect anyway: **the date in the class name
-is what decides**, whatever namespace the class is in.
+A migration's identity in doctrine/migrations is its **full class name**, and
+the comparator that ships with it is a `strcmp` over that name
+(`vendor/doctrine/migrations/src/Version/AlphabeticalComparator.php`), so with a
+namespace per package the order is alphabetical by namespace — and a package
+whose name sorts early creates a table before the table its foreign key points
+at. A date is no better once packages are written by different people: a module
+released last year carries last year's timestamps and would be planned in front
+of the core it was built against. The core registers a comparator that reads
+the Composer dependency graph instead, through `doctrine_migrations.services`,
+the seam the migrations bundle documents for it.
+
+The graph comes from the `require` and `replace` blocks of each installed
+package's own `composer.json`, read at the install path Composer reports, so
+nothing is declared twice and nothing has to be kept in step by hand. A version
+is placed by its namespace: the namespace names a registered directory, the
+directory sits inside one installed package, and a directory inside none of
+them is your application's.
+
+Two consequences worth having in mind:
+
+- **The five core bundles are one package**, so the dates in their class names
+  are what orders them among themselves. Area, Registry, Team, Shell.
+- **A module that requires `uhifadhi/registry-bundle` is placed behind the whole
+  core**, because the core is the one package that answers to that name.
+
+If two installed packages require each other, `doctrine:migrations:migrate`
+stops and names them rather than picking an order.
 
 ## Upgrading
 

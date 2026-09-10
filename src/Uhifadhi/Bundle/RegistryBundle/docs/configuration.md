@@ -9,6 +9,7 @@ not ship for migrations.
 - [The `registry:` tree](#the-registry-tree)
 - [An area is required, and a bundle answers it](#an-area-is-required-and-a-bundle-answers-it)
 - [The tables, and whose migration history they are](#the-tables-and-whose-migration-history-they-are)
+- [What decides the order every version runs in](#what-decides-the-order-every-version-runs-in)
 
 ## The `registry:` tree
 
@@ -103,3 +104,31 @@ so the statements that create them live in `migrations/` under
 `prependExtension()`. An installation runs `doctrine:migrations:migrate` and
 generates nothing; `doctrine:migrations:diff` is what it runs for the entities it
 writes itself.
+
+## What decides the order every version runs in
+
+The ordering of every migration in an installation is registered here, for the
+same reason: this is the one core bundle that requires
+`doctrine/doctrine-migrations-bundle`, and an order across namespaces is a
+property of the installation rather than of any one bundle's tables.
+
+`Version/DependencyOrderComparator.php` replaces
+`Doctrine\Migrations\Version\Comparator` through the `doctrine_migrations.services`
+key, which is the seam the migrations bundle documents for it. The rule it
+applies:
+
+- a package's versions run after the versions of every package it requires;
+- the timestamp orders versions that belong to the same package;
+- versions an installation keeps itself run last;
+- two packages that require each other are refused by name.
+
+The graph comes from the `require` and `replace` blocks of each installed
+package's own `composer.json`, at the install path
+`Composer\InstalledVersions::getAllRawData()` reports. A version is placed
+through the migrations configuration: class name to namespace, namespace to the
+registered directory, directory to the package whose install path contains it.
+
+The other half of owning that behaviour is
+`DependencyInjection/Compiler/InstallationMigrationsPathFirstPass`, which puts
+the directory no installed bundle ships in front of the packages' so a flagless
+`doctrine:migrations:diff` writes where an installation expects.

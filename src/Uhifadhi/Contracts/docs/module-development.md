@@ -1217,15 +1217,28 @@ bin/console doctrine:migrations:diff --namespace='YourVendor\Sightings\Migration
 
 ### What decides the order
 
+**Your versions run after the core's, and after every module you require.** The date in the class
+name orders versions inside one package and decides nothing between two packages.
+
 A version's identity in doctrine/migrations is its **full class name**, and the comparator that
 ships with the library is a `strcmp` over that name
-(`vendor/doctrine/migrations/src/Version/AlphabeticalComparator.php`). The core replaces it with
-one that reads the trailing `YmdHis`, through `doctrine_migrations.services`, so **the date in
-the class name is what decides** — whatever namespace the class is in.
+(`vendor/doctrine/migrations/src/Version/AlphabeticalComparator.php`), which with a namespace per
+package is alphabetical by namespace. The core replaces it with one that reads the Composer
+dependency graph — the `require` and `replace` blocks of each installed package's own
+`composer.json` — through `doctrine_migrations.services`.
 
-Which means: give a version that declares a foreign key into a core table a date later than the
-core's own versions. Generating it with `doctrine:migrations:diff` against an installation that
-has already migrated does that for you, because the generated name is the current timestamp.
+So there is nothing to arrange. A version of yours that declares a foreign key into a core table
+is placed behind every core version by your manifest, and a `require` on
+`uhifadhi/registry-bundle` places it behind the whole core, because the core is the one package
+that answers to that name. If your module requires another module, the same holds between the two
+of them, in the direction the manifest says.
+
+Date a new version with the current timestamp anyway — `doctrine:migrations:diff` does it for you,
+and it is what orders your own versions among themselves. It just no longer has to be later than
+anybody else's.
+
+If two installed packages require each other, `doctrine:migrations:migrate` stops and names them
+rather than picking an order.
 
 ### The three rules
 
