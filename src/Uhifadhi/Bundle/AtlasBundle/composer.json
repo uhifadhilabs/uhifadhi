@@ -28,6 +28,7 @@
         "symfony/framework-bundle": "^7.3 || ^8.0",
         "symfony/http-kernel": "^7.3 || ^8.0",
         "symfony/ux-chartjs": "^2.20 || ^3.0",
+        "symfony/ux-leaflet-map": "^2.20 || ^3.0",
         "symfony/ux-map": "^2.20 || ^3.0",
         "twig/twig": "^3.14",
         "uhifadhi/shell-bundle": "^1.0"

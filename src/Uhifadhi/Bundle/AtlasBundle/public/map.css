@@ -118,5 +118,69 @@
 }
 .leaflet-tooltip.zone-label::before { display: none; }
 
-/* Fullscreen takes the whole card; the plate fills it. */
+/* ---- the plate render_map() emits ------------------------------------- */
+/* THE PLATE IS A COLUMN: the filter row, then the imagery frame taking whatever
+   height is left. The column is what makes fullscreen work, and it lives here
+   rather than in a consumer's sheet because a plate that cannot grow is a plate
+   whose fullscreen button does nothing — a fault no module should be able to
+   introduce by styling its own card. */
+.map-plate { position: relative; display: flex; flex-direction: column; min-height: 0; }
+.map-plate > .viewer { flex: 1 1 auto; min-height: 0; }
+
+/* One row above the map. It is inside the plate, so it expands with it. */
+.map-filters { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; min-width: 0; }
+
+/* THE LEGEND FLOATS BOTTOM-RIGHT, over the imagery and inside the plate, so it
+   is in the same place on every map and comes along into fullscreen. Under the
+   chrome's z-index, never over it: the controls must stay clickable. */
+.map-legend {
+    position: absolute; z-index: 5; right: 10px; bottom: 10px;
+    display: flex; gap: 18px; flex-wrap: wrap; max-width: calc(100% - 60px);
+    padding: 8px 10px; border-radius: 8px;
+    background: color-mix(in srgb, var(--z-ink) 78%, transparent);
+    border: 1px solid color-mix(in srgb, var(--z-paper) 18%, transparent);
+}
+.map-legend .grp { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.map-legend .grp > b {
+    font: 700 8.5px var(--font-mono); letter-spacing: .14em; text-transform: uppercase;
+    color: color-mix(in srgb, var(--z-paper) 62%, transparent); display: flex; align-items: center; gap: 6px;
+}
+.map-legend .grp > b i { width: 6px; height: 6px; border-radius: 2px; font-style: normal; }
+.map-legend .lay {
+    display: flex; align-items: center; gap: 7px; text-align: left;
+    font: 400 9.5px var(--font-mono); color: var(--z-paper);
+    background: none; border: 0; padding: 0; cursor: pointer;
+}
+.map-legend span.lay { cursor: default; }
+.map-legend .lay .sw { width: 16px; height: 8px; border-radius: 2px; flex: none; }
+.map-legend .lay .sw.ln { height: 0; border-top: 2.2px solid currentColor; }
+.map-legend .lay.off { color: color-mix(in srgb, var(--z-paper) 55%, transparent); }
+.map-legend .lay.off .sw { opacity: .35; }
+.map-legend .lay .tog {
+    font-size: 8px; letter-spacing: .1em;
+    color: color-mix(in srgb, var(--z-paper) 62%, transparent);
+    border: 1px solid color-mix(in srgb, var(--z-paper) 22%, transparent);
+    border-radius: 4px; padding: 1px 5px;
+}
+.map-legend .lay.off .tog { border-style: dashed; }
+.map-legend .lay:focus-visible { outline: 2px solid rgb(var(--c-acc)); outline-offset: 2px; }
+
+/* ---- fullscreen ------------------------------------------------------- */
+/* THE PLATE ROOT IS THE FULLSCREEN ELEMENT and the frame grows to fill it.
+   Stated for the plate itself AND for a plate inside anything else that goes
+   fullscreen, because the frame's ordinary height is a clamp — without this it
+   would keep that clamp on a 1440-tall screen and leave the rest black. */
+.map-plate:fullscreen { height: 100%; padding: 10px; background: var(--z-ink); }
+.map-plate:fullscreen > .viewer,
+:fullscreen .map-plate > .viewer { height: auto; flex: 1 1 auto; min-height: 0; }
+:fullscreen .map-plate { height: 100%; }
+/* A filter row is a row in fullscreen too. A width a module clamped for a
+   narrow card would wrap the chips into a stack across a whole screen. */
+.map-plate:fullscreen .map-filters,
+.map-plate:fullscreen .map-filters > *,
+:fullscreen .map-plate .map-filters,
+:fullscreen .map-plate .map-filters > * { max-width: none; }
+
+/* A card that goes fullscreen with a bare frame inside it — a consumer that
+   frames imagery without the plate — still fills the screen. */
 .c:fullscreen .viewer { height: auto; flex: 1; min-height: 0; }

@@ -52,6 +52,7 @@
         "symfony/uid": "^7.3 || ^8.0",
         "symfony/ux-chartjs": "^2.20 || ^3.0",
         "symfony/ux-icons": "^2.20 || ^3.0",
+        "symfony/ux-leaflet-map": "^2.20 || ^3.0",
         "symfony/ux-map": "^2.20 || ^3.0",
         "twig/twig": "^3.14"
     },

@@ -19,7 +19,10 @@ use Symfony\Bundle\TwigBundle\TwigBundle;
 use Symfony\Component\AssetMapper\AssetMapperInterface;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Kernel;
+use Symfony\UX\Map\UXMapBundle;
+use Symfony\UX\StimulusBundle\StimulusBundle;
 use Uhifadhi\Bundle\AtlasBundle\AtlasBundle;
+use Uhifadhi\Bundle\AtlasBundle\Map\MapBuilderInterface;
 use Uhifadhi\Bundle\AtlasBundle\Tests\Integration\Fixtures\CollectedModules;
 
 use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
@@ -47,6 +50,8 @@ final class TestKernel extends Kernel
     {
         yield new FrameworkBundle();
         yield new TwigBundle();
+        yield new StimulusBundle();
+        yield new UXMapBundle();
         yield new AtlasBundle();
     }
 
@@ -67,6 +72,14 @@ final class TestKernel extends Kernel
             'default_path' => __DIR__.'/Fixtures/templates',
         ]);
 
+        /*
+         * The Leaflet renderer, named the way a host names it. The plate is
+         * built on UX Map and its bridge, so a test that renders one has to go
+         * through the real renderer or it proves nothing about the markup a
+         * browser is served.
+         */
+        $container->extension('ux_map', ['renderer' => 'leaflet://default']);
+
         // Stands in for the HOST's module catalogue: the host collects every
         // service tagged "uhifadhi.module" and seeds its catalogue from them.
         // Tagged services are private, so this collector is what makes the
@@ -79,6 +92,7 @@ final class TestKernel extends Kernel
         // Both contracts the bundle exists to provide, made reachable from a test.
         $container->services()->alias('test.asset_mapper', AssetMapperInterface::class)->public();
         $container->services()->alias('test.twig', 'twig')->public();
+        $container->services()->alias('test.atlas.map_builder', MapBuilderInterface::class)->public();
     }
 
     public function getCacheDir(): string

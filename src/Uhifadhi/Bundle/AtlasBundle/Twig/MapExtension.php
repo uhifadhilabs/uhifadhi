@@ -39,6 +39,12 @@ use Uhifadhi\Bundle\AtlasBundle\Model\SatelliteSource;
  *
  * Registered wherever there is a Twig, without a controller or a route, so a
  * host that installs this bundle for its assets alone still gets the function.
+ *
+ * IT ALSO DECLARES `render_map()`, the whole of what a module writes to have a
+ * map. The two belong in one extension because they are two halves of the same
+ * promise: the body attribute settles what the ground is, and the plate settles
+ * what is drawn on it and what it is dressed in. The rendering itself is a
+ * runtime ({@see MapPlateRuntime}), so a page with no map pays for none of it.
  */
 final class MapExtension extends AbstractExtension
 {
@@ -60,6 +66,10 @@ final class MapExtension extends AbstractExtension
             // The raw payload, for a host that would rather place the attribute
             // itself (a component's root element, say) than take the whole tag.
             new TwigFunction('map_basemap_payload', $this->basemapPayload(...)),
+            // The plate. Declared here and rendered in a RUNTIME, so a page that
+            // draws no map builds neither Twig's renderer nor UX Map's: the
+            // function is always known, the machinery arrives on first use.
+            new TwigFunction('render_map', [MapPlateRuntime::class, 'renderMap'], ['is_safe' => ['html']]),
         ];
     }
 

@@ -1,0 +1,159 @@
+<?php
+
+declare(strict_types=1);
+
+/*
+ * This file is part of the Uhifadhi core.
+ *
+ * (c) Ezekiel Mjema <https://github.com/eemjema>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace Uhifadhi\Bundle\AtlasBundle\Tests\Integration\Twig;
+
+use PHPUnit\Framework\TestCase;
+use Twig\Environment;
+use Uhifadhi\Bundle\AtlasBundle\Map\MapBuilderInterface;
+use Uhifadhi\Bundle\AtlasBundle\Model\AtlasMap;
+use Uhifadhi\Bundle\AtlasBundle\Model\Boundary;
+use Uhifadhi\Bundle\AtlasBundle\Model\GeoJsonLayer;
+use Uhifadhi\Bundle\AtlasBundle\Model\LayerShape;
+use Uhifadhi\Bundle\AtlasBundle\Model\LegendItem;
+use Uhifadhi\Bundle\AtlasBundle\Tests\Integration\TestKernel;
+use Uhifadhi\Bundle\AtlasBundle\Twig\MapPlateRuntime;
+
+/**
+ * `render_map()` THROUGH THE REAL RENDERER. Not a string built in a unit test:
+ * a booted kernel with UX Map, its Leaflet bridge and Stimulus, so what this
+ * asserts is the markup a browser is actually served.
+ *
+ * The plate is what a module never writes: the wrapper that owns fullscreen,
+ * the map element the bridge's controller mounts on, the filter row and the
+ * legend. A module writes one Twig call.
+ */
+final class RenderMapTest extends TestCase
+{
+    private const array BOUNDARY = [
+        'type' => 'Polygon',
+        'coordinates' => [[[-29.5, -3.2], [-29.4, -3.2], [-29.4, -3.1], [-29.5, -3.1], [-29.5, -3.2]]],
+    ];
+
+    public function testThePlateWrapsTheMapElementAndCarriesTheAtlasController(): void
+    {
+        $html = self::render();
+
+        self::assertStringContainsString('class="map-plate"', $html);
+        self::assertStringContainsString(MapPlateRuntime::CONTROLLER, $html);
+        self::assertStringContainsString('map-canvas', $html);
+    }
+
+    /**
+     * The bridge's own controller must still be on the map element — the atlas
+     * extends UX Map, it does not replace it.
+     */
+    public function testTheUxMapControllerStillMountsTheMap(): void
+    {
+        self::assertStringContainsString('symfony--ux-leaflet-map--map', self::render());
+    }
+
+    public function testTheAtlasPayloadReachesTheBrowserUnderItsOwnKey(): void
+    {
+        $html = self::render(static function (AtlasMap $map): void {
+            $map->boundary(new Boundary(self::BOUNDARY));
+        });
+
+        self::assertStringContainsString('&quot;atlas&quot;', $html);
+        self::assertStringContainsString('&quot;boundary&quot;', $html);
+    }
+
+    public function testALayerRendersALegendRowThatTogglesIt(): void
+    {
+        $html = self::render(static function (AtlasMap $map): void {
+            $map->addLayer(new GeoJsonLayer(
+                id: 'sightings.recent',
+                label: 'Recent sightings',
+                url: '/sightings.geojson',
+                shape: LayerShape::Point,
+                count: 4,
+            ));
+        });
+
+        self::assertStringContainsString('map-legend', $html);
+        self::assertStringContainsString('Recent sightings', $html);
+        self::assertStringContainsString('sightings.recent', $html);
+        self::assertStringContainsString('#toggleLayer', $html);
+    }
+
+    /**
+     * A stated row is a key, not a switch: no toggle action, because there is
+     * no layer behind it to switch.
+     */
+    public function testAStatedLegendRowIsNotAToggle(): void
+    {
+        $html = self::render(static function (AtlasMap $map): void {
+            $map->addLegendItem(new LegendItem(label: 'Boundary only', swatch: '#B9C8BD'));
+        });
+
+        self::assertStringContainsString('Boundary only', $html);
+        self::assertStringNotContainsString('#toggleLayer', $html);
+    }
+
+    public function testAMapWithNoLegendRendersNoLegend(): void
+    {
+        self::assertStringNotContainsString('map-legend', self::render());
+    }
+
+    /**
+     * The filter row is one row ABOVE the map, inside the plate, so it comes
+     * along into fullscreen.
+     */
+    public function testTheFilterSlotRendersAboveTheMap(): void
+    {
+        $html = self::render(filters: '<span class="chip">This week</span>');
+
+        self::assertStringContainsString('map-filters', $html);
+        self::assertLessThan(
+            strpos($html, 'map-canvas') ?: \PHP_INT_MAX,
+            strpos($html, 'map-filters') ?: \PHP_INT_MAX,
+            'The filter row must precede the map, or it cannot be a row above it.',
+        );
+    }
+
+    public function testAttributesReachTheMapElement(): void
+    {
+        $html = self::render(attributes: ['aria-label' => 'The area and its zones', 'role' => 'img']);
+
+        self::assertStringContainsString('aria-label="The area and its zones"', $html);
+        self::assertStringContainsString('role="img"', $html);
+    }
+
+    /**
+     * @param \Closure(AtlasMap): void|null $arrange
+     * @param array<string, bool|string>    $attributes
+     */
+    private static function render(?\Closure $arrange = null, array $attributes = [], ?string $filters = null): string
+    {
+        $kernel = new TestKernel('test', true);
+        $kernel->boot();
+        $container = $kernel->getContainer();
+
+        /** @var MapBuilderInterface $builder */
+        $builder = $container->get('test.atlas.map_builder');
+        $map = $builder->createMap();
+        $arrange?->__invoke($map);
+
+        /** @var Environment $twig */
+        $twig = $container->get('test.twig');
+        $html = $twig->createTemplate('{{ render_map(map, attributes, filters) }}')->render([
+            'map' => $map,
+            'attributes' => $attributes,
+            'filters' => $filters,
+        ]);
+
+        $kernel->shutdown();
+
+        return $html;
+    }
+}

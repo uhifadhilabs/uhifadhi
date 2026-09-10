@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
+use Uhifadhi\Bundle\AtlasBundle\Map\MapBuilder;
+use Uhifadhi\Bundle\AtlasBundle\Map\MapBuilderInterface;
+
 /*
  * The bundle's static service wiring.
  *
@@ -28,13 +31,25 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *   "Services should not use autowiring or autoconfiguration. Instead, all
  *    services should be defined explicitly."
  *   "If the bundle defines services, they must be prefixed with the bundle alias."
+ *   "services not meant to be used by the application directly, should be
+ *    defined as private. For public services, aliases should be created from the
+ *    interface/class to the service id."
  *   — https://symfony.com/doc/current/bundles/best_practices.html
- *
- * Empty, and honestly so: every service this bundle defines depends on the
- * deployment's configuration, so all of them are built in loadExtension() where
- * that configuration is in hand. The file exists so the first CONFIG-FREE
- * service lands in the right place, in the right style.
  */
 return static function (ContainerConfigurator $container): void {
-    $container->services();
+    $container->services()
+        /*
+         * The one way a module gets a map. Config-free by design: which imagery
+         * a plate draws is settled in the browser, off the attribute on the
+         * <body>, rather than baked into the map on the server — so the builder
+         * is the same object whatever a deployment configured.
+         */
+        ->set('atlas.map_builder', MapBuilder::class)
+
+        /*
+         * The name a module names it by. The service stays private; this alias
+         * is what a consumer's own explicit wiring references.
+         */
+        ->alias(MapBuilderInterface::class, 'atlas.map_builder')
+    ;
 };

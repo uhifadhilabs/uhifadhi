@@ -1,0 +1,53 @@
+{# THE PLATE — the one shape every map in the product is served in.
+
+   A flex column: the filter row, then the imagery frame, and the legend
+   floating over the frame's bottom-right corner. The column is what makes
+   fullscreen work — the plate root is the element that expands, and the frame
+   grows into the space the filter row does not take — so a module cannot lay a
+   map out into a card that will not grow.
+
+   The map element is UX Map's own, controller and values and all; the plate is
+   what surrounds it. Both controllers are live at once: the bridge's mounts the
+   map, and the atlas's listens for the events it fires.
+
+   Rendered by Twig\MapPlateRuntime, never included by hand — a module writes
+   {{ render_map(map) }}. #}
+<div class="map-plate" data-controller="{{ controller }}">
+    {% if filters %}
+        {# ONE ROW ABOVE THE MAP, inside the plate, so the chips come along into
+           fullscreen instead of being left behind on the page. #}
+        <div class="map-filters">{{ filters|raw }}</div>
+    {% endif %}
+
+    <div class="viewer" data-{{ controller }}-target="frame">{{ element|raw }}</div>
+
+    {% if groups is not empty %}
+        {# A LEGEND ROW IS A SWITCH when there is a layer behind it: clicking it
+           shows or hides that layer and the row says which it now is. A row
+           with no layer is a key — what a colour means — and is not a control,
+           so it is not a button. #}
+        <div class="map-legend" data-{{ controller }}-target="legend">
+            {% for group in groups %}
+                <div class="grp">
+                    {% if group.label %}
+                        <b><i style="background:{{ group.items|first.swatch }}"></i>{{ group.label }}</b>
+                    {% endif %}
+                    {% for item in group.items %}
+                        {% set swatch %}<span class="sw{{ item.shape.value == 'line' ? ' ln' : '' }}" style="{{ item.shape.value == 'line' ? 'color:' ~ item.swatch : 'background:' ~ item.swatch }}"></span>{% endset %}
+                        {% if item.layerId %}
+                            <button type="button" class="lay{{ item.visible ? '' : ' off' }}"
+                                    data-action="{{ controller }}#toggleLayer"
+                                    data-{{ controller }}-layer-param="{{ item.layerId }}"
+                                    aria-pressed="{{ item.visible ? 'true' : 'false' }}">
+                                {{- swatch -}}{{ item.label }}{% if item.count is not null %} &middot; {{ item.count }}{% endif %}
+                                <span class="tog">{{ item.visible ? 'on' : 'off' }}</span>
+                            </button>
+                        {% else %}
+                            <span class="lay">{{- swatch -}}{{ item.label }}{% if item.count is not null %} &middot; {{ item.count }}{% endif %}</span>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>

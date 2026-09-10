@@ -21,6 +21,7 @@ use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 use Uhifadhi\Bundle\AtlasBundle\DependencyInjection\AtlasConfiguration;
 use Uhifadhi\Bundle\AtlasBundle\Model\SatelliteSource;
 use Uhifadhi\Bundle\AtlasBundle\Twig\MapExtension;
+use Uhifadhi\Bundle\AtlasBundle\Twig\MapPlateRuntime;
 
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 
@@ -155,6 +156,19 @@ final class AtlasBundle extends AbstractBundle
                 ],
             ]);
         }
+
+        /*
+         * The plate template's namespace. Registered rather than left to the
+         * bundle-name convention because the plate is rendered through an
+         * INJECTED Twig environment, which resolves no bundle-relative path of
+         * its own. Guarded the same way: an installation with no twig draws no
+         * plate, and must still boot for the Leaflet build's sake.
+         */
+        if ($builder->hasExtension('twig')) {
+            $container->extension('twig', [
+                'paths' => [__DIR__.'/templates' => 'Atlas'],
+            ], prepend: true);
+        }
     }
 
     /**
@@ -209,6 +223,22 @@ final class AtlasBundle extends AbstractBundle
             $services->set('atlas.twig_extension', MapExtension::class)
                 ->args([service('atlas.satellite_source')])
                 ->tag('twig.extension');
+        }
+
+        /*
+         * The plate's renderer, registered only where UX Map is registered too:
+         * the runtime references UX Map's own renderer service, and referencing
+         * a service the container does not have would refuse to boot a host that
+         * installed this bundle for the Leaflet build alone.
+         *
+         * The FUNCTION is declared either way — it is on the extension above —
+         * so the failure a host sees for a missing bundle is "no runtime for
+         * render_map", which names what is absent.
+         */
+        if (\is_array($bundles) && isset($bundles['TwigBundle'], $bundles['UXMapBundle'])) {
+            $services->set('atlas.twig_plate_runtime', MapPlateRuntime::class)
+                ->args([service('twig'), service('ux_map.renderers')])
+                ->tag('twig.runtime');
         }
     }
 
