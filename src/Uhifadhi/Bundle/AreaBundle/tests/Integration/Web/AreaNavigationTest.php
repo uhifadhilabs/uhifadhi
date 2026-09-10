@@ -267,6 +267,72 @@ final class AreaNavigationTest extends WebTestCase
     }
 
     /**
+     * A CONFIGURE PAGE IS INSIDE THE PLACE IT CONFIGURES. The tree says where
+     * you are, and on the area's configure page you are still in the area — so
+     * its group stays open and its screens stay listed, with none of them lit,
+     * exactly as on a data page. Collapsing the branch there tells a person they
+     * have left the area, which they have not.
+     */
+    public function testTheAreasGroupStaysOpenOnItsConfigurePageWithNoScreenLit(): void
+    {
+        $this->boot(self::WITH_MODULES);
+        $area = $this->anArea('Northern Conservation Reserve');
+        $uuid = (string) $area->getUuidString();
+
+        $row = $this->areaRow($this->navAtRoute('/areas/'.$uuid.'/configure', 'shell_area_configure', self::WITH_MODULES));
+
+        self::assertTrue($row->open, 'the area group folds shut on its own configure page');
+        self::assertSame(
+            ['Overview', 'Modules', 'Zones'],
+            array_map(static fn (NavItem $i): string => $i->label, $row->children),
+        );
+        self::assertSame([], array_values(array_filter(
+            $row->children,
+            static fn (NavItem $i): bool => $i->current,
+        )), 'a configure page is none of the area\'s screens, so none is lit');
+    }
+
+    /**
+     * AND ONE RUNG DEEPER, for the same reason: a module's configure page is
+     * inside the module, so the module stays the open ancestor with its data
+     * places listed under it — and none of them lit, because a configure page is
+     * not one of them.
+     */
+    public function testTheModuleStaysOpenOnItsConfigurePageWithNoDataPlaceLit(): void
+    {
+        $this->boot(self::WITH_MODULES);
+        $area = $this->anArea('Northern Conservation Reserve');
+        $this->aCatalogue();
+        $this->install($area, 'patrols');
+        $uuid = (string) $area->getUuidString();
+
+        $modules = $this->modulesBranch($this->navAtRoute(
+            '/areas/'.$uuid.'/modules/patrols/configure',
+            'shell_module_configure',
+            self::WITH_MODULES,
+            ['slug' => 'patrols'],
+        ));
+
+        self::assertSame('Patrols', $modules[0]->label);
+        self::assertTrue($modules[0]->open, 'the module folds shut on its own configure page');
+        self::assertFalse($modules[0]->current, 'the module is the open ancestor, never the lit row');
+        self::assertSame(
+            ['Overview', 'Patrols'],
+            array_map(static fn (NavItem $i): string => $i->label, $modules[0]->children),
+        );
+        self::assertSame([], array_values(array_filter(
+            $modules[0]->children,
+            static fn (NavItem $i): bool => $i->current,
+        )));
+    }
+
+    /** The row for the one area this suite creates. */
+    private function areaRow(AreaNavigation $nav): NavItem
+    {
+        return $this->sections($nav)[0]->items[0]->children[0];
+    }
+
+    /**
      * The catalogue this suite's modules are filed in. Written here rather than
      * read from a module bundle, because this bundle depends on none.
      */
@@ -313,9 +379,14 @@ final class AreaNavigationTest extends WebTestCase
      * lights by route name, which is how a module says which of its screens are
      * the same place.
      *
-     * @param list<string> $grants
+     * THE ROUTER'S OWN ATTRIBUTES ARE SET TOO — the route name and the area the
+     * path names. A request built without them is a request no router produced,
+     * and every source in the frame reads the area off exactly those attributes.
+     *
+     * @param list<string>          $grants
+     * @param array<string, string> $attributes
      */
-    private function navAtRoute(string $path, string $route, array $grants = self::ALL_AREA_PERMISSIONS): AreaNavigation
+    private function navAtRoute(string $path, string $route, array $grants = self::ALL_AREA_PERMISSIONS, array $attributes = []): AreaNavigation
     {
         if (!isset($this->em)) {
             $this->boot($grants);
@@ -324,6 +395,12 @@ final class AreaNavigationTest extends WebTestCase
 
         $request = Request::create($path);
         $request->attributes->set('_route', $route);
+        if (1 === preg_match('#^/areas/([^/]+)#', $path, $matched)) {
+            $request->attributes->set('uuid', $matched[1]);
+        }
+        foreach ($attributes as $name => $value) {
+            $request->attributes->set($name, $value);
+        }
 
         /** @var RequestStack $stack */
         $stack = static::getContainer()->get('request_stack');

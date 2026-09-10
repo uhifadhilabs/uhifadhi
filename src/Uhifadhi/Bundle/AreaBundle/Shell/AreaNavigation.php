@@ -185,6 +185,14 @@ final readonly class AreaNavigation implements NavigationSourceInterface
              */
             $here = null !== $link->url && $this->viewerIsHere($link->url);
 
+            /*
+             * A MODULE'S CONFIGURE PAGE IS INSIDE THE MODULE, so the module row
+             * stays the OPEN ANCESTOR with its data places under it — and takes
+             * no accent, because a configure page is none of those places and
+             * the accent is what says "this is the row you are on".
+             */
+            $configuring = $here && $this->screens->isConfiguring($this->here() ?? '/');
+
             $screens = [];
             foreach ($here ? $this->frame->tabsOf($link->slug, (string) $area->getUuidString()) : [] as $screen) {
                 $screens[] = new NavItem(label: $screen->label, url: $screen->url, current: $screen->current);
@@ -195,7 +203,7 @@ final readonly class AreaNavigation implements NavigationSourceInterface
             $modules[] = new NavItem(
                 label: $link->title,
                 url: $link->url,
-                current: $here && !$leafLit,
+                current: $here && !$leafLit && !$configuring,
                 open: $here,
                 children: $screens,
             );

@@ -118,6 +118,32 @@ final class AreaShellSourceTest extends WebTestCase
         self::assertContains('Zones', $this->labels($this->sourceAt('/areas/{uuid}', grants: ['area.view'])));
     }
 
+    /**
+     * THE STRIP AND THE TREE ANSWER THE SAME QUESTION DIFFERENTLY ON A CONFIGURE
+     * PAGE, and both are right. The strip says nothing, because the section
+     * strip stands in its place and a strip that lit none of its own tabs would
+     * read as links to somewhere else. The TREE still lists the area's screens
+     * and keeps the branch open, because you have not left the area.
+     */
+    public function testTheStripSaysNothingOnAConfigurePageButTheTreeStaysOpen(): void
+    {
+        $this->boot();
+        $area = $this->anArea();
+        $source = $this->sourceAt('/areas/{uuid}/configure', $area);
+
+        self::assertSame([], $this->labels($source));
+
+        $branch = $source->screensOf($area);
+        self::assertSame(['Overview', 'Zones'], array_map(
+            static fn (AreaTab $t): string => $t->label,
+            $branch,
+        ));
+        self::assertSame([], array_values(array_filter(
+            $branch,
+            static fn (AreaTab $t): bool => $t->current,
+        )));
+    }
+
     /** Outside an area there is no strip at all — the register, a settings screen. */
     public function testThereIsNoStripOutsideAnArea(): void
     {

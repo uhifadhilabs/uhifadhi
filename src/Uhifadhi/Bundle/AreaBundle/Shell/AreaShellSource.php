@@ -81,12 +81,42 @@ final class AreaShellSource implements AreaShellSourceInterface
     ) {
     }
 
-    /** @return list<AreaTab> */
+    /**
+     * THE SIBLING SCREENS, FOR THE STRIP — and nothing at all on a configure
+     * page, because there the SECTION strip stands in the data tabs' place. A
+     * strip's only job is to say which of these you are on, and a configure page
+     * is none of them.
+     *
+     * The tree answers the same question differently and correctly: see
+     * {@see screensOf()}, which keeps the branch open there.
+     *
+     * @return list<AreaTab>
+     */
     public function tabs(): array
     {
-        $area = $this->currentArea($this->requestStack->getCurrentRequest());
+        $request = $this->requestStack->getCurrentRequest();
+        $area = $this->currentArea($request);
 
-        return null === $area ? [] : $this->screensOf($area);
+        if (null === $area || $this->isConfiguring($request?->getPathInfo() ?? '/')) {
+            return [];
+        }
+
+        return $this->screensOf($area);
+    }
+
+    /**
+     * IS THIS REQUEST A CONFIGURE PAGE — the area's own, or one of its modules'?
+     *
+     * Recognised by the URL SPACE the frame owns rather than by a route-name
+     * allowlist, for the reason the modules space is: the addresses belong to
+     * the application, and a list of names typed out here goes stale the first
+     * time one is added. `/areas/{uuid}/configure` and
+     * `/areas/{uuid}/modules/{slug}/configure` are the two shapes, and anything
+     * under either of them is still inside it.
+     */
+    public function isConfiguring(string $path): bool
+    {
+        return 1 === preg_match('#^/areas/[^/]++(?:/modules/[^/]++)?/configure(?:/|$)#', $path);
     }
 
     /**
@@ -106,8 +136,21 @@ final class AreaShellSource implements AreaShellSourceInterface
         $current = $this->currentArea($request);
         $inThisArea = null !== $current && $current->getId() === $area->getId();
 
-        $here = $inThisArea ? $this->whereWeAre(\is_string($route) ? $route : '', $request?->getPathInfo() ?? '/') : null;
-        if ($inThisArea && null === $here) {
+        $path = $request?->getPathInfo() ?? '/';
+
+        /*
+         * A CONFIGURE PAGE IS INSIDE THE PLACE IT CONFIGURES. The tree says
+         * where you are, and on an area's configure page you are still in the
+         * area — so its branch stays listed and stays open, with none of its
+         * screens lit, because a configure page is not one of them. Folding the
+         * branch there tells a person they have left the area, which they have
+         * not; that is the difference between "we cannot say where you are" and
+         * "you are here, on none of these".
+         */
+        $configuring = $inThisArea && $this->isConfiguring($path);
+
+        $here = $inThisArea && !$configuring ? $this->whereWeAre(\is_string($route) ? $route : '', $path) : null;
+        if ($inThisArea && !$configuring && null === $here) {
             /*
              * WE DO NOT KNOW WHERE WE ARE, SO WE DO NOT CLAIM TO. A strip whose
              * job is to say which of these screens you are on, and which cannot
@@ -132,8 +175,9 @@ final class AreaShellSource implements AreaShellSourceInterface
 
         // The screen we are on turned out to be one this viewer may not reach —
         // possible only if a permission changed mid-session. Say nothing rather
-        // than light nothing.
-        return !$inThisArea || $this->lights($tabs) ? $tabs : [];
+        // than light nothing. A configure page lights nothing BY DESIGN and is
+        // exempt.
+        return !$inThisArea || $configuring || $this->lights($tabs) ? $tabs : [];
     }
 
     /**
