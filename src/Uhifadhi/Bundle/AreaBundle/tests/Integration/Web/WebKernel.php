@@ -24,6 +24,8 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 use Symfony\UX\Icons\UXIconsBundle;
+use Symfony\UX\Map\UXMapBundle;
+use Symfony\UX\StimulusBundle\StimulusBundle;
 use Uhifadhi\Bundle\AreaBundle\AreaBundle;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\CheckoutTempDirTrait;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web\Fixtures\HostUser;
@@ -84,10 +86,14 @@ final class WebKernel extends Kernel
         // The shell's frame draws its icons with ux_icon(); it is a hard
         // requirement of the shell, so an installation that has the shell has it.
         yield new UXIconsBundle();
+        yield new StimulusBundle();
+        // UX Map and its Leaflet bridge: the atlas's plate is built on them,
+        // and every area screen that draws a map renders through them.
+        yield new UXMapBundle();
         yield new ShellBundle();
-        // The atlas: these pages link its Leaflet build and its map sheet by
-        // the constants it publishes, so an installation that draws an area's
-        // boundary has it and so does this kernel.
+        // The atlas: these pages link its map sheet by the constant it
+        // publishes and render their plates through it, so an installation that
+        // draws an area's boundary has it and so does this kernel.
         yield new AtlasBundle();
         yield new AreaBundle();
     }
@@ -130,6 +136,7 @@ final class WebKernel extends Kernel
         // STRICT: a template that reads a variable the controller did not pass
         // fails here rather than rendering a blank cell in an installation.
         $container->extension('twig', ['strict_variables' => true]);
+        $container->extension('ux_map', ['renderer' => 'leaflet://default']);
 
         $container->extension('doctrine', [
             'dbal' => ['url' => '%env(UHIFADHI_TEST_DATABASE_URL)%'],

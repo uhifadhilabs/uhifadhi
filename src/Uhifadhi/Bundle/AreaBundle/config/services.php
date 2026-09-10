@@ -18,6 +18,7 @@ use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaComposition;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaCreator;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaIdentity;
+use Uhifadhi\Bundle\AreaBundle\Service\AreaMap;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaMapPayload;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaOverview;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaPresetLibrary;
@@ -25,6 +26,7 @@ use Uhifadhi\Bundle\AreaBundle\Service\AreaRegister;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaThumbnailer;
 use Uhifadhi\Bundle\AreaBundle\Service\BoundaryImport;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneService;
+use Uhifadhi\Bundle\AtlasBundle\Map\MapBuilderInterface;
 use Uhifadhi\Bundle\RegistryBundle\Repository\AreaModuleRepository;
 
 /*
@@ -106,6 +108,15 @@ return static function (ContainerConfigurator $container): void {
     $services->set('area.map_payload', AreaMapPayload::class)
         ->args([service(ZoneRepository::class)]);
     $services->alias(AreaMapPayload::class, 'area.map_payload');
+
+    /*
+     * THE AREA'S PLATES. What the area states about its two maps — the overview's
+     * and the register's — handed to the atlas to draw. The area writes no
+     * JavaScript: this builds the map, and render_map() puts it on the page.
+     */
+    $services->set('area.map', AreaMap::class)
+        ->args([service(MapBuilderInterface::class)]);
+    $services->alias(AreaMap::class, 'area.map');
 
     /*
      * THE AREAS-INDEX WIDGET LIBRARY — the five whole-page layouts the landing

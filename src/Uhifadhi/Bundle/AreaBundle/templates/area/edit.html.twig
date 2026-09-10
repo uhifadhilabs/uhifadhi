@@ -15,9 +15,8 @@
    supersede, so no confirm), and the sidebar is the no-boundary state.
 
    THE PREVIEW IS THE SHARED PLATE. The map is the platform's one map — the same
-   imagery, boundary treatment and chrome as the overview and a patrol plate,
-   drawn by the area-map controller from the same payload. This template only
-   frames it.
+   imagery, boundary treatment and chrome as the overview and a patrol plate —
+   stated in PHP and drawn by the atlas. This template only frames it.
 
    NO WIDGET INDICES. The design's PL· labels are the workspace's referencing
    system, not product. See tests/Unit/Template/NoWorkshopLabelsTest.php. #}
@@ -27,22 +26,12 @@
 
 {% block stylesheets %}
     {{ parent() }}
-    {# The platform's one map stylesheet — Leaflet, then the shared plate/chrome
-       rules, before this bundle's sheet: the preview is the same map everywhere. #}
+    {# The platform's one map stylesheet, before this bundle's sheet: the
+       preview is the same map everywhere. #}
     {% if area.hasBoundary %}
-        <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Bundle\\AtlasBundle\\AtlasBundle::LEAFLET_CSS')) }}">
         <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Bundle\\AtlasBundle\\AtlasBundle::STYLESHEET')) }}">
     {% endif %}
     {{ include('@Area/_stylesheets.html.twig') }}
-{% endblock %}
-
-{% block javascripts %}
-    {% if area.hasBoundary %}
-        {# Leaflet as a classic script FIRST, so window.L is published before the
-           deferred area-map controller connects. parent() renders the importmap. #}
-        <script src="{{ asset(constant('Uhifadhi\\Bundle\\AtlasBundle\\AtlasBundle::LEAFLET_JS')) }}"></script>
-    {% endif %}
-    {{ parent() }}
 {% endblock %}
 
 {% block shell_breadcrumbs %}
@@ -177,16 +166,13 @@
             <span class="tab">Current boundary<span class="src">&middot; {% if area.hasBoundary %}preview &middot; what a replace affects{% else %}nothing to preview yet{% endif %}</span></span>
 
             {% if area.hasBoundary %}
-                {# The stored geometry travels to the browser on the payload; the
-                   area-map controller draws it over the imagery, the same plate
-                   as the overview. #}
-                <div class="viewer" style="min-height:300px;margin-bottom:12px"
-                     data-controller="uhifadhi--area-bundle--area-map"
-                     data-uhifadhi--area-bundle--area-map-payload-value="{{ mapPayload|json_encode }}">
-                    <div class="map-canvas"
-                         data-uhifadhi--area-bundle--area-map-target="canvas"
-                         role="img"
-                         aria-label="{{ area.name }} &mdash; current boundary{% if zoneCount > 0 %} and zones{% endif %}"></div>
+                {# The stored boundary drawn over the imagery — the same plate as
+                   the overview, stated in PHP and rendered by the atlas. #}
+                <div style="margin-bottom:12px">
+                    {{ render_map(map, {
+                        'role': 'img',
+                        'aria-label': area.name ~ ' — current boundary' ~ (zoneCount > 0 ? ' and zones' : ''),
+                    }) }}
                 </div>
 
                 <div class="rln"><span class="fog">Current boundary</span><span class="mono d">{{ area.source }} &middot; {{ areaKm2|number_format }} km&sup2;</span></div>

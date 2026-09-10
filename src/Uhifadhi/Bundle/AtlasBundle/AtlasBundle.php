@@ -30,10 +30,10 @@ use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
  *
  * MECHANISM, NOT A SCREEN. This bundle owns no entities and no pages. What it
  * owns is everything a map is made of before anyone decides what to draw on it:
- * the self-hosted Leaflet build, the basemap contract (which imagery, from which
- * provider), how an area boundary is cased and scrimmed, and the chrome — zoom,
- * DIM, the base-layer menu, fullscreen, the scale bar, the Ctrl/⌘-scroll bargain
- * — that every map in the product wears.
+ * the map builder and the plate render_map() emits, the basemap contract (which
+ * imagery, from which provider), how an area boundary is cased and scrimmed, and
+ * the chrome — zoom, DIM, the base-layer menu, fullscreen, the scale bar, the
+ * Ctrl/⌘-scroll bargain — that every map in the product wears.
  *
  * THE TWO TIERS. A CAPABILITY module (patrol, incident) is the per-area grid an
  * admin switches on, default off, ledgered per area. An INFRASTRUCTURE module is
@@ -53,30 +53,15 @@ use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
  * The three importmap entries are not a third step: this package declares them
  * in assets/package.json and Flex writes them on install (see prependExtension
  * below).
- * Leaflet itself needs nothing: it is served out of this bundle's public/ dir,
- * which AssetMapper registers by itself.
+ *
+ * LEAFLET IS UX MAP'S. The map itself is created by symfony/ux-leaflet-map's
+ * own Stimulus controller, which imports `leaflet` from the host's importmap —
+ * one Leaflet on the page, vendored locally by AssetMapper, named by the entry
+ * that bridge's own assets/package.json declares. This bundle ships no copy of
+ * it and publishes no global.
  */
 final class AtlasBundle extends AbstractBundle
 {
-    /**
-     * The self-hosted Leaflet build, as a host links it.
-     *
-     * Constants rather than literals for the same reason patrol's stylesheet is
-     * one: this path is written in the host layout AND in every module's
-     * base template, and a path typed five times is a path that eventually
-     * differs by one character in one of them.
-     *
-     * NOT in assets/ and NOT in the importmap, deliberately. Leaflet is a classic
-     * script that publishes window.L, and the map controllers read it from there;
-     * a classic <script> in <head> has run before the deferred importmap modules
-     * connect, which is precisely the ordering the controllers rely on.
-     * AssetMapper registers a bundle's public/ dir under bundles/<bundlename>
-     * with no configuration at all, and versions its contents — including the
-     * marker and layers PNGs that leaflet.css asks for by relative url.
-     */
-    public const string LEAFLET_JS = 'bundles/atlas/leaflet/leaflet.js';
-    public const string LEAFLET_CSS = 'bundles/atlas/leaflet/leaflet.css';
-
     /**
      * THE PLATFORM'S ONE MAP STYLESHEET, as a host links it.
      *
@@ -85,10 +70,12 @@ final class AtlasBundle extends AbstractBundle
      * controls need styling, and there must be exactly ONE copy of those rules or
      * two maps on the platform drift apart. They live beside the markup that
      * emits them rather than in a host app.css, so a fresh installation that
-     * draws a map gets styled chrome without writing any CSS of its own. This sheet also carries the .viewer imagery frame and the
-     * .zone-label halo, so any consumer that frames a plate gets them for free.
-     * A consumer links it alongside LEAFLET_CSS; it is served, versioned, out of
-     * this bundle's public/ dir the same way Leaflet is.
+     * draws a map gets styled chrome without writing any CSS of its own. This
+     * sheet also carries the .map-plate column, the .viewer imagery frame, the
+     * legend and the fullscreen rules, so every plate in the product grows the
+     * same way. It is served, versioned, out of this bundle's public/ dir, which
+     * AssetMapper registers by itself. Leaflet's own sheet is not linked beside
+     * it: the Leaflet bridge's controller imports it.
      */
     public const string STYLESHEET = 'bundles/atlas/map.css';
 

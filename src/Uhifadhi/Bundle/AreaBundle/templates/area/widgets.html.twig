@@ -29,18 +29,10 @@
 
 {% block stylesheets %}
     {{ parent() }}
-    {# The map-of-the-network preview is a real Leaflet plate, so the library
-       carries the platform's one map stylesheet, exactly as the overview does. #}
-    <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Bundle\\AtlasBundle\\AtlasBundle::LEAFLET_CSS')) }}">
+    {# The map-of-the-network preview is a real plate, so the library carries
+       the platform's one map stylesheet, exactly as the overview does. #}
     <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Bundle\\AtlasBundle\\AtlasBundle::STYLESHEET')) }}">
     {{ include('@Area/_stylesheets.html.twig') }}
-{% endblock %}
-
-{% block javascripts %}
-    {# Leaflet as a classic script FIRST, so window.L is published before the
-       deferred importmap modules connect — the map preview's controller among them. #}
-    <script src="{{ asset(constant('Uhifadhi\\Bundle\\AtlasBundle\\AtlasBundle::LEAFLET_JS')) }}"></script>
-    {{ parent() }}
 {% endblock %}
 
 {# The library is not inside an area, so it fills the tab socket with nothing

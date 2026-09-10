@@ -23,20 +23,13 @@
 
 {% block stylesheets %}
     {{ parent() }}
-    {# The platform's one map stylesheet — Leaflet, then the shared plate/chrome
-       rules from AtlasBundle, before this bundle's own sheet so the overview
-       can build on them. The same map renders identically everywhere. #}
-    <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Bundle\\AtlasBundle\\AtlasBundle::LEAFLET_CSS')) }}">
+    {# The platform's one map stylesheet — the shared plate, chrome and legend
+       rules from AtlasBundle, before this bundle's own sheet so the overview can
+       build on them. The same map renders identically everywhere. Leaflet's own
+       sheet is not linked here: the UX Map Leaflet bridge's controller imports
+       it, so there is one Leaflet and one copy of its styles. #}
     <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Bundle\\AtlasBundle\\AtlasBundle::STYLESHEET')) }}">
     {{ include('@Area/_stylesheets.html.twig') }}
-{% endblock %}
-
-{% block javascripts %}
-    {# Leaflet as a classic script FIRST, so window.L is published before the
-       deferred importmap modules (the area-map controller among them) connect.
-       parent() renders the importmap. #}
-    <script src="{{ asset(constant('Uhifadhi\\Bundle\\AtlasBundle\\AtlasBundle::LEAFLET_JS')) }}"></script>
-    {{ parent() }}
 {% endblock %}
 
 {% block shell_breadcrumbs %}

@@ -266,10 +266,10 @@ final class AreaPagesTest extends WebTestCase
 
     /**
      * THE PLATE IS INFRASTRUCTURE, AND THE BOUNDARY IS ALWAYS DRAWN. An area
-     * with a boundary on file opens on a real map — the operational plate, wired
-     * to the area-map controller, carrying the stored geometry for the browser
-     * to draw. This is the area's own base content: it is there whether or not any
-     * module is switched on.
+     * with a boundary on file opens on a real map — the operational plate the
+     * atlas draws, carrying the stored geometry for the browser to draw. This is
+     * the area's own base content: it is there whether or not any module is
+     * switched on.
      */
     public function testTheOverviewDrawsTheBoundaryPlateWhenTheAreaHasABoundary(): void
     {
@@ -278,8 +278,8 @@ final class AreaPagesTest extends WebTestCase
 
         $body = $this->body('/areas/'.$area->getUuidString());
 
-        // The plate, wired to the shared map controller...
-        self::assertStringContainsString('data-controller="uhifadhi--area-bundle--area-map"', $body);
+        // The plate, wired to the atlas's one map controller...
+        self::assertStringContainsString('data-controller="uhifadhi--atlas-bundle--map-plate"', $body);
         // ...carrying the stored geometry for the browser to draw...
         self::assertStringContainsString('MultiPolygon', $body);
         // ...and the always-present "The area" legend group, boundary on.
@@ -302,7 +302,7 @@ final class AreaPagesTest extends WebTestCase
         $body = $this->body('/areas/'.$area->getUuidString());
 
         // No map controller is wired where there is nothing to draw.
-        self::assertStringNotContainsString('data-controller="uhifadhi--area-bundle--area-map"', $body);
+        self::assertStringNotContainsString('data-controller="uhifadhi--atlas-bundle--map-plate"', $body);
         // The plate says so, in words.
         self::assertStringContainsString('no boundary on file', $body);
     }

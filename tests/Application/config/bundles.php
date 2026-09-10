@@ -18,6 +18,7 @@ use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Bundle\SecurityBundle\SecurityBundle;
 use Symfony\Bundle\TwigBundle\TwigBundle;
 use Symfony\UX\Icons\UXIconsBundle;
+use Symfony\UX\Map\UXMapBundle;
 use Symfony\UX\StimulusBundle\StimulusBundle;
 use Uhifadhi\Bundle\AreaBundle\AreaBundle;
 use Uhifadhi\Bundle\AtlasBundle\AtlasBundle;
@@ -38,6 +39,7 @@ return [
     TwigBundle::class => ['all' => true],
     UXIconsBundle::class => ['all' => true],
     StimulusBundle::class => ['all' => true],
+    UXMapBundle::class => ['all' => true],
     SecurityBundle::class => ['all' => true],
     RegistryBundle::class => ['all' => true],
     ShellBundle::class => ['all' => true],

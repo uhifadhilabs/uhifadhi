@@ -58,14 +58,16 @@ function button({ label, title, html, text, pressed }) {
  * @param bases            {satellite, osm} Leaflet layers; the menu switches between them
  * @param scrim            the outside-the-area scrim layer, or null for no DIM control
  * @param scrimOn          whether the scrim starts switched on
+ * @param fullscreen       whether the stack carries a fullscreen button at all — off for a
+ *                         plate that already is the whole screen
  * @param fullscreenTarget what fullscreen expands, when it is wider than the frame
- *                         (a widget card, so its chips and legend come along)
+ *                         (a plate root, so its filter row and legend come along)
  * @param onResize         called after the map is resized by a fullscreen change,
  *                         so the caller can re-frame what the map is about
  *
  * Returns { destroy() } — call it when the map goes away.
  */
-export function mountMapChrome(L, map, frame, { bases = {}, scrim = null, scrimOn = false, fullscreenTarget = null, onResize = null } = {}) {
+export function mountMapChrome(L, map, frame, { bases = {}, scrim = null, scrimOn = false, fullscreen: withFullscreen = true, fullscreenTarget = null, onResize = null } = {}) {
     // The chrome is positioned inside `frame`; fullscreen may take something
     // wider — the whole widget card, so its filter chips and legend come too.
     const expandTarget = fullscreenTarget ?? frame;
@@ -138,19 +140,21 @@ export function mountMapChrome(L, map, frame, { bases = {}, scrim = null, scrimO
         });
     column.append(layersBtn);
 
-    const fullscreenBtn = button({
-        label: 'Fullscreen',
-        title: 'Fullscreen — the legend floats bottom-right',
-        html: ICONS.fullscreen,
-    });
-    fullscreenBtn.addEventListener('click', () => {
-        if (document.fullscreenElement) {
-            document.exitFullscreen();
-        } else if (expandTarget.requestFullscreen) {
-            expandTarget.requestFullscreen().catch(() => {});
-        }
-    });
-    column.append(fullscreenBtn);
+    if (withFullscreen) {
+        const fullscreenBtn = button({
+            label: 'Fullscreen',
+            title: 'Fullscreen — the legend floats bottom-right',
+            html: ICONS.fullscreen,
+        });
+        fullscreenBtn.addEventListener('click', () => {
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            } else if (expandTarget.requestFullscreen) {
+                expandTarget.requestFullscreen().catch(() => {});
+            }
+        });
+        column.append(fullscreenBtn);
+    }
 
     frame.append(column, menu);
 

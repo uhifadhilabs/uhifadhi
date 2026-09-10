@@ -89,7 +89,7 @@ final class AreaEditTest extends WebTestCase
         self::assertStringContainsString('Replace boundary', $body);
 
         // The preview sidebar — the current boundary on the shared map plate...
-        self::assertStringContainsString('data-controller="uhifadhi--area-bundle--area-map"', $body);
+        self::assertStringContainsString('data-controller="uhifadhi--atlas-bundle--map-plate"', $body);
         self::assertStringContainsString('MultiPolygon', $body);
         // ...and the heads-up guard, deactivate-never-destroy in its own words.
         self::assertStringContainsString('HEADS UP', $body);
@@ -319,7 +319,7 @@ final class AreaEditTest extends WebTestCase
         // ...there is nothing to guard against superseding...
         self::assertStringNotContainsString('HEADS UP', $body);
         // ...and no map is drawn where there is no geometry.
-        self::assertStringNotContainsString('data-controller="uhifadhi--area-bundle--area-map"', $body);
+        self::assertStringNotContainsString('data-controller="uhifadhi--atlas-bundle--map-plate"', $body);
         self::assertStringContainsString('no boundary on file', $body);
     }
 

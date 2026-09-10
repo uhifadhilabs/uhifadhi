@@ -56,23 +56,14 @@ final class BundleBootTest extends KernelTestCase
     }
 
     /**
-     * The Leaflet paths are constants, not literals, because they are written in
-     * the host layout AND in every module's base template. This holds
-     * them to the directory the files are actually in — a bundle's public/ dir
-     * is served under bundles/<lowercased bundle name without "Bundle">.
+     * ONE LEAFLET ON THE PAGE, and it is the one the UX Map bridge imports from
+     * the host's importmap. A second copy served out of this bundle would be a
+     * second Leaflet namespace: layers built against one and added to a map
+     * built by the other, which fails in ways nobody can read.
      */
-    public function testTheLeafletPathsPointAtFilesThisBundleReallyShips(): void
+    public function testThisBundleShipsNoLeafletOfItsOwn(): void
     {
-        $public = \dirname(__DIR__, 2).'/public';
-
-        self::assertFileExists($public.'/leaflet/leaflet.js');
-        self::assertFileExists($public.'/leaflet/leaflet.css');
-        // leaflet.css asks for these by relative url; AssetMapper rewrites them,
-        // but only if they are here.
-        self::assertFileExists($public.'/leaflet/images/marker-icon.png');
-
-        self::assertSame('bundles/atlas/leaflet/leaflet.js', AtlasBundle::LEAFLET_JS);
-        self::assertSame('bundles/atlas/leaflet/leaflet.css', AtlasBundle::LEAFLET_CSS);
+        self::assertDirectoryDoesNotExist(\dirname(__DIR__, 2).'/public/leaflet');
     }
 
     /**

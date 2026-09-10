@@ -1,0 +1,300 @@
+<?php
+
+declare(strict_types=1);
+
+/*
+ * This file is part of the Uhifadhi core.
+ *
+ * (c) Ezekiel Mjema <https://github.com/eemjema>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace Uhifadhi\Bundle\AreaBundle\Service;
+
+use Symfony\UX\Map\Icon\Icon;
+use Symfony\UX\Map\InfoWindow;
+use Symfony\UX\Map\Marker;
+use Symfony\UX\Map\Point;
+use Uhifadhi\Bundle\AreaBundle\Overview\MapLayer;
+use Uhifadhi\Bundle\AtlasBundle\Map\MapBuilderInterface;
+use Uhifadhi\Bundle\AtlasBundle\Model\AtlasMap;
+use Uhifadhi\Bundle\AtlasBundle\Model\Boundary;
+use Uhifadhi\Bundle\AtlasBundle\Model\GeoJsonLayer;
+use Uhifadhi\Bundle\AtlasBundle\Model\LayerShape;
+use Uhifadhi\Bundle\AtlasBundle\Model\LegendItem;
+
+/**
+ * THE AREA'S TWO PLATES, STATED IN PHP.
+ *
+ * The area draws two maps: the one an area overview opens on — the boundary,
+ * the zones inside it, and every layer the installed modules contributed — and
+ * the map of the network, where each area is a shape and a point on the org's
+ * own ground.
+ *
+ * Both are built here and drawn by the atlas. This bundle holds no opinion about
+ * what satellite imagery looks like, how a boundary is cased, where the zoom
+ * buttons sit or what fullscreen does; it states what is on its maps and the
+ * platform draws them the one way it draws every map.
+ *
+ * THE GEOMETRY ARRIVES AS TEXT, exactly as the geometry column returns it
+ * (ST_AsGeoJSON, through the postgis type). It is decoded here — once, on the
+ * server — and anything unusable is simply not drawn: a boundary that will not
+ * parse is a plate without a boundary, never a page that fails.
+ */
+final readonly class AreaMap
+{
+    /** The area's own legend heading, present whatever is installed. */
+    public const string OWN_GROUP = 'The area';
+
+    /** The zones layer's id, which is also what its legend row switches. */
+    public const string ZONES_LAYER = 'area.zones';
+
+    /** The register's two layers: the areas that are running, and the rest. */
+    public const string LIVE_LAYER = 'area.live';
+    public const string SETUP_LAYER = 'area.setup';
+
+    private const string LIVE_SWATCH = '#3ED9A8';
+    private const string QUIET_SWATCH = '#B9C8BD';
+    private const string BOUNDARY_SWATCH = '#49E6B4';
+
+    public function __construct(
+        private MapBuilderInterface $maps,
+    ) {
+    }
+
+    /**
+     * The operational plate: the area's own base content, then every module's
+     * layer beneath it under that module's own heading.
+     *
+     * @param array{boundary: string|null, zones: list<array{name: string|null, geom: string|null}>} $payload
+     * @param list<MapLayer>                                                                         $layers
+     */
+    public function overview(array $payload, array $layers = []): AtlasMap
+    {
+        $map = $this->maps->createMap();
+
+        $boundary = self::decode($payload['boundary']);
+        if (null !== $boundary) {
+            $map->boundary(new Boundary($boundary));
+            $map->addLegendItem(new LegendItem(
+                label: 'Boundary',
+                swatch: self::BOUNDARY_SWATCH,
+                shape: LayerShape::Line,
+                group: self::OWN_GROUP,
+                layerId: AtlasMap::BOUNDARY_LAYER_ID,
+            ));
+        }
+
+        $zones = [];
+        foreach ($payload['zones'] as $zone) {
+            $geometry = self::decode($zone['geom']);
+            if (null !== $geometry) {
+                $zones[] = self::feature($geometry, ['label' => $zone['name'] ?? '']);
+            }
+        }
+
+        // THE ZONES ROW IS ALWAYS THERE, empty or not. A legend that appears and
+        // disappears with the data is a legend nobody can read: "Zones · 0" is an
+        // answer, a missing row is a question.
+        $map->addLayer(new GeoJsonLayer(
+            id: self::ZONES_LAYER,
+            label: 'Zones',
+            features: self::collection($zones),
+            swatch: self::QUIET_SWATCH,
+            shape: LayerShape::Line,
+            visible: [] !== $zones,
+            count: \count($zones),
+            group: self::OWN_GROUP,
+        ));
+
+        foreach ($layers as $layer) {
+            $map->addLayer(new GeoJsonLayer(
+                id: $layer->id,
+                label: $layer->label,
+                features: $layer->features,
+                swatch: $layer->swatch,
+                shape: MapLayer::STYLE_FILL === $layer->style ? LayerShape::Fill : LayerShape::Line,
+                visible: $layer->on,
+                count: $layer->count,
+                group: $layer->groupLabel,
+            ));
+        }
+
+        return $map;
+    }
+
+    /**
+     * The map of the network: every area's boundary, drawn bold where the area
+     * is running and quiet where it is only mapped, with a marker on each that
+     * opens it.
+     *
+     * An area with no boundary has no place on a map. It is not drawn, and the
+     * register beside the plate is where it is found.
+     *
+     * @param list<array{name: string, live: bool, href: string, boundary: string|null}> $areas
+     */
+    public function register(array $areas): AtlasMap
+    {
+        $map = $this->maps->createMap();
+
+        $live = [];
+        $setup = [];
+        foreach ($areas as $area) {
+            $geometry = self::decode($area['boundary']);
+            if (null === $geometry) {
+                continue;
+            }
+
+            if ($area['live']) {
+                $live[] = self::feature($geometry);
+            } else {
+                $setup[] = self::feature($geometry);
+            }
+
+            $centre = self::centre($geometry);
+            if (null === $centre) {
+                continue;
+            }
+
+            $map->ux()->addMarker(new Marker(
+                position: $centre,
+                title: $area['name'],
+                infoWindow: new InfoWindow(
+                    headerContent: htmlspecialchars($area['name'], \ENT_QUOTES | \ENT_SUBSTITUTE, 'UTF-8'),
+                    content: \sprintf(
+                        '<a href="%s">Open the area &rarr;</a>',
+                        htmlspecialchars($area['href'], \ENT_QUOTES | \ENT_SUBSTITUTE, 'UTF-8'),
+                    ),
+                ),
+                icon: self::dot($area['live'] ? self::LIVE_SWATCH : self::QUIET_SWATCH, $area['live']),
+            ));
+        }
+
+        $map
+            ->addLayer(new GeoJsonLayer(
+                id: self::LIVE_LAYER,
+                label: 'Live',
+                features: self::collection($live),
+                swatch: self::LIVE_SWATCH,
+                count: \count($live),
+            ))
+            ->addLayer(new GeoJsonLayer(
+                id: self::SETUP_LAYER,
+                label: 'Boundary only',
+                features: self::collection($setup),
+                swatch: self::QUIET_SWATCH,
+                shape: LayerShape::Line,
+                count: \count($setup),
+            ))
+        ;
+
+        return $map;
+    }
+
+    /**
+     * The centre of a geometry's bounding box — where a marker for the whole
+     * shape belongs.
+     *
+     * Not a centroid: a centroid of a crescent-shaped area falls outside it, and
+     * a point outside the shape it names is worse than an approximate one
+     * inside the frame. Null where the geometry carries no coordinates at all.
+     *
+     * @param array<string, mixed> $geometry
+     */
+    private static function centre(array $geometry): ?Point
+    {
+        $lngs = [];
+        $lats = [];
+        array_walk_recursive($geometry, static function (mixed $value, int|string $key) use (&$lngs, &$lats): void {
+            // A GeoJSON position is [lng, lat] at the deepest level of an
+            // arbitrarily nested coordinates array; walking it is what makes
+            // this work for a Polygon and a MultiPolygon alike.
+            if (!\is_int($key) || (!\is_int($value) && !\is_float($value))) {
+                return;
+            }
+            if (0 === $key % 2) {
+                $lngs[] = (float) $value;
+            } else {
+                $lats[] = (float) $value;
+            }
+        });
+
+        if ([] === $lngs || [] === $lats) {
+            return null;
+        }
+
+        return new Point(
+            (min($lats) + max($lats)) / 2,
+            (min($lngs) + max($lngs)) / 2,
+        );
+    }
+
+    /**
+     * A dot rather than a pin: the register's map is about where areas ARE, and
+     * a filled dot on a live one reads as presence where a dropped pin reads as
+     * an address.
+     */
+    private static function dot(string $colour, bool $filled): Icon
+    {
+        // The size is on the root element: SvgIcon reads it from the markup and
+        // refuses to be told twice.
+        return Icon::svg(\sprintf(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="%s" fill="%s" stroke="%s" stroke-width="2"/></svg>',
+            $filled ? '6' : '4.5',
+            $filled ? $colour : 'none',
+            $colour,
+        ));
+    }
+
+    /**
+     * @param array<string, mixed> $geometry
+     * @param array<string, mixed> $properties
+     *
+     * @return array<string, mixed>
+     */
+    private static function feature(array $geometry, array $properties = []): array
+    {
+        return ['type' => 'Feature', 'properties' => $properties, 'geometry' => $geometry];
+    }
+
+    /**
+     * @param list<array<string, mixed>> $features
+     *
+     * @return array<string, mixed>
+     */
+    private static function collection(array $features): array
+    {
+        return ['type' => 'FeatureCollection', 'features' => $features];
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private static function decode(?string $geoJson): ?array
+    {
+        if (null === $geoJson || '' === $geoJson) {
+            return null;
+        }
+
+        try {
+            $decoded = json_decode($geoJson, true, 512, \JSON_THROW_ON_ERROR);
+        } catch (\JsonException) {
+            return null;
+        }
+
+        if (!\is_array($decoded) || !\is_string($decoded['type'] ?? null)) {
+            return null;
+        }
+
+        $geometry = [];
+        foreach ($decoded as $key => $value) {
+            if (\is_string($key)) {
+                $geometry[$key] = $value;
+            }
+        }
+
+        return $geometry;
+    }
+}

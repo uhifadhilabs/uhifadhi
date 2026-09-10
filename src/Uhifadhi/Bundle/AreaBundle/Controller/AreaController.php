@@ -21,6 +21,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Environment;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
+use Uhifadhi\Bundle\AreaBundle\Service\AreaMap;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaMapPayload;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaOverview;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaRegister;
@@ -49,6 +50,7 @@ final readonly class AreaController
         private AreaRegister $register,
         private AreaOverview $overview,
         private AreaMapPayload $mapPayload,
+        private AreaMap $areaMap,
     ) {
     }
 
@@ -94,9 +96,7 @@ final readonly class AreaController
             'area' => $area,
             'areaKm2' => $this->register->areaKm2($area),
             'zoneCount' => $this->zones->countFor($area),
-            'mapPayload' => $this->mapPayload->forArea($area),
-            'mapLayers' => $mapLayers,
-            'mapLayerGroups' => AreaOverview::groupByContributor($mapLayers),
+            'map' => $this->areaMap->overview($this->mapPayload->forArea($area), $mapLayers),
             'nowTiles' => $this->overview->nowTilesFor($area, $now),
             'attention' => $this->overview->attentionFor($area, $now),
             'installedSlugs' => $this->overview->installedSlugs($area),

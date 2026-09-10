@@ -14,16 +14,6 @@
                 "fetch": "eager",
                 "enabled": true
             },
-            "area-map": {
-                "main": "controllers/area_map_controller.js",
-                "fetch": "eager",
-                "enabled": true
-            },
-            "area-index-map": {
-                "main": "controllers/area_index_map_controller.js",
-                "fetch": "eager",
-                "enabled": true
-            },
             "area-presets": {
                 "main": "controllers/area_presets_controller.js",
                 "fetch": "eager",

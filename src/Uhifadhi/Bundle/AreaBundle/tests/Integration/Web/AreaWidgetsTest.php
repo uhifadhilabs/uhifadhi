@@ -142,9 +142,9 @@ final class AreaWidgetsTest extends WebTestCase
     }
 
     /**
-     * THE MAP LAYOUT IS THE PLATFORM'S REAL MAP — the atlas's, wired to the
-     * index-map controller, each area travelling as GeoJSON for it to draw.
-     * The dock beside it lists the same rows.
+     * THE MAP LAYOUT IS THE PLATFORM'S REAL MAP — the atlas's plate, each area
+     * travelling as GeoJSON for it to draw. The dock beside it lists the same
+     * rows.
      */
     public function testTheMapLayoutReusesTheRealMapPlateAndDocksTheList(): void
     {
@@ -153,7 +153,7 @@ final class AreaWidgetsTest extends WebTestCase
 
         $body = $this->body('/areas/widgets');
 
-        self::assertStringContainsString('data-controller="uhifadhi--area-bundle--area-index-map"', $body);
+        self::assertStringContainsString('data-controller="uhifadhi--atlas-bundle--map-plate"', $body);
         self::assertStringContainsString('MultiPolygon', $body);
         self::assertStringContainsString('ax-docklist', $body);
     }

@@ -39,6 +39,17 @@ final class AtlasMap
     /** The one key of `extra` the atlas owns. Everything else there is the module's. */
     public const string EXTRA_KEY = 'atlas';
 
+    /**
+     * The id the plate keys the drawn boundary by.
+     *
+     * The boundary is not a layer — it has its own treatment and its own scrim —
+     * but it is still something a person may want to switch off, so it is
+     * reachable by a legend row like any layer is. A map states that row itself,
+     * because only the map knows what to call it and which heading it sits
+     * under.
+     */
+    public const string BOUNDARY_LAYER_ID = 'atlas.boundary';
+
     /** @var list<GeoJsonLayer> */
     private array $layers = [];
 

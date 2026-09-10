@@ -107,6 +107,16 @@ final class Kernel extends BaseKernel
             'iconify' => ['on_demand' => false],
         ]);
 
+        // WHICH RENDERER DRAWS THE MAPS. The atlas is built on UX Map and its
+        // Leaflet bridge, and UX Map draws nothing at all until a renderer is
+        // named — an installation writes this line, and this application is an
+        // installation.
+        //
+        // @see https://symfony.com/bundles/ux-map/current/index.html#configuration
+        $container->extension('ux_map', [
+            'renderer' => 'leaflet://default',
+        ]);
+
         // THE TWO SETTINGS THAT DECIDE WHAT THE DDL LOOKS LIKE, copied from the
         // file the skeleton ships as `config/packages/doctrine.yaml`, because
         // the migrations in this repository are generated here and applied

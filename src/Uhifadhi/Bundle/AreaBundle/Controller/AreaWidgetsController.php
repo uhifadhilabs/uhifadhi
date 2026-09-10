@@ -19,6 +19,7 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Environment;
 use Uhifadhi\Bundle\AreaBundle\Model\AreaRow;
+use Uhifadhi\Bundle\AreaBundle\Service\AreaMap;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaPresetLibrary;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaRegister;
 
@@ -47,6 +48,7 @@ final readonly class AreaWidgetsController
         private AreaRegister $register,
         private AreaPresetLibrary $library,
         private UrlGeneratorInterface $urls,
+        private AreaMap $areaMap,
     ) {
     }
 
@@ -78,7 +80,7 @@ final readonly class AreaWidgetsController
             'flagship' => $flagship,
             'flagshipRest' => AreaPresetLibrary::rest($presetRows, $flagship),
             'statColumns' => $this->statColumns($rows),
-            'mapAreas' => $this->mapAreas($rows),
+            'map' => $this->areaMap->register($this->mapAreas($rows)),
         ]));
     }
 

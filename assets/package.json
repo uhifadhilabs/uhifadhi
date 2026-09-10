@@ -40,6 +40,12 @@
                 "fetch": "lazy",
                 "enabled": true
             },
+            "map-plate": {
+                "main": "../src/Uhifadhi/Bundle/AtlasBundle/assets/controllers/map_plate_controller.js",
+                "name": "uhifadhi--atlas-bundle--map-plate",
+                "fetch": "eager",
+                "enabled": true
+            },
             "area-register": {
                 "main": "../src/Uhifadhi/Bundle/AreaBundle/assets/controllers/area_register_controller.js",
                 "name": "uhifadhi--area-bundle--area-register",
@@ -49,18 +55,6 @@
             "area-upload": {
                 "main": "../src/Uhifadhi/Bundle/AreaBundle/assets/controllers/area_upload_controller.js",
                 "name": "uhifadhi--area-bundle--area-upload",
-                "fetch": "eager",
-                "enabled": true
-            },
-            "area-map": {
-                "main": "../src/Uhifadhi/Bundle/AreaBundle/assets/controllers/area_map_controller.js",
-                "name": "uhifadhi--area-bundle--area-map",
-                "fetch": "eager",
-                "enabled": true
-            },
-            "area-index-map": {
-                "main": "../src/Uhifadhi/Bundle/AreaBundle/assets/controllers/area_index_map_controller.js",
-                "name": "uhifadhi--area-bundle--area-index-map",
                 "fetch": "eager",
                 "enabled": true
             },

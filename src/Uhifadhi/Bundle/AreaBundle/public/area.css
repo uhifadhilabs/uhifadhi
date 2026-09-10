@@ -698,35 +698,6 @@
 /* The count beside a plate's tab — "15 on". */
 .lib { float: right; font-family: var(--font-mono); font-size: 9px; color: rgb(var(--c-dim)); }
 
-/* ---- the operational map's legend --------------------------------------- */
-/* EVERY LAYER SHIPS A LEGEND, and the legend is grouped by the contributor that
-   drew the layer, because that is what makes the plate composable. "The area"
-   is the area's own group — the boundary and the zones — and is always
-   present; a module adds its own group beneath it when it draws a layer. The
-   entry is also the switch, so what the legend says and what the map draws
-   cannot drift. The chrome and imagery themselves are AtlasBundle's shared
-   sheet; this is only the overview's legend beneath the plate. */
-.ao-legend { display: flex; gap: 22px; flex-wrap: wrap; margin-top: 12px; }
-.ao-legend .grp { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.ao-legend .grp > b {
-    font: 700 8.5px var(--font-mono); letter-spacing: .14em; text-transform: uppercase;
-    color: rgb(var(--c-dim)); display: flex; align-items: center; gap: 6px;
-}
-.ao-legend .grp > b i { width: 6px; height: 6px; border-radius: 2px; font-style: normal; background: rgb(var(--c-fog)); }
-.ao-legend .lay {
-    display: flex; align-items: center; gap: 7px;
-    font: 400 9.5px var(--font-mono); color: rgb(var(--c-fog)); text-decoration: none;
-}
-.ao-legend .lay .sw { width: 16px; height: 8px; border-radius: 2px; flex: none; }
-.ao-legend .lay .sw.ln { height: 0; border-top: 2.2px solid currentColor; }
-.ao-legend .lay.off { color: rgb(var(--c-dim)); }
-.ao-legend .lay.off .sw { opacity: .35; }
-.ao-legend .lay .tog {
-    font-size: 8px; letter-spacing: .1em; color: rgb(var(--c-dim));
-    border: 1px solid var(--c-ln2); border-radius: 4px; padding: 1px 5px;
-}
-.ao-legend .lay.off .tog { border-style: dashed; }
-
 /* ── The register, drawn as a wall of workspaces ─────────────────────────────
    The card gallery the /areas register graduated to (design: areas/index.html,
    source presets/areas-index/a.html). Ported from the design's `.ax-*` set onto
@@ -1037,15 +1008,7 @@ table.tbl.ax-reg em { font-style: normal; }
 .ax-maplayout { display: grid; grid-template-columns: 1.55fr 1fr; gap: 18px; align-items: stretch; margin-bottom: 20px; }
 @media (max-width: 960px) { .ax-maplayout { grid-template-columns: 1fr; } }
 .ax-mapwrap { display: flex; flex-direction: column; min-height: 460px; overflow: hidden; padding: 0; }
-.ax-mapwrap .viewer { flex: 1; min-height: 420px; }
-.ax-maplegend {
-    display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px;
-    padding: 11px 14px; border-top: 1px solid var(--c-ln); font-size: 11px; color: rgb(var(--c-fog));
-}
-.ax-maplegend b { font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: rgb(var(--c-dim)); }
-.ax-maplegend .lay { display: inline-flex; align-items: center; gap: 7px; }
-.ax-maplegend .sw { width: 16px; height: 0; border-top: 2px solid rgb(var(--c-acc)); display: inline-block; }
-.ax-maplegend .sw.quiet { border-top-style: dashed; border-top-color: rgb(var(--c-dim)); }
+.ax-mapwrap .map-plate { flex: 1; min-height: 420px; }
 .ax-dock { display: flex; flex-direction: column; padding: 0; overflow: hidden; }
 .ax-dockhd { display: flex; align-items: center; gap: 10px; padding: 13px 14px; border-bottom: 1px solid var(--c-ln); }
 .ax-dockhd .fld { flex: 1; padding: 8px 11px; border-radius: 9px; }

@@ -58,6 +58,7 @@ return static function (ContainerConfigurator $container): void {
             service('area.register'),
             service('area.overview'),
             service('area.map_payload'),
+            service('area.map'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(AreaController::class, 'area.controller.area')->public();
@@ -73,6 +74,7 @@ return static function (ContainerConfigurator $container): void {
             service('area.register'),
             service('area.preset_library'),
             service('router'),
+            service('area.map'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(AreaWidgetsController::class, 'area.controller.widgets')->public();
@@ -100,6 +102,7 @@ return static function (ContainerConfigurator $container): void {
             service('area.identity'),
             service('area.boundary_import'),
             service('area.map_payload'),
+            service('area.map'),
             service('area.register'),
             service(ZoneRepository::class),
             service('security.csrf.token_manager'),

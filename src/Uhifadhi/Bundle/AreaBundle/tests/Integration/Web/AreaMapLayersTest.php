@@ -148,15 +148,16 @@ final class AreaMapLayersTest extends WebTestCase
 
         $body = $this->body('/areas/'.$area->getUuidString());
 
-        // The controller lives on the map card, so the legend rows are in scope.
-        self::assertStringContainsString('data-controller="uhifadhi--area-bundle--area-map"', $body);
-        // The area page's own boundary/zones rows toggle...
-        self::assertStringContainsString('area-map-layer-param="area.boundary"', $body);
-        self::assertStringContainsString('area-map-layer-param="area.zones"', $body);
+        // The plate controller lives on the plate root, so the legend rows it
+        // rendered are in scope.
+        self::assertStringContainsString('data-controller="uhifadhi--atlas-bundle--map-plate"', $body);
+        // The area's own boundary/zones rows toggle...
+        self::assertStringContainsString('uhifadhi--atlas-bundle--map-plate-layer-param="atlas.boundary"', $body);
+        self::assertStringContainsString('uhifadhi--atlas-bundle--map-plate-layer-param="area.zones"', $body);
         // ...and so does a contributed layer.
-        self::assertStringContainsString('area-map-layer-param="patrols.live"', $body);
+        self::assertStringContainsString('uhifadhi--atlas-bundle--map-plate-layer-param="patrols.live"', $body);
         // The click is wired to the toggle action.
-        self::assertStringContainsString('area-map#toggleLayer', $body);
+        self::assertStringContainsString('uhifadhi--atlas-bundle--map-plate#toggleLayer', $body);
     }
 
     /**
