@@ -111,7 +111,8 @@ class HostKernel extends TestKernel
      */
     public function getCacheDir(): string
     {
-        return sys_get_temp_dir().'/uhifadhi-core-tests/cache/installation/'
-            .substr(hash('xxh128', serialize(self::$modules)), 0, 12);
+        return $this->checkoutTempDir(
+            'cache/installation/'.substr(hash('xxh128', serialize(self::$modules)), 0, 12),
+        );
     }
 }

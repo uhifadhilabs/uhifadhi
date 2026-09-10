@@ -22,6 +22,7 @@ use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 use Uhifadhi\Bundle\ShellBundle\ShellBundle;
 use Uhifadhi\Bundle\TeamBundle\TeamBundle;
+use Uhifadhi\Bundle\TeamBundle\Tests\Integration\CheckoutTempDirTrait;
 
 /**
  * THE SMALLEST HOST THE QUESTION CAN HONESTLY BE ASKED IN: framework, twig,
@@ -46,6 +47,8 @@ use Uhifadhi\Bundle\TeamBundle\TeamBundle;
  */
 final class ResolutionKernel extends Kernel
 {
+    use CheckoutTempDirTrait;
+
     /**
      * @param array<class-string, class-string> $override what the APPLICATION says, if anything —
      *                                                    the escape hatch under test
@@ -146,11 +149,11 @@ final class ResolutionKernel extends Kernel
     /** Per-variant, so one kernel's compiled container can never answer for the other. */
     public function getCacheDir(): string
     {
-        return sys_get_temp_dir().'/uhifadhi-core-tests/team/resolution/'.$this->variant;
+        return $this->checkoutTempDir('team/resolution/'.$this->variant);
     }
 
     public function getLogDir(): string
     {
-        return sys_get_temp_dir().'/uhifadhi-core-tests/team/resolution/log';
+        return $this->checkoutTempDir('team/resolution/log');
     }
 }

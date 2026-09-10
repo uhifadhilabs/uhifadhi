@@ -25,6 +25,7 @@ use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 use Symfony\UX\Icons\UXIconsBundle;
 use Uhifadhi\Bundle\AreaBundle\AreaBundle;
+use Uhifadhi\Bundle\AreaBundle\Tests\Integration\CheckoutTempDirTrait;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web\Fixtures\HostUser;
 use Uhifadhi\Bundle\AtlasBundle\AtlasBundle;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
@@ -57,6 +58,7 @@ final class WebKernel extends Kernel
      * `kernel::loadRoutes`. Without it configureRoutes() below is never called
      * and every route in this suite silently does not exist.
      */
+    use CheckoutTempDirTrait;
     use MicroKernelTrait;
 
     /** @var list<string> */
@@ -280,11 +282,11 @@ final class WebKernel extends Kernel
 
     public function getCacheDir(): string
     {
-        return sys_get_temp_dir().'/uhifadhi-core-tests/area/web-cache/'.$this->getEnvironment();
+        return $this->checkoutTempDir('area/web-cache/'.$this->getEnvironment());
     }
 
     public function getLogDir(): string
     {
-        return sys_get_temp_dir().'/uhifadhi-core-tests/area/web-log';
+        return $this->checkoutTempDir('area/web-log');
     }
 }

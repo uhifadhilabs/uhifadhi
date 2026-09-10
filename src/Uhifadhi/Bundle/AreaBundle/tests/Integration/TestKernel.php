@@ -47,6 +47,8 @@ use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_it
  */
 class TestKernel extends Kernel
 {
+    use CheckoutTempDirTrait;
+
     public function __construct()
     {
         parent::__construct('test', true);
@@ -107,11 +109,11 @@ class TestKernel extends Kernel
 
     public function getCacheDir(): string
     {
-        return sys_get_temp_dir().'/uhifadhi-core-tests/area/cache';
+        return $this->checkoutTempDir('area/cache');
     }
 
     public function getLogDir(): string
     {
-        return sys_get_temp_dir().'/uhifadhi-core-tests/area/log';
+        return $this->checkoutTempDir('area/log');
     }
 }

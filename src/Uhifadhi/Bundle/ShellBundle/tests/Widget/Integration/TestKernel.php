@@ -22,6 +22,7 @@ use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigura
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\UX\Icons\UXIconsBundle;
 use Uhifadhi\Bundle\ShellBundle\ShellBundle;
+use Uhifadhi\Bundle\ShellBundle\Tests\Integration\CheckoutTempDirTrait;
 use Uhifadhi\Bundle\ShellBundle\Tests\Widget\Integration\Fixtures\HostUser;
 use Uhifadhi\Bundle\ShellBundle\Tests\Widget\Integration\Fixtures\SightingsSurface;
 use Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceInterface;
@@ -48,6 +49,7 @@ use Uhifadhi\Contracts\Entity\UserInterface;
  */
 final class TestKernel extends Kernel
 {
+    use CheckoutTempDirTrait;
     use MicroKernelTrait;
 
     public function registerBundles(): iterable
@@ -134,11 +136,11 @@ final class TestKernel extends Kernel
 
     public function getCacheDir(): string
     {
-        return sys_get_temp_dir().'/uhifadhi-core-tests/cache/'.$this->getEnvironment().'/'.static::class;
+        return $this->checkoutTempDir('cache/'.$this->getEnvironment().'/'.static::class);
     }
 
     public function getLogDir(): string
     {
-        return sys_get_temp_dir().'/uhifadhi-core-tests/log';
+        return $this->checkoutTempDir('log');
     }
 }

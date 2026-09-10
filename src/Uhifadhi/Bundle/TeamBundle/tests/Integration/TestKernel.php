@@ -52,6 +52,7 @@ use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\SilentModuleProvider;
  */
 final class TestKernel extends Kernel
 {
+    use CheckoutTempDirTrait;
     use MicroKernelTrait;
 
     public function registerBundles(): iterable
@@ -343,11 +344,11 @@ final class TestKernel extends Kernel
 
     public function getCacheDir(): string
     {
-        return sys_get_temp_dir().'/uhifadhi-core-tests/team/cache';
+        return $this->checkoutTempDir('team/cache');
     }
 
     public function getLogDir(): string
     {
-        return sys_get_temp_dir().'/uhifadhi-core-tests/team/log';
+        return $this->checkoutTempDir('team/log');
     }
 }

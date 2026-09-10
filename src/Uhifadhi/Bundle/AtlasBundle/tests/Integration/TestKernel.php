@@ -40,6 +40,7 @@ use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_it
  */
 final class TestKernel extends Kernel
 {
+    use CheckoutTempDirTrait;
     use MicroKernelTrait;
 
     public function registerBundles(): iterable
@@ -82,11 +83,11 @@ final class TestKernel extends Kernel
 
     public function getCacheDir(): string
     {
-        return sys_get_temp_dir().'/uhifadhi-core-tests/cache/'.$this->getEnvironment().'/'.static::class;
+        return $this->checkoutTempDir('cache/'.$this->getEnvironment().'/'.static::class);
     }
 
     public function getLogDir(): string
     {
-        return sys_get_temp_dir().'/uhifadhi-core-tests/log';
+        return $this->checkoutTempDir('log');
     }
 }

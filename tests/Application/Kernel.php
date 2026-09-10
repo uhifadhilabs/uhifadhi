@@ -36,6 +36,7 @@ use Uhifadhi\Bundle\TeamBundle\Security\ApiTokenAuthenticator;
  */
 final class Kernel extends BaseKernel
 {
+    use CheckoutTempDirTrait;
     use MicroKernelTrait;
 
     public function registerBundles(): iterable
@@ -57,12 +58,12 @@ final class Kernel extends BaseKernel
 
     public function getCacheDir(): string
     {
-        return sys_get_temp_dir().'/uhifadhi-core-tests/application/cache/'.$this->environment;
+        return $this->checkoutTempDir('application/cache/'.$this->environment);
     }
 
     public function getLogDir(): string
     {
-        return sys_get_temp_dir().'/uhifadhi-core-tests/application/log';
+        return $this->checkoutTempDir('application/log');
     }
 
     protected function configureContainer(ContainerConfigurator $container): void

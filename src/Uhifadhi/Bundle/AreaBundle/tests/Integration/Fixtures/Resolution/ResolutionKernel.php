@@ -20,6 +20,7 @@ use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigura
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 use Uhifadhi\Bundle\AreaBundle\AreaBundle;
+use Uhifadhi\Bundle\AreaBundle\Tests\Integration\CheckoutTempDirTrait;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
 
 /**
@@ -39,6 +40,8 @@ use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
  */
 final class ResolutionKernel extends Kernel
 {
+    use CheckoutTempDirTrait;
+
     /**
      * @param array<class-string, class-string> $override what the INSTALLATION says, if anything —
      *                                                    the escape hatch under test
@@ -102,11 +105,11 @@ final class ResolutionKernel extends Kernel
     /** Per-variant, so one kernel's compiled container can never answer for the other. */
     public function getCacheDir(): string
     {
-        return sys_get_temp_dir().'/uhifadhi-core-tests/area/resolution/'.$this->variant;
+        return $this->checkoutTempDir('area/resolution/'.$this->variant);
     }
 
     public function getLogDir(): string
     {
-        return sys_get_temp_dir().'/uhifadhi-core-tests/area/resolution/log';
+        return $this->checkoutTempDir('area/resolution/log');
     }
 }
