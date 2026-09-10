@@ -63,6 +63,7 @@ you write on an element; the parts each one brings are in the table.
 | The colour words | `.fog` `.acc` `.g` `.w` `.r` `.d` `.muted` | — |
 | The card's tab | `.tab` (direct child of `.c`) | `.src`, the qualifier |
 | What the card is for | `.use` | `b` for the emphasis |
+| The way back | `.backbtn` | the chevron `svg`, sized by the rule; carries `margin-bottom: 16px` |
 | The identity band | `.factband` | `.f` a fact, `.k`/`.v` its halves (`em` the unit), `.sp` then `.more`; wraps below 900px |
 | The KPI plate | `.kpi` | `b`/`.disp` the number, `em` the unit, `.sub` the sub-line, `.hot` for the one that matters |
 | The KPI strip | `.kstrip` | a modifier on `.grid`, never alone |
@@ -72,6 +73,16 @@ you write on an element; the parts each one brings are in the table.
 | The person's mark | `.avatar` | — |
 | The row affordance | `.open-btn` | fills on the **row's** hover, not its own |
 | The quiet button | `.tgl` | the secondary to `.cta` |
+
+**The way back is written as one line**, at the top of the page body:
+
+```twig
+<a class="backbtn" href="…">{{ ux_icon('shell:chevron-left') }} All modules</a>
+```
+
+It is not a page action — a link out of a record belongs where the reading
+starts, not in `shell_page_actions` — and it carries its own 16px of air, so
+the plate below it states no top margin.
 
 **The identity band carries the gap under it.** `.factband` states
 `margin: 0 0 20px`, so the element a screen puts below it states no top margin

@@ -88,6 +88,9 @@ final class ComponentContractTest extends ContractTestCase
             'tab',
             'use',          // and the line under it saying what it is FOR
 
+            // THE WAY BACK — a detail screen's link to the list it came from.
+            'backbtn',
+
             // THE IDENTITY BAND a detail screen opens with.
             'factband',     // .f the fact, .k/.v its halves, .sp and .more the tail
 

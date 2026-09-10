@@ -1040,12 +1040,18 @@ once, and it cannot recur silently. Include the shared test in your suite (it is
 ### UI idioms that must match across modules
 
 A module's chrome is not a free canvas — a person moving between Patrols, Incidents and Files should
-meet the *same* controls in the *same* clothes. Two that are settled and must be identical everywhere:
+meet the *same* controls in the *same* clothes. Three that are settled and must be identical
+everywhere:
 
 - **The widget-library entry point.** Every module dashboard reaches its widget library through one
   standard link — **`<a class="tgl w-act" …>{{ ux_icon('shell:layout-grid') }} Widget library</a>`**.
   Not "Customize widgets", not a plus icon, not a module-private action class. The label is
   "Widget library", the icon is `shell:layout-grid`, the class is `tgl w-act`.
+- **The way back off a record.** Every screen that opens one thing out of a list returns to that list
+  through the shell's pill — **`<a class="backbtn" href="…">{{ ux_icon('shell:chevron-left') }} All
+  modules</a>`** — at the top of the page body, never as a page action and never as a `.tgl`. The
+  label names the list you are going back to ("All patrols", "All incidents"); the icon is
+  `shell:chevron-left`; the class is `backbtn`, and it carries its own 16px of air below it.
 - **Filters are grouped dropdowns.** Filter bars use the grouped-**dropdown** pattern (a closed chip
   that opens a floating panel of options with live counts — the incidents filter is the reference),
   not a sprawling row of always-expanded chips.

@@ -220,6 +220,9 @@ final class LayoutContract
         'tab',
         'use',
 
+        // the way back to the list a detail screen came from
+        'backbtn',
+
         // the identity band a detail screen opens with
         'factband',
 

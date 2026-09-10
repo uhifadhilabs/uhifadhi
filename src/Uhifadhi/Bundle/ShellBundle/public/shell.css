@@ -602,6 +602,29 @@ h2.zone::after { content: ""; flex: 1; height: 1px; background: var(--c-ln2); }
 .use { font-size: 12.5px; color: rgb(var(--c-fog)); margin: 10px 2px 4px; line-height: 1.55; }
 .use b { color: rgb(var(--c-tx)); }
 
+/* ---- THE WAY BACK — a detail screen's link to the list it came from -----
+   A chevron and a label in a bordered pill that lifts on hover, and 16px of
+   air under it so the page's first plate does not sit on it. It is the pair to
+   the breadcrumb, not a page action: the breadcrumb says where you are, this
+   says where you were, and it sits at the top of the page's own body.
+
+   It shipped nowhere, so a module that needed it carried a private copy and
+   the module beside it dropped the class and wore `.tgl` — a button the size
+   of a chip, with none of the pill's shape, weight or margin.
+
+   The design's hover fill is `var(--card)`, which the design defines as the
+   raised surface. Every other value below is the design's own. */
+.backbtn {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12.5px; font-weight: 600; color: rgb(var(--c-fog)); text-decoration: none;
+    padding: 6px 14px 6px 10px; border: 1px solid var(--c-ln2); border-radius: 99px;
+    margin-bottom: 16px; transition: color .15s, border-color .15s, background .15s;
+}
+.backbtn:hover { color: rgb(var(--c-tx)); border-color: rgb(var(--c-fog)); background: rgb(var(--c-raised)); }
+/* The design's markup carries width/height 15 on the chevron; `ux_icon()`
+   emits no size, so the pill states one or the glyph draws at the font's. */
+.backbtn svg { display: block; width: 15px; height: 15px; flex: none; }
+
 /* ---- THE IDENTITY BAND — what the thing IS, above everything it has done -
    A row of labelled facts a detail screen opens with: the ones that have not
    changed since the record was created. They are facts, not measurements, so
