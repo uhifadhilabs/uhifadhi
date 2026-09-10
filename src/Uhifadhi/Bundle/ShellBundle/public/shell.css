@@ -639,9 +639,9 @@ h2.zone::after { content: ""; flex: 1; height: 1px; background: var(--c-ln2); }
    a button — a module that opens a tab rather than a page has no anchor to
    write — the same reset `.tgl` and the pager's controls carry.
 
-   The design declares `background: var(--card)`, and `--card` is defined in no
-   sheet in the design workspace; the raised surface is what the band is drawn
-   on here. Every other value below is the design's own. */
+   The design declares `background: var(--card)`, which the design's global
+   sheet defines as `var(--raised)` under both palettes: the band is drawn on
+   the raised surface. Every other value below is the design's own. */
 .factband {
     display: flex; align-items: center; gap: 0; flex-wrap: wrap;
     border: 1px solid var(--c-ln); border-radius: 12px; background: rgb(var(--c-raised));

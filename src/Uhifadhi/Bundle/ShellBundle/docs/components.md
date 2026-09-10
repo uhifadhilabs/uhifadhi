@@ -89,8 +89,9 @@ the plate below it states no top margin.
 of its own.
 
 **`.factband` is drawn on `--c-raised`.** The identity band is a card, and every
-card sits on the raised surface; the design's `--card` token is that same
-surface.
+card sits on the raised surface. The design draws it on `var(--card)`, which the
+design defines as `var(--raised)` under both palettes — the same surface, under
+the name the design's own sheets write.
 
 **The colour words are not the start of a utility set.** They colour one word of
 a sentence, and they are the palette's own names. A fifth grey belongs in the
