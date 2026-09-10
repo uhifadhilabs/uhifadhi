@@ -18,9 +18,12 @@
 
 {% block title %}{{ heading }} · configure{% endblock %}
 
+{# THE TRAIL BACK. It names what the shell has — the brand's front door and the
+   surface's own page — and nothing it would have to be told. The crumb is
+   upper-cased by the frame's stylesheet, so nothing is cased here. #}
 {% block shell_breadcrumbs %}
-    <a href="{{ shell_brand().url }}">{{ shell_brand().name|lower }}</a> /
-    {%- if back is not null %} <a href="{{ back }}">{{ heading|lower }}</a> / {% else %} {{ heading|lower }} / {% endif -%}
+    <a href="{{ shell_brand().url }}">{{ shell_brand().name }}</a> /
+    {%- if back is not null %} <a href="{{ back }}">{{ heading }}</a> / {% else %} {{ heading }} / {% endif -%}
     configure
 {% endblock %}
 
