@@ -66,6 +66,24 @@ final class Kernel extends BaseKernel
         return $this->checkoutTempDir('application/log');
     }
 
+    /**
+     * Where this application's OWN versions go. A checkout has no such
+     * directory in it, so one is made: a registered path that is not there is
+     * a path the migration finder throws on.
+     *
+     * @see vendor/doctrine/migrations/src/Finder/Finder.php — `getRealPath()`
+     */
+    public function installationMigrationsDir(): string
+    {
+        $dir = $this->checkoutTempDir('application/migrations');
+
+        if (!is_dir($dir) && !mkdir($dir, 0o777, true) && !is_dir($dir)) {
+            throw new \RuntimeException(\sprintf('the throwaway application could not make "%s"', $dir));
+        }
+
+        return $dir;
+    }
+
     protected function configureContainer(ContainerConfigurator $container): void
     {
         $container->extension('framework', [
@@ -107,6 +125,19 @@ final class Kernel extends BaseKernel
                 'identity_generation_preferences' => [
                     PostgreSQLPlatform::class => 'identity',
                 ],
+            ],
+        ]);
+
+        // THE ONE LINE EVERY INSTALLATION HAS AND THE CORE DOES NOT SHIP: its
+        // own migrations namespace, mapped in `config/packages/doctrine_migrations.yaml`
+        // to a `migrations/` directory in the project. It is here because a
+        // specification about where a generated version LANDS cannot be asked
+        // of an application that has nowhere of its own to put one.
+        //
+        // @see https://symfony.com/bundles/DoctrineMigrationsBundle/current/index.html
+        $container->extension('doctrine_migrations', [
+            'migrations_paths' => [
+                'DoctrineMigrations' => $this->installationMigrationsDir(),
             ],
         ]);
 

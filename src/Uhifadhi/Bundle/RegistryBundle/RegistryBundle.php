@@ -18,6 +18,7 @@ use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
+use Uhifadhi\Bundle\RegistryBundle\DependencyInjection\Compiler\InstallationMigrationsPathFirstPass;
 use Uhifadhi\Bundle\RegistryBundle\DependencyInjection\RegistryConfiguration;
 use Uhifadhi\Contracts\ModuleProviderInterface;
 
@@ -117,6 +118,14 @@ final class RegistryBundle extends AbstractBundle
         // already a working registry.
         $container->registerForAutoconfiguration(ModuleProviderInterface::class)
             ->addTag(self::MODULE_TAG);
+
+        // WHERE A FLAGLESS `migrations:diff` LANDS. The registry already owns
+        // how doctrine/migrations behaves across a whole installation — it
+        // replaces the comparator below — and this is the other half of it: the
+        // installation's own directory is put ahead of every directory a
+        // package ships, so the version an installation generates for its own
+        // entities is never written into vendor/.
+        $container->addCompilerPass(new InstallationMigrationsPathFirstPass());
     }
 
     public function prependExtension(ContainerConfigurator $container, ContainerBuilder $builder): void

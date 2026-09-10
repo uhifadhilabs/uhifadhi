@@ -70,6 +70,11 @@ final class MigrationPathsAreRegisteredTest extends KernelTestCase
 
         self::assertSame(
             [
+                // The application's own, mapped by the application and not by
+                // anything the core ships. Which of these a flagless
+                // `migrations:diff` writes into is a separate specification —
+                // see InstallationOwnsTheFirstMigrationsPathTest.
+                'DoctrineMigrations',
                 'Uhifadhi\\Bundle\\AreaBundle\\Migrations',
                 'Uhifadhi\\Bundle\\RegistryBundle\\Migrations',
                 'Uhifadhi\\Bundle\\ShellBundle\\Migrations',
@@ -97,6 +102,11 @@ final class MigrationPathsAreRegisteredTest extends KernelTestCase
         $root = \dirname(__DIR__, 2).'/src/Uhifadhi/Bundle';
 
         foreach ($factory->getConfiguration()->getMigrationDirectories() as $namespace => $path) {
+            // The application's own namespace is the application's business.
+            if (!str_starts_with($namespace, 'Uhifadhi\\Bundle\\')) {
+                continue;
+            }
+
             $bundle = explode('\\', $namespace)[2] ?? '';
 
             self::assertSame(
