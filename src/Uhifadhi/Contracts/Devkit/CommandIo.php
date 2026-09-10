@@ -28,7 +28,7 @@ namespace Uhifadhi\Contracts\Devkit;
  * command's output, and appears uninvited in a test run.
  *
  * So the descriptor hands the handler this, as the second argument. It is the
- * same trade the descriptor itself makes: three verbs are the lowest common
+ * same trade the descriptor itself makes: these verbs are the lowest common
  * denominator of talking to a terminal, they need nothing from a framework, and
  * devkit — which legitimately requires symfony/console — is where they are
  * finally wired to a real {@see \Symfony\Component\Console\Output\OutputInterface}.
@@ -41,7 +41,15 @@ namespace Uhifadhi\Contracts\Devkit;
  * leaving it out; it is HONOURED by leaving it out, because devkit's adapter
  * writes through the real output, which applies `--quiet` and `-v` itself.
  *
- * THE THREE ARE SEPARATE BECAUSE THE STREAMS ARE. What a command produces goes
+ * READING IS TWO VERBS RATHER THAN ONE FLAG, and that is the one place this
+ * models something a stream alone does not: whether what is typed appears on
+ * the screen. A passphrase read like an ordinary line is a passphrase left
+ * standing in a terminal's scrollback and in whatever records it, which is the
+ * same leak as writing it down. Asking for it is therefore its own verb, so
+ * that a handler cannot ask for a secret and be given an echoed one by
+ * accident.
+ *
+ * THE OUTPUT VERBS ARE SEPARATE BECAUSE THE STREAMS ARE. What a command produces goes
  * to stdout, where a pipeline can read it; why a command refused goes to
  * stderr, where it survives that pipeline and does not corrupt it. A handler
  * that sent both to one place would make its own output unpipeable.
@@ -78,4 +86,28 @@ interface CommandIo
      * tells it that asking again would be pointless.
      */
     public function readLine(): ?string;
+
+    /**
+     * One line the person typed that is NEVER PUT ON THE SCREEN, without its
+     * trailing newline, or null at end of input — the passphrase somebody is
+     * asked for at a prompt rather than passing on the command line, where it
+     * would be read back out of a shell history or a process list.
+     *
+     * It answers exactly as {@see readLine()} does: the line, or null once the
+     * stream is closed and asking again would be pointless. '' is a line that
+     * was there and was empty, and a handler that requires a secret refuses
+     * both — but only null says the asking is over.
+     *
+     * WHAT AN IMPLEMENTATION OWES IS THE SILENCE, and the terminal is the only
+     * place it can be had: switching the echo off is a property of a terminal,
+     * not of a stream. So the promise is that where there is a terminal the
+     * typing does not appear on it. Where there is none — a pipe, a log, a test
+     * — there is no echo to suppress and nothing is leaked by reading the line
+     * plainly, which is what keeps this the same verb for a passphrase piped in
+     * and a passphrase typed at a prompt. An implementation that meets a
+     * terminal it cannot silence says so on the error stream rather than
+     * refusing, because a first administrator who cannot be created is worse
+     * than one created in view of the person creating it.
+     */
+    public function readSecret(): ?string;
 }

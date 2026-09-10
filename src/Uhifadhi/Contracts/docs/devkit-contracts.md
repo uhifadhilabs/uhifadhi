@@ -142,6 +142,7 @@ interface CommandIo
     public function write(string $line): void;   // the result, on stdout
     public function error(string $line): void;   // why it refused, on stderr
     public function readLine(): ?string;         // one line of stdin; null at end of input
+    public function readSecret(): ?string;       // one line never put on the screen; null likewise
 }
 ```
 
@@ -150,7 +151,30 @@ coupling.** Handed only a tail and an exit code, a command that creates somethin
 what it created — so it writes to `\STDOUT` itself, and that output has escaped the process it was
 given: it ignores `--quiet`, a caller capturing the command's output cannot see it, and it turns up
 uninvited in a test run. A passphrase read straight off `\STDIN` is the same escape in the other
-direction. Three verbs close both.
+direction. These verbs close both.
+
+**Reading is two verbs rather than one flag,** and it is the only place the contract models
+something a stream alone does not: whether what is typed appears on the screen. A passphrase read
+like an ordinary line is a passphrase left in a terminal's scrollback and in whatever records it, so
+asking for one is its own verb — a handler cannot ask for a secret and be handed an echoed one by
+accident. Both answer identically: the line without its newline, or `null` once the stream is closed
+and asking again is pointless.
+
+**The silence is owed only where a terminal exists.** Switching the echo off is a property of a
+terminal, not of a stream, so `readSecret()` promises that where there is a terminal the typing does
+not appear on it, and where there is none — a pipe, a log, a test — it reads the line plainly,
+because there is no echo to suppress and nothing is leaked by reading it. That is what makes it one
+verb for both a passphrase typed at a prompt and a passphrase piped in:
+
+```bash
+bin/console team:user:create                                    # typed, and not echoed
+printf '%s' "$PASSPHRASE" | bin/console team:user:create ada@example.test Ada Mwangi
+```
+
+devkit's adapter reads it through Symfony's `QuestionHelper` with `Question::setHidden(true)`, whose
+own fallback rule it follows: where the response cannot be hidden it says so on the error stream and
+reads the line anyway rather than refusing, because a first administrator who cannot be created is
+worse than one created in view of the person creating it.
 
 **It is deliberately not shaped like an `OutputInterface`.** No verbosity, no formatter, no
 sections, no `write`/`writeln` distinction — modelling those would be reimplementing the console in

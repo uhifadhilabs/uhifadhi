@@ -127,6 +127,11 @@ final class CommandDescriptorTest extends TestCase
             {
                 return null;
             }
+
+            public function readSecret(): ?string
+            {
+                return null;
+            }
         };
     }
 

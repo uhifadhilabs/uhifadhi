@@ -129,6 +129,11 @@ final class CommandProviderInterfaceTest extends TestCase
             {
                 return null;
             }
+
+            public function readSecret(): ?string
+            {
+                return null;
+            }
         };
 
         $handler = $commands[0]->handler;

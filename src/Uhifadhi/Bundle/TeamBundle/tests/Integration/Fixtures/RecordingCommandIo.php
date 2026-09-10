@@ -29,6 +29,12 @@ use Uhifadhi\Contracts\Devkit\CommandIo;
  * The queued lines are standard input. readLine() consumes them in order and
  * returns null once they run out, which is the end-of-stream a piped
  * passphrase reaches after its one line.
+ *
+ * A SECRET IS SCRIPTED SEPARATELY, because a test wants to say which answer was
+ * typed where the screen stayed blank. When none is scripted, readSecret() takes
+ * the next ordinary line instead — which is not a shortcut but the thing itself:
+ * with no terminal there is no echo to switch off, and the passphrase a pipe
+ * offers is read off the same stream the lines come from.
  */
 final class RecordingCommandIo implements CommandIo
 {
@@ -41,10 +47,17 @@ final class RecordingCommandIo implements CommandIo
     /** @var list<string> */
     private array $pending;
 
-    /** @param list<string> $input the lines standard input will offer, in order */
-    public function __construct(array $input = [])
+    /** @var list<string> */
+    private array $secrets;
+
+    /**
+     * @param list<string> $input   the lines standard input will offer, in order
+     * @param list<string> $secrets the answers typed where nothing was echoed, in order
+     */
+    public function __construct(array $input = [], array $secrets = [])
     {
         $this->pending = $input;
+        $this->secrets = $secrets;
     }
 
     public function write(string $line): void
@@ -60,6 +73,11 @@ final class RecordingCommandIo implements CommandIo
     public function readLine(): ?string
     {
         return array_shift($this->pending);
+    }
+
+    public function readSecret(): ?string
+    {
+        return array_shift($this->secrets) ?? array_shift($this->pending);
     }
 
     /** Everything said on standard output, as one block to assert against. */

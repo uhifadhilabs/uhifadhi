@@ -101,7 +101,8 @@ composer check   # cs:check -> phpstan (max) -> require-check -> the suite
 - **[The devkit contracts](docs/devkit-contracts.md)** — `Devkit\ContentProviderInterface` and
   `Devkit\CommandProviderInterface`: the require-dev firewall, why they live here and not in devkit,
   why a command is a descriptor-plus-closure rather than a `symfony/console` `Command`, and why that
-  closure is handed a `Devkit\CommandIo` instead of reaching for `\STDOUT` itself.
+  closure is handed a `Devkit\CommandIo` instead of reaching for `\STDOUT` itself — including why
+  reading is two verbs, `readLine()` and a `readSecret()` that is never put on the screen.
 - **[Why one package?](docs/why-one-package.md)** — why the registration contract and the
   data-shape contracts ship together, and the test that would split them.
 - **[Area-scoped authority](docs/area-scoped-authority.md)** — *design + architecture, decisions

@@ -30,6 +30,9 @@ use Uhifadhi\Contracts\Devkit\CommandIo;
  */
 final class CommandIoTest extends TestCase
 {
+    /** The verbs that read, as against the two that write one given line. */
+    private const array READING = ['readLine', 'readSecret'];
+
     /**
      * THE SURFACE, TYPED OUT BY HAND. Anything that widens it — a verbosity, a
      * section, a `write` that does not end a line — is the console being
@@ -42,6 +45,7 @@ final class CommandIoTest extends TestCase
         return [
             ['error', 'void'],
             ['readLine', '?string'],
+            ['readSecret', '?string'],
             ['write', 'void'],
         ];
     }
@@ -74,7 +78,7 @@ final class CommandIoTest extends TestCase
 
         self::assertSame($returnType, (string) $reflection->getReturnType());
         self::assertSame(
-            'readLine' === $method ? 0 : 1,
+            \in_array($method, self::READING, true) ? 0 : 1,
             $reflection->getNumberOfParameters(),
             'Writing takes the one line to write; reading takes nothing.',
         );
@@ -129,6 +133,11 @@ final class CommandIoTest extends TestCase
             {
                 return array_shift($this->in);
             }
+
+            public function readSecret(): ?string
+            {
+                return array_shift($this->in);
+            }
         };
 
         $io->write('made the thing');
@@ -140,5 +149,41 @@ final class CommandIoTest extends TestCase
         self::assertSame('first', $io->readLine());
         self::assertSame('second', $io->readLine());
         self::assertNull($io->readLine(), 'Null is the end of input — nothing more to read, unlike an empty line.');
+    }
+
+    /**
+     * READING A SECRET IS A READ, and answers the same two ways: the line, or
+     * null once the stream is closed. What separates it from readLine() is not
+     * its result but what the person watching sees, which no signature can
+     * express — so the contract states it in words and leaves the mechanics to
+     * the implementation that has a terminal to switch the echo off on.
+     */
+    public function testASecretIsReadLikeALineAndEndsTheSameWay(): void
+    {
+        $io = new class implements CommandIo {
+            /** @var list<string> */
+            public array $typed = ['a-long-enough-passphrase'];
+
+            public function write(string $line): void
+            {
+            }
+
+            public function error(string $line): void
+            {
+            }
+
+            public function readLine(): ?string
+            {
+                return array_shift($this->typed);
+            }
+
+            public function readSecret(): ?string
+            {
+                return array_shift($this->typed);
+            }
+        };
+
+        self::assertSame('a-long-enough-passphrase', $io->readSecret());
+        self::assertNull($io->readSecret(), 'A closed stream offers no secret, which is not the same as an empty one.');
     }
 }
