@@ -482,8 +482,20 @@ abstract class VocabularyConformanceTestCase extends TestCase
     }
 
     /**
-     * The bundle's shipped templates, PHP and JavaScript — never its own tests,
-     * whose fixtures name things no installation ever draws.
+     * The bundle's shipped templates, PHP and JavaScript — THE FILES THE BUNDLE
+     * WOULD HAVE TO CHANGE, and nothing else under the same root.
+     *
+     * A working copy is not a package as it was published. Beside the source
+     * sit other people's packages (`vendor/`, `node_modules/`), the framework's
+     * rendered templates (`var/`), the asset pipeline's digested copies of
+     * sources already read once (`public/assets/`), and the suite's own
+     * fixtures (`tests/`), which name things no installation ever draws. All of
+     * those carry markup; none of it is markup this bundle writes.
+     *
+     * Reading them fails a bundle for a name somebody else spent — a module
+     * with another module installed under it is failed for that module's icon
+     * prefix — and the available answer is to widen the prefixes the bundle
+     * allows itself, after which the check is asserting nothing.
      *
      * @return list<string>
      */
@@ -494,11 +506,22 @@ abstract class VocabularyConformanceTestCase extends TestCase
             $paths = [...$paths, ...self::files(static::bundlePath(), $extension)];
         }
 
-        $tests = static::bundlePath().'/tests/';
+        $notSource = array_map(
+            static fn (string $directory): string => static::bundlePath().'/'.$directory.'/',
+            ['vendor', 'node_modules', 'var', 'public/assets', 'tests'],
+        );
 
         return array_values(array_filter(
             $paths,
-            static fn (string $path): bool => !str_starts_with($path, $tests),
+            static function (string $path) use ($notSource): bool {
+                foreach ($notSource as $directory) {
+                    if (str_starts_with($path, $directory)) {
+                        return false;
+                    }
+                }
+
+                return true;
+            },
         ));
     }
 

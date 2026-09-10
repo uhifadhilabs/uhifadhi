@@ -18,6 +18,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Uhifadhi\Bundle\ShellBundle\Test\VocabularyConformanceTestCase;
 use Uhifadhi\Bundle\ShellBundle\Tests\Unit\Test\Fixtures\DriftingBundle;
+use Uhifadhi\Bundle\ShellBundle\Tests\Unit\Test\Fixtures\VendoringBundle;
 
 /**
  * THE CONFORMANCE BASE, WATCHED FAILING.
@@ -68,8 +69,29 @@ final class VocabularyConformanceTestCaseTest extends TestCase
         self::drifting()->testTheOwnSheetsSpendNoTokenTheChainDoesNotDefine();
     }
 
+    /**
+     * A bundle answers for what it WRITES, and a checkout holds far more than
+     * that: another module under `vendor/`, a package under `node_modules/`,
+     * rendered templates under `var/`, digested copies under `public/assets/`,
+     * and fixtures under `tests/`. Read as the bundle's own, any of them fails
+     * the bundle for a name somebody else spent — which is answered by widening
+     * the allowed prefixes, and then the check is gone.
+     *
+     * @see VendoringBundle
+     */
+    public function testWhatIsInstalledUnderABundleIsNotReadAsWhatTheBundleDraws(): void
+    {
+        self::vendoring()->testEveryIconReferenceUsesAPrefixThisBundleMayUse();
+        self::vendoring()->testEveryIconUnderThisBundlesPrefixResolvesFromTheDirectoryItShips();
+    }
+
     private static function drifting(): DriftingBundle
     {
         return new DriftingBundle('conformance');
+    }
+
+    private static function vendoring(): VendoringBundle
+    {
+        return new VendoringBundle('conformance');
     }
 }
