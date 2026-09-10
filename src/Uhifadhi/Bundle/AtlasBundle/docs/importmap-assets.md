@@ -5,6 +5,7 @@ Written down because it is the part with the sharp edges.
 ## Contents
 
 - [What lands in a host](#what-lands-in-a-host)
+- [The plate controller](#the-plate-controller)
 - [How it works](#how-it-works)
 
 ## What lands in a host
@@ -28,6 +29,34 @@ Two conditions and no more: the host must **have** an `importmap.php` (i.e. run 
 host that installed this bundle for the Leaflet build alone has nothing to write into, and Flex
 writes nothing), and `symfony/flex` must be allowed to run its plugin. Neither is special to this
 package: it is how `symfony/stimulus-bundle` gets its loader into your importmap too.
+
+## The plate controller
+
+A Stimulus controller is not an importmap entry. It is declared in the same `assets/package.json`,
+under `symfony.controllers`, and an installation enables it in `assets/controllers.json`:
+
+```json
+"@uhifadhi/uhifadhi": {
+    "map-plate": { "enabled": true, "fetch": "eager" }
+}
+```
+
+The declaration carries an explicit `name`, so the identifier a template writes is
+`uhifadhi--atlas-bundle--map-plate` whichever package key an installation enables it under — the
+core ships as one composer package and its `assets/package.json` aggregates every bundle's
+controllers, so without the explicit name the identifier would say `uhifadhi--uhifadhi--`.
+
+Templates never write that identifier: `render_map()` does.
+
+`symfony/ux-leaflet-map` contributes its own entries the same way, and one of them is the single
+`leaflet` this package relies on:
+
+```php
+'leaflet' => ['version' => '1.9.4'],
+'leaflet/dist/leaflet.min.css' => ['version' => '1.9.4', 'type' => 'css'],
+'@symfony/ux-leaflet-map' => ['path' => './vendor/symfony/ux-leaflet-map/assets/dist/map_controller.js'],
+'@symfony/ux-map' => ['path' => './vendor/symfony/ux-map/assets/dist/abstract_map_controller.js'],
+```
 
 ## How it works
 

@@ -17,6 +17,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Uhifadhi\Bundle\AtlasBundle\AtlasBundle;
 use Uhifadhi\Bundle\AtlasBundle\Tests\Integration\Asset\AssetContractTest;
+use Uhifadhi\Bundle\AtlasBundle\Twig\MapPlateRuntime;
 
 /**
  * NOBODY TYPES THIS BUNDLE'S IMPORTMAP ENTRIES BY HAND.
@@ -125,6 +126,36 @@ final class ImportmapContributionTest extends TestCase
         }
 
         self::assertSame($resolved, $logicalPaths, 'The specifiers Flex writes and the logical paths AssetMapper resolves are one list; they have drifted.');
+    }
+
+    /**
+     * THE ONE CONTROLLER, DECLARED. A Stimulus controller is not an importmap
+     * entry: StimulusBundle reads it from the same assets/package.json, under
+     * `symfony.controllers`, and an installation enables it in its own
+     * controllers.json.
+     *
+     * The `name` is explicit and asserted, because the identifier StimulusBundle
+     * would DERIVE is the package key plus the controller name — and the core
+     * ships as one composer package whose assets/package.json aggregates every
+     * bundle's controllers, so the derived identifier would say
+     * "uhifadhi--uhifadhi--map-plate". Every plate on the platform carries the
+     * name below instead, written by render_map().
+     */
+    public function testThePlateControllerIsDeclaredUnderTheNameEveryPlateCarries(): void
+    {
+        $symfony = self::assetPackage()['symfony'] ?? null;
+        self::assertIsArray($symfony);
+        $controllers = $symfony['controllers'] ?? null;
+        self::assertIsArray($controllers);
+
+        self::assertSame(['map-plate'], array_keys($controllers));
+
+        $plate = $controllers['map-plate'];
+        self::assertIsArray($plate);
+        self::assertSame(MapPlateRuntime::CONTROLLER, $plate['name'] ?? null);
+        self::assertTrue($plate['enabled'] ?? false);
+        self::assertIsString($plate['main'] ?? null);
+        self::assertFileExists(self::root().'/assets/'.$plate['main']);
     }
 
     /**

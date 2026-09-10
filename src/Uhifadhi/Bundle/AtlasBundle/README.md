@@ -1,8 +1,9 @@
 # AtlasBundle
 
-The **atlas**: the platform's map machinery — self-hosted Leaflet, one basemap contract with a
-configurable satellite provider, the boundary drawing, and the chrome every map in the product
-wears.
+The **atlas**: the component library every module's visuals are drawn with. Today that is maps —
+one map builder, one plate, one basemap contract with a configurable satellite provider, the
+boundary drawing, and the chrome every map in the product wears. Charts and calendars are the
+same shape and are coming.
 
 One of the bundles of the uhifadhi core, `uhifadhi/uhifadhi`. It can be installed on its own as
 `uhifadhi/atlas-bundle`.
@@ -12,6 +13,7 @@ One of the bundles of the uhifadhi core, `uhifadhi/uhifadhi`. It can be installe
 - [What it is](#what-it-is)
 - [Install](#install)
 - [Getting started](#getting-started)
+- [A map in four lines](#a-map-in-four-lines)
 - [Learn more](#learn-more)
 - [License](#license)
 
@@ -42,7 +44,14 @@ composer require uhifadhi/uhifadhi
 ```
 
 Flex registers the bundle, writes `config/packages/atlas.yaml`, and writes the three importmap
-entries.
+entries. The atlas is built on [Symfony UX Map](https://symfony.com/bundles/ux-map/current/index.html)
+and its Leaflet bridge, so an installation also registers `UXMapBundle` and names the renderer:
+
+```yaml
+# config/packages/ux_map.yaml
+ux_map:
+    renderer: 'leaflet://default'
+```
 
 The bundle registration (`config/bundles.php`) — the recipe's `bundles` block:
 
@@ -67,23 +76,40 @@ Every map on every page then draws the configured imagery — the host's own map
 plates alike. There is no per-template and no per-module wiring, which is the point: the same layer
 must render identically everywhere.
 
-Leaflet needs no step at all. Link it from your layout with the bundle's own constants, so the path
-is never typed twice:
+**Link the map stylesheet** wherever a map renders — the plate, the chrome, the legend and the
+fullscreen rules:
 
 ```twig
-<link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Bundle\\AtlasBundle\\AtlasBundle::LEAFLET_CSS')) }}">
-<script src="{{ asset(constant('Uhifadhi\\Bundle\\AtlasBundle\\AtlasBundle::LEAFLET_JS')) }}"></script>
+<link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Bundle\\AtlasBundle\\AtlasBundle::STYLESHEET')) }}">
 ```
 
-Leaflet is a classic script that publishes `window.L`, and the map controllers read it from there —
-a `<script>` in `<head>` has run before the deferred importmap modules connect, which is exactly
-the ordering they rely on.
+Leaflet needs no step at all. The UX Map Leaflet bridge imports it from the importmap and imports
+its stylesheet with it, so there is exactly one Leaflet on the page and this package ships no copy
+of its own.
 
 The satellite imagery is `esri` by default and needs no key; choosing another provider is
 [choosing the satellite imagery](docs/satellite-imagery.md).
 
+## A map in four lines
+
+```php
+$map = $this->maps->createMap();                 // MapBuilderInterface
+$map->boundary(new Boundary($areaGeoJson));
+$map->addLayer(new GeoJsonLayer(id: 'sightings.recent', label: 'This week', features: $collection));
+```
+
+```twig
+{{ render_map(map, {'role': 'img', 'aria-label': 'Sightings this week'}) }}
+```
+
+That is the whole of it: the imagery the deployment configured, the boundary drawn the platform's
+one way, the control stack, the legend with a switch per layer, and fullscreen. A module writes no
+JavaScript — the full guide is [the atlas components](docs/components.md).
+
 ## Learn more
 
+- [The atlas components](docs/components.md) — how a module gets a map: the builder, layers, the
+  legend, `render_map()` and the events, with a whole module template.
 - [Choosing the satellite imagery](docs/satellite-imagery.md) — the `esri` / `google` / `custom`
   providers, their configuration, and why the default is keyless.
 - [What the bundle ships](docs/what-the-bundle-ships.md) — the assets, their import names, and why

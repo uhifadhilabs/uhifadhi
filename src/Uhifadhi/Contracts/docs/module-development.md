@@ -26,11 +26,12 @@ is the instruction: it says where you create it.
 - [3. Registering with the registry](#3-registering-with-the-registry)
 - [4. Shipping importmap assets from a bundle](#4-shipping-importmap-assets-from-a-bundle)
 - [5. Templates and Twig namespaces](#5-templates-and-twig-namespaces)
-- [6. Contributing to the overview](#6-contributing-to-the-overview)
-- [7. Shipping migrations](#7-shipping-migrations)
-- [8. Testing](#8-testing)
-- [9. CI](#9-ci)
-- [10. Flex recipe and activation](#10-flex-recipe-and-activation)
+- [6. Using the atlas: maps, charts and calendars](#6-using-the-atlas-maps-charts-and-calendars)
+- [7. Contributing to the overview](#7-contributing-to-the-overview)
+- [8. Shipping migrations](#8-shipping-migrations)
+- [9. Testing](#9-testing)
+- [10. CI](#10-ci)
+- [11. Flex recipe and activation](#11-flex-recipe-and-activation)
 
 ---
 
@@ -912,7 +913,7 @@ contribute an entry to it. So the contract splits in two:
 'sightings/plate' => ['path' => '@your-vendor/sightings-module/plate.js'],
 ```
 
-Document those lines in your README, and ship them in a Flex recipe (chapter 10) so an install
+Document those lines in your README, and ship them in a Flex recipe (chapter 11) so an install
 writes them. The recipe hides the join; it does not remove it.
 
 ### Name your exports as bare specifiers, not paths
@@ -926,24 +927,30 @@ Import by path instead and the same relocation touches every map controller in t
 Write a test for it. A one-line sweep over your controllers asserting that none of them contains
 your own namespace string is enough to keep the property true.
 
-### Classic scripts stay in `public/`
+### Stylesheets and classic scripts stay in `public/`
 
-If a library publishes a global (`window.L` and friends) it is not an importmap module, and putting
-it in `assets/` gains nothing. Keep it in `public/` and link it from a layout. Publish the path as a
+A stylesheet is not an importmap module, and neither is a library that publishes a global instead
+of exporting anything. Keep both in `public/`, which AssetMapper serves and versions under
+`bundles/<bundlename>/` with no configuration, and link them from a layout. Publish the path as a
 **class constant** rather than expecting hosts to type it:
 
 ```php
 // src/YourVendorSightingsBundle.php
-public const string LEAFLET_JS = 'bundles/yourvendorsightings/leaflet/leaflet.js';
+public const string STYLESHEET = 'bundles/yourvendorsightings/sightings.css';
 ```
 
 ```twig
 {# templates/sightings/_base.html.twig #}
-<script src="{{ asset(constant('YourVendor\\Sightings\\YourVendorSightingsBundle::LEAFLET_JS')) }}"></script>
+<link rel="stylesheet" href="{{ asset(constant('YourVendor\\Sightings\\YourVendorSightingsBundle::STYLESHEET')) }}">
 ```
 
 A path written in a host layout *and* two other bundles' base templates is a path that eventually
 differs by one character in one of them.
+
+Do not ship a JavaScript library this way. A library a controller of yours needs — Leaflet,
+Chart.js — belongs in the **installation's importmap**, once, and the packages that need it declare
+it. Two copies of a library are two module namespaces, and objects built against one are refused by
+the other.
 
 ### Publishing configuration to the browser
 
@@ -1100,7 +1107,156 @@ public function prependExtension(ContainerConfigurator $container, ContainerBuil
 
 ---
 
-## 6. Contributing to the overview
+## 6. Using the atlas: maps, charts and calendars
+
+The **atlas** is the component library every module's visuals are drawn with. It is core
+infrastructure — installed means on, no catalogue tile, no per-area switch — and it exists so that
+a map in your module and a map in somebody else's are the same instrument pointed at different
+data.
+
+The rule is short: **a module writes no visual JavaScript.** You state what is on the visual in
+PHP and call one Twig function. You do not create a Leaflet map, you do not draw chrome, you do not
+style a plate, and you do not ship a Stimulus controller for any of it. If a visual cannot say what
+you need, the gap is in the atlas and belongs there — not in a controller of your own that quietly
+looks different from every other one in the product.
+
+Today the atlas ships **maps**. **Charts** and **calendars** are the same shape and are coming;
+their APIs are not written here because they are not written yet. When they land they will arrive
+as a builder, a model and a `render_*()` function, and this section will name them.
+
+### A map, end to end
+
+The map is built in a service, not in a template and not in a controller.
+
+```php
+// src/Service/SightingsMap.php
+namespace YourVendor\Sightings\Service;
+
+use Uhifadhi\Bundle\AtlasBundle\Map\MapBuilderInterface;
+use Uhifadhi\Bundle\AtlasBundle\Model\AtlasMap;
+use Uhifadhi\Bundle\AtlasBundle\Model\GeoJsonLayer;
+use Uhifadhi\Bundle\AtlasBundle\Model\LayerShape;
+
+final readonly class SightingsMap
+{
+    public function __construct(private MapBuilderInterface $maps)
+    {
+    }
+
+    /**
+     * @param array<string, mixed> $collection a GeoJSON FeatureCollection
+     */
+    public function forArea(array $collection, int $count): AtlasMap
+    {
+        return $this->maps->createMap()->addLayer(new GeoJsonLayer(
+            id: 'sightings.recent',
+            label: 'This week',
+            features: $collection,
+            swatch: '#E5C15A',
+            shape: LayerShape::Point,
+            count: $count,
+            group: 'Sightings',
+        ));
+    }
+}
+```
+
+Wired explicitly, like everything else your bundle defines:
+
+```php
+// config/services.php
+$services->set('sightings.map', SightingsMap::class)
+    ->args([service(MapBuilderInterface::class)]);
+```
+
+Handed to the template by the screen:
+
+```php
+// src/Controller/SightingsController.php
+return new Response($this->twig->render('@Sightings/sightings/plate.html.twig', [
+    'map' => $this->map->forArea($collection, $count),
+]));
+```
+
+And drawn:
+
+```twig
+{# templates/sightings/plate.html.twig #}
+{{ render_map(map, {'role': 'img', 'aria-label': 'Sightings this week'}) }}
+```
+
+That is the whole of it. What arrives on the page is the imagery the deployment configured, the
+control stack every map in the product wears, a legend with a switch per layer, and a fullscreen
+that works — because the plate owns its own layout and your card cannot break it.
+
+### The pieces
+
+| You state | Class | What the atlas does with it |
+|---|---|---|
+| a body of GeoJSON | `Model\GeoJsonLayer` | draws it in your colour and shape, with a legend row that switches it |
+| the ground it is about | `Model\Boundary` | the platform's one outline treatment, and the scrim outside it |
+| a colour's meaning | `Model\LegendItem` | one more legend row, a key rather than a switch |
+| which grounds to offer | `Model\BaseLayer` | the base-layer menu, and what the plate opens on |
+| markers, polygons, lines | UX Map's own classes, via `$map->ux()` | passed straight through to UX Map |
+
+A layer names exactly one source — `features` the server already has, or a `url` the plate fetches
+once it is mounted. Naming both, or neither, is refused where you wrote it rather than showing an
+empty map to somebody at 07:00.
+
+### The stylesheet, and the one thing you do link
+
+A map's styles are the atlas's, in one sheet. Link it wherever a plate renders:
+
+```twig
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Bundle\\AtlasBundle\\AtlasBundle::STYLESHEET')) }}">
+{% endblock %}
+```
+
+Leaflet needs nothing from you: the map is created by Symfony UX Map's Leaflet bridge, which
+imports the one `leaflet` in the installation's importmap and its stylesheet with it. A module that
+ships or links a second copy has given the page a second Leaflet namespace, and objects built
+against one are refused by the other.
+
+### Filters and the legend
+
+A filter row is markup you own, handed to `render_map()` as its third argument. It renders one row
+**above** the map and inside the plate, so it comes along into fullscreen:
+
+```twig
+{% set filters %}
+    <a class="chip on" href="?since=week">This week</a>
+    <a class="chip" href="?since=month">This month</a>
+{% endset %}
+
+{{ render_map(map, {'role': 'img', 'aria-label': 'Sightings'}, filters) }}
+```
+
+The legend is not markup you own. It is rendered from the layers and legend rows the map states,
+floats bottom-right over the imagery, and each row that names a layer is a real switch. Grouping is
+data: rows that share a `group` are drawn together under that heading, which is what keeps a plate
+with four contributors readable.
+
+### The events, and when you need them
+
+The plate dispatches `atlas:map:connect` (`{map, L, layers}`) and `atlas:map:layer:added`
+(`{id, layer}`) on its root element, and UX Map's own `ux:map:*` events fire there too. They exist
+for an **installation** that has to extend a plate without forking anything.
+
+A module should not need them. Reaching for them is the signal that the atlas is missing something
+— say so, rather than building a second map controller that drifts.
+
+### What this replaces
+
+If you are porting a module that has its own map controller, the whole of it goes: the Leaflet
+bootstrap, the base layers, the boundary drawing, the chrome mount, the fullscreen handling, the
+legend wiring, the re-fit on resize. What is left is a service that says what is on the map, which
+is the only part that was ever yours.
+
+---
+
+## 7. Contributing to the overview
 
 An area's overview is composed from every installed module. Each contribution is a small interface
 plus an explicit tag; you can implement any subset, and a module that implements none is perfectly
@@ -1133,7 +1289,7 @@ Three rules that keep these contribution points honest:
 
 ---
 
-## 7. Shipping migrations
+## 8. Shipping migrations
 
 **Your module owns its tables, so it ships the statements that create them.** An installation
 runs `doctrine:migrations:migrate` and writes no version for you — the same way it writes none
@@ -1287,7 +1443,7 @@ data-safe undo. Data survives `up()`.
 
 ---
 
-## 8. Testing
+## 9. Testing
 
 Tests first — the platform's modules are built that way and the contracts assume it.
 
@@ -1497,7 +1653,7 @@ That is the whole adoption. It runs in `composer check` with the rest of your su
 
 ---
 
-## 9. CI
+## 10. CI
 
 One job, the same command a developer runs:
 
@@ -1529,7 +1685,7 @@ var at it.
 
 ---
 
-## 10. Flex recipe and activation
+## 11. Flex recipe and activation
 
 Installing a module should not be a checklist. A Flex recipe turns it into `composer require`.
 
