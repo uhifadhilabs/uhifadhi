@@ -105,13 +105,35 @@ Every screen is behind the sign-in an installation does not have yet, so the one
 account that cannot be made through a screen is made from the console:
 
 ```bash
-printf '%s' "$PASSPHRASE" | bin/console team:user:create ada@example.test Ada Mwangi
+bin/console team:user:create
+Email address: ada@example.test
+First name: Ada
+Last name: Mwangi
+Tier — super-admin, admin, staff [super-admin]:
+Passphrase (not shown):
+Created Ada Mwangi <ada@example.test> as Super Admin.
 ```
 
+It asks for whatever it was not told, so anything given on the command line is
+not asked for again. The **passphrase is never echoed** — nothing appears as you
+type it, and it is left in no scrollback. An unanswered tier is the default one.
+
 The account is a **Super Admin**, verified and active — somebody who can sign in
-and compose everything else. `--tier=super-admin|admin|staff` names another
-tier, and `--password=…` passes the passphrase inline instead of on standard
-input.
+and compose everything else.
+
+Non-interactively — in a provisioning script, or over a connection with nobody
+watching — give the three names and the passphrase never reaches a shell history
+or a process list either:
+
+```bash
+printf '%s' "$PASSPHRASE" | bin/console team:user:create ada@example.test Ada Mwangi
+bin/console team:user:create ada@example.test Ada Mwangi --tier=staff --password="$PASSPHRASE"
+```
+
+**A tail naming all three is asked nothing**, which is what keeps the piped form
+working: a question put to a script would be answered by whatever the pipe held
+next. `--tier=super-admin|admin|staff` names another tier, and `--password=…`
+passes the passphrase inline instead of on standard input.
 
 **That command exists in a development install only.** This bundle ships no
 console commands; it ships an inert *provider* that names one, and

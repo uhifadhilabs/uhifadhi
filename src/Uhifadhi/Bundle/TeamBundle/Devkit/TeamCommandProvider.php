@@ -58,21 +58,50 @@ use Uhifadhi\Contracts\Devkit\CommandProviderInterface;
  * drifting from the first the moment either changed. This parses a tail and
  * calls that service.
  *
- * THE PASSWORD IS READ FROM STANDARD INPUT WHEN IT IS NOT GIVEN, so it need
- * never appear in a shell history or a process list:
+ * IT ASKS FOR WHAT IT WAS NOT TOLD. The person running this is at the console
+ * of an installation with no account in it, and the tail above is four things
+ * long. So anything missing from it is asked for, in the order it is written:
+ * the address, the two names, the tier, and last the passphrase.
+ *
+ *     bin/console team:user:create
+ *     Email address: ada@example.test
+ *     First name: Ada
+ *     Last name: Mwangi
+ *     Tier — super-admin, admin, staff [super-admin]:
+ *     Passphrase (not shown):
+ *     Created Ada Mwangi <ada@example.test> as Super Admin.
+ *
+ * A TAIL THAT NAMED EVERYTHING IS ASKED NOTHING, and that rule is not a
+ * convenience — it is the only one available. Whether somebody is sitting at a
+ * terminal is a question about a tty, and the descriptor contract deliberately
+ * models nothing of the sort; the tail is the whole of what this can see. A
+ * tail carrying all three names was written by something rather than typed by
+ * somebody, and a question put to a script is answered by whatever the pipe
+ * held next — which is how asking a scripted run for a tier would quietly turn
+ * a piped passphrase into a rejected tier. So the scripted form is left exactly
+ * as it was:
  *
  *     printf '%s' "$PASSPHRASE" | bin/console team:user:create ada@example.test Ada Mwangi
+ *
+ * The passphrase is the one thing read the same way in both: `--password=` when
+ * it was given, and {@see CommandIo::readSecret()} otherwise. That verb reads a
+ * pipe's line plainly, because there is no echo to suppress where there is no
+ * terminal, and hides the typing where there is one — so the two routes need no
+ * two paths here.
  *
  * @see CommandProviderInterface
  */
 final readonly class TeamCommandProvider implements CommandProviderInterface
 {
-    /** What a person may type after `--tier=`, and the tier each names. */
+    /** What a person may type after `--tier=` or at the tier prompt, and the tier each names. */
     private const array TIERS = [
         'super-admin' => TeamRoleEnum::SuperAdmin,
         'admin' => TeamRoleEnum::Admin,
         'staff' => TeamRoleEnum::Staff,
     ];
+
+    /** The three positional names, in the order they are written and asked for. */
+    private const array NAMES = ['Email address', 'First name', 'Last name'];
 
     public function __construct(
         private UserService $accounts,
@@ -84,7 +113,7 @@ final readonly class TeamCommandProvider implements CommandProviderInterface
         return [
             new CommandDescriptor(
                 'team:user:create',
-                'Create an account and set its password — the administrator an installation is bootstrapped with. Usage: <email> <first name> <last name> [--tier=super-admin|admin|staff] [--password=…]; the password is read from standard input when the option is absent.',
+                'Create an account and set its password — the administrator an installation is bootstrapped with. Usage: [<email> <first name> <last name>] [--tier=super-admin|admin|staff] [--password=…]; anything not given is asked for, and the passphrase is never echoed. A tail naming all three is asked nothing, so the password may be piped in.',
                 fn (array $arguments, CommandIo $io): int => $this->createUser($arguments, $io),
             ),
         ];
@@ -104,21 +133,47 @@ final readonly class TeamCommandProvider implements CommandProviderInterface
             return self::refuse($io, \sprintf('Options take the form --tier=admin or --password=…, with the value joined on by "="; got %s.', implode(', ', $bare)));
         }
 
-        if (3 !== \count($positional)) {
+        if (\count($positional) > \count(self::NAMES)) {
             return self::refuse($io, 'Give an email address, a first name and a last name: team:user:create <email> <first name> <last name> [--tier=super-admin|admin|staff] [--password=…].');
         }
 
-        [$email, $firstName, $lastName] = $positional;
+        // A TAIL SHORT OF ITS NAMES WAS TYPED BY SOMEBODY, so the rest is asked
+        // for; a tail carrying all three was written by something, and is asked
+        // nothing at all.
+        $scripted = \count($positional) === \count(self::NAMES);
 
-        $tierToken = $options['tier'] ?? 'super-admin';
-        $tier = self::TIERS[$tierToken] ?? null;
-        if (null === $tier) {
-            return self::refuse($io, \sprintf('Unknown tier "%s". Use one of: %s.', $tierToken, implode(', ', array_keys(self::TIERS))));
+        $names = [];
+        foreach (self::NAMES as $index => $label) {
+            $given = $positional[$index] ?? self::ask($io, $label.':');
+            if (null === $given || '' === trim($given)) {
+                return self::refuse($io, \sprintf('%s: nothing was given, and nothing more can be read. Type it at the prompt, or write it on the command line: team:user:create <email> <first name> <last name>.', $label));
+            }
+
+            $names[] = trim($given);
         }
 
-        $password = $options['password'] ?? self::readPassword($io);
+        [$email, $firstName, $lastName] = $names;
+
+        if (isset($options['tier'])) {
+            // A TAIL IS REFUSED RATHER THAN ASKED AGAIN. It was written before
+            // the command ran, so it can be written again with the word
+            // corrected; a person mid-prompt has no such second chance.
+            $tier = self::TIERS[$options['tier']] ?? null;
+            if (null === $tier) {
+                return self::refuse($io, \sprintf('Unknown tier "%s". Use one of: %s.', $options['tier'], implode(', ', array_keys(self::TIERS))));
+            }
+        } elseif ($scripted) {
+            $tier = TeamRoleEnum::SuperAdmin;
+        } else {
+            $tier = self::askTier($io);
+            if (null === $tier) {
+                return self::refuse($io, \sprintf('Tier: nothing was given, and nothing more can be read. Type one of: %s, or pass --tier=….', implode(', ', array_keys(self::TIERS))));
+            }
+        }
+
+        $password = $options['password'] ?? self::readPassword($io, $scripted);
         if ('' === trim($password)) {
-            return self::refuse($io, 'A password is required. Pass --password=… or write it on standard input.');
+            return self::refuse($io, 'A password is required. Type it at the prompt, pass --password=…, or write it on standard input.');
         }
 
         // VERIFIED AND ACTIVE, unlike an invited account: this is the
@@ -196,16 +251,76 @@ final readonly class TeamCommandProvider implements CommandProviderInterface
     }
 
     /**
-     * One line from standard input, so a passphrase need never appear in a
-     * shell history or a process list. It comes through the channel rather than
-     * off \STDIN directly: the handler is given a process to run inside, and a
-     * command reading the file descriptor itself would be reading past whatever
-     * the console was actually wired to. An input that has ended offers nothing,
-     * which is an empty password and is refused above.
+     * A question and the line it is answered with, or null once the input has
+     * ended and asking again would be pointless.
+     *
+     * THE QUESTION GOES ON THE ERROR STREAM, for the same reason a refusal
+     * does: it is not what the command produced. A person whose output is being
+     * piped somewhere still reads it, and it never lands in that pipe.
      */
-    private static function readPassword(CommandIo $io): string
+    private static function ask(CommandIo $io, string $question): ?string
     {
-        return $io->readLine() ?? '';
+        $io->error($question);
+
+        return $io->readLine();
+    }
+
+    /**
+     * The tier a person types, asked until it is one — or null once the input
+     * has ended.
+     *
+     * AN EMPTY ANSWER IS THE DEFAULT, and the default is super admin: the
+     * account this command exists to make is the one an installation is
+     * bootstrapped with, and a first administrator who could not administer
+     * would leave nobody who can. A WORD THAT IS NOT A TIER IS ASKED AGAIN
+     * rather than refused, because the alternative is telling somebody who
+     * typed one letter wrong to start the whole command over.
+     */
+    private static function askTier(CommandIo $io): ?TeamRoleEnum
+    {
+        $tiers = implode(', ', array_keys(self::TIERS));
+
+        while (true) {
+            $answer = self::ask($io, \sprintf('Tier — %s [super-admin]:', $tiers));
+            if (null === $answer) {
+                return null;
+            }
+
+            $answer = trim($answer);
+            if ('' === $answer) {
+                return TeamRoleEnum::SuperAdmin;
+            }
+
+            $tier = self::TIERS[$answer] ?? null;
+            if (null !== $tier) {
+                return $tier;
+            }
+
+            $io->error(\sprintf('Unknown tier "%s". Use one of: %s.', $answer, $tiers));
+        }
+    }
+
+    /**
+     * The passphrase, through the verb that does not put it on the screen — so
+     * it need never appear in a shell history, a process list or a terminal's
+     * scrollback. It comes through the channel rather than off \STDIN directly:
+     * the handler is given a process to run inside, and a command reading the
+     * file descriptor itself would be reading past whatever the console was
+     * actually wired to.
+     *
+     * A SCRIPTED RUN IS NOT PROMPTED, only read: there is nobody to read the
+     * question, and the line the pipe holds is the answer either way, since
+     * readSecret() has no echo to suppress where there is no terminal. An input
+     * that has ended offers nothing, which is an empty password and is refused
+     * above.
+     */
+    private static function readPassword(CommandIo $io, bool $scripted): string
+    {
+        if (!$scripted) {
+            $io->error('Passphrase (not shown):');
+        }
+
+        return $io->readSecret() ?? '';
     }
 
     /**

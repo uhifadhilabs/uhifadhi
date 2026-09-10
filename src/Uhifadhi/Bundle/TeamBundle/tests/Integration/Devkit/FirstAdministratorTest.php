@@ -267,6 +267,154 @@ final class FirstAdministratorTest extends IntegrationTestCase
         self::assertStringContainsString('password', strtolower($io->diagnostics()));
     }
 
+    /**
+     * NOTHING TYPED AT ALL, AND THE COMMAND ASKS. The person who runs this is
+     * at the console of an installation with no accounts in it, and the tail
+     * they are expected to have memorised is four things long. So a tail that
+     * named nobody is a person, not a script, and a person is asked.
+     */
+    public function testATailThatNamesNothingIsAskedForEverything(): void
+    {
+        $io = new RecordingCommandIo(['ada@example.test', 'Ada', 'Mwangi', 'staff'], ['a-long-enough-passphrase']);
+
+        $exit = $this->collector()->run('team:user:create', [], $io);
+
+        self::assertSame(0, $exit, $io->diagnostics());
+
+        $user = $this->users()->findOneByEmail('ada@example.test');
+        self::assertNotNull($user);
+        self::assertSame('Ada Mwangi', $user->getFullName());
+        self::assertSame(TeamRoleEnum::Staff, $user->getTeamRole());
+
+        /** @var UserPasswordHasherInterface $hasher */
+        $hasher = static::getContainer()->get('test_public.hasher');
+        self::assertTrue($hasher->isPasswordValid($user, 'a-long-enough-passphrase'));
+    }
+
+    /** An answer that is not given is the default, and the default is Super Admin. */
+    public function testAnUnansweredTierIsTheDefaultOne(): void
+    {
+        $io = new RecordingCommandIo(['ada@example.test', 'Ada', 'Mwangi', ''], ['a-long-enough-passphrase']);
+
+        self::assertSame(0, $this->collector()->run('team:user:create', [], $io), $io->diagnostics());
+        self::assertSame(TeamRoleEnum::SuperAdmin, $this->users()->findOneByEmail('ada@example.test')?->getTeamRole());
+    }
+
+    /** What was given is not asked for again; only what is missing is. */
+    public function testOnlyWhatWasNotGivenIsAskedFor(): void
+    {
+        $io = new RecordingCommandIo(['Ada', 'Mwangi', ''], ['a-long-enough-passphrase']);
+
+        $exit = $this->collector()->run('team:user:create', ['ada@example.test'], $io);
+
+        self::assertSame(0, $exit, $io->diagnostics());
+        self::assertSame('Ada Mwangi', $this->users()->findOneByEmail('ada@example.test')?->getFullName());
+        self::assertStringNotContainsString('Email address', $io->diagnostics(), 'The address was given on the command line and is not asked for again.');
+        self::assertStringContainsString('First name', $io->diagnostics());
+    }
+
+    /**
+     * A TYPED ANSWER THAT IS NOT A TIER IS ASKED AGAIN, unlike a `--tier=` that
+     * is not one. A person mid-prompt has nowhere to go back to and no way to
+     * correct a word except by typing another; a tail was written before the
+     * command ran and can be written again.
+     */
+    public function testATierTypedWrongIsAskedAgain(): void
+    {
+        $io = new RecordingCommandIo(['ada@example.test', 'Ada', 'Mwangi', 'emperor', 'staff'], ['a-long-enough-passphrase']);
+
+        $exit = $this->collector()->run('team:user:create', [], $io);
+
+        self::assertSame(0, $exit, $io->diagnostics());
+        self::assertSame(TeamRoleEnum::Staff, $this->users()->findOneByEmail('ada@example.test')?->getTeamRole());
+        self::assertStringContainsString('emperor', $io->diagnostics());
+    }
+
+    /**
+     * THE PROMPTS ARE ON THE ERROR STREAM, because a prompt is not what the
+     * command produced — it must reach a person whose output is being piped
+     * somewhere, without landing in that pipe.
+     */
+    public function testTheQuestionsAreAskedOnTheErrorStream(): void
+    {
+        $io = new RecordingCommandIo(['ada@example.test', 'Ada', 'Mwangi', ''], ['a-long-enough-passphrase']);
+
+        $this->collector()->run('team:user:create', [], $io);
+
+        self::assertStringContainsString('Email address', $io->diagnostics());
+        self::assertStringNotContainsString('Email address', $io->output(), 'A question is not the command\'s result.');
+    }
+
+    /**
+     * THE PASSPHRASE IS ASKED FOR THROUGH THE VERB THAT DOES NOT ECHO IT, so
+     * that a person typing it at a prompt does not leave it in the scrollback.
+     */
+    public function testTheTypedPassphraseIsReadWithoutBeingEchoed(): void
+    {
+        $io = new RecordingCommandIo(['ada@example.test', 'Ada', 'Mwangi', ''], ['a-typed-passphrase']);
+
+        self::assertSame(0, $this->collector()->run('team:user:create', [], $io), $io->diagnostics());
+
+        $user = $this->users()->findOneByEmail('ada@example.test');
+        self::assertNotNull($user);
+
+        /** @var UserPasswordHasherInterface $hasher */
+        $hasher = static::getContainer()->get('test_public.hasher');
+        self::assertTrue($hasher->isPasswordValid($user, 'a-typed-passphrase'));
+        self::assertStringNotContainsString('a-typed-passphrase', $io->diagnostics().$io->output(), 'A secret that was asked for is never said back.');
+    }
+
+    /** A prompt answered with nothing is no passphrase, and is refused. */
+    public function testAPassphraseTypedEmptyIsRefused(): void
+    {
+        $io = new RecordingCommandIo(['ada@example.test', 'Ada', 'Mwangi', ''], ['']);
+
+        $exit = $this->collector()->run('team:user:create', [], $io);
+
+        self::assertSame(1, $exit);
+        self::assertNull($this->users()->findOneByEmail('ada@example.test'));
+        self::assertStringContainsString('password', strtolower($io->diagnostics()));
+    }
+
+    /** The option is the answer, so the question is never put. */
+    public function testTheOptionBypassesThePassphrasePrompt(): void
+    {
+        $io = new RecordingCommandIo([], ['a-typed-passphrase']);
+
+        $exit = $this->collector()->run('team:user:create', [
+            'ada@example.test', 'Ada', 'Mwangi', '--password=a-long-enough-passphrase',
+        ], $io);
+
+        self::assertSame(0, $exit, $io->diagnostics());
+
+        $user = $this->users()->findOneByEmail('ada@example.test');
+        self::assertNotNull($user);
+
+        /** @var UserPasswordHasherInterface $hasher */
+        $hasher = static::getContainer()->get('test_public.hasher');
+        self::assertTrue($hasher->isPasswordValid($user, 'a-long-enough-passphrase'));
+        self::assertFalse($hasher->isPasswordValid($user, 'a-typed-passphrase'));
+    }
+
+    /**
+     * A TAIL THAT NAMED EVERYTHING IS NEVER ASKED ANYTHING, and that is the
+     * rule that keeps the piped form working. The descriptor cannot see a
+     * terminal — the contract models no such thing — so the tail is the only
+     * signal of intent it has: a tail carrying all three names was written by
+     * something rather than typed by somebody, and a question put to a script
+     * is a question answered by whatever the pipe held next.
+     */
+    public function testATailThatNamedEverythingIsAskedNothing(): void
+    {
+        $io = new RecordingCommandIo(['a-piped-passphrase']);
+
+        $exit = $this->collector()->run('team:user:create', ['ada@example.test', 'Ada', 'Mwangi'], $io);
+
+        self::assertSame(0, $exit, $io->diagnostics());
+        self::assertSame('', $io->diagnostics(), 'Nothing is asked, so the pipe\'s one line is the passphrase and not a tier.');
+        self::assertSame(TeamRoleEnum::SuperAdmin, $this->users()->findOneByEmail('ada@example.test')?->getTeamRole());
+    }
+
     private function collector(): DevkitCommandCollector
     {
         $collector = static::getContainer()->get('test_public.devkit_commands');
