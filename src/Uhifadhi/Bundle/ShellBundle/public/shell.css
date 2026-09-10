@@ -707,7 +707,8 @@ table.tbl td {
 }
 table.tbl tr:hover td { background: color-mix(in srgb, rgb(var(--c-acc)) 4%, transparent); }
 table.tbl a { color: rgb(var(--c-acc)); text-decoration: none; font-weight: 600; }
-table.tbl .num { text-align: right; font-family: var(--font-mono); font-size: 12px; }
+table.tbl .num { text-align: right; font-family: var(--font-mono); }
+table.tbl td.num { font-size: 12px; }
 
 /* ---- THE META ROW — a label on the left, its value on the right ---------
    The card's answer to a table for two columns and no header: a stack of these
