@@ -65,25 +65,6 @@
     color: rgb(var(--c-fog));
 }
 
-/* THE FIELD, and it lives here rather than in the shell on purpose. The shell
-   owns what every page shows — plates, chips, the CTA — and a text input is not
-   that: this is the only screen in the module that has one. An installation with
-   forms of its own defines .fld again and wins, because its sheet loads after
-   this one. */
-.fld {
-    background: rgb(var(--c-raised));
-    border: 1px solid var(--c-ln2);
-    border-radius: 10px;
-    padding: 10px 13px;
-    color: rgb(var(--c-tx));
-    font-size: 13px;
-    width: 100%;
-    font-family: inherit;
-    box-sizing: border-box;
-}
-.fld::placeholder { color: rgb(var(--c-dim)); }
-.fld:focus { outline: none; border-color: rgb(var(--c-acc) / .6); }
-
 .auth-row {
     display: flex;
     align-items: center;
@@ -208,7 +189,12 @@
 }
 .newrow .inl { width: 272px; max-width: none; }
 .posact { display: flex; gap: 6px; justify-content: flex-end; }
-table.tbl th { white-space: nowrap; }
+/* Scoped to this module's own tables. The register table is the frame's, and a
+   header that never wraps is what the roster and the matrix need, not what
+   every table on the platform needs. */
+[data-tm] table.tbl th,
+[data-pm] table.tbl th,
+[data-people] table.tbl th { white-space: nowrap; }
 /* #fff, not a token: this is text on a saturated red fill, which is the same
    red in both themes — a token that flips would put dark text on it. */
 .open-btn.danger:hover { background: rgb(var(--c-fail)) !important; border-color: rgb(var(--c-fail)) !important; color: #fff !important; }
@@ -1667,6 +1653,16 @@ td .qual { white-space: nowrap; }
    are not rows of data. */
 [data-tm] table.tbl tbody tr:not(.tm-bandrow) { cursor: pointer; }
 
+/* A FILTER THAT MATCHES NOBODY IS A RESULT: an icon and a sentence saying which
+   filter produced it, not an empty table. Drawn as the platform's other empty
+   states are — the mark, then the words, aligned at their tops. */
+.tm-nores {
+    display: flex; gap: 12px; align-items: flex-start; padding: 14px 2px 2px;
+    color: rgb(var(--c-fog)); font-size: 12.5px; line-height: 1.6;
+}
+.tm-nores svg { flex: none; color: rgb(var(--c-fog)); margin-top: 2px; }
+.tm-nores b { display: block; color: rgb(var(--c-tx)); margin-bottom: 2px; }
+
 /* ---- B and D · the band header ------------------------------------------
    Tier, department and position are the grouping axes the model now has. B
    bands by tier; D bands by department and then by position inside it. All the
@@ -2261,41 +2257,17 @@ body[data-life="off"] .mb-band .avatar { opacity: .6; }
  * THE TWO-FIELD CREATE FORM: department first, because the name is only unique
  * once the department is chosen — beside the two links that leave the page.
  *
- * THE ROW IS LAID OUT HERE, NOT INHERITED. The design draws this header as
- * `.pgact.w-pgact` and ShellBundle's `.w-pgact` is what makes it a row, but the
- * wrapper is rendered by the SHELL (`page.html.twig` writes
- * `<div class="pgact">`), a module filling `shell_page_actions` cannot add a
- * class to it, and `.pgact` alone is `flex-shrink: 0` and nothing else. Left to
- * that, the form is a block on its own line, `.fld`'s `width: 100%` lets the
- * name field swallow the column, and the select, the field and the button come
- * out stacked into a squished column.
- *
- * The rule the design states is that EVERY CONTROL IN THE ROW IS THE SAME
- * HEIGHT: a .tgl at 11px/5px beside a .cta at 12px/7px beside a .fld at
- * 10px/13px is three different boxes on one line, which is what makes a header
- * look assembled rather than designed. Only weight and fill separate the
- * primary from the quiet ones — never size. This is `.w-pgact`'s block, scoped
- * to the header of the pages that load this stylesheet.
+ * THE ROW ITSELF IS THE FRAME'S. `.pgact` and every control in it is laid out
+ * by shell.css; the one thing left here is `.sel`, which is this module's own
+ * class and so is nobody else's to hold to the row's height.
  * ------------------------------------------------------------------------- */
-.pgact { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; }
-.pgact .assign { display: flex; align-items: center; gap: 9px; margin: 0; }
-.pgact .tgl,
-.pgact .cta,
-.pgact .assign .fld,
-.pgact .assign .sel,
-.pgact .assign button {
+.pgact .sel {
     height: 32px; box-sizing: border-box;
     display: inline-flex; align-items: center; gap: 7px;
     padding: 0 13px; border-radius: 9px;
     font-family: inherit; font-size: 12px; line-height: 1;
     white-space: nowrap; text-decoration: none;
 }
-.pgact .cta { font-weight: 700; }
-.pgact .tgl { font-weight: 600; }
-/* A fixed field rather than `.fld`'s full-width default: in a row, 100% is the
-   whole row. */
-.pgact .assign .fld { font-weight: 400; min-width: 0; width: 178px; }
-.pgact .tgl svg, .pgact .cta svg { width: 14px; height: 14px; flex: none; }
 
 /* ==================== RULED — OWNERSHIP IS TRANSFERABLE ==================
    No owner flag, no break-glass account. A Super Admin can promote a successor,
@@ -2331,12 +2303,10 @@ body[data-life="off"] .mb-band .avatar { opacity: .6; }
 
 /* THE SIGN-IN CARD'S OWN RULES ARE NOT REPEATED HERE. The design workspace's
    team-auth.css opens with a verbatim copy of them so its three pages render
-   standalone in a browser; in the bundle they are already above, at the top of
-   this file, and a second copy would be a second opinion about the one card
-   every one of these screens IS. The one rule the design added and the shipped
-   card lacked — a visible focus ring, without which a password field is
-   unusable by keyboard — is kept. */
-.fld:focus { outline: none; border-color: color-mix(in srgb, rgb(var(--c-acc)) 60%, transparent); }
+   standalone in a browser; the card is the frame's, and a second copy would be
+   a second opinion about the one card every one of these screens IS. The focus
+   ring a password field needs to be usable by keyboard is `.fld:focus` in
+   shell.css. */
 
 /* ==================== NEW — the self-service screens =====================
    Three screens the module does not yet draw: ask for a link, set a new
@@ -2643,6 +2613,11 @@ body[data-life="off"] .mb-band .avatar { opacity: .6; }
     font-variant-numeric: tabular-nums; white-space: nowrap;
 }
 .deptrow .dr-act { display: flex; align-items: center; gap: 7px; justify-self: end; flex-wrap: wrap; justify-content: flex-end; }
+/* The design puts every action in this row as a direct child. Reactivate is a
+   write, so here it is a button in a form with a token — and the form is what
+   the row would otherwise lay out, one flex item holding one button, spaced
+   unlike its siblings. `display: contents` hands the button back to the row. */
+.pf-inline { display: contents; }
 
 /* A DEACTIVATED DEPARTMENT reads greyed and struck through — the canonical
    design's .deptrow.inactive treatment (dashed border, dimmed, line-through
