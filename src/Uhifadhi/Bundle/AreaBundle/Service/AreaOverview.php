@@ -173,37 +173,6 @@ final readonly class AreaOverview
     }
 
     /**
-     * THE MODULE LAYERS AS THEIR LEGEND GROUPS — one group per contributor, in the
-     * order the layers arrived, each carrying the module's own colour for its dot.
-     *
-     * The legend is grouped by contributor because provenance is the only thing
-     * that lets a person tell why a layer vanished. The grouping is done here, on
-     * the flat list the plate already gathered, rather than in the template —
-     * a Twig template must be renderable in a bare installation whose Twig carries
-     * no extra filters, so the shape it loops over is built in PHP.
-     *
-     * @param list<MapLayer> $layers
-     *
-     * @return list<array{label: string, swatch: string, layers: list<MapLayer>}>
-     */
-    public static function groupByContributor(array $layers): array
-    {
-        $groups = [];
-        foreach ($layers as $layer) {
-            if (!isset($groups[$layer->groupLabel])) {
-                $groups[$layer->groupLabel] = [
-                    'label' => $layer->groupLabel,
-                    'swatch' => $layer->swatch,
-                    'layers' => [],
-                ];
-            }
-            $groups[$layer->groupLabel]['layers'][] = $layer;
-        }
-
-        return array_values($groups);
-    }
-
-    /**
      * The slugs of the modules this area has switched on.
      *
      * READ FROM THE REGISTRY'S LEDGER, never from what happens to be installed in
