@@ -110,6 +110,21 @@ final class ShellBundle extends AbstractBundle
     public const string ROUTES = '@ShellBundle/config/routes/welcome.php';
 
     /**
+     * THE CONFIGURE PAGE'S ADDRESSES, shipped the same way and imported the same
+     * way:
+     *
+     *     shell_configure:
+     *         resource: '@ShellBundle/config/routes/configure.php'
+     *
+     * A SECOND RESOURCE RATHER THAN A SECOND ROUTE IN THE FIRST, because the two
+     * are separate decisions: an installation may want the welcome page and no
+     * configure page (nothing configurable yet), or the configure page and its
+     * own front door at `/`. One file per decision keeps both reversible in one
+     * line.
+     */
+    public const string CONFIGURE_ROUTES = '@ShellBundle/config/routes/configure.php';
+
+    /**
      * The AssetMapper namespace this bundle's assets/ directory is mapped to.
      *
      * It is the npm-style form of the composer package name, and it has to be:

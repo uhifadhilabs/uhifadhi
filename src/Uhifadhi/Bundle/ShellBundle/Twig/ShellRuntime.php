@@ -15,6 +15,8 @@ namespace Uhifadhi\Bundle\ShellBundle\Twig;
 
 use Symfony\Component\Routing\RouterInterface;
 use Twig\Extension\RuntimeExtensionInterface;
+use Uhifadhi\Bundle\ShellBundle\Frame\Model\ConfigureAction;
+use Uhifadhi\Bundle\ShellBundle\Frame\Service\ModuleFrameService;
 use Uhifadhi\Bundle\ShellBundle\Model\AreaTab;
 use Uhifadhi\Bundle\ShellBundle\Model\NavSection;
 use Uhifadhi\Bundle\ShellBundle\Service\AreaShell;
@@ -35,6 +37,7 @@ final class ShellRuntime implements RuntimeExtensionInterface
     public function __construct(
         private readonly Navigation $navigation,
         private readonly AreaShell $areaShell,
+        private readonly ModuleFrameService $frame,
         private readonly UserBadgeReader $userBadge,
         private readonly Theme $theme,
         private readonly RouterInterface $router,
@@ -52,11 +55,26 @@ final class ShellRuntime implements RuntimeExtensionInterface
     }
 
     /**
+     * ONE STRIP, ONE POSITION, AND THE REQUEST DECIDES WHAT IS IN IT: an area's
+     * own screens, the data places of the module the viewer is inside, or — on a
+     * configure page — that surface's configure sections, standing exactly where
+     * the data tabs stand. A page asks for the strip; it never says which.
+     *
      * @return list<AreaTab>
      */
     public function tabs(): array
     {
-        return $this->areaShell->tabs();
+        return $this->frame->tabs();
+    }
+
+    /**
+     * THE SURFACE'S ONE CONFIGURATION ENTRY, or null on a page with nothing to
+     * configure. Two states, one control: it opens the configure page, and on
+     * the configure page it is lit and goes back to the overview.
+     */
+    public function configure(): ?ConfigureAction
+    {
+        return $this->frame->configure();
     }
 
     /**

@@ -366,6 +366,28 @@ body::before {
    shell names no module (BoundaryTest), so it ships no per-module hue of its own. */
 .ntree .ntm .mdot { width: 6px; height: 6px; border-radius: 2px; background: rgb(var(--c-acc)); flex: none; }
 
+/* THE SIDEBAR'S FOURTH LEVEL — a module's own screens under its module row.
+   nav.css stops at .ntm (level three: the installed modules). A screen list
+   under one module needs a fourth rung, and it continues the same system:
+   +12px indent, the connector rail 12px further right, one step quieter in
+   size and colour, the same accent treatment for the current row. No marker
+   of its own — .ntm's square dot is the module's identity and repeating a
+   glyph one level down reads as a second kind of thing.
+   .ntm gains .par (an ancestor of the current row: legible, not accented),
+   and its caret reuses the existing [data-subtree-toggle] + .ntgroup pair, so
+   collapse works with no change to assets/app.js. */
+.ntree .nts { padding: 4px 12px 4px 76px; font-size: 10.5px; color: var(--dim); }
+.ntree .nts::before { content: ""; position: absolute; left: 59px; top: -3px; bottom: 50%; width: 1px; background: var(--ln2); }
+.ntree .nts::after { content: ""; position: absolute; left: 59px; top: 50%; width: 8px; height: 1px; background: var(--ln2); }
+.ntree .nts:hover { color: var(--tx); background: var(--raised); }
+.ntree .nts.on {
+    color: var(--acc); background: color-mix(in srgb, var(--acc) 12%, transparent);
+    border-left-color: var(--acc); font-weight: 600;
+}
+.ntree .ntm.par { color: var(--tx); font-weight: 600; }
+.ntree .ntm.par .chev { margin-left: auto; }
+.ntree .ntm.par.closed .chev { transform: rotate(-90deg); }
+
 /* Carets: every node with children carries one, it only ever folds (the label
    navigates), and a folded caret points at what it would reveal. One unified
    rule at every depth, in place of the design's three near-copies. */
@@ -777,6 +799,289 @@ table.tbl tr:hover .open-btn {
 .r { color: rgb(var(--c-fail)); }
 .d { color: rgb(var(--c-dim)); }
 .muted { color: rgb(var(--c-dim)); }
+
+/* ==================== THE GRADUATED VOCABULARY ====================
+   The platform-wide components every module draws with: the labelled form row,
+   the settings list, the pager, the list filter, the upload box, the month's
+   marks and the record page's grid. Each of them is a class more than one
+   module needs, so each is defined ONCE here and no module's own sheet
+   redefines it — a component stated twice renders differently depending on
+   which sheet loaded last, and four private copies of one row is four rows.
+
+   `.upl-*` and `.cal-*` SHIP AHEAD OF THE COMPONENTS THAT USE THEM, for exactly
+   that reason. A file enters the product through more than one door and a month
+   is drawn by more than one module, so the box and the mark belong to the frame
+   before there is a module to claim them; the alternative is the first module
+   to need one owning it, and the second module copying it.
+
+   Same discipline as the section above: unscoped, tokens only, and correct in
+   both palettes with no html.dark override. */
+
+/* A PAGE ACTION THAT IS THE PAGE YOU ARE ON. The strip names the data places;
+   a configuration screen is not one, so the control that opened it carries the
+   current state instead of a tab. Same box, same height, same padding as every
+   other .tgl — only the ground, the border and the colour change, so the row
+   never steps when one control is lit. */
+.w-pgact .tgl.on {
+    color: var(--acc); border-color: color-mix(in srgb, var(--acc) 55%, transparent);
+    background: color-mix(in srgb, var(--acc) 10%, transparent);
+}
+
+/* A LABELLED FORM ROW. Host form vocabulary: a label beside a control belongs to
+   no module. Lived in patrols.css, so every screen outside the patrol module
+   rendered one unstyled. */
+.frow { display: grid; grid-template-columns: 130px 1fr; gap: 12px; align-items: center; padding: 7px 0; }
+.frow > label {
+    font: 600 9.5px "JetBrains Mono", monospace; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--fog);
+}
+.save-row { display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin-top: 18px; }
+
+/* THE SETTINGS LIST ROW — a named thing with its own actions.
+   Patrol types, stations, incident kinds: one row is a label, a quiet code,
+   a usage count, and the two actions a never-deleted registry allows. The
+   row keeps one height whether or not it carries a retired badge, and the
+   actions sit on the label's baseline rather than under it. */
+.srow { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px dashed var(--ln); }
+.srow:last-of-type { border-bottom: 0; }
+.srow > .nm { font-size: 12.5px; font-weight: 600; color: var(--tx); }
+.srow > .cd {
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 9.5px; letter-spacing: .06em;
+    color: var(--dim);
+}
+.srow > .n {
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10px; color: var(--fog);
+    margin-left: auto; font-variant-numeric: tabular-nums;
+}
+.srow > .acts { display: inline-flex; align-items: center; gap: 6px; flex: none; }
+.srow.gone > .nm { color: var(--fog); text-decoration: line-through; text-decoration-color: var(--ln2); }
+.srow .swatch { width: 9px; height: 9px; border-radius: 3px; flex: none; }
+.sact {
+    border: 1px solid var(--ln2); background: none; color: var(--fog); border-radius: 7px;
+    padding: 4px 10px 5px; font: 600 9.5px "JetBrains Mono", monospace; letter-spacing: .08em;
+    text-transform: uppercase; cursor: pointer; line-height: 1;
+}
+.sact:hover { color: var(--tx); border-color: var(--fog); }
+.sact.warn:hover { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 55%, transparent); }
+.sadd {
+    border: 1px dashed var(--acc); background: none; color: var(--acc); border-radius: 8px;
+    padding: 6px 12px 7px; font: 600 10px "JetBrains Mono", monospace; letter-spacing: .08em;
+    text-transform: uppercase; cursor: pointer; margin-top: 10px; line-height: 1;
+}
+.snum { width: 104px; }
+.sout {
+    display: flex; align-items: center; gap: 12px; border: 1px solid var(--ln2); border-radius: 11px;
+    padding: 12px 14px; background: var(--raised);
+}
+.sout .bd { flex: 1; font-size: 12.5px; line-height: 1.55; color: var(--fog); }
+.sout .bd b { color: var(--tx); }
+
+/* THE PAGINATION ROW — one rule for every full-page list in the product.
+   Count on the left, page controls on the right, both on one baseline; the
+   current page is a filled pill at the same 28px height as its neighbours so
+   the row never changes height between pages. */
+.pgr { display: flex; align-items: center; gap: 10px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--ln); }
+.pgr .cnt {
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10.5px; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--dim);
+}
+.pgr .sp { flex: 1; }
+.pgr a, .pgr span.pg-n {
+    display: inline-flex; align-items: center; justify-content: center; min-width: 28px; height: 28px;
+    padding: 0 9px; border: 1px solid var(--ln2); border-radius: 8px;
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 11px; font-weight: 600; color: var(--fog); text-decoration: none;
+}
+/* The design's hover fill is `var(--card)`, which the design defines as the
+   raised surface — the same reading `.backbtn` above takes. */
+.pgr a:hover { color: var(--tx); border-color: var(--fog); background: var(--raised); }
+.pgr span.pg-n.on { color: var(--accT); background: var(--acc); border-color: var(--acc); }
+.pgr span.pg-n.gap { border: 0; color: var(--dim); }
+.pgr a.off { color: var(--dim); border-style: dashed; pointer-events: none; }
+
+/* THE LIST FILTER ROW — the filters and their live counts, then the search at
+   the far right of the same row. One row, one baseline: the field and the
+   chips are centred against each other rather than stacked a pixel apart.
+   The magnifier sits inside the field and never changes its height. */
+.lfilt { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 2px 0 14px; }
+.lsearch { position: relative; display: inline-flex; align-items: center; flex: none; margin-left: auto; }
+.lsearch svg { position: absolute; left: 11px; width: 14px; height: 14px; color: var(--dim); pointer-events: none; }
+.lsearch .fld { width: 246px; padding: 7px 12px 8px 32px; font-size: 12.5px; border-radius: 99px; }
+.lsearch .fld::-webkit-search-cancel-button { filter: grayscale(1); opacity: .5; }
+
+/* ---- THE UPLOAD COMPONENT — one component, two presentations. ------------
+   Every place a file enters the product wears one of these. The
+   dropzone card is the whole step (imports, documents); the add tile
+   is one cell of a grid of things already attached. Both draw the
+   same four moments — waiting, receiving, refused, kept — with one
+   bar height, one chip height and one action box, so a file behaves
+   the same way whichever door it came through.
+   Tokens only; both themes. The one deliberate exception is the kept
+   tile's ground, which is fixed like .i-ph: a photograph does not get
+   lighter when the interface does. */
+
+/* ── the dropzone card ─────────────────────────────────────────── */
+.upl-zone {
+    border: 2px dashed var(--ln2); border-radius: 12px; padding: 26px 20px; display: flex;
+    flex-direction: column; align-items: center; gap: 10px; color: var(--fog); text-align: center;
+    transition: border-color .15s, background .15s, color .15s;
+}
+.upl-zone:hover { border-color: var(--fog); }
+.upl-zone.over { border-color: var(--acc); color: var(--acc); background: color-mix(in srgb, var(--acc) 8%, transparent); }
+.upl-zone .lead { font-size: 13px; line-height: 1.5; }
+.upl-zone .lead a { color: var(--acc); text-decoration: none; font-weight: 600; }
+.upl-zone > svg { display: block; color: inherit; }
+.upl-kinds { font: 500 9.5px "JetBrains Mono", monospace; letter-spacing: .06em; color: var(--dim); line-height: 1.6; }
+
+/* ── the queue: one row per file, one height per row ───────────── */
+.upl-list { display: flex; flex-direction: column; gap: 7px; width: 100%; max-width: 540px; margin-top: 2px; }
+.upl-file {
+    display: flex; align-items: center; gap: 9px; background: var(--raised); border: 1px solid var(--ln2);
+    border-radius: 9px; padding: 0 10px; min-height: 38px; text-align: left;
+}
+.upl-file > svg { width: 14px; height: 14px; flex: none; color: var(--fog); display: block; }
+.upl-file .nm {
+    font: 600 11px "JetBrains Mono", monospace; color: var(--tx); flex: none; max-width: 196px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.upl-file .sz { font: 500 10px "JetBrains Mono", monospace; color: var(--dim); flex: none; }
+.upl-file .why { flex: 1; font-size: 11.5px; color: var(--fail); line-height: 1.35; min-width: 80px; }
+.upl-file .pct {
+    font: 600 10px "JetBrains Mono", monospace; color: var(--fog); flex: none; width: 36px;
+    text-align: right; font-variant-numeric: tabular-nums;
+}
+.upl-file.bad {
+    border-color: color-mix(in srgb, var(--fail) 45%, transparent);
+    background: color-mix(in srgb, var(--fail) 7%, transparent);
+}
+.upl-file.bad > svg { color: var(--fail); }
+.upl-file.done { border-color: color-mix(in srgb, var(--ok) 35%, transparent); }
+/* A chip in a file row is the same 19px box with a glyph or without it, so a
+   queue of mixed rows never steps up and down. */
+.upl-file .chip { height: 19px; display: inline-flex; align-items: center; padding: 0 7px; line-height: 1; flex: none; }
+.upl-file .chip svg { height: 10px; width: auto; margin-right: 4px; display: block; }
+
+/* ── ONE bar height, wherever a bar is drawn ───────────────────── */
+.upl-bar {
+    height: 6px; border-radius: 3px; background: color-mix(in srgb, var(--fog) 20%, transparent);
+    overflow: hidden; flex: 1; min-width: 44px;
+}
+.upl-bar > i { display: block; height: 100%; border-radius: 3px; background: var(--acc); }
+
+/* ── ONE action box: a word or a glyph, same height either way ──── */
+.upl-act {
+    display: inline-flex; align-items: center; justify-content: center; height: 22px; padding: 0 8px;
+    border: 1px solid var(--ln2); border-radius: 6px; background: none; color: var(--fog); cursor: pointer; flex: none;
+    font: 600 9.5px "JetBrains Mono", monospace; letter-spacing: .08em; text-transform: uppercase; line-height: 1;
+    text-decoration: none;
+}
+.upl-act:hover { color: var(--tx); border-color: var(--fog); }
+.upl-act.dg:hover { color: var(--fail); border-color: color-mix(in srgb, var(--fail) 55%, transparent); }
+.upl-act.x { width: 22px; padding: 0; font-size: 13px; letter-spacing: 0; text-transform: none; }
+.upl-act.x:hover { color: var(--fail); border-color: color-mix(in srgb, var(--fail) 55%, transparent); }
+
+/* ── the add tile: the SAME box as an evidence tile, in every state ─
+   aspect-ratio, radius and border width are stated once and no state
+   changes any of them — only the border style, the ground and what is
+   inside. A tile that resized while uploading would make the grid
+   jump under the pointer. */
+.upl-tile {
+    aspect-ratio: 4/3; border-radius: 9px; border: 1px solid var(--ln2); position: relative; overflow: hidden;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 0;
+    color: var(--fog); background: none; cursor: pointer; font-family: inherit;
+    transition: border-color .15s, color .15s, background .15s;
+}
+.upl-tile .lbl { font: 600 9.5px "JetBrains Mono", monospace; letter-spacing: .06em; line-height: 1.4; }
+.upl-tile > svg { display: block; }
+.upl-tile.idle { border-style: dashed; }
+.upl-tile.idle:hover { border-color: var(--acc); color: var(--acc); }
+.upl-tile.over {
+    border-style: dashed; border-color: var(--acc); color: var(--acc);
+    background: color-mix(in srgb, var(--acc) 10%, transparent);
+}
+.upl-tile.busy { cursor: default; color: var(--tx); background: color-mix(in srgb, var(--fog) 7%, transparent); }
+.upl-tile.busy .fill {
+    position: absolute; left: 0; right: 0; bottom: 0; pointer-events: none;
+    background: color-mix(in srgb, var(--acc) 15%, transparent);
+}
+.upl-tile .pct {
+    font: 700 16px "JetBrains Mono", monospace; font-variant-numeric: tabular-nums; color: var(--tx);
+    position: relative;
+}
+.upl-tile .fn {
+    position: absolute; left: 6px; right: 6px; bottom: 9px; font: 600 8.5px "JetBrains Mono", monospace;
+    color: var(--fog); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center;
+}
+.upl-tile .upl-bar { position: absolute; left: 0; right: 0; bottom: 0; border-radius: 0; flex: none; background: none; }
+.upl-tile.bad {
+    border-color: color-mix(in srgb, var(--fail) 50%, transparent);
+    background: color-mix(in srgb, var(--fail) 8%, transparent); color: var(--fail); cursor: default;
+}
+.upl-tile.bad .lbl { color: var(--fail); padding: 0 9px; text-align: center; line-height: 1.45; }
+/* kept: an ordinary evidence tile, with its removal always at least visible */
+.upl-tile.done {
+    color: #8CA093; cursor: pointer;
+    background: radial-gradient(90px 60px at 40% 35%, #2A3327 0%, transparent 70%), #20241F;
+}
+.upl-tile.done:hover { border-color: color-mix(in srgb, var(--acc) 55%, transparent); }
+.upl-tile.done .fn { color: #EAF2EC; background: rgba(10, 14, 11, .72); padding: 3px 6px; border-radius: 4px; bottom: 6px; }
+.upl-tile .rm {
+    position: absolute; top: 5px; right: 5px; width: 20px; height: 20px; display: grid; place-items: center;
+    border-radius: 6px; border: 1px solid rgba(234, 242, 236, .3); background: rgba(10, 14, 11, .68); color: #EAF2EC;
+    font-size: 12px; line-height: 1; opacity: .62; cursor: pointer; transition: opacity .15s, color .15s;
+}
+.upl-tile.done:hover .rm { opacity: 1; }
+.upl-tile .rm:hover { color: #FF8A73; border-color: #FF8A73; }
+/* On a tile that is not a photograph the ground is the interface's, so the same
+   box takes the interface's tokens rather than the photo overlay's. */
+.upl-tile.busy .rm { opacity: 1; background: var(--cv); border-color: var(--ln2); color: var(--fog); }
+.upl-tile.busy .rm:hover { color: var(--fail); border-color: color-mix(in srgb, var(--fail) 55%, transparent); }
+/* the removal question, asked inside the tile's own box — never a browser dialog */
+.upl-tile.confirm {
+    border-color: color-mix(in srgb, var(--fail) 50%, transparent);
+    background: color-mix(in srgb, var(--fail) 8%, transparent); cursor: default; padding: 0 8px;
+}
+.upl-tile.confirm .lbl { color: var(--fail); text-align: center; line-height: 1.45; }
+.upl-tile.confirm .row { display: flex; gap: 6px; }
+
+/* The bed an add tile sits in when a record grows its own small evidence grid,
+   rather than the module's full-width one. Same cell size, so a tile is the
+   same tile wherever it is drawn. */
+.upl-tilebed { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 10px; }
+
+/* ---- THE MONTH'S MARKS AND ITS STEPPER — HOST VOCABULARY, ONE COPY -------
+   What goes IN a day cell is the module's; the mark it goes in is not, and
+   the three controls that step the month are the same three on every month. */
+/* One thing on one day. Filled means open, hollow means closed — the same
+   reading the map plate uses, so a mark means one thing across the product. */
+.cal-mark {
+    display: flex; align-items: center; gap: 5px; min-width: 0; border: 1px solid var(--ln2); border-radius: 6px;
+    padding: 2px 5px 3px; font: 600 9px "JetBrains Mono", monospace; color: var(--tx); text-decoration: none;
+    background: var(--cv); line-height: 1.2;
+}
+.cal-mark:hover { border-color: var(--fog); }
+.cal-mark i { width: 6px; height: 6px; border-radius: 2px; flex: none; background: var(--acc); }
+.cal-mark.done i { background: none; box-shadow: inset 0 0 0 1.5px var(--acc); }
+.cal-mark .l { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cal-more { font: 600 9px "JetBrains Mono", monospace; color: var(--dim); text-decoration: none; padding: 1px 5px; }
+.cal-more:hover { color: var(--acc); }
+/* The month stepper, above the grid — the same three controls on every month. */
+.cal-nav { display: flex; gap: 8px; align-items: center; margin-top: 2px; }
+
+/* ---- A RECORD PAGE IS ONE GRID. ----------------------------------------
+   Every row on a record page shares the same two columns, so a card is exactly
+   as wide as the card above it. A flex ratio resolves against each row's own
+   content and drifts a few pixels per row — a grid template cannot. The ratio
+   is stated once here and nowhere on a page. */
+.recgrid {
+    display: grid; grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr); gap: 16px;
+    align-items: stretch; margin-bottom: 16px;
+}
+.recgrid > .c, .recgrid > .col { min-width: 0; }
+/* A column that stacks several cards keeps the same gap as the grid itself. */
+.recgrid > .col { display: flex; flex-direction: column; gap: 16px; }
+/* One column below the width where two would squeeze the plate to a strip. */
+@media (max-width: 1000px) { .recgrid { grid-template-columns: minmax(0, 1fr); } }
 
 /* ==================== THE CATALOGUE PICTURE ==================== */
 .mtile { display: flex; flex-direction: column; gap: 9px; padding: 15px 16px; text-decoration: none; transition: border-color .15s, transform .12s; }

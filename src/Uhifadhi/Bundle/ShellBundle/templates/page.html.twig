@@ -19,7 +19,18 @@
     {%- set _crumbs %}{% block shell_breadcrumbs %}{% endblock %}{% endset -%}
     {%- set _title %}{% block shell_page_title %}{% endblock %}{% endset -%}
     {%- set _subtitle %}{% block shell_page_subtitle %}{% endblock %}{% endset -%}
-    {%- set _actions %}{% block shell_page_actions %}{% endblock %}{% endset -%}
+    {%- set _actions %}
+        {%- set _configure = shell_configure() -%}
+        {#- THE ONE CONFIGURATION ENTRY, WRITTEN BY THE FRAME. A module never
+            types it, which is the only way "exactly one entry per surface" stays
+            true across modules nobody has written yet: no Settings button, no
+            kinds link, no Widget library button, and no "Back to dashboard". The
+            same control opens the configure page and, once you are on it, lights
+            and takes you back. -#}
+        {%- if _configure is not null %}<a class="tgl{{ _configure.current ? ' on' }}" href="{{ _configure.url }}"
+            {%- if _configure.hint is not empty %} title="{{ _configure.hint }}"{% endif %}>{{ ux_icon('shell:settings') }} Configure</a>{% endif -%}
+        {%- block shell_page_actions %}{% endblock -%}
+    {% endset -%}
     {%- set _tabs %}
         {%- block shell_page_tabs -%}
             {# THE DEFAULT IS THE AREA SHELL, and that is the defect this fixes:
@@ -50,7 +61,7 @@
                     {%- if _title|trim is not empty %}<h1 class="pg">{{ _title }}</h1>{% endif -%}
                     {%- if _subtitle|trim is not empty %}<p class="pgsub">{{ _subtitle }}</p>{% endif -%}
                 </div>
-                {%- if _actions|trim is not empty %}<div class="pgact">{{ _actions }}</div>{% endif -%}
+                {%- if _actions|trim is not empty %}<div class="pgact w-pgact">{{ _actions }}</div>{% endif -%}
             {%- endif -%}
         {% endblock %}{% endset -%}
         {%- if _head|trim is not empty %}<div class="pghead">{{ _head }}</div>{% endif -%}

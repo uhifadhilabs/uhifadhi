@@ -15,6 +15,10 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
 use Uhifadhi\Bundle\ShellBundle\Contract\LayoutContract;
 use Uhifadhi\Bundle\ShellBundle\Controller\WelcomeController;
+use Uhifadhi\Bundle\ShellBundle\Frame\Controller\ConfigureController;
+use Uhifadhi\Bundle\ShellBundle\Frame\Registry\ConfigurationSectionsRegistry;
+use Uhifadhi\Bundle\ShellBundle\Frame\Registry\ModuleTabsRegistry;
+use Uhifadhi\Bundle\ShellBundle\Frame\Service\ModuleFrameService;
 use Uhifadhi\Bundle\ShellBundle\Service\AreaShell;
 use Uhifadhi\Bundle\ShellBundle\Service\Installation;
 use Uhifadhi\Bundle\ShellBundle\Service\Navigation;
@@ -23,6 +27,8 @@ use Uhifadhi\Bundle\ShellBundle\Service\UserBadgeReader;
 use Uhifadhi\Bundle\ShellBundle\ShellBundle;
 use Uhifadhi\Bundle\ShellBundle\Twig\ShellExtension;
 use Uhifadhi\Bundle\ShellBundle\Twig\ShellRuntime;
+use Uhifadhi\Contracts\Shell\ConfigurationSectionsInterface;
+use Uhifadhi\Contracts\Shell\ModuleTabsInterface;
 
 /*
  * The bundle's static service wiring.
@@ -131,6 +137,62 @@ return static function (ContainerConfigurator $container): void {
         ])
         ->tag('controller.service_arguments');
 
+    /*
+     * THE MODULE FRAME'S TWO COLLECTORS. Tagged iterators, walked on every
+     * render: whatever carries the tag contributes, and a module switched off
+     * this morning is out of the strip this morning rather than after a deploy.
+     *
+     * The pair is deliberate and not one registry with two verbs — a module with
+     * data places need not have a configure page, and a surface with a configure
+     * page need not have data places (the area is exactly that).
+     */
+    $services->set('shell.frame.module_tabs', ModuleTabsRegistry::class)
+        ->args([tagged_iterator(ModuleTabsInterface::TAG)]);
+
+    $services->set('shell.frame.configuration_sections', ConfigurationSectionsRegistry::class)
+        ->args([tagged_iterator(ConfigurationSectionsInterface::TAG)]);
+
+    /*
+     * WHICH STRIP A PAGE GETS, AND WHERE ITS `Configure` GOES.
+     *
+     * THE MODULE MARKER ARRIVES AS A STRING, not as a constant read off the
+     * registry. The shell requires no registry — a page frame that had to be
+     * installed alongside a module ledger would not be a page frame — and
+     * importing one to learn the spelling of a route default would be buying a
+     * dependency for a word. The default is the marker the platform publishes as
+     * RegistryBundle::MODULE_ROUTE_DEFAULT. It is an argument rather than a
+     * configuration key because it is a property of the PLATFORM, not of a
+     * deployment: nobody installing the shell gets to choose it, and this tree
+     * stays as small as its own rules demand.
+     */
+    $services->set('shell.frame', ModuleFrameService::class)
+        ->args([
+            service('request_stack'),
+            service('router'),
+            service('shell.frame.module_tabs'),
+            service('shell.frame.configuration_sections'),
+            service('shell.area_shell'),
+            ConfigureController::AREA_ROUTE,
+            ConfigureController::MODULE_ROUTE,
+            ModuleFrameService::MODULE_ROUTE_ATTRIBUTE,
+            ModuleFrameService::AREA_PARAMETER,
+        ]);
+
+    /*
+     * THE CONFIGURE PAGE, as a controller service — the `controller.service_arguments`
+     * tag is what lets the routes address it by id, keeping it an ordinary,
+     * explicitly wired service rather than a public one fished out by class name.
+     *
+     * REACHABLE ONLY IF THE APPLICATION SAYS SO. config/routes/configure.php puts
+     * it at an address, and nothing here loads that file.
+     */
+    $services->set('shell.controller.configure', ConfigureController::class)
+        ->args([
+            service('twig'),
+            service('shell.frame'),
+        ])
+        ->tag('controller.service_arguments');
+
     $services->set('shell.twig.extension', ShellExtension::class)
         ->tag('twig.extension');
 
@@ -138,6 +200,7 @@ return static function (ContainerConfigurator $container): void {
         ->args([
             service('shell.navigation'),
             service('shell.area_shell'),
+            service('shell.frame'),
             service('shell.user_badge'),
             service('shell.theme'),
             service('router'),

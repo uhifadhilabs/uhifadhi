@@ -35,8 +35,13 @@ final class ShellExtension extends AbstractExtension
         return [
             // The sidebar's content, collected from the tagged sources.
             new TwigFunction('shell_nav', [ShellRuntime::class, 'nav']),
-            // The tab strip: the sibling screens of wherever the viewer is.
+            // The tab strip: the sibling screens of wherever the viewer is —
+            // an area's screens, a module's data places, or, on a configure
+            // page, that surface's configure sections in their place.
             new TwigFunction('shell_tabs', [ShellRuntime::class, 'tabs']),
+            // The surface's ONE configuration entry, or null where there is
+            // nothing to configure. The frame draws it so no module does.
+            new TwigFunction('shell_configure', [ShellRuntime::class, 'configure']),
             // "<page> — <place> — <brand>", composed once, by the shell.
             new TwigFunction('shell_title', [ShellRuntime::class, 'title']),
             // Who the top bar names — the viewer's card — or null when nobody.

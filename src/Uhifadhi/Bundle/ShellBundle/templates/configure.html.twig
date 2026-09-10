@@ -1,0 +1,36 @@
+{# THE CONFIGURE PAGE — the shell's, for every surface in the platform.
+
+   ONE CONFIGURATION ENTRY, ONE PAGE. A module's settings, the words it lets a
+   ranger pick from, the library its dashboard is composed in: all of it is
+   behind the one `Configure` action and all of it is on this page, as sections.
+   No module writes a settings screen of its own, and none writes a way back —
+   the surface's first data tab and the crumb are the way back.
+
+   THE DATA TABS ARE NOT SHOWN HERE. The section strip stands exactly where they
+   stand, in the same component, so a person always reads one strip in one place
+   and it always answers "which of these am I looking at". The frame renders it
+   from `shell_tabs()` like any other strip; nothing below has to know.
+
+   THE SECTION'S CONTENT IS THE SURFACE'S. Everything above the body belongs to
+   the shell; the body is a template the surface named through the contract, and
+   the shell neither reads a setting nor knows one exists. #}
+{% extends '@Shell/page.html.twig' %}
+
+{% block title %}{{ heading }} &middot; configure{% endblock %}
+
+{% block shell_breadcrumbs %}
+    <a href="{{ shell_brand().url }}">{{ shell_brand().name|lower }}</a> /
+    {%- if back is not null %} <a href="{{ back }}">{{ heading|lower }}</a> / {% else %} {{ heading|lower }} / {% endif -%}
+    configure
+{% endblock %}
+
+{% block shell_page_title %}{{ heading }} &middot; configure{% endblock %}
+
+{% block shell_page_subtitle %}{{ summary }}{% endblock %}
+
+{# THE SECTION, RENDERED BY WHOEVER OWNS IT. `only` is deliberate: a section
+   template receives the section it is and nothing else out of this page's
+   scope, so it cannot come to depend on a variable the shell happens to have
+   in hand today. Everything it needs about its own surface it reads from its
+   own services. #}
+{% block shell_page %}{{ include(section.template, {section: section}, with_context: false) }}{% endblock %}
