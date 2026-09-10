@@ -175,7 +175,7 @@ final class AtlasMap
      * `event.detail.extra.atlas`.
      *
      * @return array{
-     *     layers: list<array{id: string, features: array<string, mixed>|null, url: string|null, swatch: string, shape: string, visible: bool}>,
+     *     layers: list<array<string, mixed>>,
      *     boundary: array{geojson: array<string, mixed>, scrim: bool}|null,
      *     baseLayers: list<string>,
      *     fullscreen: bool,

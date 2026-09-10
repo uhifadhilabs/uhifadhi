@@ -13,6 +13,10 @@ APIs are not written here because they are not written yet.
 - [How a module gets a map](#how-a-module-gets-a-map)
 - [The map builder](#the-map-builder)
 - [Layers](#layers)
+- [Styling a layer's features](#styling-a-layers-features)
+- [Tooltips and popups](#tooltips-and-popups)
+- [Spotlighting a feature from elsewhere on the page](#spotlighting-a-feature-from-elsewhere-on-the-page)
+- [How tall a plate is](#how-tall-a-plate-is)
 - [The boundary](#the-boundary)
 - [The legend](#the-legend)
 - [Base layers, fullscreen and fitting](#base-layers-fullscreen-and-fitting)
@@ -95,6 +99,138 @@ as a permanent halo over the shape.
 A layer with `visible: false` is still built, so its first switch costs no round trip. A layer
 with a `url` is built empty and filled when the fetch answers — the plate never waits on a
 request to become a map.
+
+## Styling a layer's features
+
+A shape settles what a line, a fill and a point look like for the whole platform. On top of that
+a layer states the few things that carry MEANING rather than house style — a hollow mark for a
+closed case, a dashed ring for the serious end, a wider stroke for one route.
+
+Two statements, and both are data:
+
+- **`style`** — a `LayerStyle` every feature of the layer wears, merged over the shape's answer;
+- **`rules`** — `StyleRule`s keyed on the features' own properties, merged over `style` in the
+  order they are written.
+
+```php
+use Uhifadhi\Bundle\AtlasBundle\Model\LayerStyle;
+use Uhifadhi\Bundle\AtlasBundle\Model\StyleRule;
+
+$map->addLayer(new GeoJsonLayer(
+    id: 'sightings.recent',
+    label: 'This week',
+    features: $collection,
+    swatch: '#E5C15A',
+    shape: LayerShape::Point,
+    style: new LayerStyle(radius: 5.5, weight: 1.6, fillOpacity: 0.85),
+    rules: [
+        // a finished sighting is HOLLOW
+        StyleRule::when('open', false)->fillOpacity(0.0),
+        // and the serious end wears a dashed ring
+        StyleRule::when('severity', ['high', 'critical'])->radius(7.0)->weight(2.4)->dashArray('3 3'),
+    ],
+));
+```
+
+A style states **only what it changes**; an unstated property keeps the shape's own answer. The
+vocabulary is Leaflet's own path options, so what you write and what the browser receives are the
+same word:
+
+| Statement | What it sets |
+|---|---|
+| `color(string)` | the stroke colour |
+| `weight(float)` | the stroke width, in pixels |
+| `opacity(float)` | the stroke opacity, 0–1 |
+| `fill(bool)` | whether the shape is filled at all |
+| `fillColor(string)` / `fillOpacity(float)` | the fill, where it differs from the stroke |
+| `dashArray(string)` | an SVG dash pattern, e.g. `'4 3'` |
+| `radius(float)` | the circle radius of a point feature |
+| `zIndex(int)` | which pane it is drawn in — higher is nearer the reader |
+
+`zIndex` is the only way to say "this layer sits over that one" independently of the order the
+layers were added in: the plate builds one Leaflet pane per stated value.
+
+**No callback crosses the wire.** A rule is a property name, the values that satisfy it and the
+style they earn — which is a thing JSON can carry and one controller can evaluate. That is
+precisely why your module ships no map JavaScript.
+
+## Tooltips and popups
+
+Both are stated as **property names**. The plate reads the property, writes the markup and escapes
+the value, so a headline somebody typed into a form cannot become an element on a map.
+
+```php
+use Uhifadhi\Bundle\AtlasBundle\Model\FeaturePopup;
+
+new GeoJsonLayer(
+    id: 'sightings.recent',
+    label: 'This week',
+    features: $collection,
+    // read on HOVER — a floating label, following the cursor
+    tooltip: 'summary',
+    // opened on CLICK
+    popup: new FeaturePopup(
+        title: 'title',
+        lines: ['category', 'statusLabel'],
+        href: 'href',
+        linkLabel: 'Open the sighting →',
+    ),
+);
+```
+
+`FeaturePopup::of('title', 'href')` is the short way to say the two properties a popup nearly
+always has. A popup whose `title` property is empty on a given feature is not drawn: an empty
+bubble says less than no bubble.
+
+A feature that carries a **`label`** property still wears it as a permanent halo over the shape —
+that is how a zone is read on imagery, and it is unrelated to `tooltip`.
+
+## Spotlighting a feature from elsewhere on the page
+
+A log row beside a map should lift the track it is about. That needs no JavaScript from you: the
+layer declares which property identifies a feature, and any element on the page carrying
+`data-atlas-highlight="<layer id>:<feature id>"` spotlights it on hover or focus.
+
+```php
+new GeoJsonLayer(id: 'patrol.tracks.foot', label: 'foot', features: $tracks, featureId: 'ref');
+```
+
+```twig
+<a class="row" href="{{ path('patrol_show', {…}) }}" data-atlas-highlight="patrol.tracks.foot:{{ patrol.ref }}">…</a>
+```
+
+The plate raises that feature's stroke and pushes its siblings back while the cursor is on the
+element, and puts every one of them back on leave. How far it lifts and how far the rest fall
+back is the plate's answer, so a spotlit patrol track and a spotlit anything else read alike.
+
+The listeners are delegated from `document`, so rows re-rendered, paginated or swapped in after
+the map mounted still work.
+
+## How tall a plate is
+
+**A plate is as tall as it says it is, never as tall as the row it sits in.** It has a real
+`height` off one custom property, and `align-self: start`, so a stretch row cannot grow it; the
+only thing that does is fullscreen.
+
+```css
+--map-plate-height   /* default: min(58vh, 560px) */
+```
+
+Set it wherever it inherits from — the card the plate is in:
+
+```css
+.your-module .case-file-where { --map-plate-height: min(46vh, 440px); }
+```
+
+or hand it to `render_map()`, which lifts any custom property in the attributes onto the plate
+rather than onto the map element inside it:
+
+```twig
+{{ render_map(map, {'--map-plate-height': 'min(46vh,440px)', 'role': 'img', 'aria-label': 'Where'}) }}
+```
+
+Never size a plate with `min-height` plus `flex: 1` on your own card. That is the rule this
+replaced, and it is how a map ends up over a thousand pixels tall beside a long column of facts.
 
 ## The boundary
 

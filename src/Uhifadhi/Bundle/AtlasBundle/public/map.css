@@ -36,14 +36,6 @@
 /* The Leaflet container fills the frame; it carries .map-chrome-host. */
 .viewer .map-canvas { position: absolute; inset: 0; isolation: isolate; }
 .leaflet-container { width: 100%; height: 100%; font: inherit; background: var(--z-imagery); }
-/* A caption riding on the imagery (source label, scale text). */
-.viewer .ol {
-    position: absolute; z-index: 500; left: 10px; bottom: 10px;
-    font: 600 10px var(--font-mono); color: var(--z-paper); letter-spacing: .04em;
-    background: color-mix(in srgb, var(--z-ink) 78%, transparent);
-    border: 1px solid color-mix(in srgb, var(--z-paper) 22%, transparent);
-    border-radius: 6px; padding: 4px 8px;
-}
 
 /* ---- the chrome chrome.js builds --------------------------------------- */
 /* The chrome shares the page's stacking context with modals; isolating it keeps
@@ -124,8 +116,19 @@
    rather than in a consumer's sheet because a plate that cannot grow is a plate
    whose fullscreen button does nothing — a fault no module should be able to
    introduce by styling its own card. */
-.map-plate { position: relative; display: flex; flex-direction: column; min-height: 0; }
-.map-plate > .viewer { flex: 1 1 auto; min-height: 0; }
+/* THE HEIGHT IS THE PLATE'S OWN, NEVER ITS ROW'S. A plate lives in cards, grids
+   and stretch rows; sized with a min-height and left to flex it grows to
+   whatever the tallest sibling in the row happens to be, which is how a case
+   file's map ends up a thousand pixels tall beside a long column of facts. So
+   it is a real height, off ONE custom property, and `align-self: start` keeps a
+   stretch row from overriding it. A screen states its own height by setting the
+   property — on the card, or handed to render_map() as `--map-plate-height`. */
+.map-plate {
+    position: relative; display: flex; flex-direction: column;
+    height: var(--map-plate-height, min(58vh, 560px));
+    align-self: start; flex: none;
+}
+.map-plate > .viewer { flex: 1 1 auto; min-height: 0; height: auto; }
 
 /* One row above the map. It is inside the plate, so it expands with it. */
 .map-filters { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; min-width: 0; }

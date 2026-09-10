@@ -43,16 +43,23 @@ final readonly class GeoJsonLayer
     public const string DEFAULT_SWATCH = '#49E6B4';
 
     /**
-     * @param string                    $id       the id the legend row and the drawn layer share; a
-     *                                            module namespaces it with its own word ("patrol.tracks")
-     * @param array<string, mixed>|null $features a decoded GeoJSON FeatureCollection
-     * @param string|null               $url      an endpoint answering with one, fetched by the plate
-     * @param string                    $swatch   the layer's colour, in the legend and on the map; a
-     *                                            feature may override it with its own `color` property
-     * @param bool                      $visible  whether the layer starts drawn — an invisible layer is
-     *                                            still built, so its first switch costs no round trip
-     * @param int|null                  $count    how many features the legend row states
-     * @param string|null               $group    the legend heading this row sits under
+     * @param string                    $id        the id the legend row and the drawn layer share; a
+     *                                             module namespaces it with its own word ("patrol.tracks")
+     * @param array<string, mixed>|null $features  a decoded GeoJSON FeatureCollection
+     * @param string|null               $url       an endpoint answering with one, fetched by the plate
+     * @param string                    $swatch    the layer's colour, in the legend and on the map; a
+     *                                             feature may override it with its own `color` property
+     * @param bool                      $visible   whether the layer starts drawn — an invisible layer is
+     *                                             still built, so its first switch costs no round trip
+     * @param int|null                  $count     how many features the legend row states
+     * @param string|null               $group     the legend heading this row sits under
+     * @param LayerStyle|null           $style     what every feature is drawn with, over the shape's own answer
+     * @param list<StyleRule>           $rules     per-feature statements, applied in the order they are written
+     * @param string|null               $tooltip   the feature property a hover reads — a floating label, not the
+     *                                             permanent halo a feature's own `label` property still wears
+     * @param FeaturePopup|null         $popup     which properties a click opens, and where its link goes
+     * @param string|null               $featureId the property that identifies a feature, so an element elsewhere
+     *                                             on the page can spotlight it by name
      */
     public function __construct(
         public string $id,
@@ -64,6 +71,11 @@ final readonly class GeoJsonLayer
         public bool $visible = true,
         public ?int $count = null,
         public ?string $group = null,
+        public ?LayerStyle $style = null,
+        public array $rules = [],
+        public ?string $tooltip = null,
+        public ?FeaturePopup $popup = null,
+        public ?string $featureId = null,
     ) {
         if (null === $features && null === $url) {
             throw new LayerException(\sprintf('The layer "%s" names no source: give it either "features" or "url".', $id));
@@ -96,7 +108,19 @@ final readonly class GeoJsonLayer
      * the count, the heading — are rendered by the server and are not repeated
      * here.
      *
-     * @return array{id: string, features: array<string, mixed>|null, url: string|null, swatch: string, shape: string, visible: bool}
+     * @return array{
+     *     id: string,
+     *     features: array<string, mixed>|null,
+     *     url: string|null,
+     *     swatch: string,
+     *     shape: string,
+     *     visible: bool,
+     *     style: array<string, bool|float|int|string>,
+     *     rules: list<array{property: string, values: list<bool|float|int|string>, style: array<string, bool|float|int|string>}>,
+     *     tooltip: string|null,
+     *     popup: array{title: string, lines: list<string>, href: string|null, linkLabel: string|null}|null,
+     *     featureId: string|null,
+     * }
      */
     public function toArray(): array
     {
@@ -107,6 +131,11 @@ final readonly class GeoJsonLayer
             'swatch' => $this->swatch,
             'shape' => $this->shape->value,
             'visible' => $this->visible,
+            'style' => $this->style?->toArray() ?? [],
+            'rules' => array_map(static fn (StyleRule $rule) => $rule->toArray(), $this->rules),
+            'tooltip' => $this->tooltip,
+            'popup' => $this->popup?->toArray(),
+            'featureId' => $this->featureId,
         ];
     }
 }

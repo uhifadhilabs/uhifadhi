@@ -12,7 +12,9 @@
 
    Rendered by Twig\MapPlateRuntime, never included by hand — a module writes
    {{ render_map(map) }}. #}
-<div class="map-plate" data-controller="{{ controller }}">
+{# A custom property handed to render_map() sizes the PLATE: its height is one
+   such property, and on the canvas inside it would size nothing. #}
+<div class="map-plate"{% if plateStyle %} style="{{ plateStyle }}"{% endif %} data-controller="{{ controller }}">
     {% if filters %}
         {# ONE ROW ABOVE THE MAP, inside the plate, so the chips come along into
            fullscreen instead of being left behind on the page. #}

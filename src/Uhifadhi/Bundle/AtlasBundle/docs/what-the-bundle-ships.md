@@ -13,6 +13,8 @@
 | `Map\MapBuilderInterface` / `Map\MapBuilder` | the one entry point: `createMap(): AtlasMap` |
 | `Model\AtlasMap` | a UX Map map plus the atlas's layers, boundary, legend and chrome |
 | `Model\GeoJsonLayer` | one FeatureCollection — inline or fetched — with its colour, shape and legend row |
+| `Model\LayerStyle`, `Model\StyleRule` | what a layer's features are drawn with, and the per-feature rules on top of it |
+| `Model\FeaturePopup` | which of a feature's properties a click opens, and where its link goes |
 | `Model\Boundary` | the outline and the scrim outside it |
 | `Model\LegendItem` | one legend row: a switch when it names a layer, a key when it does not |
 | `Model\BaseLayer`, `Model\LayerShape` | the grounds a plate offers; how a layer's features are drawn |

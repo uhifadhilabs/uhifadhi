@@ -56,6 +56,18 @@ final class MapPlateRuntime implements RuntimeExtensionInterface
      */
     private const string CANVAS_CLASSES = 'map-canvas map-chrome-host';
 
+    /**
+     * WHAT MARKS AN ATTRIBUTE AS THE PLATE'S RATHER THAN THE MAP ELEMENT'S.
+     *
+     * A plate's height is one custom property (`--map-plate-height`), and a
+     * custom property has to land on the PLATE: set on the canvas inside it, it
+     * would size nothing. Rather than a second parameter meaning "attributes,
+     * but for the wrapper", anything written as a custom property is understood
+     * to be about the plate and is lifted onto it; everything else stays the map
+     * element's, as it always was.
+     */
+    public const string CUSTOM_PROPERTY_PREFIX = '--';
+
     public function __construct(
         private readonly Environment $twig,
         private readonly RendererInterface $renderer,
@@ -64,12 +76,19 @@ final class MapPlateRuntime implements RuntimeExtensionInterface
 
     /**
      * @param array<string, bool|string> $attributes attributes for the MAP element — an aria-label,
-     *                                               a role, a module's own data attribute
+     *                                               a role, a module's own data attribute; a key written
+     *                                               as a custom property (`--map-plate-height`) sizes the
+     *                                               PLATE instead
      * @param string|null                $filters    markup for the row above the map; already-escaped
      *                                               HTML, as a `{% set %}` block or a rendered include
      */
     public function renderMap(AtlasMap $map, array $attributes = [], ?string $filters = null): string
     {
+        $plateStyle = self::plateStyle($attributes);
+        foreach (array_keys($plateStyle) as $property) {
+            unset($attributes[$property]);
+        }
+
         $class = $attributes['class'] ?? null;
         $attributes['class'] = \is_string($class) && '' !== $class
             ? self::CANVAS_CLASSES.' '.$class
@@ -80,7 +99,32 @@ final class MapPlateRuntime implements RuntimeExtensionInterface
             'element' => $this->renderer->renderMap($map->toUxMap(), $attributes),
             'groups' => self::group($map->legend()),
             'filters' => $filters,
+            'plateStyle' => implode(';', array_map(
+                static fn (string $property, string $value): string => $property.':'.$value,
+                array_keys($plateStyle),
+                array_values($plateStyle),
+            )),
         ]);
+    }
+
+    /**
+     * The custom properties among the attributes — the plate's, in the order
+     * they were written.
+     *
+     * @param array<string, bool|string> $attributes
+     *
+     * @return array<string, string>
+     */
+    private static function plateStyle(array $attributes): array
+    {
+        $style = [];
+        foreach ($attributes as $property => $value) {
+            if (str_starts_with($property, self::CUSTOM_PROPERTY_PREFIX) && \is_string($value)) {
+                $style[$property] = $value;
+            }
+        }
+
+        return $style;
     }
 
     /**

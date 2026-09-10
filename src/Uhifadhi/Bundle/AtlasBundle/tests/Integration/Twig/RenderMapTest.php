@@ -18,9 +18,11 @@ use Twig\Environment;
 use Uhifadhi\Bundle\AtlasBundle\Map\MapBuilderInterface;
 use Uhifadhi\Bundle\AtlasBundle\Model\AtlasMap;
 use Uhifadhi\Bundle\AtlasBundle\Model\Boundary;
+use Uhifadhi\Bundle\AtlasBundle\Model\FeaturePopup;
 use Uhifadhi\Bundle\AtlasBundle\Model\GeoJsonLayer;
 use Uhifadhi\Bundle\AtlasBundle\Model\LayerShape;
 use Uhifadhi\Bundle\AtlasBundle\Model\LegendItem;
+use Uhifadhi\Bundle\AtlasBundle\Model\StyleRule;
 use Uhifadhi\Bundle\AtlasBundle\Tests\Integration\TestKernel;
 use Uhifadhi\Bundle\AtlasBundle\Twig\MapPlateRuntime;
 
@@ -127,6 +129,45 @@ final class RenderMapTest extends TestCase
 
         self::assertStringContainsString('aria-label="The area and its zones"', $html);
         self::assertStringContainsString('role="img"', $html);
+    }
+
+    /**
+     * THE STYLE RULES TRAVEL AS DATA. What used to be a `style(feature)`
+     * callback in a module's own controller is a property name, the values that
+     * satisfy it and the style they earn — which is a thing a page can carry.
+     */
+    public function testALayersStyleRulesReachTheBrowser(): void
+    {
+        $html = self::render(static function (AtlasMap $map): void {
+            $map->addLayer(new GeoJsonLayer(
+                id: 'sightings.recent',
+                label: 'Recent sightings',
+                url: '/sightings.geojson',
+                shape: LayerShape::Point,
+                rules: [StyleRule::when('status', 'closed')->fill(false)],
+                tooltip: 'title',
+                popup: FeaturePopup::of('title', 'href'),
+                featureId: 'reference',
+            ));
+        });
+
+        self::assertStringContainsString('&quot;rules&quot;', $html);
+        self::assertStringContainsString('&quot;property&quot;:&quot;status&quot;', $html);
+        self::assertStringContainsString('&quot;tooltip&quot;:&quot;title&quot;', $html);
+        self::assertStringContainsString('&quot;featureId&quot;:&quot;reference&quot;', $html);
+    }
+
+    /**
+     * A CUSTOM PROPERTY HANDED TO render_map() SIZES THE PLATE, not the canvas
+     * inside it — so a screen states its own map height without restating one
+     * word of the plate's own layout.
+     */
+    public function testACustomPropertyInTheAttributesSizesThePlate(): void
+    {
+        $html = self::render(attributes: ['--map-plate-height' => 'min(46vh,440px)', 'role' => 'img']);
+
+        self::assertStringContainsString('<div class="map-plate" style="--map-plate-height:min(46vh,440px)"', $html);
+        self::assertStringNotContainsString('--map-plate-height', substr($html, strpos($html, 'map-canvas') ?: 0));
     }
 
     /**

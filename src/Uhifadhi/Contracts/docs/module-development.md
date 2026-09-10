@@ -1194,6 +1194,8 @@ that works — because the plate owns its own layout and your card cannot break 
 | You state | Class | What the atlas does with it |
 |---|---|---|
 | a body of GeoJSON | `Model\GeoJsonLayer` | draws it in your colour and shape, with a legend row that switches it |
+| what a feature looks like | `Model\LayerStyle` + `Model\StyleRule` | evaluates the rules against each feature's own properties and draws it |
+| what a feature says | a layer's `tooltip` property name, `Model\FeaturePopup` | binds the hover label and the click popup, writing and escaping the markup |
 | the ground it is about | `Model\Boundary` | the platform's one outline treatment, and the scrim outside it |
 | a colour's meaning | `Model\LegendItem` | one more legend row, a key rather than a switch |
 | which grounds to offer | `Model\BaseLayer` | the base-layer menu, and what the plate opens on |
@@ -1202,6 +1204,70 @@ that works — because the plate owns its own layout and your card cannot break 
 A layer names exactly one source — `features` the server already has, or a `url` the plate fetches
 once it is mounted. Naming both, or neither, is refused where you wrote it rather than showing an
 empty map to somebody at 07:00.
+
+### What a mark MEANS: styling, declared
+
+The shape settles what a line, a fill and a point look like across the product. What is genuinely
+yours is what a mark *means* — hollow for a closed case, a dashed ring for the serious end. You
+state it as data, never as a callback:
+
+```php
+use Uhifadhi\Bundle\AtlasBundle\Model\FeaturePopup;
+use Uhifadhi\Bundle\AtlasBundle\Model\LayerStyle;
+use Uhifadhi\Bundle\AtlasBundle\Model\StyleRule;
+
+new GeoJsonLayer(
+    id: 'sightings.recent',
+    label: 'This week',
+    features: $collection,
+    shape: LayerShape::Point,
+    style: new LayerStyle(radius: 5.5, weight: 1.6, fillOpacity: 0.85),
+    rules: [
+        StyleRule::when('open', false)->fillOpacity(0.0),                       // hollow when finished
+        StyleRule::when('severity', ['high', 'critical'])->dashArray('3 3'),    // dashed at the serious end
+    ],
+    tooltip: 'summary',                                    // read on hover
+    popup: FeaturePopup::of('title', 'href'),              // opened on click
+    featureId: 'reference',                                // what a spotlight names it by
+);
+```
+
+Every statement is a value object serialised into the payload the plate reads — the same shape UX
+Map and UX Chart.js use. **No callback crosses the wire**, which is exactly what lets one
+controller draw every module's layers. The full vocabulary — stroke, fill, dash, radius, z-index —
+is in the atlas's own `docs/components.md`.
+
+### Spotlighting a feature from a list beside the map
+
+A log row that lifts its own track needs no JavaScript from you. The layer declares which property
+identifies a feature; the row wears the attribute:
+
+```twig
+<a class="row" href="…" data-atlas-highlight="sightings.recent:{{ sighting.reference }}">…</a>
+```
+
+The plate wires it by delegation from `document`, raises that feature and pushes its siblings back
+while the cursor or the focus is on the row. Publishing your own document event and answering it
+in a controller of your own is the old way, and it is exactly the drift this replaced.
+
+### How tall your map is
+
+**A plate is as tall as it says it is, never as tall as the row it sits in.** It carries a real
+height off one custom property (`--map-plate-height`, default `min(58vh, 560px)`) and refuses to
+stretch. Say your screen's own height by setting the property on the card:
+
+```css
+.your-module .case-file-where { --map-plate-height: min(46vh, 440px); }
+```
+
+or by handing it to `render_map()`, which lifts any custom property onto the plate:
+
+```twig
+{{ render_map(map, {'--map-plate-height': 'min(46vh,440px)', 'role': 'img', 'aria-label': 'Where'}) }}
+```
+
+Sizing a plate with `min-height` plus `flex: 1` on your own card is how a map ends up a thousand
+pixels tall beside a long column of facts. Don't.
 
 ### The stylesheet, and the one thing you do link
 
