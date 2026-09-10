@@ -20,10 +20,12 @@
     ],
     "require": {
         "php": ">=8.4",
+        "doctrine/dbal": "^4.0",
         "doctrine/doctrine-bundle": "^3.0",
         "doctrine/doctrine-migrations-bundle": "^4.0",
-        "doctrine/persistence": "^3.1 || ^4.0",
+        "doctrine/migrations": "^3.9",
         "doctrine/orm": "^3.5",
+        "doctrine/persistence": "^3.1 || ^4.0",
         "psr/container": "^1.1 || ^2.0",
         "symfony/config": "^7.3 || ^8.0",
         "symfony/dependency-injection": "^7.3 || ^8.0",
@@ -36,7 +38,8 @@
     },
     "autoload": {
         "psr-4": {
-            "Uhifadhi\\Bundle\\RegistryBundle\\": ""
+            "Uhifadhi\\Bundle\\RegistryBundle\\": "",
+            "Uhifadhi\\Bundle\\RegistryBundle\\Migrations\\": "migrations/"
         },
         "exclude-from-classmap": [
             "/tests/"

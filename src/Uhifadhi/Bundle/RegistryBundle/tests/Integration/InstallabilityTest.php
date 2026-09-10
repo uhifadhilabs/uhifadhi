@@ -96,10 +96,10 @@ final class InstallabilityTest extends RegistryKernelTestCase
      *
      * A bundle that contributes tables owns the need for a migration tool the
      * same way it owns the need for the ORM — which the registry has always
-     * required. What the registry deliberately does NOT ship is migration
-     * versions: the tables are the registry's, but the migration history belongs
-     * to the installation, and a vendor replaying its own versions into it
-     * would fight every `doctrine:migrations:diff` the host ever runs.
+     * required. It owns the VERSIONS too: the catalogue and the per-area ledger
+     * are the registry's tables, so the statements that create them arrive with
+     * the code that maps them, and an installation runs them rather than
+     * generating its own.
      */
     public function testTheMigrationToolArrivesWithTheBundleThatAddsTables(): void
     {
@@ -109,9 +109,9 @@ final class InstallabilityTest extends RegistryKernelTestCase
         );
 
         self::assertSame(
-            [],
-            glob(\dirname(__DIR__, 2).'/migrations/*.php') ?: [],
-            'and the registry ships no versions of its own: the history is the host\'s',
+            ['Version20260101000200.php'],
+            array_map(basename(...), glob(\dirname(__DIR__, 2).'/migrations/*.php') ?: []),
+            'and the registry ships the version that creates its own two tables',
         );
     }
 

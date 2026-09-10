@@ -119,11 +119,14 @@ final class BoundaryTest extends TestCase
         self::assertDirectoryDoesNotExist(self::ROOT.'/Entity', 'The shell\'s only entities are the widget machinery\'s.');
         self::assertDirectoryDoesNotExist(self::ROOT.'/Repository', 'The shell\'s only repositories are the widget machinery\'s.');
         self::assertDirectoryExists(self::ROOT.'/Widget/Entity', 'Dashboard layouts are stored, and they are stored here.');
-        self::assertDirectoryDoesNotExist(self::ROOT.'/migrations', 'A bundle owns no schema: the migration history is the installation\'s.');
+        // The DDL for those two tables ships with them. It is the one thing
+        // outside Widget/ that is allowed to name Doctrine, because a migration
+        // is what a stored fact costs.
+        self::assertDirectoryExists(self::ROOT.'/migrations', 'The shell ships the versions that create its two tables.');
 
         $offenders = [];
         foreach (self::phpSources() as $path => $code) {
-            if (str_starts_with($path, 'Widget/')) {
+            if (str_starts_with($path, 'Widget/') || str_starts_with($path, 'migrations/')) {
                 continue;
             }
             if (str_contains($code, 'Doctrine\\')

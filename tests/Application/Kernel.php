@@ -109,6 +109,16 @@ final class Kernel extends BaseKernel
             ],
         ]);
 
+        // A PRIVATE SERVICE A SPECIFICATION HAS TO REACH. Nothing in an
+        // application references the devkit declarations — devkit does, and it
+        // is not installed here — so the container compiles them away. The same
+        // `test_public.` alias every bundle's own test kernel uses keeps this
+        // one, and keeps it as the one the bundle actually defines rather than a
+        // second copy built by hand.
+        $container->services()
+            ->alias('test_public.team.devkit.content', 'team.devkit.content')
+            ->public();
+
         // The security file an installation gets from the skeleton, as this
         // throwaway application's own: the hashers, the entity provider over
         // the account TeamBundle owns, the checker that refuses a deactivated

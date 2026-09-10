@@ -25,6 +25,7 @@
         "doctrine/collections": "^2.2",
         "doctrine/dbal": "^4.0",
         "doctrine/doctrine-bundle": "^3.0",
+        "doctrine/migrations": "^3.9",
         "doctrine/orm": "^3.5",
         "doctrine/persistence": "^3.1 || ^4.0",
         "ext-mbstring": "*",
@@ -57,7 +58,8 @@
     },
     "autoload": {
         "psr-4": {
-            "Uhifadhi\\Bundle\\TeamBundle\\": ""
+            "Uhifadhi\\Bundle\\TeamBundle\\": "",
+            "Uhifadhi\\Bundle\\TeamBundle\\Migrations\\": "migrations/"
         },
         "exclude-from-classmap": [
             "/tests/"

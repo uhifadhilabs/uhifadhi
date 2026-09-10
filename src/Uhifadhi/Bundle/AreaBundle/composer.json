@@ -24,6 +24,7 @@
         "php": ">=8.4",
         "doctrine/dbal": "^4.0",
         "doctrine/doctrine-bundle": "^3.0",
+        "doctrine/migrations": "^3.9",
         "doctrine/orm": "^3.5",
         "doctrine/persistence": "^3.1 || ^4.0",
         "fundistadi/postgis-bundle": "^0.5.1",
@@ -54,7 +55,8 @@
     },
     "autoload": {
         "psr-4": {
-            "Uhifadhi\\Bundle\\AreaBundle\\": ""
+            "Uhifadhi\\Bundle\\AreaBundle\\": "",
+            "Uhifadhi\\Bundle\\AreaBundle\\Migrations\\": "migrations/"
         },
         "exclude-from-classmap": [
             "/tests/"

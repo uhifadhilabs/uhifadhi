@@ -123,17 +123,20 @@ final class MigrationLintTest extends KernelTestCase
     }
 
     /**
+     * The path IS the class name: `<bundle>/migrations/VersionN.php` is
+     * `Uhifadhi\\Bundle\\<Bundle>\\Migrations\\VersionN`, which is exactly what the
+     * psr-4 prefix in both manifests promises.
+     *
      * @return class-string<AbstractMigration>
      */
     private function classIn(string $file): string
     {
-        $source = (string) file_get_contents($file);
-
-        self::assertSame(1, preg_match('/^namespace\s+(?<namespace>[^;]+);/m', $source, $namespace));
-        self::assertSame(1, preg_match('/^final class\s+(?<class>\w+)/m', $source, $class));
+        $bundle = basename(\dirname($file, 2));
 
         /** @var class-string<AbstractMigration> $fqcn */
-        $fqcn = $namespace['namespace'].'\\'.$class['class'];
+        $fqcn = \sprintf('Uhifadhi\\Bundle\\%s\\Migrations\\%s', $bundle, basename($file, '.php'));
+
+        self::assertTrue(class_exists($fqcn), $fqcn.' is not autoloadable');
 
         return $fqcn;
     }

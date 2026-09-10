@@ -53,6 +53,7 @@ final class MigrationsUpgradeKeepsDataTest extends MigrationsTestCase
 
         // What an installation taking a new core does. Nothing is outstanding,
         // so nothing runs — and nothing may be lost by asking.
+        $this->asAFreshProcess();
         $this->console('doctrine:migrations:migrate', ['--no-interaction' => true, 'version' => 'latest']);
 
         self::assertSame(6, $this->countPeople());
@@ -69,6 +70,7 @@ final class MigrationsUpgradeKeepsDataTest extends MigrationsTestCase
 
         // Every down(), in reverse. A version whose down() is missing or wrong
         // fails here and nowhere else.
+        $this->asAFreshProcess();
         $this->console('doctrine:migrations:migrate', ['--no-interaction' => true, 'version' => '0']);
 
         self::assertSame(
@@ -77,6 +79,7 @@ final class MigrationsUpgradeKeepsDataTest extends MigrationsTestCase
             'the ledger is the only table a fully unwound installation keeps',
         );
 
+        $this->asAFreshProcess();
         $this->console('doctrine:migrations:migrate', ['--no-interaction' => true, 'version' => 'latest']);
 
         self::assertSame($afterFirstUp, $this->tableNames());
@@ -88,7 +91,7 @@ final class MigrationsUpgradeKeepsDataTest extends MigrationsTestCase
 
     private function seedTheTeam(): void
     {
-        $provider = static::getContainer()->get('team.devkit.content');
+        $provider = static::getContainer()->get('test_public.team.devkit.content');
         self::assertInstanceOf(ContentProviderInterface::class, $provider);
 
         $provider->load();
@@ -101,6 +104,9 @@ final class MigrationsUpgradeKeepsDataTest extends MigrationsTestCase
 
     private function countIn(string $table): int
     {
-        return (int) $this->connection->fetchOne(\sprintf('SELECT count(*) FROM %s', $table));
+        /** @var list<int|string> $rows */
+        $rows = $this->connection->fetchFirstColumn(\sprintf('SELECT count(*) FROM %s', $table));
+
+        return (int) $rows[0];
     }
 }

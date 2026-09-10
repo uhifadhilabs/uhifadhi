@@ -82,6 +82,30 @@ abstract class MigrationsTestCase extends KernelTestCase
     }
 
     /**
+     * A SECOND `migrate` IN ONE PROCESS NEEDS A SECOND KERNEL.
+     *
+     * The repository hands out one instance per version and the executor freezes
+     * it once it has run, so asking the same instance for its SQL again throws
+     * `FrozenMigration`. A real installation never meets this — each `migrate`
+     * is its own process — and a test that runs up, down and up again has to
+     * arrange the same thing for itself.
+     *
+     * @see vendor/doctrine/migrations/src/AbstractMigration.php — `freeze()`
+     * @see vendor/doctrine/migrations/src/Version/DbalExecutor.php
+     */
+    protected function asAFreshProcess(): void
+    {
+        $this->connection->close();
+
+        self::ensureKernelShutdown();
+        self::bootKernel();
+
+        /** @var Connection $connection */
+        $connection = static::getContainer()->get('doctrine.dbal.default_connection');
+        $this->connection = $connection;
+    }
+
+    /**
      * @param array<string, bool|string> $arguments
      */
     protected function console(string $command, array $arguments = []): string

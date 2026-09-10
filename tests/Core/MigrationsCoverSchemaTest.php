@@ -37,8 +37,15 @@ final class MigrationsCoverSchemaTest extends MigrationsTestCase
 
         $before = $this->shippedVersionFiles();
 
+        // `--allow-empty-diff` turns "there is nothing to write" from a thrown
+        // exception into a message and exit status 0. Without it the command an
+        // installer runs to CONFIRM a release is whole exits non-zero when it
+        // is — which is worth knowing, and is why the flag is named in the
+        // installation notes as well as here.
+        // @see vendor/doctrine/migrations/src/Tools/Console/Command/DiffCommand.php
         $diff = $this->console('doctrine:migrations:diff', [
             '--no-interaction' => true,
+            '--allow-empty-diff' => true,
             '--namespace' => 'Uhifadhi\\Bundle\\AreaBundle\\Migrations',
         ]);
 
@@ -67,7 +74,7 @@ final class MigrationsCoverSchemaTest extends MigrationsTestCase
         $files = glob(\dirname(__DIR__, 2).'/src/Uhifadhi/Bundle/*/migrations/*.php') ?: [];
         sort($files);
 
-        return array_values($files);
+        return $files;
     }
 
     public function testTheMigrationsBuildEveryTableTheCoreOwnsAndNoOther(): void
@@ -80,6 +87,10 @@ final class MigrationsCoverSchemaTest extends MigrationsTestCase
                 'area_of_interest',
                 'doctrine_migration_versions',
                 'module',
+                // PostGIS's own, brought by the extension migration zero
+                // creates — not the core's, and not something a diff will ever
+                // offer to drop: the schema filter hides it.
+                'spatial_ref_sys',
                 'team_api_token',
                 'team_department',
                 'team_department_scope_change',
@@ -107,8 +118,8 @@ final class MigrationsCoverSchemaTest extends MigrationsTestCase
         $this->console('doctrine:migrations:migrate', ['--no-interaction' => true, 'version' => 'latest']);
 
         self::assertSame(
-            1,
-            (int) $this->connection->fetchOne("SELECT count(*) FROM pg_extension WHERE extname = 'postgis'"),
+            ['postgis'],
+            $this->connection->fetchFirstColumn("SELECT extname FROM pg_extension WHERE extname = 'postgis'"),
         );
     }
 

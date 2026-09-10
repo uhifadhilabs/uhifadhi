@@ -127,14 +127,20 @@ final class InstallabilityTest extends KernelTestCase
     }
 
     /**
-     * THIS BUNDLE SHIPS ENTITIES, NOT MIGRATIONS. The tables
-     * are the bundle's; the migration history belongs to the installation, and a
-     * vendor replaying its own versions into it would fight every
-     * `doctrine:migrations:diff` the installation ever runs.
+     * THIS BUNDLE SHIPS ITS TABLES, NOT ONLY ITS ENTITIES. The DDL for
+     * `area_of_interest` and `zone` — and the PostGIS extension both of them
+     * need — arrives with the code that maps them, so an installation runs
+     * `doctrine:migrations:migrate` and writes no version of its own.
+     *
+     * The installation's history stays the installation's: `diff` is still what
+     * it runs for the entities IT writes.
      */
-    public function testItShipsNoMigrationVersionsOfItsOwn(): void
+    public function testItShipsTheVersionsThatCreateItsOwnTables(): void
     {
-        self::assertSame([], glob(\dirname(__DIR__, 2).'/migrations/*.php') ?: []);
+        self::assertSame(
+            ['Version20260101000000.php', 'Version20260101000100.php'],
+            array_map(basename(...), glob(\dirname(__DIR__, 2).'/migrations/*.php') ?: []),
+        );
     }
 
     private function entityManager(): EntityManagerInterface

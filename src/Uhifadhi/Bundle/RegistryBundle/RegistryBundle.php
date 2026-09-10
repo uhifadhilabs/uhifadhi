@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\RegistryBundle;
 
+use Doctrine\Migrations\Version\Comparator;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
@@ -136,6 +137,38 @@ final class RegistryBundle extends AbstractBundle
                 ],
             ]);
         }
+
+        // THE TABLES ARRIVE WITH THE CODE. The catalogue and the per-area ledger
+        // are the registry's, so their DDL ships here too, under the bundle's
+        // own namespace — the shape the migrations bundle documents for a
+        // bundle-shipped history:
+        //
+        // > migrations_paths:
+        // >     'SomeBundle\Migrations': '@SomeBundle/Migrations'
+        //
+        // @see https://symfony.com/bundles/DoctrineMigrationsBundle/current/index.html
+        // @see vendor/doctrine/doctrine-migrations-bundle/src/DependencyInjection/DoctrineMigrationsExtension.php
+        //
+        // Guarded: an application may install this bundle without the migrations
+        // bundle in its kernel, and there it simply has no history to run.
+        if (!$builder->hasExtension('doctrine_migrations')) {
+            return;
+        }
+
+        $container->extension('doctrine_migrations', [
+            'migrations_paths' => [
+                'Uhifadhi\\Bundle\\RegistryBundle\\Migrations' => __DIR__.'/migrations',
+            ],
+
+            // WHY THE CORE REPLACES A DOCTRINE SERVICE, AND ONLY THIS ONE. A
+            // version's identity is its full class name, so the shipped
+            // comparator orders migrations by NAMESPACE — which, with a
+            // namespace per bundle, is not the order the foreign keys need.
+            // @see Version/VersionTimestampComparator.php
+            'services' => [
+                Comparator::class => 'registry.migration_comparator',
+            ],
+        ], prepend: true);
     }
 
     /**

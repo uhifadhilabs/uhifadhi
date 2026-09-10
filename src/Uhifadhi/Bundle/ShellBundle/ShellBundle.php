@@ -238,6 +238,27 @@ final class ShellBundle extends AbstractBundle
                 ],
             ]);
         }
+
+        // THE TABLES ARRIVE WITH THE CODE. A person's widget layout and the
+        // presets they saved are this bundle's, so their DDL ships here too,
+        // under the bundle's own namespace — the shape the migrations bundle
+        // documents for a bundle-shipped history:
+        //
+        // > migrations_paths:
+        // >     'SomeBundle\Migrations': '@SomeBundle/Migrations'
+        //
+        // @see https://symfony.com/bundles/DoctrineMigrationsBundle/current/index.html
+        // @see vendor/doctrine/doctrine-migrations-bundle/src/DependencyInjection/DoctrineMigrationsExtension.php
+        //
+        // Guarded: an application may install this bundle without the migrations
+        // bundle in its kernel, and there it simply has no history to run.
+        if ($builder->hasExtension('doctrine_migrations')) {
+            $container->extension('doctrine_migrations', [
+                'migrations_paths' => [
+                    'Uhifadhi\\Bundle\\ShellBundle\\Migrations' => __DIR__.'/migrations',
+                ],
+            ], prepend: true);
+        }
     }
 
     public function build(ContainerBuilder $container): void
