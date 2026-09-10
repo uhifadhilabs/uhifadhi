@@ -46,7 +46,6 @@ use Doctrine\Migrations\Version\Version;
  * sorts the packages and falls back to the default order inside one of them,
  * whose ideal graph source he names as "the package relations defined in the
  * composer.json file":
- *
  * @see https://www.goetas.com/blog/multi-namespace-migrations-with-doctrinemigrations-30/
  *
  * WHERE THE GRAPH COMES FROM. Composer writes the installed set twice.
@@ -57,7 +56,6 @@ use Doctrine\Migrations\Version\Version;
  * requirements are the reason its own versions run last. So the graph is read
  * from each installed package's OWN `composer.json`, at the install path
  * `InstalledVersions` reports, which is uniform across the root and the rest.
- *
  * @see vendor/composer/InstalledVersions.php — `getAllRawData()`, whose `root`
  *      entry and `versions` entries both carry `install_path`; a name reachable
  *      only through a `replace` carries none, because there is no directory.
@@ -115,18 +113,17 @@ final class DependencyOrderComparator implements Comparator
         $seen = [];
 
         foreach (InstalledVersions::getAllRawData() as $set) {
-            /** @var array<string, array<string, mixed>> $entries */
-            $entries = array_merge(
-                isset($set['root']) && \is_array($set['root']) && \is_string($set['root']['name'] ?? null)
-                    ? [$set['root']['name'] => $set['root']]
-                    : [],
-                \is_array($set['versions'] ?? null) ? $set['versions'] : [],
-            );
+            // The root package leads: an installation is one of the packages
+            // whose requirements decide the order, and it is the only one the
+            // versions list never carries.
+            $entries = [$set['root']['name'] => ['install_path' => $set['root']['install_path']]] + $set['versions'];
 
             foreach ($entries as $name => $entry) {
                 // No path is no install: the name is one an installed package
-                // answers to through `replace`, not a directory anybody has.
-                if (isset($seen[$name]) || !\is_string($entry['install_path'] ?? null)) {
+                // answers to through `replace`, not a directory anybody has. A
+                // package can also appear in more than one raw-data set when
+                // several autoloaders are in play, and it is still one package.
+                if (isset($seen[$name]) || !isset($entry['install_path'])) {
                     continue;
                 }
 
@@ -236,10 +233,7 @@ final class DependencyOrderComparator implements Comparator
             if (!$settled) {
                 sort($pending);
 
-                throw new \LogicException(\sprintf(
-                    'The migrations cannot be ordered: these installed packages require each other in a cycle: %s.',
-                    implode(', ', $pending),
-                ));
+                throw new \LogicException(\sprintf('The migrations cannot be ordered: these installed packages require each other in a cycle: %s.', implode(', ', $pending)));
             }
         }
 
