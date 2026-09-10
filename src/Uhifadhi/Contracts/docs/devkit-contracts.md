@@ -157,8 +157,11 @@ direction. These verbs close both.
 something a stream alone does not: whether what is typed appears on the screen. A passphrase read
 like an ordinary line is a passphrase left in a terminal's scrollback and in whatever records it, so
 asking for one is its own verb — a handler cannot ask for a secret and be handed an echoed one by
-accident. Both answer identically: the line without its newline, or `null` once the stream is closed
-and asking again is pointless.
+accident. Both answer the same shape: the line without its newline, or `null` when there is nothing
+to give. `readLine()` keeps `''` — a line that was there and was empty — apart from `null`, the
+closed stream; `readSecret()` cannot, and does not pretend to, because a line read with the echo off
+arrives identically whether somebody pressed return on an empty prompt or the stream closed under
+it. A handler requiring a secret refuses both anyway.
 
 **The silence is owed only where a terminal exists.** Switching the echo off is a property of a
 terminal, not of a stream, so `readSecret()` promises that where there is a terminal the typing does

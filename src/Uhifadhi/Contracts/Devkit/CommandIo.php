@@ -93,10 +93,14 @@ interface CommandIo
      * asked for at a prompt rather than passing on the command line, where it
      * would be read back out of a shell history or a process list.
      *
-     * It answers exactly as {@see readLine()} does: the line, or null once the
-     * stream is closed and asking again would be pointless. '' is a line that
-     * was there and was empty, and a handler that requires a secret refuses
-     * both — but only null says the asking is over.
+     * It answers as {@see readLine()} does — the line, or null when there is
+     * nothing to give — and differs in what null covers, for a mechanical
+     * reason rather than a chosen one. A line read with the echo off arrives
+     * the same way whether somebody pressed return on an empty prompt or the
+     * stream was closed under it: nothing was typed, and nothing was shown that
+     * could tell the two apart. So null is both, and a handler that requires a
+     * secret refuses both anyway. A handler that needs the finer distinction is
+     * not asking for a secret and should use {@see readLine()}.
      *
      * WHAT AN IMPLEMENTATION OWES IS THE SILENCE, and the terminal is the only
      * place it can be had: switching the echo off is a property of a terminal,

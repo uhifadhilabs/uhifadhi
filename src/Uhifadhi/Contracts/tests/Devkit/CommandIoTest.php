@@ -153,8 +153,8 @@ final class CommandIoTest extends TestCase
 
     /**
      * READING A SECRET IS A READ, and answers the same two ways: the line, or
-     * null once the stream is closed. What separates it from readLine() is not
-     * its result but what the person watching sees, which no signature can
+     * null when there is nothing to give. What separates it from readLine() is
+     * not its result but what the person watching sees, which no signature can
      * express — so the contract states it in words and leaves the mechanics to
      * the implementation that has a terminal to switch the echo off on.
      */
@@ -184,6 +184,6 @@ final class CommandIoTest extends TestCase
         };
 
         self::assertSame('a-long-enough-passphrase', $io->readSecret());
-        self::assertNull($io->readSecret(), 'A closed stream offers no secret, which is not the same as an empty one.');
+        self::assertNull($io->readSecret(), 'Nothing given is null — with nothing echoed, an empty answer and a closed stream look alike.');
     }
 }
