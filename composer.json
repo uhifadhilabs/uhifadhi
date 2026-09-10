@@ -89,6 +89,7 @@
             "Uhifadhi\\Bundle\\TeamBundle\\Tests\\": "src/Uhifadhi/Bundle/TeamBundle/tests/",
             "Uhifadhi\\Contracts\\Tests\\": "src/Uhifadhi/Contracts/tests/",
             "Uhifadhi\\Core\\Tests\\": "tests/",
+            "Uhifadhi\\Core\\Tests\\Core\\Fixtures\\Migrations\\": "tests/Core/Fixtures/migrations/",
             "Uhifadhi\\Entity\\": "src/Uhifadhi/Bundle/RegistryBundle/tests/Integration/Fixtures/Uhifadhi/Entity/"
         }
     },
