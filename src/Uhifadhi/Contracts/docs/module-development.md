@@ -1218,7 +1218,8 @@ bin/console doctrine:migrations:diff --namespace='YourVendor\Sightings\Migration
 ### What decides the order
 
 **Your versions run after the core's, and after every module you require.** The date in the class
-name orders versions inside one package and decides nothing between two packages.
+name orders versions inside one package, and between your module and another module neither of
+which requires the other — where there is no dependency to go on.
 
 A version's identity in doctrine/migrations is its **full class name**, and the comparator that
 ships with the library is a `strcmp` over that name

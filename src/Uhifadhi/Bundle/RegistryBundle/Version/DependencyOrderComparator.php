@@ -22,7 +22,8 @@ use Doctrine\Migrations\Version\Version;
  * THE RULE: a package's versions run after the versions of every package it
  * requires. The timestamp orders versions that belong to the SAME package, and
  * decides nothing between two packages. Versions an installation keeps itself
- * run last. Only packages that ship migrations are ordered at all.
+ * run last, because the root package is the installation and nothing requires
+ * it. Only packages that ship migrations are ordered at all.
  *
  * A version's identity in doctrine/migrations is its full class name — the
  * repository builds one as `new Version($migrationClassName)` — and the shipped
@@ -104,7 +105,7 @@ final class DependencyOrderComparator implements Comparator
     private array $owners = [];
 
     /**
-     * @param list<array{name: string, path: string, require: list<string>, replace: list<string>}> $packages
+     * @param list<array{name: string, path: string, require: list<string>, replace: list<string>, root: bool}> $packages
      */
     public function __construct(
         private readonly Configuration $configuration,
@@ -124,7 +125,8 @@ final class DependencyOrderComparator implements Comparator
             // The root package leads: an installation is one of the packages
             // whose requirements decide the order, and it is the only one the
             // versions list never carries.
-            $entries = [$set['root']['name'] => ['install_path' => $set['root']['install_path']]] + $set['versions'];
+            $root = $set['root']['name'];
+            $entries = [$root => ['install_path' => $set['root']['install_path']]] + $set['versions'];
 
             foreach ($entries as $name => $entry) {
                 // No path is no install: the name is one an installed package
@@ -136,7 +138,7 @@ final class DependencyOrderComparator implements Comparator
                 }
 
                 $seen[$name] = true;
-                $packages[] = self::manifestAt($name, $entry['install_path']);
+                $packages[] = self::manifestAt($name, $entry['install_path'], $name === $root);
             }
         }
 
@@ -147,17 +149,18 @@ final class DependencyOrderComparator implements Comparator
     {
         $depths = $this->depths ??= $this->depths();
 
-        $packageOfA = $this->packageOf($a);
-        $packageOfB = $this->packageOf($b);
-
+        // NOTHING BETWEEN THE DEPTH AND THE DATE. Two packages neither of which
+        // requires the other are at the same depth, and the graph has said all
+        // it has to say about them; the date is what is left, and it is the
+        // answer their authors would expect. A package NAME here would order
+        // them alphabetically instead, which is the accident this comparator
+        // replaced the shipped one to avoid.
         return [
-            $depths[$packageOfA] ?? \PHP_INT_MAX,
-            $packageOfA,
+            $depths[$this->packageOf($a)] ?? \PHP_INT_MAX,
             $this->timestamp($a),
             (string) $a,
         ] <=> [
-            $depths[$packageOfB] ?? \PHP_INT_MAX,
-            $packageOfB,
+            $depths[$this->packageOf($b)] ?? \PHP_INT_MAX,
             $this->timestamp($b),
             (string) $b,
         ];
@@ -169,9 +172,9 @@ final class DependencyOrderComparator implements Comparator
      * stopping an installation from migrating: an unreadable manifest is a
      * package that requires nothing anybody here can see.
      *
-     * @return array{name: string, path: string, require: list<string>, replace: list<string>}
+     * @return array{name: string, path: string, require: list<string>, replace: list<string>, root: bool}
      */
-    private static function manifestAt(string $name, string $path): array
+    private static function manifestAt(string $name, string $path, bool $root): array
     {
         $manifest = rtrim($path, \DIRECTORY_SEPARATOR).'/composer.json';
         $json = is_file($manifest) ? json_decode((string) file_get_contents($manifest), true) : null;
@@ -181,6 +184,7 @@ final class DependencyOrderComparator implements Comparator
             'path' => $path,
             'require' => \is_array($json) ? self::names($json['require'] ?? null) : [],
             'replace' => \is_array($json) ? self::names($json['replace'] ?? null) : [],
+            'root' => $root,
         ];
     }
 
@@ -326,6 +330,15 @@ final class DependencyOrderComparator implements Comparator
      * that answers to a name per bundle — and a requirement nothing installed
      * answers to, or that resolves back to the package itself, is not an edge.
      *
+     * THE ROOT PACKAGE IS A DEPENDENT AND NEVER A DEPENDENCY. It is the
+     * installation: it requires the packages, they do not require it, and the
+     * only reason its versions run last is that nothing is behind it. Its
+     * `replace` block is not read either — an installation replacing
+     * `symfony/polyfill-ctype`, which the Symfony skeleton ships that block for,
+     * is saying nobody needs the polyfill, not that the installation provides
+     * it. Read as a provider it would answer for a name half the graph requires,
+     * and every package would depend on the installation that depends on them.
+     *
      * @return array<string, list<string>>
      */
     private function requires(): array
@@ -333,8 +346,20 @@ final class DependencyOrderComparator implements Comparator
         $answersTo = [];
         foreach ($this->packages as $package) {
             $answersTo[$package['name']] = $package['name'];
+
+            if ($package['root']) {
+                continue;
+            }
+
             foreach ($package['replace'] as $replaced) {
                 $answersTo[$replaced] = $package['name'];
+            }
+        }
+
+        $roots = [];
+        foreach ($this->packages as $package) {
+            if ($package['root']) {
+                $roots[$package['name']] = true;
             }
         }
 
@@ -343,7 +368,7 @@ final class DependencyOrderComparator implements Comparator
             $edges = [];
             foreach ($package['require'] as $required) {
                 $installed = $answersTo[$required] ?? null;
-                if (null !== $installed && $installed !== $package['name']) {
+                if (null !== $installed && $installed !== $package['name'] && !isset($roots[$installed])) {
                     $edges[$installed] = true;
                 }
             }

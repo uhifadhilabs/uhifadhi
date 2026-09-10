@@ -118,8 +118,12 @@ key, which is the seam the migrations bundle documents for it. The rule it
 applies:
 
 - a package's versions run after the versions of every package it requires;
-- the timestamp orders versions that belong to the same package;
-- versions an installation keeps itself run last;
+- the timestamp orders versions inside one package, and between two packages
+  neither of which requires the other;
+- versions an installation keeps itself run last: the root package requires the
+  packages and nothing requires it, and its `replace` block is not read as a
+  claim to provide anything — a skeleton replaces `symfony/polyfill-ctype`, and
+  reading that as a promise would make every package depend on the installation;
 - two packages that both ship migrations and require each other are refused by
   name; a cycle anywhere else in the graph is not looked at.
 

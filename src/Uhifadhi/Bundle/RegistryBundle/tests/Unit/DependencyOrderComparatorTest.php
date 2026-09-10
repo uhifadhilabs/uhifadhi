@@ -36,6 +36,10 @@ final class DependencyOrderComparatorTest extends TestCase
 
     private const string VENDOR = '/fixture/vendor/';
 
+    private const string PROJECT = '/srv/installation';
+
+    private const string INSTALLED = '/srv/installation/vendor/';
+
     public function testAModulesVersionRunsAfterTheCoresEvenWhenItsTimestampIsOlder(): void
     {
         self::assertSame(
@@ -263,6 +267,161 @@ final class DependencyOrderComparatorTest extends TestCase
     }
 
     /**
+     * THE SHAPE AN INSTALLATION ACTUALLY HAS, read off a real one: a root
+     * package with no `name` of its own — Composer calls it `__root__` — whose
+     * install path contains every vendor path, and whose manifest `replace`s
+     * the polyfills the Symfony skeleton ships that block for.
+     *
+     * Everything under it requires a polyfill somewhere. If the installation is
+     * allowed to answer for one, every package in the graph depends on the
+     * installation, and the installation depends on every package: nothing can
+     * be ordered at all.
+     */
+    public function testAnInstallationThatReplacesAPolyfillIsStillADependencyOfNothing(): void
+    {
+        self::assertSame(
+            [
+                'Uhifadhi\\Bundle\\AreaBundle\\Migrations\\Version20260101000000',
+                'Uhifadhi\\Bundle\\AreaBundle\\Migrations\\Version20260101000100',
+                'Uhifadhi\\Bundle\\RegistryBundle\\Migrations\\Version20260101000200',
+                'Uhifadhi\\Bundle\\TeamBundle\\Migrations\\Version20260101000300',
+                'Uhifadhi\\Bundle\\ShellBundle\\Migrations\\Version20260101000400',
+                'Uhifadhi\\Patrol\\Migrations\\Version20260910044923',
+                'Uhifadhi\\Incident\\Migrations\\Version20260910045214',
+                'DoctrineMigrations\\Version20260909014925',
+            ],
+            $this->sortedOnAnInstallation([
+                'DoctrineMigrations\\Version20260909014925',
+                'Uhifadhi\\Incident\\Migrations\\Version20260910045214',
+                'Uhifadhi\\Bundle\\ShellBundle\\Migrations\\Version20260101000400',
+                'Uhifadhi\\Patrol\\Migrations\\Version20260910044923',
+                'Uhifadhi\\Bundle\\AreaBundle\\Migrations\\Version20260101000000',
+                'Uhifadhi\\Bundle\\TeamBundle\\Migrations\\Version20260101000300',
+                'Uhifadhi\\Bundle\\RegistryBundle\\Migrations\\Version20260101000200',
+                'Uhifadhi\\Bundle\\AreaBundle\\Migrations\\Version20260101000100',
+            ]),
+        );
+    }
+
+    /**
+     * Two modules that require the same core and not each other: the graph is
+     * silent between them, so the date decides — and the alphabet does not.
+     * `uhifadhi/incident-module` sorts before `uhifadhi/patrol-module`, while
+     * the version patrol ships is the older of the two.
+     */
+    public function testTwoModulesThatDoNotRequireEachOtherAreOrderedByDate(): void
+    {
+        $plan = $this->sortedOnAnInstallation([
+            'Uhifadhi\\Incident\\Migrations\\Version20260910045214',
+            'Uhifadhi\\Patrol\\Migrations\\Version20260910044923',
+        ]);
+
+        self::assertSame(
+            [
+                'Uhifadhi\\Patrol\\Migrations\\Version20260910044923',
+                'Uhifadhi\\Incident\\Migrations\\Version20260910045214',
+            ],
+            $plan,
+        );
+    }
+
+    /**
+     * @param list<string> $names
+     *
+     * @return list<string>
+     */
+    private function sortedOnAnInstallation(array $names): array
+    {
+        $comparator = new DependencyOrderComparator(
+            $this->installationConfiguration(),
+            $this->installationPackages(),
+        );
+
+        $versions = array_map(static fn (string $name): Version => new Version($name), $names);
+        usort($versions, $comparator->compare(...));
+
+        return array_map(strval(...), $versions);
+    }
+
+    /**
+     * The namespaces such an installation configures for its default
+     * connection. A module whose history runs on a SECOND connection registers
+     * its namespace in that connection's configuration and not in this one, so
+     * it is a package with migrations that this configuration never names.
+     */
+    private function installationConfiguration(): Configuration
+    {
+        $configuration = new Configuration();
+        $core = self::INSTALLED.'uhifadhi/uhifadhi/src/Uhifadhi/Bundle/';
+
+        foreach ([
+            'DoctrineMigrations' => self::PROJECT.'/migrations',
+            'Uhifadhi\\Bundle\\AreaBundle\\Migrations' => $core.'AreaBundle/migrations',
+            'Uhifadhi\\Bundle\\RegistryBundle\\Migrations' => $core.'RegistryBundle/migrations',
+            'Uhifadhi\\Bundle\\TeamBundle\\Migrations' => $core.'TeamBundle/migrations',
+            'Uhifadhi\\Bundle\\ShellBundle\\Migrations' => $core.'ShellBundle/migrations',
+            'Uhifadhi\\Patrol\\Migrations' => self::INSTALLED.'uhifadhi/patrol-module/migrations',
+            'Uhifadhi\\Incident\\Migrations' => self::INSTALLED.'uhifadhi/incident-module/migrations',
+        ] as $namespace => $directory) {
+            $configuration->addMigrationsDirectory($namespace, $directory);
+        }
+
+        return $configuration;
+    }
+
+    /**
+     * @return list<array{name: string, path: string, require: list<string>, replace: list<string>, root: bool}>
+     */
+    private function installationPackages(): array
+    {
+        return [
+            $this->root('__root__', self::PROJECT, [
+                'symfony/framework-bundle',
+                'uhifadhi/uhifadhi',
+                'uhifadhi/patrol-module',
+                'uhifadhi/incident-module',
+                'uhifadhi/storage-module',
+                'uhifadhi/telemetry-module',
+                'uhifadhi/devkit-module',
+            ], ['symfony/polyfill-ctype', 'symfony/polyfill-php80']),
+
+            // Every package in a Symfony installation reaches a polyfill.
+            $this->package('symfony/framework-bundle', self::INSTALLED.'symfony/framework-bundle', ['symfony/polyfill-ctype', 'symfony/polyfill-php80']),
+
+            $this->package('uhifadhi/uhifadhi', self::INSTALLED.'uhifadhi/uhifadhi', ['symfony/framework-bundle'], [
+                'uhifadhi/area-bundle',
+                'uhifadhi/atlas-bundle',
+                'uhifadhi/contracts',
+                'uhifadhi/registry-bundle',
+                'uhifadhi/shell-bundle',
+                'uhifadhi/team-bundle',
+            ]),
+
+            // Ships no migrations, and stands between patrol and the core.
+            $this->package('uhifadhi/storage-module', self::INSTALLED.'uhifadhi/storage-module', ['uhifadhi/uhifadhi']),
+
+            $this->package('uhifadhi/patrol-module', self::INSTALLED.'uhifadhi/patrol-module', ['uhifadhi/storage-module', 'uhifadhi/uhifadhi']),
+            $this->package('uhifadhi/incident-module', self::INSTALLED.'uhifadhi/incident-module', ['uhifadhi/uhifadhi']),
+
+            // Migrations of its own, on a connection this configuration is not for.
+            $this->package('uhifadhi/telemetry-module', self::INSTALLED.'uhifadhi/telemetry-module', ['uhifadhi/uhifadhi']),
+
+            $this->package('uhifadhi/devkit-module', self::INSTALLED.'uhifadhi/devkit-module', ['uhifadhi/uhifadhi']),
+        ];
+    }
+
+    /**
+     * @param list<string> $require
+     * @param list<string> $replace
+     *
+     * @return array{name: string, path: string, require: list<string>, replace: list<string>, root: bool}
+     */
+    private function root(string $name, string $path, array $require, array $replace = []): array
+    {
+        return ['name' => $name, 'path' => $path, 'require' => $require, 'replace' => $replace, 'root' => true];
+    }
+
+    /**
      * @param list<string> $names
      *
      * @return list<string>
@@ -302,12 +461,12 @@ final class DependencyOrderComparatorTest extends TestCase
     }
 
     /**
-     * @return list<array{name: string, path: string, require: list<string>, replace: list<string>}>
+     * @return list<array{name: string, path: string, require: list<string>, replace: list<string>, root: bool}>
      */
     private function packages(): array
     {
         return [
-            $this->package('acme/installation', self::INSTALLATION, ['acme/core', 'acme/second-module', 'acme/replacing-module']),
+            $this->root('acme/installation', self::INSTALLATION, ['acme/core', 'acme/second-module', 'acme/replacing-module']),
             $this->package('acme/contracts', self::VENDOR.'acme/contracts', []),
             $this->package('acme/core', self::VENDOR.'acme/core', ['acme/contracts'], ['acme/core-registry']),
             $this->package('acme/first-module', self::VENDOR.'acme/first-module', ['acme/core']),
@@ -320,10 +479,10 @@ final class DependencyOrderComparatorTest extends TestCase
      * @param list<string> $require
      * @param list<string> $replace
      *
-     * @return array{name: string, path: string, require: list<string>, replace: list<string>}
+     * @return array{name: string, path: string, require: list<string>, replace: list<string>, root: bool}
      */
     private function package(string $name, string $path, array $require, array $replace = []): array
     {
-        return ['name' => $name, 'path' => $path, 'require' => $require, 'replace' => $replace];
+        return ['name' => $name, 'path' => $path, 'require' => $require, 'replace' => $replace, 'root' => false];
     }
 }

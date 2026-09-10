@@ -75,9 +75,10 @@ owns every command the platform has.
 ### The order versions run in
 
 **A package's versions run after the versions of every package it requires.**
-The date in the class name orders versions inside one package and decides
-nothing between two. Your own versions run last, because your application
-requires everything.
+The date in the class name orders versions inside one package, and between two
+packages neither of which requires the other — where the dependency graph has
+nothing to say. Your own versions run last: your application requires the
+packages and none of them requires it.
 
 A migration's identity in doctrine/migrations is its **full class name**, and
 the comparator that ships with it is a `strcmp` over that name
