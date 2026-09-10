@@ -27,6 +27,7 @@ use Uhifadhi\Bundle\RegistryBundle\Service\ModulePermissionCatalogue;
 use Uhifadhi\Bundle\RegistryBundle\Service\ModuleRouteGate;
 use Uhifadhi\Bundle\RegistryBundle\Service\ProviderCatalogueMapper;
 use Uhifadhi\Bundle\RegistryBundle\Service\RegistrySyncService;
+use Uhifadhi\Bundle\RegistryBundle\Version\VersionTimestampComparator;
 
 /*
  * The bundle's static service wiring.
@@ -147,6 +148,16 @@ return static function (ContainerConfigurator $container): void {
         ]);
 
     $services->alias(RegistrySyncService::class, 'registry.sync');
+
+    /*
+     * WHAT DECIDES THE ORDER OF EVERY MIGRATION IN AN INSTALLATION. It belongs
+     * to the registry because the registry is the one core bundle that requires
+     * doctrine/doctrine-migrations-bundle, and because an ordering across
+     * namespaces is a property of the installation rather than of any one
+     * bundle's tables. The bundle class hands this id to
+     * `doctrine_migrations.services`; the class itself says why it exists.
+     */
+    $services->set('registry.migration_comparator', VersionTimestampComparator::class);
 
     $services->set('registry.sync_warmer', RegistrySyncWarmer::class)
         // ResolveServiceSubscribersPass swaps a Psr ContainerInterface reference
