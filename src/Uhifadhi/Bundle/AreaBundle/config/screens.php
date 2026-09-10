@@ -21,11 +21,13 @@ use Uhifadhi\Bundle\AreaBundle\Controller\AreaWidgetsController;
 use Uhifadhi\Bundle\AreaBundle\Controller\ZoneController;
 use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
+use Uhifadhi\Bundle\AreaBundle\Shell\AreaConfigurationSections;
 use Uhifadhi\Bundle\AreaBundle\Shell\AreaNavigation;
 use Uhifadhi\Bundle\AreaBundle\Shell\AreaShellSource;
 use Uhifadhi\Bundle\ShellBundle\Contract\AreaShellSourceInterface;
 use Uhifadhi\Bundle\ShellBundle\Contract\NavigationSourceInterface;
 use Uhifadhi\Bundle\ShellBundle\Model\ModuleGroup;
+use Uhifadhi\Contracts\Shell\ConfigurationSectionsInterface;
 
 /*
  * THE SCREENS, AND THE CONTRACTS THAT FRAME THEM — imported ONLY where an
@@ -59,6 +61,7 @@ return static function (ContainerConfigurator $container): void {
             service('area.overview'),
             service('area.map_payload'),
             service('area.map'),
+            service('router'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(AreaController::class, 'area.controller.area')->public();
@@ -170,6 +173,27 @@ return static function (ContainerConfigurator $container): void {
         $services->alias('shell.area_shell_source', 'area.shell_source');
     }
 
+    /*
+     * WHAT IS ON THE AREA'S CONFIGURE PAGE. The area declares its sections
+     * through exactly the contract a module declares its own through — one
+     * frame, one page, one button — so the rule has no exception on the day it
+     * ships.
+     *
+     * GUARDED like the two above: the shell is a `suggest`, and an installation
+     * without one has the area model and no configure page.
+     */
+    if (interface_exists(ConfigurationSectionsInterface::class)) {
+        $services->set('area.configuration_sections', AreaConfigurationSections::class)
+            ->args([
+                service('request_stack'),
+                service(AreaOfInterestRepository::class),
+                service('area.register'),
+                service(ZoneRepository::class),
+            ])
+            ->tag('uhifadhi.configuration_sections');
+        $services->alias(AreaConfigurationSections::class, 'area.configuration_sections');
+    }
+
     if (interface_exists(NavigationSourceInterface::class)) {
         $services->set('area.navigation', AreaNavigation::class)
             ->args([
@@ -180,6 +204,10 @@ return static function (ContainerConfigurator $container): void {
                 service(AreaOfInterestRepository::class),
                 service('area.shell_source'),
                 service('area.composition'),
+                // The module frame, for the tree's fourth level: a module's own
+                // data places, read from the SAME declaration the strip under
+                // its head is drawn from.
+                service('shell.frame'),
             ])
             ->tag('shell.nav_section');
         $services->alias(AreaNavigation::class, 'area.navigation');

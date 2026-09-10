@@ -369,16 +369,95 @@ final class AreaPagesTest extends WebTestCase
         self::assertStringNotContainsString('has no zones yet', $body);
     }
 
-    public function testTheSettingsPageShowsTheRecordAndDashesWhatIsUnrecorded(): void
+    /**
+     * THE RECORD MOVED ONTO THE CONFIGURE PAGE and lost nothing on the way: it
+     * is the Area settings section now, which is the page's own bare address.
+     */
+    public function testTheAreaSettingsSectionShowsTheRecordAndDashesWhatIsUnrecorded(): void
     {
         $this->boot();
         $area = $this->anArea();
 
-        $body = $this->body('/areas/'.$area->getUuidString().'/settings');
+        $body = $this->body('/areas/'.$area->getUuidString().'/configure');
 
         self::assertStringContainsString((string) $area->getUuidString(), $body);
         // A dash means UNRECORDED, never zero.
         self::assertStringContainsString('&mdash;', $body);
+    }
+
+    /**
+     * THE CONFIGURE PAGE SHOWS ITS SECTIONS WHERE A DATA PAGE SHOWS ITS TABS:
+     * one strip, one component, one position — and the area's data tabs are not
+     * among them.
+     */
+    public function testTheConfigurePageShowsItsSectionStripAndNotTheAreasDataTabs(): void
+    {
+        $this->boot();
+        $area = $this->anArea();
+
+        $strip = $this->tabStrip($this->body('/areas/'.$area->getUuidString().'/configure'));
+
+        self::assertStringContainsString('Widget library', $strip);
+        self::assertStringContainsString('Area settings', $strip);
+        self::assertStringNotContainsString('Zones', $strip);
+        self::assertStringNotContainsString('Modules', $strip);
+    }
+
+    /** The strip above the page body, whatever is currently in it. */
+    private function tabStrip(string $body): string
+    {
+        $strip = preg_split('#<div class="atabs">#', $body, 2);
+        self::assertIsArray($strip);
+        self::assertCount(2, $strip, 'the page renders a tab strip');
+
+        return (string) strstr($strip[1], '</div>', true);
+    }
+
+    /** The section named in the URL is the section lit and the section drawn. */
+    public function testTheWidgetLibrarySectionHasItsOwnAddressAndIsLitThere(): void
+    {
+        $this->boot();
+        $area = $this->anArea();
+
+        $body = $this->body('/areas/'.$area->getUuidString().'/configure/widgets');
+
+        self::assertStringContainsString('href="/areas/'.$area->getUuidString().'/configure/widgets" class="on"', $body);
+        self::assertStringContainsString('Dashboard composition', $body);
+    }
+
+    /**
+     * ONE CONFIGURATION ENTRY, AND IT IS LIT WHILE YOU ARE INSIDE IT. The same
+     * control opens the configure page from the area's own page and takes you
+     * back from it.
+     */
+    public function testTheConfigureActionIsOnTheAreaPageAndLitOnTheConfigurePage(): void
+    {
+        $this->boot();
+        $area = $this->anArea();
+        $uuid = (string) $area->getUuidString();
+
+        $page = $this->body('/areas/'.$uuid);
+        self::assertStringContainsString('href="/areas/'.$uuid.'/configure"', $page);
+        self::assertStringContainsString('Configure', $page);
+
+        $configure = $this->body('/areas/'.$uuid.'/configure');
+        self::assertStringContainsString('class="tgl on" href="/areas/'.$uuid.'"', $configure);
+    }
+
+    /**
+     * THE OLD SETTINGS ADDRESS IS PERMANENTLY MOVED, not deleted: it is in
+     * bookmarks and in whatever an installation typed into its own links, and
+     * 301 is what tells all of them where it went for good.
+     */
+    public function testTheOldSettingsAddressRedirectsPermanentlyToTheConfigurePage(): void
+    {
+        $this->boot();
+        $area = $this->anArea();
+
+        $response = $this->get('/areas/'.$area->getUuidString().'/settings');
+
+        self::assertSame(301, $response->getStatusCode());
+        self::assertSame('/areas/'.$area->getUuidString().'/configure', $response->headers->get('Location'));
     }
 
     /**
@@ -405,7 +484,7 @@ final class AreaPagesTest extends WebTestCase
         yield 'the register needs area.view' => ['/areas', []];
         yield 'an overview needs area.view' => ['/areas/{uuid}', []];
         yield 'zones need area.view' => ['/areas/{uuid}/zones', []];
-        yield 'settings need area.edit' => ['/areas/{uuid}/settings', ['area.view']];
+        yield 'the settings redirect needs area.edit' => ['/areas/{uuid}/settings', ['area.view']];
     }
 
     /**

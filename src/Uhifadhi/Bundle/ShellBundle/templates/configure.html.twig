@@ -16,7 +16,7 @@
    the shell neither reads a setting nor knows one exists. #}
 {% extends '@Shell/page.html.twig' %}
 
-{% block title %}{{ heading }} &middot; configure{% endblock %}
+{% block title %}{{ heading }} · configure{% endblock %}
 
 {% block shell_breadcrumbs %}
     <a href="{{ shell_brand().url }}">{{ shell_brand().name|lower }}</a> /
@@ -24,13 +24,12 @@
     configure
 {% endblock %}
 
-{% block shell_page_title %}{{ heading }} &middot; configure{% endblock %}
+{% block shell_page_title %}{{ heading }} · configure{% endblock %}
 
 {% block shell_page_subtitle %}{{ summary }}{% endblock %}
 
-{# THE SECTION, RENDERED BY WHOEVER OWNS IT. `only` is deliberate: a section
-   template receives the section it is and nothing else out of this page's
-   scope, so it cannot come to depend on a variable the shell happens to have
-   in hand today. Everything it needs about its own surface it reads from its
-   own services. #}
-{% block shell_page %}{{ include(section.template, {section: section}, with_context: false) }}{% endblock %}
+{# THE SECTION, RENDERED BY WHOEVER OWNS IT. `with_context: false` is
+   deliberate: a section template receives the variables its own declaration
+   handed over and nothing out of this page's scope, so it cannot come to depend
+   on something the frame happens to have in hand today. #}
+{% block shell_page %}{{ include(section.template, section.variables|merge({section: section}), with_context: false) }}{% endblock %}

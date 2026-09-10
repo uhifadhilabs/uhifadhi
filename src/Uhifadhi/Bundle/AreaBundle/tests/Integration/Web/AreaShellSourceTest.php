@@ -72,7 +72,18 @@ final class AreaShellSourceTest extends WebTestCase
     {
         $source = $this->sourceAt('/areas/{uuid}');
 
-        self::assertSame(['Overview', 'Zones', 'Settings'], $this->labels($source));
+        self::assertSame(['Overview', 'Zones'], $this->labels($source));
+    }
+
+    /**
+     * A TAB IS A PLACE WHERE DATA LIVES, so what an area is SET UP WITH is not
+     * one. All of it is behind the one Configure action, on the page the shell
+     * owns; a strip that mixed places to look at with screens that change how
+     * the area behaves would have stopped meaning anything.
+     */
+    public function testTheStripCarriesNoSettingsTab(): void
+    {
+        self::assertNotContains('Settings', $this->labels($this->sourceAt('/areas/{uuid}')));
     }
 
     public function testExactlyOneTabIsLitAndItIsTheScreenTheViewerIsOn(): void
@@ -85,15 +96,16 @@ final class AreaShellSourceTest extends WebTestCase
     }
 
     /**
-     * A TAB THE VIEWER MAY NOT HAVE IS ABSENT, NEVER GREYED OUT. A disabled
-     * "Settings" tells a ranger a screen exists and they are not trusted with
-     * it, which is a worse product than not mentioning it.
+     * A TAB THE VIEWER MAY NOT HAVE IS ABSENT, NEVER GREYED OUT. A disabled tab
+     * tells a ranger a screen exists and they are not trusted with it, which is
+     * a worse product than not mentioning it. The Modules tab carries the gate
+     * that proves it, now that the area's own screens carry none.
      */
-    public function testASettingsTabIsWithheldFromSomebodyWhoMayNotEditTheArea(): void
+    public function testAGatedTabIsWithheldFromSomebodyWhoDoesNotHoldIt(): void
     {
         $source = $this->sourceAt('/areas/{uuid}', grants: ['area.view']);
 
-        self::assertSame(['Overview', 'Zones'], $this->labels($source));
+        self::assertNotContains('Modules', $this->labels($source));
     }
 
     /**

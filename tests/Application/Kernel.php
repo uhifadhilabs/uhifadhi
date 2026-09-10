@@ -230,6 +230,11 @@ final class Kernel extends BaseKernel
         // answer whether the core serves a page.
         $routes->import(ShellBundle::ROUTES);
 
+        // The configure page, the same way: a resource the shell ships and an
+        // application asks for. Every module and the area reach their one
+        // configuration entry through it.
+        $routes->import(ShellBundle::CONFIGURE_ROUTES);
+
         // Every screen TeamBundle draws, mounted where an installation's own
         // config/routes/team.yaml mounts it.
         $routes->import('@TeamBundle/Controller/', 'attribute');

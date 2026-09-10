@@ -51,16 +51,26 @@ final class AreaShellSource implements AreaShellSourceInterface
      * The area's screens in the order the design draws them, each with the route
      * that serves it and the permission that grants it.
      *
-     * ZONES CARRIES NO GATE OF ITS OWN, exactly like the overview: a zone is a
-     * lens, and a lens nobody may look through explains nothing. Reading the
+     * ZONES CARRIES NO GATE OF ITS OWN, exactly like the first screen: a zone is
+     * a lens, and a lens nobody may look through explains nothing. Reading the
      * zoning scheme is for anyone who can reach the area; the writes are gated
      * inside the page.
+     *
+     * SETTINGS IS NOT HERE, AND THAT IS THE RULE RATHER THAN AN OMISSION. A tab
+     * is a place where DATA lives; what an area is set up with is configuration,
+     * and all of it — the dashboard's composition and the area's own record —
+     * is behind the one Configure action, on the page the shell owns. A strip
+     * that mixed the two would be a strip that had stopped meaning anything.
+     *
+     * DEPARTMENTS IS HERE AND MAY NOT BE MOUNTED, which is what route-tolerance
+     * is for: an installation that serves the screen gets the tab, and one that
+     * does not gets a shorter strip rather than a broken page.
      */
     private const array SCREENS = [
         ['Overview', 'area_show', null],
         ['Modules', 'area_modules', 'module.view'],
         ['Zones', 'area_zones', null],
-        ['Settings', 'area_settings', 'area.edit'],
+        ['Departments', 'area_departments', null],
     ];
 
     public function __construct(
@@ -143,7 +153,7 @@ final class AreaShellSource implements AreaShellSourceInterface
             return 'Modules';
         }
 
-        foreach (['Zones' => 'area_zones', 'Settings' => 'area_settings', 'Overview' => 'area_show'] as $label => $name) {
+        foreach (['Zones' => 'area_zones', 'Departments' => 'area_departments', 'Overview' => 'area_show'] as $label => $name) {
             if ($route === $name) {
                 return $label;
             }

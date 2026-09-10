@@ -343,14 +343,14 @@ final class AreaEditTest extends WebTestCase
         self::assertTrue($fresh->hasBoundary());
     }
 
-    /** The settings page carries the entry to this screen. */
-    public function testTheSettingsPageOffersAnEditAreaEntry(): void
+    /** The Area settings section of the configure page carries the entry to this screen. */
+    public function testTheAreaSettingsSectionOffersAnEditAreaEntry(): void
     {
         $this->boot();
         $this->signIn();
         $area = $this->anArea('Northern Reserve');
 
-        $body = $this->body('/areas/'.$area->getUuidString().'/settings');
+        $body = $this->body('/areas/'.$area->getUuidString().'/configure');
 
         self::assertStringContainsString('Edit area', $body);
         self::assertStringContainsString('href="/areas/'.$area->getUuidString().'/edit"', $body);

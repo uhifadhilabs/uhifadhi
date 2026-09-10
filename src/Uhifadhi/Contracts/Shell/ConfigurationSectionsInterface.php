@@ -75,6 +75,23 @@ interface ConfigurationSectionsInterface
     public function slug(): string;
 
     /**
+     * WHAT THE CONFIGURE PAGE IS CALLED, whole — "Ngorongoro — Patrols" — to
+     * which the shell adds " · configure".
+     *
+     * The surface composes it because only the surface knows the words: the
+     * shell has a slug, not a display name, and the area it is being configured
+     * in is the surface's own knowledge too. A declaration resolves the current
+     * request the way every other source in the frame does.
+     */
+    public function heading(): string;
+
+    /**
+     * The line under the heading — what this page is for, in one sentence — or
+     * null for a surface that would only repeat its own title.
+     */
+    public function summary(): ?string;
+
+    /**
      * The sections of this surface's configure page, each named in the surface's
      * own words. Order them however reads best; the collector still anchors
      * Widget library first and Settings last.

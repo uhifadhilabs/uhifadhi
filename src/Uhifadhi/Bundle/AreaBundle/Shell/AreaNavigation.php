@@ -22,6 +22,7 @@ use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaComposition;
 use Uhifadhi\Bundle\ShellBundle\Contract\NavigationSourceInterface;
+use Uhifadhi\Bundle\ShellBundle\Frame\Service\ModuleFrameService;
 use Uhifadhi\Bundle\ShellBundle\Model\AreaTab;
 use Uhifadhi\Bundle\ShellBundle\Model\NavItem;
 use Uhifadhi\Bundle\ShellBundle\Model\NavSection;
@@ -68,6 +69,7 @@ final readonly class AreaNavigation implements NavigationSourceInterface
         private AreaOfInterestRepository $areas,
         private AreaShellSource $screens,
         private AreaComposition $composition,
+        private ModuleFrameService $frame,
     ) {
     }
 
@@ -158,6 +160,10 @@ final readonly class AreaNavigation implements NavigationSourceInterface
      * current. Either way the branch is unfolded while you are inside the modules
      * space and folded — but still in the document — while you are not.
      *
+     * The module row keeps `par` treatment while one of its own screens is lit,
+     * exactly as the design draws it: the module is the legible ancestor and the
+     * screen under it carries the accent.
+     *
      * Each module row draws the shell's identity dot, jade by default. Carrying a
      * PER-MODULE hue waits on the shell publishing a NavItem tone passthrough (it
      * has the field on main but not in a release yet); when it ships, this hands
@@ -167,10 +173,31 @@ final readonly class AreaNavigation implements NavigationSourceInterface
     {
         $modules = [];
         foreach ($this->composition->moduleLinksFor($area) as $link) {
+            /*
+             * AND THE MODULE UNFOLDS TO ITS OWN DATA PLACES — the sidebar's
+             * fourth level, and the SAME list the strip under the module's head
+             * is drawn from. A module declares its tabs once; the branch and the
+             * strip cannot disagree, because there is only one declaration.
+             *
+             * Only the module being viewed unfolds: drilling every module of
+             * every area would build rows that are folded away anyway, and the
+             * point of the level is to show where you are, not what exists.
+             */
+            $here = null !== $link->url && $this->viewerIsHere($link->url);
+
+            $screens = [];
+            foreach ($here ? $this->frame->tabsOf($link->slug, (string) $area->getUuidString()) : [] as $screen) {
+                $screens[] = new NavItem(label: $screen->label, url: $screen->url, current: $screen->current);
+            }
+
+            $leafLit = [] !== array_filter($screens, static fn (NavItem $s): bool => $s->current);
+
             $modules[] = new NavItem(
                 label: $link->title,
                 url: $link->url,
-                current: null !== $link->url && $this->viewerIsHere($link->url),
+                current: $here && !$leafLit,
+                open: $here,
+                children: $screens,
             );
         }
 

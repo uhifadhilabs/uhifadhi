@@ -14,8 +14,10 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\AreaBundle\Controller;
 
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\Requirement\Requirement;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Environment;
@@ -25,6 +27,7 @@ use Uhifadhi\Bundle\AreaBundle\Service\AreaMapPayload;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaMapService;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaOverview;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaRegister;
+use Uhifadhi\Bundle\ShellBundle\Frame\Controller\ConfigureController;
 
 /**
  * THE AREA SCREENS — the register, one area's overview, and its settings.
@@ -51,6 +54,7 @@ final readonly class AreaController
         private AreaOverview $overview,
         private AreaMapPayload $mapPayload,
         private AreaMapService $areaMap,
+        private UrlGeneratorInterface $urls,
     ) {
     }
 
@@ -103,15 +107,27 @@ final readonly class AreaController
         ]));
     }
 
+    /**
+     * THE OLD SETTINGS SCREEN'S ADDRESS, PERMANENTLY MOVED.
+     *
+     * What an area is set up with is configuration, and all of it now lives on
+     * the one configure page behind the one Configure action. The address stays
+     * answered rather than deleted because it is in bookmarks, in a redirect a
+     * form posts through, and in whatever an installation typed into its own
+     * links — and 301 is what tells all three where it went for good.
+     *
+     * THE PERMISSION IS UNCHANGED. `area.edit` was the gate on the screen and it
+     * is the gate on the redirect, so a viewer who could not read it before
+     * still cannot be bounced into it.
+     */
     #[Route('/areas/{uuid}/settings', name: 'area_settings', requirements: ['uuid' => Requirement::UUID], methods: ['GET'])]
     #[IsGranted('area.edit')]
     public function settings(
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
     ): Response {
-        return new Response($this->twig->render('@Area/area/settings.html.twig', [
-            'area' => $area,
-            'areaKm2' => $this->register->areaKm2($area),
-            'zoneCount' => $this->zones->countFor($area),
-        ]));
+        return new RedirectResponse(
+            $this->urls->generate(ConfigureController::AREA_ROUTE, ['uuid' => $area->getUuidString()]),
+            Response::HTTP_MOVED_PERMANENTLY,
+        );
     }
 }

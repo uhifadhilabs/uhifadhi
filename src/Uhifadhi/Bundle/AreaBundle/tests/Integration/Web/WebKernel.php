@@ -259,6 +259,13 @@ final class WebKernel extends Kernel
         );
 
         /*
+         * THE SHELL'S CONFIGURE PAGE, mounted as an installation mounts it. The
+         * area's one configuration entry leads here, so a suite that did not
+         * mount it would be asserting a `Configure` action that goes nowhere.
+         */
+        $routes->import(ShellBundle::CONFIGURE_ROUTES);
+
+        /*
          * A MODULE'S OWN PAGE, STOOD IN FOR. A tile links where the registry's entry
          * resolver names a route the application actually mounted; in a real
          * installation that is the patrol module's dashboard. This suite mounts

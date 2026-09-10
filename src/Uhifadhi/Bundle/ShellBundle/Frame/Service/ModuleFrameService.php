@@ -186,6 +186,34 @@ final readonly class ModuleFrameService
     }
 
     /**
+     * A MODULE'S DATA PLACES, FOR A NAMED AREA — the same list the strip is
+     * drawn from, asked for by whoever draws the sidebar's fourth level.
+     *
+     * It takes the area rather than reading the request because the tree lists
+     * every area, not only the one the viewer is inside; only the module
+     * actually being viewed has one of its places lit, and that is decided by
+     * the current route as everywhere else.
+     *
+     * @return list<AreaTab>
+     */
+    public function tabsOf(string $slug, string $areaUuid): array
+    {
+        $route = self::routeOf($this->requests->getCurrentRequest() ?? new Request());
+
+        $tabs = [];
+        foreach ($this->moduleTabs->tabs($slug) as $tab) {
+            $url = $this->url($tab->routeName, [$this->areaParameter => $areaUuid] + $tab->parameters);
+            if (null === $url) {
+                continue;
+            }
+
+            $tabs[] = new AreaTab(label: $tab->label, url: $url, current: $tab->lightsFor($route));
+        }
+
+        return $tabs;
+    }
+
+    /**
      * The surface's sections, in the ruled order — what the configure page has
      * to draw a strip out of, and the emptiness that says a surface has no
      * configure page at all.

@@ -89,7 +89,7 @@ final class AreaNavigationTest extends WebTestCase
         self::assertCount(1, $areas);
         self::assertSame('Northern Conservation Reserve', $areas[0]->label);
         self::assertSame(
-            ['Overview', 'Zones', 'Settings'],
+            ['Overview', 'Zones'],
             array_map(static fn (NavItem $i): string => $i->label, $areas[0]->children),
         );
     }

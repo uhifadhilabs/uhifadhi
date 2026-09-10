@@ -59,7 +59,7 @@ final class ModuleFrameContractsTest extends TestCase
         );
         sort($declared);
 
-        self::assertSame(['sections', 'slug'], $declared);
+        self::assertSame(['heading', 'sections', 'slug', 'summary'], $declared);
     }
 
     /**

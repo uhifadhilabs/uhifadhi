@@ -62,6 +62,7 @@ final readonly class ConfigurationSection
      * @param string|null           $template   the twig the shell renders, or null for a screen
      * @param string|null           $routeName  the section's own address, or null for a rendered page
      * @param array<string, scalar> $parameters route parameters beyond the area's own
+     * @param array<string, mixed>  $variables  what the rendered template is given
      */
     private function __construct(
         public string $id,
@@ -69,6 +70,7 @@ final readonly class ConfigurationSection
         public ?string $template,
         public ?string $routeName,
         public array $parameters,
+        public array $variables = [],
     ) {
         if ('' === trim($id)) {
             throw new \InvalidArgumentException('A section is addressed by its id: it cannot be empty.');
@@ -81,16 +83,23 @@ final readonly class ConfigurationSection
 
     /**
      * A SECTION THE SHELL RENDERS. The template is included inside the configure
-     * page with the area, the module and the section in scope; it writes the
-     * section's content and nothing around it.
+     * page and writes the section's content and nothing around it.
+     *
+     * IT IS GIVEN WHAT THE DECLARATION HANDS IT AND NOTHING ELSE. The surface
+     * already resolves the request to compose its heading, so it is the right
+     * place to resolve the section's data too — and a template that received the
+     * shell's own page scope would come to depend on a variable the frame
+     * happens to have in hand today.
+     *
+     * @param array<string, mixed> $variables
      */
-    public static function page(string $id, string $label, string $template): self
+    public static function page(string $id, string $label, string $template, array $variables = []): self
     {
         if ('' === trim($template)) {
             throw new \InvalidArgumentException(\sprintf('The "%s" section names no template, so the shell has nothing to render for it.', $id));
         }
 
-        return new self($id, $label, $template, null, []);
+        return new self($id, $label, $template, null, [], $variables);
     }
 
     /**

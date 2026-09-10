@@ -14,23 +14,28 @@
    explanation in a title. The product says "this is coming" instead of
    pretending it was never planned.
 
-   FOUR TREATMENTS, BY DEPTH — the design distinguishes them and so must the
+   FIVE TREATMENTS, BY DEPTH — the design distinguishes them and so must the
    shell: a section row (1), the place the branch hangs from (2), that place's
    own sibling screens (3, `ntt`, with `par` on the one that carries modules),
-   and the module rows under it (4+, `ntm`, each with its identity dot). #}
+   the module rows under it (4, `ntm`, each with its identity dot, and `par`
+   while one of its own screens is lit), and a module's own data places under
+   that (5, `nts`). The fifth rung carries NO marker of its own: the module's
+   square dot one level up is the identity, and repeating a glyph below it would
+   read as a second kind of thing. #}
 {%- set _tag = item.url is null ? 'span' : 'a' -%}
 {%- set _kids = item.children|length > 0 -%}
-{%- set _row = depth == 1 ? 'nav-item' : (depth == 2 ? 'nta' : (depth == 3 ? 'ntt' : 'ntm')) -%}
+{%- set _row = depth == 1 ? 'nav-item' : (depth == 2 ? 'nta' : (depth == 3 ? 'ntt' : (depth == 4 ? 'ntm' : 'nts'))) -%}
 {%- set _group = depth == 1 ? 'ntree' : (depth == 2 ? 'nta-group' : 'ntgroup') -%}
 
-<{{ _tag }} class="{{ _row }}{{ depth == 3 and _kids ? ' par' }}{{ item.current ? ' on' }}{{ item.url is null ? ' off' }}{{ _kids and not item.open ? ' closed' }}"
+<{{ _tag }} class="{{ _row }}{{ depth >= 3 and _kids ? ' par' }}{{ item.current ? ' on' }}{{ item.url is null ? ' off' }}{{ _kids and not item.open ? ' closed' }}"
     {%- if item.url is not null %} href="{{ item.url }}"{% endif %}
     {%- if item.hint is not null %} title="{{ item.hint }}"{% endif %}>
     {%- if item.icon is not null %}{{ ux_icon(item.icon) }}{% endif -%}
     {%- if depth == 1 %}<span>{{ item.label }}</span>
     {%- elseif depth == 2 %}<b>{{ item.label }}</b>
     {%- elseif depth == 3 %}{{ item.label }}
-    {%- else %}<i class="mdot{{ item.tone is not null ? ' ' ~ item.tone }}"></i>{{ item.label }}{% endif -%}
+    {%- elseif depth == 4 %}<i class="mdot{{ item.tone is not null ? ' ' ~ item.tone }}"></i>{{ item.label }}
+    {%- else %}{{ item.label }}{% endif -%}
     {%- if _kids %}<button class="chev" type="button" aria-label="Fold {{ item.label }}"
             data-action="uhifadhi--shell-bundle--sidebar-tree#fold">{{ ux_icon('shell:chevron-down') }}</button>{% endif -%}
 </{{ _tag }}>

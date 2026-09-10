@@ -1,30 +1,25 @@
-{# AREA SETTINGS — what this area is, and what an installation may change about
-   it.
+{# THE AREA SETTINGS SECTION — what this area is, and what an installation may
+   change about it.
 
-   GATED ON `area.edit`, so reaching this page at all is the permission. The page
-   states what is editable and what is not rather than offering fields that do
-   nothing: the boundary is not re-drawn here, because importing one is a
-   surface this bundle does not ship yet and pretending otherwise would be a
-   form that fails on submit. #}
-{% extends '@Shell/page.html.twig' %}
+   A SECTION, NOT A SCREEN. It carries no page frame, no head, no strip and no
+   way back: the shell's configure page draws all four, and the area's Configure
+   action is both the way in and the way out. Before the frame this was a screen
+   of its own with a tab in the area's strip, which put "what this area is" beside
+   "what is happening in it" as though the two were the same kind of place.
 
-{% block title %}Settings{% endblock %}
+   GATED ON `area.edit` BY THE ROUTE, so reaching the configure page at all is
+   the permission. The page states what is editable and what is not rather than
+   offering fields that do nothing: the boundary is not re-drawn here, because
+   importing one is a surface this bundle does not ship yet and pretending
+   otherwise would be a form that fails on submit.
 
-{% block stylesheets %}
-    {{ parent() }}
-    {{ include('@Area/_stylesheets.html.twig') }}
-{% endblock %}
-
-{% block shell_breadcrumbs %}
-    <a href="{{ path('area_index') }}">uhifadhi</a> / <a href="{{ path('area_show', {uuid: area.uuidString}) }}">{{ area.name }}</a> / settings
-{% endblock %}
-
-{% block shell_page_title %}{{ area.name }} &mdash; Settings{% endblock %}
-
-{% block shell_page_subtitle %}What this area is, and where its boundary came from.{% endblock %}
-
-{% block shell_page %}
-    <div class="grid">
+   THE SHEET IS LINKED HERE, IN THE BODY, and that is deliberate rather than
+   sloppy: a section is included into a page the shell owns, and the shell's head
+   cannot know which bundle's vocabulary the section is written in. A stylesheet
+   link in the body is applied exactly as one in the head is; what it costs is
+   that this section's own rules land a beat after the frame's. #}
+{{ include('@Area/_stylesheets.html.twig') }}
+<div class="grid">
         <div class="c">
             <span class="tab">The record<span class="src">&middot; area_of_interest</span></span>
 
@@ -61,4 +56,3 @@
                 year, and must not be made to invent them to save a record.</div>
         </div>
     </div>
-{% endblock %}
