@@ -104,6 +104,47 @@ disagrees. `doctrine:migrations:migrate --write-sql=upgrade.sql` writes the
 statements to a file instead of executing them, for a database somebody else
 applies changes to.
 
+### Your own entities, and where their versions land
+
+The core generates nothing for you, and you generate nothing for the core. For
+the entities **your** application writes:
+
+```bash
+bin/console doctrine:migrations:diff
+bin/console doctrine:migrations:migrate
+```
+
+That version is written into your own `migrations/` directory — the one your
+`config/packages/doctrine_migrations.yaml` maps under `DoctrineMigrations` —
+and not into a package's, even though every core bundle registers a namespace
+of its own too.
+
+It is worth saying because it is not what the commands do left alone. `diff`
+and `generate` write into the namespace `--namespace` names, and with no flag
+they fall back to the **first** one configured
+(`vendor/doctrine/migrations/src/Tools/Console/Command/DoctrineCommand.php`,
+`getNamespace()`). A bundle registers its path by prepending it, and prepended
+configuration is merged ahead of the application's own, so the first one would
+be a bundle's — which is to say `vendor/`, which the next `composer update`
+deletes while the row in `doctrine_migration_versions` stays behind. The core
+puts the directory no installed bundle ships back in front, so the flagless
+command an installer runs writes where an installer expects.
+
+Two cases still want the flag. If your application maps more than one namespace
+of its own, name the one you mean:
+
+```bash
+bin/console doctrine:migrations:diff --namespace=DoctrineMigrations
+```
+
+And if you are developing a package rather than an installation — the core
+itself, or a module — every configured namespace belongs to a package, so
+`--namespace` is what says which:
+
+```bash
+bin/console doctrine:migrations:diff --namespace='Uhifadhi\Bundle\AreaBundle\Migrations'
+```
+
 ### The three rules every version here keeps
 
 **Expand, backfill, contract — in that order, in one version.** Add the column

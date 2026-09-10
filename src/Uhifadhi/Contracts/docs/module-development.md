@@ -1183,6 +1183,38 @@ public function prependExtension(ContainerConfigurator $container, ContainerBuil
 The guard is not decoration: an application may have your bundle and not the migrations bundle,
 and there your module simply has no history to run.
 
+### Where a generated version lands
+
+`diff` and `generate` write into the namespace `--namespace` names. With no flag they fall back
+to the **first** configured namespace — silently when there is nothing to ask, and through a
+question whose default is that same first entry when there is:
+
+```php
+$dirs = $configuration->getMigrationDirectories();
+if ($namespace === null && count($dirs) === 1) {
+    $namespace = key($dirs);
+} elseif ($namespace === null && count($dirs) > 1) {
+    $question = new ChoiceQuestion('Please choose a namespace (defaults to the first one)', array_keys($dirs), 0);
+```
+
+(`vendor/doctrine/migrations/src/Tools/Console/Command/DoctrineCommand.php`, `getNamespace()`.)
+
+Every path above is registered by PREPENDING it, and prepended configuration is merged ahead of
+the application's own, so on an installation the first entry would be a package's — under
+`vendor/`, where the next `composer update` deletes the file and leaves the row in
+`doctrine_migration_versions` pointing at nothing. The core moves the directory no installed
+bundle ships back to the front, so the flagless `doctrine:migrations:diff` an installation runs
+for its OWN entities writes into its own `migrations/`. Your module needs nothing for this — only
+to keep registering its path the way above.
+
+**In your own repository it is the other way round.** Every namespace your test application
+configures belongs to a package, so name the one you mean; without the flag a version lands in
+whichever package happens to be first:
+
+```bash
+bin/console doctrine:migrations:diff --namespace='YourVendor\Sightings\Migrations'
+```
+
 ### What decides the order
 
 A version's identity in doctrine/migrations is its **full class name**, and the comparator that
