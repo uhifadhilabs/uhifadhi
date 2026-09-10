@@ -18,8 +18,11 @@ it. Postgres counts NULLs as distinct in a unique index, so an org-wide surface
 (one with no area) needs a second, partial index of its own; both tables carry
 the pair.
 
-**The shell ships entities, not migrations.** The tables are the shell's, but
-the migration history is the installation's.
+**The shell ships the version that creates both tables**, in `migrations/` under
+`Uhifadhi\Bundle\ShellBundle\Migrations`, registered from the bundle's own
+`prependExtension()`. It is dated last of the core's five, because both tables
+reference the table behind the user contract and a version declaring a foreign
+key is dated after the version that creates what it points at.
 
 ## Contents
 

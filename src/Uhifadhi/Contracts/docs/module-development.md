@@ -27,9 +27,10 @@ is the instruction: it says where you create it.
 - [4. Shipping importmap assets from a bundle](#4-shipping-importmap-assets-from-a-bundle)
 - [5. Templates and Twig namespaces](#5-templates-and-twig-namespaces)
 - [6. Contributing to the overview](#6-contributing-to-the-overview)
-- [7. Testing](#7-testing)
-- [8. CI](#8-ci)
-- [9. Flex recipe and activation](#9-flex-recipe-and-activation)
+- [7. Shipping migrations](#7-shipping-migrations)
+- [8. Testing](#8-testing)
+- [9. CI](#9-ci)
+- [10. Flex recipe and activation](#10-flex-recipe-and-activation)
 
 ---
 
@@ -297,7 +298,7 @@ doctrine:
 Both bundles are in the core, so both answers arrive with it.
 
 **The corollary is the test of whether the rule is being followed: a bare installation reaches
-`doctrine:migrations:diff` with zero doctrine edits.** A hand-step is for a decision only the
+`doctrine:migrations:migrate` with zero doctrine edits.** A hand-step is for a decision only the
 installation can make, and neither of these is one. The cost of getting it wrong is real, because a
 missing resolution fails a long way from its cause: the container compiles, the kernel boots, and
 only the metadata walk stops.
@@ -911,7 +912,7 @@ contribute an entry to it. So the contract splits in two:
 'sightings/plate' => ['path' => '@your-vendor/sightings-module/plate.js'],
 ```
 
-Document those lines in your README, and ship them in a Flex recipe (chapter 9) so an install
+Document those lines in your README, and ship them in a Flex recipe (chapter 10) so an install
 writes them. The recipe hides the join; it does not remove it.
 
 ### Name your exports as bare specifiers, not paths
@@ -1126,7 +1127,115 @@ Three rules that keep these contribution points honest:
 
 ---
 
-## 7. Testing
+## 7. Shipping migrations
+
+**Your module owns its tables, so it ships the statements that create them.** An installation
+runs `doctrine:migrations:migrate` and writes no version for you — the same way it writes none
+for the core. `doctrine:migrations:diff` stays what an installation runs for the entities **it**
+writes.
+
+### The directory and the namespace
+
+```
+your-module/
+    migrations/
+        Version20260714091500.php
+```
+
+```php
+// migrations/Version20260714091500.php
+namespace YourVendor\Sightings\Migrations;
+```
+
+Both manifests map it, because a version has to resolve in an installation and after any split:
+
+```json
+{
+    "autoload": {
+        "psr-4": {
+            "YourVendor\\Sightings\\": "",
+            "YourVendor\\Sightings\\Migrations\\": "migrations/"
+        }
+    }
+}
+```
+
+### The registration
+
+One block in `prependExtension()`, guarded, and an installation configures nothing:
+
+```php
+// YourVendorSightingsBundle.php
+public function prependExtension(ContainerConfigurator $container, ContainerBuilder $builder): void
+{
+    if (!$builder->hasExtension('doctrine_migrations')) {
+        return;
+    }
+
+    $container->extension('doctrine_migrations', [
+        'migrations_paths' => [
+            'YourVendor\\Sightings\\Migrations' => __DIR__.'/migrations',
+        ],
+    ], prepend: true);
+}
+```
+
+The guard is not decoration: an application may have your bundle and not the migrations bundle,
+and there your module simply has no history to run.
+
+### What decides the order
+
+A version's identity in doctrine/migrations is its **full class name**, and the comparator that
+ships with the library is a `strcmp` over that name
+(`vendor/doctrine/migrations/src/Version/AlphabeticalComparator.php`). The core replaces it with
+one that reads the trailing `YmdHis`, through `doctrine_migrations.services`, so **the date in
+the class name is what decides** — whatever namespace the class is in.
+
+Which means: give a version that declares a foreign key into a core table a date later than the
+core's own versions. Generating it with `doctrine:migrations:diff` against an installation that
+has already migrated does that for you, because the generated name is the current timestamp.
+
+### The three rules
+
+**Expand, backfill, contract — in that order, in one version.** Add the column nullable, write
+the value into the rows already there, then require it. A version that adds a `NOT NULL` column
+to a table an earlier version created, with neither a `DEFAULT` nor an `UPDATE` beside it, fails
+on the first installation that has data in it.
+
+**A column that cannot be backfilled for everyone ships nullable, and validation enforces it.**
+There is no universally correct value for a fact an installation has not recorded yet, so the
+database stays permissive and the rule lives where the rule actually is. A later release tightens
+the column once every installation has been through the period where the value gets written.
+
+**A destructive statement rides a later release than the code that stopped using it.** Dropping a
+column loses data no `down()` brings back, so the release that stops reading it and the release
+that drops it are two releases, and the file that drops says which is which:
+
+```php
+/**
+ * @destructive 1.4 — sightings_observation.legacy_grid stopped being read in 1.3
+ */
+```
+
+### The four tests to copy
+
+The core keeps these under `tests/Core/`, and they are worth copying whole:
+
+| Test | What it locks |
+|---|---|
+| `MigrationPathsAreRegisteredTest` | booting the application yields exactly the namespaces you ship, each pointing at a directory that exists |
+| `MigrationsCoverSchemaTest` | on an empty database, `migrate` then `diff` reports `No changes detected` — the drift lock between your entities and your versions |
+| `MigrationsUpgradeKeepsDataTest` | rows seeded through your own services survive every further `migrate`, and the whole history unwinds to nothing and comes back |
+| `MigrationLintTest` | the three rules above, read off the SQL each version plans — with fixture versions that break one rule each, so a lint that passes everything you ship has been shown failing something |
+
+The third one is worth being honest about: a version that creates a table has a `down()` that
+drops it, and dropping a table drops its rows. What `down()` guarantees is that the schema
+round-trips, which is what makes it worth shipping — it is the rehearsal before an upgrade, not a
+data-safe undo. Data survives `up()`.
+
+---
+
+## 8. Testing
 
 Tests first — the platform's modules are built that way and the contracts assume it.
 
@@ -1336,7 +1445,7 @@ That is the whole adoption. It runs in `composer check` with the rest of your su
 
 ---
 
-## 8. CI
+## 9. CI
 
 One job, the same command a developer runs:
 
@@ -1368,7 +1477,7 @@ var at it.
 
 ---
 
-## 9. Flex recipe and activation
+## 10. Flex recipe and activation
 
 Installing a module should not be a checklist. A Flex recipe turns it into `composer require`.
 
@@ -1414,7 +1523,7 @@ the bundle has to boot without it.
 Then say honestly how far an installation gets before the interface is answered, and **test the
 answer** rather than assuming it. "Boots without it" and "works without it" are different claims,
 and a recipe that asserts the second while only the first is true is a recipe that reads as correct
-right up to `doctrine:migrations:diff` — see
+right up to the first command that walks the metadata — see
 [the chokepoints](#three-chokepoints-between-composer-require-and-a-schema) below.
 
 ### The host's half of a recipe-owned file
@@ -1469,10 +1578,11 @@ The rule: **if your bundle contributes a table, require the migration bundle.** 
 owning the need for the tool that creates them, exactly as it is owning the need for the ORM that
 maps them.
 
-The other half of that rule: **do not ship migration versions.** The tables are yours; the record of
-which migrations an installation has run belongs to the installation. A vendor replaying its own
-versions into a project's migration log has to be diffed around forever afterwards.
-`doctrine:migrations:diff` on the host is the honest join.
+The other half of that rule: **ship the versions too.** The tables are yours, so the statements
+that create them are yours, and an installation runs them rather than generating a copy that then
+has to be kept in step with yours by hand. How, and the three rules a version keeps, is
+[7. Shipping migrations](#7-shipping-migrations). `doctrine:migrations:diff` stays what an
+installation runs for the entities it writes itself.
 
 **2. Claiming the host's resolution step is optional when it is not.** A recipe that says an
 installation without `resolve_target_entities` simply goes without the per-area half is wrong: it
@@ -1629,13 +1739,13 @@ named at the root as well.
 ### After installing
 
 ```bash
-bin/console doctrine:migrations:diff      # if your module added tables
 bin/console doctrine:migrations:migrate
 bin/console cache:clear                   # the registry reconciles itself on a cache warm-up
 ```
 
-The `diff` is the host's, not yours — see chokepoint 1 above for why a bundle that owns tables
-requires the migration bundle and ships no versions.
+If your module added tables, the versions that create them ship with it — see
+[7. Shipping migrations](#7-shipping-migrations). `doctrine:migrations:diff` is the
+installation's, for the entities it writes itself.
 
 **There is no command to add your module to the catalogue, and there is nothing to remember.** The
 registry sync is a cache warmer, so `cache:clear` is the whole of it — the same command a deploy

@@ -19,7 +19,7 @@ Every row below is a test, and the table is the order they were written in:
 | 7 | Boundaries: no module named in `src/`, no host namespace, no templates, no controllers, no routes | `Unit/BoundaryTest` |
 | 8 | A module's entry route is read live from its provider, never from a stored column | `Integration/Routing/ModuleEntryRouteResolverTest` |
 | 9 | The catalogue tables keep their production names; the area association is resolved to a real entity | `Integration/Area/CataloguePersistenceTest` |
-| 10 | Installability: the registry alone boots without an area and cannot be schema'd without one; the migration tool arrives with the bundle, and no migration versions do | `Integration/InstallabilityTest` |
+| 10 | Installability: the registry alone boots without an area and cannot be schema'd without one; the migration tool arrives with the bundle, and so does the version that creates its two tables | `Integration/InstallabilityTest` |
 | 11 | The registry answers its own area contract for nobody — it yields, which is what lets an answer-module state the resolution and an installation write no doctrine line | `Integration/InstallabilityTest` |
 | 12 | A module an area has parked — or never took — answers **404** on its own routes, before its controller runs; an active module is untouched, a non-module route costs nothing, and the area's own screens on the same path shape stay open | `Integration/Routing/ParkedModuleRouteTest` |
 

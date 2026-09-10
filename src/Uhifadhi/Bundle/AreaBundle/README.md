@@ -63,18 +63,20 @@ nothing here an installation would set.
 
 Your database needs PostGIS:
 
-```sql
-CREATE EXTENSION IF NOT EXISTS postgis;
-```
-
 ```bash
-bin/console doctrine:migrations:diff      # your history, your migration
 bin/console doctrine:migrations:migrate
 ```
 
-Two tables, `area_of_interest` and `zone`. This bundle ships no migration
-versions: the tables are the bundle's, the migration history is the
-installation's.
+Two tables, `area_of_interest` and `zone`, and the bundle ships the versions
+that create them — `migrations/`, namespace
+`Uhifadhi\Bundle\AreaBundle\Migrations`, registered from the bundle's own
+`prependExtension()`, so an installation configures nothing. The first of them
+is `CREATE EXTENSION IF NOT EXISTS postgis`, dated before every version in the
+core, because both geometry columns and their GiST indexes need the extension to
+exist first; a hosted database that will not grant `CREATE EXTENSION` needs
+PostGIS enabled by its provider, after which that version runs and does nothing.
+`doctrine:migrations:diff` stays what an installation runs for the entities IT
+writes.
 
 ## The area
 

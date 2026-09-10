@@ -89,15 +89,19 @@ copies `config/packages/team.yaml` in, and mounts the routes.
 ### Then the tables
 
 ```bash
-bin/console doctrine:migrations:diff      # your history, your migration
 bin/console doctrine:migrations:migrate
 ```
 
 Five tables: `team_user`, `team_position`, `team_department` — which carries a
 nullable **area**, and that is what makes a department org-level or area-level —
 `team_department_scope_change` (the trail of every scope change) and
-`team_api_token`. This bundle ships no migration versions: the tables are the
-bundle's, the migration history is the installation's.
+`team_api_token`. The bundle ships the version that creates all five —
+`migrations/`, namespace `Uhifadhi\Bundle\TeamBundle\Migrations`, registered
+from the bundle's own `prependExtension()`, so an installation configures
+nothing. It is dated after the area tables, because two of these columns
+reference `area_of_interest`, and before the shell's, because two of the shell's
+reference `team_user`. `doctrine:migrations:diff` stays what an installation runs
+for the entities IT writes.
 
 ### Then the first administrator
 

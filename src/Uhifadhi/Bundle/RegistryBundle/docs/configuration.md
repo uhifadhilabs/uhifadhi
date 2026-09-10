@@ -97,6 +97,9 @@ bundle that adds tables brings the tool that creates them, the same way it has
 always brought the ORM. An installed project that lacked it had no
 `doctrine:migrations:*` commands at all and no hint that it should.
 
-What the registry deliberately does **not** ship is migration versions. The tables
-are the registry's; the migration history is the installation's, and a vendor
-replaying its own versions into it would fight every `diff` the host ever runs.
+It ships the versions too. `module` and `area_module` are the registry's tables,
+so the statements that create them live in `migrations/` under
+`Uhifadhi\Bundle\RegistryBundle\Migrations`, registered from the bundle's own
+`prependExtension()`. An installation runs `doctrine:migrations:migrate` and
+generates nothing; `doctrine:migrations:diff` is what it runs for the entities it
+writes itself.

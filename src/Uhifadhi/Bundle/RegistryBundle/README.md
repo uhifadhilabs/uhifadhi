@@ -56,13 +56,19 @@ cannot name an area class itself.
 
 ```bash
 bin/console doctrine:database:create
-bin/console doctrine:migrations:diff      # your history, your migration
 bin/console doctrine:migrations:migrate
 bin/console cache:clear                   # the registry reconciles itself
 ```
 
-The registry ships no migration versions: the tables are the registry's, the
-migration history is the installation's. There is **no seed command** — the
+Two tables, `module` and `area_module`, and the registry ships the version that
+creates them — `migrations/`, namespace
+`Uhifadhi\Bundle\RegistryBundle\Migrations`, registered from the bundle's own
+`prependExtension()`, so an installation configures nothing.
+`doctrine:migrations:diff` stays what an installation runs for the entities IT
+writes. The registry also names the service that decides the ORDER every version
+runs in, across every namespace an installation has, because a version's
+identity is its class name and a package that sorts early would otherwise create
+a table before the one its foreign key points at. There is **no seed command** — the
 catalogue is reconciled by a `kernel.cache_warmer`, which Symfony runs on
 `cache:warmup`, on `cache:clear`, and on the first request if neither has.
 

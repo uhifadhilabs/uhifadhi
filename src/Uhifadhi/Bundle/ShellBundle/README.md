@@ -55,6 +55,14 @@ itself is what `Uhifadhi\Contracts\Entity\UserInterface` means — a layout
 belongs to a person, and the shell does not know who an installation's people
 are. `TeamBundle`, in the same package, states that resolution.
 
+Two tables, `widget_preference` and `widget_custom_preset`, and the shell ships
+the version that creates them — `migrations/`, namespace
+`Uhifadhi\Bundle\ShellBundle\Migrations`, registered from the bundle's own
+`prependExtension()`, so an installation runs `doctrine:migrations:migrate` and
+writes nothing. It is dated last of the core's five: both tables reference the
+table behind that user contract, and a version that declares a foreign key is
+dated after the version that creates what it points at.
+
 ## Getting started
 
 Every code block below opens with a comment naming the file it belongs in. Where

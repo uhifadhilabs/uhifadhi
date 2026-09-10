@@ -17,6 +17,7 @@ updates it or builds a module against it.
 - [What the core is](#what-the-core-is)
 - [The packages](#the-packages)
 - [Installation](#installation)
+- [Upgrading](#upgrading)
 - [The controllers an installation registers](#the-controllers-an-installation-registers)
 - [Development](#development)
 - [Versioning](#versioning)
@@ -56,14 +57,80 @@ Flex writes one `config/bundles.php` line per core bundle and copies one
 `config/packages/<bundle>.yaml` each. Then the tables:
 
 ```bash
-bin/console doctrine:migrations:diff      # your history, your migration
 bin/console doctrine:migrations:migrate
 bin/console cache:clear                   # the registry reconciles itself
 ```
 
-The core ships **no console commands** and **no migration versions**: the tables
-are the core's, the migration history is the installation's, and devkit — a
-development-only package — owns every command the platform has.
+**The core ships its own migrations.** Each bundle that owns tables carries a
+`migrations/` directory under its own namespace and registers it from its
+`prependExtension()`, so an installation configures nothing and generates
+nothing. `doctrine:migrations:diff` is still what an installation runs — for the
+entities **it** writes. Run it after a core update and it must report
+`No changes detected in your mapping information.`; pass `--allow-empty-diff` if
+you want that outcome to exit zero for a script.
+
+The core ships **no console commands**: devkit — a development-only package —
+owns every command the platform has.
+
+### The order versions run in
+
+A migration's identity in doctrine/migrations is its **full class name**, and the
+comparator that ships with it is a `strcmp` over that name
+(`vendor/doctrine/migrations/src/Version/AlphabeticalComparator.php`). With one
+namespace that is the same thing as sorting by date; with a namespace per
+package it is not, and a package whose name sorts early would create a table
+before the table its foreign key points at. So the core registers a comparator
+that reads the trailing `YmdHis` instead, through
+`doctrine_migrations.services`, the seam the migrations bundle documents for it.
+
+The consequence for anyone writing migrations in the same installation — yours,
+or a module's — is the one you would expect anyway: **the date in the class name
+is what decides**, whatever namespace the class is in.
+
+## Upgrading
+
+```bash
+# 1. Back the database up. Nothing below replaces this.
+# 2. Read what is about to run.
+bin/console doctrine:migrations:migrate --dry-run
+# 3. Run it.
+bin/console doctrine:migrations:migrate
+```
+
+Two hatches when it goes wrong. `doctrine:migrations:version --add
+'<Fully\Qualified\Version>'` marks one version executed without running it —
+for the case where the change is already in the database and only the ledger
+disagrees. `doctrine:migrations:migrate --write-sql=upgrade.sql` writes the
+statements to a file instead of executing them, for a database somebody else
+applies changes to.
+
+### The three rules every version here keeps
+
+**Expand, backfill, contract — in that order, in one version.** Add the column
+nullable, write the value into the rows already there, then require it. A
+version that adds a `NOT NULL` column to a table an earlier version created,
+with neither a `DEFAULT` nor an `UPDATE` beside it, fails on the first
+installation that has data in it.
+
+**A column that cannot be backfilled for everyone ships nullable, and validation
+enforces it.** There is no universally correct value for "the staff number this
+organisation has not issued yet", so the database stays permissive and the rule
+lives where the rule actually is. A later release tightens the column once every
+installation has been through the period where the value gets written.
+
+**A destructive statement rides a later release than the code that stopped using
+it.** Deleting a column is not reversible by a `down()`, so the release that
+stops reading it and the release that drops it are two releases, and the file
+that does the dropping says which one is which:
+
+```php
+/**
+ * @destructive 1.4 — widget_preference.legacy_layout stopped being read in 1.3
+ */
+```
+
+All three are enforced, not just written down: `tests/Core/MigrationLintTest`
+reads the SQL every shipped version plans and fails the build on a violation.
 
 ## The controllers an installation registers
 
