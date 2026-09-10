@@ -72,6 +72,23 @@ final class VocabularyConformanceTest extends VocabularyConformanceTestCase
     }
 
     /**
+     * THE PAGE-ACTION ROW IS THE FRAME'S AND HAS NO SECOND NAME. The frame
+     * renders the wrapper and lays it out (`.pgact` in shell.css), so a row
+     * under a name of the library's own is a second answer to the same
+     * question — one a template can only reach by putting a class on a div the
+     * frame writes, which no template can do.
+     */
+    public function testTheLibrarySheetLaysOutNoPageActionRowOfItsOwn(): void
+    {
+        self::assertDoesNotMatchRegularExpression(
+            '/\.w-pgact(?![\w-])/',
+            (string) file_get_contents(self::bundlePath().'/public/widget.css'),
+            'The frame lays out the page-action row. A second row in the library\'s sheet is a name '
+            .'no template can reach and a set of values that will drift from the frame\'s.',
+        );
+    }
+
+    /**
      * Every selector in the library's sheet that carries a class and none of
      * them is the library's own.
      *

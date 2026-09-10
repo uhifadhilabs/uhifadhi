@@ -197,7 +197,8 @@
 }
 
 /* ---- widget library: page header actions ------------------------------- */
-.w-pgact { display: flex; gap: 10px; }
+/* The row itself is `.pgact` in shell.css: the frame writes that wrapper, so
+   only the frame can lay it out. This is the link a library page puts IN it. */
 .w-act { display: inline-flex; align-items: center; gap: 7px; text-decoration: none; }
 
 
