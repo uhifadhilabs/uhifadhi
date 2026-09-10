@@ -77,9 +77,9 @@ you write on an element; the parts each one brings are in the table.
 `margin: 0 0 20px`, so the element a screen puts below it states no top margin
 of its own.
 
-**`.factband` is drawn on `--c-raised`, pending a ruling on its surface.** The
-design declares `background: var(--card)` and defines `--card` in no sheet in
-the workspace, which leaves the band transparent there.
+**`.factband` is drawn on `--c-raised`.** The identity band is a card, and every
+card sits on the raised surface; the design's `--card` token is that same
+surface.
 
 **The colour words are not the start of a utility set.** They colour one word of
 a sentence, and they are the palette's own names. A fifth grey belongs in the
