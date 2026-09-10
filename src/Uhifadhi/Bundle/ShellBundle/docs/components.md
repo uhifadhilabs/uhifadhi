@@ -73,6 +73,14 @@ you write on an element; the parts each one brings are in the table.
 | The row affordance | `.open-btn` | fills on the **row's** hover, not its own |
 | The quiet button | `.tgl` | the secondary to `.cta` |
 
+**The identity band carries the gap under it.** `.factband` states
+`margin: 0 0 20px`, so the element a screen puts below it states no top margin
+of its own.
+
+**`.factband` is drawn on `--c-raised`, pending a ruling on its surface.** The
+design declares `background: var(--card)` and defines `--card` in no sheet in
+the workspace, which leaves the band transparent there.
+
 **The colour words are not the start of a utility set.** They colour one word of
 a sentence, and they are the palette's own names. A fifth grey belongs in the
 token list or nowhere.
