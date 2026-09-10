@@ -66,6 +66,7 @@ you write on an element; the parts each one brings are in the table.
 | The KPI plate | `.kpi` | `b`/`.disp` the number, `em` the unit, `.sub` the sub-line, `.hot` for the one that matters |
 | The KPI strip | `.kstrip` | a modifier on `.grid`, never alone |
 | The register table | `table.tbl` | `th` `td` `.num`, and the row's hover |
+| The meta row | `.rln` | the two halves are yours (`.k`/`.v`, a `.mono` figure, a colour word); the last row drops the rule |
 | The pager | `.rdf-foot` `.rdf-page` | `.pg`, the page you are on |
 | The person's mark | `.avatar` | — |
 | The row affordance | `.open-btn` | fills on the **row's** hover, not its own |

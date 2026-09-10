@@ -2814,14 +2814,8 @@ html.light [data-dp] select, html.light [data-dept] select {
 .dp-empty b { display: block; margin-bottom: 6px; color: rgb(var(--c-tx)); }
 .dp-empty span { font-size: 13px; color: rgb(var(--c-fog)); }
 
-/* The labelled row-line used inside the lens's Settings cards — a key on the
-   left, a value on the right, dashed between (from the design's base vocabulary,
-   which the shell does not ship). */
-.rln {
-    display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 12px;
-    padding: 8px 2px; border-bottom: 1px dashed color-mix(in srgb, rgb(var(--c-fog)) 18%, transparent);
-}
-.rln:last-child { border: 0; }
+/* The meta row inside the lens's Settings cards is the shell's. The key and the
+   value it carries are this bundle's own: quiet label, weighted answer. */
 .rln .k { color: rgb(var(--c-fog)); }
 .rln .v { color: rgb(var(--c-tx)); font-weight: 600; }
 .rln .v.acc { color: rgb(var(--c-acc)); }

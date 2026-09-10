@@ -645,6 +645,19 @@ table.tbl tr:hover td { background: color-mix(in srgb, rgb(var(--c-acc)) 4%, tra
 table.tbl a { color: rgb(var(--c-acc)); text-decoration: none; font-weight: 600; }
 table.tbl .num { text-align: right; font-family: var(--font-mono); font-size: 12px; }
 
+/* ---- THE META ROW — a label on the left, its value on the right ---------
+   The card's answer to a table for two columns and no header: a stack of these
+   is a specification sheet. The dashed rule is the table's, so a card of rows
+   and a table of rows are the same object at two sizes; the last row drops it,
+   because a rule under the final line is a line under nothing. What goes in the
+   two halves is the module's — `.k`/`.v`, a `.mono` figure, a colour word. */
+.rln {
+    display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 12px;
+    padding: 8px 2px;
+    border-bottom: 1px dashed color-mix(in srgb, rgb(var(--c-fog)) 18%, transparent);
+}
+.rln:last-child { border: 0; }
+
 /* ---- THE PAGER, and the foot it sits in --------------------------------- */
 .rdf-foot {
     display: flex; align-items: center; justify-content: space-between; gap: 12px;

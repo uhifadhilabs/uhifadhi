@@ -320,19 +320,8 @@
     flex: none;
 }
 
-/* rln metrics match the design (uhifadhi.css); the app draws these as
-   standalone labelled lines, so it keeps a top rule rather than the design's
-   in-list bottom rule (which would erase the divider on a lone/last row). */
-.rln {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    font-size: 12px;
-    padding: 8px 2px;
-    border-top: 1px dashed color-mix(in srgb, rgb(var(--c-fog)) 18%, transparent);
-}
-
+/* The meta row itself is the shell's. What this bundle puts in its left half is
+   its own: a mono small-caps label rather than the plain key. */
 .rln .fog {
     font-family: var(--font-mono);
     font-size: 9px;

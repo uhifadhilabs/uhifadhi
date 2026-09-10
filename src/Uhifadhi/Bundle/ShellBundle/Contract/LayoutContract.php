@@ -224,8 +224,9 @@ final class LayoutContract
         'kpi',
         'kstrip',
 
-        // the register table, and the pager under it
+        // the register table, the meta row, and the pager under them
         'tbl',
+        'rln',
         'rdf-foot',
         'rdf-page',
 

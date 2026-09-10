@@ -92,8 +92,9 @@ final class ComponentContractTest extends ContractTestCase
             'kpi',
             'kstrip',
 
-            // THE REGISTER TABLE, and the pager under it.
+            // THE REGISTER TABLE, THE META ROW, and the pager under them.
             'tbl',
+            'rln',          // a label and its value, dashed between
             'rdf-foot',
             'rdf-page',
 
