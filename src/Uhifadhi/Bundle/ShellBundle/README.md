@@ -96,6 +96,17 @@ shell:
     resource: '@ShellBundle/config/routes/welcome.php'
 ```
 
+The configure pages — the area's at `/areas/{uuid}/configure` and every module's at
+`/areas/{uuid}/modules/{slug}/configure` — are a second shipped resource, imported the
+same way. The starter imports both; an installation without this line has no
+configure page and no `Configure` action.
+
+```yaml
+# config/routes/shell.yaml (your application)
+shell_configure:
+    resource: '@ShellBundle/config/routes/configure.php'
+```
+
 Configuration, all of it optional:
 
 ```yaml
