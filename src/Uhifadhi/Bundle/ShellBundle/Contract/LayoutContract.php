@@ -220,6 +220,9 @@ final class LayoutContract
         'tab',
         'use',
 
+        // the identity band a detail screen opens with
+        'factband',
+
         // the KPI plate, and the strip it sits in
         'kpi',
         'kstrip',

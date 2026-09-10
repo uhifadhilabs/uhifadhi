@@ -2738,28 +2738,13 @@ html.light [data-dp] select, html.light [data-dept] select {
     font: 700 13px "JetBrains Mono", ui-monospace, monospace;
 }
 
-/* The identity band — labelled facts, mirroring the area overview's .factband. */
-.factband {
-    display: flex; align-items: center; gap: 0; flex-wrap: wrap;
-    border: 1px solid var(--c-ln); border-radius: 12px; background: rgb(var(--c-cv));
-    padding: 2px 4px; margin: 0 0 20px; box-sizing: border-box;
+/* The identity band is the shell's. One fact in this bundle's band is an opaque
+   code rather than a word, and a code is read character by character: it drops
+   to mono at a size the eye can pick apart, so it stops competing with the
+   facts beside it that a reader is actually scanning. */
+.factband .f .v.uuid {
+    font-family: var(--font-mono); font-size: 11px; color: rgb(var(--c-fog)); font-weight: 500;
 }
-.factband .f { display: flex; flex-direction: column; gap: 2px; padding: 9px 16px; position: relative; }
-.factband .f + .f::before { content: ""; position: absolute; left: 0; top: 11px; bottom: 11px; width: 1px; background: var(--c-ln); }
-.factband .f .k {
-    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 8.5px; font-weight: 600;
-    letter-spacing: .15em; text-transform: uppercase; color: rgb(var(--c-dim));
-}
-.factband .f .v { font-size: 13px; font-weight: 600; color: rgb(var(--c-tx)); font-variant-numeric: tabular-nums; }
-.factband .f .v.uuid { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 11px; color: rgb(var(--c-fog)); font-weight: 500; }
-.factband .sp { flex: 1; }
-.factband .more {
-    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 9.5px; font-weight: 600;
-    letter-spacing: .1em; text-transform: uppercase; color: rgb(var(--c-fog)); text-decoration: none;
-    padding: 9px 15px; background: none; border: 0; cursor: pointer;
-}
-.factband .more:hover { color: rgb(var(--c-acc)); }
-@media (max-width: 900px) { .factband .f + .f::before { display: none; } }
 
 /* The scope-reading strip above the tabs — one rule, said with the accent (not
    a warning), because it states the model, not a risk. */

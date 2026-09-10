@@ -63,6 +63,7 @@ you write on an element; the parts each one brings are in the table.
 | The colour words | `.fog` `.acc` `.g` `.w` `.r` `.d` `.muted` | — |
 | The card's tab | `.tab` (direct child of `.c`) | `.src`, the qualifier |
 | What the card is for | `.use` | `b` for the emphasis |
+| The identity band | `.factband` | `.f` a fact, `.k`/`.v` its halves (`em` the unit), `.sp` then `.more`; wraps below 900px |
 | The KPI plate | `.kpi` | `b`/`.disp` the number, `em` the unit, `.sub` the sub-line, `.hot` for the one that matters |
 | The KPI strip | `.kstrip` | a modifier on `.grid`, never alone |
 | The register table | `table.tbl` | `th` `td` `.num`, and the row's hover |

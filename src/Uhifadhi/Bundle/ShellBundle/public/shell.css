@@ -602,6 +602,47 @@ h2.zone::after { content: ""; flex: 1; height: 1px; background: var(--c-ln2); }
 .use { font-size: 12.5px; color: rgb(var(--c-fog)); margin: 10px 2px 4px; line-height: 1.55; }
 .use b { color: rgb(var(--c-tx)); }
 
+/* ---- THE IDENTITY BAND — what the thing IS, above everything it has done -
+   A row of labelled facts a detail screen opens with: the ones that have not
+   changed since the record was created. They are facts, not measurements, so
+   they are never plates — a KPI strip says a number is moving, and this says a
+   number is settled.
+
+   The band is hairline-divided rather than gapped, so it reads as one object;
+   below 900px it wraps, and a divider between two fields no longer on the same
+   line is a rule pointing at nothing, so it goes.
+
+   `.more` is the band's trailing link. It is styled to survive being written as
+   a button — a module that opens a tab rather than a page has no anchor to
+   write — the same reset `.tgl` and the pager's controls carry.
+
+   The design declares `background: var(--card)`, and `--card` is defined in no
+   sheet in the design workspace; the raised surface is what the band is drawn
+   on here. Every other value below is the design's own. */
+.factband {
+    display: flex; align-items: center; gap: 0; flex-wrap: wrap;
+    border: 1px solid var(--c-ln); border-radius: 12px; background: rgb(var(--c-raised));
+    padding: 2px 4px; margin: 0 0 20px;
+}
+.factband .f { display: flex; flex-direction: column; gap: 2px; padding: 9px 16px; position: relative; }
+.factband .f + .f::before {
+    content: ""; position: absolute; left: 0; top: 11px; bottom: 11px; width: 1px; background: var(--c-ln);
+}
+.factband .f .k {
+    font-family: var(--font-mono); font-size: 8.5px; font-weight: 600;
+    letter-spacing: .15em; text-transform: uppercase; color: rgb(var(--c-dim));
+}
+.factband .f .v { font-size: 13px; font-weight: 600; color: rgb(var(--c-tx)); font-variant-numeric: tabular-nums; }
+.factband .f .v em { font-style: normal; font-size: 10.5px; color: rgb(var(--c-fog)); margin-left: 3px; }
+.factband .sp { flex: 1; }
+.factband .more {
+    font-family: var(--font-mono); font-size: 9.5px; font-weight: 600;
+    letter-spacing: .1em; text-transform: uppercase; color: rgb(var(--c-fog)); text-decoration: none;
+    padding: 9px 15px; background: none; border: 0; cursor: pointer;
+}
+.factband .more:hover { color: rgb(var(--c-acc)); }
+@media (max-width: 900px) { .factband .f + .f::before { display: none; } }
+
 /* ---- THE KPI PLATE — a label on the tab, one number, one sub-line --------
    The number is display type at 30px and BLOCK, and the block is the whole
    composition: as an inline run the label, the count and the sub-line collapse

@@ -164,49 +164,6 @@
 .reg-meta { font-size: 9px; color: rgb(var(--c-dim)); margin-top: 2px; }
 .reg-open { text-align: right; white-space: nowrap; }
 
-/* ── The identity band ────────────────────────────────────────────────────── */
-.factband {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0;
-    padding: 2px 4px;
-    border: 1px solid var(--c-ln);
-    border-radius: 12px;
-    background: rgb(var(--c-raised));
-}
-
-.factband .f { display: flex; flex-direction: column; gap: 2px; padding: 9px 16px; position: relative; }
-/* A hairline between two facts on the same row; suppressed when the band wraps. */
-.factband .f + .f::before { content: ""; position: absolute; left: 0; top: 11px; bottom: 11px; width: 1px; background: var(--c-ln); }
-
-.factband .k {
-    font-family: var(--font-mono);
-    font-size: 8.5px;
-    font-weight: 600;
-    letter-spacing: .15em;
-    text-transform: uppercase;
-    color: rgb(var(--c-dim));
-}
-
-.factband .v { font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
-.factband .v em { font-style: normal; font-size: 10.5px; font-weight: 500; color: rgb(var(--c-fog)); margin-left: 3px; }
-.factband .sp { flex: 1; }
-.factband .more {
-    font-family: var(--font-mono);
-    font-size: 9.5px;
-    font-weight: 600;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    color: rgb(var(--c-fog));
-    text-decoration: none;
-    white-space: nowrap;
-    padding: 9px 15px;
-}
-.factband .more:hover { color: rgb(var(--c-acc)); }
-
-@media (max-width: 900px) { .factband .f + .f::before { display: none; } }
-
 /* ── The right-now strip ──────────────────────────────────────────────────── */
 /* The KPI strip is a `.grid`, and the shell's grid carries the card-gap rhythm
    as its own margin-bottom. Here the strip is the first band of a stack that
