@@ -43,7 +43,7 @@ use Uhifadhi\Bundle\AtlasBundle\Model\LegendItem;
  * server — and anything unusable is simply not drawn: a boundary that will not
  * parse is a plate without a boundary, never a page that fails.
  */
-final readonly class AreaMap
+final readonly class AreaMapService
 {
     /** The area's own legend heading, present whatever is installed. */
     public const string OWN_GROUP = 'The area';

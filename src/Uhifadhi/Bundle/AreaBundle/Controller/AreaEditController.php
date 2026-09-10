@@ -31,8 +31,8 @@ use Uhifadhi\Bundle\AreaBundle\Exception\AreaIdentityException;
 use Uhifadhi\Bundle\AreaBundle\Exception\BoundaryImportException;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaIdentity;
-use Uhifadhi\Bundle\AreaBundle\Service\AreaMap;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaMapPayload;
+use Uhifadhi\Bundle\AreaBundle\Service\AreaMapService;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaRegister;
 use Uhifadhi\Bundle\AreaBundle\Service\BoundaryImport;
 
@@ -77,7 +77,7 @@ final readonly class AreaEditController
         private AreaIdentity $identity,
         private BoundaryImport $boundaries,
         private AreaMapPayload $mapPayload,
-        private AreaMap $areaMap,
+        private AreaMapService $areaMap,
         private AreaRegister $register,
         private ZoneRepository $zones,
         private CsrfTokenManagerInterface $csrf,

@@ -15,7 +15,7 @@ namespace Uhifadhi\Bundle\AreaBundle\Tests\Unit\Service;
 
 use PHPUnit\Framework\TestCase;
 use Uhifadhi\Bundle\AreaBundle\Overview\MapLayer;
-use Uhifadhi\Bundle\AreaBundle\Service\AreaMap;
+use Uhifadhi\Bundle\AreaBundle\Service\AreaMapService;
 use Uhifadhi\Bundle\AtlasBundle\Map\MapBuilder;
 use Uhifadhi\Bundle\AtlasBundle\Model\AtlasMap;
 use Uhifadhi\Bundle\AtlasBundle\Model\LegendItem;
@@ -29,7 +29,7 @@ use Uhifadhi\Bundle\AtlasBundle\Model\LegendItem;
  * unusable is simply not drawn — a boundary that will not parse is a plate with
  * no boundary, never a page that fails.
  */
-final class AreaMapTest extends TestCase
+final class AreaMapServiceTest extends TestCase
 {
     private const string BOUNDARY = '{"type":"Polygon","coordinates":[[[-29.5,-3.2],[-29.4,-3.2],[-29.4,-3.1],[-29.5,-3.1],[-29.5,-3.2]]]}';
     private const string ZONE = '{"type":"Polygon","coordinates":[[[-29.48,-3.18],[-29.44,-3.18],[-29.44,-3.14],[-29.48,-3.14],[-29.48,-3.18]]]}';
@@ -203,8 +203,8 @@ final class AreaMapTest extends TestCase
         ];
     }
 
-    private static function areaMap(): AreaMap
+    private static function areaMap(): AreaMapService
     {
-        return new AreaMap(new MapBuilder());
+        return new AreaMapService(new MapBuilder());
     }
 }

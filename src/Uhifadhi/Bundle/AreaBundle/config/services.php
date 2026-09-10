@@ -18,8 +18,8 @@ use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaComposition;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaCreator;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaIdentity;
-use Uhifadhi\Bundle\AreaBundle\Service\AreaMap;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaMapPayload;
+use Uhifadhi\Bundle\AreaBundle\Service\AreaMapService;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaOverview;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaPresetLibrary;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaRegister;
@@ -114,9 +114,9 @@ return static function (ContainerConfigurator $container): void {
      * and the register's — handed to the atlas to draw. The area writes no
      * JavaScript: this builds the map, and render_map() puts it on the page.
      */
-    $services->set('area.map', AreaMap::class)
+    $services->set('area.map', AreaMapService::class)
         ->args([service(MapBuilderInterface::class)]);
-    $services->alias(AreaMap::class, 'area.map');
+    $services->alias(AreaMapService::class, 'area.map');
 
     /*
      * THE AREAS-INDEX WIDGET LIBRARY — the five whole-page layouts the landing
