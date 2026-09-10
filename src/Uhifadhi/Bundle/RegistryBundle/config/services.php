@@ -27,7 +27,7 @@ use Uhifadhi\Bundle\RegistryBundle\Service\ModulePermissionCatalogue;
 use Uhifadhi\Bundle\RegistryBundle\Service\ModuleRouteGate;
 use Uhifadhi\Bundle\RegistryBundle\Service\ProviderCatalogueMapper;
 use Uhifadhi\Bundle\RegistryBundle\Service\RegistrySyncService;
-use Uhifadhi\Bundle\RegistryBundle\Version\VersionTimestampComparator;
+use Uhifadhi\Bundle\RegistryBundle\Version\DependencyOrderComparator;
 
 /*
  * The bundle's static service wiring.
@@ -155,9 +155,17 @@ return static function (ContainerConfigurator $container): void {
      * doctrine/doctrine-migrations-bundle, and because an ordering across
      * namespaces is a property of the installation rather than of any one
      * bundle's tables. The bundle class hands this id to
-     * `doctrine_migrations.services`; the class itself says why it exists.
+     * `doctrine_migrations.services`; the class itself says what the order is.
+     *
+     * It takes the migrations configuration because that is where a namespace
+     * is mapped to a directory, and a directory is what says which package a
+     * version came from. The named constructor reads the installed set from
+     * Composer at RUNTIME, so nothing about a particular vendor directory is
+     * baked into a compiled container.
      */
-    $services->set('registry.migration_comparator', VersionTimestampComparator::class);
+    $services->set('registry.migration_comparator', DependencyOrderComparator::class)
+        ->factory([DependencyOrderComparator::class, 'fromComposer'])
+        ->args([service('doctrine.migrations.configuration')]);
 
     $services->set('registry.sync_warmer', RegistrySyncWarmer::class)
         // ResolveServiceSubscribersPass swaps a Psr ContainerInterface reference

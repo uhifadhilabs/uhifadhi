@@ -172,8 +172,9 @@ final class RegistryBundle extends AbstractBundle
             // WHY THE CORE REPLACES A DOCTRINE SERVICE, AND ONLY THIS ONE. A
             // version's identity is its full class name, so the shipped
             // comparator orders migrations by NAMESPACE — which, with a
-            // namespace per bundle, is not the order the foreign keys need.
-            // @see Version/VersionTimestampComparator.php
+            // namespace per package, is not the order the foreign keys need.
+            // The replacement orders by the Composer dependency graph.
+            // @see Version/DependencyOrderComparator.php
             'services' => [
                 Comparator::class => 'registry.migration_comparator',
             ],
