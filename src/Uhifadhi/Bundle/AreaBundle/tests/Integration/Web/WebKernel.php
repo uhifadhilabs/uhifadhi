@@ -29,6 +29,7 @@ use Symfony\UX\StimulusBundle\StimulusBundle;
 use Uhifadhi\Bundle\AreaBundle\AreaBundle;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\CheckoutTempDirTrait;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web\Fixtures\HostUser;
+use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web\Fixtures\PatrolsModuleTabs;
 use Uhifadhi\Bundle\AtlasBundle\AtlasBundle;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
 use Uhifadhi\Bundle\ShellBundle\ShellBundle;
@@ -182,6 +183,13 @@ final class WebKernel extends Kernel
          * tile is a link; `forest-loss` carries none, so its tile is inert. Both
          * halves of that rule are asserted.
          */
+        /*
+         * A MODULE'S OWN DATA PLACES, STOOD IN FOR — what fills the sidebar's
+         * fourth rung. Tagged by hand, exactly as a reusable module bundle must.
+         */
+        $services->set(PatrolsModuleTabs::class)
+            ->tag('uhifadhi.module_tabs');
+
         foreach ([
             ['patrols', 'Patrols', 'pressure', 'live', 'GPS field tracks', 'test_module_entry'],
             ['incidents', 'Incidents', 'pressure', 'live', 'field reports', null],
@@ -273,6 +281,11 @@ final class WebKernel extends Kernel
          * asserted without depending on a module bundle.
          */
         $routes->add('test_module_entry', '/areas/{uuid}/modules/patrols')
+            ->controller('kernel::moduleEntry');
+
+        // The module's second data place, so the fourth rung of the tree has
+        // more than one rung to be.
+        $routes->add('test_module_list', '/areas/{uuid}/modules/patrols/patrols')
             ->controller('kernel::moduleEntry');
     }
 
