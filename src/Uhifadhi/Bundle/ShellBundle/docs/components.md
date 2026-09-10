@@ -90,10 +90,19 @@ own pages could speak, which is the opposite of the point.
 
 ## What is furniture, and not yours to write
 
-`.pgbody`, `.pghead`, `.crumb`, `.atabs`, `.page`, `.side`, `.topbar` and the
-rest of the frame. The shell writes those from its own templates. A module that
-typed one would be drawing the frame instead of filling it — fill a
+`.pgbody`, `.pghead`, `.pgact`, `.crumb`, `.atabs`, `.page`, `.side`, `.topbar`
+and the rest of the frame. The shell writes those from its own templates. A
+module that typed one would be drawing the frame instead of filling it — fill a
 [socket](blocks.md) instead.
+
+`.pgact` is the page's action row, and the frame lays it out completely: a
+wrapping line of controls that are all one height, in which only weight and fill
+separate the primary from the quiet ones. Fill `shell_page_actions` with the
+controls themselves — a `.cta`, a `.tgl`, a form with a `.fld` — and write no
+rule for the row. **A module may not restate `.pgact`.** It cannot reach the
+wrapper to put a class on it, so a module that lays out the row again has
+written a second definition of one component, and the header renders whichever
+sheet the page happened to link last.
 
 `.pgbody` is worth one line of its own, because it was the frame's one class
 that nobody styled. A wrapper with no rules is not neutral: a module's first

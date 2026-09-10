@@ -123,10 +123,12 @@ any block, and the document's tag picks it up — that is how a platform-wide
 setting the map controllers read rides on a document the shell owns. It is
 emitted as markup, so escape your own values.
 
-**Do not write `<div class="page">`, a `.crumb`, a `.pghead` or a flash loop.**
-The frame owns all four. Every one of them was, at some point, copied into a
-module from whichever host template was open at the time — which is the
-reason this package exists.
+**Do not write `<div class="page">`, a `.crumb`, a `.pghead`, a `.pgact` or a
+flash loop.** The frame owns all five, in markup and in CSS — `shell_page_actions`
+is filled with the controls alone, and the row that lays them out is the
+[shell's](components.md#what-is-furniture-and-not-yours-to-write). Every one of
+them was, at some point, copied into a module from whichever host template was
+open at the time — which is the reason this package exists.
 
 **Your stylesheet goes after the shell's, and `parent()` is what puts it there.**
 

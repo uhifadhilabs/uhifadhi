@@ -196,6 +196,112 @@ final class ComponentContractTest extends ContractTestCase
     }
 
     /**
+     * THE PAGE-ACTION ROW IS THE FRAME'S, WHOLE. `page.html.twig` writes
+     * `<div class="pgact">` itself and gives a module filling
+     * `shell_page_actions` no way to add a class to it, so the row's layout can
+     * only be stated here. A module that needs two actions side by side and
+     * finds `.pgact` is not a row has one move left — restate `.pgact` in its
+     * own sheet — and that is the drift the vocabulary conformance test forbids.
+     *
+     * The values are the design's, read from the two sheets that between them
+     * define the row: the slot in nav.css and the row in widgets.css, which
+     * every screen wears together as `class="pgact w-pgact"` (129 of the design's
+     * 136 page heads). Where the two disagree — the icon size — widgets.css is
+     * linked after nav.css at equal specificity and wins, so 14px is what the
+     * design renders.
+     *
+     * @see /Users/eemjema/Programming/DesignsProjects/uhifadhi-web/nav.css lines 86-89
+     * @see /Users/eemjema/Programming/DesignsProjects/uhifadhi-web/widgets.css lines 229-246
+     */
+    #[DataProvider('pageActionRowDeclarations')]
+    public function testTheFrameLaysOutThePageActionRow(string $selector, string $property, string $value): void
+    {
+        $rule = $this->rule($selector);
+
+        self::assertMatchesRegularExpression(
+            '/(?:^|;)\s*'.preg_quote($property, '/').'\s*:\s*'.preg_quote($value, '/').'\s*(?:;|$)/',
+            $rule,
+            \sprintf(
+                '%s must state `%s: %s` — the design\'s own value. Without it a module with two page '
+                .'actions has to restate the row in its own sheet, and the same header renders differently '
+                .'on every screen that does.',
+                $selector,
+                $property,
+                $value,
+            ),
+        );
+    }
+
+    /**
+     * @return \Generator<string, array{string, string, string}>
+     */
+    public static function pageActionRowDeclarations(): \Generator
+    {
+        $declarations = [
+            // The row itself: a wrapping line of equal-height controls, held to
+            // its content beside a title that may run long.
+            '.pgact' => [
+                'display' => 'flex',
+                'align-items' => 'center',
+                'flex-wrap' => 'wrap',
+                'gap' => '9px',
+                'flex-shrink' => '0',
+                'padding-top' => '4px',
+            ],
+            // The primary, and the whole reason the row reads as designed: every
+            // control in it is one height, and only weight and fill separate the
+            // primary from the quiet ones.
+            '.pgact .cta' => [
+                'height' => '32px',
+                'padding' => '0 13px',
+                'border-radius' => '9px',
+                'font-size' => '12px',
+                'font-weight' => '700',
+                'white-space' => 'nowrap',
+                'text-decoration' => 'none',
+            ],
+            '.pgact .cta svg' => [
+                'width' => '14px',
+                'height' => '14px',
+            ],
+        ];
+
+        foreach ($declarations as $selector => $properties) {
+            foreach ($properties as $property => $value) {
+                yield $selector.' — '.$property => [$selector, $property, $value];
+            }
+        }
+    }
+
+    /**
+     * The declarations of one rule, by exact selector. A selector written as
+     * part of a comma-separated group counts: the group is how a sheet states
+     * one rule for several selectors, and the row's height is stated that way.
+     */
+    private function rule(string $selector): string
+    {
+        $css = (string) preg_replace('#/\*.*?\*/#s', '', $this->stylesheet());
+        $quoted = preg_quote($selector, '/');
+
+        // A prelude cannot contain a brace, so it starts where the rule before
+        // it ended without the two rules having to share the brace between them.
+        preg_match_all('/([^{}@]*)\{([^{}]*)\}/s', $css, $matches, \PREG_SET_ORDER);
+
+        $declarations = [];
+        foreach ($matches as $match) {
+            foreach (explode(',', $match[1]) as $written) {
+                if (1 === preg_match('/^\s*'.$quoted.'\s*$/', (string) preg_replace('/\s+/', ' ', $written))) {
+                    $declarations[] = trim($match[2]);
+                }
+            }
+        }
+
+        self::assertNotSame([], $declarations, $selector.' is stated nowhere in the frame\'s sheet.');
+
+        return implode(';', $declarations);
+    }
+
+    /**
      * The component section, delimited by its own banner so the two tests above
      * judge the vocabulary rather than the whole sheet — which does name
      * colours, in the one place it is allowed to: the palettes.
