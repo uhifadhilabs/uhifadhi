@@ -174,6 +174,7 @@ return static function (ContainerConfigurator $container): void {
             service('team.accounts'),
             service('team.positions'),
             service('team.departments'),
+            service(UserRepository::class),
         ])
         ->tag('uhifadhi.devkit.content_provider');
 

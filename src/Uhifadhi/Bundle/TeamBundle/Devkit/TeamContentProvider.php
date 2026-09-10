@@ -16,6 +16,7 @@ namespace Uhifadhi\Bundle\TeamBundle\Devkit;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
+use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentService;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionService;
 use Uhifadhi\Bundle\TeamBundle\Service\UserService;
@@ -31,6 +32,12 @@ use Uhifadhi\Contracts\Devkit\ContentProviderInterface;
  * permission no module declares, a department in a state no form can reach —
  * and every such row is a bug report about a screen that is working correctly.
  * Everything below is reachable by somebody clicking.
+ *
+ * IT SEEDS ONCE. An installation that already answers to any of the addresses
+ * below is left exactly as it is: re-running a demo seeder is a developer
+ * repeating a command, not an instruction to enter this organisation twice —
+ * and a department name is unique org-wide, so the second attempt is refused
+ * rather than duplicated, taking every slice seeded after this one down with it.
  *
  * IT IS COLLECTED, NOT RUN. devkit installs through `require-dev`; in a
  * production build nothing collects this and it is an ordinary service nobody
@@ -50,10 +57,32 @@ use Uhifadhi\Contracts\Devkit\ContentProviderInterface;
  */
 final readonly class TeamContentProvider implements ContentProviderInterface
 {
+    /**
+     * THE SIX ADDRESSES THIS SEEDS, written once and read twice: the roster
+     * below is built from them, and whether any of them is already answered for
+     * is how a second run recognises its own first one.
+     *
+     * The accounts are the detector rather than the departments, because an
+     * account is what the whole slice ends in: an installation holding one of
+     * these got here by running this, and the departments and positions in
+     * front of it are already in place.
+     *
+     * @var array<string, string>
+     */
+    private const array ACCOUNTS = [
+        'coordinator' => 'amara.okonkwo@example.test',
+        'head_ranger' => 'desta.haile@example.test',
+        'ranger' => 'kofi.mensah@example.test',
+        'second_ranger' => 'nadia.sow@example.test',
+        'analyst' => 'thabo.ndlovu@example.test',
+        'unseated' => 'yara.benali@example.test',
+    ];
+
     public function __construct(
         private UserService $accounts,
         private PositionService $positions,
         private DepartmentService $departments,
+        private UserRepository $roster,
     ) {
     }
 
@@ -79,6 +108,10 @@ final readonly class TeamContentProvider implements ContentProviderInterface
 
     public function load(): void
     {
+        if ($this->alreadySeeded()) {
+            return;
+        }
+
         $protection = $this->departments->create('Protection Service', null);
         $ecology = $this->departments->create('Ecology', null);
         $operations = $this->departments->create('Operations', null);
@@ -90,15 +123,32 @@ final readonly class TeamContentProvider implements ContentProviderInterface
         $ranger = $this->positions->create('Ranger', $protection);
         $analyst = $this->positions->create('Analyst', $ecology);
 
-        $this->person('amara.okonkwo@example.test', 'Amara', 'Okonkwo', TeamRoleEnum::SuperAdmin, $coordinator);
-        $this->person('desta.haile@example.test', 'Desta', 'Haile', TeamRoleEnum::Admin, $headRanger);
-        $this->person('kofi.mensah@example.test', 'Kofi', 'Mensah', TeamRoleEnum::Staff, $ranger);
-        $this->person('nadia.sow@example.test', 'Nadia', 'Sow', TeamRoleEnum::Staff, $ranger);
-        $this->person('thabo.ndlovu@example.test', 'Thabo', 'Ndlovu', TeamRoleEnum::Staff, $analyst);
+        $this->person(self::ACCOUNTS['coordinator'], 'Amara', 'Okonkwo', TeamRoleEnum::SuperAdmin, $coordinator);
+        $this->person(self::ACCOUNTS['head_ranger'], 'Desta', 'Haile', TeamRoleEnum::Admin, $headRanger);
+        $this->person(self::ACCOUNTS['ranger'], 'Kofi', 'Mensah', TeamRoleEnum::Staff, $ranger);
+        $this->person(self::ACCOUNTS['second_ranger'], 'Nadia', 'Sow', TeamRoleEnum::Staff, $ranger);
+        $this->person(self::ACCOUNTS['analyst'], 'Thabo', 'Ndlovu', TeamRoleEnum::Staff, $analyst);
 
         // SOMEBODY WITH NO POSITION, because that is a real state the roster has
         // to draw: verified, able to sign in, and able to do nothing at all.
-        $this->person('yara.benali@example.test', 'Yara', 'Benali', TeamRoleEnum::Staff, null);
+        $this->person(self::ACCOUNTS['unseated'], 'Yara', 'Benali', TeamRoleEnum::Staff, null);
+    }
+
+    /**
+     * ANY ONE OF THE ADDRESSES BEING ANSWERED IS ENOUGH. A run that stopped
+     * part-way through left some of them and not others, and the honest reading
+     * of that is still "this has been here" — the departments it would start
+     * with are the ones that refuse a second write.
+     */
+    private function alreadySeeded(): bool
+    {
+        foreach (self::ACCOUNTS as $email) {
+            if (null !== $this->roster->findOneByEmail($email)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function person(string $email, string $firstName, string $lastName, TeamRoleEnum $tier, ?Position $position): void

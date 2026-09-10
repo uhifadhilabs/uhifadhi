@@ -57,6 +57,24 @@ final class DemoOrganisationTest extends IntegrationTestCase
     }
 
     /**
+     * SEEDING TWICE IS SEEDING ONCE. A developer running the demo seeder again
+     * is repeating a command, not asking for a second organisation — and the
+     * slices seeded after this one only run if this one does not refuse.
+     */
+    public function testSeedingTwiceLeavesTheOrganisationTheFirstRunLeft(): void
+    {
+        $this->collector()->seed('team');
+        $this->em->clear();
+
+        $this->collector()->seed('team');
+        $this->em->clear();
+
+        self::assertCount(3, $this->service(DepartmentRepository::class)->findAllOrdered());
+        self::assertCount(4, $this->service(PositionRepository::class)->findAllOrdered());
+        self::assertCount(6, $this->service(UserRepository::class)->findAllByName());
+    }
+
+    /**
      * SOMEBODY CAN ADMINISTER IT. A demo organisation whose every account is
      * Staff is a demo nobody can open the team screens from.
      */
