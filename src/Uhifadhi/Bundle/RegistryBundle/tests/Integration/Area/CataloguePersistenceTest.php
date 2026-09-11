@@ -116,7 +116,7 @@ final class CataloguePersistenceTest extends InstallationTestCase
     {
         $this->install(['sightings' => ['base' => true]]);
         $area = $this->area();
-        $this->warmUp();
+        $this->reconcile();
 
         $reloaded = $this->em()->find(AreaOfInterest::class, $area->getId());
         self::assertNotNull($reloaded);

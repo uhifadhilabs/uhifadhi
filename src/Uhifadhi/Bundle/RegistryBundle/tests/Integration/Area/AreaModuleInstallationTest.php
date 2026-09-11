@@ -112,7 +112,7 @@ final class AreaModuleInstallationTest extends InstallationTestCase
         $this->install(['sightings']);
         $north = $this->area('North');
         $south = $this->area('South');
-        $this->warmUp();
+        $this->reconcile();
 
         $this->areaModules()->install($north, 'sightings');
 
@@ -247,7 +247,7 @@ final class AreaModuleInstallationTest extends InstallationTestCase
         $area = $this->area();
         // The area exists before the sync reaches it, exactly as a real one
         // created between two deploys does.
-        $this->warmUp();
+        $this->reconcile();
 
         return $area;
     }

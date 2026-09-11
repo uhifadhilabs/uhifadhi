@@ -17,6 +17,7 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\HttpKernel\CacheWarmer\CacheWarmerAggregate;
 use Uhifadhi\Bundle\AreaBundle\AreaBundle;
 use Uhifadhi\Bundle\AtlasBundle\AtlasBundle;
+use Uhifadhi\Bundle\RegistryBundle\EventListener\RegistrySyncListener;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
 use Uhifadhi\Bundle\ShellBundle\ShellBundle;
 use Uhifadhi\Bundle\TeamBundle\TeamBundle;
@@ -99,13 +100,22 @@ final class CoreBootTest extends KernelTestCase
     }
 
     /**
-     * A DEPLOY IS `cache:clear`, and this is why: warming the cache reconciles
-     * the registry with whatever module providers the installation carries. The
-     * warmer runs here against a database with no registry tables in it — the
-     * state a fresh installation is in before its first migration — and the
-     * whole point is that it does not throw.
+     * A DEPLOY IS `cache:clear`, and this is the pair of things it does to the
+     * five bundles at once: every warmer they contribute runs, and the registry
+     * is reconciled with whatever module providers the installation carries.
+     *
+     * Both halves run here against a database with no registry tables in it —
+     * the state a fresh installation is in before its first migration — and the
+     * whole point is that neither throws.
+     *
+     * NO BUNDLE HERE READS THE DATABASE WHILE THE CACHE IS WARMED. That is not a
+     * style rule: doctrine-bundle's metadata warmer fails the command outright if
+     * anything loaded ORM metadata before it, and the pass the kernel runs while
+     * it compiles the container does not include it.
+     *
+     * @see \Uhifadhi\Bundle\RegistryBundle\Tests\Integration\Sync\PristineCacheWarmUpTest which asserts that on a pristine prod cache, where the warmer in question exists
      */
-    public function testWarmingTheCacheReconcilesTheRegistryAndSurvivesAFreshInstall(): void
+    public function testADeployWarmsEveryCacheAndReconcilesTheRegistry(): void
     {
         $kernel = self::bootKernel();
 
@@ -115,6 +125,15 @@ final class CoreBootTest extends KernelTestCase
         $warmer->enableOptionalWarmers();
         $warmer->warmUp($kernel->getCacheDir(), $kernel->getBuildDir());
 
-        $this->expectNotToPerformAssertions();
+        $listener = self::getContainer()->get('registry.sync_listener');
+        \assert($listener instanceof RegistrySyncListener);
+
+        @unlink($listener->stampFile);
+        $listener->reconcileOnce();
+
+        self::assertFileDoesNotExist(
+            $listener->stampFile,
+            'nothing to reconcile before the first migration, and nothing remembered as done',
+        );
     }
 }

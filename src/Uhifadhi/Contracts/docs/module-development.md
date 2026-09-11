@@ -532,10 +532,9 @@ bundles.
 ### The catalogue and per-area install
 
 RegistryBundle keeps a catalogue of modules and, separately, a per-area record of which are switched
-on. **Nobody runs a command to fill either.** The reconciliation is a `kernel.cache_warmer`: Symfony
-runs cache warmers on `cache:warmup`, on `cache:clear`, and on the first request if neither has
-happened, so the registry comes into step by itself. An operator's whole ritual after migrating is
-`bin/console cache:clear`.
+on. **Nobody runs a command to fill either.** The reconciliation happens once per build, when a
+console command finishes or the first request arrives — whichever comes first — so the registry comes
+into step by itself. An operator's whole ritual after migrating is `bin/console cache:clear`.
 
 The sync reads every tagged provider and upserts a catalogue row by `slug()`; then it backfills each
 area with any module it does not yet have. It is idempotent and **create-only** for the per-area
@@ -2221,7 +2220,7 @@ named at the root as well.
 
 ```bash
 bin/console doctrine:migrations:migrate
-bin/console cache:clear                   # the registry reconciles itself on a cache warm-up
+bin/console cache:clear                   # the registry reconciles itself
 ```
 
 If your module added tables, the versions that create them ship with it — see
@@ -2229,8 +2228,9 @@ If your module added tables, the versions that create them ship with it — see
 installation's, for the entities it writes itself.
 
 **There is no command to add your module to the catalogue, and there is nothing to remember.** The
-registry sync is a cache warmer, so `cache:clear` is the whole of it — the same command a deploy
-already runs, doing a job an operator would otherwise have to be told about. There are no commands in
+registry sync rides the end of any console command and the first request of any build, so
+`cache:clear` is the whole of it — the same command a deploy already runs, doing a job an operator
+would otherwise have to be told about. There are no commands in
 the core at all; `bin/console list` on a production installation offers the framework's built-in
 commands and nothing of this platform's, because everything a person types belongs to devkit, which
 is `require-dev`.

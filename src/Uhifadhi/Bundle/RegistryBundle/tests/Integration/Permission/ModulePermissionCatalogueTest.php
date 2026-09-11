@@ -180,7 +180,7 @@ final class ModulePermissionCatalogueTest extends InstallationTestCase
             new ModulePermission('sightings.verify', 'Sightings', 'Verify', 'Confirm or reject somebody else’s sighting.'),
         ]]]);
         $this->area();
-        $this->warmUp();
+        $this->reconcile();
 
         // Parked in the only area there is — and still declared.
         self::assertTrue($this->permissions()->has('sightings.verify'));

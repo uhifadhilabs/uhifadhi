@@ -69,8 +69,9 @@ writes. The registry also names the service that decides the ORDER every version
 runs in, across every namespace an installation has, because a version's
 identity is its class name and a package that sorts early would otherwise create
 a table before the one its foreign key points at. There is **no seed command** — the
-catalogue is reconciled by a `kernel.cache_warmer`, which Symfony runs on
-`cache:warmup`, on `cache:clear`, and on the first request if neither has.
+catalogue is reconciled once per build, when a console command finishes or the
+first request arrives — whichever comes first. So `cache:clear` is the whole of
+it, and an installation that only swaps code reconciles on its next request.
 
 ## Parking a module closes its routes
 

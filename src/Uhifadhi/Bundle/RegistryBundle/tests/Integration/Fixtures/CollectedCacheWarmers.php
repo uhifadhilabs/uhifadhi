@@ -16,10 +16,10 @@ namespace Uhifadhi\Bundle\RegistryBundle\Tests\Integration\Fixtures;
 use Symfony\Component\HttpKernel\CacheWarmer\CacheWarmerInterface;
 
 /**
- * Everything that reached the `kernel.cache_warmer` tag — the same iterator
- * the framework's warmer aggregate receives, which is what makes
- * "the framework will run this on a deploy" an assertable fact rather than a
- * reading of the service file.
+ * Everything that reached the `kernel.cache_warmer` tag — the same iterator the
+ * framework's warmer aggregate receives, which is what makes "the registry
+ * contributes no warmer of its own" an assertable fact rather than a reading of
+ * the service file.
  */
 final readonly class CollectedCacheWarmers
 {

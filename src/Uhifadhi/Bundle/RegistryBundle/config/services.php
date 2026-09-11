@@ -14,8 +14,8 @@ declare(strict_types=1);
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
 use Psr\Container\ContainerInterface;
-use Uhifadhi\Bundle\RegistryBundle\CacheWarmer\RegistrySyncWarmer;
 use Uhifadhi\Bundle\RegistryBundle\EventListener\ParkedModuleListener;
+use Uhifadhi\Bundle\RegistryBundle\EventListener\RegistrySyncListener;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
 use Uhifadhi\Bundle\RegistryBundle\Repository\AreaModuleRepository;
 use Uhifadhi\Bundle\RegistryBundle\Repository\ModuleRepository;
@@ -59,7 +59,7 @@ use Uhifadhi\Bundle\RegistryBundle\Version\DependencyOrderComparator;
  *   registry.parked_module_listener  the gate, applied to every incoming request
  *   registry.permissions           the permissions installed modules declare
  *   registry.sync                  the create-only reconciliation itself
- *   registry.sync_warmer           the deploy hook that runs it
+ *   registry.sync_listener         the deploy hook that runs it
  */
 return static function (ContainerConfigurator $container): void {
     $services = $container->services();
@@ -128,15 +128,13 @@ return static function (ContainerConfigurator $container): void {
         ->args([$providers]);
 
     /*
-     * THE DEPLOY HOOK. The core ships no console command; reconciling the
-     * catalogue with the installed providers is a cache warmer, which Symfony
-     * runs on cache:warmup, on cache:clear, and on the first request if neither
-     * has — the full set of moments a deploy can be said to have happened.
-     * @see https://symfony.com/doc/current/reference/dic_tags.html#kernel-cache-warmer
+     * THE RECONCILIATION, AND ITS DEPLOY HOOK further down. The core ships no
+     * console command; the catalogue is brought into step with the installed
+     * providers once per build, by the listener at the end of this file.
      *
-     * Both tags are written out by hand: nothing here is autoconfigured, so
-     * neither the warmer tag nor the service-subscriber tag that gives the
-     * warmer its lazy locator is applied for us.
+     * Every tag there is written out by hand: nothing here is autoconfigured, so
+     * neither the listener tags nor the service-subscriber tag that gives the
+     * listener its lazy locator is applied for us.
      */
     $services->set('registry.sync', RegistrySyncService::class)
         ->args([
@@ -167,11 +165,17 @@ return static function (ContainerConfigurator $container): void {
         ->factory([DependencyOrderComparator::class, 'fromComposer'])
         ->args([service('doctrine.migrations.configuration')]);
 
-    $services->set('registry.sync_warmer', RegistrySyncWarmer::class)
+    $services->set('registry.sync_listener', RegistrySyncListener::class)
         // ResolveServiceSubscribersPass swaps a Psr ContainerInterface reference
         // for the subscriber's own locator; any other id would inject the real
         // container. @see vendor/symfony/dependency-injection/Compiler/ResolveServiceSubscribersPass.php
-        ->args([service(ContainerInterface::class)])
+        ->args([
+            service(ContainerInterface::class),
+            '%kernel.cache_dir%/uhifadhi/registry-sync.stamp',
+        ])
         ->tag('container.service_subscriber')
-        ->tag('kernel.cache_warmer');
+        // Ahead of the parked-module gate above, which reads the catalogue.
+        // @see https://symfony.com/doc/current/reference/dic_tags.html#kernel-event-listener
+        ->tag('kernel.event_listener', ['event' => 'kernel.request', 'method' => 'onKernelRequest', 'priority' => 16])
+        ->tag('kernel.event_listener', ['event' => 'console.terminate', 'method' => 'onConsoleTerminate']);
 };

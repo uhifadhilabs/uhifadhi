@@ -68,10 +68,10 @@ final class RegistrySyncTest extends InstallationTestCase
     {
         $this->install(['sightings', 'ferries']);
         $area = $this->area();
-        $this->warmUp();
+        $this->reconcile();
 
         $before = \count($this->areaModules()->allFor($area));
-        $this->warmUp();
+        $this->reconcile();
 
         self::assertSame($before, \count($this->areaModules()->allFor($area)), 'a second run adds nothing');
     }
@@ -85,12 +85,12 @@ final class RegistrySyncTest extends InstallationTestCase
     {
         $this->install(['ferries' => ['base' => true], 'sightings' => []]);
         $area = $this->area();
-        $this->warmUp();
+        $this->reconcile();
 
         $this->areaModules()->uninstall($area, 'ferries'); // parked a CORE module, on purpose
         $this->areaModules()->install($area, 'sightings');  // switched on an INSTALLABLE one
 
-        $this->warmUp();
+        $this->reconcile();
 
         self::assertFalse($this->areaModules()->isActive($area, 'ferries'), 'a base module the admin parked stays parked');
         self::assertTrue($this->areaModules()->isActive($area, 'sightings'), 'a module the admin switched on stays on');
@@ -104,7 +104,7 @@ final class RegistrySyncTest extends InstallationTestCase
     {
         $this->install(['sightings', 'ferries']);
         $area = $this->area();
-        $this->warmUp();
+        $this->reconcile();
         foreach (['sightings', 'ferries'] as $slug) {
             $this->areaModules()->install($area, $slug);
         }
@@ -132,7 +132,7 @@ final class RegistrySyncTest extends InstallationTestCase
         $this->install(['sightings']);
         $north = $this->area('North');
         $south = $this->area('South');
-        $this->warmUp();
+        $this->reconcile();
 
         $this->install(['sightings', 'tides'], freshDatabase: false);
 
@@ -156,7 +156,7 @@ final class RegistrySyncTest extends InstallationTestCase
     {
         $this->install(['sightings', 'ferries']);
         $area = $this->area();
-        $this->warmUp();
+        $this->reconcile();
         $this->areaModules()->install($area, 'ferries');
 
         $this->install(['sightings'], freshDatabase: false);

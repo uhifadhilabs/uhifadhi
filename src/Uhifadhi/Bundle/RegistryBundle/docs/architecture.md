@@ -20,8 +20,8 @@ and where each piece lives in the bundle.
   have a module that only one of its areas wants.
 - **Declared permissions** — the granular permissions modules declare, gathered
   for the host to fold into its matrix. Declared, never granted.
-- **The sync** — the cache warmer that reconciles the catalogue with what is
-  installed, on every deploy, without ever overruling an admin. There is no
+- **The sync** — the reconciliation that brings the catalogue into step with what
+  is installed, once per build, without ever overruling an admin. There is no
   command: the core ships none.
 - **The route gate** — where an area has parked a module, that module's routes
   answer 404 there. One enforcement point, no per-module code, and nothing
@@ -94,7 +94,7 @@ in a list, nothing more.
 | The catalogue and the per-area ledger | `Entity/`, `Repository/` |
 | The runtime | `Service/` |
 | The route gate, applied to every request | `EventListener/ParkedModuleListener.php` |
-| The create-only sync, and its deploy hook | `Service/RegistrySyncService.php`, `CacheWarmer/RegistrySyncWarmer.php` |
+| The create-only sync, and its deploy hook | `Service/RegistrySyncService.php`, `EventListener/RegistrySyncListener.php` |
 | Test host app | `tests/Integration/TestKernel.php` |
 | A host, minimally: area entity + resolved target entity | `tests/Integration/Fixtures/HostKernel.php` |
 

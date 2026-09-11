@@ -15,7 +15,7 @@ namespace Uhifadhi\Bundle\RegistryBundle\Tests\Integration;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
-use Uhifadhi\Bundle\RegistryBundle\CacheWarmer\RegistrySyncWarmer;
+use Uhifadhi\Bundle\RegistryBundle\EventListener\RegistrySyncListener;
 use Uhifadhi\Bundle\RegistryBundle\Service\RegistrySyncResult;
 use Uhifadhi\Bundle\RegistryBundle\Service\RegistrySyncService;
 use Uhifadhi\Bundle\RegistryBundle\Tests\Integration\Fixtures\HostKernel;
@@ -54,7 +54,7 @@ abstract class InstallationTestCase extends RegistryKernelTestCase
     /**
      * INSTALL THESE MODULES AND RECONCILE — the whole install path, in one line:
      * boot an installation carrying exactly these module bundles, give it a
-     * schema, and warm the cache the way a deploy does.
+     * schema, and reconcile the way a deploy does.
      *
      * Called a second time in one test, it is an UNINSTALL as well as an
      * install: the modules not named are the ones whose bundles were removed,
@@ -87,30 +87,33 @@ abstract class InstallationTestCase extends RegistryKernelTestCase
             $tool->createSchema($metadata);
         }
 
-        $this->warmUp();
+        $this->reconcile();
     }
 
     /**
-     * Reconcile the registry the way a deploy does: through the cache warmer,
-     * which is the whole of the mechanism. The core ships no console command —
-     * a deploy runs `cache:clear`/`cache:warmup` and the registry is in step.
+     * Reconcile the registry the way a deploy does: through the listener that is
+     * the whole of the mechanism. The core ships no console command — a deploy
+     * runs `cache:clear`/`cache:warmup` and the registry is in step.
+     *
+     * The stamp goes first because a deploy is a new build, and a new build has
+     * a cache directory with no stamp in it. That is also what tells this apart
+     * from {@see RegistrySyncListener::reconcileOnce()} being called twice in one
+     * build, which the once-per-build specification is about.
      */
-    protected function warmUp(): void
+    protected function reconcile(): void
     {
-        $kernel = self::$kernel;
-        \assert(null !== $kernel);
+        $listener = self::getContainer()->get('test.registry.sync_listener');
+        \assert($listener instanceof RegistrySyncListener);
 
-        $warmer = self::getContainer()->get('test.registry.sync_warmer');
-        \assert($warmer instanceof RegistrySyncWarmer);
-
-        self::assertSame([], $warmer->warmUp($kernel->getCacheDir()), 'the warmer preloads nothing');
+        @unlink($listener->stampFile);
+        $listener->reconcileOnce();
 
         $this->em()->clear();
     }
 
     /**
      * The reconciliation itself, called directly — for the specifications that
-     * are about what it REPORTS rather than about the warmer that triggers it.
+     * are about what it REPORTS rather than about the hook that triggers it.
      */
     protected function sync(): RegistrySyncResult
     {

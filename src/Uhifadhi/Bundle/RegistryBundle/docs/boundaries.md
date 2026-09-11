@@ -13,7 +13,7 @@ is the argument.
 
 The test is independent life: can this bundle live alone and still be useful? The
 runtime can — a catalogue, a per-area install record, a permission collector, an
-entry-route resolver, the parking gate and the cache warmer that keeps the
+entry-route resolver, the parking gate and the deploy hook that keeps the
 catalogue in step with the installed providers are complete and meaningful with
 nothing rendering them, and a CLI or an API can use every one of them. A module
 grid cannot live alone: it is a *picture* of those answers, and it needs a

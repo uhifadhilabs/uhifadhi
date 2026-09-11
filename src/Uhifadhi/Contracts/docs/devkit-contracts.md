@@ -22,8 +22,7 @@ this page, and devkit `tagged_iterator`s them and materialises real Symfony cons
 demo-content loaders — but only in a dev install, because that is the only place devkit exists.
 
 This is not a small job, because devkit owns **every command the platform has**. The core ships
-none: the five bundles contribute entities, screens, listeners and cache warmers, and nothing a
-person types. So a console command that belongs to the platform rather than to an application is,
+none: the five bundles contribute entities, screens and listeners, and nothing a person types. So a console command that belongs to the platform rather than to an application is,
 by construction, a `CommandDescriptor` handed to devkit — and it exists on a developer's machine
 and in CI and nowhere else.
 
