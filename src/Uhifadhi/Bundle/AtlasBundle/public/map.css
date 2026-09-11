@@ -116,17 +116,26 @@
    rather than in a consumer's sheet because a plate that cannot grow is a plate
    whose fullscreen button does nothing — a fault no module should be able to
    introduce by styling its own card. */
-/* THE HEIGHT IS THE PLATE'S OWN, NEVER ITS ROW'S. A plate lives in cards, grids
-   and stretch rows; sized with a min-height and left to flex it grows to
-   whatever the tallest sibling in the row happens to be, which is how a case
-   file's map ends up a thousand pixels tall beside a long column of facts. So
-   it is a real height, off ONE custom property, and `align-self: start` keeps a
-   stretch row from overriding it. A screen states its own height by setting the
+/* A PLATE IS THE WIDTH OF WHATEVER IT SITS IN AND THE HEIGHT OF ITS OWN
+   PROPERTY — in a row and in a column alike. A plate lives in cards, grids and
+   stretch rows; sized with a min-height and left to flex it grows to whatever
+   the tallest sibling in the row happens to be, which is how a case file's map
+   ends up a thousand pixels tall beside a long column of facts. So it is a real
+   height, off ONE custom property, and the height is also what refuses the row:
+   CSS Flexible Box Layout Level 1, §9.6 step 11 — "If a flex item has
+   `align-self: stretch`, its computed cross size property is `auto` […] the used
+   outer cross size is the used cross size of its flex line […] Otherwise, the
+   used cross size is the item's hypothetical cross size."
+   (https://www.w3.org/TR/css-flexbox-1/#algo-stretch). A height that is never
+   `auto` is a height no stretch row can reach, so no self-alignment is written
+   here — and none may be: `align-self` names the CROSS axis, so inside a card
+   that stacks a plate under a heading (a column) it would shrink the plate to
+   the imagery's own width instead. A screen states its own height by setting the
    property — on the card, or handed to render_map() as `--map-plate-height`. */
 .map-plate {
     position: relative; display: flex; flex-direction: column;
     height: var(--map-plate-height, min(58vh, 560px));
-    align-self: start; flex: none;
+    flex: none;
 }
 .map-plate > .viewer { flex: 1 1 auto; min-height: 0; height: auto; }
 

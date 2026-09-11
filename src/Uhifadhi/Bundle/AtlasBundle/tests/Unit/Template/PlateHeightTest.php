@@ -44,12 +44,39 @@ final class PlateHeightTest extends TestCase
     }
 
     /**
-     * The plate must not be a stretch item. A grid or flex row that stretches
-     * its children would otherwise override the height above.
+     * WHAT KEEPS A ROW FROM GROWING THE PLATE IS THE HEIGHT ITSELF, not an
+     * alignment declaration. CSS Flexible Box Layout Level 1, §9.6 step 11:
+     * "If a flex item has `align-self: stretch`, its computed cross size
+     * property is `auto`, and neither of its cross-axis margins are `auto`, the
+     * used outer cross size is the used cross size of its flex line […]
+     * Otherwise, the used cross size is the item's hypothetical cross size."
+     * The plate's cross size in a row is its `height`, and that is never `auto`
+     * — so a stretch row cannot reach it.
      */
-    public function testThePlateRefusesToStretchToItsRow(): void
+    public function testThePlateRefusesToStretchToItsRowOnTheStrengthOfItsHeight(): void
     {
-        self::assertMatchesRegularExpression('/\.map-plate \{[^}]*align-self: start/', self::stylesheet());
+        self::assertDoesNotMatchRegularExpression(
+            '/\.map-plate \{[^}]*height: auto/',
+            self::stylesheet(),
+            'A plate whose height is auto is a plate a stretch row owns.',
+        );
+    }
+
+    /**
+     * AND THE PLATE IS THE WIDTH OF WHATEVER IT SITS IN. `align-self` names the
+     * CROSS axis, which is the horizontal one inside a column — the shape every
+     * card that stacks a plate under a heading has. So an `align-self` on the
+     * plate cannot mean "do not grow taller" in a row without also meaning
+     * "shrink to the imagery's own width" in a column, and the plate carries
+     * none.
+     */
+    public function testThePlateCarriesNoSelfAlignmentThatWouldShrinkItInAColumn(): void
+    {
+        self::assertDoesNotMatchRegularExpression(
+            '/\.map-plate \{[^}]*align-self:/',
+            self::stylesheet(),
+            'align-self on a plate shrinks it to its content width in every column card it sits in.',
+        );
     }
 
     /** Fullscreen is the one thing that grows a plate. */
