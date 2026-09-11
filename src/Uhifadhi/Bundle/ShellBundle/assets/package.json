@@ -25,6 +25,8 @@
                 "enabled": true
             }
         },
-        "importmap": {}
+        "importmap": {
+            "uhifadhi/widgets": "path:%PACKAGE%/widgets.js"
+        }
     }
 }

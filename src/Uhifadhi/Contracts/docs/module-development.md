@@ -928,6 +928,32 @@ Import by path instead and the same relocation touches every map controller in t
 Write a test for it. A one-line sweep over your controllers asserting that none of them contains
 your own namespace string is enough to keep the property true.
 
+### The names the platform already publishes
+
+Four bare specifiers arrive in an installation's `importmap.php` without you writing anything: the
+core declares them in its own `assets/package.json`, under `symfony.importmap`, and **Flex writes
+them on `composer update`**.
+
+```php
+// importmap.php (the host application) — written by Flex, not by you
+'uhifadhi/widgets'    => ['path' => './vendor/uhifadhi/uhifadhi/src/Uhifadhi/Bundle/ShellBundle/assets/widgets.js'],
+'uhifadhi/basemaps'   => ['path' => './vendor/uhifadhi/uhifadhi/src/Uhifadhi/Bundle/AtlasBundle/assets/basemaps.js'],
+'uhifadhi/boundary'   => ['path' => './vendor/uhifadhi/uhifadhi/src/Uhifadhi/Bundle/AtlasBundle/assets/boundary.js'],
+'uhifadhi/map-chrome' => ['path' => './vendor/uhifadhi/uhifadhi/src/Uhifadhi/Bundle/AtlasBundle/assets/chrome.js'],
+```
+
+**Your widget library page imports `uhifadhi/widgets` and nothing else.**
+
+```js
+import 'uhifadhi/widgets';
+```
+
+The module arms itself against the library root your page rendered; there is no init call to write
+and no Stimulus controller to register. An installation older than the entry adds the line by hand.
+A page that imports the name in an installation that has not got the line answers with
+`Uncaught TypeError: Failed to resolve module specifier "uhifadhi/widgets"` and a library whose
+cards draw correctly and do nothing when clicked — check `importmap.php` first when you see that.
+
 ### Stylesheets and classic scripts stay in `public/`
 
 A stylesheet is not an importmap module, and neither is a library that publishes a global instead

@@ -70,6 +70,12 @@
                 "fetch": "eager",
                 "enabled": true
             }
+        },
+        "importmap": {
+            "uhifadhi/widgets": "path:%PACKAGE%/../src/Uhifadhi/Bundle/ShellBundle/assets/widgets.js",
+            "uhifadhi/basemaps": "path:%PACKAGE%/../src/Uhifadhi/Bundle/AtlasBundle/assets/basemaps.js",
+            "uhifadhi/boundary": "path:%PACKAGE%/../src/Uhifadhi/Bundle/AtlasBundle/assets/boundary.js",
+            "uhifadhi/map-chrome": "path:%PACKAGE%/../src/Uhifadhi/Bundle/AtlasBundle/assets/chrome.js"
         }
     }
 }

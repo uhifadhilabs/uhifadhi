@@ -42,6 +42,7 @@ refusal at boot.
 
 - [The model: one active preset](#the-model-one-active-preset)
 - [Rendering the library](#rendering-the-library)
+  - [The script, and the one line that loads it](#the-script-and-the-one-line-that-loads-it)
 
 ## The model: one active preset
 
@@ -89,37 +90,46 @@ filtering.
 The stylesheet is written in the **shell's tokens** and defines none of its own,
 so an installation that restyles the shell restyles this with it.
 
-### The script, and the two lines that load it
+### The script, and the one line that loads it
 
-The script is registered under the AssetMapper namespace
-`@uhifadhi/shell-bundle`, and an installation names it in its own
-`importmap.php` — the one file a bundle may not write. **The Flex recipe writes
-both lines for you**; they are here so you can recognise them, and so you can
-add them by hand if your project's files have moved from the skeleton's layout.
-
-In `importmap.php`:
-
-```php
-'@uhifadhi/shell-bundle/widgets' => ['path' => '@uhifadhi/shell-bundle/widgets.js'],
-```
-
-In `assets/app.js`:
+**Your library page imports `uhifadhi/widgets`, and nothing else.**
 
 ```js
-import '@uhifadhi/shell-bundle/widgets';
+import 'uhifadhi/widgets';
 ```
 
-**Importing it is the whole contract.** The module arms itself: it looks for a
-library root when the document is ready, and a page that carries none costs one
+That is the whole contract. The module arms itself: it looks for a library root
+when the document is ready, and a page that carries none costs one
 `querySelector`. There is no init call to write and no controller to register —
 a module bundle must not make somebody install a Stimulus controller before they
-can arrange their own dashboard.
+can arrange their own dashboard. The named export `initWidgetLibrary(root)` is
+there for a page that builds its root after load; a page that renders one
+server-side never calls it.
 
-Without these two lines the library still *renders*: the strips, the toolbar and
-the canvas are all server-side, and every action on them is a plain form post.
-What you lose is everything the script adds — **previewing a preset**, the
-picker's live filtering, and optimistic editing. That is the shape of the
-failure to look for: cards that draw correctly and do nothing when clicked.
+`uhifadhi/widgets` is a **bare specifier**, not a path, so this bundle can move
+underneath it. The name is published by the core's `assets/package.json`, under
+`symfony.importmap`, and **Flex writes it into an installation's `importmap.php`
+on `composer update`** — the same mechanism `symfony/stimulus-bundle` gets its
+loader in by, and see [importmap assets](../../../AtlasBundle/docs/importmap-assets.md)
+for how it works. What lands is one line:
+
+```php
+'uhifadhi/widgets' => ['path' => './vendor/uhifadhi/uhifadhi/src/Uhifadhi/Bundle/ShellBundle/assets/widgets.js'],
+```
+
+An installation that predates the entry adds that line by hand; the equivalent
+logical path `@uhifadhi/shell-bundle/widgets.js` resolves to the same file and is
+equally correct in a hand-written `importmap.php`. Two conditions and no more:
+the installation must have an `importmap.php` at all, and `symfony/flex` must be
+allowed to run its plugin.
+
+**The failure to recognise** is `Uncaught TypeError: Failed to resolve module
+specifier "uhifadhi/widgets"` in the browser console, on every library page in
+the installation. The library still *renders* — the strips, the toolbar and the
+canvas are all server-side, and every action on them is a plain form post — so
+what you lose is everything the script adds: **previewing a preset**, the
+picker's live filtering, and optimistic editing. Cards that draw correctly and do
+nothing when clicked.
 
 `WidgetDom` is the attribute contract between the templates and the script. Both
 sides read it from there, and a test reads `widgets.js` as text and proves they

@@ -111,5 +111,8 @@ surfaces no registered provider claims, after saying which ones and asking.
 - **The write endpoints** — `WidgetEndpoint`: save, adopt, copy, rename, delete,
   reset. A controller hands its catalogue in and returns what comes back.
 - **The library** — templates, `assets/widgets.js`, `public/widget.css`, and
-  `WidgetDom`, the attribute contract the two sides meet on.
+  `WidgetDom`, the attribute contract the two sides meet on. The script is
+  published as the bare specifier **`uhifadhi/widgets`**, which is the one thing a
+  module's library page imports; see
+  [declaring a surface](declaring-a-surface.md#the-script-and-the-one-line-that-loads-it).
 - **`widget:prune`.**

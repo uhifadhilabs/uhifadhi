@@ -10,15 +10,25 @@ Written down because it is the part with the sharp edges.
 
 ## What lands in a host
 
-**The three shared modules in `importmap.php`** — **Flex writes these automatically**, and no
-longer by way of the recipe. This package declares them itself, in `assets/package.json`, and
+**The shared modules in `importmap.php`** — **Flex writes these automatically**, and no
+longer by way of the recipe. The core declares them itself, in `assets/package.json`, and
 Symfony Flex runs `importmap:require` once per entry on install. What lands in a host is:
 
 ```php
 'uhifadhi/basemaps'   => ['path' => './vendor/uhifadhi/uhifadhi/src/Uhifadhi/Bundle/AtlasBundle/assets/basemaps.js'],
 'uhifadhi/boundary'   => ['path' => './vendor/uhifadhi/uhifadhi/src/Uhifadhi/Bundle/AtlasBundle/assets/boundary.js'],
 'uhifadhi/map-chrome' => ['path' => './vendor/uhifadhi/uhifadhi/src/Uhifadhi/Bundle/AtlasBundle/assets/chrome.js'],
+'uhifadhi/widgets'    => ['path' => './vendor/uhifadhi/uhifadhi/src/Uhifadhi/Bundle/ShellBundle/assets/widgets.js'],
 ```
+
+**WHICH `assets/package.json`, THOUGH.** Flex builds ONE path per installed composer package —
+`<vendor-dir>/<the package's name>/assets/package.json` — and looks nowhere else
+(`PackageJsonSynchronizer::resolvePackageJson`). The bundles here are names the core `replace`s;
+none of them is installed and none of their manifests is ever opened. So a bundle declares its own
+modules for the day it becomes a package of its own, and the **root** `assets/package.json`
+declares the same list for today, exactly as it aggregates every bundle's Stimulus controllers.
+`tests/Core/ImportmapPackageTest` is what keeps the two one list — a name published only by a
+bundle reaches no installation, silently.
 
 The paths are the vendor-relative form because that is what `importmap:require` writes — it
 resolves whatever path it is given back to an asset and then stores the shortest form it can. The
