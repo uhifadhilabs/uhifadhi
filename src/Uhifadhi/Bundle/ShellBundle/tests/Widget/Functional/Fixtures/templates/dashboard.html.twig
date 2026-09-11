@@ -1,0 +1,12 @@
+{# The surface's own page: exactly the composition the person adopted. #}
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Sightings</title></head>
+<body>
+<div class="dash">
+    {% for widget in widgets|filter(w => w.on) %}
+        <section data-dash-widget="{{ widget.id }}" data-dash-cols="{{ widget.cols }}">
+            {{ include('@Fixture/_w_%s.html.twig'|format(widget.id), {}, with_context: false) }}
+        </section>
+    {% endfor %}
+</div>
+</body></html>
