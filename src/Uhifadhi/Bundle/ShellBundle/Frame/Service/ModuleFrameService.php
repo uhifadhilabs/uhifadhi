@@ -32,8 +32,12 @@ use Uhifadhi\Contracts\Shell\ConfigurationSectionsInterface;
  *
  *   a configure page  → the surface's configure SECTIONS (the data tabs are not
  *                       shown there; the sections stand in their place)
- *   a module's page   → that module's DATA TABS
- *   anything else     → the area's own screens, as before
+ *   a module's DATA
+ *   PLACE             → that module's DATA TABS — only on the routes the tabs
+ *                       point at; a record page or a form inside the module
+ *                       gets no strip, because it is inside a place rather
+ *                       than being one
+ *   anything else     → the area's own screens
  *
  * IT RECOGNISES A MODULE BY THE MARKER, NOT BY NAME. A module page is one whose
  * route carries the platform's module marker — the same route default the
@@ -85,7 +89,8 @@ final readonly class ModuleFrameService
 
     /**
      * THE STRIP, as it should render — sections on a configure page, the
-     * module's data places on a module page, the area's screens everywhere else.
+     * module's data places on one of those places, the area's screens
+     * everywhere else, and nothing on a module's other pages.
      *
      * @return list<AreaTab>
      */
@@ -115,15 +120,16 @@ final readonly class ModuleFrameService
                 continue;
             }
 
-            $tabs[] = new AreaTab(label: $tab->label, url: $url, current: $tab->lightsFor($route));
+            $tabs[] = new AreaTab(label: $tab->label, url: $url, current: $tab->routeName === $route);
         }
 
         /*
-         * A MODULE ON ONE OF ITS OWN PAGES ALWAYS LIGHTS ONE TAB. If none of
-         * them claims this route the module has grown a screen it never told the
-         * frame about, and a strip that lights nothing reads as a row of links
-         * to somewhere else. Say nothing rather than say the wrong thing — the
-         * same rule the area's source keeps.
+         * THE STRIP IS DRAWN BY THE DATA PLACES THEMSELVES, and a tab OWNS its
+         * place: the route it points at, not every route it lights. Anywhere
+         * else inside the module — a record, a form — the strip would name
+         * places without being one of them, so it says nothing; the tree still
+         * lights the row that led there ({@see tabsOf()}), which is where
+         * "where you are" is answered.
          */
         return $this->lights($tabs) ? $tabs : [];
     }

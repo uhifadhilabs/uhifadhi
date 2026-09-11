@@ -64,13 +64,35 @@ final class ModuleFrameServiceTest extends TestCase
     }
 
     /**
-     * A LIST AND ITS DETAIL SCREEN ARE ONE PLACE — the module said so, and the
-     * strip stays lit on the tab that led there.
+     * THE STRIP BELONGS TO THE DATA PLACE ITSELF. A tab's own route draws it,
+     * with that tab lit and no other.
      */
-    public function testADetailScreenKeepsItsListsTabLit(): void
+    public function testTheTabsOwnRouteDrawsTheStripWithThatTabCurrent(): void
+    {
+        $tabs = $this->frame($this->moduleRequest('patrol_list'))->tabs();
+
+        self::assertSame(['Overview', 'Patrols'], $this->labels($tabs));
+        self::assertSame(['Patrols'], $this->labels(array_values(array_filter(
+            $tabs,
+            static fn (AreaTab $tab): bool => $tab->current,
+        ))));
+    }
+
+    /**
+     * A RECORD PAGE IS NOT A DATA PLACE. The module lights the list's row for
+     * it, because the tree says where you are — but the strip names the places
+     * themselves, and a record is inside one rather than being one.
+     */
+    public function testARouteATabLightsButDoesNotOwnDrawsNoStrip(): void
+    {
+        self::assertSame([], $this->frame($this->moduleRequest('patrol_detail'))->tabs());
+    }
+
+    /** And the tree keeps that row lit there, off the same declaration. */
+    public function testTheTreeKeepsTheListsRowLitOnARecordPage(): void
     {
         $lit = array_values(array_filter(
-            $this->frame($this->moduleRequest('patrol_detail'))->tabs(),
+            $this->frame($this->moduleRequest('patrol_detail'))->tabsOf('patrols', self::AREA),
             static fn (AreaTab $tab): bool => $tab->current,
         ));
 
