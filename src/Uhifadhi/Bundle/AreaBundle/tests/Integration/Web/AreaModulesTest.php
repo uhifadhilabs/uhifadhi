@@ -296,6 +296,33 @@ final class AreaModulesTest extends WebTestCase
         self::assertSame(['incidents', 'patrols'], $this->activeSlugs($area));
     }
 
+    /**
+     * AND THE ROWS ARE THE OTHER END OF THE SAME DRAG. The shop draws the active
+     * set twice and says both are draggable, so the order a person expresses in
+     * the detailed rows reaches the route exactly as a pill order does — and the
+     * page they come back to is drawn in the order they just set, rows included.
+     */
+    public function testTheOrderTheRowsAreDraggedIntoIsPersistedAndRedrawn(): void
+    {
+        $this->boot(self::ALL);
+        $this->signIn();
+        $area = $this->anArea();
+        $this->aCatalogue();
+        $this->install($area, 'patrols');
+        $this->install($area, 'incidents');
+        $this->install($area, 'forest-loss');
+
+        $this->post($this->modulesPath($area).'/customize/reorder', ['order' => ['forest-loss', 'incidents', 'patrols']]);
+
+        self::assertSame(['forest-loss', 'incidents', 'patrols'], $this->activeSlugs($area));
+
+        $rows = $this->body($this->modulesPath($area).'/customize');
+        $positions = array_map(static fn (string $slug): int|false => strpos($rows, 'data-slug="'.$slug.'"'), ['forest-loss', 'incidents', 'patrols']);
+        $sorted = $positions;
+        sort($sorted);
+        self::assertSame($sorted, $positions, 'The shop is not redrawn in the order it was just given.');
+    }
+
     /** A write without the permission is refused, and nothing moves. */
     public function testTogglingIsClosedWithoutModuleCreate(): void
     {

@@ -35,20 +35,22 @@ export default class extends Controller {
 
     connect() {
         this.dragging = null;
+        this.draggedList = null;
         this.listTargets.forEach((list) => this.arm(list));
     }
 
     arm(list) {
         list.querySelectorAll('[data-slug]').forEach((row) => {
             row.draggable = true;
-            row.addEventListener('dragstart', () => this.start(row));
+            row.addEventListener('dragstart', () => this.start(row, list));
             row.addEventListener('dragend', () => this.end(row));
             row.addEventListener('dragover', (event) => this.moveOver(event, list, row));
         });
     }
 
-    start(row) {
+    start(row, list) {
         this.dragging = row;
+        this.draggedList = list;
         row.classList.add('dragging');
     }
 
@@ -57,6 +59,7 @@ export default class extends Controller {
         this.dragging = null;
         this.mirror();
         this.persist();
+        this.draggedList = null;
     }
 
     moveOver(event, list, row) {
@@ -69,24 +72,29 @@ export default class extends Controller {
         list.insertBefore(this.dragging, after ? row.nextSibling : row);
     }
 
-    /* The list that was NOT dragged in is re-sorted to match the one that was. */
+    /* Every list that was NOT dragged in is re-sorted to match the one that was. */
     mirror() {
         const order = this.order();
-        this.listTargets.forEach((list) => {
-            order.forEach((slug) => {
-                const row = list.querySelector(`[data-slug="${slug}"]`);
-                if (row) {
-                    list.appendChild(row);
-                }
+        this.listTargets
+            .filter((list) => list !== this.draggedList)
+            .forEach((list) => {
+                order.forEach((slug) => {
+                    const row = list.querySelector(`[data-slug="${slug}"]`);
+                    if (row) {
+                        list.appendChild(row);
+                    }
+                });
             });
-        });
     }
 
+    /*
+     * THE ORDER IS THE LIST THE DRAG HAPPENED IN. Both lists are `list` targets,
+     * so a fixed one — the first in the template — would answer for its own drags
+     * only and overwrite every drag made in the other.
+     */
     order() {
-        const list = this.listTargets[0];
-
-        return list
-            ? Array.from(list.querySelectorAll('[data-slug]')).map((row) => row.dataset.slug)
+        return this.draggedList
+            ? Array.from(this.draggedList.querySelectorAll('[data-slug]')).map((row) => row.dataset.slug)
             : [];
     }
 
