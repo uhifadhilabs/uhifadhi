@@ -28,6 +28,7 @@ use Uhifadhi\Bundle\AreaBundle\Service\AreaMapService;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaOverview;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaRegister;
 use Uhifadhi\Bundle\ShellBundle\Frame\Controller\ConfigureController;
+use Uhifadhi\Contracts\Shell\ConfigurationSection;
 
 /**
  * THE AREA SCREENS — the register, one area's overview, and its settings.
@@ -111,7 +112,8 @@ final readonly class AreaController
      * THE OLD SETTINGS SCREEN'S ADDRESS, PERMANENTLY MOVED.
      *
      * What an area is set up with is configuration, and all of it now lives on
-     * the one configure page behind the one Configure action. The address stays
+     * the one configure page behind the one Configure action — the record itself
+     * in that page's Area settings section, which is where this points. The address stays
      * answered rather than deleted because it is in bookmarks, in a redirect a
      * form posts through, and in whatever an installation typed into its own
      * links — and 301 is what tells all three where it went for good.
@@ -126,7 +128,10 @@ final readonly class AreaController
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
     ): Response {
         return new RedirectResponse(
-            $this->urls->generate(ConfigureController::AREA_ROUTE, ['uuid' => $area->getUuidString()]),
+            $this->urls->generate(ConfigureController::AREA_ROUTE, [
+                'uuid' => $area->getUuidString(),
+                'section' => ConfigurationSection::SETTINGS,
+            ]),
             Response::HTTP_MOVED_PERMANENTLY,
         );
     }

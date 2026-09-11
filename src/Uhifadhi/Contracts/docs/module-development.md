@@ -1536,9 +1536,15 @@ What the shell then renders:
 order you write, and whatever you file between them keeps the order you gave it. That is why the two
 anchoring ids are constants: file your kinds in the middle and you get the platform's order for free.
 
-**The bare configure address is your LAST rendered section** — Settings, by that order — and every
-other rendered section hangs one segment below it. So `…/configure` is your settings and
-`…/configure/kinds` is your kinds, and the `Configure` action opens the bare one.
+**The bare configure address is your FIRST section** — Widget library, by that order — and every
+other section hangs one segment below it. So `…/configure` is your widget library, `…/configure/kinds`
+is your kinds, `…/configure/settings` is your settings, and the `Configure` action opens the bare one.
+People come to a configure page for how the dashboard is composed, so that is what it opens on.
+
+If your first section is a `screen()` rather than a page — a library screen you shipped before the
+frame existed — the shell cannot draw it at the bare address, so **the bare address answers `302` to
+that screen's own URL**. Same rule, both shapes: opening the configure page has one answer, and it is
+the first section.
 
 ### What a module stops shipping
 

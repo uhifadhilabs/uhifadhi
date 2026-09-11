@@ -99,15 +99,83 @@ final class ModuleFrameServiceTest extends TestCase
         self::assertNotContains('Patrols', $this->labels($strip));
     }
 
-    /** The bare configure address is the surface's LAST rendered section. */
-    public function testTheBareConfigureAddressOpensOnSettingsAndLightsIt(): void
+    /**
+     * THE BARE CONFIGURE ADDRESS IS THE SURFACE'S FIRST SECTION — Widget
+     * library, by the ruled order — because the first thing anybody opens a
+     * configure page for is how the dashboard is composed, and a page that
+     * opened on the last section made them hunt for it.
+     */
+    public function testTheBareConfigureAddressOpensOnTheFirstSectionAndLightsIt(): void
     {
         $lit = array_values(array_filter(
             $this->frame($this->configureRequest('patrols'))->tabs(),
             static fn (AreaTab $tab): bool => $tab->current,
         ));
 
-        self::assertSame(['Settings'], $this->labels($lit));
+        self::assertSame(['Widget library'], $this->labels($lit));
+    }
+
+    /** And every other section hangs one segment below it. */
+    public function testEveryOtherSectionKeepsItsOwnAddress(): void
+    {
+        $urls = array_map(
+            static fn (AreaTab $tab): string => $tab->url,
+            $this->frame($this->configureRequest('patrols'))->tabs(),
+        );
+
+        $configure = '/areas/'.self::AREA.'/modules/patrols/configure';
+        self::assertSame([$configure, $configure.'/kinds', $configure.'/settings'], $urls);
+    }
+
+    /**
+     * A SURFACE WHOSE FIRST SECTION KEEPS AN ADDRESS OF ITS OWN cannot render
+     * at the bare one, so the bare one sends the viewer to it. The rule does not
+     * bend for the shape of the section: the first section is what a configure
+     * page opens on either way.
+     */
+    public function testTheBareAddressRedirectsWhenTheFirstSectionIsAScreen(): void
+    {
+        $frame = $this->frame($this->configureRequest('patrols'), sections: $this->sectionsLedByAScreen());
+
+        self::assertSame(
+            '/areas/'.self::AREA.'/modules/patrols/library',
+            $frame->bareAddressRedirect($this->configureRequest('patrols'), 'patrols'),
+        );
+    }
+
+    /** And it does not redirect when the first section is one the shell renders. */
+    public function testTheBareAddressRendersWhenTheFirstSectionIsAPage(): void
+    {
+        $request = $this->configureRequest('patrols');
+
+        self::assertNull($this->frame($request)->bareAddressRedirect($request, 'patrols'));
+    }
+
+    /**
+     * A NAMED SECTION IS NEVER A REDIRECT, whatever the first section is: the
+     * viewer asked for that one.
+     */
+    public function testANamedSectionIsNeverRedirected(): void
+    {
+        $request = $this->configureRequest('patrols', 'kinds');
+
+        self::assertNull($this->frame($request, sections: $this->sectionsLedByAScreen())->bareAddressRedirect($request, 'patrols'));
+    }
+
+    /**
+     * THE SCREEN THE STRIP LINKS OUT TO IS LIT WHILE THE VIEWER IS ON IT, and
+     * the sections the shell renders keep their own addresses under the bare
+     * one — which no longer belongs to any of them.
+     */
+    public function testAScreenLedSurfaceGivesEveryRenderedSectionItsOwnAddress(): void
+    {
+        $urls = array_map(
+            static fn (AreaTab $tab): string => $tab->url,
+            $this->frame($this->configureRequest('patrols'), sections: $this->sectionsLedByAScreen())->tabs(),
+        );
+
+        $configure = '/areas/'.self::AREA.'/modules/patrols/configure';
+        self::assertSame(['/areas/'.self::AREA.'/modules/patrols/library', $configure.'/kinds', $configure.'/settings'], $urls);
     }
 
     public function testTheNamedSectionIsTheOneLit(): void
@@ -213,7 +281,7 @@ final class ModuleFrameServiceTest extends TestCase
     }
 
     /** @param list<AreaTab> $areaTabs */
-    private function frame(Request $request, array $areaTabs = []): ModuleFrameService
+    private function frame(Request $request, array $areaTabs = [], ?ConfigurationSectionsInterface $sections = null): ModuleFrameService
     {
         $requests = new RequestStack();
         $requests->push($request);
@@ -222,7 +290,7 @@ final class ModuleFrameServiceTest extends TestCase
             $requests,
             $this->router(),
             new ModuleTabsRegistry([$this->tabs()]),
-            new ConfigurationSectionsRegistry([$this->sections()]),
+            new ConfigurationSectionsRegistry([$sections ?? $this->sections()]),
             new AreaShell(new class($areaTabs) implements \Uhifadhi\Bundle\ShellBundle\Contract\AreaShellSourceInterface {
                 /** @param list<AreaTab> $tabs */
                 public function __construct(private readonly array $tabs)
@@ -294,6 +362,39 @@ final class ModuleFrameServiceTest extends TestCase
     }
 
     /**
+     * A SURFACE WHOSE WIDGET LIBRARY IS A SCREEN OF ITS OWN — the shape a module
+     * that shipped a library page before the frame existed still has.
+     */
+    private function sectionsLedByAScreen(): ConfigurationSectionsInterface
+    {
+        return new class implements ConfigurationSectionsInterface {
+            public function slug(): string
+            {
+                return 'patrols';
+            }
+
+            public function heading(): string
+            {
+                return 'Patrols';
+            }
+
+            public function summary(): ?string
+            {
+                return null;
+            }
+
+            public function sections(): array
+            {
+                return [
+                    ConfigurationSection::screen('widgets', 'Widget library', 'patrol_widgets'),
+                    ConfigurationSection::page('kinds', 'Observation kinds', '@Fixture/_kinds.html.twig'),
+                    ConfigurationSection::page('settings', 'Settings', '@Fixture/_settings.html.twig'),
+                ];
+            }
+        };
+    }
+
+    /**
      * A REAL ROUTER OVER A HAND-BUILT COLLECTION, not a mock: what is being
      * specified includes the urls the frame generates, and a mock that returned
      * whatever it was told would specify nothing.
@@ -303,6 +404,7 @@ final class ModuleFrameServiceTest extends TestCase
         $routes = new RouteCollection();
         $routes->add('patrol_dashboard', new Route('/areas/{uuid}/modules/patrols'));
         $routes->add('patrol_list', new Route('/areas/{uuid}/modules/patrols/patrols'));
+        $routes->add('patrol_widgets', new Route('/areas/{uuid}/modules/patrols/library'));
         $routes->add(ConfigureController::AREA_ROUTE, new Route('/areas/{uuid}/configure/{section}', ['section' => null]));
         $routes->add(ConfigureController::MODULE_ROUTE, new Route('/areas/{uuid}/modules/{slug}/configure/{section}', ['section' => null]));
 

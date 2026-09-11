@@ -30,11 +30,15 @@ use Uhifadhi\Bundle\ShellBundle\Frame\Controller\ConfigureController;
  * not ask it to claim.
  *
  * THE SECTION IS A TRAILING OPTIONAL PARAMETER, which is what makes the ruled
- * order visible in the URL: the surface's LAST section — Settings — is the bare
- * address the `Configure` action opens, and every other section the shell
- * renders hangs one segment below it. So `/areas/{uuid}/configure` is the area's
- * settings and `/areas/{uuid}/configure/widgets` is its widget library, and the
- * router generates the bare form on its own whenever no section is named.
+ * order visible in the URL: the surface's FIRST section — Widget library — is
+ * the bare address the `Configure` action opens, and every other section hangs
+ * one segment below it. So `/areas/{uuid}/configure` is the area's widget
+ * library and `/areas/{uuid}/configure/settings` is its settings, and the router
+ * generates the bare form on its own whenever no section is named.
+ *
+ * A surface whose first section keeps an address of its own cannot be drawn at
+ * the bare address, so the bare address answers 302 to that screen instead. One
+ * rule, both shapes — see ModuleFrameService::bareAddressRedirect().
  *
  * NOTHING HERE NEEDS A PRIORITY. The module address is three segments under
  * `/modules/`, and the module grid's own customize family is two, so neither can

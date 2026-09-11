@@ -242,9 +242,10 @@ final readonly class ModuleFrameService
 
     /**
      * WHICH SECTION THE SHELL'S OWN CONFIGURE PAGE IS SHOWING — the one named in
-     * the request, or the surface's last rendered section, which is Settings by
-     * the ruled order. A configure page opened with no section named opens on the
-     * surface's own settings, exactly as the design draws it.
+     * the request, or the surface's FIRST rendered section, which is Widget
+     * library by the ruled order. A configure page opened with no section named
+     * opens on the first thing anybody opens one for; a page that opened on the
+     * last one made them hunt for it.
      */
     public function currentSectionId(Request $request, string $surface): ?string
     {
@@ -266,7 +267,35 @@ final readonly class ModuleFrameService
             }
         }
 
-        return $rendered[array_key_last($rendered)]->id;
+        return $rendered[0]->id;
+    }
+
+    /**
+     * WHERE THE BARE CONFIGURE ADDRESS SENDS THE VIEWER, or null when it renders
+     * something itself.
+     *
+     * The bare address belongs to the surface's FIRST section whichever shape it
+     * has. A section the shell renders is drawn there; a section that keeps an
+     * address of its own cannot be, so the bare address is a redirect to it —
+     * one rule, two shapes, and no configure page that opens on a section the
+     * surface did not put first.
+     *
+     * A request that NAMES a section is never redirected: the viewer asked for
+     * that one.
+     */
+    public function bareAddressRedirect(Request $request, string $surface): ?string
+    {
+        $named = $request->attributes->get('section');
+        if (\is_string($named) && '' !== $named) {
+            return null;
+        }
+
+        $sections = $this->sections->sections($surface);
+        if ([] === $sections || $sections[0]->isRendered()) {
+            return null;
+        }
+
+        return $this->url($sections[0]->routeName ?? '', $this->withArea($request, $sections[0]->parameters));
     }
 
     /**
@@ -341,7 +370,7 @@ final readonly class ModuleFrameService
     }
 
     /**
-     * The configure page's address — bare for the surface's own settings, and
+     * The configure page's address — bare for the surface's first section, and
      * with the section appended for every other section the shell renders. The
      * route carries the section as an optional trailing parameter, so the bare
      * form is what the router generates when none is named.
@@ -364,31 +393,27 @@ final readonly class ModuleFrameService
     }
 
     /**
-     * The address of a section the shell renders. The surface's LAST rendered
-     * section — Settings, by the ruled order — is the configure page itself, so
-     * it keeps the bare address the `Configure` action opens; the rest hang
-     * below it. That is why a configure page opened with no section named opens
-     * on the surface's own settings, exactly as the design draws it.
+     * The address of a section the shell renders. The surface's FIRST section —
+     * Widget library, by the ruled order — is the configure page itself, so it
+     * keeps the bare address the `Configure` action opens; every other section
+     * hangs one segment below it.
+     *
+     * The first SECTION, not the first rendered one: when a surface leads with a
+     * screen of its own the bare address is that screen's redirect
+     * ({@see bareAddressRedirect()}) and belongs to no section the shell draws.
      */
     private function renderedSectionUrl(Request $request, string $surface, ConfigurationSection $section): ?string
     {
         return $this->configureUrl(
             $request,
             $surface,
-            $section->id === $this->lastRenderedSectionId($surface) ? null : $section->id,
+            $section->id === $this->firstSectionId($surface) ? null : $section->id,
         );
     }
 
-    private function lastRenderedSectionId(string $surface): ?string
+    private function firstSectionId(string $surface): ?string
     {
-        $id = null;
-        foreach ($this->sections->sections($surface) as $section) {
-            if ($section->isRendered()) {
-                $id = $section->id;
-            }
-        }
-
-        return $id;
+        return $this->sections->sections($surface)[0]->id ?? null;
     }
 
     /**

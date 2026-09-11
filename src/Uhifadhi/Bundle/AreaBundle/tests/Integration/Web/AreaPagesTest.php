@@ -371,14 +371,15 @@ final class AreaPagesTest extends WebTestCase
 
     /**
      * THE RECORD MOVED ONTO THE CONFIGURE PAGE and lost nothing on the way: it
-     * is the Area settings section now, which is the page's own bare address.
+     * is the Area settings section now, one segment under the page's own bare
+     * address.
      */
     public function testTheAreaSettingsSectionShowsTheRecordAndDashesWhatIsUnrecorded(): void
     {
         $this->boot();
         $area = $this->anArea();
 
-        $body = $this->body('/areas/'.$area->getUuidString().'/configure');
+        $body = $this->body('/areas/'.$area->getUuidString().'/configure/settings');
 
         self::assertStringContainsString((string) $area->getUuidString(), $body);
         // A dash means UNRECORDED, never zero.
@@ -413,16 +414,30 @@ final class AreaPagesTest extends WebTestCase
         return (string) strstr($strip[1], '</div>', true);
     }
 
-    /** The section named in the URL is the section lit and the section drawn. */
-    public function testTheWidgetLibrarySectionHasItsOwnAddressAndIsLitThere(): void
+    /**
+     * THE BARE CONFIGURE ADDRESS IS THE FIRST SECTION — the widget library — so
+     * that is what opens, and that is what is lit.
+     */
+    public function testTheBareConfigureAddressOpensTheWidgetLibraryAndLightsIt(): void
     {
         $this->boot();
         $area = $this->anArea();
 
-        $body = $this->body('/areas/'.$area->getUuidString().'/configure/widgets');
+        $body = $this->body('/areas/'.$area->getUuidString().'/configure');
 
-        self::assertStringContainsString('href="/areas/'.$area->getUuidString().'/configure/widgets" class="on"', $body);
+        self::assertStringContainsString('href="/areas/'.$area->getUuidString().'/configure" class="on"', $body);
         self::assertStringContainsString('Dashboard composition', $body);
+    }
+
+    /** And every other section is named in its own address. */
+    public function testTheAreaSettingsSectionIsNamedInItsOwnAddressAndIsLitThere(): void
+    {
+        $this->boot();
+        $area = $this->anArea();
+
+        $body = $this->body('/areas/'.$area->getUuidString().'/configure/settings');
+
+        self::assertStringContainsString('href="/areas/'.$area->getUuidString().'/configure/settings" class="on"', $body);
     }
 
     /**
@@ -457,7 +472,7 @@ final class AreaPagesTest extends WebTestCase
         $response = $this->get('/areas/'.$area->getUuidString().'/settings');
 
         self::assertSame(301, $response->getStatusCode());
-        self::assertSame('/areas/'.$area->getUuidString().'/configure', $response->headers->get('Location'));
+        self::assertSame('/areas/'.$area->getUuidString().'/configure/settings', $response->headers->get('Location'));
     }
 
     /**

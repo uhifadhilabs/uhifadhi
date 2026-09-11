@@ -350,7 +350,7 @@ final class AreaEditTest extends WebTestCase
         $this->signIn();
         $area = $this->anArea('Northern Reserve');
 
-        $body = $this->body('/areas/'.$area->getUuidString().'/configure');
+        $body = $this->body('/areas/'.$area->getUuidString().'/configure/settings');
 
         self::assertStringContainsString('Edit area', $body);
         self::assertStringContainsString('href="/areas/'.$area->getUuidString().'/edit"', $body);

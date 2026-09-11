@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\ShellBundle\Frame\Controller;
 
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -88,6 +89,19 @@ final readonly class ConfigureController
         $sections = $this->frame->sectionsOf($surface);
         if ([] === $sections) {
             throw new NotFoundHttpException(\sprintf('Nothing declares a configure page for "%s".', $surface));
+        }
+
+        /*
+         * THE BARE ADDRESS BELONGS TO THE FIRST SECTION, and a surface that
+         * leads with a screen of its own cannot have that section drawn here.
+         * A redirect rather than a second-choice section: opening the configure
+         * page has one answer, and it is the same answer whichever shape the
+         * first section has. Found, not permanent — the surface may re-order its
+         * sections in the next release, and a 301 would outlive the decision.
+         */
+        $elsewhere = $this->frame->bareAddressRedirect($request, $surface);
+        if (null !== $elsewhere) {
+            return new RedirectResponse($elsewhere);
         }
 
         $section = $this->frame->currentSection($request, $surface);
