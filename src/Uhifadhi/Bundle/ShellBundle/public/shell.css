@@ -320,6 +320,16 @@ body::before {
     display: flex; align-items: center; gap: 8px; position: relative;
     text-decoration: none; border-left: 2px solid transparent;
 }
+/* THE FURNITURE KEEPS ITS SIZE AND THE LABEL IS WHAT GIVES WAY. The icon, the
+   label and the caret are all items of the same flex row, so with nothing said
+   about them the label's LENGTH decided the icon's SIZE: a place with a real
+   name drew a visibly smaller glyph than a place with a short one, which reads
+   as two kinds of row. Stated as well as fixed — an icon with no size of its
+   own is not small, it is as wide as whatever the row has left — and stated in
+   `em` so it steps down with each rung's own type, the way the rest of the
+   drawing does. Names come from the contract and no length is wrong, so the
+   label is the part that truncates (`.nta b`, below). */
+.ntree :is(a, span) > svg { flex: none; width: 1em; height: 1em; }
 /* FOLDING IS ONE WORD AT EVERY DEPTH. A caret folds the group that follows its
    row, whichever level that row is on, and `closed` is the only state — so a
    folded branch is always still in the document and always reopens. */
@@ -393,7 +403,8 @@ body::before {
    rule at every depth, in place of the design's three near-copies. */
 .nav .chev {
     margin-left: auto; display: flex; align-items: center; padding: 2px; border: 0; background: none;
-    color: rgb(var(--c-dim)); cursor: pointer; transition: transform .15s ease;
+    color: rgb(var(--c-dim)); cursor: pointer; flex: none;
+    transition: transform .15s ease;
 }
 .nav .chev svg { width: 13px; height: 13px; }
 .nav .chev:hover { color: rgb(var(--c-tx)); }
