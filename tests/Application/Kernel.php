@@ -118,6 +118,51 @@ final class Kernel extends BaseKernel
             'renderer' => 'leaflet://default',
         ]);
 
+        /*
+         * THE MACHINE API'S CONFIGURATION, as an installation receives it.
+         *
+         * The first four keys are verbatim what API Platform's own Flex recipe
+         * writes into `config/packages/api_platform.yaml` — title, version, and
+         * the two `defaults` — so the resources here are read under the settings
+         * a real installation runs.
+         *
+         * `formats` IS THE ONE LINE THE RECIPE DOES NOT WRITE, and the field
+         * contract needs it. API Platform's default first format is JSON-LD,
+         * which answers with `@context` and `@id` members; a field client parses
+         * the documented keys and nothing else, so JSON is the only format this
+         * URL space offers and content negotiation has nothing else to pick.
+         *
+         * `mapping.paths` IS DELIBERATELY UNSET. A bundle's own `ApiResource`
+         * directory is discovered from `kernel.bundles_metadata`, so neither the
+         * core nor an installation names TeamBundle or AreaBundle anywhere —
+         * and naming anything here would DISABLE the project-dir defaults an
+         * installation's own resources rely on.
+         *
+         * @see https://api-platform.com/docs/symfony/#configuration
+         * @see https://github.com/symfony/recipes/tree/main/api-platform/core/4.0 — the recipe's own config/packages/api_platform.yaml
+         * @see vendor/api-platform/core/src/Symfony/Bundle/DependencyInjection/ApiPlatformExtension.php — `getBundlesResourcesPaths()`
+         */
+        $container->extension('api_platform', [
+            'title' => 'Uhifadhi core test API',
+            'version' => '1.0.0',
+            'formats' => ['json' => ['application/json']],
+            /*
+             * NARROWED WITH `formats`, AND IT HAS TO BE. `error_formats`
+             * defaults to JSON-LD FIRST and is a SEPARATE setting, so narrowing
+             * only `formats` leaves API Platform rendering every refusal in a
+             * format whose serializer is no longer registered — the serializer
+             * throws INSIDE the exception handler and a 406 comes out as a 500.
+             * Both lists are therefore narrowed together, always.
+             *
+             * @see vendor/api-platform/core/src/Symfony/Bundle/DependencyInjection/Configuration.php — the error_formats default
+             */
+            'error_formats' => ['json' => ['application/problem+json', 'application/json']],
+            'defaults' => [
+                'stateless' => true,
+                'cache_headers' => ['vary' => ['Content-Type', 'Authorization', 'Origin']],
+            ],
+        ]);
+
         // THE TWO SETTINGS THAT DECIDE WHAT THE DDL LOOKS LIKE, copied from the
         // file the skeleton ships as `config/packages/doctrine.yaml`, because
         // the migrations in this repository are generated here and applied
@@ -160,6 +205,13 @@ final class Kernel extends BaseKernel
         // second copy built by hand.
         $container->services()
             ->alias('test_public.team.devkit.content', 'team.devkit.content')
+            ->public();
+
+        // The credential a field client carries. The field-API specifications
+        // mint a real token through it, so their requests cross the same
+        // authenticator an installation's do rather than a logged-in session.
+        $container->services()
+            ->alias('test_public.team.api_token.manager', 'team.api_token.manager')
             ->public();
 
         // The security file an installation gets from the skeleton, as this
@@ -252,6 +304,23 @@ final class Kernel extends BaseKernel
         //
         // @see vendor/symfony/framework-bundle/Kernel/MicroKernelTrait.php — `loadRoutes()` rewrites a [$this, 'method'] controller to the kernel service
         $routes->add('liveness', '/up')->controller([$this, 'liveness'])->methods(['GET']);
+
+        /*
+         * THE ONE `/api` ENTRY POINT, mounted exactly as API Platform's Flex
+         * recipe mounts it in `config/routes/api_platform.yaml`:
+         *
+         *     api_platform:
+         *         resource: .
+         *         type: api_platform
+         *         prefix: /api
+         *
+         * Every resource class in a registered bundle's `ApiResource` directory
+         * reaches its address through this import and through nothing else, so
+         * neither the core's two field resources nor a module's are named here.
+         *
+         * @see https://github.com/symfony/recipes/tree/main/api-platform/core/4.0 — the recipe's own config/routes/api_platform.yaml
+         */
+        $routes->import('.', 'api_platform')->prefix('/api');
 
         // Every screen TeamBundle draws, mounted where an installation's own
         // config/routes/team.yaml mounts it.

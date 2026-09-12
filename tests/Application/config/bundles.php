@@ -11,6 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
+use ApiPlatform\Symfony\Bundle\ApiPlatformBundle;
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
 use Doctrine\Bundle\MigrationsBundle\DoctrineMigrationsBundle;
 use FundiStadi\PostGISBundle\FundiStadiPostGISBundle;
@@ -41,6 +42,7 @@ return [
     StimulusBundle::class => ['all' => true],
     UXMapBundle::class => ['all' => true],
     SecurityBundle::class => ['all' => true],
+    ApiPlatformBundle::class => ['all' => true],
     RegistryBundle::class => ['all' => true],
     ShellBundle::class => ['all' => true],
     AtlasBundle::class => ['all' => true],
