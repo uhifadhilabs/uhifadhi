@@ -59,7 +59,7 @@ use Uhifadhi\Bundle\RegistryBundle\Version\DependencyOrderComparator;
  *   registry.parked_module_listener  the gate, applied to every incoming request
  *   registry.permissions           the permissions installed modules declare
  *   registry.sync                  the create-only reconciliation itself
- *   registry.sync_listener         the deploy hook that runs it
+ *   registry.sync_listener         the deploy hook that runs it, at the end of a console command
  */
 return static function (ContainerConfigurator $container): void {
     $services = $container->services();
@@ -174,8 +174,9 @@ return static function (ContainerConfigurator $container): void {
             '%kernel.cache_dir%/uhifadhi/registry-sync.stamp',
         ])
         ->tag('container.service_subscriber')
-        // Ahead of the parked-module gate above, which reads the catalogue.
+        // THE END OF A CONSOLE COMMAND IS THE WHOLE OF THE HOOK. A deploy
+        // migrates and then warms the cache up, and the registry is in step by
+        // the time the second command returns; a request is served without it.
         // @see https://symfony.com/doc/current/reference/dic_tags.html#kernel-event-listener
-        ->tag('kernel.event_listener', ['event' => 'kernel.request', 'method' => 'onKernelRequest', 'priority' => 16])
         ->tag('kernel.event_listener', ['event' => 'console.terminate', 'method' => 'onConsoleTerminate']);
 };

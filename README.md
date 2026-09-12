@@ -58,7 +58,7 @@ Flex writes one `config/bundles.php` line per core bundle and copies one
 
 ```bash
 bin/console doctrine:migrations:migrate
-bin/console cache:clear                   # the registry reconciles itself
+bin/console cache:warmup                  # the registry reconciles itself
 ```
 
 **The core ships its own migrations.** Each bundle that owns tables carries a

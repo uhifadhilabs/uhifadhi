@@ -92,8 +92,9 @@ abstract class InstallationTestCase extends RegistryKernelTestCase
 
     /**
      * Reconcile the registry the way a deploy does: through the listener that is
-     * the whole of the mechanism. The core ships no console command — a deploy
-     * runs `cache:clear`/`cache:warmup` and the registry is in step.
+     * the whole of the mechanism. The core ships no console command of its own —
+     * a deploy migrates and then warms the cache up, and the registry is in step
+     * by the end of those.
      *
      * The stamp goes first because a deploy is a new build, and a new build has
      * a cache directory with no stamp in it. That is also what tells this apart

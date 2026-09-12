@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Core\Tests\Core;
 
+use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\HttpKernel\CacheWarmer\CacheWarmerAggregate;
 use Uhifadhi\Bundle\AreaBundle\AreaBundle;
@@ -100,9 +101,10 @@ final class CoreBootTest extends KernelTestCase
     }
 
     /**
-     * A DEPLOY IS `cache:clear`, and this is the pair of things it does to the
-     * five bundles at once: every warmer they contribute runs, and the registry
-     * is reconciled with whatever module providers the installation carries.
+     * A DEPLOY IS `doctrine:migrations:migrate` AND THEN `cache:warmup`, and this
+     * is the pair of things it does to the five bundles at once: every warmer they
+     * contribute runs, and the registry is reconciled with whatever module
+     * providers the installation carries.
      *
      * Both halves run here against a database with no registry tables in it —
      * the state a fresh installation is in before its first migration — and the
@@ -118,6 +120,14 @@ final class CoreBootTest extends KernelTestCase
     public function testADeployWarmsEveryCacheAndReconcilesTheRegistry(): void
     {
         $kernel = self::bootKernel();
+
+        // The state is arranged rather than inherited: this suite shares one
+        // database with every other, and "before the first migration" is a
+        // precondition, not whatever the previous run happened to leave.
+        $connection = self::getContainer()->get('doctrine.dbal.default_connection');
+        \assert($connection instanceof Connection);
+        $connection->executeStatement('DROP SCHEMA IF EXISTS public CASCADE');
+        $connection->executeStatement('CREATE SCHEMA public');
 
         $warmer = self::getContainer()->get('cache_warmer');
         \assert($warmer instanceof CacheWarmerAggregate);

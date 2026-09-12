@@ -57,7 +57,7 @@ cannot name an area class itself.
 ```bash
 bin/console doctrine:database:create
 bin/console doctrine:migrations:migrate
-bin/console cache:clear                   # the registry reconciles itself
+bin/console cache:warmup                  # the registry reconciles itself
 ```
 
 Two tables, `module` and `area_module`, and the registry ships the version that
@@ -68,10 +68,22 @@ creates them — `migrations/`, namespace
 writes. The registry also names the service that decides the ORDER every version
 runs in, across every namespace an installation has, because a version's
 identity is its class name and a package that sorts early would otherwise create
-a table before the one its foreign key points at. There is **no seed command** — the
-catalogue is reconciled once per build, when a console command finishes or the
-first request arrives — whichever comes first. So `cache:clear` is the whole of
-it, and an installation that only swaps code reconciles on its next request.
+a table before the one its foreign key points at.
+
+### What reconciles the catalogue, and when
+
+There is **no seed command**. The catalogue is reconciled **at the end of a
+console command**, once per build: a deploy hook runs
+`doctrine:migrations:migrate` and then `cache:warmup`, so the first of those two
+commands reconciles the build and the second finds the work done. A manual
+install types the same two lines — the warm-up once, after migrating — and every
+later command in that build reconciles nothing.
+
+**A web request reconciles nothing and opens no connection on the registry's
+account.** The catalogue is filled by the deploy that migrated the tables, so a
+request arriving on an installation that has not migrated yet — a proxy's probe
+of a liveness route that reads no database — is answered without the registry
+asking the database anything.
 
 ## Parking a module closes its routes
 

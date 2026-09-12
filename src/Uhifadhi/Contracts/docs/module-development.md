@@ -532,16 +532,19 @@ bundles.
 ### The catalogue and per-area install
 
 RegistryBundle keeps a catalogue of modules and, separately, a per-area record of which are switched
-on. **Nobody runs a command to fill either.** The reconciliation happens once per build, when a
-console command finishes or the first request arrives — whichever comes first — so the registry comes
-into step by itself. An operator's whole ritual after migrating is `bin/console cache:clear`.
+on. **Nobody runs a command to fill either.** The reconciliation happens once per build, at the end
+of a console command: a deploy runs `doctrine:migrations:migrate` and then `bin/console cache:warmup`,
+the first of the two reconciles the build, and the second finds the work done. An operator's whole
+ritual after migrating is that warm-up. **A web request reconciles nothing** — it opens the registry
+no connection on its own account, so an installation that has migrated nothing still answers a
+liveness probe on a route that reads no database.
 
 The sync reads every tagged provider and upserts a catalogue row by `slug()`; then it backfills each
 area with any module it does not yet have. It is idempotent and **create-only** for the per-area
 rows: running it again never touches an area's existing on/off state or ordering, and it never
 deletes the rows of a module that has been uninstalled — an admin's decision outlives your package.
-It is also safe on a fresh install where the registry tables do not exist yet, which is what lets
-`cache:clear` be the first thing a new installation runs.
+It is also safe on a fresh install where the registry tables do not exist yet, which is what lets any
+console command be run before the first migration.
 
 Two fields the host coerces rather than trusts: `category()` and `status()` are matched against the
 host's own enums, and anything unrecognised falls back to a safe default. A typo in your module
@@ -646,7 +649,7 @@ $areaModules->install($area, YourModuleProvider::SLUG);
 
 That is the whole fixture step, because the half an operator would have run by hand has already
 happened: your test kernel boots against a cold cache, the cache warm-up runs, and the registry
-sync puts your provider in the catalogue before the first request is made. What is left is the
+sync puts your provider in the catalogue as that command ends. What is left is the
 per-area decision, which no warm-up will ever make for you — it is exactly the admin's choice the
 sync refuses to overrule.
 
@@ -2220,7 +2223,7 @@ named at the root as well.
 
 ```bash
 bin/console doctrine:migrations:migrate
-bin/console cache:clear                   # the registry reconciles itself
+bin/console cache:warmup                  # the registry reconciles itself
 ```
 
 If your module added tables, the versions that create them ship with it — see
@@ -2228,9 +2231,10 @@ If your module added tables, the versions that create them ship with it — see
 installation's, for the entities it writes itself.
 
 **There is no command to add your module to the catalogue, and there is nothing to remember.** The
-registry sync rides the end of any console command and the first request of any build, so
-`cache:clear` is the whole of it — the same command a deploy already runs, doing a job an operator
-would otherwise have to be told about. **The core ships exactly one console command**, and your
+registry sync rides the end of a console command, once per build, so the warm-up above is the whole
+of it — a command a deploy hook already runs after migrating, doing a job an operator would otherwise
+have to be told about. Nothing a request does reconciles anything, and nothing a request does opens
+the registry a connection. **The core ships exactly one console command**, and your
 module ships none: `bin/console list` on a production installation offers the framework's built-in
 commands plus `team:user:create` — the first administrator, the one account that cannot be made
 through a screen — because everything else a person types belongs to devkit, which is

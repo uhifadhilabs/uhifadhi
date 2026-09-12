@@ -15,21 +15,30 @@ namespace Uhifadhi\Bundle\RegistryBundle\Tests\Integration\Sync;
 
 use Doctrine\ORM\Tools\SchemaTool;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Uid\Uuid;
 use Uhifadhi\Bundle\RegistryBundle\EventListener\RegistrySyncListener;
 use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleService;
 use Uhifadhi\Bundle\RegistryBundle\Tests\Integration\Fixtures\CollectedCacheWarmers;
+use Uhifadhi\Bundle\RegistryBundle\Tests\Integration\Fixtures\RoutedHostKernel;
 use Uhifadhi\Bundle\RegistryBundle\Tests\Integration\InstallationTestCase;
 
 /**
- * THE MECHANISM: A LISTENER ON THE MOMENTS A DEPLOY IS MADE OF, NOT A COMMAND
- * AND NOT A CACHE WARMER.
+ * THE MECHANISM: A LISTENER ON THE END OF A CONSOLE COMMAND, WHICH IS THE DEPLOY
+ * PATH AND THE ONLY PATH. NOT A COMMAND OF ITS OWN, AND NOT A CACHE WARMER.
  *
  * Reconciling the registry with the installed module providers is a
  * once-per-deploy job, and the core ships no console command for it — devkit
- * owns commands. So it hangs off the two moments that bracket every deploy: a
- * console command has finished (`cache:clear` is the one an operator runs), or a
- * request has arrived. Whichever comes first does it, once per build, and the
- * stamp file in the cache directory is what "once per build" is made of.
+ * owns commands. So it hangs off `console.terminate`: a deploy runs
+ * `doctrine:migrations:migrate` and then `cache:warmup`, and each of those is a
+ * console command finishing in the build the deploy has just made. The first of
+ * them reconciles, the stamp file in the cache directory records it, and the
+ * second finds the work done.
+ *
+ * A WEB REQUEST RECONCILES NOTHING. The registry's connection is the deploy's to
+ * open: a request that arrives before the first migration — a proxy's liveness
+ * probe on a DB-free route among them — must reach its controller without the
+ * registry asking the database anything.
  *
  * IT IS NOT A CACHE WARMER, AND CANNOT BE ONE: a warmer that reads a database
  * breaks the cache commands on a pristine prod cache. The kernel's own warm-up
@@ -39,13 +48,23 @@ use Uhifadhi\Bundle\RegistryBundle\Tests\Integration\InstallationTestCase;
  *
  * @see PristineCacheWarmUpTest the deploy that pins it
  *
- * The half that is easy to get wrong is the FRESH INSTALL. `cache:clear` runs
- * before the first migration, so the reconciliation meets a database with no
- * registry tables in it — and it must neither break the command it is attached
- * to nor remember that nothing was done as if something had been.
+ * The half that is easy to get wrong is the FRESH INSTALL. A console command can
+ * be run before the first migration, so the reconciliation meets a database with
+ * no registry tables in it — and it must neither break the command it is
+ * attached to nor remember that nothing was done as if something had been.
  */
 final class RegistrySyncListenerTest extends InstallationTestCase
 {
+    /**
+     * The host with routes on it: what a request does is only observable through
+     * a router that has something to match, and a listener on `kernel.request`
+     * never runs for a request that matches nothing.
+     */
+    protected static function getKernelClass(): string
+    {
+        return RoutedHostKernel::class;
+    }
+
     private function listener(): RegistrySyncListener
     {
         $listener = $this->service('registry.sync_listener');
@@ -55,15 +74,15 @@ final class RegistrySyncListenerTest extends InstallationTestCase
     }
 
     /**
-     * It is wired to both halves of a deploy as far as the framework is
-     * concerned, which is what makes `cache:clear` the whole of the operator's
-     * instructions.
+     * THE DEPLOY PATH, AND NOTHING ELSE. `console.terminate` is the one event it
+     * is on, which is what makes `doctrine:migrations:migrate` followed by
+     * `cache:warmup` the whole of the operator's instructions.
      *
-     * `console.terminate` and not `console.command`: the command a deploy runs is
-     * `cache:warmup`, and reconciling before it executes would load ORM metadata
-     * into the very pass that must not find any.
+     * `console.terminate` and not `console.command`: the command a deploy ends
+     * with is `cache:warmup`, and reconciling before it executes would load ORM
+     * metadata into the very pass that must not find any.
      */
-    public function testTheListenerIsWiredToBothHalvesOfADeploy(): void
+    public function testTheEndOfAConsoleCommandIsTheOnlyThingItIsWiredTo(): void
     {
         $this->install([]);
 
@@ -76,16 +95,44 @@ final class RegistrySyncListenerTest extends InstallationTestCase
             [$listener, 'onConsoleTerminate'],
             $dispatcher->getListeners('console.terminate'),
         );
-        self::assertContains(
-            [$listener, 'onKernelRequest'],
-            $dispatcher->getListeners('kernel.request'),
-        );
 
-        // Ahead of the parked-module gate, which reads the catalogue at 8.
-        self::assertSame(
-            16,
-            $dispatcher->getListenerPriority('kernel.request', [$listener, 'onKernelRequest']),
-        );
+        foreach ($dispatcher->getListeners('kernel.request') as $registered) {
+            $subscriber = \is_array($registered) ? $registered[0] : $registered;
+            self::assertNotSame($listener, $subscriber, 'a request reconciles nothing');
+        }
+    }
+
+    /**
+     * A WEB REQUEST NEITHER RECONCILES NOR OPENS THE CONNECTION, in the state
+     * where opening it is the visible failure: the registry tables are not there
+     * yet, and the page asked for is one the registry has no part in — the shape
+     * every installation's liveness route has, which a proxy probes and which
+     * reads no database.
+     *
+     * A connection opened here is a healthcheck that depends on a database it
+     * never reads, and a reconciliation attempted here is one attempted on every
+     * request until the first migration runs.
+     */
+    public function testAWebRequestNeitherReconcilesNorOpensTheConnection(): void
+    {
+        $this->install(['sightings']);
+
+        $metadata = $this->em()->getMetadataFactory()->getAllMetadata();
+        new SchemaTool($this->em())->dropSchema($metadata);
+
+        @unlink($this->listener()->stampFile);
+
+        $connection = $this->em()->getConnection();
+        $connection->close();
+
+        $kernel = self::$kernel;
+        \assert(null !== $kernel);
+        $response = $kernel->handle(Request::create('/areas/'.Uuid::v7()->toRfc4122()));
+
+        self::assertSame(200, $response->getStatusCode(), 'the page a request came for was answered');
+
+        self::assertFalse($connection->isConnected(), 'the request opened the registry a connection');
+        self::assertFileDoesNotExist($this->listener()->stampFile);
     }
 
     /**
@@ -126,10 +173,11 @@ final class RegistrySyncListenerTest extends InstallationTestCase
     }
 
     /**
-     * ONCE PER BUILD, AND THE STAMP IS WHAT SAYS SO. Without it this would be a
-     * reconciliation on every request forever, to answer a question a deploy
-     * asks once. The proof is a row removed by hand that a second call does not
-     * put back.
+     * ONCE PER BUILD, AND THE STAMP IS WHAT SAYS SO. A deploy is two commands —
+     * migrate, then warm up — and the question they answer between them is asked
+     * once: the first of them reconciles and the second finds the work done, as
+     * does every command an operator runs afterwards in the same build. The proof
+     * is a row removed by hand that a second call does not put back.
      */
     public function testAReconciledBuildIsNotReconciledAgain(): void
     {
@@ -150,11 +198,12 @@ final class RegistrySyncListenerTest extends InstallationTestCase
     }
 
     /**
-     * THE FRESH-INSTALL GUARD. No tables yet — `cache:clear` still has to work,
-     * and the reconciliation says so rather than exploding.
+     * THE FRESH-INSTALL GUARD. No tables yet — a console command run before the
+     * first migration still has to work, and the reconciliation says so rather
+     * than exploding.
      *
      * AND IT MUST NOT BE REMEMBERED AS DONE: the operator's next step is the
-     * first migration, and the request after it is the one that fills the
+     * first migration, and the command that ends it is the one that fills the
      * catalogue. A stamp left behind here would leave an installation with an
      * empty catalogue until its second deploy.
      */
@@ -172,8 +221,8 @@ final class RegistrySyncListenerTest extends InstallationTestCase
         self::assertFileDoesNotExist($this->listener()->stampFile);
         self::assertTrue($this->sync()->skipped, 'no registry tables, nothing to reconcile');
 
-        // …and the migration's turn comes: the tables appear, and the next
-        // request reconciles.
+        // …and the migration's turn comes: the tables appear, and the command
+        // that applied them reconciles as it ends.
         $tool->createSchema($metadata);
         $this->listener()->reconcileOnce();
 

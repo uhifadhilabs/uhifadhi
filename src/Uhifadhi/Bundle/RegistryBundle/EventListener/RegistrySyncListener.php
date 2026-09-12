@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\RegistryBundle\EventListener;
 
 use Psr\Container\ContainerInterface;
-use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Contracts\Service\ServiceSubscriberInterface;
 use Uhifadhi\Bundle\RegistryBundle\Service\RegistrySyncService;
 
@@ -22,8 +21,16 @@ use Uhifadhi\Bundle\RegistryBundle\Service\RegistrySyncService;
  * THE ONCE-PER-DEPLOY HOOK. There is no command to reconcile the registry with —
  * devkit owns every command the platform has bar the team bundle's first
  * administrator — so reconciling it with the installed module providers hangs
- * off the moments a deploy is made of: a console command has finished, or a
- * request has arrived. Whichever comes first does it, once per build.
+ * off the moment a deploy is made of: a console command has finished. A deploy
+ * runs `doctrine:migrations:migrate` and then `cache:warmup`, so the first of
+ * them reconciles the build and the second finds the work done.
+ *
+ * A REQUEST DOES NOTHING HERE, AND THAT IS THE POINT. The registry's connection
+ * is the deploy's to open: an installation's liveness route reads no database, a
+ * proxy probes it before anything is migrated, and a listener on `kernel.request`
+ * would answer that probe out of a connection to tables that do not exist yet.
+ * The catalogue is filled by the command that migrated them, in the same deploy,
+ * before a request arrives at all.
  *
  * WHY NOT A CACHE WARMER, WHICH IS WHAT THIS LOOKS LIKE. Because a warmer that
  * reads the database breaks the cache commands themselves on a pristine prod
@@ -52,15 +59,17 @@ use Uhifadhi\Bundle\RegistryBundle\Service\RegistrySyncService;
  *   @see https://symfony.com/doc/current/reference/dic_tags.html#kernel-cache-warmer
  *
  * `console.terminate` and not `console.command`, because the command a deploy
- * runs IS `cache:warmup`: reconciling before it executes would poison exactly
- * the pass this listener exists to protect, while reconciling after it has
- * warmed the metadata cache is free of that. So `bin/console cache:clear` on a
- * deploy remains the whole of the operator's instructions, and the registry is
- * in step by the time the command returns.
+ * ends with IS `cache:warmup`: reconciling before it executes would poison
+ * exactly the pass this listener exists to protect, while reconciling after it
+ * has warmed the metadata cache is free of that. So migrating and warming up
+ * remains the whole of the operator's instructions, and the registry is in step
+ * by the time the last command returns.
  *
- * The stamp file is what makes this once-per-deploy rather than once-per-
- * request: it lives in the cache directory, which a deploy replaces, and it is
- * claimed atomically so that two processes arriving together reconcile once.
+ * The stamp file is what makes this once-per-deploy rather than once-per-command:
+ * it lives in the cache directory, which a deploy replaces, so the two commands
+ * of one deploy reconcile once between them and every command an operator runs
+ * afterwards in that build reconciles not at all. It is claimed atomically, so
+ * two processes running together reconcile once.
  */
 final class RegistrySyncListener implements ServiceSubscriberInterface
 {
@@ -71,20 +80,6 @@ final class RegistrySyncListener implements ServiceSubscriberInterface
         private readonly ContainerInterface $container,
         public readonly string $stampFile,
     ) {
-    }
-
-    /**
-     * Ahead of everything that reads the catalogue — the parked-module gate runs
-     * at priority 8 — so a first request for a module page is answered from a
-     * reconciled registry rather than from an empty one.
-     */
-    public function onKernelRequest(RequestEvent $event): void
-    {
-        if (!$event->isMainRequest()) {
-            return;
-        }
-
-        $this->reconcileOnce();
     }
 
     /**
@@ -102,12 +97,12 @@ final class RegistrySyncListener implements ServiceSubscriberInterface
      * Reconcile unless this build already has been.
      *
      * WHAT IT DECLINES TO DO RATHER THAN FATAL, and why the stamp is removed
-     * again in two cases: an installation runs `cache:clear` BEFORE its first
-     * migration, so this routinely meets a database with no registry tables in
-     * it — or, in a build container, no database at all. Neither may break the
-     * command it is attached to, and neither may be remembered as done: a
-     * skipped reconciliation leaves no stamp, so the request that follows the
-     * first migration is the one that fills the catalogue.
+     * again in two cases: a console command can be run BEFORE the first
+     * migration, so this meets a database with no registry tables in it — or, in
+     * a build container, no database at all. Neither may break the command it is
+     * attached to, and neither may be remembered as done: a skipped
+     * reconciliation leaves no stamp, so the command that applies the first
+     * migration is the one that fills the catalogue.
      */
     public function reconcileOnce(): void
     {
@@ -121,7 +116,7 @@ final class RegistrySyncListener implements ServiceSubscriberInterface
         }
 
         // 'x' fails if the file is there: the process that creates it is the one
-        // that reconciles, and the others go on serving their request.
+        // that reconciles, and the others go on with the command they are in.
         $claim = @fopen($this->stampFile, 'x');
         if (false === $claim) {
             return;
@@ -142,9 +137,9 @@ final class RegistrySyncListener implements ServiceSubscriberInterface
 
     public static function getSubscribedServices(): array
     {
-        // Fetched through the locator rather than injected, so that neither a
-        // console command nor a request builds an entity manager for a
-        // reconciliation this build has already had.
+        // Fetched through the locator rather than injected, so that a console
+        // command builds no entity manager for a reconciliation this build has
+        // already had.
         return [
             RegistrySyncService::class,
         ];

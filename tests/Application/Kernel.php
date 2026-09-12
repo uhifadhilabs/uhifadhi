@@ -16,6 +16,7 @@ namespace Uhifadhi\Core\Tests\Application;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 use Symfony\Component\HttpKernel\Kernel as BaseKernel;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
@@ -212,6 +213,7 @@ final class Kernel extends BaseKernel
                 'ROLE_SUPER_ADMIN' => ['ROLE_ADMIN', 'ROLE_ALLOWED_TO_SWITCH'],
             ],
             'access_control' => [
+                ['path' => '^/up$', 'roles' => 'PUBLIC_ACCESS'],
                 ['path' => '^/login', 'roles' => 'PUBLIC_ACCESS'],
                 ['path' => '^/reset-password', 'roles' => 'PUBLIC_ACCESS'],
                 ['path' => '^/invite/', 'roles' => 'PUBLIC_ACCESS'],
@@ -220,6 +222,12 @@ final class Kernel extends BaseKernel
                 ['path' => '^/', 'roles' => 'ROLE_USER'],
             ],
         ]);
+    }
+
+    /** The liveness answer: a status and nothing else, out of the container alone. */
+    public function liveness(): Response
+    {
+        return new Response('', Response::HTTP_NO_CONTENT);
     }
 
     protected function configureRoutes(RoutingConfigurator $routes): void
@@ -234,6 +242,16 @@ final class Kernel extends BaseKernel
         // application asks for. Every module and the area reach their one
         // configuration entry through it.
         $routes->import(ShellBundle::CONFIGURE_ROUTES);
+
+        // THE LIVENESS ROUTE, which an installation puts behind the proxy's
+        // healthcheck and this application owns for the same reason: it answers
+        // out of the container alone, with no database, no session and no
+        // template, so a probe for it is a probe of the process and of nothing
+        // else. A kernel's own method is the documented controller for a route an
+        // application declares in code.
+        //
+        // @see vendor/symfony/framework-bundle/Kernel/MicroKernelTrait.php — `loadRoutes()` rewrites a [$this, 'method'] controller to the kernel service
+        $routes->add('liveness', '/up')->controller([$this, 'liveness'])->methods(['GET']);
 
         // Every screen TeamBundle draws, mounted where an installation's own
         // config/routes/team.yaml mounts it.

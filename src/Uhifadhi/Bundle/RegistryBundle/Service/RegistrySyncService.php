@@ -120,11 +120,11 @@ final readonly class RegistrySyncService
     }
 
     /**
-     * THE FRESH-INSTALL GUARD. The reconciliation is hooked to `cache:clear`,
-     * which an operator runs BEFORE the first `doctrine:migrations:migrate` — so
-     * the registry's own tables are routinely absent, and asking the schema
-     * manager is cheaper and more honest than catching the driver's error
-     * afterwards.
+     * THE FRESH-INSTALL GUARD. The reconciliation is hooked to the end of a
+     * console command, and a command can be run BEFORE the first
+     * `doctrine:migrations:migrate` — so the registry's own tables may be absent,
+     * and asking the schema manager is cheaper and more honest than catching the
+     * driver's error afterwards.
      */
     private function tablesExist(): bool
     {
