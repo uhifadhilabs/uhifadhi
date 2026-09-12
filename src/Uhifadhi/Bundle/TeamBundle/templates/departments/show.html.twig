@@ -108,27 +108,32 @@
             <p class="pgsub" style="margin:0 0 16px">The record, composed &mdash; <b>the modules this department
                 attaches lead</b>. A lens, not a fence: every card is the same shared data, listed first here.</p>
 
-            <div class="c">
-                <span class="tab">Modules<span class="src">&middot; the lens</span></span>
-                <div class="dp-empty">
-                    <b>No modules attached yet</b>
-                    <span>This department leads with nothing until a module is attached. Attaching a module makes it
-                        lead for this department&rsquo;s people &mdash; it grants nothing and hides nothing. The
-                        attachment surface is the rich-lens follow-up.</span>
+            <div class="grid">
+                <div class="c">
+                    <span class="tab">Modules<span class="src">&middot; the lens</span></span>
+                    <div class="dp-empty">
+                        <b>No modules attached yet</b>
+                        <span>This department leads with nothing until a module is attached. Attaching a module makes
+                            it lead for this department&rsquo;s people &mdash; it grants nothing and hides nothing. The
+                            attachment surface is the rich-lens follow-up.</span>
+                    </div>
                 </div>
             </div>
         </section>
 
         {# ── PERFORMANCE ── KPIs on a single row when the follow-up wires them. ── #}
         <section data-tab-panel="performance" data-uhifadhi--team-bundle--department-target="tabpanel">
-            <div class="c">
-                <span class="tab">This month<span class="src">&middot; the attached modules&rsquo; KPIs</span></span>
-                <p class="use">A department owns no numbers of its own &mdash; every figure is a module KPI rolled up
-                    through this department&rsquo;s attachment. With no module attached there is nothing to roll up yet.</p>
-                <div class="grid kstrip" style="margin-top:12px">
-                    <div class="dp-empty" style="grid-column:1/-1">
-                        <b>No module KPIs this period</b>
-                        <span>They arrive with the first attached module &mdash; the rich-lens follow-up.</span>
+            <div class="grid">
+                <div class="c">
+                    <span class="tab">This month<span class="src">&middot; the attached modules&rsquo; KPIs</span></span>
+                    <p class="use">A department owns no numbers of its own &mdash; every figure is a module KPI rolled
+                        up through this department&rsquo;s attachment. With no module attached there is nothing to roll
+                        up yet.</p>
+                    <div class="grid kstrip" style="margin-top:12px">
+                        <div class="dp-empty" style="grid-column:1/-1">
+                            <b>No module KPIs this period</b>
+                            <span>They arrive with the first attached module &mdash; the rich-lens follow-up.</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -141,33 +146,35 @@
                 <div>People are in this department only through the <b>position</b> they hold &mdash; there is no
                     &ldquo;add person to department&rdquo;, by design. Manage positions on the matrix.</div>
             </div>
-            <div class="c">
-                <span class="tab">Positions &amp; members<span class="src">&middot; via position</span></span>
-                {% if positions|length %}
-                    <div style="margin-top:6px">
-                        {% for position in positions %}
-                            <div class="posrow">
-                                <span class="pn"><a href="{{ path('team_positions', {position: position.uuidString}) }}">{{ position.name }}</a></span>
-                                <div class="pp">
-                                    {% for value in position.permissionValues %}
-                                        <span class="perm">{{ value }}</span>
-                                    {% else %}
-                                        <span class="pl-mem">no permissions granted</span>
-                                    {% endfor %}
+            <div class="grid">
+                <div class="c">
+                    <span class="tab">Positions &amp; members<span class="src">&middot; via position</span></span>
+                    {% if positions|length %}
+                        <div style="margin-top:6px">
+                            {% for position in positions %}
+                                <div class="posrow">
+                                    <span class="pn"><a href="{{ path('team_positions', {position: position.uuidString}) }}">{{ position.name }}</a></span>
+                                    <div class="pp">
+                                        {% for value in position.permissionValues %}
+                                            <span class="perm">{{ value }}</span>
+                                        {% else %}
+                                            <span class="pl-mem">no permissions granted</span>
+                                        {% endfor %}
+                                    </div>
+                                    <div class="hb">
+                                        {% set held = holders[position.uuidString]|default(0) %}
+                                        {{ held }} {{ held == 1 ? 'holder' : 'holders' }}
+                                    </div>
                                 </div>
-                                <div class="hb">
-                                    {% set held = holders[position.uuidString]|default(0) %}
-                                    {{ held }} {{ held == 1 ? 'holder' : 'holders' }}
-                                </div>
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <div class="dp-empty"><b>No positions in this department yet</b>
-                        <span>A position is born in a department on the matrix. Until one is filed here, this
-                            department leads nobody.</span></div>
-                {% endif %}
-                <a class="softbtn" href="{{ path('team_positions') }}" style="margin-top:12px">{{ pm.icon_people() }} Manage positions</a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="dp-empty"><b>No positions in this department yet</b>
+                            <span>A position is born in a department on the matrix. Until one is filed here, this
+                                department leads nobody.</span></div>
+                    {% endif %}
+                    <a class="softbtn" href="{{ path('team_positions') }}" style="margin-top:12px">{{ pm.icon_people() }} Manage positions</a>
+                </div>
             </div>
         </section>
 

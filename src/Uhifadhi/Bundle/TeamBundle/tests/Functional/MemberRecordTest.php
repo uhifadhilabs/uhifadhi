@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Tests\Functional;
 
+use Symfony\Component\DomCrawler\Crawler;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
@@ -50,6 +51,39 @@ final class MemberRecordTest extends WebTestCaseWithSchema
 
         self::assertResponseIsSuccessful();
         self::assertSame('Grace Ndosi', $crawler->filter('h1.pg')->text());
+    }
+
+    /**
+     * EVERY CARD SITS IN A ROW OF THE PAGE GRID — the same rule the department
+     * lens is held to. `.c` is a plate that declares no margin, `.grid` is the
+     * composition that declares the 20px between two of them, and a card written
+     * straight into the page body has to invent a spacing of its own.
+     */
+    public function testEveryCardOnTheRecordSitsInARowOfThePageGrid(): void
+    {
+        $this->withSuccessor();
+        $grace = $this->person('Grace', 'Ndosi');
+        $this->em->flush();
+
+        $crawler = $this->client->request('GET', '/team/'.$grace->getUuidString());
+
+        $cards = $crawler->filter('.pgbody .c');
+        self::assertGreaterThanOrEqual(5, $cards->count(), 'the record draws a card per section');
+
+        foreach ($cards as $card) {
+            $node = new Crawler($card);
+            $label = $node->filter('.tab')->text('?');
+
+            self::assertNotNull(
+                $node->closest('.grid'),
+                \sprintf('the card "%s" is in no .grid row, so nothing declares the gap under it', $label),
+            );
+            self::assertStringContainsString(
+                'grid',
+                (string) ($card->parentNode instanceof \DOMElement ? $card->parentNode->getAttribute('class') : ''),
+                \sprintf('the card "%s" is a bare child of the page body rather than a cell of a grid row', $label),
+            );
+        }
     }
 
     /** THERE IS NO DELETE, and the page says so where a delete would be. */

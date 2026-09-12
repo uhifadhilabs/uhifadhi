@@ -158,6 +158,39 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
         self::assertGreaterThan(0, $crawler->filter('[data-tab-panel="performance"] .grid.kstrip')->count());
     }
 
+    /**
+     * EVERY CARD SITS IN A ROW OF THE PAGE GRID, because the card declares no
+     * margin and never has: `.c` is a plate, `.grid` is the composition, and the
+     * 20px between two cards is the grid's gap. A `.c` written straight into the
+     * page body therefore touches whatever follows it — which is what the lens
+     * did, with four card edges meeting at 0px and the position note pinned to
+     * the card above it.
+     */
+    public function testEveryCardOnTheLensSitsInARowOfThePageGrid(): void
+    {
+        $this->screen();
+
+        $crawler = $this->client->request('GET', '/departments/'.$this->uuidOf('Ecology'));
+
+        $cards = $crawler->filter('.pgbody .c');
+        self::assertGreaterThanOrEqual(5, $cards->count(), 'the lens draws a card on every one of its tabs');
+
+        foreach ($cards as $card) {
+            $node = new Crawler($card);
+            $label = $node->filter('.tab')->text('?');
+
+            self::assertNotNull(
+                $node->closest('.grid'),
+                \sprintf('the card "%s" is in no .grid row, so nothing declares the gap under it', $label),
+            );
+            self::assertStringContainsString(
+                'grid',
+                (string) ($card->parentNode instanceof \DOMElement ? $card->parentNode->getAttribute('class') : ''),
+                \sprintf('the card "%s" is a bare child of the page body rather than a cell of a grid row', $label),
+            );
+        }
+    }
+
     // ---- create, per-area and per-org -------------------------------------
 
     /**
