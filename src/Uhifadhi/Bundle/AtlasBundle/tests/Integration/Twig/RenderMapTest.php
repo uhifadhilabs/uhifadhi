@@ -124,6 +124,30 @@ final class RenderMapTest extends TestCase
         );
     }
 
+    /**
+     * THE LEGEND IS DRAWN UNDER THE MAP, as a child of the plate that FOLLOWS
+     * the map body — not inside the body the plate's height sizes, and not
+     * absolutely positioned over the imagery, where on a short plate it covers
+     * the ground it describes. The design draws it this way too: a `.maplegend`
+     * after the `.viewer` it explains.
+     */
+    public function testTheLegendIsRenderedBelowTheMapBodyInsideThePlate(): void
+    {
+        $plate = (new Crawler(self::render(static function (AtlasMap $map): void {
+            $map->addLayer(new GeoJsonLayer(id: 'zones', label: 'Zones', features: []));
+        })))->filter('.map-plate');
+
+        self::assertCount(1, $plate->children('.map-body'), 'The map body is the plate\'s own child.');
+        self::assertCount(1, $plate->children('.map-legend'), 'And so is the legend — a sibling of the body, not a child of it.');
+        self::assertCount(1, $plate->filter('.map-body > .viewer'), 'The imagery frame is inside the body the height sizes.');
+        self::assertCount(0, $plate->filter('.map-body .map-legend'));
+        self::assertSame(
+            ['map-body', 'map-legend'],
+            $plate->children()->each(static fn (Crawler $child): string => (string) $child->attr('class')),
+            'The legend comes after the map it explains, and nothing else is in the plate.',
+        );
+    }
+
     public function testAttributesReachTheMapElement(): void
     {
         $html = self::render(attributes: ['aria-label' => 'The area and its zones', 'role' => 'img']);

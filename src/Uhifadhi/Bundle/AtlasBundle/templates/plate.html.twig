@@ -1,10 +1,16 @@
 {# THE PLATE — the one shape every map in the product is served in.
 
-   A flex column: the filter row, then the imagery frame, and the legend
-   floating over the frame's bottom-right corner. The column is what makes
-   fullscreen work — the plate root is the element that expands, and the frame
-   grows into the space the filter row does not take — so a module cannot lay a
-   map out into a card that will not grow.
+   A flex column of two parts: the MAP BODY — the filter row and the imagery
+   frame under it, which is what a plate's stated height sizes — and the LEGEND
+   below them. The column is what makes fullscreen work — the plate root is the
+   element that expands, and the frame grows into the space the filter row does
+   not take — so a module cannot lay a map out into a card that will not grow.
+
+   THE LEGEND IS UNDER THE MAP, NOT OVER IT (the design's `.maplegend` after a
+   `.viewer`): a legend floating in the imagery covers the ground it describes,
+   and on a short plate it covers most of it. It stays inside the plate, so it
+   comes along into fullscreen — where it does float, because there the screen is
+   all map. That is the sheet's doing; the markup is the same in both.
 
    The map element is UX Map's own, controller and values and all; the plate is
    what surrounds it. Both controllers are live at once: the bridge's mounts the
@@ -18,23 +24,28 @@
    fullscreen finds this same plate in a fetched copy of the page. See
    Twig\MapPlateRuntime::PLATE_HOOK. #}
 <div class="map-plate"{% if plateStyle %} style="{{ plateStyle }}"{% endif %} data-controller="{{ controller }}" {{ hook }}>
-    {% if filters %}
-        {# ONE ROW ABOVE THE MAP, inside the plate, so the chips come along into
-           fullscreen instead of being left behind on the page.
+    {# THE MAP BODY — everything the stated height is the height OF. The legend
+       is outside it, so a card that fixes a plate at 400px gets 400px of map and
+       the legend under it, never 400px with the legend cut out of the map. #}
+    <div class="map-body">
+        {% if filters %}
+            {# ONE ROW ABOVE THE MAP, inside the plate, so the chips come along into
+               fullscreen instead of being left behind on the page.
 
-           THE ROW HANDS WHAT IT IS ASKED TO THE PLATE — a submission and a
-           click, because a chip is as often a link as it is a button and both
-           are the same act. The markup is the module's, so the plate cannot put
-           an attribute on the form or on the chips — but both events reach this
-           row on their way up, and a Stimulus action hears events that bubble to
-           the element it is declared on
-           (https://stimulus.hotwired.dev/reference/actions). In fullscreen the
-           plate answers with a swap instead of a navigation; everywhere else it
-           declines and the row behaves as the markup says. #}
-        <div class="map-filters" data-action="submit->{{ controller }}#filter click->{{ controller }}#filterLink">{{ filters|raw }}</div>
-    {% endif %}
+               THE ROW HANDS WHAT IT IS ASKED TO THE PLATE — a submission and a
+               click, because a chip is as often a link as it is a button and both
+               are the same act. The markup is the module's, so the plate cannot put
+               an attribute on the form or on the chips — but both events reach this
+               row on their way up, and a Stimulus action hears events that bubble to
+               the element it is declared on
+               (https://stimulus.hotwired.dev/reference/actions). In fullscreen the
+               plate answers with a swap instead of a navigation; everywhere else it
+               declines and the row behaves as the markup says. #}
+            <div class="map-filters" data-action="submit->{{ controller }}#filter click->{{ controller }}#filterLink">{{ filters|raw }}</div>
+        {% endif %}
 
-    <div class="viewer" data-{{ controller }}-target="frame">{{ element|raw }}</div>
+        <div class="viewer" data-{{ controller }}-target="frame">{{ element|raw }}</div>
+    </div>{# the map body: what --map-plate-height sizes #}
 
     {% if groups is not empty %}
         {# A LEGEND ROW IS A SWITCH when there is a layer behind it: clicking it

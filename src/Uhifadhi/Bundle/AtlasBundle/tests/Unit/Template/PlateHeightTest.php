@@ -26,6 +26,11 @@ use Uhifadhi\Bundle\AtlasBundle\Twig\MapPlateRuntime;
  * property with the plate's own default behind it, and the only thing allowed
  * to grow it is fullscreen.
  *
+ * WHAT THAT HEIGHT SIZES IS THE MAP — the filter row and the imagery, the box
+ * `.map-body` holds. The legend is drawn under that box and adds its own height
+ * to the plate, so the number a screen states is the number of pixels of map it
+ * gets.
+ *
  * A TEXT CHECK OVER THE SHEET, and that is the limit of what it promises: it
  * catches the rule being written some other way, not a plate that renders
  * wrongly for some other reason. Rendered fidelity is a sweep, not a unit test.
@@ -35,10 +40,42 @@ final class PlateHeightTest extends TestCase
     /** The height a plate takes when nothing overrides it — the imagery frame's own. */
     private const string DEFAULT_HEIGHT = 'min(58vh, 560px)';
 
+    /**
+     * THE DECLARED HEIGHT IS THE MAP'S — the filter row and the imagery under
+     * it, which is the box `.map-body` is. The legend adds under that box, so a
+     * plate is as tall as its declared height plus whatever its legend needs;
+     * a screen that says 400px gets 400px of map, never 400px minus a legend.
+     */
     public function testThePlateTakesItsHeightFromOneCustomProperty(): void
     {
         self::assertMatchesRegularExpression(
-            '/\.map-plate \{[^}]*height: var\(--map-plate-height, '.preg_quote(self::DEFAULT_HEIGHT, '/').'\)/',
+            '/\.map-plate > \.map-body \{[^}]*height: var\(--map-plate-height, '.preg_quote(self::DEFAULT_HEIGHT, '/').'\)/',
+            self::stylesheet(),
+        );
+    }
+
+    /**
+     * AND THE PLATE ITSELF IS AS TALL AS WHAT IT HOLDS — `max-content`, which is
+     * the map body's declared height plus the legend's own. CSS Box Sizing Level
+     * 3, §5.1: "max-content — Use the max-content size in the relevant axis."
+     * (https://www.w3.org/TR/css-sizing-3/#valdef-width-max-content). It is a
+     * definite-enough height for the stretch refusal below and a height no
+     * legend can be squeezed by.
+     */
+    public function testThePlateIsAsTallAsItsMapBodyAndItsLegendTogether(): void
+    {
+        self::assertMatchesRegularExpression(
+            '/\.map-plate \{[^}]*height: max-content/',
+            self::stylesheet(),
+            'A plate that is not the height of its content is a plate whose legend is clipped or squeezed.',
+        );
+    }
+
+    /** The map body fills a plate that is taller than it — fullscreen, or a card that grows it. */
+    public function testTheMapBodyGrowsWithThePlate(): void
+    {
+        self::assertMatchesRegularExpression(
+            '/\.map-plate > \.map-body \{[^}]*flex: 1 1 auto/',
             self::stylesheet(),
         );
     }

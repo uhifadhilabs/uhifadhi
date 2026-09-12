@@ -160,8 +160,8 @@ export function mountMapChrome(L, map, frame, { bases = {}, scrim = null, scrimO
     frame.append(column, menu);
 
     // A live scale bar: a map that zooms cannot wear a printed distance. It sits
-    // bottom-LEFT, beside the attribution, because the plate's legend floats over
-    // the opposite corner.
+    // bottom-LEFT, beside the attribution, because in fullscreen the plate's
+    // legend floats over the opposite corner.
     const scaleControl = L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(map);
     map.attributionControl?.setPrefix(false);
 

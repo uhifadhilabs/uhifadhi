@@ -1283,7 +1283,9 @@ in a controller of your own is the old way, and it is exactly the drift this rep
 
 **A plate is as tall as it says it is, never as tall as the row it sits in.** It carries a real
 height off one custom property (`--map-plate-height`, default `min(58vh, 560px)`) and refuses to
-stretch. Say your screen's own height by setting the property on the card:
+stretch. What that property sizes is the MAP — your filter row and the imagery under it; the legend
+is drawn below it and adds its own height, so 400px is 400px of map and never 400px minus a legend.
+Say your screen's own height by setting the property on the card:
 
 ```css
 .your-module .case-file-where { --map-plate-height: min(46vh, 440px); }
@@ -1329,9 +1331,10 @@ A filter row is markup you own, handed to `render_map()` as its third argument. 
 ```
 
 The legend is not markup you own. It is rendered from the layers and legend rows the map states,
-floats bottom-right over the imagery, and each row that names a layer is a real switch. Grouping is
-data: rows that share a `group` are drawn together under that heading, which is what keeps a plate
-with four contributors readable.
+sits BELOW the map — floating in the imagery's bottom-right corner only in fullscreen, where there
+is imagery to spare — and each row that names a layer is a real switch. Grouping is data: rows that
+share a `group` are drawn together under that heading, which is what keeps a plate with four
+contributors readable.
 
 ### The events, and when you need them
 

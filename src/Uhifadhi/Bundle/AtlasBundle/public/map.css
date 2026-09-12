@@ -111,11 +111,11 @@
 .leaflet-tooltip.zone-label::before { display: none; }
 
 /* ---- the plate render_map() emits ------------------------------------- */
-/* THE PLATE IS A COLUMN: the filter row, then the imagery frame taking whatever
-   height is left. The column is what makes fullscreen work, and it lives here
-   rather than in a consumer's sheet because a plate that cannot grow is a plate
-   whose fullscreen button does nothing — a fault no module should be able to
-   introduce by styling its own card. */
+/* THE PLATE IS A COLUMN OF TWO THINGS: the MAP BODY — the filter row and the
+   imagery frame under it — and the LEGEND beneath them. The column is what makes
+   fullscreen work, and it lives here rather than in a consumer's sheet because a
+   plate that cannot grow is a plate whose fullscreen button does nothing — a
+   fault no module should be able to introduce by styling its own card. */
 /* A PLATE IS THE WIDTH OF WHATEVER IT SITS IN AND THE HEIGHT OF ITS OWN
    PROPERTY — in a row and in a column alike. A plate lives in cards, grids and
    stretch rows; sized with a min-height and left to flex it grows to whatever
@@ -131,47 +131,65 @@
    here — and none may be: `align-self` names the CROSS axis, so inside a card
    that stacks a plate under a heading (a column) it would shrink the plate to
    the imagery's own width instead. A screen states its own height by setting the
-   property — on the card, or handed to render_map() as `--map-plate-height`. */
+   property — on the card, or handed to render_map() as `--map-plate-height`.
+
+   AND WHAT THE PROPERTY SIZES IS THE MAP, NOT THE MAP PLUS ITS LEGEND: it is
+   the MAP BODY's height — the filter row and the imagery under it — so a screen
+   that asks for 400px gets 400px of map and the legend adds its own rows below.
+   The plate is therefore as tall as what it holds, `max-content`, which is a
+   height and not `auto`: CSS Box Sizing Level 3, §5.1 — "max-content — Use the
+   max-content size in the relevant axis"
+   (https://www.w3.org/TR/css-sizing-3/#valdef-width-max-content) — so the
+   stretch refusal above still holds, and a legend can never be squeezed by the
+   height a card stated for the map. A card that gives a plate a fixed box gets
+   a box of that height plus the legend's; the legend is never clipped. */
 .map-plate {
     position: relative; display: flex; flex-direction: column;
-    height: var(--map-plate-height, min(58vh, 560px));
+    height: max-content;
     flex: none;
 }
-.map-plate > .viewer { flex: 1 1 auto; min-height: 0; height: auto; }
+/* The part the declared height sizes. It grows when the plate is bigger than it
+   — fullscreen, or a card that stretches the plate — so the imagery follows. */
+.map-plate > .map-body {
+    display: flex; flex-direction: column;
+    height: var(--map-plate-height, min(58vh, 560px));
+    flex: 1 1 auto; min-height: 0;
+}
+.map-body > .viewer { flex: 1 1 auto; min-height: 0; height: auto; }
 
-/* One row above the map. It is inside the plate, so it expands with it. */
+/* One row above the map, inside the map body — so the stated height covers the
+   row and the imagery together, and the chips come along into fullscreen. */
 .map-filters { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; min-width: 0; }
 
-/* THE LEGEND FLOATS BOTTOM-RIGHT, over the imagery and inside the plate, so it
-   is in the same place on every map and comes along into fullscreen. Under the
-   chrome's z-index, never over it: the controls must stay clickable. */
-.map-legend {
-    position: absolute; z-index: 5; right: 10px; bottom: 10px;
-    display: flex; gap: 18px; flex-wrap: wrap; max-width: calc(100% - 60px);
-    padding: 8px 10px; border-radius: 8px;
-    background: color-mix(in srgb, var(--z-ink) 78%, transparent);
-    border: 1px solid color-mix(in srgb, var(--z-paper) 18%, transparent);
-}
+/* THE LEGEND SITS UNDER THE MAP — a wrapping row of groups on the page's own
+   ground, 22px apart, 12px under the plate, as the design workspace draws it
+   (`.maplegend` following a `.viewer`). It is under the map rather than over it
+   because a floating legend covers the ground it describes, and on a short plate
+   — an incident report's 176px rail, a thumbnail — it covers most of it.
+
+   It is INSIDE the plate all the same, because fullscreen expands the plate and
+   the legend has to come along; there, and only there, it floats (below). */
+.map-legend { display: flex; gap: 22px; flex-wrap: wrap; margin-top: 12px; }
 .map-legend .grp { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .map-legend .grp > b {
     font: 700 8.5px var(--font-mono); letter-spacing: .14em; text-transform: uppercase;
-    color: color-mix(in srgb, var(--z-paper) 62%, transparent); display: flex; align-items: center; gap: 6px;
+    color: rgb(var(--c-dim)); display: flex; align-items: center; gap: 6px;
 }
 .map-legend .grp > b i { width: 6px; height: 6px; border-radius: 2px; font-style: normal; }
 .map-legend .lay {
     display: flex; align-items: center; gap: 7px; text-align: left;
-    font: 400 9.5px var(--font-mono); color: var(--z-paper);
+    font: 400 9.5px var(--font-mono); color: rgb(var(--c-fog));
     background: none; border: 0; padding: 0; cursor: pointer;
 }
 .map-legend span.lay { cursor: default; }
+.map-legend button.lay:hover { color: rgb(var(--c-tx)); }
 .map-legend .lay .sw { width: 16px; height: 8px; border-radius: 2px; flex: none; }
 .map-legend .lay .sw.ln { height: 0; border-top: 2.2px solid currentColor; }
-.map-legend .lay.off { color: color-mix(in srgb, var(--z-paper) 55%, transparent); }
+.map-legend .lay.off { color: rgb(var(--c-dim)); }
 .map-legend .lay.off .sw { opacity: .35; }
 .map-legend .lay .tog {
-    font-size: 8px; letter-spacing: .1em;
-    color: color-mix(in srgb, var(--z-paper) 62%, transparent);
-    border: 1px solid color-mix(in srgb, var(--z-paper) 22%, transparent);
+    font-size: 8px; letter-spacing: .1em; color: rgb(var(--c-dim));
+    border: 1px solid var(--c-ln2);
     border-radius: 4px; padding: 1px 5px;
 }
 .map-legend .lay.off .tog { border-style: dashed; }
@@ -183,9 +201,35 @@
    fullscreen, because the frame's ordinary height is a clamp — without this it
    would keep that clamp on a 1440-tall screen and leave the rest black. */
 .map-plate:fullscreen { height: 100%; padding: 10px; background: var(--z-ink); }
-.map-plate:fullscreen > .viewer,
-:fullscreen .map-plate > .viewer { height: auto; flex: 1 1 auto; min-height: 0; }
+.map-plate:fullscreen > .map-body,
+:fullscreen .map-plate > .map-body { height: auto; flex: 1 1 auto; min-height: 0; }
 :fullscreen .map-plate { height: 100%; }
+
+/* AND THE LEGEND FLOATS, in the imagery's bottom-right corner: a full screen is
+   all map, so the legend has imagery to sit on and nothing on the page to sit
+   beside. Under the chrome's z-index, never over it: the controls must stay
+   clickable. Its ink is the map chrome's, not the page's — it is on imagery
+   now, and imagery does not flip with the theme. */
+.map-plate:fullscreen > .map-legend,
+:fullscreen .map-plate > .map-legend {
+    position: absolute; z-index: 5; right: 10px; bottom: 10px;
+    margin-top: 0; gap: 18px; max-width: calc(100% - 60px);
+    padding: 8px 10px; border-radius: 8px;
+    background: color-mix(in srgb, var(--z-ink) 78%, transparent);
+    border: 1px solid color-mix(in srgb, var(--z-paper) 18%, transparent);
+}
+/* The ink needs no second selector for the plate that is itself the fullscreen
+   element: that plate matches `:fullscreen`, so its own legend is a descendant of
+   a `:fullscreen` element either way. Only the positioning above, which selects
+   the legend as a CHILD, has to name both shapes. */
+:fullscreen .map-legend .grp > b { color: color-mix(in srgb, var(--z-paper) 62%, transparent); }
+:fullscreen .map-legend .lay { color: var(--z-paper); }
+:fullscreen .map-legend button.lay:hover { color: var(--z-paper); }
+:fullscreen .map-legend .lay.off { color: color-mix(in srgb, var(--z-paper) 55%, transparent); }
+:fullscreen .map-legend .lay .tog {
+    color: color-mix(in srgb, var(--z-paper) 62%, transparent);
+    border-color: color-mix(in srgb, var(--z-paper) 22%, transparent);
+}
 /* A filter row is a row in fullscreen too. A width a module clamped for a
    narrow card would wrap the chips into a stack across a whole screen. */
 .map-plate:fullscreen .map-filters,

@@ -32,5 +32,9 @@ Not released yet.
    its siblings back, wired by the plate by delegation — no module JavaScript
  * a plate is as tall as it says it is and never as tall as the row it sits in:
    one custom property, `--map-plate-height`, which a card sets or `render_map()`
-   is handed
+   is handed — and what it sizes is the MAP BODY (the filter row and the imagery),
+   with the legend adding its own height below it
+ * the legend is drawn BELOW the map, as the design's `.maplegend` row under a
+   `.viewer`, and floats over the imagery's bottom-right corner in fullscreen
+   only — a floating legend covered the ground it described on a short plate
  * removed the `.viewer .ol` caption rule, which no template writes

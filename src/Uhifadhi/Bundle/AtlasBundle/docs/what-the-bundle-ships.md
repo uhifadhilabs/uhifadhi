@@ -32,7 +32,7 @@ How a module uses them is [the atlas components](components.md).
 | `assets/basemaps.js` | `uhifadhi/basemaps` | street + satellite base layers, the provider contract |
 | `assets/boundary.js` | `uhifadhi/boundary` | the AOI outline, its casing and its outside-the-area scrim |
 | `assets/chrome.js` | `uhifadhi/map-chrome` | zoom, DIM, base-layer menu, fullscreen, scale, Ctrl/⌘-scroll |
-| `public/map.css` | `bundles/atlas/map.css` | the plate column, the imagery frame, the chrome, the legend, fullscreen |
+| `public/map.css` | `bundles/atlas/map.css` | the plate column, the imagery frame, the chrome, the legend below it, fullscreen |
 | `assets/package.json` | — | the `symfony.controllers` and `symfony.importmap` blocks Flex reads |
 
 How the import names and the controller reach a host is

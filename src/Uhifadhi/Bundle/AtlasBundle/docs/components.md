@@ -19,6 +19,7 @@ APIs are not written here because they are not written yet.
 - [How tall a plate is](#how-tall-a-plate-is)
 - [The boundary](#the-boundary)
 - [The legend](#the-legend)
+  - [Where it is drawn](#where-it-is-drawn)
 - [Base layers, fullscreen and fitting](#base-layers-fullscreen-and-fitting)
 - [What UX Map already models](#what-ux-map-already-models)
 - [render_map()](#render_map)
@@ -210,12 +211,19 @@ the map mounted still work.
 ## How tall a plate is
 
 **A plate is as tall as it says it is, never as tall as the row it sits in.** It has a real
-`height` off one custom property, and `align-self: start`, so a stretch row cannot grow it; the
-only thing that does is fullscreen.
+`height` — never `auto`, and never an `align-self`, which inside a card that stacks a plate under
+a heading would read across the other axis and shrink the plate off its width — so a stretch row
+cannot grow it; the only thing that does is fullscreen.
 
 ```css
 --map-plate-height   /* default: min(58vh, 560px) */
 ```
+
+**What the property sizes is the MAP: the filter row and the imagery under it (`.map-body`). The
+legend is drawn below that box and adds its own height to the plate.** So a screen that states
+400px gets 400px of map, and the plate it sits in is 400px plus the legend's rows — a card that
+gives a plate a fixed box gets a box of that size plus the legend, which is therefore never
+clipped. A plate with no legend is exactly its stated height.
 
 Set it wherever it inherits from — the card the plate is in:
 
@@ -273,6 +281,18 @@ $map->addLegendItem(new LegendItem(
 
 Rows sharing a `group` are drawn together under that heading, in the order their first row
 appeared — which is how a plate with four contributors stays readable.
+
+### Where it is drawn
+
+**Below the map, as a wrapping row of groups** — the design workspace's `.maplegend` under its
+`.viewer`: 22px between groups, 12px under the plate, on the page's own ground. A legend floating
+in the imagery covers the ground it describes, and on a short plate — an incident report's 176px
+rail, a thumbnail — it covers most of it.
+
+**In fullscreen it floats**, back in the imagery's bottom-right corner on a dark panel, under the
+control stack's z-index so the controls stay clickable: there the screen is all map, so the legend
+has imagery to spare and nothing on a page to sit beside. It is the same element and the same
+switches in both — only the stylesheet changes, and a module says nothing about either.
 
 ## Base layers, fullscreen and fitting
 
@@ -338,11 +358,10 @@ fullscreen:
 {{ render_map(map, {'role': 'img', 'aria-label': 'Sightings'}, filters) }}
 ```
 
-What it emits is the plate: a flex column carrying the filter row, the imagery frame with the UX
-Map element inside it, and the legend floating over the frame's bottom-right corner. The plate
-root is the fullscreen element and the frame grows to fill it, which is why a module never
-writes those rules — the atlas stylesheet owns them, and a card that clamps a height cannot
-break a plate inside it.
+What it emits is the plate: a flex column carrying the map body — the filter row and the imagery
+frame with the UX Map element inside it — and the legend below it. The plate root is the
+fullscreen element and the body grows to fill it, which is why a module never writes those rules
+— the atlas stylesheet owns them, and a card that clamps a height cannot break a plate inside it.
 
 ### A filter change keeps fullscreen
 
@@ -423,6 +442,6 @@ Leaflet, no chrome markup, no legend markup.
 - **Do not ship a map Stimulus controller.** If a plate cannot say what you need, the gap is in
   the atlas and belongs here.
 - **Do not link Leaflet.** There is one on the page and the UX Map bridge brings it.
-- **Do not style the plate.** `.map-plate`, `.viewer`, `.map-filters`, `.map-legend` and the
+- **Do not style the plate.** `.map-plate`, `.map-body`, `.viewer`, `.map-filters`, `.map-legend` and the
   chrome classes are the atlas's vocabulary; a module that restyles them makes its own map the
   odd one out, and a module that clamps a height around one breaks its fullscreen.

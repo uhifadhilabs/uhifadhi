@@ -99,7 +99,7 @@ const PLATE = 'data-atlas-plate';
  * to put it back.
  */
 const SWAPPED = [
-    { selector: '.map-filters', into: (plate) => plate, at: 'afterbegin' },
+    { selector: '.map-filters', into: (plate) => plate.querySelector('.map-body'), at: 'afterbegin' },
     { selector: '.map-canvas', into: (plate) => plate.querySelector('.viewer'), at: 'beforeend' },
     { selector: '.map-legend', into: (plate) => plate, at: 'beforeend' },
 ];
