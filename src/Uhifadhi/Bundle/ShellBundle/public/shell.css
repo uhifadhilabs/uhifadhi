@@ -865,12 +865,15 @@ table.tbl tr:hover .open-btn {
     margin-left: auto; font-variant-numeric: tabular-nums;
 }
 .srow > .acts { display: inline-flex; align-items: center; gap: 6px; flex: none; }
-.srow.gone > .nm { color: var(--fog); text-decoration: line-through; text-decoration-color: var(--ln2); }
+.srow.gone > .nm { color: var(--fog); }
 .srow .swatch { width: 9px; height: 9px; border-radius: 3px; flex: none; }
 .sact {
     border: 1px solid var(--ln2); background: none; color: var(--fog); border-radius: 7px;
     padding: 4px 10px 5px; font: 600 9.5px "JetBrains Mono", monospace; letter-spacing: .08em;
     text-transform: uppercase; cursor: pointer; line-height: 1;
+    /* The row's control height: a chip, a rename field and this button all stand 21px,
+       so a row keeps its height whichever of them it carries. */
+    height: 21px;
 }
 .sact:hover { color: var(--tx); border-color: var(--fog); }
 .sact.warn:hover { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 55%, transparent); }
