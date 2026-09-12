@@ -13,15 +13,20 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\AreaBundle\Controller;
 
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\FlashBagAwareSessionInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Environment;
-use Uhifadhi\Bundle\AreaBundle\Model\AreaRow;
-use Uhifadhi\Bundle\AreaBundle\Service\AreaMapService;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaPresetLibrary;
-use Uhifadhi\Bundle\AreaBundle\Service\AreaRegister;
+use Uhifadhi\Bundle\AreaBundle\Widget\AreaIndexWidgets;
+use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetEndpoint;
+use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService;
+use Uhifadhi\Contracts\Entity\UserInterface as ModuleUserInterface;
 
 /**
  * THE AREAS-INDEX WIDGET LIBRARY — the "Widget library" button on the register
@@ -33,10 +38,16 @@ use Uhifadhi\Bundle\AreaBundle\Service\AreaRegister;
  *
  * ADOPT-ONLY, AND SELF-CONTAINED. The five layouts are rendered whole and inline,
  * from the same real rows the register reads; previewing one swaps the inline
- * layout on this page and adopting it makes it the landing. The preview and the
- * adoption are the page's own client-side concern in this slice — the server
- * hands down the five layouts and marks the shipped default, and never links out
- * to the design scratchboard the layouts were graduated from.
+ * layout on this page, and adopting one makes it the landing. There is no
+ * compose-your-own here and nothing links out to the design scratchboard the
+ * layouts were graduated from.
+ *
+ * THE ADOPTION IS A STORED PREFERENCE, not a note in the browser. Applying goes
+ * through {@see WidgetEndpoint} against this surface's catalogue, exactly as it
+ * does on every other widget surface — which is what lets the register read back
+ * what was adopted here. This controller validates nothing itself, mints no token
+ * and chooses no status code: it names the catalogue and turns a 204 into a
+ * redirect with a sentence, so the plain-form path works with no JavaScript.
  *
  * GATED ON `area.view` — reading which layouts the landing can wear is for anyone
  * who may see the register at all.
@@ -45,10 +56,11 @@ final readonly class AreaWidgetsController
 {
     public function __construct(
         private Environment $twig,
-        private AreaRegister $register,
         private AreaPresetLibrary $library,
+        private WidgetService $widgets,
+        private WidgetEndpoint $endpoint,
         private UrlGeneratorInterface $urls,
-        private AreaMapService $areaMap,
+        private TokenStorageInterface $tokens,
     ) {
     }
 
@@ -60,75 +72,78 @@ final readonly class AreaWidgetsController
     #[IsGranted('area.view')]
     public function index(): Response
     {
-        // One clock for every layout, exactly as the register measures its wall:
-        // the map dock, the register table and the attention board all read the
-        // same rows at the same instant, so no two disagree.
-        $now = new \DateTimeImmutable();
-        $rows = $this->register->rows($now);
-        $presetRows = $this->library->enrich($rows, $now);
-        $flagship = AreaPresetLibrary::flagship($presetRows);
+        $catalog = new AreaIndexWidgets()->catalog();
 
         return new Response($this->twig->render('@Area/area/widgets.html.twig', [
-            'presets' => $this->library->presets(),
-            'defaultKey' => $this->library->defaultKey(),
-            'rows' => $rows,
-            'counts' => $this->register->counts($rows),
-            'presetRows' => $presetRows,
-            'needsAttention' => AreaPresetLibrary::needsAttention($presetRows),
-            'runningSteady' => AreaPresetLibrary::runningSteady($presetRows),
-            'awaitingSetup' => AreaPresetLibrary::awaitingSetup($presetRows),
-            'flagship' => $flagship,
-            'flagshipRest' => AreaPresetLibrary::rest($presetRows, $flagship),
-            'statColumns' => $this->statColumns($rows),
-            'map' => $this->areaMap->register($this->mapAreas($rows)),
+            'presets' => $catalog->builtins(),
+            'active' => $this->widgets->activeRef($catalog, $this->signedIn()),
+            'csrfToken' => $this->endpoint->csrfToken($catalog),
+            ...$this->library->landing(new \DateTimeImmutable()),
         ]));
     }
 
-    /**
-     * THE REGISTER TABLE'S OPERATIONAL COLUMN HEADERS — the labels the now-tile
-     * contributions handed back, read from the first live area (they are uniform across
-     * areas, one module contributing the same tiles to each). Empty when nothing
-     * is live, so the table draws no column for a figure no module contributed —
-     * the same absent-not-zero discipline the wall keeps, in a table.
-     *
-     * @param list<AreaRow> $rows
-     *
-     * @return list<string>
-     */
-    private function statColumns(array $rows): array
+    /** Adopt one of the five as the landing. */
+    #[Route('/areas/widgets/preset/{presetId}', name: 'area_widgets_preset', requirements: ['presetId' => '[a-z0-9_-]+'], methods: ['POST'], priority: 1)]
+    #[IsGranted('area.view')]
+    public function applyPreset(Request $request, string $presetId): Response
     {
-        foreach ($rows as $row) {
-            if ($row->isLive()) {
-                return array_map(static fn ($stat): string => $stat->label, $row->stats);
-            }
-        }
+        $catalog = new AreaIndexWidgets()->catalog();
+        // A layout the surface does not ship is refused by the endpoint; naming
+        // it in the flash is only for the case where it IS shipped.
+        $adopted = $catalog->preset($presetId);
 
-        return [];
+        return $this->afterWrite(
+            $request,
+            $this->endpoint->applyPreset($request, $catalog, $presetId),
+            \sprintf('The areas landing now shows “%s”.', null !== $adopted ? $adopted->label : $presetId),
+        );
+    }
+
+    /** Back to the layout this surface ships with. */
+    #[Route('/areas/widgets/reset', name: 'area_widgets_reset', methods: ['POST'], priority: 1)]
+    #[IsGranted('area.view')]
+    public function reset(Request $request): Response
+    {
+        $catalog = new AreaIndexWidgets()->catalog();
+        $shipped = $catalog->preset($catalog->defaultPresetId());
+
+        return $this->afterWrite(
+            $request,
+            $this->endpoint->reset($request, $catalog),
+            \sprintf('The areas landing is back to “%s”.', null !== $shipped ? $shipped->label : 'the shipped default'),
+        );
     }
 
     /**
-     * The map-of-the-network payload — each area as a point the browser plate
-     * draws: its name, whether it is live, the link to its overview, and its
-     * boundary as GeoJSON (or null, for a boundary-less area that has no place on
-     * the map but still rides the dock beside it). The geometry travels as text
-     * exactly as the column holds it; it is never parsed in PHP.
-     *
-     * @param list<AreaRow> $rows
-     *
-     * @return list<array{name: string, live: bool, href: string, boundary: string|null}>
+     * A refused write is returned as it came, so the reason reaches whoever asked;
+     * a successful one says so and goes back to the library, which is what makes
+     * the plain-form path work with no JavaScript at all.
      */
-    private function mapAreas(array $rows): array
+    private function afterWrite(Request $request, Response $response, string $flash): Response
     {
-        $areas = [];
-        foreach ($rows as $row) {
-            $areas[] = [
-                'name' => $row->area->getName() ?? '',
-                'live' => $row->isLive(),
-                'href' => $this->urls->generate('area_show', ['uuid' => $row->area->getUuidString()]),
-                'boundary' => $row->area->getGeom(),
-            ];
+        if (Response::HTTP_NO_CONTENT !== $response->getStatusCode()) {
+            return $response;
         }
 
-        return $areas;
+        $session = $request->hasSession() ? $request->getSession() : null;
+        if ($session instanceof FlashBagAwareSessionInterface) {
+            $session->getFlashBag()->add('success', $flash);
+        }
+
+        return new RedirectResponse($this->urls->generate('area_widgets'));
+    }
+
+    /**
+     * The signed-in person as the CONTRACT sees them, which is what the widget
+     * framework keeps a layout against. Null is a real answer rather than a
+     * guard: the framework hands an anonymous read the catalogue's own layout,
+     * which is exactly right for a page nobody is signed in to, and the WRITES
+     * ask for a person themselves.
+     */
+    private function signedIn(): ?ModuleUserInterface
+    {
+        $user = $this->tokens->getToken()?->getUser();
+
+        return $user instanceof ModuleUserInterface ? $user : null;
     }
 }

@@ -14,9 +14,6 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web;
 
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
-use Uhifadhi\Bundle\RegistryBundle\Entity\Module;
-use Uhifadhi\Bundle\RegistryBundle\Enum\ModuleCategory;
-use Uhifadhi\Bundle\RegistryBundle\Enum\ModuleStatus;
 
 /**
  * THE AREAS-INDEX WIDGET LIBRARY, RENDERED — the five whole-page layouts the
@@ -35,25 +32,6 @@ final class AreaWidgetsTest extends WebTestCase
         $this->browser()->request('GET', $path);
 
         return (string) $this->browser()->getResponse()->getContent();
-    }
-
-    private function aLiveArea(string $name = 'Northern Conservation Reserve'): AreaOfInterest
-    {
-        $area = $this->anArea($name);
-        $this->em->persist(new Module()
-            ->setSlug('patrols')
-            ->setName('Patrols')
-            ->setCategory(ModuleCategory::Pressure)
-            ->setStatus(ModuleStatus::Live)
-            ->setDataSource('GPS field tracks')
-            ->setPosition(0));
-        $this->em->flush();
-
-        /** @var \Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleService $modules */
-        $modules = static::getContainer()->get('test_public.registry.area_modules');
-        $modules->install($area, 'patrols');
-
-        return $area;
     }
 
     public function testTheLibraryNamesTheFivePresetsByTheirRealNames(): void

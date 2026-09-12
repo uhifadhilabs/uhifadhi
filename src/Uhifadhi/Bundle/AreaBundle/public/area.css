@@ -983,6 +983,14 @@ a.ax-card:hover .ax-open { opacity: 1; transform: none; }
 .w-baracts > * { flex: none; }
 .w-baracts .cta, .w-baracts .tgl { display: inline-flex; align-items: center; gap: 7px; height: 30px; box-sizing: border-box; white-space: nowrap; }
 .w-baracts .cta svg, .w-baracts .tgl svg { width: 14px; height: 14px; }
+.w-baracts form { display: flex; align-items: center; gap: 8px; margin: 0; }
+
+/* The <noscript> door to Apply. Previewing a layout is script, so where there is
+   none the page offers the plain forms outright rather than pretending a card is a
+   control. It wraps, because it is a list of every layout rather than one
+   selection's actions. */
+.w-noscriptacts { flex-wrap: wrap; margin: 12px 0 0; }
+.w-presetapply { display: inline-flex; align-items: center; gap: 7px; }
 
 /* ---- the inline previews: only one shows at a time ---------------------- */
 .ax-view { margin-top: 2px; }

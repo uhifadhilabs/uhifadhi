@@ -26,8 +26,10 @@ use Uhifadhi\Bundle\AreaBundle\Service\AreaRegister;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaThumbnailer;
 use Uhifadhi\Bundle\AreaBundle\Service\BoundaryImport;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneService;
+use Uhifadhi\Bundle\AreaBundle\Widget\AreaIndexWidgets;
 use Uhifadhi\Bundle\AtlasBundle\Map\MapBuilderInterface;
 use Uhifadhi\Bundle\RegistryBundle\Repository\AreaModuleRepository;
+use Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceInterface;
 
 /*
  * The bundle's static service wiring.
@@ -119,18 +121,32 @@ return static function (ContainerConfigurator $container): void {
     $services->alias(AreaMapService::class, 'area.map');
 
     /*
-     * THE AREAS-INDEX WIDGET LIBRARY — the five whole-page layouts the landing
-     * ships, and the register rows enriched with what the denser of them read.
+     * WHAT THE FIVE AREAS-INDEX LAYOUTS READ — every fact any of them draws,
+     * gathered once at one clock, for the landing and for the library alike.
      * Reads the same overview contributions the register does, so it names no module's
-     * content; kept apart from the register because it is the LIBRARY's reading,
-     * not the wall's.
+     * content.
      */
     $services->set('area.preset_library', AreaPresetLibrary::class)
         ->args([
             service(AreaOverview::class),
             service(ZoneRepository::class),
+            service(AreaRegister::class),
+            service(AreaMapService::class),
+            service('router'),
         ]);
     $services->alias(AreaPresetLibrary::class, 'area.preset_library');
+
+    /*
+     * THE /areas SURFACE'S CATALOGUE — the five layouts the landing ships, as the
+     * widget framework's own declaration, so the adopted one is a stored
+     * preference row the register and its library both read.
+     *
+     * TAGGED BY HAND: a reusable bundle wires its services explicitly, and a
+     * surface that forgot the tag has a working dashboard and an unreachable
+     * registry entry.
+     */
+    $services->set('area.widget_surface', AreaIndexWidgets::class)
+        ->tag(WidgetSurfaceInterface::TAG);
 
     $services->set('area.overview', AreaOverview::class)
         ->args([

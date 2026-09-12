@@ -1,9 +1,17 @@
-{# THE REGISTER — every area this installation manages, drawn as a wall of
-   workspaces: one card per area, its live operational pulse on the face and its
-   sub-app one click behind. It reads the same at four cards or forty.
+{# THE REGISTER — every area this installation manages, drawn the way this
+   installation adopted: a wall of workspaces, an operational table, a map of the
+   network, an attention board or a flagship portfolio. Whichever layout was
+   adopted in the widget library is the one drawn here, so the two screens cannot
+   disagree about what is on; "Wall of workspaces" is the shipped default and
+   reads the same at four cards or forty.
 
    Design: areas/index.html in the design workspace (the graduated card gallery,
    source presets/areas-index/a.html).
+
+   THE LAYOUT IS THE LIBRARY'S PARTIAL, NOT A COPY OF IT — the same five files the
+   library previews, so the preview is the real page. Each carries the page head
+   for its preview and suppresses it here, where the frame has already drawn it
+   with this layout's own subtitle.
 
    THE AREA PAGE OWNS THE FRAME, A MODULE OWNS THE CONTENT. A card's face, its
    identity line, its "modules live" count and its "last check-in" are the
@@ -29,6 +37,11 @@
 
 {% block stylesheets %}
     {{ parent() }}
+    {# The map-of-the-network layout is a real plate, so the register carries the
+       platform's one map stylesheet whichever layout is adopted — exactly as the
+       library does, and for the same reason: the sheet is linked by the page, and
+       the page cannot know which layout it will wear until it is rendering. #}
+    <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Bundle\\AtlasBundle\\AtlasBundle::STYLESHEET')) }}">
     {{ include('@Area/_stylesheets.html.twig') }}
 {% endblock %}
 
@@ -40,16 +53,14 @@
 
 {% block shell_page_title %}Areas{% endblock %}
 
-{% block shell_page_subtitle %}The org&rsquo;s register of protected areas, drawn as a wall of workspaces. Each card is an area you manage &mdash; its live operational pulse on the face, its sub-app one click behind.{% endblock %}
+{# THE SUBTITLE IS THE ADOPTED LAYOUT'S OWN, from the same partial the library's
+   preview of that layout reads, so the landing says what it is showing. #}
+{% block shell_page_subtitle %}{{ include('@Area/area/widgets/_subtitle.html.twig') }}{% endblock %}
 
 {% block shell_page_actions %}
     {# THE WIDGET-LIBRARY ADOPT-CONTROL — the same control, in the same place, as
-       every widget surface. Its library (the five preset directions this register
-       was drawn in) is a follow-up slice; the button is wired to where that route
-       will live. A literal href rather than path(), on purpose: the route is not
-       mounted yet, so generating it would fail — this is the same "the door is
-       named before it is built" is the reassurance the New area button carries. #}
-    <a class="tgl w-act" href="/areas/widgets">{{ ux_icon('shell:layout-grid') }} Widget library</a>
+       every widget surface. #}
+    <a class="tgl w-act" href="{{ path('area_widgets') }}">{{ ux_icon('shell:layout-grid') }} Widget library</a>
     {# THE BUTTON CARRIES THE PERMISSION, not just the screen behind it: a control
        that opens onto a refusal teaches somebody the product is broken. #}
     {% if is_granted('area.create') %}
@@ -71,15 +82,10 @@
             {% endif %}
         </div>
     {% else %}
-        {# SEARCH, THE FILTER PILLS WITH THEIR LIVE COUNTS, AND THE SORT STATE —
-           all three narrow the SAME rendered cards on the client, drawn by the
-           shared wall partial the widget library's "Wall of workspaces" preview
-           renders too, so the register landing and its preset can never drift.
-
-           THE PILLS ARE ONLY THE ONES THAT CAN MOVE. Live and awaiting-setup are
-           the registry's ledger; alerts is the attention contribution. All three change with
-           the installation, so none is a filter that can only ever return
-           everything or nothing. #}
-        {{ include('@Area/area/_register_cards.html.twig') }}
+        {# THE ADOPTED LAYOUT, drawn from the library's own partial for it. Each of
+           the five brings its own muscle: the wall and the register their search,
+           filter pills with live counts and sort state; the map its plate and
+           dock; the board its three groups; the flagship its hero. #}
+        {{ include('@Area/area/widgets/_' ~ view ~ '.html.twig', {landing: true}) }}
     {% endif %}
 {% endblock %}

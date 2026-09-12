@@ -13,23 +13,27 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\AreaBundle\Service;
 
-use Uhifadhi\Bundle\AreaBundle\Model\AreaLayoutPreset;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Uhifadhi\Bundle\AreaBundle\Model\AreaPresetRow;
 use Uhifadhi\Bundle\AreaBundle\Model\AreaRow;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
 
 /**
- * THE AREAS-INDEX WIDGET LIBRARY — the five whole-page layouts the areas landing
- * ships, and the enriched rows the denser of them read.
+ * WHAT THE FIVE AREAS-INDEX LAYOUTS READ — every fact any of them draws,
+ * gathered once, at one clock.
  *
- * FIVE LAYOUT DIRECTIONS, ADOPT-ONLY. Unlike the overview surface's library,
- * which composes a dashboard out of widgets, the areas landing is drawn five
- * complete ways and adopting one swaps the whole landing. This service names the
- * five — with "Wall of workspaces" the shipped default — and enriches the
- * register's rows with the attention items and zone counts the attention board
- * and the flagship read. It picks nothing and adopts nothing: which layout is
- * live is a per-person preference the widget-preference framework holds, and in
- * this slice the preview and adoption are the page's own client-side concern.
+ * WHICH LAYOUTS EXIST IS NOT HERE. The five are declared by
+ * {@see \Uhifadhi\Bundle\AreaBundle\Widget\AreaIndexWidgets}, the surface's widget
+ * catalogue, and which one is on is a stored preference the widget framework
+ * holds — so the register and its library read the same answer from the same
+ * place and cannot disagree about what is adopted. What this service owns is the
+ * DATA side: the register's rows enriched with the attention items and zone
+ * counts the attention board and the flagship need, and the operational column
+ * headers and map payload the register and map views need.
+ *
+ * ONE CLOCK FOR EVERY LAYOUT, exactly as the register measures its wall: the map
+ * dock, the table and the attention board all read the same rows at the same
+ * instant, so no two of them disagree.
  *
  * IT NAMES NO MODULE'S CONTENT. The enrichment is the same overview contributions the
  * register already reads — the attention items are gathered, not invented — so
@@ -41,57 +45,59 @@ final readonly class AreaPresetLibrary
     public function __construct(
         private AreaOverview $overview,
         private ZoneRepository $zones,
+        private AreaRegister $register,
+        private AreaMapService $areaMap,
+        private UrlGeneratorInterface $urls,
     ) {
     }
 
     /**
-     * The five layouts this surface ships, in the order the library lists them —
-     * the shipped default first.
+     * EVERY FACT ANY OF THE FIVE LAYOUTS MIGHT WANT, gathered once — so the
+     * landing drawing one of them and the library previewing all five are handed
+     * the identical picture, and the two screens can never differ over a figure.
      *
-     * @return list<AreaLayoutPreset>
+     * @return array<string, mixed>
      */
-    public function presets(): array
+    public function landing(\DateTimeImmutable $now): array
     {
+        $rows = $this->register->rows($now);
+        $presetRows = $this->enrich($rows, $now);
+        $flagship = self::flagship($presetRows);
+
         return [
-            new AreaLayoutPreset(
-                'wall',
-                'Wall of workspaces',
-                'Each area a rich workspace card — thumbnail, the operational figures, live patrols out and last contact. The warmest, most product-like read; the least dense.',
-                default: true,
-            ),
-            new AreaLayoutPreset(
-                'register',
-                'The register',
-                'The working table, science columns swapped for operational ones and the search / filter / sort muscle kept intact. The densest, most direct descendant of the current page.',
-            ),
-            new AreaLayoutPreset(
-                'map',
-                'Map of the network',
-                'The org’s ground as the base, areas as points, the list docked beside it. Answers “where does the org work” and “what’s happening” together; the right shape for a spread-out org.',
-            ),
-            new AreaLayoutPreset(
-                'attention',
-                'Attention board',
-                'A worklist — areas grouped by what needs the operator: needs-attention, running-steady, awaiting-setup. The most honest about the morning; it hides a good day on purpose.',
-            ),
-            new AreaLayoutPreset(
-                'flagship',
-                'The flagship',
-                'The flagship area featured large with its full live pulse; the rest on a secondary strip. The honest shape for one busy area among areas still coming online.',
-            ),
+            'rows' => $rows,
+            'counts' => $this->register->counts($rows),
+            'presetRows' => $presetRows,
+            'needsAttention' => self::needsAttention($presetRows),
+            'runningSteady' => self::runningSteady($presetRows),
+            'awaitingSetup' => self::awaitingSetup($presetRows),
+            'flagship' => $flagship,
+            'flagshipRest' => self::rest($presetRows, $flagship),
+            'statColumns' => self::statColumns($rows),
+            'map' => $this->areaMap->register($this->mapAreas($rows)),
         ];
     }
 
-    /** The key of the shipped-default layout — the landing everyone gets until one is adopted. */
-    public function defaultKey(): string
+    /**
+     * THE REGISTER TABLE'S OPERATIONAL COLUMN HEADERS — the labels the now-tile
+     * contributions handed back, read from the first live area (they are uniform across
+     * areas, one module contributing the same tiles to each). Empty when nothing
+     * is live, so the table draws no column for a figure no module contributed —
+     * the same absent-not-zero discipline the wall keeps, in a table.
+     *
+     * @param list<AreaRow> $rows
+     *
+     * @return list<string>
+     */
+    public static function statColumns(array $rows): array
     {
-        foreach ($this->presets() as $preset) {
-            if ($preset->default) {
-                return $preset->key;
+        foreach ($rows as $row) {
+            if ($row->isLive()) {
+                return array_map(static fn ($stat): string => $stat->label, $row->stats);
             }
         }
 
-        return 'wall';
+        return [];
     }
 
     /**
@@ -202,5 +208,31 @@ final readonly class AreaPresetLibrary
     private static function runningSteadyOrAttention(array $rows): array
     {
         return array_values(array_filter($rows, static fn (AreaPresetRow $r): bool => $r->row->isLive()));
+    }
+
+    /**
+     * The map-of-the-network payload — each area as a point the browser plate
+     * draws: its name, whether it is live, the link to its overview, and its
+     * boundary as GeoJSON (or null, for a boundary-less area that has no place on
+     * the map but still rides the dock beside it). The geometry travels as text
+     * exactly as the column holds it; it is never parsed in PHP.
+     *
+     * @param list<AreaRow> $rows
+     *
+     * @return list<array{name: string, live: bool, href: string, boundary: string|null}>
+     */
+    private function mapAreas(array $rows): array
+    {
+        $areas = [];
+        foreach ($rows as $row) {
+            $areas[] = [
+                'name' => $row->area->getName() ?? '',
+                'live' => $row->isLive(),
+                'href' => $this->urls->generate('area_show', ['uuid' => $row->area->getUuidString()]),
+                'boundary' => $row->area->getGeom(),
+            ];
+        }
+
+        return $areas;
     }
 }

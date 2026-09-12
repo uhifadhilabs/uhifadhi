@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web\Fixtures;
 
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\UserInterface as SecurityUserInterface;
 use Uhifadhi\Contracts\Entity\UserInterface;
 
 /**
@@ -29,10 +30,17 @@ use Uhifadhi\Contracts\Entity\UserInterface;
  *
  * It answers the published contract and nothing more: anything beyond it would
  * be this suite testing an account rather than an area's pages.
+ *
+ * IT IS ALSO THE PRINCIPAL. Two user interfaces meet on a screen — Symfony's,
+ * "who is signed in", and the contracts', "whose record is this" — and an
+ * installation's account class satisfies both, which is exactly what makes a
+ * widget layout storable for whoever is looking. So the stand-in satisfies both
+ * too; playing only half of it would be this suite proving something no real
+ * installation is.
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'fixture_host_user')]
-class HostUser implements UserInterface
+class HostUser implements UserInterface, SecurityUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -42,6 +50,7 @@ class HostUser implements UserInterface
     #[ORM\Column(length: 36, unique: true)]
     private string $uuid;
 
+    /** @var non-empty-string */
     #[ORM\Column(length: 180, unique: true)]
     private string $email = 'nobody@example.org';
 
@@ -89,5 +98,20 @@ class HostUser implements UserInterface
     public function getRangerCode(): ?string
     {
         return null;
+    }
+
+    /** @return list<string> */
+    public function getRoles(): array
+    {
+        return ['ROLE_USER'];
+    }
+
+    public function eraseCredentials(): void
+    {
+    }
+
+    public function getUserIdentifier(): string
+    {
+        return $this->email;
     }
 }

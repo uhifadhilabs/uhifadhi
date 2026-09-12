@@ -16,9 +16,13 @@
    from the same real rows the register reads; nothing links out to the design
    scratchboard the layouts were graduated from. "Wall of workspaces" is the
    org's shipped default; adopting another makes it the landing and retires none
-   of the rest. The preview and adoption are the page's own client-side concern
-   in this slice (the area-presets controller), persisted so an adoption survives
-   a reload the way a widget-preference row would.
+   of the rest.
+
+   THE PREVIEW IS THE PAGE'S, THE ADOPTION IS THE SERVER'S. Swapping the inline
+   layout is client-side and nothing else needs to know; applying one is a real
+   POST through the shell's widget endpoint, which is what lets /areas draw the
+   adopted layout. Which card is Active is read off that stored row, never off the
+   browser.
 
    NO WIDGET INDICES. The design file prints one on each preset card and in the
    register/flagship plates (AX·01, AX·P1); that is the workspace's referencing
@@ -46,16 +50,19 @@
 {% block shell_page_subtitle %}Adopt one of the five layouts the areas landing ships. Preview any of them here &mdash; the real page at full size, exactly as the landing renders it &mdash; then apply it to make it the landing for everyone. <b>Wall of workspaces</b> is the org&rsquo;s shipped default; adopting another retires none of the rest.{% endblock %}
 
 {% block shell_page_actions %}
-    {# Reset drops the adopted layout back to the shipped default. The button
-       lives in the page header; the area-presets controller finds it wherever it
-       sits, so the whole page need not nest inside the controller. #}
-    <button type="button" class="tgl w-act" data-area-presets-reset>{{ ux_icon('shell:rotate-ccw') }} Reset to the shipped default</button>
+    {# Reset drops the adopted layout back to the shipped default. A real form, so
+       it works with no JavaScript at all — the adoption is a stored row and only
+       the server can drop it. #}
+    <form method="post" action="{{ path('area_widgets_reset') }}">
+        <input type="hidden" name="_token" value="{{ csrfToken }}">
+        <button type="submit" class="tgl w-act">{{ ux_icon('shell:rotate-ccw') }} Reset to the shipped default</button>
+    </form>
     <a class="cta" href="{{ path('area_index') }}">{{ ux_icon('shell:chevron-left') }} Back to areas</a>
 {% endblock %}
 
 {% block shell_page %}
     <div data-controller="uhifadhi--area-bundle--area-presets"
-         data-uhifadhi--area-bundle--area-presets-default-value="{{ defaultKey }}">
+         data-uhifadhi--area-bundle--area-presets-active-value="{{ active.id }}">
 
         <div class="w-galnote">{{ ux_icon('shell:search') }}<div><b>The directions are presets, not a ballot.</b> The areas index is drawn as a wall of workspaces, as an operational register, as a map of the network, as an attention board, and as a flagship portfolio. None of them became a separate screen: each is one of this surface&rsquo;s ruled presets, and adopting one makes it the landing for everyone. Areas ships these five to adopt &mdash; there is no compose-your-own here; <b>Wall of workspaces</b> is the shipped default.</div></div>
 
@@ -68,23 +75,50 @@
             <p class="w-presetintro">The five layouts this surface ships. Preview one to see it whole below; adopting one makes it the areas landing for everyone &mdash; it retires none of the others.</p>
             <div class="w-presetrow">
                 {% for preset in presets %}
-                    <div class="w-preset{{ preset.default ? ' w-preset-active' : '' }}"
+                    {% set isActive = preset.id == active.id %}
+                    <div class="w-preset{{ isActive ? ' w-preset-active' : '' }}"
                          data-uhifadhi--area-bundle--area-presets-target="card"
                          data-action="click->uhifadhi--area-bundle--area-presets#select keydown->uhifadhi--area-bundle--area-presets#key"
-                         data-view="{{ preset.key }}" data-name="{{ preset.name }}"
-                         role="button" tabindex="0" aria-pressed="{{ preset.default ? 'true' : 'false' }}">
+                         data-preset-id="{{ preset.id }}" data-view="{{ preset.id }}" data-name="{{ preset.label }}"
+                         role="button" tabindex="0" aria-pressed="{{ isActive ? 'true' : 'false' }}">
                         <div class="w-presettop" data-uhifadhi--area-bundle--area-presets-target="top">
-                            <span class="w-presetname">{{ preset.name }}</span>
-                            {% if preset.default %}<span class="w-presetflag w-presetflag-active">{{ ux_icon('shell:check') }} Active</span>{% endif %}
+                            <span class="w-presetname">{{ preset.label }}</span>
+                            {% if isActive %}<span class="w-presetflag w-presetflag-active">{{ ux_icon('shell:check') }} Active</span>{% endif %}
                         </div>
-                        <p class="w-presetsub">{{ preset.summary }}</p>
+                        <p class="w-presetsub">{{ preset.description }}</p>
                         <div class="w-presetmeta">
                             <span class="w-presetcount">Full areas layout</span>
-                            <span class="w-presetgo" data-uhifadhi--area-bundle--area-presets-target="go">{{ preset.default ? 'On your dashboard' : 'Preview' }} {{ ux_icon('shell:arrow-right') }}</span>
+                            <span class="w-presetgo" data-uhifadhi--area-bundle--area-presets-target="go">{{ isActive ? 'On your dashboard' : 'Preview' }} {{ ux_icon('shell:arrow-right') }}</span>
                         </div>
                     </div>
                 {% endfor %}
             </div>
+
+            {# THE ADOPT WRITE. Applying a layout is a stored preference, so it is a
+               real POST and never a note the browser keeps to itself — this form is
+               the one the preview bar's Apply presses, its action completed with
+               the previewed layout's id. #}
+            <form method="post" hidden
+                  data-uhifadhi--area-bundle--area-presets-target="applyForm"
+                  data-url-template="{{ path('area_widgets_preset', {presetId: constant('Uhifadhi\\Bundle\\ShellBundle\\Widget\\Model\\WidgetDom::ID_PLACEHOLDER')}) }}"
+                  data-url-placeholder="{{ constant('Uhifadhi\\Bundle\\ShellBundle\\Widget\\Model\\WidgetDom::ID_PLACEHOLDER') }}">
+                <input type="hidden" name="_token" value="{{ csrfToken }}">
+            </form>
+
+            {# PREVIEWING IS CLIENT-SIDE, so with no script a card is a card and
+               nothing more. Rather than pretend, the page offers the plain forms
+               outright, in a <noscript> the browser only ever renders when they are
+               the only way through — the same escape the shell's own library takes. #}
+            <noscript>
+                <div class="w-baracts w-noscriptacts">
+                    {% for preset in presets %}
+                        <form method="post" action="{{ path('area_widgets_preset', {presetId: preset.id}) }}">
+                            <input type="hidden" name="_token" value="{{ csrfToken }}">
+                            <button type="submit" class="tgl w-presetapply">{{ ux_icon('shell:layout-grid') }} Apply &ldquo;{{ preset.label }}&rdquo;</button>
+                        </form>
+                    {% endfor %}
+                </div>
+            </noscript>
         </section>
 
         {# THE PREVIEW BAR — rests on the adopted layout (active styling, no
@@ -93,26 +127,27 @@
            in reach while a long layout scrolls. Rendered here for a no-script
            viewer; the controller re-renders it. #}
         <div class="w-previewbar w-previewbar-active" data-uhifadhi--area-bundle--area-presets-target="bar" role="status">
-            <span class="w-barstatus">{{ ux_icon('shell:check') }}<span>The areas landing shows <b>Wall of workspaces</b>. It is the org&rsquo;s shipped default &mdash; preview any design above to see it whole, then apply it to make it the landing.</span></span>
+            <span class="w-barstatus">{{ ux_icon('shell:check') }}<span>The areas landing shows <b>{{ active.label }}</b>. Preview any design above to see it whole, then apply it to make it the landing.</span></span>
         </div>
 
         {# THE INLINE PREVIEWS — each layout's FULL markup, at full size, exactly
            as the landing renders it. Only one shows at a time, toggled by the
-           controller; the shipped default opens visible for a no-script viewer. #}
+           controller; the ADOPTED one opens visible, so a viewer with no scripting
+           sees the layout their landing is actually wearing. #}
         <div>
-            <div class="ax-view" data-uhifadhi--area-bundle--area-presets-target="view" data-view="wall">
+            <div class="ax-view" data-uhifadhi--area-bundle--area-presets-target="view" data-view="wall"{{ 'wall' != active.id ? ' hidden' : '' }}>
                 {{ include('@Area/area/widgets/_wall.html.twig') }}
             </div>
-            <div class="ax-view" data-uhifadhi--area-bundle--area-presets-target="view" data-view="register" hidden>
+            <div class="ax-view" data-uhifadhi--area-bundle--area-presets-target="view" data-view="register"{{ 'register' != active.id ? ' hidden' : '' }}>
                 {{ include('@Area/area/widgets/_register.html.twig') }}
             </div>
-            <div class="ax-view" data-uhifadhi--area-bundle--area-presets-target="view" data-view="map" hidden>
+            <div class="ax-view" data-uhifadhi--area-bundle--area-presets-target="view" data-view="map"{{ 'map' != active.id ? ' hidden' : '' }}>
                 {{ include('@Area/area/widgets/_map.html.twig') }}
             </div>
-            <div class="ax-view" data-uhifadhi--area-bundle--area-presets-target="view" data-view="attention" hidden>
+            <div class="ax-view" data-uhifadhi--area-bundle--area-presets-target="view" data-view="attention"{{ 'attention' != active.id ? ' hidden' : '' }}>
                 {{ include('@Area/area/widgets/_attention.html.twig') }}
             </div>
-            <div class="ax-view" data-uhifadhi--area-bundle--area-presets-target="view" data-view="flagship" hidden>
+            <div class="ax-view" data-uhifadhi--area-bundle--area-presets-target="view" data-view="flagship"{{ 'flagship' != active.id ? ' hidden' : '' }}>
                 {{ include('@Area/area/widgets/_flagship.html.twig') }}
             </div>
         </div>

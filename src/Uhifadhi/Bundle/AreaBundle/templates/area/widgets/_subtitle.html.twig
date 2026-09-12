@@ -1,0 +1,18 @@
+{# WHAT THE LANDING SAYS ABOUT ITSELF, one sentence per layout.
+
+   HERE RATHER THAN IN EACH LAYOUT because two screens read it: the landing wears
+   the sentence of the layout it has adopted, and the library prints the same
+   sentence above the same layout's inline preview. Written twice they would
+   drift, and the preview would stop being the real page.
+
+   The sentence is the layout's own — what THIS direction is for — and not the
+   trade-off line the preset card carries; the card argues between five
+   directions, this states the one you are looking at. #}
+{%- set subtitles = {
+    wall: 'The org&rsquo;s register of protected areas, drawn as a wall of workspaces. Each card is an area you manage &mdash; its live operational pulse on the face, its sub-app one click behind.',
+    register: 'The register &mdash; the working list the landing already is, with operational columns in place of scientific ones. The muscle stays: search, the filter pills with live counts, sortable headers, the whole row clickable. What each column reports is now <b>operational</b>, gathered through the same contributions the cards read.',
+    map: 'The register with geography as the ground &mdash; the one view about <b>where the org works</b>. Every area a point on the map, the live one bold, the rest awaiting setup; the list docks beside it so &ldquo;where&rdquo; and &ldquo;what&rsquo;s happening&rdquo; are read in one glance.',
+    attention: 'The register as a worklist &mdash; areas grouped by what needs the operator. The ones raising a flag come first, the ones running steady next, the ones not yet live last. A good day is allowed to look like one.',
+    flagship: 'The portfolio read &mdash; the org&rsquo;s primary area featured large with its full live pulse, everything else on a secondary strip below. It says which area is the work without hiding the rest.',
+} -%}
+{{- subtitles[view]|default(subtitles.wall)|raw -}}

@@ -22,6 +22,12 @@ use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 use Symfony\Component\Security\Core\User\InMemoryUser;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Entity\Zone;
+use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web\Fixtures\HostUser;
+use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web\Fixtures\SignedInPerson;
+use Uhifadhi\Bundle\RegistryBundle\Entity\Module;
+use Uhifadhi\Bundle\RegistryBundle\Enum\ModuleCategory;
+use Uhifadhi\Bundle\RegistryBundle\Enum\ModuleStatus;
+use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleService;
 
 /**
  * A page, a real database, and a viewer holding exactly the permissions the test
@@ -82,6 +88,52 @@ abstract class WebTestCase extends KernelTestCase
         ));
     }
 
+    /**
+     * A SIGNED-IN VIEWER WHO IS ALSO A RECORD — the installation's own account
+     * entity in the token, which is what a real one puts there.
+     *
+     * {@see signIn()} is enough for "is anybody looking?"; a screen that keeps
+     * something PER PERSON (an adopted layout) needs a principal the contracts
+     * recognise, because a layout belongs to somebody and an in-memory principal
+     * is nobody.
+     */
+    protected function signInAsPerson(): HostUser
+    {
+        $person = new HostUser();
+        $this->em->persist($person);
+        $this->em->flush();
+
+        /** @var SignedInPerson $principal */
+        $principal = static::getContainer()->get(SignedInPerson::class);
+        $principal->is($person);
+
+        return $person;
+    }
+
+    /**
+     * AN AREA WITH A MODULE SWITCHED ON — "live", which is what the operational
+     * figures, the attention items and the flagship all need before they have
+     * anything to draw.
+     */
+    protected function aLiveArea(string $name = 'Northern Conservation Reserve'): AreaOfInterest
+    {
+        $area = $this->anArea($name);
+        $this->em->persist(new Module()
+            ->setSlug('patrols')
+            ->setName('Patrols')
+            ->setCategory(ModuleCategory::Pressure)
+            ->setStatus(ModuleStatus::Live)
+            ->setDataSource('GPS field tracks')
+            ->setPosition(0));
+        $this->em->flush();
+
+        /** @var AreaModuleService $modules */
+        $modules = static::getContainer()->get('test_public.registry.area_modules');
+        $modules->install($area, 'patrols');
+
+        return $area;
+    }
+
     private ?KernelBrowser $browser = null;
 
     /**
@@ -94,6 +146,13 @@ abstract class WebTestCase extends KernelTestCase
         if (null === $this->browser) {
             /** @var KernelBrowser $client */
             $client = static::getContainer()->get('test.client');
+            // ONE KERNEL FOR THE WHOLE TEST. The browser shuts the kernel down
+            // between requests by default, and a new one has a new container: the
+            // token this suite put in token storage, and the schema boot() built on
+            // this entity manager, would both be gone by the second request. A test
+            // that signs somebody in and then walks two pages needs them to be the
+            // same somebody on both.
+            $client->disableReboot();
             $this->browser = $client;
         }
 

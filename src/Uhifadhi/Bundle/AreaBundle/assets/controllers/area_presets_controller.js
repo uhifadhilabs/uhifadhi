@@ -18,14 +18,14 @@ import { Controller } from '@hotwired/stimulus';
  * in its adopt-only form — no "my presets", no compose-your-own, no link out to
  * the design scratchboard the layouts were graduated from.
  *
- * ADOPTION IS PERSISTED, exactly as a widget-preference row would be, so an Apply
- * survives a reload; the shipped default is whatever the server marked. In this
- * slice the store is the browser's own (localStorage), the page's client-side
- * concern; the server hands down the five and the default and renders the default
- * view visible for a viewer with no scripting.
+ * THE PREVIEW IS THIS CONTROLLER'S, THE ADOPTION IS THE SERVER'S. Swapping the
+ * inline layout is a local matter and nothing else needs to know. Applying one is
+ * a stored widget preference, because the LANDING has to read it back — so Apply
+ * submits the layout's own form and the page comes back from the server with the
+ * new layout already marked Active. Nothing is remembered in the browser: a note
+ * kept here would be a second answer to "which layout is on", and the register
+ * would go on drawing the first one.
  */
-
-const STORE = 'uhifadhi.active.areas-index';
 
 const ICON_CHECK =
     '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
@@ -37,30 +37,17 @@ const ICON_ARROW =
     '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>';
 
 export default class extends Controller {
-    static targets = ['card', 'bar', 'view'];
-    static values = { default: { type: String, default: 'wall' } };
+    static targets = ['card', 'bar', 'view', 'applyForm'];
+    static values = { active: { type: String, default: 'wall' } };
 
     connect() {
-        // The adopted layout survives a reload; falls back to the shipped default
-        // if nothing is stored or the store names a layout this page no longer has.
-        this.active = this.readStore() || this.defaultValue;
-        if (!this.viewFor(this.active)) {
-            this.active = this.defaultValue;
-        }
+        // WHICH LAYOUT IS ON IS THE SERVER'S ANSWER, rendered into the element.
+        // Reading it from anywhere else is how the library and the landing come to
+        // disagree.
+        this.active = this.activeValue;
         this.selected = this.active;
 
-        // The Reset control lives in the page header, outside this controller's
-        // element, so it is found and wired by hand — the same escape the design
-        // takes. Kept on the instance so disconnect can drop it.
-        this.resetButton = document.querySelector('[data-area-presets-reset]');
-        this.onReset = () => this.reset();
-        this.resetButton?.addEventListener('click', this.onReset);
-
         this.render();
-    }
-
-    disconnect() {
-        this.resetButton?.removeEventListener('click', this.onReset);
     }
 
     /** A card was clicked — look at its layout. */
@@ -80,23 +67,23 @@ export default class extends Controller {
         }
     }
 
-    /** Apply adopts the previewed layout; Cancel drops back to the adopted one. */
+    /**
+     * Apply adopts the previewed layout — by submitting that layout's own form, so
+     * the write is the server's and the page returns with the new layout Active.
+     * The forms are on the page for a no-script viewer anyway; this only presses
+     * the right one.
+     */
     apply() {
-        this.active = this.selected;
-        this.writeStore(this.active);
-        this.render();
+        if (!this.hasApplyFormTarget) {
+            return;
+        }
+        const form = this.applyFormTarget;
+        form.action = form.dataset.urlTemplate.replace(form.dataset.urlPlaceholder, this.selected);
+        form.requestSubmit();
     }
 
     cancel() {
         this.selected = this.active;
-        this.render();
-    }
-
-    /** Reset drops the adopted layout back to the shipped default. */
-    reset() {
-        this.active = this.defaultValue;
-        this.selected = this.defaultValue;
-        this.clearStore();
         this.render();
     }
 
@@ -142,11 +129,7 @@ export default class extends Controller {
 
         if (this.selected === this.active) {
             bar.className = 'w-previewbar w-previewbar-active';
-            const tail =
-                this.active === this.defaultValue
-                    ? 'It is the org’s shipped default — preview any design above to see it whole, then apply it to make it the landing.'
-                    : 'Preview any design above to see it whole, then apply it to make it the landing for everyone.';
-            bar.innerHTML = `<span class="w-barstatus">${ICON_CHECK}<span>The areas landing shows <b>${this.nameOf(this.active)}</b>. ${tail}</span></span>`;
+            bar.innerHTML = `<span class="w-barstatus">${ICON_CHECK}<span>The areas landing shows <b>${this.nameOf(this.active)}</b>. Preview any design above to see it whole, then apply it to make it the landing.</span></span>`;
 
             return;
         }
@@ -174,29 +157,5 @@ export default class extends Controller {
         const card = this.cardTargets.find((c) => c.dataset.view === key);
 
         return card ? card.dataset.name : key;
-    }
-
-    readStore() {
-        try {
-            return window.localStorage.getItem(STORE);
-        } catch {
-            return null;
-        }
-    }
-
-    writeStore(value) {
-        try {
-            window.localStorage.setItem(STORE, value);
-        } catch {
-            /* a private-mode browser refusing storage is not an error worth showing */
-        }
-    }
-
-    clearStore() {
-        try {
-            window.localStorage.removeItem(STORE);
-        } catch {
-            /* see writeStore */
-        }
     }
 }

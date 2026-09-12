@@ -7,15 +7,20 @@
    and its zone count (the area page's); the KPIs and the attention list are the same
    module now-tiles and attention items every other preset reads. The flagship is
    simply the most recently active live area. #}
-<div class="pghead">
-    <div>
-        <h1 class="pg">Areas</h1>
-        <p class="pgsub">The portfolio read &mdash; the org&rsquo;s primary area featured large with its full live pulse, everything else on a secondary strip below. It says which area is the work without hiding the rest.</p>
+{# THE PAGE HEAD IS THE PREVIEW'S. On the landing the page frame has already
+   drawn it — with this layout's own subtitle, from the same partial — so the
+   layout would be stating the title twice. #}
+{% if not landing|default(false) %}
+    <div class="pghead">
+        <div>
+            <h1 class="pg">Areas</h1>
+            <p class="pgsub">{{ include('@Area/area/widgets/_subtitle.html.twig', {view: 'flagship'}) }}</p>
+        </div>
+        {% if is_granted('area.create') %}
+            <div class="pgact"><a class="cta" href="{{ path('area_new') }}">{{ ux_icon('shell:plus') }} New area</a></div>
+        {% endif %}
     </div>
-    {% if is_granted('area.create') %}
-        <div class="pgact"><a class="cta" href="{{ path('area_new') }}">{{ ux_icon('shell:plus') }} New area</a></div>
-    {% endif %}
-</div>
+{% endif %}
 
 {% if flagship %}
     {% set row = flagship.row %}

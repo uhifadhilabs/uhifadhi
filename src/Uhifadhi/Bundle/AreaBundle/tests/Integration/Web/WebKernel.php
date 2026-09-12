@@ -20,6 +20,7 @@ use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Bundle\SecurityBundle\SecurityBundle;
 use Symfony\Bundle\TwigBundle\TwigBundle;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
@@ -30,6 +31,7 @@ use Uhifadhi\Bundle\AreaBundle\AreaBundle;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\CheckoutTempDirTrait;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web\Fixtures\HostUser;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web\Fixtures\PatrolsModuleTabs;
+use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web\Fixtures\SignedInPerson;
 use Uhifadhi\Bundle\AtlasBundle\AtlasBundle;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
 use Uhifadhi\Bundle\ShellBundle\ShellBundle;
@@ -239,6 +241,16 @@ final class WebKernel extends Kernel
         // The suite's own voter, standing in for TeamBundle's. It answers
         // the same permission strings, which is the whole of what these screens
         // depend on.
+        /*
+         * THE SUITE'S OWN SIGN-IN, standing in for a firewall this kernel
+         * deliberately leaves unsecured — see SignedInPerson. Public, because the
+         * test says whose requests these are.
+         */
+        $services->set(SignedInPerson::class)
+            ->args([new Reference('doctrine'), new Reference('security.token_storage')])
+            ->tag('kernel.event_listener', ['event' => 'kernel.request', 'method' => 'onKernelRequest', 'priority' => 9])
+            ->public();
+
         $services->set(GrantedPermissions::class)
             ->args([$this->grants])
             ->tag('security.voter')

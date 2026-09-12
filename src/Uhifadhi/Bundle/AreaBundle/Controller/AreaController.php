@@ -19,6 +19,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\Requirement\Requirement;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Environment;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
@@ -26,8 +27,12 @@ use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaMapPayload;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaMapService;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaOverview;
+use Uhifadhi\Bundle\AreaBundle\Service\AreaPresetLibrary;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaRegister;
+use Uhifadhi\Bundle\AreaBundle\Widget\AreaIndexWidgets;
 use Uhifadhi\Bundle\ShellBundle\Frame\Controller\ConfigureController;
+use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService;
+use Uhifadhi\Contracts\Entity\UserInterface as ModuleUserInterface;
 use Uhifadhi\Contracts\Shell\ConfigurationSection;
 
 /**
@@ -56,6 +61,9 @@ final readonly class AreaController
         private AreaMapPayload $mapPayload,
         private AreaMapService $areaMap,
         private UrlGeneratorInterface $urls,
+        private AreaPresetLibrary $library,
+        private WidgetService $widgets,
+        private TokenStorageInterface $tokens,
     ) {
     }
 
@@ -65,18 +73,25 @@ final readonly class AreaController
      * Not gated on `area.create`: reading which areas exist is for anybody who
      * may see an area at all, and the create affordance inside the page is what
      * carries the stricter permission.
+     *
+     * IT IS A WIDGET SURFACE, and its five layouts are alternatives rather than
+     * additions, so the page draws the ONE the person adopted in the library —
+     * read back through the widget framework from the same stored row the library
+     * wrote. A layout adopted on one screen and ignored on the other is the whole
+     * defect this resolve() call exists to close.
      */
     #[Route('/areas', name: 'area_index', methods: ['GET'])]
     #[IsGranted('area.view')]
     public function index(): Response
     {
-        // Handed to the register once, so every card on the wall is measured
-        // against the same clock: two areas' "6 min ago" then mean the same thing.
-        $rows = $this->register->rows(new \DateTimeImmutable());
+        $catalog = new AreaIndexWidgets()->catalog();
 
         return new Response($this->twig->render('@Area/area/index.html.twig', [
-            'rows' => $rows,
-            'counts' => $this->register->counts($rows),
+            'view' => self::adopted($this->widgets->resolve($catalog, $this->signedIn())),
+            // Handed to the register once, so every figure on the landing is
+            // measured against the same clock: two areas' "6 min ago" then mean
+            // the same thing.
+            ...$this->library->landing(new \DateTimeImmutable()),
         ]));
     }
 
@@ -134,5 +149,40 @@ final readonly class AreaController
             ]),
             Response::HTTP_MOVED_PERMANENTLY,
         );
+    }
+
+    /**
+     * WHICH OF THE FIVE LAYOUTS IS ON, read off a resolved layout. They are
+     * alternatives, so the first one switched on is the answer; a stored row that
+     * somehow has none on falls back to the layout this surface ships, because a
+     * register that drew nothing would read as a page that failed to load.
+     *
+     * @param list<array{id: string, label: string, group: string, on: bool, cols: int, spans: list<int>}> $resolved
+     */
+    private static function adopted(array $resolved): string
+    {
+        foreach ($resolved as $widget) {
+            if ($widget['on']) {
+                return $widget['id'];
+            }
+        }
+
+        return AreaIndexWidgets::DEFAULT_PRESET;
+    }
+
+    /**
+     * The signed-in person as the CONTRACT sees them, which is what the widget
+     * framework keeps a layout against — it never type-hints an installation's
+     * account class, and this call site is not where that would start.
+     *
+     * Null is a real answer rather than a guard: the framework hands an anonymous
+     * request the catalogue's own layout, which is exactly right for a register
+     * nobody is signed in to.
+     */
+    private function signedIn(): ?ModuleUserInterface
+    {
+        $user = $this->tokens->getToken()?->getUser();
+
+        return $user instanceof ModuleUserInterface ? $user : null;
     }
 }

@@ -62,22 +62,27 @@ return static function (ContainerConfigurator $container): void {
             service('area.map_payload'),
             service('area.map'),
             service('router'),
+            service('area.preset_library'),
+            service('shell.widget.service'),
+            service('security.token_storage'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(AreaController::class, 'area.controller.area')->public();
 
     /*
-     * THE AREAS-INDEX WIDGET LIBRARY. Reads the register's rows and the preset
-     * library, and generates the map layout's overview links, so it carries the
-     * router beside twig.
+     * THE AREAS-INDEX WIDGET LIBRARY. Reads what the five layouts draw from the
+     * same service the landing does, and takes its one write — adopt a layout —
+     * through the shell's widget endpoint, so the landing reads back exactly what
+     * was adopted here.
      */
     $services->set('area.controller.widgets', AreaWidgetsController::class)
         ->args([
             service('twig'),
-            service('area.register'),
             service('area.preset_library'),
+            service('shell.widget.service'),
+            service('shell.widget.endpoint'),
             service('router'),
-            service('area.map'),
+            service('security.token_storage'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(AreaWidgetsController::class, 'area.controller.widgets')->public();
