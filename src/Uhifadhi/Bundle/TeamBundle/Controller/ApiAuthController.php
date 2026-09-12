@@ -18,6 +18,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
+use Uhifadhi\Bundle\TeamBundle\Api\ContractFormat;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Exception\ApiProblemException;
 use Uhifadhi\Bundle\TeamBundle\Service\ApiTokenManager;
@@ -45,9 +46,6 @@ use Uhifadhi\Bundle\TeamBundle\Service\PermissionCatalogue;
  */
 final class ApiAuthController
 {
-    /** UTC, to the second, with a literal Z — no offsets, no microseconds. */
-    private const string TIMESTAMP = 'Y-m-d\TH:i:s\Z';
-
     /**
      * The per-install identifier a client sends on every request. Accepted as
      * the device when the body names none, so a client need not say the same
@@ -97,16 +95,13 @@ final class ApiAuthController
 
         return new JsonResponse([
             'token' => $plaintext,
-            'expiresAt' => $token->getExpiresAt()->setTimezone(new \DateTimeZone('UTC'))->format(self::TIMESTAMP),
-            'ranger' => [
-                // The service number where there is one, the sign-in address
-                // otherwise: office staff are never issued one.
-                'id' => $user->getRangerCode() ?? (string) $user->getEmail(),
-                'name' => $user->getFullName(),
-                // What a client prints under the name, and what its refusal
-                // screens name as the thing to change. Never blank.
-                'role' => $user->getPosition()?->getName() ?? $user->getTeamRole()->label(),
-            ],
+            'expiresAt' => ContractFormat::timestamp($token->getExpiresAt()),
+            /*
+             * The account, spelled by the one class that spells it — so this
+             * document and `/api/me` can never disagree about who somebody is
+             * or about what their role is called.
+             */
+            'ranger' => ContractFormat::ranger($user),
             /*
              * THE EARLY SIGNAL. Without it a client cannot know whether it may
              * record until its first upload — hours later, possibly out of

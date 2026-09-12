@@ -16,6 +16,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 use Symfony\Component\Console\Application;
 use Uhifadhi\Bundle\ShellBundle\Contract\NavigationSourceInterface;
 use Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceInterface;
+use Uhifadhi\Bundle\TeamBundle\Api\State\MeProvider;
 use Uhifadhi\Bundle\TeamBundle\ArgumentResolver\AreaValueResolver;
 use Uhifadhi\Bundle\TeamBundle\Command\CreateUserCommand;
 use Uhifadhi\Bundle\TeamBundle\Controller\ApiAuthController;
@@ -79,6 +80,7 @@ use Uhifadhi\Bundle\TeamBundle\Widget\TeamWidgets;
  *   team.api_error_listener     one failure document for everything under /api
  *   team.field_sign_in          identifier + passcode -> the person, or nobody
  *   team.controller.api_auth    where a field client signs in
+ *   team.api.me_provider        GET /api/me: the bearer account and its permissions
  *   team.permissions            the catalogue: this bundle's seven + what modules declared
  *   team.permission_voter       who holds which of them
  *   team.super_admin_invariant  the refusal that keeps one active Super Admin
@@ -259,6 +261,32 @@ return static function (ContainerConfigurator $container): void {
         ])
         ->tag('controller.service_arguments');
     $services->alias(ApiAuthController::class, 'team.controller.api_auth')->public();
+
+    /*
+     * `GET /api/me` — the bearer account and its permissions, re-read on every
+     * sync so a grant made in the web app reaches a handset with no sign-out.
+     *
+     * TAGGED BY HAND, because a reusable bundle is not autoconfigured: an
+     * untagged provider is not in the locator API Platform resolves an
+     * operation's `provider:` through, and the endpoint would answer 500 with
+     * "Provider not found".
+     *
+     * THE `key` ATTRIBUTE IS WHAT KEEPS THE ID PREFIXED. The locator is built
+     * with `tagged_locator('api_platform.state_provider', 'key')`, so a tag
+     * without one is indexed by SERVICE ID and the resource's
+     * `provider: MeProvider::class` would only resolve if the id were the class
+     * name. Naming the class in `key` satisfies the resource and leaves the id
+     * under this bundle's alias, as a reusable bundle's ids must be.
+     *
+     * @see vendor/api-platform/core/src/Symfony/Bundle/Resources/config/state/state.php — the locator and its index attribute
+     * @see vendor/api-platform/core/src/State/CallableProvider.php — the lookup that throws when a provider is not in it
+     */
+    $services->set('team.api.me_provider', MeProvider::class)
+        ->args([
+            service('security.token_storage'),
+            service('team.permissions'),
+        ])
+        ->tag('api_platform.state_provider', ['key' => MeProvider::class]);
 
     /*
      * THE CATALOGUE, reading the module providers LIVE from the container in

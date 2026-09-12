@@ -16,6 +16,7 @@ installed on its own as `uhifadhi/team-bundle`.
 - [Modules point at your people](#modules-point-at-your-people)
 - [Two axes: tier and position](#two-axes-tier-and-position)
 - [Signing a field client in](#signing-a-field-client-in)
+- [Asking again: `GET /api/me`](#asking-again-get-apime)
 - [The screens](#the-screens)
 - [Configuration](#configuration)
 - [License](#license)
@@ -301,6 +302,52 @@ see below.
 Signing in again on the same handset **rotates** that handset's row rather than
 adding another, so a wipe leaves no trail of live credentials. A different
 handset gets its own row, which is what lets one be withdrawn alone.
+
+## Asking again: `GET /api/me`
+
+A permission granted in the web app has to reach a handset **without a sign-out,
+a re-install or any ceremony** — months pass between sign-ins, and a client that
+learned it may record only at its next sign-in would have a refusal it could not
+clear. So sign-in's two facts are readable on their own:
+
+```jsonc
+// 200, for the bearer account and nobody else
+{
+  "ranger": { "id": "sl-0142", "name": "…", "role": "…" },
+  "permissions": ["area.view"]
+}
+```
+
+There is no identifier in the address and none is accepted: **the token is the
+subject**, so this cannot be turned into a way to read somebody else's
+permissions. `ranger.role` is the POSITION where there is one and the tier
+otherwise, because a refusal screen names the thing an administrator has to
+change. `permissions` follows the same rule as at sign-in — always sent,
+including empty, an empty array being a refusal.
+
+It is served through **api-platform**, which the bundle requires: the resource is
+`ApiResource/Me.php` and the provider behind it is `team.api.me_provider`. Neither
+the bundle nor an installation registers the resource — a bundle's `ApiResource`
+directory is a mapped path api-platform reads off `kernel.bundles_metadata`, so a
+`mapping.paths` line is not needed and writing one would *disable* the defaults an
+installation's own resources rely on.
+
+Two lines of an installation's `api_platform.yaml` matter to a field client, and
+neither is written by api-platform's own recipe:
+
+```yaml
+api_platform:
+    # JSON only: JSON-LD would answer with @context and @id members, which the
+    # field contract does not describe.
+    formats:
+        json: ['application/json']
+    # Narrowed WITH formats, always. error_formats is a separate setting whose
+    # default is JSON-LD first, so narrowing only the line above leaves refusals
+    # being rendered by a serializer that is no longer registered — and a 406
+    # comes out as a 500.
+    error_formats:
+        json: ['application/problem+json', 'application/json']
+```
 
 ## The screens
 
