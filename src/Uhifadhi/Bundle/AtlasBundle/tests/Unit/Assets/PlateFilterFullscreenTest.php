@@ -65,7 +65,7 @@ final class PlateFilterFullscreenTest extends TestCase
     public function testTheFilterRowHandsItsSubmissionToThePlate(): void
     {
         self::assertMatchesRegularExpression(
-            '/class="map-filters"[^>]*data-action="submit->\{\{ controller \}\}#filter"/',
+            '/class="map-filters"[^>]*data-action="[^"]*submit->\{\{ controller \}\}#filter\b/',
             self::template(),
         );
     }
@@ -85,6 +85,59 @@ final class PlateFilterFullscreenTest extends TestCase
             $js,
             'The first thing the interception does is decline to intercept anywhere but fullscreen.',
         );
+    }
+
+    /**
+     * A CHIP IS AS OFTEN A LINK AS A BUTTON, and both are the same act. A filter
+     * row built of `<a href="?type=…">` chips navigates on a click exactly as a
+     * form navigates on a submission, so it leaves fullscreen exactly as a form
+     * did — the plate answers the click the same way and by the same path.
+     */
+    public function testAChipThatIsALinkIsAnsweredTheSameWay(): void
+    {
+        self::assertMatchesRegularExpression(
+            '/class="map-filters"[^>]*data-action="submit->\{\{ controller \}\}#filter click->\{\{ controller \}\}#filterLink"/',
+            self::template(),
+        );
+
+        $js = self::controllerJs();
+
+        self::assertMatchesRegularExpression(
+            '/filterLink\(event\) \{\n\s+if \(!this\.isFullscreen\(\)\) \{\n\s+return;/',
+            $js,
+            'The link path declines outside fullscreen for the same reason the form path does.',
+        );
+        self::assertStringContainsString("closest('a[href]')", $js);
+        self::assertSame(
+            2,
+            substr_count($js, 'this.refilter(address)'),
+            'Both chips reach the same fetch, the same swap and the same address — one path, two ways in.',
+        );
+    }
+
+    /**
+     * AND ONLY A PLAIN LEFT CLICK IS TAKEN. Opening a filter in a new tab or a
+     * new window is the viewer asking for a second page, and a plate that
+     * swallowed that would have broken something that worked.
+     *
+     * @param string $refused a way of clicking that is not the plate's to answer
+     */
+    #[DataProvider('otherWaysOfClicking')]
+    public function testOnlyAPlainLeftClickIsIntercepted(string $refused): void
+    {
+        self::assertStringContainsString(
+            $refused,
+            self::controllerJs(),
+            'A modified click belongs to the browser, not to the plate.',
+        );
+    }
+
+    /** @return iterable<string, array{string}> */
+    public static function otherWaysOfClicking(): iterable
+    {
+        foreach (['event.button', 'event.metaKey', 'event.ctrlKey', 'event.shiftKey', 'event.altKey'] as $refused) {
+            yield $refused => [$refused];
+        }
     }
 
     /**

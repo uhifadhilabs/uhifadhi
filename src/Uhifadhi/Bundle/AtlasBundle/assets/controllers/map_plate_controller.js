@@ -516,7 +516,7 @@ export default class extends Controller {
      * bubbling, because the form is the module's own markup and the plate puts no
      * attribute on it: https://stimulus.hotwired.dev/reference/actions
      */
-    async filter(event) {
+    filter(event) {
         if (!this.isFullscreen()) {
             return;
         }
@@ -528,7 +528,43 @@ export default class extends Controller {
         }
 
         event.preventDefault();
+        this.refilter(address);
+    }
 
+    /**
+     * THE SAME ANSWER FOR A CHIP THAT IS A LINK. A filter row is as often a row
+     * of `<a href="?type=…">` chips as it is a form, and a click on one navigates
+     * exactly as a submission does — so it left fullscreen exactly as a
+     * submission did, and it is answered by the same path.
+     *
+     * ONLY A PLAIN LEFT CLICK. A middle click, a modified click or a chip with a
+     * target of its own is the viewer asking for a SECOND page, and a plate that
+     * swallowed that would have taken something that worked away from them.
+     */
+    filterLink(event) {
+        if (!this.isFullscreen()) {
+            return;
+        }
+
+        const link = event.target.closest('a[href]');
+        if (!link || link.target || !isPlainClick(event)) {
+            return;
+        }
+
+        const address = new URL(link.href, window.location.href);
+        if (address.origin !== window.location.origin) {
+            return;
+        }
+
+        event.preventDefault();
+        this.refilter(address);
+    }
+
+    /**
+     * THIS PLATE, AT ANOTHER QUERY, WITHOUT LEAVING FULLSCREEN — the one path
+     * both kinds of chip take.
+     */
+    async refilter(address) {
         const fresh = await this.fetchPlate(address);
         if (!fresh) {
             // The answer was a refusal or no page at all. The honest fallback is
@@ -714,6 +750,16 @@ function popupMarkup(popup, properties) {
     }
 
     return markup;
+}
+
+/**
+ * WHOSE CLICK IT IS. A plain left click on a chip is the viewer changing the
+ * filter; every other way of clicking one is them asking for a second page, and
+ * that belongs to the browser.
+ * https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button
+ */
+function isPlainClick(event) {
+    return 0 === event.button && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
 }
 
 function escapeHtml(value) {

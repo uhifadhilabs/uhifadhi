@@ -346,13 +346,16 @@ break a plate inside it.
 
 ### A filter change keeps fullscreen
 
-A filter row written as a GET form needs nothing else to work on an expanded map. While the plate
-is fullscreen the plate answers the submission itself: it fetches the same address with the new
-query, swaps its own three subtrees — the filter row, the map element and the legend — out of the
-answer, and writes the new address into the bar without navigating. Leaving fullscreen then
-navigates once, because the log and the counts outside the plate are still answering the query the
-page was served with. Outside fullscreen nothing is intercepted and the form submits as any form
-does.
+A filter row needs nothing else to work on an expanded map, whether its chips are a GET form or
+same-origin links. While the plate is fullscreen it answers the submission — or the click — itself:
+it fetches that address, swaps its own three subtrees — the filter row, the map element and the
+legend — out of the answer, and writes the new address into the bar without navigating. Leaving
+fullscreen then navigates once, because the log and the counts outside the plate are still
+answering the query the page was served with. Outside fullscreen nothing is intercepted and the
+row behaves as its markup says.
+
+A chip clicked with a modifier, with the middle button, or carrying a `target` of its own is left
+to the browser: that is somebody asking for a second page, not for a different filter.
 
 A module writes no JavaScript for this and no attribute either. What it must not do is take the
 plate's hook (`data-atlas-plate`) off the root or wrap the filter row in another element of its
