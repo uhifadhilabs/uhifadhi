@@ -102,7 +102,7 @@ return static function (ContainerConfigurator $container): void {
     /*
      * The operator's broom. Never automatic, never wired to a kernel event:
      * removing somebody's saved dashboards is a decision, and a decision
-     * belongs to a person answering a prompt. The core ships no command to ask
+     * belongs to a person answering a prompt. The shell ships no command to ask
      * with — devkit owns commands — so this is the service that prompt drives.
      */
     $services->set('shell.widget.pruner', WidgetPruneService::class)

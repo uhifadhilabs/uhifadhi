@@ -31,7 +31,6 @@ use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Security\ApiTokenAuthenticator;
 use Uhifadhi\Bundle\TeamBundle\TeamBundle;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\DeclaringModuleProvider;
-use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\DevkitCommandCollector;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\DevkitContentCollector;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\GuardedController;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\ShellPageController;
@@ -264,16 +263,10 @@ final class TestKernel extends Kernel
         $container->services()->alias('test_public.hasher', 'security.user_password_hasher')->public();
 
         // DEVKIT, STANDING IN. devkit installs through require-dev and is no
-        // dependency of the core, so the half of the devkit contracts that
+        // dependency of the core, so the side of the devkit contracts that
         // COLLECTS is a fixture here: the same tagged iterator devkit builds,
-        // over the same tag string this bundle writes by hand.
-        $container->services()
-            ->set('test_public.devkit_commands', DevkitCommandCollector::class)
-            ->args([new TaggedIteratorArgument('uhifadhi.devkit.command_provider')])
-            ->public();
-
-        // The same stand-in for the other half of the devkit contracts: the
-        // collector that orders content providers and seeds them.
+        // over the same tag string this bundle writes by hand. It orders the
+        // content providers and seeds them.
         $container->services()
             ->set('test_public.devkit_content', DevkitContentCollector::class)
             ->args([new TaggedIteratorArgument('uhifadhi.devkit.content_provider')])

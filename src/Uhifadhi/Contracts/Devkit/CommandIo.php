@@ -78,7 +78,7 @@ interface CommandIo
      * end of input — so a passphrase can be piped in rather than written into a
      * shell history or a process list:
      *
-     *     printf '%s' "$PASSPHRASE" | bin/console team:user:create ada@example.test Ada Mwangi
+     *     printf '%s' "$TOKEN" | bin/console patrol:feed:connect https://feed.example.test
      *
      * Null means the stream ended with nothing more to read, which is a
      * different thing from '' — a line that was there and was empty. A handler

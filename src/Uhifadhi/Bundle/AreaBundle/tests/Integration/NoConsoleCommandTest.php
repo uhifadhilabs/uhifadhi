@@ -16,14 +16,17 @@ namespace Uhifadhi\Bundle\AreaBundle\Tests\Integration;
 use Symfony\Component\Console\CommandLoader\CommandLoaderInterface;
 
 /**
- * THE CORE SHIPS NO CONSOLE COMMAND, AND THIS BUNDLE IS NOT THE EXCEPTION.
+ * THE CORE SHIPS ONE CONSOLE COMMAND, AND THIS BUNDLE IS NOT WHERE IT LIVES.
  *
- * Everything the platform can be told to do is either something the runtime
- * does for itself — the registry reconciles when the cache is warmed — or
- * something devkit owns, and devkit is a development-only package whose absence
- * from a deployment is enforced by the dependency graph rather than by a flag
- * somebody has to remember to set. A seeder shipped here would be installed on
- * every deployment and reachable by anybody who can reach a shell.
+ * The exception is exact: TeamBundle's `team:user:create`, the first
+ * administrator, because a production installation is built without development
+ * packages and that account is needed on the server. Nothing else. Everything
+ * the platform can otherwise be told to do is either something the runtime does
+ * for itself — the registry reconciles when the cache is warmed — or something
+ * devkit owns, and devkit is a development-only package whose absence from a
+ * deployment is enforced by the dependency graph rather than by a flag somebody
+ * has to remember to set. A seeder shipped here would be installed on every
+ * deployment and reachable by anybody who can reach a shell.
  *
  * The assertion is about a category rather than about one name: nothing this
  * bundle registers carries `console.command`. A second seeder added next year
@@ -48,7 +51,7 @@ final class NoConsoleCommandTest extends IntegrationTestCase
         ));
 
         self::assertSame([], $mine, \sprintf(
-            'The core ships no commands; this bundle registers [%s]. A seeder belongs in devkit.',
+            'The core ships one command, team:user:create, and it is the team bundle\'s; this bundle registers [%s]. A seeder belongs in devkit.',
             implode(', ', $mine),
         ));
     }

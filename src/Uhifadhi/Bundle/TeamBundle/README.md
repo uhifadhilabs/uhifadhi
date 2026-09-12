@@ -40,6 +40,7 @@ it is not the firewall — it is the account those two ask about.
 | the screens | sign in, forgotten password, reset, accept an invitation, the roster, one person's record, the permission matrix, departments |
 | the widget surfaces | the roster and the matrix, each a catalogue the shell's widget machinery arranges |
 | the sidebar row | one Team row, contributed to the shell's navigation where a shell is installed |
+| the first administrator | `team:user:create` — the one console command the core ships, run once on a deployment because every screen is behind the sign-in it creates |
 
 It also answers the platform's user contract. Registering the bundle prepends
 `doctrine.orm.resolve_target_entities` for
@@ -106,16 +107,34 @@ for the entities IT writes.
 ### Then the first administrator
 
 Every screen is behind the sign-in an installation does not have yet, so the one
-account that cannot be made through a screen is made from the console:
+account that cannot be made through a screen is made from the console. **On a
+deployment it is run once, on the server, after the migrations:**
 
 ```bash
-bin/console team:user:create
-Email address: ada@example.test
-First name: Ada
-Last name: Mwangi
-Tier — super-admin, admin, staff [super-admin]:
-Passphrase (not shown):
-Created Ada Mwangi <ada@example.test> as Super Admin.
+docker exec <web> php bin/console team:user:create
+# or, on a Kamal deployment
+kamal app exec "php bin/console team:user:create"
+```
+
+```console
+$ bin/console team:user:create
+
+ Email address:
+ > ada@example.test
+ First name:
+ > Ada
+ Last name:
+ > Mwangi
+ Tier [super-admin]:
+  [0] super-admin
+  [1] admin
+  [2] staff
+ >
+
+ Passphrase (not shown):
+ >
+
+ [OK] Created Ada Mwangi <ada@example.test> as Super Admin.
 ```
 
 It asks for whatever it was not told, so anything given on the command line is
@@ -134,17 +153,21 @@ printf '%s' "$PASSPHRASE" | bin/console team:user:create ada@example.test Ada Mw
 bin/console team:user:create ada@example.test Ada Mwangi --tier=staff --password="$PASSPHRASE"
 ```
 
-**A tail naming all three is asked nothing**, which is what keeps the piped form
-working: a question put to a script would be answered by whatever the pipe held
-next. `--tier=super-admin|admin|staff` names another tier, and `--password=…`
-passes the passphrase inline instead of on standard input.
+**A tail naming all three is asked nothing but the passphrase**, which is what
+keeps the piped form working: a tier question put to a pipe would be answered by
+the line the passphrase was on. Under `--no-interaction` nothing is asked at all
+and the passphrase is read from standard input.
+`--tier=super-admin|admin|staff` names another tier, and `--password=…` passes
+the passphrase inline instead of on standard input — at the cost of putting it in
+the process list, so prefer the pipe.
 
-**That command exists in a development install only.** This bundle ships no
-console commands; it ships an inert *provider* that names one, and
-`uhifadhi/devkit-module` — installed through `require-dev` — is what collects it
-and turns it into a real command. A production build has no devkit and no
-`team:user:create`, so the first administrator is made where the deployment is
-built and the account travels in the database.
+**This is the one console command the core ships.** Every other command the
+platform has belongs to `uhifadhi/devkit-module`, which installs through
+`require-dev` and is absent from a production build. That arrangement cannot hold
+this one: a production installation is built *without* development packages, and
+the first administrator is needed exactly there. There is no web setup screen —
+a page that creates the first administrator is a page a stranger can reach, and
+one that something has to remember to close.
 
 ## Modules point at your people
 

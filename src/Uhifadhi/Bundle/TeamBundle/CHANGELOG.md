@@ -14,3 +14,5 @@ Not released yet.
  * the roster and the permission matrix, as widget surfaces
  * the API token a field client signs in with: the credential, the manager
    that issues and revokes it, and `POST /api/auth/token`
+ * `team:user:create`: the first administrator, made from the console once on a
+   deployment — the one console command the core ships

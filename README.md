@@ -69,8 +69,26 @@ entities **it** writes. Run it after a core update and it must report
 `No changes detected in your mapping information.`; pass `--allow-empty-diff` if
 you want that outcome to exit zero for a script.
 
-The core ships **no console commands**: devkit — a development-only package —
-owns every command the platform has.
+### Then the first administrator
+
+Every screen is behind the sign-in the installation does not have yet, so the one
+account that cannot be made through a screen is made from the console, once, on
+the deployment itself:
+
+```bash
+docker exec <web> php bin/console team:user:create      # or: kamal app exec "php bin/console team:user:create"
+```
+
+It asks for the address, the two names, the tier and the passphrase, and the
+passphrase is never echoed. [`TeamBundle`'s
+README](src/Uhifadhi/Bundle/TeamBundle/README.md#then-the-first-administrator)
+documents the scripted and piped forms.
+
+**That command is the one exception to a standing rule.** The core ships **no
+console commands** — devkit, a development-only package, owns every command the
+platform has — and `team:user:create` is the single documented exception, because
+a production installation is built without development packages and the first
+account has to be made where the deployment is.
 
 ### The order versions run in
 

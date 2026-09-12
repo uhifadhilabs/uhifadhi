@@ -13,9 +13,11 @@ declare(strict_types=1);
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
+use Symfony\Component\Console\Application;
 use Uhifadhi\Bundle\ShellBundle\Contract\NavigationSourceInterface;
 use Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceInterface;
 use Uhifadhi\Bundle\TeamBundle\ArgumentResolver\AreaValueResolver;
+use Uhifadhi\Bundle\TeamBundle\Command\CreateUserCommand;
 use Uhifadhi\Bundle\TeamBundle\Controller\ApiAuthController;
 use Uhifadhi\Bundle\TeamBundle\Controller\DepartmentController;
 use Uhifadhi\Bundle\TeamBundle\Controller\InviteController;
@@ -26,7 +28,6 @@ use Uhifadhi\Bundle\TeamBundle\Controller\PositionWidgetsController;
 use Uhifadhi\Bundle\TeamBundle\Controller\SecurityController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamWidgetsController;
-use Uhifadhi\Bundle\TeamBundle\Devkit\TeamCommandProvider;
 use Uhifadhi\Bundle\TeamBundle\Devkit\TeamContentProvider;
 use Uhifadhi\Bundle\TeamBundle\EventListener\ApiErrorListener;
 use Uhifadhi\Bundle\TeamBundle\Repository\ApiTokenRepository;
@@ -88,7 +89,7 @@ use Uhifadhi\Bundle\TeamBundle\Widget\TeamWidgets;
  *   team.user_checker           the sign-in refusal for a deactivated account
  *   team.overview               the roster's counts and its attention rows
  *   team.widget_surface.*       the roster and the matrix, as dashboard surfaces
- *   team.devkit.commands        what devkit materialises into commands in a dev install
+ *   team.command.create_user    the first administrator, made from the console
  *   team.devkit.content         the demo organisation devkit seeds in a dev install
  *   team.controller.security    the sign-in screen
  *   team.controller.team        the roster
@@ -150,19 +151,35 @@ return static function (ContainerConfigurator $container): void {
         ->args([service(ApiTokenRepository::class), service('doctrine.orm.entity_manager')]);
 
     /*
-     * THE FIRST ADMINISTRATOR, OFFERED RATHER THAN SHIPPED. The core ships no
-     * console command; devkit — dev-only, installed through require-dev — is
-     * what turns this inert declaration into one. In a production build devkit
-     * is absent, nothing collects this service, and it is never asked anything.
+     * THE FIRST ADMINISTRATOR, AND THE ONE CONSOLE COMMAND THE CORE SHIPS.
+     * Every other command the platform has belongs to devkit, which installs
+     * through require-dev; this one cannot, because a production installation is
+     * built WITHOUT development packages and the first account is needed exactly
+     * there — on the server, once, after the deploy.
      *
-     * THE TAG IS A LITERAL STRING, not a constant of devkit's. Reading
-     * UhifadhiDevkitBundle::COMMAND_PROVIDER_TAG would load a class that is not
-     * installed in production, which is the whole arrangement inverted: the
-     * always-installed side names the promise, never the tool.
+     *   "If you can't use PHP attributes, register the command as a service and
+     *    tag it with the console.command tag."
+     *   — https://symfony.com/doc/current/console.html#registering-the-command
+     *
+     * A BARE TAG, because the name and the description are on the class: the
+     * compiler pass reads the #[AsCommand] attribute whether or not anything was
+     * autoconfigured, and registers the service lazily under the name it finds —
+     * which is how the framework's own commands are wired.
+     * @see vendor/symfony/console/DependencyInjection/AddConsoleCommandPass.php
+     * @see vendor/symfony/framework-bundle/Resources/config/console.php
+     *
+     * GUARDED ON THE COMPONENT, as FrameworkBundle guards the file that carries
+     * every one of its commands (FrameworkExtension::hasConsole() is
+     * class_exists(Application::class), and console.php is loaded only if it
+     * holds). A container compiled where there is no console must not carry a
+     * service whose class it cannot load.
+     * @see vendor/symfony/framework-bundle/DependencyInjection/FrameworkExtension.php
      */
-    $services->set('team.devkit.commands', TeamCommandProvider::class)
-        ->args([service('team.accounts')])
-        ->tag('uhifadhi.devkit.command_provider');
+    if (class_exists(Application::class)) {
+        $services->set('team.command.create_user', CreateUserCommand::class)
+            ->args([service('team.accounts')])
+            ->tag('console.command');
+    }
 
     /*
      * A SMALL ORGANISATION TO LOOK AT, offered the same way and collected by

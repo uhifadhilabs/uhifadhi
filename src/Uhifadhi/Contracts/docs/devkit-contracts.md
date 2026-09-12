@@ -21,10 +21,13 @@ every piece of machinery it owns — is absent from a production build. Its job 
 this page, and devkit `tagged_iterator`s them and materialises real Symfony console commands and
 demo-content loaders — but only in a dev install, because that is the only place devkit exists.
 
-This is not a small job, because devkit owns **every command the platform has**. The core ships
-none: the five bundles contribute entities, screens and listeners, and nothing a person types. So a console command that belongs to the platform rather than to an application is,
-by construction, a `CommandDescriptor` handed to devkit — and it exists on a developer's machine
-and in CI and nowhere else.
+This is not a small job, because devkit owns **every command the platform has bar one**. The core
+ships a single console command — TeamBundle's `team:user:create`, the first administrator, which
+has to exist on a production installation because that is where the first account is made and a
+production build has no development packages. Everything else: the five bundles contribute
+entities, screens and listeners, and nothing a person types. So a console command that belongs to
+the platform rather than to an application is, by construction, a `CommandDescriptor` handed to
+devkit — and it exists on a developer's machine and in CI and nowhere else.
 
 The word for the providers is **inert**. In production, a provider is an ordinary tagged service
 that is never asked to do anything, because the thing that would ask — devkit — is not installed.
@@ -169,14 +172,14 @@ because there is no echo to suppress and nothing is leaked by reading it. That i
 verb for both a passphrase typed at a prompt and a passphrase piped in:
 
 ```bash
-bin/console team:user:create                                    # typed, and not echoed
-printf '%s' "$PASSPHRASE" | bin/console team:user:create ada@example.test Ada Mwangi
+bin/console patrol:feed:connect                                 # typed, and not echoed
+printf '%s' "$TOKEN" | bin/console patrol:feed:connect https://feed.example.test
 ```
 
 devkit's adapter reads it through Symfony's `QuestionHelper` with `Question::setHidden(true)`, whose
 own fallback rule it follows: where the response cannot be hidden it says so on the error stream and
-reads the line anyway rather than refusing, because a first administrator who cannot be created is
-worse than one created in view of the person creating it.
+reads the line anyway rather than refusing, because a credential that cannot be entered at all is
+worse than one entered in view of the person entering it.
 
 **It is deliberately not shaped like an `OutputInterface`.** No verbosity, no formatter, no
 sections, no `write`/`writeln` distinction — modelling those would be reimplementing the console in

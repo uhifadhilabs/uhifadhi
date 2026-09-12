@@ -2230,10 +2230,14 @@ installation's, for the entities it writes itself.
 **There is no command to add your module to the catalogue, and there is nothing to remember.** The
 registry sync rides the end of any console command and the first request of any build, so
 `cache:clear` is the whole of it — the same command a deploy already runs, doing a job an operator
-would otherwise have to be told about. There are no commands in
-the core at all; `bin/console list` on a production installation offers the framework's built-in
-commands and nothing of this platform's, because everything a person types belongs to devkit, which
-is `require-dev`.
+would otherwise have to be told about. **The core ships exactly one console command**, and your
+module ships none: `bin/console list` on a production installation offers the framework's built-in
+commands plus `team:user:create` — the first administrator, the one account that cannot be made
+through a screen — because everything else a person types belongs to devkit, which is
+`require-dev`. That command is the documented exception, and it exists because a production build
+has no development packages and the first account has to be made on the deployment itself. A
+command your module wants is a `CommandDescriptor` handed to devkit; see
+[the devkit contracts](devkit-contracts.md).
 
 The sync is safe on production and safe to repeat. Your module's catalogue row is refreshed from your
 provider every time — change your module's display name between releases and the catalogue follows,

@@ -19,10 +19,11 @@ use Symfony\Contracts\Service\ServiceSubscriberInterface;
 use Uhifadhi\Bundle\RegistryBundle\Service\RegistrySyncService;
 
 /**
- * THE ONCE-PER-DEPLOY HOOK. The core ships no console command — devkit owns
- * commands — so reconciling the registry with the installed module providers
- * hangs off the moments a deploy is made of: a console command has finished, or
- * a request has arrived. Whichever comes first does it, once per build.
+ * THE ONCE-PER-DEPLOY HOOK. There is no command to reconcile the registry with —
+ * devkit owns every command the platform has bar the team bundle's first
+ * administrator — so reconciling it with the installed module providers hangs
+ * off the moments a deploy is made of: a console command has finished, or a
+ * request has arrived. Whichever comes first does it, once per build.
  *
  * WHY NOT A CACHE WARMER, WHICH IS WHAT THIS LOOKS LIKE. Because a warmer that
  * reads the database breaks the cache commands themselves on a pristine prod
@@ -88,9 +89,9 @@ final class RegistrySyncListener implements ServiceSubscriberInterface
 
     /**
      * The event object is not taken, and symfony/console is not a dependency of
-     * this bundle: commands belong to devkit, so the registry names no class of
-     * that component. A tag is a string, and an installation without a console
-     * simply never fires this one.
+     * this bundle: the registry has no command of its own, so it names no class
+     * of that component. A tag is a string, and an installation without a
+     * console simply never fires this one.
      */
     public function onConsoleTerminate(): void
     {

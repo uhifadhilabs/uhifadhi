@@ -32,8 +32,10 @@ use PHPUnit\Framework\TestCase;
  *     reach back into one.
  *  3. The registry renders nothing. See docs/boundaries.md: the module grid, the
  *     customize screen and every tile is the shell's.
- *  4. The registry ships no console command. The core ships none at all — devkit
- *     owns commands, and reconciling the catalogue is a cache warmer.
+ *  4. The registry ships no console command. The core ships exactly one —
+ *     TeamBundle's `team:user:create`, the first administrator an installation
+ *     cannot make through a screen — and devkit owns every other command the
+ *     platform has. Reconciling the catalogue is a cache warmer.
  */
 final class BoundaryTest extends TestCase
 {
@@ -189,10 +191,12 @@ final class BoundaryTest extends TestCase
     }
 
     /**
-     * NO COMMANDS IN THE CORE. Reconciling the catalogue is a cache warmer, so
+     * NO COMMAND IN THIS BUNDLE. Reconciling the catalogue is a cache warmer, so
      * an operator has nothing to remember, and devkit — a dev-only package —
-     * owns every command the platform has. A `Command/` directory here is that
-     * ruling being undone by accident.
+     * owns every command the platform has bar one: `team:user:create` is
+     * TeamBundle's, and TeamBundle's `Command/` namespace and services file are
+     * the only place in the core that may name the console component. A
+     * `Command/` directory here is that ruling being undone by accident.
      */
     public function testTheRegistryShipsNoConsoleCommand(): void
     {
@@ -206,7 +210,7 @@ final class BoundaryTest extends TestCase
             }
         }
 
-        self::assertSame([], $offenders, 'The core ships no console command.');
+        self::assertSame([], $offenders, 'Only TeamBundle\'s Command/ namespace may name the console component.');
     }
 
     /**
