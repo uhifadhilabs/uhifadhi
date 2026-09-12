@@ -260,5 +260,19 @@ final class AreaBundle extends AbstractBundle
         if (isset($bundles['TwigBundle'], $bundles['SecurityBundle'])) {
             $container->import('config/screens.php');
         }
+
+        /*
+         * THE FIELD API IS CONDITIONAL FOR THE SAME REASON AND ON THE SAME
+         * SIGNAL — see config/field_api.php.
+         *
+         * Without ApiPlatformBundle there is no `/api` for a resource to attach
+         * to; without SecurityBundle there is no authorization checker, and this
+         * endpoint hands out the areas somebody may work in, which is a list that
+         * must never widen because the thing that narrows it was absent. Neither
+         * present means the area model and no field API.
+         */
+        if (isset($bundles['ApiPlatformBundle'], $bundles['SecurityBundle'])) {
+            $container->import('config/field_api.php');
+        }
     }
 }

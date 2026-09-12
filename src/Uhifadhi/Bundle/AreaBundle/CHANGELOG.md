@@ -17,4 +17,6 @@ Not released yet.
  * the areas register, the area's own map plate, and the widget surface behind
    the landing page's layouts
  * the KPI contract a department's performance surfaces read
+ * `GET /api/areas/mine`: the areas an account may work in, with their size,
+   roster and simplified boundary — the cache a field client fills at sign-in
  * the Areas section in the sidebar and the tab strip above every area page

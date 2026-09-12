@@ -16,6 +16,7 @@ installed on its own as `uhifadhi/area-bundle`.
 - [The zone](#the-zone)
 - [Modules point at your ground](#modules-point-at-your-ground)
 - [What a module contributes to an area](#what-a-module-contributes-to-an-area)
+- [What a field client caches](#what-a-field-client-caches)
 - [The screens](#the-screens)
 - [Where you are, and what is in the sidebar](#where-you-are-and-what-is-in-the-sidebar)
 - [An area is not a module of itself](#an-area-is-not-a-module-of-itself)
@@ -46,6 +47,7 @@ who is looking, and this is the ground they are all talking about.
 | the screens | the register, create, one area's overview, its module grid, its module shop, its zones and its settings |
 | the sidebar section | Areas, and every area unfolding to its own screens, where a shell is installed |
 | the KPI contract | the figures a department's performance surfaces read from the modules attached to it |
+| the field cache | `GET /api/areas/mine` — the areas an account may work in, with their size, roster and boundary, for a client that works offline |
 
 ## Installation
 
@@ -196,6 +198,55 @@ a name — because a department is TeamBundle's and nothing published describes
 one. Typing this against Team's entity would make every module that reports a
 figure depend on Team; typing it against nothing would hand providers an
 `object` to guess at.
+
+## What a field client caches
+
+A handset works for days out of signal, so it fills a cache at sign-in and then
+asks nothing. `GET /api/areas/mine` is that cache:
+
+```jsonc
+// 200
+{
+  "areas": [
+    {
+      "id": "0192f3c1-…",                    // the public address, never the sequential key
+      "name": "Northern Conservation Reserve",
+      "areaKm2": 9903.4,                     // ST_Area on the spheroid, to a tenth
+      "stations": [],
+      "team": [{ "id": "sl-0142", "name": "…" }],
+      "boundary": { "type": "MultiPolygon", "coordinates": [ /* lon, lat */ ] }
+    }
+  ]
+}
+```
+
+**"Mine" is the platform's own authority question, asked once per area.** An area
+is in the answer when `area.view` is granted *for that area* — the same question
+every screen here asks — so a tier and an org-level position are handed every
+area, somebody whose department is confined to one area is handed that one, and an
+account that may see nothing is handed an **empty list rather than a 403**: a
+refusal here would stop a client syncing instead of showing an empty picker.
+
+**`boundary` is GeoJSON in lon/lat order** (RFC 7946, which is also PostGIS's
+order), simplified in the database to roughly 55 m before it is sent — a phone
+draws it at zooms where a vertex every few metres is invisible. It is a
+`MultiPolygon` or a `Polygon` depending on whether the ground is one piece, and
+`null` for an area whose edge has not been imported, which also measures `0.0`.
+
+**`stations` is present and empty.** This platform has no station record;
+publishing the station names typed on past work as a register would hand a client
+a list of guesses with positions nobody holds.
+
+**`team` is the roster, and it is asked of the contract.** This bundle owns ground,
+not people: it reads `Uhifadhi\Contracts\Entity\UserInterface`, so whichever
+entity an installation resolved that interface to is what answers. Everybody is
+listed, the deactivated included — the list is who may be *named* on a record, not
+who may sign in.
+
+The endpoint is registered **only where both ApiPlatformBundle and SecurityBundle
+are in the kernel**. Without api-platform there is no `/api` to attach to; without
+security there is no authorization checker, and a list of the areas somebody may
+work in must never widen because the thing that narrows it was missing.
 
 ## The screens
 
