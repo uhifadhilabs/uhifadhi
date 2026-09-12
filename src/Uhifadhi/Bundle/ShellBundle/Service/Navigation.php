@@ -96,10 +96,11 @@ final class Navigation
      * "Where am I" is the sidebar's whole job and two lit rows answer it worse
      * than none, so the shell refuses rather than rendering a nav that cannot
      * be read. The check is per sibling list rather than per sidebar, and the
-     * distinction is the tree's: an area's row and the row of the screen you
-     * are on inside it are both lit, on purpose — that is one PATH, drawn. Two
-     * lit rows side by side is a contradiction; a lit row inside a lit branch
-     * is a location.
+     * distinction is the tree's: the place you are inside and the row you are on
+     * within it are both marked, on purpose — that is one PATH, drawn, and the
+     * template spends the accent on the deeper of the two. Two marked rows side
+     * by side is a contradiction; a marked row inside a marked branch is a
+     * location.
      *
      * Zero is allowed and always will be: a viewer can be somewhere the nav
      * does not list, and a shell that refused to draw a sidebar on a sign-in

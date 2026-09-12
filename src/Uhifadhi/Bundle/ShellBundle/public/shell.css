@@ -332,9 +332,9 @@ body::before {
 .ntree .nta::after { content: ""; position: absolute; left: 23px; top: 50%; width: 9px; height: 1px; background: var(--c-ln2); }
 .ntree .nta:hover { background: rgb(var(--c-raised)); }
 /* The place the viewer is inside: named and weighted, but NOT the accent — the
-   accent is reserved for the leaf they are actually on. `.cur` is the design's
-   name for this ancestor state; `.on` is what the single-`current` model emits. */
-.ntree .nta.on, .ntree .nta.cur { color: rgb(var(--c-tx)); font-weight: 600; }
+   accent is reserved for the one row they are actually on, however many rungs
+   below this one it sits. `.cur` is the place rung's own marking. */
+.ntree .nta.cur { color: rgb(var(--c-tx)); font-weight: 600; }
 
 /* DEPTH 3 — an area's own sibling screens (Overview / Modules / Zones / Settings). */
 .ntree .ntt { padding: 5px 12px 5px 52px; font-size: 11.5px; color: rgb(var(--c-fog)); }

@@ -31,9 +31,12 @@ source's job** (the shell holds no
 `AuthorizationChecker` and calls `is_granted` on nothing — a withheld row is
 absent, never hidden); a row with no destination renders inert rather than
 disappearing; folding is a class, never an omission (a caret that folds by not
-rendering has nothing to reopen); **exactly one row is current** or the shell
-refuses; and the nav is read live per render, so switching a module off takes its
-row with it the same day.
+rendering has nothing to reopen); **exactly one row is current among siblings** or
+the shell refuses; **the accent is spent once per sidebar** — `on` goes to the
+deepest current row of the path, the place rung it hangs under wears the quieter
+`cur`, and every rung between them is an open branch (`par`) and nothing more; and
+the nav is read live per render, so switching a module off takes its row with it
+the same day.
 
 ## The area shell
 

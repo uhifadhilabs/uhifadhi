@@ -128,10 +128,13 @@ final readonly class AreaNavigation implements NavigationSourceInterface
                 label: (string) $area->getName(),
                 url: $url,
                 icon: 'shell:map',
-                current: $hereArea && [] === array_filter(
-                    $children,
-                    static fn (NavItem $c): bool => $c->current,
-                ),
+                /*
+                 * THE PLACE THE VIEWER IS IN, MARKED WHATEVER IS LIT BELOW IT.
+                 * The place rung is drawn quieter than the accent, so it says
+                 * "you are inside here" next to the one accented row rather than
+                 * competing with it, and it says nothing from outside the area.
+                 */
+                current: $hereArea,
                 // Unfolded only for the area being viewed: an installation with
                 // eight areas would otherwise open with forty rows.
                 open: $hereArea,
@@ -198,26 +201,45 @@ final readonly class AreaNavigation implements NavigationSourceInterface
                 $screens[] = new NavItem(label: $screen->label, url: $screen->url, current: $screen->current);
             }
 
-            $leafLit = [] !== array_filter($screens, static fn (NavItem $s): bool => $s->current);
-
             $modules[] = new NavItem(
                 label: $link->title,
                 url: $link->url,
-                current: $here && !$leafLit && !$configuring,
+                current: $here && !self::litAnywhere($screens) && !$configuring,
                 open: $here,
                 children: $screens,
             );
         }
 
-        $leafLit = [] !== array_filter($modules, static fn (NavItem $m): bool => $m->current);
+        $litBelow = self::litAnywhere($modules);
 
         return new NavItem(
             label: $tab->label,
             url: $tab->url,
-            current: $tab->current && !$leafLit,
-            open: $tab->current || $leafLit,
+            current: $tab->current && !$litBelow,
+            open: $tab->current || $litBelow,
             children: $modules,
         );
+    }
+
+    /**
+     * IS ANY ROW IN THIS BRANCH LIT — at any depth, not merely one rung down.
+     *
+     * An ancestor is an ancestor however many rungs below the light sits: a
+     * module's own screen is three rungs under the area's `Modules` screen, and
+     * a check that looked one level down would let every rung between them
+     * accent itself as well. Only the deepest row carries the light.
+     *
+     * @param list<NavItem> $rows
+     */
+    private static function litAnywhere(array $rows): bool
+    {
+        foreach ($rows as $row) {
+            if ($row->current || self::litAnywhere($row->children)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

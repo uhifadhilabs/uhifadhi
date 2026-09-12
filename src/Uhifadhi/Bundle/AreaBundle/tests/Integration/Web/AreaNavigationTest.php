@@ -246,6 +246,67 @@ final class AreaNavigationTest extends WebTestCase
     }
 
     /**
+     * ONE LIT ROW IN THE WHOLE TREE, AND IT IS THE DEEPEST ONE. An ancestor is
+     * an ancestor however many rungs down the light is: the module's own screen
+     * is lit, so neither the module nor the area's `Modules` screen above it may
+     * claim the light as well. Three accented rows in one branch answer "where
+     * am I" three times.
+     */
+    public function testTheTreeLightsTheDeepestRowAndNoAncestorOfIt(): void
+    {
+        $this->boot(self::WITH_MODULES);
+        $area = $this->anArea('Northern Conservation Reserve');
+        $this->aCatalogue();
+        $this->install($area, 'patrols');
+        $uuid = (string) $area->getUuidString();
+
+        $row = $this->areaRow($this->navAtRoute('/areas/'.$uuid.'/modules/patrols', 'test_module_entry', self::WITH_MODULES));
+
+        self::assertSame(['Overview'], self::litUnder($row));
+    }
+
+    /**
+     * AND ON A RECORD PAGE THE LIT ROW IS THE LIST SCREEN THAT LED THERE — still
+     * one row, still the deepest. A record is inside a place rather than being
+     * one, so the place it belongs to is what the tree names.
+     */
+    public function testARecordPageLightsTheListScreenAndNothingAboveIt(): void
+    {
+        $this->boot(self::WITH_MODULES);
+        $area = $this->anArea('Northern Conservation Reserve');
+        $this->aCatalogue();
+        $this->install($area, 'patrols');
+        $uuid = (string) $area->getUuidString();
+
+        $row = $this->areaRow($this->navAtRoute('/areas/'.$uuid.'/modules/patrols/patrols', 'test_module_list', self::WITH_MODULES));
+
+        self::assertSame(['Patrols'], self::litUnder($row));
+    }
+
+    /**
+     * THE AREA ROW MARKS THE PLACE THE VIEWER IS IN, LIT LEAF OR NOT. The
+     * design draws the place rung as `cur` rather than as the accent, so it says
+     * "you are inside here" alongside the one accented row below it, and stops
+     * saying it the moment the viewer leaves the area.
+     */
+    public function testTheAreaRowMarksThePlaceTheViewerIsInEvenWithALitLeafBelowIt(): void
+    {
+        $this->boot(self::WITH_MODULES);
+        $area = $this->anArea('Northern Conservation Reserve');
+        $this->aCatalogue();
+        $this->install($area, 'patrols');
+        $uuid = (string) $area->getUuidString();
+
+        $row = $this->areaRow($this->navAtRoute('/areas/'.$uuid.'/modules/patrols', 'test_module_entry', self::WITH_MODULES));
+
+        self::assertTrue($row->current, 'the place the viewer is in is marked');
+        self::assertFalse(
+            $this->areaRow($this->navAt('/areas'))->current,
+            'and it is not marked from outside the area',
+        );
+    }
+
+    /**
      * A MODULE THE VIEWER IS NOT IN STAYS FOLDED AND EMPTY. Drilling every
      * module of every area would build rows nobody can see, and the point of the
      * rung is to show where you are.
@@ -330,6 +391,25 @@ final class AreaNavigationTest extends WebTestCase
     private function areaRow(AreaNavigation $nav): NavItem
     {
         return $this->sections($nav)[0]->items[0]->children[0];
+    }
+
+    /**
+     * Every lit row BENEATH a row, at any depth — the whole branch rather than
+     * the one rung under it, because that is the difference a lit ancestor hides.
+     *
+     * @return list<string>
+     */
+    private static function litUnder(NavItem $row): array
+    {
+        $lit = [];
+        foreach ($row->children as $child) {
+            if ($child->current) {
+                $lit[] = $child->label;
+            }
+            $lit = [...$lit, ...self::litUnder($child)];
+        }
+
+        return $lit;
     }
 
     /**

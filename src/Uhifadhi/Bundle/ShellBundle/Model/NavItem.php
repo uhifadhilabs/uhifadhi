@@ -42,7 +42,11 @@ final class NavItem
      * @param string|null $url      where it goes, or null for an inert row
      * @param string|null $icon     a ux-icons name, e.g. "shell:map"
      * @param string|null $hint     the title attribute — why a row is inert
-     * @param bool        $current  whether this is the row the viewer is on
+     * @param bool        $current  whether the viewer is here — accented on the
+     *                              row they are on, and drawn quieter on the
+     *                              place rung they are inside (see
+     *                              `_nav_item.html.twig`, which spends the accent
+     *                              once per sidebar)
      * @param bool        $open     whether this row's children are unfolded
      * @param list<self>  $children the branch under this row, if any
      * @param string|null $tone     a module row's dot class, or null for jade

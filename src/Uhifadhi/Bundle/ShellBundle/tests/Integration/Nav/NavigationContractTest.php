@@ -226,6 +226,51 @@ final class NavigationContractTest extends ContractTestCase
     }
 
     /**
+     * ONE ACCENTED ROW IN THE TREE, AND THE PLACE ABOVE IT MARKED QUIETLY.
+     *
+     * The design draws a module dashboard with the accent (`on`) on the leaf
+     * alone; the place rung wears the quieter `cur`, and every rung between them
+     * is nothing but an open branch. So the shell reads the rung, not only the
+     * flag: the same `current` that accents a screen MARKS a place, because the
+     * design distinguishes the two and a sidebar that accented both would answer
+     * "where am I" twice.
+     */
+    public function testTheTreeAccentsOneRowAndMarksThePlaceAboveItQuietly(): void
+    {
+        HostKernel::$navSources = [
+            'obs' => new NavSection('Observatory', [
+                new NavItem(label: 'Areas', url: '/areas', icon: 'shell:map', children: [
+                    new NavItem(label: 'Test Area', url: '/areas/x', current: true, children: [
+                        new NavItem(label: 'Screens', url: '/areas/x/screens'),
+                        new NavItem(label: 'Modules', url: '/areas/x/modules', children: [
+                            new NavItem(label: 'Sightings', url: '/areas/x/modules/sightings', children: [
+                                new NavItem(label: 'Overview', url: '/areas/x/modules/sightings', current: true),
+                                new NavItem(label: 'Records', url: '/areas/x/modules/sightings/records'),
+                            ]),
+                        ]),
+                    ]),
+                ]),
+            ]),
+        ];
+
+        $crawler = $this->crawl('@fixtures/body_only_page.html.twig');
+
+        self::assertCount(1, $crawler->filter('.ntree .on'), 'the tree accents exactly one row');
+        self::assertSame('Overview', trim($crawler->filter('.ntree .nts.on')->text()));
+
+        // The place rung: marked, never accented.
+        self::assertCount(1, $crawler->filter('.ntree .nta.cur'));
+        self::assertCount(0, $crawler->filter('.ntree .nta.on'));
+
+        // And the rungs in between are open branches carrying no marking of
+        // their own — `par` is the parent affordance, not a second light.
+        self::assertCount(0, $crawler->filter('.ntree .ntt.on'));
+        self::assertCount(0, $crawler->filter('.ntree .ntm.on'));
+        self::assertSame('Modules', trim($crawler->filter('.ntree .ntt.par')->text()));
+        self::assertSame('Sightings', trim($crawler->filter('.ntree .ntm.par')->text()));
+    }
+
+    /**
      * FOLDING IS A CLASS, NEVER AN OMISSION. The host's sidebar learned this the
      * hard way: a caret that folds by not rendering its children has nothing to
      * reopen, and the row becomes a one-way door. The contract states it, so a
