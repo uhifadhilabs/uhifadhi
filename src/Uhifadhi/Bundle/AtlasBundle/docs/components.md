@@ -22,6 +22,7 @@ APIs are not written here because they are not written yet.
 - [Base layers, fullscreen and fitting](#base-layers-fullscreen-and-fitting)
 - [What UX Map already models](#what-ux-map-already-models)
 - [render_map()](#render_map)
+  - [A filter change keeps fullscreen](#a-filter-change-keeps-fullscreen)
 - [The events](#the-events)
 - [A whole module template](#a-whole-module-template)
 - [What a module must not do](#what-a-module-must-not-do)
@@ -342,6 +343,21 @@ Map element inside it, and the legend floating over the frame's bottom-right cor
 root is the fullscreen element and the frame grows to fill it, which is why a module never
 writes those rules — the atlas stylesheet owns them, and a card that clamps a height cannot
 break a plate inside it.
+
+### A filter change keeps fullscreen
+
+A filter row written as a GET form needs nothing else to work on an expanded map. While the plate
+is fullscreen the plate answers the submission itself: it fetches the same address with the new
+query, swaps its own three subtrees — the filter row, the map element and the legend — out of the
+answer, and writes the new address into the bar without navigating. Leaving fullscreen then
+navigates once, because the log and the counts outside the plate are still answering the query the
+page was served with. Outside fullscreen nothing is intercepted and the form submits as any form
+does.
+
+A module writes no JavaScript for this and no attribute either. What it must not do is take the
+plate's hook (`data-atlas-plate`) off the root or wrap the filter row in another element of its
+own — the swap finds this plate in the fetched page by that hook, and its subtrees by their
+classes.
 
 ## The events
 

@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\AtlasBundle\Tests\Integration\Twig;
 
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\DomCrawler\Crawler;
 use Twig\Environment;
 use Uhifadhi\Bundle\AtlasBundle\Map\MapBuilderInterface;
 use Uhifadhi\Bundle\AtlasBundle\Model\AtlasMap;
@@ -168,6 +169,30 @@ final class RenderMapTest extends TestCase
 
         self::assertStringContainsString('<div class="map-plate" style="--map-plate-height:min(46vh,440px)"', $html);
         self::assertStringNotContainsString('--map-plate-height', substr($html, strpos($html, 'map-canvas') ?: 0));
+    }
+
+    /**
+     * THE PLATE IS ADDRESSABLE IN A PAGE, and that is what makes a filter change
+     * survive fullscreen: the plate fetches the same address with the new query
+     * and has to find ITS OWN plate in the answer, then the three subtrees of it
+     * that a filter can change. All four are reachable from the hook, in a
+     * document nothing but the markup was handed to.
+     */
+    public function testThePlatesSubtreesAreAddressableInAServedPage(): void
+    {
+        $page = new Crawler(self::render(
+            static function (AtlasMap $map): void {
+                $map->addLayer(new GeoJsonLayer(id: 'zones', label: 'Zones', features: []));
+            },
+            filters: '<form method="get"><button name="week" value="this">This week</button></form>',
+        ));
+
+        $plate = $page->filter('['.MapPlateRuntime::PLATE_HOOK.']');
+
+        self::assertCount(1, $plate);
+        self::assertCount(1, $plate->filter('.map-filters form'));
+        self::assertCount(1, $plate->filter('.map-canvas'));
+        self::assertCount(1, $plate->filter('.map-legend'));
     }
 
     /**

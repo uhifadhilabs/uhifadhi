@@ -46,6 +46,23 @@ final class MapPlateRuntime implements RuntimeExtensionInterface
      */
     public const string CONTROLLER = 'uhifadhi--atlas-bundle--map-plate';
 
+    /**
+     * WHAT MARKS A PLATE IN A PAGE, so the plate can find ITSELF in another copy
+     * of that page.
+     *
+     * A filter change made in fullscreen fetches the same address with the new
+     * query and swaps the plate's own subtrees out of the answer. To do that it
+     * has to recognise which element of the fetched document is this plate, and
+     * a class would not do: `.map-plate` is a style hook a host may restyle or
+     * reuse, and losing it would break the swap silently. This attribute is the
+     * plate's identity and nothing else's.
+     *
+     * It carries no value. A page may hold several plates, and which one is
+     * which is their ORDER in the document — the same in the answer as on the
+     * page, because it is the same page.
+     */
+    public const string PLATE_HOOK = 'data-atlas-plate';
+
     /** The plate template, rendered through the namespace the bundle prepends. */
     private const string TEMPLATE = '@Atlas/plate.html.twig';
 
@@ -96,6 +113,7 @@ final class MapPlateRuntime implements RuntimeExtensionInterface
 
         return $this->twig->render(self::TEMPLATE, [
             'controller' => self::CONTROLLER,
+            'hook' => self::PLATE_HOOK,
             'element' => $this->renderer->renderMap($map->toUxMap(), $attributes),
             'groups' => self::group($map->legend()),
             'filters' => $filters,

@@ -14,11 +14,22 @@
    {{ render_map(map) }}. #}
 {# A custom property handed to render_map() sizes the PLATE: its height is one
    such property, and on the canvas inside it would size nothing. #}
-<div class="map-plate"{% if plateStyle %} style="{{ plateStyle }}"{% endif %} data-controller="{{ controller }}">
+{# THE HOOK IS THE PLATE'S IDENTITY IN A PAGE — how a filter change made in
+   fullscreen finds this same plate in a fetched copy of the page. See
+   Twig\MapPlateRuntime::PLATE_HOOK. #}
+<div class="map-plate"{% if plateStyle %} style="{{ plateStyle }}"{% endif %} data-controller="{{ controller }}" {{ hook }}>
     {% if filters %}
         {# ONE ROW ABOVE THE MAP, inside the plate, so the chips come along into
-           fullscreen instead of being left behind on the page. #}
-        <div class="map-filters">{{ filters|raw }}</div>
+           fullscreen instead of being left behind on the page.
+
+           THE ROW HANDS ITS SUBMISSION TO THE PLATE. The form is the module's
+           markup, so the plate cannot put an attribute on it — but a submission
+           reaches this row on its way up, and a Stimulus action hears events
+           that bubble to the element it is declared on
+           (https://stimulus.hotwired.dev/reference/actions). In fullscreen the
+           plate answers it with a swap instead of a navigation; everywhere else
+           it declines and the form submits itself. #}
+        <div class="map-filters" data-action="submit->{{ controller }}#filter">{{ filters|raw }}</div>
     {% endif %}
 
     <div class="viewer" data-{{ controller }}-target="frame">{{ element|raw }}</div>

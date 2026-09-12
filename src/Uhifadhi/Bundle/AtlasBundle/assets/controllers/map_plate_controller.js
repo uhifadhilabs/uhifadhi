@@ -80,6 +80,30 @@ const HIGHLIGHT = 'data-atlas-highlight';
 /** The pane a stated z-index is drawn in. One pane per value, built on demand. */
 const PANE = 'atlas-z-';
 
+/**
+ * THE PLATE'S IDENTITY IN A PAGE — the attribute PHP marks the plate root with
+ * (Twig\MapPlateRuntime::PLATE_HOOK). It is how a plate finds ITSELF in a
+ * fetched copy of the page it is on, and which plate is which is their order in
+ * the document.
+ */
+const PLATE = 'data-atlas-plate';
+
+/*
+ * WHAT A FILTER CHANGE CAN CHANGE INSIDE THE PLATE — the chips themselves (their
+ * counts and which one is pressed), the map element (the new features and the
+ * whole atlas payload with them) and the legend (its rows and their counts).
+ * Everything else in the plate is chrome that does not depend on the query.
+ *
+ * `into`/`at` say where a part belongs when the plate did not have one before: a
+ * query that empties a map can drop its legend, and the next one has to be able
+ * to put it back.
+ */
+const SWAPPED = [
+    { selector: '.map-filters', into: (plate) => plate, at: 'afterbegin' },
+    { selector: '.map-canvas', into: (plate) => plate.querySelector('.viewer'), at: 'beforeend' },
+    { selector: '.map-legend', into: (plate) => plate, at: 'beforeend' },
+];
+
 export default class extends Controller {
     static targets = ['frame', 'legend'];
 
@@ -92,8 +116,13 @@ export default class extends Controller {
         // element anywhere on the page can spotlight a feature by name.
         this.byFeatureId = new Map();
         this.spotlit = null;
+        // Whether the plate has been refiltered in place, and the page behind it
+        // is therefore answering a query that is no longer the one in the bar.
+        this.stale = false;
         this.onPreConnect = (event) => this.beforeMap(event);
         this.onConnect = (event) => this.afterMap(event);
+        this.onFullscreenChange = () => this.catchUp();
+        document.addEventListener('fullscreenchange', this.onFullscreenChange);
 
         this.element.addEventListener('ux:map:pre-connect', this.onPreConnect);
         this.element.addEventListener('ux:map:connect', this.onConnect);
@@ -123,6 +152,7 @@ export default class extends Controller {
         document.removeEventListener('mouseout', this.onOut);
         document.removeEventListener('focusin', this.onOver);
         document.removeEventListener('focusout', this.onOut);
+        document.removeEventListener('fullscreenchange', this.onFullscreenChange);
         this.chrome?.destroy();
         this.chrome = null;
         this.layers.clear();
@@ -148,10 +178,23 @@ export default class extends Controller {
      *
      * What is DRAWN must never be able to kill the map: a throw while drawing
      * leaves the tiles and the chrome standing and the console says what broke.
+     *
+     * A PLATE MAY BE HANDED A SECOND MAP — a filter change in fullscreen swaps
+     * the map element and the bridge mounts a new one — so this starts from
+     * nothing every time: what was drawn for the old map is not a layer of this
+     * one, and a second control stack in the corner is not a feature.
      */
     afterMap(event) {
         const { map, L, extra } = event.detail;
         const atlas = extra?.[ATLAS] ?? {};
+
+        this.chrome?.destroy();
+        this.chrome = null;
+        this.layers.clear();
+        this.specs.clear();
+        this.byFeatureId.clear();
+        this.spotlit = null;
+        this.scrim = null;
 
         this.map = map;
         this.L = L;
@@ -452,6 +495,172 @@ export default class extends Controller {
         if (state) {
             state.textContent = showing ? 'off' : 'on';
         }
+    }
+
+    /**
+     * A FILTER CHANGE IN FULLSCREEN, ANSWERED WITHOUT LEAVING IT.
+     *
+     * The filter row is a GET form, and a form submission is a navigation, and a
+     * navigation ends fullscreen — so comparing two filters on an expanded map
+     * meant expanding it again after every chip. In fullscreen the plate answers
+     * the submission itself: it fetches the SAME address with the new query,
+     * takes its own subtrees out of the answer, swaps them in place, and writes
+     * the new address into the bar without going anywhere.
+     *
+     * OUTSIDE FULLSCREEN NOTHING IS INTERCEPTED. A plain submission reloads the
+     * page, which is the only thing that keeps the log, the counts and everything
+     * else on it in step with the filter — so it is what happens by default and
+     * what happens again the moment fullscreen ends ({@see catchUp}).
+     *
+     * The action is declared on the filter row and the submission reaches it by
+     * bubbling, because the form is the module's own markup and the plate puts no
+     * attribute on it: https://stimulus.hotwired.dev/reference/actions
+     */
+    async filter(event) {
+        if (!this.isFullscreen()) {
+            return;
+        }
+
+        const form = event.target.closest('form');
+        const address = form && this.addressOf(form, event.submitter);
+        if (!address) {
+            return;
+        }
+
+        event.preventDefault();
+
+        const fresh = await this.fetchPlate(address);
+        if (!fresh) {
+            // The answer was a refusal or no page at all. The honest fallback is
+            // the behaviour we intercepted: go there.
+            window.location.assign(address);
+
+            return;
+        }
+
+        this.swap(fresh);
+        // replaceState, never pushState: a filter is not a place in the viewer's
+        // history, and twenty chips must not become twenty presses of Back.
+        // https://developer.mozilla.org/en-US/docs/Web/API/History/replaceState
+        history.replaceState(history.state, '', address);
+        this.stale = true;
+    }
+
+    /**
+     * WHAT THE FORM IS ASKING FOR, as an address — this page with a new query.
+     *
+     * The submitter is part of the question: a chip is a submit button carrying
+     * its own name and value, and FormData takes the submitter for exactly that
+     * reason. https://developer.mozilla.org/en-US/docs/Web/API/FormData/FormData
+     *
+     * A form pointing somewhere else entirely is nobody's business of this
+     * plate's, and null sends it back to the browser to submit.
+     */
+    addressOf(form, submitter) {
+        const address = new URL(form.getAttribute('action') || window.location.href, window.location.href);
+        if (address.origin !== window.location.origin) {
+            return null;
+        }
+
+        address.search = new URLSearchParams([...new FormData(form, submitter)]).toString();
+
+        return address;
+    }
+
+    /**
+     * THIS PLATE, IN A FRESHLY FETCHED COPY OF THE PAGE — or null, which means
+     * the swap does not happen and the browser navigates instead.
+     *
+     * `credentials: 'same-origin'` is fetch's own default and is written out
+     * because the request carries the viewer's session by necessity: it is the
+     * same page, and an anonymous copy of it would be a sign-in screen.
+     * https://developer.mozilla.org/en-US/docs/Web/API/RequestInit
+     */
+    async fetchPlate(address) {
+        try {
+            const response = await fetch(address, {
+                headers: { Accept: 'text/html' },
+                credentials: 'same-origin',
+            });
+            if (!response.ok) {
+                return null;
+            }
+
+            const page = new DOMParser().parseFromString(await response.text(), 'text/html');
+
+            return page.querySelectorAll(`[${PLATE}]`)[this.ordinal()] ?? null;
+        } catch (error) {
+            console.error('[atlas] the plate could not be refiltered in place', error);
+
+            return null;
+        }
+    }
+
+    /** Which plate of the page this is — the position it holds in the answer too. */
+    ordinal() {
+        return [...document.querySelectorAll(`[${PLATE}]`)].indexOf(this.element);
+    }
+
+    /**
+     * THE ANSWER'S SUBTREES, IN PLACE OF THIS PLATE'S — and the plate root itself
+     * untouched, because it is the element that is fullscreen and replacing it
+     * would end fullscreen, which is the whole thing being avoided.
+     *
+     * The new map element brings its own atlas payload, so the bridge mounts a
+     * map on it and this controller hears `ux:map:connect` again and draws the
+     * new query's layers ({@see afterMap}).
+     */
+    swap(fresh) {
+        /*
+         * The map being replaced is destroyed here rather than left to the
+         * bridge: the bridge's controller creates the Leaflet map and has no
+         * disconnect, so an orphaned map would keep its document listeners and
+         * its tile requests. https://leafletjs.com/reference.html#map-remove
+         */
+        this.chrome?.destroy();
+        this.chrome = null;
+        this.map?.remove();
+        this.map = null;
+
+        for (const { selector, into, at } of SWAPPED) {
+            const next = fresh.querySelector(selector);
+            const live = this.element.querySelector(selector);
+            if (!next) {
+                live?.remove();
+                continue;
+            }
+
+            // A node still owned by the parsed document cannot be inserted in
+            // this one, so it is imported rather than moved.
+            // https://developer.mozilla.org/en-US/docs/Web/API/Document/importNode
+            const adopted = document.importNode(next, true);
+            if (live) {
+                live.replaceWith(adopted);
+            } else {
+                into(this.element)?.insertAdjacentElement(at, adopted);
+            }
+        }
+    }
+
+    /**
+     * LEAVING FULLSCREEN AFTER A SWAP CATCHES THE PAGE UP. Only the plate was
+     * refiltered; the log, the counts and everything else behind it still answer
+     * the query the page was served with, and a page that disagreed with its own
+     * map would be worse than the reload it saved. One exit, one navigation, to
+     * the address the chips already wrote.
+     */
+    catchUp() {
+        if (this.isFullscreen() || !this.stale) {
+            return;
+        }
+
+        this.stale = false;
+        window.location.reload();
+    }
+
+    /** Whether this plate is the element the browser is showing fullscreen. */
+    isFullscreen() {
+        return true === document.fullscreenElement?.contains(this.element);
     }
 
     /** Re-frame the plate on everything it drew. */
