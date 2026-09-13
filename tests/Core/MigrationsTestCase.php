@@ -55,6 +55,11 @@ abstract class MigrationsTestCase extends KernelTestCase
 
     protected function tearDown(): void
     {
+        // The database is shared with every suite that runs after this one,
+        // and each of those creates its own schema into it: it is handed back
+        // the way a test database starts — no tables, and PostGIS in place.
+        $this->emptyTheDatabase();
+        $this->connection->executeStatement('CREATE EXTENSION IF NOT EXISTS postgis');
         $this->connection->close();
         parent::tearDown();
 

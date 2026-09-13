@@ -55,7 +55,7 @@ use Uhifadhi\Bundle\ShellBundle\Widget\Model\WidgetGroup;
  * own class and PHP does not inherit attributes from an interface — an
  * `#[AutoconfigureTag]` written here would be silently dead. The same constraint
  * is documented, and pinned by a test, on
- * {@see \Uhifadhi\Bundle\AreaBundle\Kpi\DepartmentKpiProviderInterface}.
+ * {@see \Uhifadhi\Contracts\Kpi\DepartmentKpiProviderInterface}.
  */
 interface OverviewContributorInterface
 {

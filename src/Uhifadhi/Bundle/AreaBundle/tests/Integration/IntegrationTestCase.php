@@ -47,9 +47,18 @@ abstract class IntegrationTestCase extends KernelTestCase
         $em = static::getContainer()->get('doctrine.orm.entity_manager');
         $this->em = $em;
 
+        // ONE DATABASE CARRIES EVERY PACKAGE'S SUITE, and a suite that ran
+        // before this one may have left tables this kernel does not map — a
+        // table with a foreign key into one this kernel does map blocks the
+        // metadata-driven drop and the create then collides. So the schema is
+        // taken back to the state a test database starts in: nothing but PostGIS.
+        $connection = $this->em->getConnection();
+        $connection->executeStatement('DROP SCHEMA IF EXISTS public CASCADE');
+        $connection->executeStatement('CREATE SCHEMA public');
+        $connection->executeStatement('CREATE EXTENSION IF NOT EXISTS postgis');
+
         $schemaTool = new SchemaTool($this->em);
         $metadata = $this->em->getMetadataFactory()->getAllMetadata();
-        $schemaTool->dropSchema($metadata);
         $schemaTool->createSchema($metadata);
 
         // Anything the boot left managed belongs to the schema that has just

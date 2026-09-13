@@ -57,7 +57,13 @@ abstract class WebTestCase extends KernelTestCase
 
         $schemaTool = new SchemaTool($this->em);
         $metadata = $this->em->getMetadataFactory()->getAllMetadata();
-        $schemaTool->dropSchema($metadata);
+        // The same reset the integration base performs: a suite that ran
+        // before may have left tables this kernel does not map, and a foreign
+        // key from one of them blocks the metadata-driven drop.
+        $connection = $this->em->getConnection();
+        $connection->executeStatement('DROP SCHEMA IF EXISTS public CASCADE');
+        $connection->executeStatement('CREATE SCHEMA public');
+        $connection->executeStatement('CREATE EXTENSION IF NOT EXISTS postgis');
         $schemaTool->createSchema($metadata);
 
         // THE IDENTITY MAP IS EMPTIED WITH THE TABLES. Booting the kernel warms
