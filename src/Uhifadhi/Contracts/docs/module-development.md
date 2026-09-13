@@ -1399,6 +1399,13 @@ Three rules that keep these contribution points honest:
 
 ### KPI figures: one set per call
 
+**Figures follow scope, not people.** A provider is called only for a department that attaches its
+module, and it answers with every record the module holds inside the ref's scope: an area-level
+department's area, or every area for an organisation-wide one. Who recorded a record, whether that
+person holds a position today, and when anyone joined decide nothing. Two departments that attach
+one module in one area read the same figures, and no surface adds them together. A breakdown by
+position or by person may sit inside a widget; it never gates a figure.
+
 `kpisFor(DepartmentRef $department, \DateTimeImmutable $now)` is asked about **one department at one
 scope**, and it answers with **one figure per key** — never the same key once per area. The
 performance surfaces draw a single row of representative tiles per module, so repeated labels with

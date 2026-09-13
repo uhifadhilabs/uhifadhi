@@ -73,6 +73,14 @@ interface DepartmentKpiProviderInterface
      * This department's figures for the period containing `$now`, plus the
      * period before it for the month-over-month move.
      *
+     * FIGURES FOLLOW SCOPE, NOT PEOPLE. A provider is asked only for a department
+     * that attaches its module, and it answers with the records the module holds
+     * inside the ref's scope — whoever recorded them, whether or not that person
+     * holds a position today, and from before anyone joined. A department never
+     * owns a record: two departments attaching one module in one area read the
+     * same figures, and nothing adds them together. Who recorded a figure may
+     * ride beside it as a breakdown; it never decides whether the figure exists.
+     *
      * ONE SET OF KPIs PER CALL. A call asks about ONE department at ONE scope and
      * is answered with ONE figure per key — never the same key once per area,
      * because the surfaces draw one row of tiles per module and unheaded copies
