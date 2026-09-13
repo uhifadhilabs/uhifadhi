@@ -176,7 +176,6 @@ operational widget arrives from a module installed in that area.
 | `Overview\PulseProviderInterface` | `uhifadhi.overview.pulse` | Its moves in the area pulse |
 | `Overview\OverviewCopyProviderInterface` | `uhifadhi.overview.copy` | Its own words inside a sentence somebody else writes |
 | `Overview\ContributesStylesheetInterface` | — | The stylesheet its markup needs, since somebody else renders it |
-| `Kpi\DepartmentKpiProviderInterface` | `uhifadhi.department_kpi` | A figure on a department's performance surfaces |
 
 **Absent is never zero.** Every one of these may answer `[]`, and that is the
 right answer rather than a gap: a module with nothing to say puts no tile in the
@@ -192,12 +191,15 @@ are kept equal by `tests/Unit/Overview/ContributionContractTest.php`; change one
 without the other and contributions land in a tag nobody collects, with no error
 anywhere.
 
-**Departments arrive as a ref, not as an entity.**
-`DepartmentKpiProviderInterface` takes a `Kpi\DepartmentRef` — an id, a uuid and
-a name — because a department is TeamBundle's and nothing published describes
-one. Typing this against Team's entity would make every module that reports a
-figure depend on Team; typing it against nothing would hand providers an
-`object` to guess at.
+**A department's figures are a different seam, published elsewhere.** A module
+puts numbers on a department's performance surfaces through
+`Uhifadhi\Contracts\Kpi\DepartmentKpiProviderInterface` (`uhifadhi.department_kpi`),
+which `uhifadhi/contracts` publishes because the department that owns those
+surfaces is TeamBundle's, not this bundle's. It takes a `DepartmentRef` — an id,
+a uuid and a name — since nothing published describes a department: typing it
+against Team's entity would make every module that reports a figure depend on
+Team, and typing it against nothing would hand providers an `object` to guess
+at.
 
 ## What a field client caches
 

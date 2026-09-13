@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Uhifadhi\Bundle\AreaBundle\Kpi;
+namespace Uhifadhi\Contracts\Kpi;
 
 /**
  * A DEPARTMENT, NAMED WITHOUT NAMING ANYBODY'S CLASS.

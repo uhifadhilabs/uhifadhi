@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Uhifadhi\Bundle\AreaBundle\Kpi;
+namespace Uhifadhi\Contracts\Kpi;
 
 /**
  * THE CONTRACT a module bundle implements to put figures on a department's

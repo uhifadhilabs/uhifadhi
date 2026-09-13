@@ -11,12 +11,12 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Uhifadhi\Bundle\AreaBundle\Tests\Unit\Kpi;
+namespace Uhifadhi\Contracts\Tests\Kpi;
 
 use PHPUnit\Framework\TestCase;
-use Uhifadhi\Bundle\AreaBundle\Kpi\DepartmentKpi;
-use Uhifadhi\Bundle\AreaBundle\Kpi\DepartmentKpiProviderInterface;
-use Uhifadhi\Bundle\AreaBundle\Kpi\DepartmentRef;
+use Uhifadhi\Contracts\Kpi\DepartmentKpi;
+use Uhifadhi\Contracts\Kpi\DepartmentKpiProviderInterface;
+use Uhifadhi\Contracts\Kpi\DepartmentRef;
 
 /**
  * THE TWO RULES THE MODEL CANON PUTS ON A FIGURE, and they are the difference

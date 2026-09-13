@@ -11,14 +11,14 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace Uhifadhi\Bundle\AreaBundle\Kpi;
+namespace Uhifadhi\Contracts\Kpi;
 
 /**
  * ONE figure a module computed for ONE department over ONE period.
  *
  * This is the whole vocabulary of the department KPI contract: a module bundle hands these back and
- * the area page renders them, so a new module adds plates to every performance surface without a line
- * of code here changing.
+ * the surface holding the department renders them, so a new module adds plates to every performance
+ * surface without a line of code here changing.
  *
  * The two rules the model canon puts on this value object:
  *
@@ -38,7 +38,7 @@ final readonly class DepartmentKpi
      * @param string      $key        stable across modules and releases ('patrols', 'coverage') — the
      *                                board's columns are these, and a goal's kpiRef names one
      * @param string      $label      what a plate calls it ('Patrols logged')
-     * @param string      $moduleSlug the module that computed it; the area page checks it is attached
+     * @param string      $moduleSlug the module that computed it; the surface checks the department attaches it
      * @param string      $moduleName that module's display name, for the "what produced this" table
      * @param float|null  $value      null means UNKNOWN — never render it as 0
      * @param string      $unit       '' for a bare count, 'km', or {@see self::SHARE}
