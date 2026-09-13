@@ -70,7 +70,7 @@
             <div class="mb-state off">
                 {{ bits.icon_off() }}
                 <span><b>Deactivated &mdash; cannot sign in.</b> <code>isActive</code> is false and
-                <code>disabledAt</code> records when{% if member.disabledAt %} ({{ member.disabledAt|date('j F Y') }}){% endif %}.
+                <code>disabledAt</code> records when{% if member.disabledAt %} (<time datetime="{{ member.disabledAt|date('c') }}" data-localtime-format="day">{{ member.disabledAt|date('j M Y')|lower }}</time>){% endif %}.
                 The row is <b>not deleted and never will be</b>: accounts are never hard-deleted, because &ldquo;this
                 ranger left in March&rdquo; and &ldquo;this ranger never existed&rdquo; must not be the same operation
                 &mdash; every patrol they recorded keeps its author. They stay listed, filterable, and one click from

@@ -128,12 +128,18 @@
     {%- if deactivated or not arrived -%}</span>{% endif -%}
 {% endmacro %}
 
-{# "3 days ago" — coarse on purpose. Whether an invitation went out on Tuesday
-   afternoon or Tuesday evening is not a fact anybody acts on; whether it went
-   out three days ago or three months ago is. #}
+{# WHEN AN INVITATION WENT OUT, coarse on purpose: whether it went out on
+   Tuesday afternoon or Tuesday evening is not a fact anybody acts on; whether it
+   went out three days ago or three months ago is.
+
+   IT IS AN ELEMENT, NOT A SENTENCE, because "today" and "yesterday" are decided
+   by a midnight — and the only midnight a server knows is its own. The frame
+   rewrites the text to the reader's own day (`day`, "12 sep 2026"); the coarse
+   relative reading below is the machine instant's fallback, which is what a
+   reader with no JavaScript gets. #}
 {% macro ago(when) %}
     {%- if when is null -%}&mdash;
-    {%- else -%}
+    {%- else -%}<time datetime="{{ when|date('c') }}" data-localtime-format="day">
         {%- set days = date().diff(when).days -%}
         {%- if days == 0 -%}today
         {%- elseif days == 1 -%}yesterday
@@ -141,7 +147,7 @@
         {%- elseif days < 365 -%}{{ (days / 30)|round(0, 'floor') }} months ago
         {%- else -%}{{ (days / 365)|round(0, 'floor') }} years ago
         {%- endif -%}
-    {%- endif -%}
+    </time>{%- endif -%}
 {% endmacro %}
 
 {# The row's one action, and its WORD changes with the state: a deactivated

@@ -1091,6 +1091,16 @@ everywhere:
 - **Filters are grouped dropdowns.** Filter bars use the grouped-**dropdown** pattern (a closed chip
   that opens a floating panel of options with live counts — the incidents filter is the reference),
   not a sprawling row of always-expanded chips.
+- **An instant is a `<time>` element, never formatted text.** Every printed instant on every screen
+  is read in the **viewer's** timezone, and the frame is what does it: print the UTC fallback inside
+  `<time datetime="{{ t|date('c') }}" data-localtime-format="stamp">…</time>` and the shell rewrites
+  the text on every page, including nodes a swap or a clone inserts later. The shapes are the
+  product's own compact stamps — `stamp` ("12 sep · 13:49"), `daystamp`, `clock`, `clocks`, `day`,
+  `daylong` — so a design's monospace cell is no longer a reason to format server-side, which is what
+  every module used to do and why every reader outside the server's zone read the time wrong. A day
+  key or a calendar date is a date-only `datetime` and is deliberately left alone. Never format an
+  instant for display any other way. See
+  [theming.md — a time reads in the reader's zone](../../Bundle/ShellBundle/docs/theming.md#a-time-reads-in-the-readers-zone).
 
 ### Icons: one prefix per package
 
@@ -1368,7 +1378,7 @@ valid.
 | `MapLayerProviderInterface` | `uhifadhi.map.layer` | layers on the area map |
 | `PulseProviderInterface` | `uhifadhi.overview.pulse` | events in the activity feed |
 | `OverviewCopyProviderInterface` | `uhifadhi.overview.copy` | copy fragments for a named slot |
-| `DepartmentKpiProviderInterface` | `uhifadhi.department_kpi` | a department's KPI figures |
+| `Kpi\DepartmentKpiProviderInterface` | `uhifadhi.department_kpi` | a department's KPI figures |
 
 Every one of them starts with `moduleSlug()`, and it must return the same slug your
 `ModuleProviderInterface` does: that is how a contribution disappears when an area switches your
@@ -1928,6 +1938,30 @@ dependency's if your pages link one, and `iconDirectory()`, which defaults to
 `assets/icons/<your alias>`.
 
 That is the whole adoption. It runs in `composer check` with the rest of your suite.
+
+### Time conformance (an instant printed server-side fails CI)
+
+The same shape of failure, for the same reason: an instant formatted server-side renders a 200 with a
+plausible time on it, and a functional test asserting that text passes on the wrong answer. Only the
+build can catch it, so the core ships a second base beside the first:
+
+```php
+// tests/Unit/Template/TimeConformanceTest.php
+use Uhifadhi\Bundle\ShellBundle\Test\TimeConformanceTestCase;
+
+final class TimeConformanceTest extends TimeConformanceTestCase
+{
+    protected static function bundlePath(): string { return \dirname(__DIR__, 3); }
+}
+```
+
+It asks three things of every template you ship: every `|date(` sits inside a `<time datetime=…>`
+element, every `<time>` carries a `datetime`, and every `data-localtime-format` names a shape the
+shell answers. `exemptTemplates()` is there for a template that prints `|date(` as prose in a code
+sample, and each entry should say which. Without PHPUnit the first check is
+`grep -rn "|date(" templates/ | grep -v "<time"`, and anything it lists is an instant in the server's
+zone. The shapes, and the rule the test enforces, are in
+[theming.md — a time reads in the reader's zone](../../Bundle/ShellBundle/docs/theming.md#a-time-reads-in-the-readers-zone).
 
 ---
 

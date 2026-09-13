@@ -161,10 +161,11 @@ the field and an analyst three timezones away read the same printed wall-clock
 and one of them reads it wrong.
 
 **A module emits only semantic markup.** It prints the instant as an ISO-8601
-`datetime`, with a human UTC fallback as the text:
+`datetime`, names the shape the design draws, and leaves a human UTC fallback as
+the text:
 
 ```twig
-<time datetime="{{ t|date('c') }}">{{ t|date('D j M')|lower }} · {{ t|date('H:i') }}</time>
+<time datetime="{{ t|date('c') }}" data-localtime-format="stamp">{{ t|date('j M')|lower }} · {{ t|date('H:i') }}</time>
 ```
 
 That is the module's *whole* contribution, and it deliberately carries no
@@ -180,24 +181,90 @@ never the visible text — and rewrites the text with `Intl.DateTimeFormat(undef
 locale and zone, the one thing the server cannot know. With no JavaScript the
 server-rendered text stays exactly as it is.
 
-An element may hint the shape it wants with `data-localtime-format`, a plain data
-attribute the frame reads (and a shell-less host harmlessly ignores):
+### The shapes
 
-| `data-localtime-format` | What it renders |
-|---|---|
-| absent / `datetime` | date and time — day, short month, year, hour, minute |
-| `date` | day, short month, year |
-| `time` | hour and minute |
+An element names the shape it wants with `data-localtime-format`, a plain data
+attribute the frame reads (and a shell-less host harmlessly ignores). The first
+three are Intl's own readings, in whatever order and punctuation the reader's
+locale writes. The other six are the **house shapes**: the frame assembles them
+from Intl *parts*, so the month and weekday NAMES are the locale's while the
+order, the separators and the lower case are the product's. The separator is a
+middle dot with a space either side, and the clock is always 24-hour.
 
-A tight cell that printed only `05:55` asks for `time`, so localising it does not
-blow the cell out to a full date.
+| `data-localtime-format` | Renders | Example, for a reader in EAT |
+|---|---|---|
+| absent / `datetime` | Intl's own date and time | `Sep 12, 2026, 04:49 PM` |
+| `date` | Intl's own date | `Sep 12, 2026` |
+| `time` | Intl's own time | `04:49 PM` |
+| `stamp` | the compact stamp a cell draws | `12 sep · 16:49` |
+| `daystamp` | the stamp with its weekday | `sat 12 sep · 16:49` |
+| `clock` | the clock alone | `16:49` |
+| `clocks` | the clock with its seconds, for a tail watched live | `16:49:07` |
+| `day` | a compact date | `12 sep 2026` |
+| `daylong` | a compact date with its weekday | `sat 12 sep 2026` |
 
-Two things a caller must hold to. **The `datetime` attribute is the real
-instant** — offset-qualified or `Z`. `{{ t|date('c') }}` on a stored instant is
-already unambiguous; a *zoneless* value is one the browser parses in *its* own
-zone, which reintroduces the bug. **The visible text is disposable**: the frame
-overwrites it, so a design's own custom wording survives only when JavaScript is
-off.
+A tight cell that printed only `05:55` asks for `clock`, so localising it does not
+blow the cell out to a full date. A shape the frame does not answer — a misspelt
+one included — falls back to `datetime` rather than to nothing, so the failure is
+a verbose cell and never an empty one; the conformance test below is what catches
+the typo before a reader does.
+
+### The rule
+
+**A template prints the UTC fallback inside the element; the shell rewrites it;
+never format an instant for display any other way.** There is no second
+mechanism, no Twig filter of our own, no per-module helper and no server-side
+timezone setting. An instant formatted anywhere but here is an instant in the
+server's zone for every reader forever.
+
+Three things a caller must hold to.
+
+- **The `datetime` attribute is the real instant** — offset-qualified or `Z`.
+  `{{ t|date('c') }}` on a stored instant is already unambiguous; a *zoneless*
+  value is one the browser parses in *its* own zone, which reintroduces the bug.
+- **The visible text is disposable.** The frame overwrites it, so it is the no-JS
+  fallback and nothing else: print it in the shape the attribute asks for, and
+  keep no wording in it that the reading would lose.
+- **A day key or a calendar date is printed as a date-only `datetime` and never
+  localised; only full instants are.** `datetime="2026-08-19"` is a day — a
+  calendar cell, a day key, a date a form collected — and a day is the same day in
+  every zone. Read as an instant it would be midnight UTC, which west of
+  Greenwich is the evening before, so localising it would show a reader in Lima
+  the 18th. The frame skips any value with no time part in it, whatever shape the
+  element asks for.
+
+### The conformance test
+
+Nothing about this fails loudly. A date printed server-side renders a 200 with a
+plausible time on it, and a functional test asserting the text passes on the wrong
+answer — so the only thing that can catch it before a deploy is the build. The
+core ships `Uhifadhi\Bundle\ShellBundle\Test\TimeConformanceTestCase` in `src/`,
+where a module can autoload it. One file in your suite:
+
+```php
+// tests/Unit/Template/TimeConformanceTest.php
+use Uhifadhi\Bundle\ShellBundle\Test\TimeConformanceTestCase;
+
+final class TimeConformanceTest extends TimeConformanceTestCase
+{
+    protected static function bundlePath(): string { return \dirname(__DIR__, 3); }
+}
+```
+
+It asks three things of every template under `templates/`: that every `|date(`
+sits **inside** a `<time datetime=…>` element (as the machine attribute or as the
+fallback text), that every `<time>` carries a `datetime`, and that every
+`data-localtime-format` names a shape from the table above. `exemptTemplates()`
+is there for a template that prints `|date(` as prose in a code sample, and each
+entry should say which.
+
+Without PHPUnit, the first check is one command:
+
+```console
+$ grep -rn "|date(" templates/ | grep -v "<time"
+```
+
+Anything it lists is an instant in the server's zone.
 
 ## The tab icon
 

@@ -79,7 +79,7 @@
                                 <span class="chip ok">{{ ux_icon('shell:circle-check') }} {{ row.liveNow.value }} {{ row.liveNow.label }}</span>
                             {% endif %}
                             {% if row.lastActivity %}
-                                <span class="ax-when mono">last check-in <time datetime="{{ row.lastActivity|date('c') }}">{{ row.lastActivityLabel }}</time></span>
+                                <span class="ax-when mono">last check-in <time datetime="{{ row.lastActivity|date('c') }}" data-localtime-format="stamp">{{ row.lastActivityLabel }}</time></span>
                             {% endif %}
                         </div>
                     {% else %}
