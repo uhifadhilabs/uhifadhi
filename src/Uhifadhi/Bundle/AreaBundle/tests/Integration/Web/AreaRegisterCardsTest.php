@@ -120,9 +120,15 @@ final class AreaRegisterCardsTest extends WebTestCase
     }
 
     /**
-     * "LAST CHECK-IN" IS THE PULSE CONTRIBUTION'S MOST RECENT MOVE, with the exact
-     * instant on a machine-readable `<time>` and a plain relative label for a
-     * person.
+     * "LAST CHECK-IN" IS THE PULSE CONTRIBUTION'S MOST RECENT MOVE, read as a
+     * relative label with the exact instant annotating it.
+     *
+     * AND IT IS NOT A `<time>`, WHICH IS THE POINT OF THE CELL. The frame
+     * localises every `<time datetime>` on the page into the reader's own zone,
+     * and this reading needs no localising: "6 min ago" is six minutes ago in
+     * every zone there is, so wrapping it would trade the only reading anybody
+     * acts on for an absolute stamp. The instant rides in the `title` instead —
+     * offset-qualified, so what it annotates is unambiguous.
      */
     public function testTheLastCheckInFlowsFromThePulseContribution(): void
     {
@@ -135,7 +141,12 @@ final class AreaRegisterCardsTest extends WebTestCase
 
         self::assertStringContainsString('last check-in', $body);
         self::assertStringContainsString('min ago', $body);
-        self::assertStringContainsString('<time datetime=', $body);
+        self::assertStringNotContainsString('<time datetime=', $body, 'A duration is not an instant the frame may rewrite.');
+        self::assertMatchesRegularExpression(
+            '/<span title="\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2})">\s*\d+ min ago\s*<\/span>/',
+            $body,
+            'The relative label carries the exact instant as an offset-qualified annotation.',
+        );
     }
 
     /**
