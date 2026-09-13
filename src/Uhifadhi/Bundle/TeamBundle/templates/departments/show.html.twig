@@ -4,18 +4,21 @@
    PORTED from the canonical design DesignsProjects/uhifadhi-web/departments/
    department.html, honouring the ruled PAGE-CHROME THEME:
      · page-level actions live in the header row (the department carries none yet
-       — its widget board is the rich-lens follow-up — so the row holds identity
-       only);
+       — its widget board is the follow-up — so the row holds identity only);
      · the identity CARD (.factband) lives on the OVERVIEW tab ALONE; the
        always-there name and scope live in the header and the scope strip above
        the tabs, so they show on every tab;
-     · KPIs, when the follow-up wires them, sit on a single row.
+     · the KPIs sit on a single row.
 
-   WHAT IS THE RICH-LENS FOLLOW-UP, drawn here as its empty state and nothing
-   invented behind it: the module-led overview, the performance KPIs, and the
-   module attachments on Settings. A department computes no numbers of its own —
-   every figure will be a module KPI rolled up through an attachment — so until a
-   module is attached there is honestly nothing to show, and the page says so. #}
+   THE ATTACHED MODULES ARE THE LENS, and three of the four tabs read them: they
+   lead the Overview one card each, their figures are the whole of Performance,
+   and Settings is where they are attached and detached. A department computes no
+   number of its own — every figure is a module KPI rolled up through an
+   attachment — so a department that leads with nothing shows nothing, and says
+   so rather than drawing a zero.
+
+   ATTACHING GRANTS NOTHING AND HIDES NOTHING. The Settings copy says it, because
+   a control that looks like a permission matrix has to. #}
 {% extends '@Shell/page.html.twig' %}
 {% import '@Team/departments/_bits.html.twig' as di %}
 {% import '@Team/positions/_bits.html.twig' as pm %}
@@ -108,16 +111,47 @@
             <p class="pgsub" style="margin:0 0 16px">The record, composed &mdash; <b>the modules this department
                 attaches lead</b>. A lens, not a fence: every card is the same shared data, listed first here.</p>
 
-            <div class="grid">
-                <div class="c">
-                    <span class="tab">Modules<span class="src">&middot; the lens</span></span>
-                    <div class="dp-empty">
-                        <b>No modules attached yet</b>
-                        <span>This department leads with nothing until a module is attached. Attaching a module makes
-                            it lead for this department&rsquo;s people &mdash; it grants nothing and hides nothing. The
-                            attachment surface is the rich-lens follow-up.</span>
+            <div class="grid" data-dept-modules>
+                {% for module in attached %}
+                    {# ONE CARD PER ATTACHED MODULE — the modules leading the view. The
+                       figures under it are that module's own KPIs; a module that ships
+                       none says so rather than showing a zero. #}
+                    <div class="c">
+                        <span class="tab">{{ module.name }}<span class="src">&middot; leads this lens</span></span>
+                        {# SHARED OR ITS OWN — the same rows either way. A module two
+                           departments attach is one module, listed first for both, and
+                           neither can hide a row from the other. #}
+                        <div class="chiprow">
+                            {% set shared = sharing[module.slug]|default(0) %}
+                            {% if shared > 1 %}
+                                <span class="dp-chip shared" title="shared — the same rows, read through another lens">shared &middot; {{ shared }} departments</span>
+                            {% else %}
+                                <span class="dp-chip">this department</span>
+                            {% endif %}
+                        </div>
+                        {% set figures = kpis|filter(kpi => kpi.moduleSlug == module.slug) %}
+                        {% if figures is not empty %}
+                            <div style="margin-top:8px">
+                                {% for kpi in figures %}
+                                    <div class="rln"><span class="k">{{ kpi.label }}</span><span class="v">{{ kpi.display }}{{ kpi.isShare and kpi.isKnown ? '%' : '' }}</span></div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="use">Leads for this department. It reports no figure of its own.</p>
+                        {% endif %}
                     </div>
-                </div>
+                {% else %}
+                    <div class="c">
+                        <span class="tab">Modules<span class="src">&middot; the lens</span></span>
+                        <div class="dp-empty">
+                            <b>No modules attached yet</b>
+                            <span>This department leads with nothing until a module is attached. Attach one from
+                                <button type="button" class="more" data-tab="settings"
+                                        data-action="uhifadhi--team-bundle--department#tab">Settings &rarr; Modules
+                                    attached</button> &mdash; it grants nothing and hides nothing.</span>
+                        </div>
+                    </div>
+                {% endfor %}
             </div>
         </section>
 
@@ -127,13 +161,26 @@
                 <div class="c">
                     <span class="tab">This month<span class="src">&middot; the attached modules&rsquo; KPIs</span></span>
                     <p class="use">A department owns no numbers of its own &mdash; every figure is a module KPI rolled
-                        up through this department&rsquo;s attachment. With no module attached there is nothing to roll
-                        up yet.</p>
-                    <div class="grid kstrip" style="margin-top:12px">
-                        <div class="dp-empty" style="grid-column:1/-1">
-                            <b>No module KPIs this period</b>
-                            <span>They arrive with the first attached module &mdash; the rich-lens follow-up.</span>
-                        </div>
+                        up through this department&rsquo;s attachment. Detaching a module takes its figures off this
+                        page; it never sets them to zero.</p>
+                    <div class="grid kstrip" style="margin-top:12px" data-dept-kpis>
+                        {% for kpi in kpis %}
+                            {# ONE TILE PER FIGURE, laid on a single row — the label the
+                               module gave it under the module's own name, and the value.
+                               AN UNKNOWN FIGURE IS A DASHED SLOT, never a zero: "we did
+                               not measure" and "we measured nothing" are different facts,
+                               and the value object is what draws the distinction. #}
+                            <div class="c kpi">
+                                <span class="tab">{{ kpi.moduleName }} &middot; {{ kpi.label }}</span>
+                                <b class="disp">{{ kpi.display }}{{ kpi.isShare and kpi.isKnown ? '%' : '' }}</b>
+                            </div>
+                        {% else %}
+                            <div class="dp-empty" style="grid-column:1/-1">
+                                <b>No module KPIs this period</b>
+                                <span>They arrive with the first attached module that reports one &mdash; a department
+                                    computes no figure of its own.</span>
+                            </div>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
@@ -193,11 +240,51 @@
                 </div>
                 <div class="c">
                     <span class="tab">Modules attached<span class="src">&middot; the lens</span></span>
-                    <div class="dp-empty" style="padding:22px 12px">
-                        <b>Nothing attached</b>
-                        <span>Attaching a module makes it lead for this department&rsquo;s people &mdash; it grants
-                            nothing and hides nothing. The attachment surface is the rich-lens follow-up.</span>
+
+                    {# THE ATTACHED SET — one row each, with the detach control on it.
+                       Nothing attached is a line, not an absent card: a department that
+                       leads with nothing should say so. #}
+                    <div data-dept-attached>
+                        {% for module in attached %}
+                            <div class="setrow">
+                                <span class="sn"><b>{{ module.name }}</b></span>
+                                {% set shared = sharing[module.slug]|default(0) %}
+                                {% if shared > 1 %}
+                                    <span class="dp-chip shared">shared &middot; {{ shared }} departments</span>
+                                {% else %}
+                                    <span class="fog mono">&mdash; this department only</span>
+                                {% endif %}
+                                <span class="sx">
+                                    <form method="post" action="{{ path('team_department_module_toggle', {uuid: department.uuidString, slug: module.slug}) }}">
+                                        <input type="hidden" name="_token" value="{{ csrfToken }}">
+                                        <button class="softbtn danger" type="submit">{{ di.icon_detach() }} Detach</button>
+                                    </form>
+                                </span>
+                            </div>
+                        {% else %}
+                            <p class="use">Nothing attached.</p>
+                        {% endfor %}
                     </div>
+
+                    {# WHAT IS LEFT TO ATTACH — the installation's catalogue minus what
+                       this department already leads with. A module nobody installed is
+                       not offered, because attaching it would point at code this
+                       deployment does not have. #}
+                    <div class="chiprow" data-dept-attach>
+                        <span class="lbl">Attach</span>
+                        {% for module in detached %}
+                            <form method="post" action="{{ path('team_department_module_toggle', {uuid: department.uuidString, slug: module.slug}) }}">
+                                <input type="hidden" name="_token" value="{{ csrfToken }}">
+                                <button class="dchip" type="submit">{{ module.name }}</button>
+                            </form>
+                        {% else %}
+                            <span class="fog mono">&mdash; every installed module is attached</span>
+                        {% endfor %}
+                    </div>
+
+                    <p class="use">Attaching a module makes it <b>lead</b> for this department&rsquo;s people &mdash;
+                        it grants nothing and hides nothing. A module claimed by two departments is one module,
+                        listed first for both.</p>
                 </div>
             </div>
         </section>

@@ -16,6 +16,7 @@ namespace Uhifadhi\Bundle\TeamBundle\Entity;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Uhifadhi\Bundle\RegistryBundle\Entity\Module;
 use Uhifadhi\Bundle\TeamBundle\Entity\Trait\TimestampableTrait;
 use Uhifadhi\Bundle\TeamBundle\Entity\Trait\UuidTrait;
 use Uhifadhi\Bundle\TeamBundle\Enum\DepartmentScopeEnum;
@@ -138,6 +139,35 @@ class Department
     private Collection $positions;
 
     /**
+     * THE MODULES THIS DEPARTMENT LEADS WITH — the lens, and the only thing on
+     * this entity that says what its people see first.
+     *
+     * ATTACHING GRANTS NOTHING AND HIDES NOTHING. It re-orders a page: the
+     * attached modules lead the department's overview, and the figures on its
+     * performance surfaces are those modules' KPIs rolled up through the
+     * attachment. No permission moves, and no row becomes unreachable — a module
+     * two departments attach is ONE module, listed first for both, reading the
+     * same rows. That is what makes a department a lens and not a fence.
+     *
+     * THE OWNING SIDE IS HERE AND THERE IS NO INVERSE. The join table is this
+     * bundle's ({@see Module} is the registry's, and the registry knows nothing
+     * of departments, nor may it: the dependency runs one way, team → registry).
+     * So a module carries no `departments` collection, and nothing in the
+     * registry has to change for a department to point at one.
+     *
+     * BOTH SIDES CASCADE ON DELETE. An attachment is a statement about a pair,
+     * and it means nothing once either half is gone.
+     *
+     * @var Collection<int, Module>
+     */
+    #[ORM\ManyToMany(targetEntity: Module::class)]
+    #[ORM\JoinTable(name: 'team_department_module')]
+    #[ORM\JoinColumn(name: 'department_id', onDelete: 'CASCADE')]
+    #[ORM\InverseJoinColumn(name: 'module_id', onDelete: 'CASCADE')]
+    #[ORM\OrderBy(['position' => 'ASC', 'name' => 'ASC'])]
+    private Collection $modules;
+
+    /**
      * WHETHER THIS DEPARTMENT IS STILL IN PLAY, and the reason there is no delete.
      *
      * "This unit was folded into another last year" and "this unit never
@@ -177,6 +207,7 @@ class Department
     {
         $this->positions = new ArrayCollection();
         $this->scopeChanges = new ArrayCollection();
+        $this->modules = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -202,6 +233,41 @@ class Department
     public function getPositions(): Collection
     {
         return $this->positions;
+    }
+
+    /**
+     * The modules this department leads with, in catalogue order.
+     *
+     * @return Collection<int, Module>
+     */
+    public function getModules(): Collection
+    {
+        return $this->modules;
+    }
+
+    public function hasModule(Module $module): bool
+    {
+        return $this->modules->contains($module);
+    }
+
+    /**
+     * Idempotent: two people pressing one chip is one attachment, not a
+     * department that leads with the same module twice.
+     */
+    public function attachModule(Module $module): static
+    {
+        if (!$this->modules->contains($module)) {
+            $this->modules->add($module);
+        }
+
+        return $this;
+    }
+
+    public function detachModule(Module $module): static
+    {
+        $this->modules->removeElement($module);
+
+        return $this;
     }
 
     public function getArea(): ?AreaInterface

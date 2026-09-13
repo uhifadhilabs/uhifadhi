@@ -97,6 +97,35 @@ final class DepartmentRepository extends ServiceEntityRepository
     }
 
     /**
+     * HOW MANY DEPARTMENTS ATTACH EACH MODULE, keyed by the module's slug — what
+     * lets a lens say "shared · 3 departments" instead of claiming a module is
+     * its own.
+     *
+     * One query for the whole page rather than one per card: a per-card count is
+     * how two rows of one screen come to disagree about the same module. A slug
+     * nobody attaches is absent from the map, which reads as zero.
+     *
+     * @return array<string, int>
+     */
+    public function countByModule(): array
+    {
+        /** @var list<array{slug: string, total: int}> $rows */
+        $rows = $this->createQueryBuilder('d')
+            ->select('m.slug AS slug', 'COUNT(d.id) AS total')
+            ->join('d.modules', 'm')
+            ->groupBy('m.slug')
+            ->getQuery()
+            ->getResult();
+
+        $counts = [];
+        foreach ($rows as $row) {
+            $counts[$row['slug']] = (int) $row['total'];
+        }
+
+        return $counts;
+    }
+
+    /**
      * The org-level departments — those with no area, spanning every one — by
      * name. The register draws these after the area-level ones.
      *

@@ -20,6 +20,7 @@ use Symfony\Bundle\TwigBundle\TwigBundle;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
+use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
 use Uhifadhi\Bundle\ShellBundle\ShellBundle;
 use Uhifadhi\Bundle\TeamBundle\TeamBundle;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\CheckoutTempDirTrait;
@@ -36,10 +37,11 @@ use Uhifadhi\Bundle\TeamBundle\Tests\Integration\CheckoutTempDirTrait;
  * its surfaces are widget surfaces (widget). A kernel that dropped any of them
  * would compile nothing and prove nothing.
  *
- * WIDGET ASKS THE QUESTION, IT DOES NOT ANSWER IT — its `WidgetPreference`
- * points at the same contract and its bundle prepends no resolution of its own,
- * which is checked rather than assumed. So the only package here that could
- * have supplied the answer is team, and the assertions are about team.
+ * WIDGET AND THE REGISTRY ASK THE QUESTION, THEY DO NOT ANSWER IT — widget's
+ * `WidgetPreference` points at the same contract, the registry maps the module
+ * catalogue a department attaches from, and neither bundle prepends a resolution
+ * of its own, which is checked rather than assumed. So the only package here that
+ * could have supplied the answer is team, and the assertions are about team.
  *
  * The whole point is what is ABSENT from `configureContainer()`: there is no
  * `resolve_target_entities` here, because an installation should not have to
@@ -66,6 +68,7 @@ final class ResolutionKernel extends Kernel
         yield new TwigBundle();
         yield new DoctrineBundle();
         yield new SecurityBundle();
+        yield new RegistryBundle();
         yield new ShellBundle();
         yield new TeamBundle();
     }

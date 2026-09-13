@@ -2804,3 +2804,45 @@ html.light [data-dp] select, html.light [data-dept] select {
 .rln .k { color: rgb(var(--c-fog)); }
 .rln .v { color: rgb(var(--c-tx)); font-weight: 600; }
 .rln .v.acc { color: rgb(var(--c-acc)); }
+
+/* ── THE LENS'S MODULE CHIPS ──────────────────────────────────────────────
+   The attachment control's own vocabulary, ported from the canonical design's
+   department-detail.css: the provenance chip a module card and an attached row
+   wear (`.dp-chip`, accented as `.shared` when more than one department leads
+   with the module), and the row of ghost chips that attaches one (`.chiprow` >
+   `.dchip`).
+
+   A `.dchip` is a BUTTON in a form, not a link: attaching is a write. It wears
+   the quiet outline the design draws and lights to the accent on hover, so the
+   act reads as available rather than as a tab already chosen. */
+.chiprow { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; margin-top: 12px; }
+.chiprow .lbl { margin: 0 3px 0 0; }
+.chiprow form { display: contents; }
+
+.dp-chip {
+    display: inline-flex; align-items: center; gap: 5px; flex: none;
+    font-family: var(--font-mono); font-size: 9.5px; font-weight: 700; letter-spacing: .08em;
+    text-transform: uppercase; line-height: 1; white-space: nowrap;
+    border: 1px solid var(--c-ln2); border-radius: 999px; padding: 5px 9px 4px;
+    color: rgb(var(--c-dim)); background: rgb(var(--c-raised));
+}
+.dp-chip.shared {
+    color: rgb(var(--c-acc)); border-color: color-mix(in srgb, rgb(var(--c-acc)) 40%, transparent);
+    background: color-mix(in srgb, rgb(var(--c-acc)) 7%, transparent);
+}
+
+.dchip {
+    font: inherit; font-size: 12px; font-weight: 600; cursor: pointer;
+    color: rgb(var(--c-fog)); background: none; border: 1px dashed var(--c-ln2);
+    border-radius: 999px; padding: 5px 12px; line-height: 1.3;
+}
+.dchip:hover {
+    color: rgb(var(--c-acc)); border-color: color-mix(in srgb, rgb(var(--c-acc)) 55%, transparent);
+    border-style: solid;
+}
+.dchip:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accGlow); }
+
+/* The attached row's provenance line, when the module is this department's
+   alone: the design sets it in the quiet mono the rest of the row's metadata
+   uses, and `.fog`/`.mono` carry the colour and the family already. */
+.setrow .fog.mono { font-size: 11px; }

@@ -29,6 +29,7 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Uid\Uuid;
 use Twig\Environment;
+use Uhifadhi\Bundle\RegistryBundle\Service\ModuleCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
@@ -38,6 +39,7 @@ use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
+use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPerformance;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentService;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionService;
 use Uhifadhi\Contracts\Entity\AreaInterface;
@@ -87,10 +89,17 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
  * how many positions and people it touches — is stated on the act and INFORMS,
  * never guards; {@see reactivate()} brings it back.
  *
- * WHAT IS DELIBERATELY NOT HERE YET. The rich lens surface — a department's
- * widget board, its attached modules and their rolled-up KPIs — is the canonical
- * detail page's follow-up: the Overview and Settings tabs draw the DRAWN empty
- * states for it and nothing is invented behind them.
+ * WHICH MODULES A DEPARTMENT LEADS WITH IS A LENS, NOT A GRANT.
+ * {@see toggleModule()} attaches a module from the registry's catalogue or takes
+ * it back off, and that is the whole of its effect: the attached modules lead the
+ * department's overview, and the figures on its performance tab are those
+ * modules' KPIs rolled up through the attachment ({@see DepartmentPerformance}).
+ * No permission moves and no row becomes unreachable, which is why — unlike a
+ * scope change — it takes no reason and leaves no audit line.
+ *
+ * WHAT IS DELIBERATELY NOT HERE YET. A department's WIDGET BOARD — the drawn
+ * arrangement of its lens into movable plates — is the canonical detail page's
+ * follow-up; the tabs render the composed page instead.
  */
 final readonly class DepartmentController
 {
@@ -108,6 +117,8 @@ final readonly class DepartmentController
         private UrlGeneratorInterface $router,
         private TokenStorageInterface $tokens,
         private AreaAuthority $authority,
+        private ModuleCatalogue $catalogue,
+        private DepartmentPerformance $performance,
     ) {
     }
 
@@ -171,9 +182,15 @@ final readonly class DepartmentController
      * THE LENS — a department's own page, area-aware and openable from every row.
      *
      * It carries the department's real facts: its scope, its area when it has
-     * one, its code and the positions filed under it. The module-led overview,
-     * the performance KPIs and the module attachments are the rich-lens
-     * follow-up; the page draws their empty states and invents no data.
+     * one, its code, the positions filed under it, and the modules it attaches —
+     * which lead its overview and are where every figure on its performance tab
+     * comes from. A department with nothing attached leads with nothing, and the
+     * page says so rather than inventing a card.
+     *
+     * The modules OFFERED are the registry's catalogue: the rows in the table
+     * that a registered provider still answers for. A module nobody installed is
+     * not offered, because attaching it would point at code this deployment does
+     * not have.
      */
     #[Route('/departments/{uuid}', name: 'team_department_show', requirements: ['uuid' => Requirement::UUID], methods: ['GET'])]
     #[IsGranted(PermissionEnum::TeamManage->value)]
@@ -188,14 +205,78 @@ final readonly class DepartmentController
             }
         }
 
+        // THE TWO HALVES OF THE ATTACHMENT CONTROL, split here rather than in
+        // Twig: the modules this department leads with, and the ones it could.
+        $attached = $department->getModules()->toArray();
+        $detached = [];
+        foreach ($this->catalogue->all() as $module) {
+            if (!$department->hasModule($module)) {
+                $detached[] = $module;
+            }
+        }
+
         return new Response($this->twig->render('@Team/departments/show.html.twig', [
             'department' => $department,
             'mark' => $this->mark((string) $department->getName()),
             'positions' => $positions,
             'headcount' => $this->users->countActiveHoldingAnyPosition($owned),
             'holders' => $this->holders(),
+            'attached' => $attached,
+            'detached' => $detached,
+            'kpis' => $this->performance->kpisFor($department),
+            // HOW MANY DEPARTMENTS EACH MODULE SERVES, so a card can say "shared"
+            // truthfully. One query for the page; a per-card count is how two rows
+            // come to disagree about one module.
+            'sharing' => $this->departments->countByModule(),
             'csrfToken' => $this->csrf->getToken(self::CSRF_ID)->getValue(),
         ]));
+    }
+
+    /**
+     * ATTACH OR DETACH A MODULE — the lens control, one door for both directions
+     * because it is one decision seen from two sides.
+     *
+     * IT GRANTS NOTHING AND HIDES NOTHING. Attaching makes the module lead this
+     * department's view and puts its KPIs on the performance tab; it moves no
+     * permission and fences off no row, so a module two departments attach is one
+     * module listed first for both. That is why there is no reason field and no
+     * audit line here, unlike {@see changeScope()}: nothing about who may do what
+     * has moved.
+     *
+     * §5.6: it is department management, so an area administrator reaches the
+     * departments their authority reaches and no others.
+     */
+    #[Route('/departments/{uuid}/modules/{slug}/toggle', name: 'team_department_module_toggle', requirements: ['uuid' => Requirement::UUID, 'slug' => '[a-z0-9-]+'], methods: ['POST'])]
+    #[IsGranted(PermissionEnum::TeamManage->value)]
+    public function toggleModule(Request $request, string $uuid, string $slug): Response
+    {
+        $department = $this->department($uuid);
+        $this->assertCsrf($request);
+        $this->assertMayManage($department);
+
+        // A slug this deployment does not have is not a module to attach: either
+        // nothing ever declared it, or its bundle is gone and the tile would
+        // point at code nobody has.
+        $module = $this->catalogue->find($slug)
+            ?? throw new NotFoundHttpException('No such module on this installation.');
+
+        if ($department->hasModule($module)) {
+            $this->departmentWrites->detach($department, $module);
+
+            return $this->toLens($request, $department, \sprintf(
+                '%s no longer leads for %s. The module and every row in it are untouched — this was emphasis, not access.',
+                (string) $module->getName(),
+                (string) $department->getName(),
+            ));
+        }
+
+        $this->departmentWrites->attach($department, $module);
+
+        return $this->toLens($request, $department, \sprintf(
+            '%s leads for %s now, and its figures roll up on this department’s performance tab. It grants nobody anything and hides nothing — another department attaching it reads the same rows.',
+            (string) $module->getName(),
+            (string) $department->getName(),
+        ));
     }
 
     /**
@@ -642,11 +723,30 @@ final readonly class DepartmentController
 
     private function back(Request $request, string $message, string $kind = 'success'): RedirectResponse
     {
+        $this->flash($request, $message, $kind);
+
+        return new RedirectResponse($this->router->generate('team_departments'));
+    }
+
+    /**
+     * BACK TO THE DEPARTMENT, not to the register — a write made ON the lens
+     * returns to the lens, so the result of pressing a chip is the page that
+     * changed rather than the list it was reached from.
+     */
+    private function toLens(Request $request, Department $department, string $message, string $kind = 'success'): RedirectResponse
+    {
+        $this->flash($request, $message, $kind);
+
+        return new RedirectResponse($this->router->generate('team_department_show', [
+            'uuid' => (string) $department->getUuidString(),
+        ]));
+    }
+
+    private function flash(Request $request, string $message, string $kind): void
+    {
         $session = $request->hasSession() ? $request->getSession() : null;
         if ($session instanceof FlashBagAwareSessionInterface) {
             $session->getFlashBag()->add($kind, $message);
         }
-
-        return new RedirectResponse($this->router->generate('team_departments'));
     }
 }

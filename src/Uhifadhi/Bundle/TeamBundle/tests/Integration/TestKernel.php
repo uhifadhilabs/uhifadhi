@@ -33,8 +33,10 @@ use Uhifadhi\Bundle\TeamBundle\TeamBundle;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\DeclaringModuleProvider;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\DevkitContentCollector;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\GuardedController;
+use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\RosterKpiProvider;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\ShellPageController;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\SilentModuleProvider;
+use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\SurveyKpiProvider;
 
 /**
  * The smallest host this bundle can live in: framework + twig + doctrine +
@@ -244,6 +246,19 @@ final class TestKernel extends Kernel
         $container->services()
             ->set(SilentModuleProvider::class)
             ->tag('uhifadhi.module');
+
+        // TWO MODULES THAT REPORT A FIGURE, tagged by hand exactly as a module
+        // bundle tags its own (a reusable bundle is not autoconfigured). One
+        // belongs to each of the providers above, so the department lens can be
+        // asked the question the KPI seam exists for: a provider is read only when
+        // the department attaches its module, and the other module's figure stays
+        // off the page rather than going to zero.
+        $container->services()
+            ->set(SurveyKpiProvider::class)
+            ->tag('uhifadhi.department_kpi');
+        $container->services()
+            ->set(RosterKpiProvider::class)
+            ->tag('uhifadhi.department_kpi');
 
         // The thing behind the firewall (see configureRoutes).
         $container->services()->set(GuardedController::class)->public();

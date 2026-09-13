@@ -15,6 +15,7 @@ namespace Uhifadhi\Bundle\TeamBundle\Service;
 
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
+use Uhifadhi\Bundle\RegistryBundle\Entity\Module;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Exception\MissingScopeChangeReasonException;
@@ -38,6 +39,11 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
  * CHANGING A SCOPE IS AUDITED, BOTH DIRECTIONS, and the entity is what records
  * it: {@see Department::changeScopeTo()} is the one door, it refuses a change
  * with no reason, and it appends the transition. This only supplies who and why.
+ *
+ * WHICH MODULES LEAD IT IS A LENS, NOT A GRANT. {@see attach()} and
+ * {@see detach()} decide what a department's people meet first and what figures
+ * its performance surfaces roll up; they move no permission and fence off no
+ * row, so a module two departments attach is one module listed first for both.
  *
  * A DEPARTMENT DEACTIVATES, IT NEVER DELETES. Winding one down flips a flag: the
  * register draws it greyed, the pickers drop it, its scope history and filed
@@ -99,6 +105,32 @@ final readonly class DepartmentService
         $department->changeScopeTo($area, $by, $reason);
 
         $this->flush((string) $department->getName());
+    }
+
+    /**
+     * ATTACH A MODULE — make it lead this department's view.
+     *
+     * Idempotent, because the control is a chip and a chip can be pressed twice.
+     *
+     * NOT AUDITED, and that is the model rather than an omission. The ledger this
+     * bundle keeps ({@see \Uhifadhi\Bundle\TeamBundle\Entity\DepartmentScopeChange})
+     * records SCOPE transitions, and it exists because a scope change moves the
+     * authority of everyone filed under the department — a fact the resulting row
+     * could never explain on its own. An attachment moves no authority and hides
+     * no row: it says which modules lead a page, the current state says exactly
+     * which those are, and reversing it is the same one click. Writing it into a
+     * scope ledger would put a row there that is not a scope transition.
+     */
+    public function attach(Department $department, Module $module): void
+    {
+        $department->attachModule($module);
+        $this->entityManager->flush();
+    }
+
+    public function detach(Department $department, Module $module): void
+    {
+        $department->detachModule($module);
+        $this->entityManager->flush();
     }
 
     public function deactivate(Department $department): void

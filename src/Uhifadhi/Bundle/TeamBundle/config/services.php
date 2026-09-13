@@ -41,6 +41,7 @@ use Uhifadhi\Bundle\TeamBundle\Security\ApiTokenAuthenticator;
 use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
 use Uhifadhi\Bundle\TeamBundle\Security\PermissionVoter;
 use Uhifadhi\Bundle\TeamBundle\Service\ApiTokenManager;
+use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPerformance;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentService;
 use Uhifadhi\Bundle\TeamBundle\Service\FieldSignIn;
 use Uhifadhi\Bundle\TeamBundle\Service\Mail;
@@ -438,6 +439,17 @@ return static function (ContainerConfigurator $container): void {
         ->args([service('doctrine.orm.entity_manager')]);
 
     /*
+     * A DEPARTMENT'S FIGURES ARE ITS ATTACHED MODULES' FIGURES. The providers
+     * arrive as a tagged iterator, and the tag string is written out here rather
+     * than read off the contract's constant for the reason the permission
+     * catalogue's is: a literal keeps a package off the build classpath of
+     * everything that reads it. The collaborator is the tag alone — the
+     * department it is asked about comes from the screen.
+     */
+    $services->set('team.department_performance', DepartmentPerformance::class)
+        ->args([tagged_iterator('uhifadhi.department_kpi')]);
+
+    /*
      * THE THREE WRITES BEHIND THE DOORS A STRANGER REACHES. It knows nothing
      * about the request: signing every OTHER session out is a fact about the
      * browser in hand and stays with the screen.
@@ -587,6 +599,8 @@ return static function (ContainerConfigurator $container): void {
             service('router'),
             service('security.token_storage'),
             service('team.area_authority'),
+            service('registry.catalogue'),
+            service('team.department_performance'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(DepartmentController::class, 'team.controller.department')->public();

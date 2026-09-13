@@ -16,6 +16,7 @@ namespace Uhifadhi\Bundle\TeamBundle\Tests\Unit\Service;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Uhifadhi\Bundle\RegistryBundle\Entity\Module;
 use Uhifadhi\Bundle\TeamBundle\Entity\DepartmentScopeChange;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Exception\MissingScopeChangeReasonException;
@@ -113,6 +114,77 @@ final class DepartmentServiceTest extends TestCase
 
         self::service()->reactivate($department);
         self::assertTrue($department->isActive());
+    }
+
+    // ---- the lens: which modules lead a department's view ------------------
+
+    public function testAttachingAModuleMakesItLeadTheDepartment(): void
+    {
+        $department = self::service()->create('Ecology', null);
+        $surveys = self::module('surveys');
+
+        self::service()->attach($department, $surveys);
+
+        self::assertTrue($department->hasModule($surveys));
+        self::assertSame([$surveys], $department->getModules()->toArray());
+    }
+
+    /**
+     * ATTACHING TWICE IS ATTACHING ONCE. Two people pressing the same chip is
+     * one attachment, not a department that leads with a module twice.
+     */
+    public function testAttachingAModuleAlreadyAttachedChangesNothing(): void
+    {
+        $department = self::service()->create('Ecology', null);
+        $surveys = self::module('surveys');
+
+        self::service()->attach($department, $surveys);
+        self::service()->attach($department, $surveys);
+
+        self::assertCount(1, $department->getModules());
+    }
+
+    public function testDetachingTakesTheModuleBackOff(): void
+    {
+        $department = self::service()->create('Ecology', null);
+        $surveys = self::module('surveys');
+        self::service()->attach($department, $surveys);
+
+        self::service()->detach($department, $surveys);
+
+        self::assertFalse($department->hasModule($surveys));
+        self::assertCount(0, $department->getModules());
+    }
+
+    /** Detaching something that was never attached is not an error either. */
+    public function testDetachingAModuleThatWasNeverAttachedChangesNothing(): void
+    {
+        $department = self::service()->create('Ecology', null);
+
+        self::service()->detach($department, self::module('surveys'));
+
+        self::assertCount(0, $department->getModules());
+    }
+
+    /**
+     * ATTACHING GRANTS NOTHING AND CONFINES NOTHING. The scope is the department's
+     * area and the ledger records scope transitions; an attachment is neither, so
+     * neither moves.
+     */
+    public function testAttachingLeavesTheScopeAndItsLedgerAlone(): void
+    {
+        $area = self::area();
+        $department = self::service()->create('Anti-Poaching', $area);
+
+        self::service()->attach($department, self::module('surveys'));
+
+        self::assertSame($area, $department->getArea());
+        self::assertCount(0, $department->getScopeChanges());
+    }
+
+    private static function module(string $slug): Module
+    {
+        return (new Module())->setSlug($slug)->setName(ucfirst($slug));
     }
 
     private static function service(): DepartmentService

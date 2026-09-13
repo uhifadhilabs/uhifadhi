@@ -9,6 +9,9 @@
 Not released yet.
 
  * the account, the position that bundles permissions, and departments
+ * the modules a department attaches — the lens that decides which modules
+   lead its view and whose KPIs its performance surfaces roll up, granting
+   nothing and hiding nothing
  * the user-provider entity and the `team.user_checker` a firewall names
  * the sign-in, forgotten-password, reset and invite-acceptance screens
  * the roster and the permission matrix, as widget surfaces

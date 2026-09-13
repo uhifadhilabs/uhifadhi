@@ -15,6 +15,7 @@ installed on its own as `uhifadhi/team-bundle`.
 - [Installation](#installation)
 - [Modules point at your people](#modules-point-at-your-people)
 - [Two axes: tier and position](#two-axes-tier-and-position)
+- [A department is a lens: the modules it attaches](#a-department-is-a-lens-the-modules-it-attaches)
 - [Signing a field client in](#signing-a-field-client-in)
 - [Asking again: `GET /api/me`](#asking-again-get-apime)
 - [The screens](#the-screens)
@@ -94,10 +95,11 @@ copies `config/packages/team.yaml` in, and mounts the routes.
 bin/console doctrine:migrations:migrate
 ```
 
-Five tables: `team_user`, `team_position`, `team_department` — which carries a
+Six tables: `team_user`, `team_position`, `team_department` — which carries a
 nullable **area**, and that is what makes a department org-level or area-level —
+`team_department_module` (the modules a department leads with),
 `team_department_scope_change` (the trail of every scope change) and
-`team_api_token`. The bundle ships the version that creates all five —
+`team_api_token`. The bundle ships the versions that create all six —
 `migrations/`, namespace `Uhifadhi\Bundle\TeamBundle\Migrations`, registered
 from the bundle's own `prependExtension()`, so an installation configures
 nothing. It is dated after the area tables, because two of these columns
@@ -197,6 +199,36 @@ is derived from the position's department every time it is asked.
 
 An installation always keeps one active Super Admin. Every write that would
 lower the last one is refused before anything is stored.
+
+## A department is a lens: the modules it attaches
+
+A department **attaches** modules from the registry's catalogue, and that is the
+whole of what a department does to a page. The attached modules lead its own
+dashboard, one card each, and the figures on its performance tab are those
+modules' KPIs. Attaching **grants nothing and hides nothing**: no permission
+moves, no row becomes unreachable, and a module two departments attach is one
+module — the same rows, listed first for both, neither able to hide anything from
+the other. It takes no reason and leaves no audit line for exactly that reason;
+a **scope** change, which does move authority, is the thing that is audited.
+
+Only the modules this deployment actually has are offered — a catalogue row whose
+provider is no longer registered is not one, because attaching it would point at
+code nobody has.
+
+**How a module puts a figure there.** Implement
+`Uhifadhi\Contracts\Kpi\DepartmentKpiProviderInterface` and tag the service
+`uhifadhi.department_kpi` by hand, the way a reusable bundle tags its module
+provider:
+
+```php
+$services->set(SightingKpiProvider::class)->tag('uhifadhi.department_kpi');
+```
+
+A provider is asked for figures only when a department attaches the module its
+`moduleSlug()` names, so a detached module's plates **leave** the page rather
+than going to zero. Returning `[]` is a legitimate answer, and a `null` value is
+a dashed slot: "we did not measure" and "we measured nothing" are different
+facts, and a page that printed `0` for the first would be lying.
 
 ## Signing a field client in
 
