@@ -39,6 +39,16 @@ use Uhifadhi\Bundle\ShellBundle\Model\TimeShape;
  *   either as the machine attribute or as the fallback text between the tags.
  *   A date printed anywhere else is a date in the server's zone forever.
  *
+ *   THE ONE EXCEPTION IS THE RELATIVE LABEL. "6 min ago", "3 days ago": a
+ *   relative reading is a duration, not a wall-clock, so it is right in every
+ *   zone at once and must NOT be rewritten. It is written as a plain
+ *   `<span title="{{ t|date('c') }}">3 days ago</span>` — never a `<time>`,
+ *   which the frame would localise into an absolute stamp and lose the reading
+ *   the design draws — and this check accepts a `|date('c')` inside a `title`
+ *   for exactly that. Only `date('c')` is accepted there: an offset-qualified
+ *   machine instant is an annotation, while a formatted one in a tooltip is the
+ *   same defect one attribute further in.
+ *
  *   Every `<time>` element carries a `datetime` attribute. Without it the frame
  *   has no instant to read and skips the element, so the server's text stands.
  *
@@ -92,18 +102,30 @@ abstract class TimeConformanceTestCase extends TestCase
             // a print somewhere else is left behind.
             $outside = (string) preg_replace('#<time\b[^>]*\bdatetime=.*?</time>#s', '', $twig);
 
-            if (1 === preg_match('/\|\s*date\(/', $outside)) {
-                $offenders[] = $path;
+            // AND THE RELATIVE LABEL, which is the one reading that is right in
+            // every zone at once. "6 min ago" carries no wall-clock to be wrong
+            // about, so it is deliberately NOT a `<time>` and deliberately not
+            // localised — it prints as it is, with the exact instant riding in a
+            // `title` for anybody who wants it. Only `date('c')` is accepted
+            // there: an offset-qualified machine instant is an annotation,
+            // whereas a formatted one in a tooltip is the same defect one
+            // attribute further in.
+            $outside = (string) preg_replace('/\btitle="[^"]*\|\s*date\(\s*.c.\s*\)[^"]*"/s', '', $outside);
+
+            preg_match_all('/\|\s*date\([^)]*\)/', $outside, $prints);
+            foreach (array_unique($prints[0]) as $print) {
+                $offenders[] = $path.': '.$print;
             }
         }
 
         sort($offenders);
 
         self::assertSame([], $offenders, \sprintf(
-            'A date is printed outside a <time datetime> element in [%s]; whatever zone the server runs in '
-            .'is the zone every reader gets. Write it as '
+            'A date is printed where nothing can read it in the viewer\'s zone: [%s]. Whatever zone the '
+            .'server runs in is the zone every reader gets. Write it as '
             .'<time datetime="{{ x|date(\'c\') }}" data-localtime-format="stamp">fallback</time> and let the '
-            .'frame rewrite it.',
+            .'frame rewrite it — or, for a relative reading that needs no zone, as '
+            .'<span title="{{ x|date(\'c\') }}">3 days ago</span>.',
             implode(', ', $offenders),
         ));
     }

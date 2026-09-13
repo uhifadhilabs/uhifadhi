@@ -1097,8 +1097,10 @@ everywhere:
   the text on every page, including nodes a swap or a clone inserts later. The shapes are the
   product's own compact stamps — `stamp` ("12 sep · 13:49"), `daystamp`, `clock`, `clocks`, `day`,
   `daylong` — so a design's monospace cell is no longer a reason to format server-side, which is what
-  every module used to do and why every reader outside the server's zone read the time wrong. A day
-  key or a calendar date is a date-only `datetime` and is deliberately left alone. Never format an
+  every module used to do and why every reader outside the server's zone read the time wrong. Two
+  things are deliberately left alone: a day key or calendar date (a date-only `datetime`), and a
+  **relative** reading — "6 min ago" is a duration, right in every zone at once, so it is written as a
+  plain `<span title="{{ t|date('c') }}">6 min ago</span>` and never as a `<time>`. Never format an
   instant for display any other way. See
   [theming.md — a time reads in the reader's zone](../../Bundle/ShellBundle/docs/theming.md#a-time-reads-in-the-readers-zone).
 
@@ -1956,11 +1958,12 @@ final class TimeConformanceTest extends TimeConformanceTestCase
 ```
 
 It asks three things of every template you ship: every `|date(` sits inside a `<time datetime=…>`
-element, every `<time>` carries a `datetime`, and every `data-localtime-format` names a shape the
-shell answers. `exemptTemplates()` is there for a template that prints `|date(` as prose in a code
-sample, and each entry should say which. Without PHPUnit the first check is
-`grep -rn "|date(" templates/ | grep -v "<time"`, and anything it lists is an instant in the server's
-zone. The shapes, and the rule the test enforces, are in
+element — or inside a relative label's `title="{{ t|date('c') }}"` — every `<time>` carries a
+`datetime`, and every `data-localtime-format` names a shape the shell answers. `exemptTemplates()` is
+there for a template that prints `|date(` as prose in a code sample, and each entry should say which.
+Without PHPUnit the first check is
+`grep -rn "|date(" templates/ | grep -v "<time" | grep -v "title="`, and anything it lists is an
+instant in the server's zone. The shapes, and the rule the test enforces, are in
 [theming.md — a time reads in the reader's zone](../../Bundle/ShellBundle/docs/theming.md#a-time-reads-in-the-readers-zone).
 
 ---

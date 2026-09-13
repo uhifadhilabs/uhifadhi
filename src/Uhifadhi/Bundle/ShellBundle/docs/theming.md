@@ -225,6 +225,20 @@ Three things a caller must hold to.
 - **The visible text is disposable.** The frame overwrites it, so it is the no-JS
   fallback and nothing else: print it in the shape the attribute asks for, and
   keep no wording in it that the reading would lose.
+- **A relative reading is not an instant and is not a `<time>`.** "6 min ago",
+  "3 days ago", "two months ago": a duration carries no wall-clock to be wrong
+  about, so it is right in every zone at once and the frame must not turn it into
+  an absolute stamp — that would lose the only reading anybody acts on. Write it
+  as a plain span, with the exact instant as an annotation:
+
+  ```twig
+  <span title="{{ t|date('c') }}">{{ label }}</span>
+  ```
+
+  The conformance test below accepts a `|date('c')` inside a `title` for exactly
+  this, and only `date('c')`: an offset-qualified machine instant is an
+  annotation, while a *formatted* date in a tooltip is the same defect one
+  attribute further in, and is still caught.
 - **A day key or a calendar date is printed as a date-only `datetime` and never
   localised; only full instants are.** `datetime="2026-08-19"` is a day — a
   calendar cell, a day key, a date a form collected — and a day is the same day in
@@ -253,15 +267,15 @@ final class TimeConformanceTest extends TimeConformanceTestCase
 
 It asks three things of every template under `templates/`: that every `|date(`
 sits **inside** a `<time datetime=…>` element (as the machine attribute or as the
-fallback text), that every `<time>` carries a `datetime`, and that every
-`data-localtime-format` names a shape from the table above. `exemptTemplates()`
-is there for a template that prints `|date(` as prose in a code sample, and each
-entry should say which.
+fallback text) — or inside a relative label's `title="{{ t|date('c') }}"` — that
+every `<time>` carries a `datetime`, and that every `data-localtime-format` names
+a shape from the table above. `exemptTemplates()` is there for a template that
+prints `|date(` as prose in a code sample, and each entry should say which.
 
 Without PHPUnit, the first check is one command:
 
 ```console
-$ grep -rn "|date(" templates/ | grep -v "<time"
+$ grep -rn "|date(" templates/ | grep -v "<time" | grep -v "title="
 ```
 
 Anything it lists is an instant in the server's zone.

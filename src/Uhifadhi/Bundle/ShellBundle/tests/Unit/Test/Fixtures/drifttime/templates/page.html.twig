@@ -1,11 +1,20 @@
 {# A module page written by somebody who printed the time on the server.
 
-   Three drifts, one per assertion: a date printed with no element around it, a
-   `<time>` with no machine instant in it, and a shape the frame does not answer.
+   Four drifts, one per assertion: a date printed with no element around it, a
+   `<time>` with no machine instant in it, a shape the frame does not answer, and
+   a relative label whose title carries a FORMATTED date rather than the machine
+   instant — the same defect one attribute further in.
+
+   The last line is the relative-label idiom written correctly, and it is here so
+   the checks are watched ACCEPTING it: a duration is right in every zone, so it
+   is not a `<time>` and is not rewritten.
+
    The comment itself prints {{ x|date('c') }} as prose, which is not markup and
    must not be read as any of them. #}
 <div class="page">
     <p>Recorded {{ patrol.endedAt|date('j F Y H:i') }}.</p>
     <time data-localtime-format="stamp">7 sep · 08:41</time>
     <time datetime="{{ patrol.startedAt|date('c') }}" data-localtime-format="timestamp">7 sep · 08:41</time>
+    <span title="{{ patrol.startedAt|date('j F Y') }}">3 days ago</span>
+    <span title="{{ patrol.endedAt|date('c') }}">6 min ago</span>
 </div>

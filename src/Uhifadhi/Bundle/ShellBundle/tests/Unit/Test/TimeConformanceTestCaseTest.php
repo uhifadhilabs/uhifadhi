@@ -39,9 +39,50 @@ final class TimeConformanceTestCaseTest extends TestCase
     public function testADatePrintedWithNoElementAroundItFails(): void
     {
         $this->expectException(AssertionFailedError::class);
-        $this->expectExceptionMessageMatches('/page\.html\.twig/');
+        $this->expectExceptionMessageMatches("/\\|date\\('j F Y H:i'\\)/");
 
         self::drifting()->testEveryInstantATemplatePrintsIsInsideATimeElement();
+    }
+
+    /**
+     * A RELATIVE LABEL'S TITLE CARRIES THE MACHINE INSTANT, NOT A READING. The
+     * check accepts `date('c')` in a `title` because an offset-qualified instant
+     * is an annotation nobody reads a wall-clock off. A formatted date there is
+     * the same defect one attribute further in, and is still caught.
+     */
+    public function testAFormattedDateInATooltipFails(): void
+    {
+        $this->expectException(AssertionFailedError::class);
+        $this->expectExceptionMessageMatches("/\\|date\\('j F Y'\\)/");
+
+        self::drifting()->testEveryInstantATemplatePrintsIsInsideATimeElement();
+    }
+
+    /**
+     * AND THE IDIOM ITSELF IS WATCHED BEING ACCEPTED. "6 min ago" is a duration:
+     * it is right in every zone at once, so it is deliberately not a `<time>`
+     * and the frame must not turn it into an absolute stamp. A check that
+     * flagged it would push the whole product back to formatting server-side, so
+     * the correct spelling — the machine instant in a `title` — has to come back
+     * clean.
+     */
+    public function testTheRelativeLabelIdiomIsNotFlagged(): void
+    {
+        try {
+            self::drifting()->testEveryInstantATemplatePrintsIsInsideATimeElement();
+        } catch (AssertionFailedError $failure) {
+            // The guidance in the message spells the idiom out, so it is the
+            // OFFENDER LIST — "<template>: <print>" — that must not name it.
+            self::assertStringNotContainsString(
+                "page.html.twig: |date('c')",
+                $failure->getMessage(),
+                'A machine instant in a <time> or in a relative label\'s title is the idiom, not a drift.',
+            );
+
+            return;
+        }
+
+        self::fail('The drifting bundle must still be failing this check.');
     }
 
     /** A `<time>` with no machine instant is read and skipped, so the server's text stands. */

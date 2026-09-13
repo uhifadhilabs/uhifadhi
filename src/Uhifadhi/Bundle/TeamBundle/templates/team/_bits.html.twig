@@ -132,14 +132,14 @@
    Tuesday afternoon or Tuesday evening is not a fact anybody acts on; whether it
    went out three days ago or three months ago is.
 
-   IT IS AN ELEMENT, NOT A SENTENCE, because "today" and "yesterday" are decided
-   by a midnight — and the only midnight a server knows is its own. The frame
-   rewrites the text to the reader's own day (`day`, "12 sep 2026"); the coarse
-   relative reading below is the machine instant's fallback, which is what a
-   reader with no JavaScript gets. #}
+   IT IS NOT A `<time>`, DELIBERATELY. A relative reading is a duration, not a
+   wall-clock: "three days ago" is three days ago in every timezone there is, so
+   there is nothing here for the frame to put right and an absolute stamp in its
+   place would lose the only reading anybody acts on. The exact instant rides in
+   the title for whoever wants it. #}
 {% macro ago(when) %}
     {%- if when is null -%}&mdash;
-    {%- else -%}<time datetime="{{ when|date('c') }}" data-localtime-format="day">
+    {%- else -%}<span title="{{ when|date('c') }}">
         {%- set days = date().diff(when).days -%}
         {%- if days == 0 -%}today
         {%- elseif days == 1 -%}yesterday
@@ -147,7 +147,7 @@
         {%- elseif days < 365 -%}{{ (days / 30)|round(0, 'floor') }} months ago
         {%- else -%}{{ (days / 365)|round(0, 'floor') }} years ago
         {%- endif -%}
-    </time>{%- endif -%}
+    </span>{%- endif -%}
 {% endmacro %}
 
 {# The row's one action, and its WORD changes with the state: a deactivated

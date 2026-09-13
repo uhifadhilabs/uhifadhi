@@ -73,9 +73,11 @@
                             {% for label in statColumns %}
                                 <td class="num">{{ row.stats[loop.index0] ? row.stats[loop.index0].value : '&mdash;'|raw }}</td>
                             {% endfor %}
-                            {# An area nothing has reported from yet has no instant to localise, so it
-                               draws the dash on its own rather than an empty `<time>` the frame skips. #}
-                            <td class="mono ax-time">{% if row.lastActivity %}<time datetime="{{ row.lastActivity|date('c') }}" data-localtime-format="stamp">{{ row.lastActivityLabel }}</time>{% else %}&mdash;{% endif %}</td>
+                            {# "6 min ago" is a duration, not a wall-clock: it reads the same in every
+                               zone, so it is NOT a `<time>` the frame would rewrite into an absolute
+                               stamp — the exact instant rides in the title instead. An area nothing has
+                               reported from yet has no instant at all and draws the dash. #}
+                            <td class="mono ax-time">{% if row.lastActivity %}<span title="{{ row.lastActivity|date('c') }}">{{ row.lastActivityLabel }}</span>{% else %}&mdash;{% endif %}</td>
                             <td>{% if row.hasAlerts %}<span class="chip warn">{{ row.alertCount }} open</span>{% else %}<span class="chip ok">steady</span>{% endif %}</td>
                         {% else %}
                             <td class="num d">0</td>
