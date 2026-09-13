@@ -42,8 +42,8 @@ namespace Uhifadhi\Contracts\Kpi;
 final readonly class DepartmentRef
 {
     /**
-     * @param int         $id       the key rows are filed under — what a provider's
-     *                              user→department map answers with
+     * @param int         $id       the department's own key, for a provider that
+     *                              labels or links a figure back to it
      * @param string      $name     what a plate prints
      * @param string|null $uuid     how a URL names it, when the caller has one
      * @param string|null $areaUuid THE AREA AN AREA-LEVEL DEPARTMENT IS CONFINED

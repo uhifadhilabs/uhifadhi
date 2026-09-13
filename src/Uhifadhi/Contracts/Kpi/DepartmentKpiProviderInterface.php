@@ -22,22 +22,17 @@ namespace Uhifadhi\Contracts\Kpi;
  *  - A department has no numbers of its own. Everything a performance page shows
  *    is an attached module's KPIs, so this interface is the ONLY way a figure
  *    gets there.
- *  - The figures are summed over the areas the module is switched on in — the
- *    implementation's business, since only the module knows what an "area" means
- *    to it.
- *  - They are SLICED BY THE RECORDING PERSON'S POSITION: a row counts for a
- *    department when the person who recorded it holds a position filed under
- *    that department. One shared module read by two departments therefore yields
- *    two different numbers from the same rows, and neither department is fenced
- *    out of the other's — the split is reporting, never permission.
+ *  - The figures are the module's records inside the department's scope — one
+ *    area for an area-level department, every area the module is switched on in
+ *    for an organisation-wide one. What an "area" means to the records is the
+ *    implementation's business.
+ *  - Who recorded a row decides nothing: a department attaching a module reads
+ *    every record in its scope, and two departments attaching one module in one
+ *    area read the same numbers from the same rows.
  *
  * THE DEPARTMENT ARRIVES AS A REF, NOT AS AN ENTITY. Departments are the team
  * module's, and nothing published describes one; see {@see DepartmentRef} for
- * why a provider is handed id, uuid and name instead of somebody's class. A
- * provider that needs to know WHOSE rows these are reads the org chart the way
- * the platform already does — off the mapping, through the class the installation
- * resolved the user contract to — and never through a `getPosition()` no
- * contract promises.
+ * why a provider is handed id, uuid, name and scope instead of somebody's class.
  *
  * HOW AN IMPLEMENTOR IS COLLECTED. Whoever renders a performance surface reads
  * the {@see TAG}, and the tag is applied EXPLICITLY at both ends:
