@@ -196,7 +196,9 @@ puts numbers on a department's performance surfaces through
 `Uhifadhi\Contracts\Kpi\DepartmentKpiProviderInterface` (`uhifadhi.department_kpi`),
 which `uhifadhi/contracts` publishes because the department that owns those
 surfaces is TeamBundle's, not this bundle's. It takes a `DepartmentRef` — an id,
-a uuid and a name — since nothing published describes a department: typing it
+a uuid, a name and the area an area-level department is confined to (`null` being
+organisation-wide, which a provider answers with one roll-up across every area) —
+since nothing published describes a department: typing it
 against Team's entity would make every module that reports a figure depend on
 Team, and typing it against nothing would hand providers an `object` to guess
 at.

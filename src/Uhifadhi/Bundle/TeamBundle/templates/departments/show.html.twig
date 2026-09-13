@@ -20,8 +20,53 @@
    ATTACHING GRANTS NOTHING AND HIDES NOTHING. The Settings copy says it, because
    a control that looks like a permission matrix has to. #}
 {% extends '@Shell/page.html.twig' %}
+{% import _self as dp %}
 {% import '@Team/departments/_bits.html.twig' as di %}
 {% import '@Team/positions/_bits.html.twig' as pm %}
+
+{# THE FIGURES A MODULE REPORTED, DRAWN ONCE EACH.
+
+   The contract asks a provider for ONE SET of KPIs per call — the department's
+   own figures at the scope its ref names — and the design draws one row of
+   representative tiles per module. A provider that still answers one set PER AREA
+   would therefore stack the same label with nothing to tell the copies apart, so
+   these two macros draw the totals first and then each area's sets UNDER THE AREA
+   NAME THE FIGURE ITSELF CARRIES. Nothing is dropped and nothing is summed here:
+   the page renders what it was given, labelled honestly. #}
+{% macro kpi_tiles(figures) %}
+    {% set areas = figures|reduce((names, kpi) => kpi.isTotal or kpi.areaName in names ? names : names|merge([kpi.areaName]), []) %}
+    {% for kpi in figures|filter(kpi => kpi.isTotal) %}
+        {# AN UNKNOWN FIGURE IS A DASHED SLOT, never a zero: "we did not measure"
+           and "we measured nothing" are different facts, and the value object is
+           what draws the distinction. #}
+        <div class="c kpi">
+            <span class="tab">{{ kpi.moduleName }} &middot; {{ kpi.label }}</span>
+            <b class="disp">{{ kpi.display }}{{ kpi.isShare and kpi.isKnown ? '%' : '' }}</b>
+        </div>
+    {% endfor %}
+    {% for areaName in areas %}
+        <div class="dp-arealbl">{{ areaName }}</div>
+        {% for kpi in figures|filter(kpi => kpi.areaName == areaName) %}
+            <div class="c kpi">
+                <span class="tab">{{ kpi.moduleName }} &middot; {{ kpi.label }}</span>
+                <b class="disp">{{ kpi.display }}{{ kpi.isShare and kpi.isKnown ? '%' : '' }}</b>
+            </div>
+        {% endfor %}
+    {% endfor %}
+{% endmacro %}
+
+{% macro kpi_rows(figures) %}
+    {% set areas = figures|reduce((names, kpi) => kpi.isTotal or kpi.areaName in names ? names : names|merge([kpi.areaName]), []) %}
+    {% for kpi in figures|filter(kpi => kpi.isTotal) %}
+        <div class="rln"><span class="k">{{ kpi.label }}</span><span class="v">{{ kpi.display }}{{ kpi.isShare and kpi.isKnown ? '%' : '' }}</span></div>
+    {% endfor %}
+    {% for areaName in areas %}
+        <div class="dp-arealbl">{{ areaName }}</div>
+        {% for kpi in figures|filter(kpi => kpi.areaName == areaName) %}
+            <div class="rln"><span class="k">{{ kpi.label }}</span><span class="v">{{ kpi.display }}{{ kpi.isShare and kpi.isKnown ? '%' : '' }}</span></div>
+        {% endfor %}
+    {% endfor %}
+{% endmacro %}
 
 {% set area = department.area %}
 {% set isArea = area is not null %}
@@ -132,9 +177,7 @@
                         {% set figures = kpis|filter(kpi => kpi.moduleSlug == module.slug) %}
                         {% if figures is not empty %}
                             <div style="margin-top:8px">
-                                {% for kpi in figures %}
-                                    <div class="rln"><span class="k">{{ kpi.label }}</span><span class="v">{{ kpi.display }}{{ kpi.isShare and kpi.isKnown ? '%' : '' }}</span></div>
-                                {% endfor %}
+                                {{ dp.kpi_rows(figures) }}
                             </div>
                         {% else %}
                             <p class="use">Leads for this department. It reports no figure of its own.</p>
@@ -163,24 +206,18 @@
                     <p class="use">A department owns no numbers of its own &mdash; every figure is a module KPI rolled
                         up through this department&rsquo;s attachment. Detaching a module takes its figures off this
                         page; it never sets them to zero.</p>
+                    {# ONE TILE PER FIGURE, laid on a single row — the label the module
+                       gave it under the module's own name, and the value. #}
                     <div class="grid kstrip" style="margin-top:12px" data-dept-kpis>
-                        {% for kpi in kpis %}
-                            {# ONE TILE PER FIGURE, laid on a single row — the label the
-                               module gave it under the module's own name, and the value.
-                               AN UNKNOWN FIGURE IS A DASHED SLOT, never a zero: "we did
-                               not measure" and "we measured nothing" are different facts,
-                               and the value object is what draws the distinction. #}
-                            <div class="c kpi">
-                                <span class="tab">{{ kpi.moduleName }} &middot; {{ kpi.label }}</span>
-                                <b class="disp">{{ kpi.display }}{{ kpi.isShare and kpi.isKnown ? '%' : '' }}</b>
-                            </div>
+                        {% if kpis is not empty %}
+                            {{ dp.kpi_tiles(kpis) }}
                         {% else %}
                             <div class="dp-empty" style="grid-column:1/-1">
                                 <b>No module KPIs this period</b>
                                 <span>They arrive with the first attached module that reports one &mdash; a department
                                     computes no figure of its own.</span>
                             </div>
-                        {% endfor %}
+                        {% endif %}
                     </div>
                 </div>
             </div>

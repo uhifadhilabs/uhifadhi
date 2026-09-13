@@ -31,7 +31,9 @@ use Uhifadhi\Contracts\Kpi\DepartmentRef;
  * THE DEPARTMENT GOES OUT AS A REF, NEVER AS THIS BUNDLE'S ENTITY
  * ({@see DepartmentRef}). Resolving it here is what keeps a module that reports a
  * figure from depending on the team package: a provider is handed the id its rows
- * are filed under, the uuid a URL names, and the name a plate prints.
+ * are filed under, the uuid a URL names, the name a plate prints, and the area an
+ * area-level department is confined to — the scope, without which a provider
+ * cannot know whether it is being asked about one area or the organisation.
  *
  * `$now` IS PASSED IN, not read, so a period is a parameter and a page is
  * testable — the same arrangement the contract asks of every provider.
@@ -66,10 +68,15 @@ final readonly class DepartmentPerformance
             return [];
         }
 
+        // THE SCOPE TRAVELS WITH THE REF. An area-level department names the area
+        // it is confined to, and an org-level one names none — the contract's word
+        // for "roll up every area". Without it a provider is asked a question with
+        // no scope in it and answers with every area's figures at once.
         $ref = new DepartmentRef(
             (int) $department->getId(),
             (string) $department->getName(),
             $department->getUuidString(),
+            $department->getArea()?->getUuidString(),
         );
         $now ??= new \DateTimeImmutable();
 

@@ -73,6 +73,24 @@ interface DepartmentKpiProviderInterface
      * This department's figures for the period containing `$now`, plus the
      * period before it for the month-over-month move.
      *
+     * ONE SET OF KPIs PER CALL. A call asks about ONE department at ONE scope and
+     * is answered with ONE figure per key — never the same key once per area,
+     * because the surfaces draw one row of tiles per module and unheaded copies
+     * of one label are unreadable. The scope is on the ref:
+     *
+     *  - `areaUuid` SET — the department is confined to that area, and the answer
+     *    is that area's figures alone;
+     *  - `areaUuid` NULL — the department is organisation-wide, and the answer is
+     *    the ROLL-UP across every area the module is switched on in: summed,
+     *    averaged or weighted as the KPI itself defines. THE PROVIDER DECIDES
+     *    WHICH, and says so in the figure's caption, because a reader cannot tell
+     *    a sum from an average by looking at it.
+     *
+     * A module that also wants to show the per-area split behind a roll-up hands
+     * those sets back beside the total — a {@see DepartmentKpi} naming an area is
+     * one area's share, and a nameless one is the total every headline plate and
+     * goal is scored from.
+     *
      * `$now` is handed in rather than read, so a performance page is testable
      * and a period picker is a parameter and not a second code path.
      *

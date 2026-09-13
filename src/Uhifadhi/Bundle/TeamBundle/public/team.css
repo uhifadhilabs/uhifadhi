@@ -2799,6 +2799,16 @@ html.light [data-dp] select, html.light [data-dept] select {
 .dp-empty b { display: block; margin-bottom: 6px; color: rgb(var(--c-tx)); }
 .dp-empty span { font-size: 13px; color: rgb(var(--c-fog)); }
 
+/* THE AREA A SET OF FIGURES BELONGS TO, when a module reports one set per area
+   instead of the single set the contract asks for. A quiet heading, not a plate:
+   it spans the whole KPI row so the tiles under it read as that area's, and the
+   department's own totals keep the first line without a heading at all. */
+.dp-arealbl {
+    grid-column: 1 / -1; margin: 6px 0 0;
+    font-family: var(--font-mono); font-size: 9.5px; font-weight: 700; letter-spacing: .1em;
+    text-transform: uppercase; line-height: 1; color: rgb(var(--c-dim));
+}
+
 /* The meta row inside the lens's Settings cards is the shell's. The key and the
    value it carries are this bundle's own: quiet label, weighted answer. */
 .rln .k { color: rgb(var(--c-fog)); }

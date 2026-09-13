@@ -131,4 +131,42 @@ final class DepartmentKpiTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         new DepartmentRef(id: 7, name: '');
     }
+
+    /**
+     * A REF CARRIES ITS SCOPE, and the scope is the whole of what keeps a
+     * provider from answering with every area's figures at once: an area-level
+     * department names the area it is confined to.
+     */
+    public function testAnAreaLevelRefNamesTheAreaItIsConfinedTo(): void
+    {
+        $ref = new DepartmentRef(
+            id: 7,
+            name: 'Warden Office',
+            uuid: '0191f2c2-0000-7000-8000-000000000001',
+            areaUuid: '0191f2c2-0000-7000-8000-0000000000aa',
+        );
+
+        self::assertSame('0191f2c2-0000-7000-8000-0000000000aa', $ref->areaUuid);
+    }
+
+    /** NO AREA MEANS ORGANISATION-WIDE — one roll-up across every area, not one set per area. */
+    public function testAnOrgWideRefNamesNoArea(): void
+    {
+        self::assertNull(new DepartmentRef(id: 7, name: 'Ecology')->areaUuid);
+    }
+
+    /**
+     * ONE SET OF KPIs PER CALL, and the interface says so — the rule that makes a
+     * performance page readable. A provider that files one set per area draws the
+     * same label three times under no heading, which is what the rule exists to
+     * stop.
+     */
+    public function testTheContractStatesTheOneSetPerCallRule(): void
+    {
+        $doc = new \ReflectionMethod(DepartmentKpiProviderInterface::class, 'kpisFor')->getDocComment();
+
+        self::assertIsString($doc);
+        self::assertStringContainsString('ONE SET OF KPIs PER CALL', $doc);
+        self::assertStringContainsString('areaUuid', $doc);
+    }
 }

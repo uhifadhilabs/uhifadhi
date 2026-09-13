@@ -198,6 +198,45 @@ final class DepartmentModuleAttachmentTest extends WebTestCaseWithSchema
         self::assertStringNotContainsString('Shifts filled', $strip->text(), 'a detached module puts no figure on the page');
     }
 
+    /**
+     * A PROVIDER THAT HONOURS THE ONE-SET RULE IS DRAWN ONCE — one tile per
+     * figure and one row per figure, which is the single row of representative
+     * tiles the design draws per module. The surveys module answers one set for
+     * the department it was asked about, so its label cannot appear twice.
+     */
+    public function testAFigureIsListedOnceWhenItsProviderAnswersOneSet(): void
+    {
+        $department = $this->seed();
+        $this->attach($department, 'surveys');
+
+        $crawler = $this->lens($department);
+
+        self::assertCount(1, $this->tilesLabelled($crawler, 'Surveys logged'));
+        self::assertCount(
+            1,
+            $crawler->filter('[data-dept-modules] .rln')->reduce(static fn (Crawler $c): bool => str_contains($c->text(), 'Surveys logged')),
+        );
+    }
+
+    /**
+     * AND A PROVIDER THAT STILL ANSWERS ONE SET PER AREA IS DRAWN UNDER THE AREA
+     * LABEL EACH SET CARRIES — never as the same label three times over with
+     * nothing to tell them apart. The roster fixture is that provider.
+     */
+    public function testSeveralSetsForOneCallAreDrawnUnderTheAreaEachCarries(): void
+    {
+        $department = $this->seed();
+        $this->attach($department, 'roster');
+
+        $strip = $this->lens($department)->filter('[data-tab-panel="performance"] [data-dept-kpis]');
+
+        self::assertSame(
+            ['Northern Reserve', 'Southern Plains'],
+            $strip->filter('.dp-arealbl')->each(static fn (Crawler $c): string => trim($c->text())),
+        );
+        self::assertCount(2, $strip->filter('.kpi'), 'one tile per set, each under its own area');
+    }
+
     /** AN UNKNOWN FIGURE IS A DASHED SLOT, never a zero. */
     public function testAnUnmeasuredFigureIsDrawnAsADashAndNotAZero(): void
     {
@@ -308,6 +347,13 @@ final class DepartmentModuleAttachmentTest extends WebTestCaseWithSchema
         foreach (['surveys' => 'Surveys', 'roster' => 'Roster'] as $slug => $name) {
             $this->em->persist((new Module())->setSlug($slug)->setName($name));
         }
+    }
+
+    /** The performance tiles whose label is this one. */
+    private function tilesLabelled(Crawler $crawler, string $label): Crawler
+    {
+        return $crawler->filter('[data-dept-kpis] .kpi')
+            ->reduce(static fn (Crawler $c): bool => str_contains($c->text(), $label));
     }
 
     private function lens(Department $department): Crawler

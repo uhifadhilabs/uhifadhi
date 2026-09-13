@@ -1397,6 +1397,48 @@ Three rules that keep these contribution points honest:
   the same layer must render identically wherever it is drawn. A layer with a private palette is a
   layer that will read differently on two screens.
 
+### KPI figures: one set per call
+
+`kpisFor(DepartmentRef $department, \DateTimeImmutable $now)` is asked about **one department at one
+scope**, and it answers with **one figure per key** — never the same key once per area. The
+performance surfaces draw a single row of representative tiles per module, so repeated labels with
+nothing to tell them apart are unreadable.
+
+The scope is on the ref, and it is the whole of the instruction:
+
+| `DepartmentRef::$areaUuid` | The department | What you return |
+|---|---|---|
+| a uuid string | is confined to that area | that area's figures, and no other area's |
+| `null` | is organisation-wide | the **roll-up** across every area your module is switched on in |
+
+How a roll-up combines is the KPI's own business — a count sums, a share is averaged or weighted by
+whatever denominator the figure means — so **you decide, and you say which in the figure's
+`caption`**: a reader cannot tell a sum from an average by looking at the number.
+
+```php
+public function kpisFor(DepartmentRef $department, \DateTimeImmutable $now): array
+{
+    $areas = null === $department->areaUuid
+        ? $this->areas->findAllInstalled()
+        : [$this->areas->findOneByUuid($department->areaUuid)];
+
+    return [new DepartmentKpi(
+        key: 'patrols',
+        label: 'Patrols logged',
+        moduleSlug: 'patrols',
+        moduleName: 'Patrols',
+        value: $this->patrols->countForDepartment($department->id, $areas, $now),
+        caption: 1 === \count($areas) ? 'Patrols module' : 'Patrols module · summed across every area',
+    )];
+}
+```
+
+If you also want to show the split behind a roll-up, hand those sets back **beside** the total: a
+`DepartmentKpi` that names an `areaName` is one area's share, and a nameless one is the total every
+headline plate and goal is scored from. A surface handed several sets for one call labels each with
+the area it carries rather than stacking them — but that is a page being defensive, not a licence to
+skip the rule.
+
 ---
 
 ## 8. The module frame: tabs and the configure page

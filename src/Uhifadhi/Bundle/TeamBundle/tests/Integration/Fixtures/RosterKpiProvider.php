@@ -23,9 +23,18 @@ use Uhifadhi\Contracts\Kpi\DepartmentRef;
  * question that matters: a provider is read only when the department attaches
  * its module, and a detached module's plate leaves the page rather than going to
  * zero.
+ *
+ * IT ALSO PLAYS THE PROVIDER THAT HAS NOT HONOURED THE ONE-SET RULE, answering
+ * one set PER AREA to a single call. The contract asks for one set — a page
+ * cannot read three unheaded copies of the same label — so the lens draws each
+ * set under the area name it carries rather than stacking them namelessly. That
+ * is the defensive half of the rule, and it needs a provider that breaks it.
  */
 final class RosterKpiProvider implements DepartmentKpiProviderInterface
 {
+    /** The areas this provider files a separate set under, instead of one roll-up. */
+    private const array AREAS = ['Northern Reserve', 'Southern Plains'];
+
     public function moduleSlug(): string
     {
         return 'roster';
@@ -33,14 +42,18 @@ final class RosterKpiProvider implements DepartmentKpiProviderInterface
 
     public function kpisFor(DepartmentRef $department, \DateTimeImmutable $now): array
     {
-        return [
-            new DepartmentKpi(
+        $kpis = [];
+        foreach (self::AREAS as $index => $area) {
+            $kpis[] = new DepartmentKpi(
                 key: 'shifts',
                 label: 'Shifts filled',
                 moduleSlug: 'roster',
                 moduleName: 'Roster',
-                value: 12.0,
-            ),
-        ];
+                value: 12.0 + $index,
+                areaName: $area,
+            );
+        }
+
+        return $kpis;
     }
 }

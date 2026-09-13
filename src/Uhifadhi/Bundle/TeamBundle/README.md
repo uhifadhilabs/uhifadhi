@@ -230,6 +230,13 @@ than going to zero. Returning `[]` is a legitimate answer, and a `null` value is
 a dashed slot: "we did not measure" and "we measured nothing" are different
 facts, and a page that printed `0` for the first would be lying.
 
+**One set of KPIs per call, and the ref says at what scope.** The department goes
+out as a `Uhifadhi\Contracts\Kpi\DepartmentRef`, which carries the area an
+area-level department is confined to: an `areaUuid` means that area's figures
+alone, and a `null` one means the roll-up across every area. A provider answers
+one figure per key either way — the surfaces draw a single row of tiles per
+module — and says in the figure's caption how a roll-up was combined.
+
 ## Signing a field client in
 
 A field client signs in once and then carries a bearer token, because somebody
