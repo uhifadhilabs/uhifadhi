@@ -281,6 +281,172 @@ final class ComponentContractTest extends ContractTestCase
     }
 
     /**
+     * THE EVIDENCE TILE SHOWS THE PICTURE STORAGE MADE. The tile family is the
+     * frame's, and the module that keeps files emits the markup for it: one
+     * thumbnail per photograph, drawn in the same `.sh` shell wherever the file
+     * is listed, so one file looks like itself on an incident and in the files
+     * hub. Until these rules shipped here, the module had markup the frame did
+     * not style — a picture layer with no box, a state pill with no pill — and
+     * the module's only move was to restate the family in its own sheet, which
+     * is the drift the vocabulary conformance test forbids.
+     *
+     * The values are the design's, read value for value.
+     *
+     * @see /Users/eemjema/Programming/DesignsProjects/uhifadhi-web/uhifadhi.css lines 1117-1120, 1139-1159
+     */
+    #[DataProvider('evidenceTileDeclarations')]
+    public function testTheFrameDrawsTheEvidenceTilesThumbnailAndItsStates(string $selector, string $property, string $value): void
+    {
+        $rule = $this->rule($selector);
+
+        self::assertMatchesRegularExpression(
+            '/(?:^|;)\s*'.preg_quote($property, '/').'\s*:\s*'.preg_quote($value, '/').'\s*(?:;|$)/',
+            $rule,
+            \sprintf(
+                '%s must state `%s: %s` — the design\'s own value. Without it the module that ships the '
+                .'markup has to restate the tile family in its own sheet.',
+                $selector,
+                $property,
+                $value,
+            ),
+        );
+    }
+
+    /**
+     * @return \Generator<string, array{string, string, string}>
+     */
+    public static function evidenceTileDeclarations(): \Generator
+    {
+        $declarations = [
+            // The picture layer: a link filling the tile, clipped to the tile's
+            // own radius rather than to a radius of its own.
+            '.upl-tile.done .sh' => [
+                'position' => 'absolute',
+                'inset' => '0',
+                'display' => 'block',
+                'border-radius' => 'inherit',
+                'overflow' => 'hidden',
+                'text-decoration' => 'none',
+            ],
+            '.upl-tile.done .sh img' => [
+                'width' => '100%',
+                'height' => '100%',
+                'object-fit' => 'cover',
+                'display' => 'block',
+            ],
+            // It is a link, so it is reachable by keyboard and says so inside
+            // its own edge — an outline outside it would be clipped away.
+            '.upl-tile.done .sh:focus-visible' => [
+                'outline' => '2px solid var(--acc)',
+                'outline-offset' => '-2px',
+            ],
+            // The radial ground is the EMPTY photo slot; under an actual picture
+            // a flat ground is what a transparent thumbnail shows through to.
+            '.upl-tile.done.shot' => [
+                'background' => '#20241F',
+            ],
+            // Nothing to look at yet, so the tile does not pretend to open.
+            '.upl-tile.done.making' => ['cursor' => 'default'],
+            '.upl-tile.done.nothumb' => ['cursor' => 'default'],
+            // The state pill, on the remove control's line.
+            '.upl-tile .th' => [
+                'position' => 'absolute',
+                'left' => '5px',
+                'top' => '5px',
+                'height' => '20px',
+                'text-transform' => 'uppercase',
+            ],
+            '.upl-tile.making .th' => [
+                'color' => '#F0C368',
+                'border-color' => 'rgba(240, 195, 104, .45)',
+            ],
+            '.upl-tile.nothumb .th' => [
+                'color' => '#B9C6BB',
+                'border-style' => 'dashed',
+            ],
+            // A kept DOCUMENT is not a photograph: the same box, the interface's
+            // ground, and the chrome in tokens rather than in the photo overlay's
+            // literals.
+            '.upl-tile.done.doc' => [
+                'background' => 'color-mix(in srgb, var(--fog) 8%, transparent)',
+                'color' => 'var(--fog)',
+            ],
+            '.upl-tile.done.doc .fn' => [
+                'color' => 'var(--fog)',
+                'background' => 'none',
+                'padding' => '0',
+            ],
+            '.upl-tile.done.doc .rm' => [
+                'background' => 'var(--cv)',
+                'border-color' => 'var(--ln2)',
+                'color' => 'var(--fog)',
+            ],
+            '.upl-tile.done.doc .rm:hover' => [
+                'color' => 'var(--fail)',
+                'border-color' => 'color-mix(in srgb, var(--fail) 55%, transparent)',
+            ],
+        ];
+
+        foreach ($declarations as $selector => $properties) {
+            foreach ($properties as $property => $value) {
+                yield $selector.' — '.$property => [$selector, $property, $value];
+            }
+        }
+    }
+
+    /**
+     * NO STATE CHANGES THE TILE'S SIZE OR ITS RADIUS — the promise the family's
+     * own comment makes, and the reason a grid of tiles does not jump under the
+     * pointer as one of them finishes uploading or grows a thumbnail. The box is
+     * stated once, on `.upl-tile`; every state rule may change the ground, the
+     * border colour and what is inside, and nothing else.
+     *
+     * `border-radius: inherit` on the picture layer is the one exception and is
+     * the opposite of a drift: it takes the tile's radius rather than naming one.
+     */
+    public function testNoStateOfTheTileRestatesTheBox(): void
+    {
+        $css = (string) preg_replace('#/\*.*?\*/#s', '', $this->stylesheet());
+
+        preg_match_all('/([^{}@]*\.upl-tile[^{}@]*)\{([^{}]*)\}/s', $css, $matches, \PREG_SET_ORDER);
+        self::assertNotSame([], $matches, 'The tile family ships in the frame\'s sheet.');
+
+        $offenders = [];
+        foreach ($matches as $match) {
+            $selector = trim((string) preg_replace('/\s+/', ' ', $match[1]));
+            if ('.upl-tile' === $selector) {
+                continue;
+            }
+
+            foreach (['aspect-ratio', 'width', 'height', 'border-radius'] as $property) {
+                if (1 !== preg_match('/(?:^|;)\s*'.$property.'\s*:\s*([^;]+)/', $match[2], $stated)) {
+                    continue;
+                }
+
+                // The parts inside the box have their own size; only a rule on
+                // the tile itself would move the grid.
+                if (!str_ends_with($selector, '.upl-tile') && !preg_match('/\.upl-tile[\w.]*$/', $selector)) {
+                    continue;
+                }
+
+                if ('inherit' === trim($stated[1])) {
+                    continue;
+                }
+
+                $offenders[] = $selector.' { '.$property.': '.trim($stated[1]).' }';
+            }
+        }
+
+        sort($offenders);
+
+        self::assertSame([], $offenders, \sprintf(
+            'A state restates the tile\'s box: [%s]. A tile that resized while uploading would make the '
+            .'grid jump under the pointer.',
+            implode(', ', $offenders),
+        ));
+    }
+
+    /**
      * The declarations of one rule, by exact selector. A selector written as
      * part of a comma-separated group counts: the group is how a sheet states
      * one rule for several selectors, and the row's height is stated that way.

@@ -1039,6 +1039,55 @@ table.tbl tr:hover .open-btn {
 }
 .upl-tile.done:hover { border-color: color-mix(in srgb, var(--acc) 55%, transparent); }
 .upl-tile.done .fn { color: #EAF2EC; background: rgba(10, 14, 11, .72); padding: 3px 6px; border-radius: 4px; bottom: 6px; }
+/* A kept DOCUMENT is not a photograph, so it does not take the photo ground:
+   there is no image under it to keep out of the theme's way. Same box, same
+   radius, same remove — only the ground and the glyph differ. */
+.upl-tile.done.doc { background: color-mix(in srgb, var(--fog) 8%, transparent); color: var(--fog); }
+.upl-tile.done.doc .fn { color: var(--fog); background: none; padding: 0; }
+.upl-tile.done.doc .rm { background: var(--cv); border-color: var(--ln2); color: var(--fog); }
+.upl-tile.done.doc .rm:hover { color: var(--fail); border-color: color-mix(in srgb, var(--fail) 55%, transparent); }
+/* ── a kept photograph shows the picture ─
+   The module that keeps files makes ONE small thumbnail per photograph and
+   serves it through the permission check; an evidence tile draws that same
+   small copy the files hub tile draws, in the same .sh shell, so one file looks
+   like itself wherever it is listed. The BOX is untouched: the aspect-ratio,
+   the radius and the border are stated once above and nothing here changes them
+   — only what is inside the box.
+   Three states, in the keeping module's own words:
+     .shot     "thumbnail"    — made: the picture fills the tile, and the tile
+                                opens the shared file preview.
+     .making   "making"       — queued and not made yet: the camera glyph with a
+                                small pill saying so.
+     .nothumb  "no thumbnail" — could not be decoded (a HEIC without the
+                                decoder): the glyph with a pill saying so. The
+                                original is untouched and still downloadable.
+   A document has no picture to make — it keeps the document glyph and the .doc
+   ground above. */
+.upl-tile.done .sh {
+    position: absolute; inset: 0; display: block; border-radius: inherit; overflow: hidden;
+    text-decoration: none;
+}
+.upl-tile.done .sh img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.upl-tile.done .sh:focus-visible { outline: 2px solid var(--acc); outline-offset: -2px; }
+/* The radial ground is the EMPTY photo slot; under an actual picture it is not
+   wanted, and a flat ground is what shows through a transparent thumbnail. */
+.upl-tile.done.shot { background: #20241F; }
+/* Nothing to look at yet, so the tile does not pretend to be openable. */
+.upl-tile.done.making, .upl-tile.done.nothumb { cursor: default; }
+/* The state pill. FIXED COLOURS, deliberately, and for the same reason the
+   remove control below carries them: the pill sits on the photograph slot, and
+   a photograph does not flip with the theme — so neither may the chrome over
+   it. 20px tall, exactly the remove control's height, so the two sit on one
+   line across the tile's top. */
+.upl-tile .th {
+    position: absolute; left: 5px; top: 5px; height: 20px; display: inline-flex; align-items: center;
+    padding: 1px 6px 0; border-radius: 6px; border: 1px solid rgba(234, 242, 236, .26);
+    background: rgba(10, 14, 11, .68); color: #C7D3C9; white-space: nowrap;
+    font: 700 8px "JetBrains Mono", ui-monospace, monospace; letter-spacing: .08em; line-height: 1;
+    text-transform: uppercase;
+}
+.upl-tile.making .th { color: #F0C368; border-color: rgba(240, 195, 104, .45); }
+.upl-tile.nothumb .th { color: #B9C6BB; border-style: dashed; }
 .upl-tile .rm {
     position: absolute; top: 5px; right: 5px; width: 20px; height: 20px; display: grid; place-items: center;
     border-radius: 6px; border: 1px solid rgba(234, 242, 236, .3); background: rgba(10, 14, 11, .68); color: #EAF2EC;
