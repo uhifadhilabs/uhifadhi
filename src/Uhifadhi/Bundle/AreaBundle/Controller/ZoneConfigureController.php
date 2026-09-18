@@ -29,6 +29,7 @@ use Uhifadhi\Bundle\AreaBundle\Repository\ZoneEventRepository;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneExportService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportDraftStore;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportService;
+use Uhifadhi\Bundle\AreaBundle\Service\ZonePlateService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneSetService;
 
 /**
@@ -76,6 +77,7 @@ final readonly class ZoneConfigureController
     public function __construct(
         private Environment $twig,
         private ZoneSetService $set,
+        private ZonePlateService $plates,
         private ZoneEventRepository $events,
         private ZoneImportDraftStore $draft,
         private ZoneExportService $export,
@@ -116,8 +118,8 @@ final readonly class ZoneConfigureController
             'exportName' => $this->export->fileName($area),
             'events' => $this->events->findByArea($area),
             'map' => null === $plan
-                ? $this->set->plate($area, $view->rows)
-                : $this->set->previewPlate($area, $plan->arriving()),
+                ? $this->plates->plate($area, $view->rows)
+                : $this->plates->previewPlate($area, $plan->arriving()),
             'hues' => $hues,
             'nameProperties' => ZoneImportService::NAME_PROPERTIES,
             'importToken' => $this->csrf->getToken(ZoneImportController::TOKEN)->getValue(),

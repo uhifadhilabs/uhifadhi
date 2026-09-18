@@ -156,7 +156,10 @@ final class ZoneAdditiveImportTest extends IntegrationTestCase
 
         self::assertSame(['Western Sector'], $plan->arrivingNames());
         self::assertSame('Western Sector', $plan->flagged()[0]->whySubject);
-        self::assertSame('overlaps Western Sector in this file', $plan->flagged()[0]->why());
+        self::assertMatchesRegularExpression(
+            '/^overlaps Western Sector in this file by [\d,]+ km²$/u',
+            $plan->flagged()[0]->why(),
+        );
     }
 
     public function testADuplicateNameInTheFileFlagsTheSecondOccurrence(): void
@@ -168,38 +171,6 @@ final class ZoneAdditiveImportTest extends IntegrationTestCase
 
         self::assertSame(['Western Sector'], $plan->arrivingNames());
         self::assertSame('this name is used twice in the file', $plan->flagged()[0]->why());
-    }
-
-    public function testAFeatureOutsideTheAreaBoundaryIsFlaggedAndNamed(): void
-    {
-        $area = $this->anArea();
-
-        $plan = $this->plan($area, $this->collection([
-            $this->feature(['Name' => 'Western Sector'], self::A_WEST_HALF_RING),
-            $this->feature(['Name' => 'Elsewhere'], self::A_FAR_AWAY_RING),
-        ]));
-
-        self::assertSame(['Western Sector'], $plan->arrivingNames());
-        self::assertSame('outside the area boundary', $plan->flagged()[0]->why());
-    }
-
-    /**
-     * A RING TRACED ON THE AREA'S OWN EDGE ARRIVES. Every exporter writes
-     * GeoJSON to nine decimals, so the outermost zone of any real scheme is a
-     * ROUNDED copy of the boundary and a few of its vertices land a fraction of
-     * a millimetre outside. Refusing that is a refusal nobody can act on.
-     */
-    public function testARingRoundedOffTheBoundaryIsNotOutsideIt(): void
-    {
-        $area = $this->anArea();
-
-        $plan = $this->plan($area, $this->collection([
-            $this->feature(['Name' => 'The whole area'], [[
-                [-30.000000001, -3.600000001], [-29.0, -3.6], [-29.0, -2.8], [-30.0, -2.800000001], [-30.000000001, -3.600000001],
-            ]]),
-        ]));
-
-        self::assertSame(['The whole area'], $plan->arrivingNames());
     }
 
     public function testAFeatureWithNoUsableGeometryIsFlaggedRatherThanRefusingTheFile(): void
@@ -270,7 +241,6 @@ final class ZoneAdditiveImportTest extends IntegrationTestCase
     private const array A_WEST_HALF_RING = [[[-30.0, -3.6, 1200.0], [-29.5, -3.6, 1200.0], [-29.5, -2.8, 1200.0], [-30.0, -2.8, 1200.0], [-30.0, -3.6, 1200.0]]];
     private const array A_EAST_HALF_RING = [[[-29.5, -3.6], [-29.0, -3.6], [-29.0, -2.8], [-29.5, -2.8], [-29.5, -3.6]]];
     private const array A_STRADDLING_RING = [[[-29.75, -3.6], [-29.25, -3.6], [-29.25, -2.8], [-29.75, -2.8], [-29.75, -3.6]]];
-    private const array A_FAR_AWAY_RING = [[[10.0, 10.0], [11.0, 10.0], [11.0, 11.0], [10.0, 11.0], [10.0, 10.0]]];
 
     private function importer(): ZoneImportService
     {

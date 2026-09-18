@@ -91,6 +91,7 @@ class TestKernel extends Kernel
         // One public alias so the suite can reach it, keyed by service id.
         $services->alias('test_public.area.repository', AreaOfInterestRepository::class)->public();
         $services->alias('test_public.area.zones', 'area.zones')->public();
+        $services->alias('test_public.area.zone_set', 'area.zone_set')->public();
         $services->alias('test_public.area.zone_import', 'area.zone_import')->public();
         $services->alias('test_public.area.zone_export', 'area.zone_export')->public();
         $services->alias('test_public.area.zone_events', 'area.zone_events')->public();

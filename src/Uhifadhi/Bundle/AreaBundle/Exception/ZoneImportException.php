@@ -90,13 +90,8 @@ final class ZoneImportException extends \RuntimeException
             : \sprintf('the file holds %d polygons — replacing one zone\'s ring takes one', $found));
     }
 
-    public static function ringOutsideTheBoundary(string $name, string $areaName): self
+    public static function ringOverlaps(string $conflicting, int $km2): self
     {
-        return new self(\sprintf('the new ring for "%s" falls outside the boundary of %s', $name, $areaName));
-    }
-
-    public static function ringOverlaps(string $conflicting): self
-    {
-        return new self(\sprintf('the new ring overlaps "%s" — zones may touch along an edge, never share interior', $conflicting));
+        return new self(\sprintf('the new ring overlaps "%s" by %s km²', $conflicting, number_format($km2)));
     }
 }

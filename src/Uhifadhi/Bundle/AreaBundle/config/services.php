@@ -29,6 +29,8 @@ use Uhifadhi\Bundle\AreaBundle\Service\BoundaryImport;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneEventService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneExportService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportService;
+use Uhifadhi\Bundle\AreaBundle\Service\ZoneOverlapService;
+use Uhifadhi\Bundle\AreaBundle\Service\ZonePlateService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneSetService;
 use Uhifadhi\Bundle\AreaBundle\Widget\AreaIndexWidgets;
@@ -82,10 +84,19 @@ return static function (ContainerConfigurator $container): void {
      * service writes an overlap nobody will notice until a point falls in two
      * zones at once.
      */
+    /*
+     * WHEN SHARED GROUND IS A SLIVER. A stateless rule with no collaborators,
+     * so the same sentence decides for an import, for a redrawn ring and for
+     * anything that writes a zone later.
+     */
+    $services->set('area.zone_overlaps', ZoneOverlapService::class);
+    $services->alias(ZoneOverlapService::class, 'area.zone_overlaps');
+
     $services->set('area.zones', ZoneService::class)
         ->args([
             service('doctrine.orm.entity_manager'),
             service(ZoneRepository::class),
+            service('area.zone_overlaps'),
         ]);
     $services->alias(ZoneService::class, 'area.zones');
 
@@ -101,6 +112,7 @@ return static function (ContainerConfigurator $container): void {
             service('doctrine.orm.entity_manager'),
             service('area.zones'),
             service(ZoneRepository::class),
+            service('area.zone_overlaps'),
         ]);
     $services->alias(ZoneImportService::class, 'area.zone_import');
 
@@ -132,10 +144,21 @@ return static function (ContainerConfigurator $container): void {
         ->args([
             service('doctrine.orm.entity_manager'),
             service(ZoneRepository::class),
-            service('area.register'),
-            service(MapBuilderInterface::class),
         ]);
     $services->alias(ZoneSetService::class, 'area.zone_set');
+
+    /*
+     * THE PLATE, WHICH NEEDS THE ATLAS — registered beside the set rather than
+     * with the screens, because a console command that renders a map payload
+     * is a thing an installation may want and a twig engine is not what it
+     * would need for it.
+     */
+    $services->set('area.zone_plate', ZonePlateService::class)
+        ->args([
+            service(ZoneRepository::class),
+            service(MapBuilderInterface::class),
+        ]);
+    $services->alias(ZonePlateService::class, 'area.zone_plate');
 
     /*
      * What the register knows about each area — the measurements PostGIS makes

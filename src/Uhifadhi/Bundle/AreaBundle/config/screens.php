@@ -154,6 +154,7 @@ return static function (ContainerConfigurator $container): void {
         ->args([
             service('twig'),
             service('area.zone_set'),
+            service('area.zone_plate'),
             service(ZoneEventRepository::class),
             service('area.zone_import_draft'),
             service('area.zone_export'),

@@ -78,15 +78,24 @@ class ZoneRepository extends SpatialEntityRepository
     }
 
     /**
-     * The sibling zone whose interior the given geometry would share, or null
-     * when the geometry fits. $ignore excludes the zone being re-drawn from its
-     * own check — otherwise every edit would collide with itself.
+     * EVERY SIBLING ZONE WHOSE INTERIOR THE GIVEN GEOMETRY WOULD SHARE, in the
+     * deterministic order — not the first one.
+     *
+     * ALL OF THEM, BECAUSE SHARING IS NO LONGER THE WHOLE QUESTION. How much is
+     * shared decides whether it is a sliver or an overlap, and a caller handed
+     * only the first conflict would accept a sliver against one zone while a
+     * real overlap with the next went unmeasured.
+     *
+     * $ignore excludes the zone being re-drawn from its own check — otherwise
+     * every edit would collide with itself.
+     *
+     * @return list<Zone>
      */
-    public function findStInteriorConflict(AreaOfInterest $area, string $geoJson, ?Zone $ignore = null): ?Zone
+    public function findStInteriorConflicts(AreaOfInterest $area, string $geoJson, ?Zone $ignore = null): array
     {
         $areaId = $area->getId();
         if (null === $areaId) {
-            return null;
+            return [];
         }
 
         $parameters = ['area' => $areaId, 'geom' => $geoJson, 'pattern' => self::INTERIORS_INTERSECT];
@@ -99,11 +108,17 @@ class ZoneRepository extends SpatialEntityRepository
             $sql .= ' AND z.id <> :ignore';
             $parameters['ignore'] = $ignoreId;
         }
-        $sql .= ' ORDER BY z.name ASC, z.id ASC LIMIT 1';
+        $sql .= ' ORDER BY z.name ASC, z.id ASC';
 
-        $id = $this->getEntityManager()->getConnection()->fetchOne($sql, $parameters);
+        $zones = [];
+        foreach ($this->getEntityManager()->getConnection()->fetchFirstColumn($sql, $parameters) as $id) {
+            $zone = is_numeric($id) ? $this->find((int) $id) : null;
+            if (null !== $zone) {
+                $zones[] = $zone;
+            }
+        }
 
-        return is_numeric($id) ? $this->find((int) $id) : null;
+        return $zones;
     }
 
     /**
@@ -133,39 +148,34 @@ class ZoneRepository extends SpatialEntityRepository
      * A SLIVER THIS SMALL IS ARITHMETIC, NOT GROUND. A ring traced along the
      * area's own edge comes back from any exporter as a ROUNDED copy of that
      * edge — GeoJSON writes nine decimals — so a few vertices land a tenth of a
-     * millimetre outside and the strict predicate says the zone is outside its
-     * area. Measured on the real thing that is about a square metre against
-     * four thousand square kilometres, which is a refusal nobody can act on and
-     * nobody deserves.
+     * millimetre outside. Measured on the real thing that is about a square
+     * metre against four thousand square kilometres, and a page that announced
+     * it would be announcing a rounding error.
      *
-     * The tolerance is therefore RELATIVE with an absolute floor: a part per
-     * million of the ring, but never less than a hundred square metres, which
-     * is smaller than anything anybody draws on purpose.
+     * The tolerance is RELATIVE with an absolute floor: a part per million of
+     * the ring, but never less than a hundred square metres, which is smaller
+     * than anything anybody draws on purpose.
      */
     private const float OUTSIDE_FLOOR_M2 = 100.0;
     private const float OUTSIDE_SHARE = 0.000001;
 
     /**
-     * DOES THE AREA'S OWN BOUNDARY COVER THIS CANDIDATE ZONE? A zone SUBDIVIDES
-     * its area, so a polygon with any real part of it outside the boundary is
-     * not a subdivision of anything — it is a file imported onto the wrong area,
-     * which is exactly what happens when an installation has several.
+     * HOW FAR THIS RING REACHES PAST THE AREA'S BOUNDARY, in square kilometres,
+     * or zero when it does not.
      *
-     * MEASURED, NOT PREDICATED. `ST_Covers` answers a question about exact
-     * arithmetic, and the question here is about ground: what is asked is how
-     * much of the ring falls outside, and the answer is compared against a
-     * tolerance no real zone can hide inside. A zone that reaches the area's own
-     * edge — the outermost zone of any real scheme does — passes either way.
+     * A ZONE MAY LIE OUTSIDE, so this is not a refusal and never was a question
+     * about permission: a gazetted edge and an operational subdivision are
+     * drawn by different people from different sources, and a sector that runs
+     * a kilometre past the line is a fact about the ground. What the number is
+     * for is SAYING SO, on the row, so nobody has to discover it from a map.
      *
-     * AN AREA WITH NO BOUNDARY COVERS NOTHING AND REFUSES NOTHING. There is no
-     * edge to be outside of, so the question does not arise and the answer is
-     * true; the check belongs to the boundary, not to the zone.
+     * AN AREA WITH NO BOUNDARY HAS NOTHING TO BE OUTSIDE OF, and answers zero.
      */
-    public function stAreaCovers(AreaOfInterest $area, string $geoJson): bool
+    public function stBeyondTheBoundaryKm2(AreaOfInterest $area, string $geoJson): float
     {
         $areaId = $area->getId();
         if (null === $areaId || !$area->hasBoundary()) {
-            return true;
+            return 0.0;
         }
 
         $outside = $this->getEntityManager()->getConnection()->fetchOne(
@@ -175,12 +185,44 @@ class ZoneRepository extends SpatialEntityRepository
         );
 
         if (!is_numeric($outside)) {
-            return false;
+            return 0.0;
         }
 
         $tolerance = max(self::OUTSIDE_FLOOR_M2, $this->stGeometryKm2($geoJson) * 1000000.0 * self::OUTSIDE_SHARE);
 
-        return (float) $outside <= $tolerance;
+        return (float) $outside <= $tolerance ? 0.0 : (float) $outside / 1000000.0;
+    }
+
+    /**
+     * THE WHOLE OF THE GROUND THIS AREA ACCOUNTS FOR — its boundary and its
+     * zones together, as one geometry, measured once.
+     *
+     * THE UNION, BECAUSE A ZONE MAY LIE OUTSIDE. "Zoned of area" was the right
+     * fraction while every zone was inside the line; now that one need not be,
+     * the same fraction reads over a hundred percent, which is a page saying
+     * something impossible. The union is the honest denominator: everything
+     * this area has said is its, counted once however many rings cover it.
+     *
+     * NULL WHERE THERE IS NOTHING TO MEASURE — no boundary and no zones — so a
+     * page states sizes and withholds shares rather than dividing by nothing.
+     */
+    public function stGroundKm2(AreaOfInterest $area): ?float
+    {
+        $areaId = $area->getId();
+        if (null === $areaId) {
+            return null;
+        }
+
+        $km2 = $this->getEntityManager()->getConnection()->fetchOne(
+            'SELECT ST_Area(ST_Union(g.geom)::geography) / 1000000.0 FROM ('
+            .'   SELECT a.geom FROM area_of_interest a WHERE a.id = :area AND a.geom IS NOT NULL'
+            .'   UNION ALL'
+            .'   SELECT z.geom FROM zone z WHERE z.area_id = :area'
+            .') g',
+            ['area' => $areaId],
+        );
+
+        return is_numeric($km2) ? (float) $km2 : null;
     }
 
     /**
@@ -222,19 +264,17 @@ class ZoneRepository extends SpatialEntityRepository
     }
 
     /**
-     * The same interior test between two geometries that are not stored yet —
-     * what an import needs to compare the features of one file against each
-     * other before writing any of them.
+     * THE GROUND TWO CANDIDATE RINGS SHARE, neither of them stored yet — what
+     * an import needs to size a clash between two features of one file the way
+     * it sizes one against a zone that is already there.
      */
-    public function stInteriorsIntersect(string $firstGeoJson, string $secondGeoJson): bool
+    public function stIntersectionKm2(string $firstGeoJson, string $secondGeoJson): float
     {
-        // Cast in SQL: the driver hands booleans back as 't'/'f' or 1/0
-        // depending on build, an int is unambiguous.
-        $intersects = $this->getEntityManager()->getConnection()->fetchOne(
-            'SELECT ST_Relate(ST_GeomFromGeoJSON(:first), ST_GeomFromGeoJSON(:second), :pattern)::int',
-            ['first' => $firstGeoJson, 'second' => $secondGeoJson, 'pattern' => self::INTERIORS_INTERSECT],
+        $km2 = $this->getEntityManager()->getConnection()->fetchOne(
+            'SELECT ST_Area(ST_Intersection(ST_GeomFromGeoJSON(:first), ST_GeomFromGeoJSON(:second))::geography) / 1000000.0',
+            ['first' => $firstGeoJson, 'second' => $secondGeoJson],
         );
 
-        return is_numeric($intersects) && 1 === (int) $intersects;
+        return is_numeric($km2) ? (float) $km2 : 0.0;
     }
 }

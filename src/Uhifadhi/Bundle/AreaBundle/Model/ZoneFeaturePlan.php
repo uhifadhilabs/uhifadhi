@@ -26,6 +26,11 @@ namespace Uhifadhi\Bundle\AreaBundle\Model;
  * confirmed in the next, and the file is gone by then: what the confirm writes
  * is this string, re-checked against the area as it stands at that moment.
  *
+ * A QUALIFIER IS NOT A REASON. A feature that reaches past the area boundary
+ * still arrives — a gazetted edge and an operational subdivision are drawn by
+ * different people — so what the row carries there is a NOTE, and the feature
+ * stays in the arriving set.
+ *
  * A REASON IS ONE LINE, and it names a zone or a feature — never the area.
  * The list is read by scanning it, the area is the page, and a sentence that
  * wraps to three rows turns the scan into reading. The length is held by
@@ -45,6 +50,7 @@ final readonly class ZoneFeaturePlan
      * @param string      $whyLead    the reason up to the thing it names; empty when the feature is arriving
      * @param string      $whySubject the zone or feature the reason is about, printed in bold; empty where there is none
      * @param string      $whyTail    the rest of the reason
+     * @param string      $note       a qualifier on a feature that is still arriving; empty when there is nothing to say
      */
     private function __construct(
         public string $name,
@@ -53,6 +59,7 @@ final readonly class ZoneFeaturePlan
         public string $whyLead = '',
         public string $whySubject = '',
         public string $whyTail = '',
+        public string $note = '',
     ) {
     }
 
@@ -82,20 +89,32 @@ final readonly class ZoneFeaturePlan
         return $this->because('overlaps ', $zoneName, null === $km2 ? '' : \sprintf(' by %s km²', number_format($km2)));
     }
 
-    /** Two features of one file cannot both arrive when they share interior. */
-    public function overlapsFeatureInTheFile(string $featureName): self
+    /** Two features of one file cannot both arrive when they share more than a sliver. */
+    public function overlapsFeatureInTheFile(string $featureName, int $km2): self
     {
-        return $this->because('overlaps ', $featureName, ' in this file');
+        return $this->because('overlaps ', $featureName, \sprintf(' in this file by %s km²', number_format($km2)));
     }
 
     /**
+     * A ZONE MAY LIE OUTSIDE THE BOUNDARY, so this is a QUALIFIER and not a
+     * reason: the feature is still arriving, and the row says how far past the
+     * line it goes because somebody should know without opening a map.
+     *
      * THE AREA IS NOT NAMED, because the area is the page: the heading above
-     * this list already says which one, and repeating it here costs two thirds
-     * of the row and tells the reader nothing they cannot see.
+     * this list already says which one, and repeating it costs two thirds of
+     * the row to tell the reader nothing they cannot see.
      */
-    public function outsideTheAreaBoundary(): self
+    public function extendingBeyondTheBoundary(int $km2): self
     {
-        return $this->because('outside the area boundary');
+        return new self(
+            $this->name,
+            $this->geom,
+            $this->km2,
+            $this->whyLead,
+            $this->whySubject,
+            $this->whyTail,
+            \sprintf('extends %s km² beyond the boundary', number_format($km2)),
+        );
     }
 
     /** A zone name with nothing behind it — somebody meant it to be a zone. */
@@ -123,6 +142,6 @@ final readonly class ZoneFeaturePlan
 
     private function because(string $lead, string $subject = '', string $tail = ''): self
     {
-        return new self($this->name, $this->geom, $this->km2, $lead, $subject, $tail);
+        return new self($this->name, $this->geom, $this->km2, $lead, $subject, $tail, $this->note);
     }
 }

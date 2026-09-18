@@ -49,6 +49,10 @@
                     <th>Established</th>
                     <td>{% if area.establishedYear %}{{ area.establishedYear }}{% else %}<span class="chip">&mdash;</span>{% endif %}</td>
                 </tr>
+                <tr>
+                    <th>Zone overlap tolerance</th>
+                    <td class="num">{{ area.zoneOverlapTolerancePct ?? defaultZoneOverlapTolerance }} %{% if area.zoneOverlapTolerancePct is null %} <span class="chip">default</span>{% endif %}</td>
+                </tr>
                 <tr><th>Identifier</th><td class="mono">{{ area.uuidString }}</td></tr>
             </table>
             <div class="use">The registry fields are optional and a dash means UNRECORDED, not zero:

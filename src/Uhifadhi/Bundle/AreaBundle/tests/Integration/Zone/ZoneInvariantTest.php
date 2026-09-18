@@ -144,10 +144,18 @@ final class ZoneInvariantTest extends IntegrationTestCase
         self::assertSame($east->getId(), $this->zones()->zoneOf($area, -29.5, -3.2)?->getId());
     }
 
-    /** What an import needs: two candidate geometries compared before either is stored. */
-    public function testItComparesTwoUnstoredGeometries(): void
+    /**
+     * What an import needs: two candidate geometries MEASURED against each
+     * other before either is stored, because how much they share is what says
+     * whether it is a sliver or an overlap. Neighbours that only touch share
+     * nothing at all.
+     */
+    public function testItMeasuresWhatTwoUnstoredGeometriesShare(): void
     {
-        self::assertFalse($this->zones()->conflicts(self::A_WEST_HALF, self::A_EAST_HALF));
-        self::assertTrue($this->zones()->conflicts(self::A_WEST_HALF, self::A_STRADDLING_MIDDLE));
+        /** @var \Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository $zones */
+        $zones = static::getContainer()->get('test_public.area.zone_repository');
+
+        self::assertSame(0.0, $zones->stIntersectionKm2(self::A_WEST_HALF, self::A_EAST_HALF));
+        self::assertGreaterThan(0.0, $zones->stIntersectionKm2(self::A_WEST_HALF, self::A_STRADDLING_MIDDLE));
     }
 }

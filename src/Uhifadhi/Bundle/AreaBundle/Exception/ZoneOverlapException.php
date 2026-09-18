@@ -16,25 +16,26 @@ namespace Uhifadhi\Bundle\AreaBundle\Exception;
 use Uhifadhi\Bundle\AreaBundle\Entity\Zone;
 
 /**
- * The zone invariant was broken: the geometry would share interior with a
- * sibling zone. The message NAMES the conflicting zone, because "it overlaps
- * something" is useless to the admin drawing it — one of the two has to be
- * fixed, and they need to know which other one.
+ * The zone invariant was broken: the geometry would share MORE THAN A SLIVER
+ * of interior with a sibling zone.
+ *
+ * THE MESSAGE NAMES THE OTHER ZONE AND THE SIZE. "It overlaps something" is
+ * useless to whoever is drawing it — one of the two has to be fixed — and
+ * "overlaps Crater" without a number does not say whether the file is wrong or
+ * the stored zone is. The size answers that in four words.
+ *
+ * HOW MUCH IS A SLIVER IS THE AREA'S OWN — see {@see \Uhifadhi\Bundle\AreaBundle\Service\ZoneOverlapService}.
  */
 final class ZoneOverlapException extends \RuntimeException
 {
-    public static function between(string $name, Zone $conflicting): self
+    public static function between(string $name, Zone $conflicting, int $km2): self
     {
-        return self::betweenNames($name, $conflicting->getName() ?? '(unnamed)');
+        return self::betweenNames($name, $conflicting->getName() ?? '(unnamed)', $km2);
     }
 
     /** For an import, where the thing collided with is a feature in the file rather than a row. */
-    public static function betweenNames(string $name, string $conflictingName): self
+    public static function betweenNames(string $name, string $conflictingName, int $km2): self
     {
-        return new self(\sprintf(
-            'Zone "%s" overlaps zone "%s" — zones of one area may touch along an edge or leave gaps, but never share interior.',
-            $name,
-            $conflictingName,
-        ));
+        return new self(\sprintf('"%s" overlaps "%s" by %s km²', $name, $conflictingName, number_format($km2)));
     }
 }

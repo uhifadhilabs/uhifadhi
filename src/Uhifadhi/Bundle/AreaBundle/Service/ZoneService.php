@@ -24,11 +24,18 @@ use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
  * The write side of the spatial lens, and THE ONLY SUPPORTED WAY a zone gets a
  * geometry.
  *
- * THE INVARIANT: sibling zones of one area never share interior. Adjacency is
- * legal — two zones may share an edge — and so are gaps: an area is often only
- * partly zoned. That is precisely the DE-9IM pattern `T********`, applied in
- * {@see ZoneRepository::findStInteriorConflict()}; a violation names the zone it
- * collided with, since the admin has to go and fix one of the two.
+ * THE INVARIANT: sibling zones of one area never share more than a SLIVER of
+ * interior. Adjacency is legal — two zones may share an edge — and so are
+ * gaps: an area is often only partly zoned. Sharing is found with the DE-9IM
+ * pattern `T********` in {@see ZoneRepository::findStInteriorConflicts()} and
+ * then MEASURED, because two rings digitised by hand share metres of edge that
+ * were meant to touch; {@see ZoneOverlapService} says which side of the area's
+ * own tolerance that falls, and a real overlap names the zone and the size.
+ *
+ * A ZONE MAY LIE OUTSIDE THE AREA BOUNDARY. That was once refused here and is
+ * not any more: a gazetted edge and an operational subdivision are drawn by
+ * different people from different sources, and the surfaces that import zones
+ * state how far a ring reaches past the line instead of turning it away.
  *
  * The read side is {@see self::zoneOf()}: point-in-zone by ST_Covers, null when
  * the point falls in no zone. On an edge two zones share ST_Covers is true for
@@ -40,6 +47,7 @@ class ZoneService
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly ZoneRepository $zones,
+        private readonly ZoneOverlapService $overlaps,
     ) {
     }
 
@@ -151,19 +159,17 @@ class ZoneService
      */
     public function assertFits(AreaOfInterest $area, string $name, string $geomJson, ?Zone $ignore = null): void
     {
-        $conflict = $this->zones->findStInteriorConflict($area, $geomJson, $ignore);
-        if (null !== $conflict) {
-            throw ZoneOverlapException::between($name, $conflict);
-        }
-    }
+        $km2 = $this->zones->stGeometryKm2($geomJson);
+        $tolerance = $this->overlaps->toleranceOf($area);
 
-    /**
-     * Do two candidate geometries — neither of them stored yet — share interior?
-     * What an import needs to check the features of one file against each other.
-     */
-    public function conflicts(string $firstGeoJson, string $secondGeoJson): bool
-    {
-        return $this->zones->stInteriorsIntersect($firstGeoJson, $secondGeoJson);
+        foreach ($this->zones->findStInteriorConflicts($area, $geomJson, $ignore) as $conflict) {
+            $shared = $this->zones->stOverlapKm2($conflict, $geomJson);
+            $theirs = $this->zones->stGeometryKm2((string) $conflict->getGeom());
+
+            if (!$this->overlaps->isSliver($shared, $theirs, $km2, $tolerance)) {
+                throw ZoneOverlapException::between($name, $conflict, (int) round($shared));
+            }
+        }
     }
 
     /**

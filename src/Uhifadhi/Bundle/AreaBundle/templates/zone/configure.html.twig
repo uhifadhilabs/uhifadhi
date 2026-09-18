@@ -83,7 +83,7 @@
                 <div class="deptgroup">
                     <span class="gh">The set</span>
                     <span class="gc">0</span>
-                    <span class="gnote">0{% if set.areaKm2 %} of {{ set.areaKm2|number_format }}{% endif %} km&sup2;</span>
+                    <span class="gnote">0{% if set.groundKm2 %} of {{ set.groundKm2|number_format }}{% endif %} km&sup2;</span>
                     <span class="gl"></span>
                 </div>
                 <div class="zempty"><b class="zeh">No zones yet</b><span class="zemono">import a file, or draw one</span></div>
@@ -98,7 +98,7 @@
                             {%- if set.lastImport.importedBy %} by {{ set.lastImport.importedBy }}{% endif %}
                             &middot; names from <code>{{ set.lastImport.nameProperty }}</code> &middot;
                         {%- endif -%}
-                        {{ set.zonedKm2|number_format }}{% if set.areaKm2 %} of {{ set.areaKm2|number_format }}{% endif %} km&sup2;
+                        {{ set.zonedKm2|number_format }}{% if set.groundKm2 %} of {{ set.groundKm2|number_format }}{% endif %} km&sup2;
                     </span>
                     <span class="gl"></span>
                 </div>
@@ -294,7 +294,7 @@
                             {%- if set.lastImport %} &middot; last import <time datetime="{{ set.lastImport.importedAt|date('c') }}" data-localtime-format="day">{{ set.lastImport.importedAt|date('j M Y') }}</time>
                                 {%- if set.lastImport.importedBy %} &middot; {{ set.lastImport.importedBy }}{% endif %}
                                 &middot; names from <b class="acc">{{ set.lastImport.nameProperty }}</b>
-                            {%- endif %} &middot; {{ set.zonedKm2|number_format }}{% if set.areaKm2 %} of {{ set.areaKm2|number_format }}{% endif %} km&sup2;</span>
+                            {%- endif %} &middot; {{ set.zonedKm2|number_format }}{% if set.groundKm2 %} of {{ set.groundKm2|number_format }}{% endif %} km&sup2;</span>
                     </div>
                 {% endif %}
 

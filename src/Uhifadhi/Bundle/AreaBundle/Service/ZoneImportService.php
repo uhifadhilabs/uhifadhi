@@ -108,6 +108,7 @@ final readonly class ZoneImportService
         private EntityManagerInterface $entityManager,
         private ZoneService $zones,
         private ZoneRepository $zoneRepository,
+        private ZoneOverlapService $overlaps,
     ) {
     }
 
@@ -317,13 +318,19 @@ final readonly class ZoneImportService
         $name = (string) $zone->getName();
         $geom = $this->geometryOf($features[0], $name);
 
-        if (!$this->zoneRepository->stAreaCovers($area, $geom)) {
-            throw ZoneImportException::ringOutsideTheBoundary($name, $area->getName() ?? 'this area');
-        }
+        // A REDRAWN RING MAY CROSS THE LINE TOO. What it may not do is take a
+        // sibling's ground, and the area's own tolerance says how much sharing
+        // is drawing precision rather than geography.
+        $km2 = $this->zoneRepository->stGeometryKm2($geom);
+        $tolerance = $this->overlaps->toleranceOf($area);
 
-        $conflict = $this->zoneRepository->findStInteriorConflict($area, $geom, $zone);
-        if (null !== $conflict) {
-            throw ZoneImportException::ringOverlaps($conflict->getName() ?? '');
+        foreach ($this->zoneRepository->findStInteriorConflicts($area, $geom, $zone) as $conflict) {
+            $shared = $this->zoneRepository->stOverlapKm2($conflict, $geom);
+            $theirs = $this->zoneRepository->stGeometryKm2((string) $conflict->getGeom());
+
+            if (!$this->overlaps->isSliver($shared, $theirs, $km2, $tolerance)) {
+                throw ZoneImportException::ringOverlaps($conflict->getName() ?? '', (int) round($shared));
+            }
         }
 
         return $geom;
@@ -362,10 +369,18 @@ final readonly class ZoneImportService
             return $unusable->notAPolygon();
         }
 
-        $planned = ZoneFeaturePlan::arriving($name, $geom, (int) round($this->zoneRepository->stGeometryKm2($geom)));
+        $km2 = $this->zoneRepository->stGeometryKm2($geom);
+        $planned = ZoneFeaturePlan::arriving($name, $geom, (int) round($km2));
 
-        if (!$this->zoneRepository->stAreaCovers($area, $geom)) {
-            return $planned->outsideTheAreaBoundary();
+        /*
+         * A ZONE MAY LIE OUTSIDE THE BOUNDARY, so this says so and moves on.
+         * It is stated before the refusals below because a feature that is
+         * both outside and clashing is refused for the clash — the thing that
+         * has to be fixed — while still carrying the fact about the line.
+         */
+        $beyond = $this->zoneRepository->stBeyondTheBoundaryKm2($area, $geom);
+        if ($beyond > 0.0) {
+            $planned = $planned->extendingBeyondTheBoundary((int) round($beyond));
         }
 
         foreach ($above as $earlier) {
@@ -378,18 +393,26 @@ final readonly class ZoneImportService
             return $planned->nameAlreadyHere();
         }
 
+        $tolerance = $this->overlaps->toleranceOf($area);
+
         foreach ($above as $earlier) {
-            if ($earlier->isArriving() && $this->zones->conflicts((string) $earlier->geom, $geom)) {
-                return $planned->overlapsFeatureInTheFile($earlier->name);
+            if (!$earlier->isArriving()) {
+                continue;
+            }
+
+            $shared = $this->zoneRepository->stIntersectionKm2((string) $earlier->geom, $geom);
+            if ($shared > 0.0 && !$this->overlaps->isSliver($shared, (float) ($earlier->km2 ?? 0), $km2, $tolerance)) {
+                return $planned->overlapsFeatureInTheFile($earlier->name, (int) round($shared));
             }
         }
 
-        $conflict = $this->zoneRepository->findStInteriorConflict($area, $geom);
-        if (null !== $conflict) {
-            return $planned->overlapsZone(
-                $conflict->getName() ?? '',
-                (int) round($this->zoneRepository->stOverlapKm2($conflict, $geom)),
-            );
+        foreach ($this->zoneRepository->findStInteriorConflicts($area, $geom) as $conflict) {
+            $shared = $this->zoneRepository->stOverlapKm2($conflict, $geom);
+            $theirs = $this->zoneRepository->stGeometryKm2((string) $conflict->getGeom());
+
+            if (!$this->overlaps->isSliver($shared, $theirs, $km2, $tolerance)) {
+                return $planned->overlapsZone($conflict->getName() ?? '', (int) round($shared));
+            }
         }
 
         return $planned;
@@ -402,15 +425,9 @@ final readonly class ZoneImportService
      */
     private function refusalOf(AreaOfInterest $area, string $name, string $geom): ?string
     {
-        if (!$this->zoneRepository->stAreaCovers($area, $geom)) {
-            return \sprintf('falls outside the boundary of %s', $area->getName() ?? 'this area');
-        }
-
-        if (null !== $this->zoneRepository->findOneForName($area, $name)) {
-            return 'name already here';
-        }
-
-        return null;
+        // Containment is not one of the questions: a zone may lie outside the
+        // boundary, and how far it does is stated rather than refused.
+        return null !== $this->zoneRepository->findOneForName($area, $name) ? 'name already here' : null;
     }
 
     /**

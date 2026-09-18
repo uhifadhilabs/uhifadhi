@@ -53,16 +53,29 @@ final readonly class AreaIdentity
         string $name,
         ?string $iucnCategory,
         ?int $establishedYear,
+        ?float $zoneOverlapTolerancePct = null,
     ): AreaOfInterest {
         $name = trim($name);
         if ('' === $name) {
             throw new AreaIdentityException('An area needs a name — as its official record names it.');
         }
 
+        /*
+         * A TOLERANCE OUT OF RANGE IS REFUSED RATHER THAN CLAMPED. Somebody who
+         * typed 50 meant something, and half a zone is a decision about the
+         * ground; silently saving 10 would leave them believing they had made
+         * it.
+         */
+        if (null !== $zoneOverlapTolerancePct
+            && ($zoneOverlapTolerancePct < 0.0 || $zoneOverlapTolerancePct > ZoneOverlapService::MAX_TOLERANCE_PCT)) {
+            throw new AreaIdentityException(\sprintf('Zone overlap tolerance is a percentage between 0 and %s. Past that, the answer is to fix the scheme rather than to accept the overlap.', (string) ZoneOverlapService::MAX_TOLERANCE_PCT));
+        }
+
         $area
             ->setName($name)
             ->setIucnCategory($iucnCategory)
-            ->setEstablishedYear($establishedYear);
+            ->setEstablishedYear($establishedYear)
+            ->setZoneOverlapTolerancePct($zoneOverlapTolerancePct);
 
         $this->entityManager->flush();
 

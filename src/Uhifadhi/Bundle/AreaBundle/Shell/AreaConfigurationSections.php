@@ -20,6 +20,7 @@ use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaRegister;
+use Uhifadhi\Bundle\AreaBundle\Service\ZoneOverlapService;
 use Uhifadhi\Contracts\Shell\ConfigurationSection;
 use Uhifadhi\Contracts\Shell\ConfigurationSectionsInterface;
 
@@ -113,6 +114,7 @@ final readonly class AreaConfigurationSections implements ConfigurationSectionsI
                 [
                     'area' => $area,
                     'areaKm2' => $this->register->areaKm2($area),
+                    'defaultZoneOverlapTolerance' => ZoneOverlapService::DEFAULT_TOLERANCE_PCT,
                     'zoneCount' => $this->zones->countFor($area),
                 ],
             );

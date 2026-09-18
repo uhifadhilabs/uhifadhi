@@ -56,8 +56,8 @@ final class ZoneFeaturePlanTest extends TestCase
         yield 'name twice' => [$feature->nameUsedTwiceInTheFile()];
         yield 'overlaps a zone' => [$feature->overlapsZone('Crater', 41)];
         yield 'overlaps a zone, unmeasured' => [$feature->overlapsZone('Crater', null)];
-        yield 'overlaps a feature' => [$feature->overlapsFeatureInTheFile('Angata Salei')];
-        yield 'outside' => [$feature->outsideTheAreaBoundary()];
+        yield 'overlaps a feature' => [$feature->overlapsFeatureInTheFile('Angata Salei', 3)];
+        yield 'overlaps a long-named feature' => [$feature->overlapsFeatureInTheFile('Mbulumbulu', 1234)];
         yield 'no geometry' => [$feature->noGeometry()];
         yield 'not a polygon' => [$feature->notAPolygon()];
     }
@@ -79,6 +79,21 @@ final class ZoneFeaturePlanTest extends TestCase
     {
         self::assertStringNotContainsString('boundary of', $flagged->why());
         self::assertStringNotContainsString('subdivides', $flagged->why());
+    }
+
+    /**
+     * A QUALIFIER IS HELD TO THE SAME LINE, and it is a qualifier: the feature
+     * carrying it is still arriving, because a zone may lie outside the area's
+     * gazetted boundary.
+     */
+    public function testTheBoundaryQualifierIsOneLineAndDoesNotFlagTheFeature(): void
+    {
+        $beyond = ZoneFeaturePlan::arriving('Border Sector', '{}', 318)->extendingBeyondTheBoundary(1234);
+
+        self::assertSame('extends 1,234 km² beyond the boundary', $beyond->note);
+        self::assertLessThanOrEqual(self::LONGEST, mb_strlen($beyond->note));
+        self::assertTrue($beyond->isArriving());
+        self::assertSame('', $beyond->why());
     }
 
     public function testAFlaggedFeatureIsNotArrivingAndAnUnflaggedOneIs(): void

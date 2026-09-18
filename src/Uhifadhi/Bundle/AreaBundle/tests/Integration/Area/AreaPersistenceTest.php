@@ -125,6 +125,12 @@ final class AreaPersistenceTest extends IntegrationTestCase
      *
      * This test is the shape of the rule, not just the removal of one column: no
      * property on this entity may be another module's measurement.
+     *
+     * A SETTING IS NOT A MEASUREMENT. `zoneOverlapTolerancePct` is here for the
+     * opposite reason `treeCoverPct` is not: it is not a figure somebody else
+     * computed about this ground, it is this area's own answer to a question
+     * only it can answer — how carefully its zone scheme was drawn — and the
+     * zones it governs are this bundle's.
      */
     public function testTheAreaHoldsNoForeignModulesFigure(): void
     {
@@ -135,9 +141,12 @@ final class AreaPersistenceTest extends IntegrationTestCase
 
         self::assertNotContains('treeCoverPct', $properties);
         self::assertSame(
-            ['id', 'name', 'geom', 'source', 'iucnCategory', 'establishedYear', 'createdAt', 'updatedAt', 'uuid'],
+            [
+                'id', 'name', 'geom', 'source', 'iucnCategory', 'establishedYear',
+                'zoneOverlapTolerancePct', 'createdAt', 'updatedAt', 'uuid',
+            ],
             $properties,
-            'an area is a name, a boundary, where it came from and its registry facts — nothing else',
+            'an area is a name, a boundary, where it came from, its registry facts and how its own ground is read — nothing else',
         );
 
         // And the column is gone from the mapping, not merely from the class.

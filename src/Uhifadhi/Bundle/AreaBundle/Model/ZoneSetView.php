@@ -23,6 +23,12 @@ use Uhifadhi\Bundle\AreaBundle\Entity\ZoneImport;
  * bare count cannot — that an area is partly zoned, which is the ordinary
  * state and not a gap somebody left.
  *
+ * THE GROUND IS THE BOUNDARY AND THE ZONES TOGETHER, not the boundary alone.
+ * A zone may reach past the gazetted line, and against the boundary alone a
+ * set that does would read as more than a hundred percent of its own area —
+ * a page stating something impossible. The union counts every piece of ground
+ * this area accounts for exactly once, whichever of the two named it.
+ *
  * THE LAST IMPORT MAY BE NULL twice over: an area nobody has imported into, and
  * an area whose zones predate the importer. Neither is an error and neither is
  * worth inventing a row for.
@@ -33,7 +39,7 @@ final readonly class ZoneSetView
     public function __construct(
         public array $rows,
         public int $zonedKm2,
-        public ?int $areaKm2,
+        public ?int $groundKm2,
         public ?ZoneImport $lastImport,
     ) {
     }
