@@ -15,6 +15,7 @@ namespace Uhifadhi\Bundle\AreaBundle\Shell;
 
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Uid\Uuid;
+use Uhifadhi\Bundle\AreaBundle\Controller\ZoneConfigureController;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
@@ -90,6 +91,21 @@ final readonly class AreaConfigurationSections implements ConfigurationSectionsI
          * answering it with a shorter strip.
          */
         if (null !== $area) {
+            /*
+             * ZONES IS A SCREEN, NOT A RENDERED SECTION. A section the shell
+             * draws is a template with no request of its own; this one takes an
+             * uploaded file, previews it and writes, so it answers at its own
+             * address and the strip links there. The frame is identical either
+             * way — the shell recognises a section's own route and keeps the
+             * strip and the Configure action exactly as they are here.
+             */
+            $sections[] = ConfigurationSection::screen(
+                'zones',
+                'Zones',
+                ZoneConfigureController::ROUTE,
+                ['uuid' => (string) $area->getUuidString()],
+            );
+
             $sections[] = ConfigurationSection::page(
                 ConfigurationSection::SETTINGS,
                 'Area settings',

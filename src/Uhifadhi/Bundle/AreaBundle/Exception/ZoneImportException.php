@@ -16,11 +16,14 @@ namespace Uhifadhi\Bundle\AreaBundle\Exception;
 /**
  * THE ZONE IMPORT REFUSED THE FILE, AND EVERY MESSAGE NAMES THE OFFENDER.
  *
- * A zoning scheme arrives as one file holding a dozen polygons, so "the import
- * failed" is useless: the person holding it has to know WHICH feature to go and
- * fix. Every refusal below therefore carries a zone's own name, or — where the
- * file broke before any name could be read — what the file is instead of what
- * it had to be.
+ * THE SENTENCE IS THE REASON AND NOTHING ELSE. The card prints it beside the
+ * file it turned away, so "coordinates are projected (UTM 36S), not degrees" is
+ * the whole of it: the advice that follows from it — export as 4326 and try
+ * again — is what somebody does next, not what happened, and a surface that
+ * explains the next step in every refusal is a surface nobody reads.
+ *
+ * IT STILL NAMES THE OFFENDER where there is one, because a file holds a dozen
+ * polygons and the person has to know which feature to go and fix.
  *
  * REFUSALS ARE WHOLE-FILE. A scheme is a subdivision, and half a subdivision is
  * not a smaller subdivision: it is a wrong one. Nothing is written until every
@@ -35,41 +38,32 @@ final class ZoneImportException extends \RuntimeException
 {
     public static function notGeoJson(string $detail, ?\Throwable $previous = null): self
     {
-        return new self('The zones must be a GeoJSON file (.geojson or .json). '.$detail, previous: $previous);
+        return new self('not a GeoJSON file — '.$detail, previous: $previous);
     }
 
     public static function notAFeatureCollection(string $type): self
     {
-        return new self(\sprintf(
-            'A zoning scheme is a GeoJSON FeatureCollection with one polygon per zone; this file is a "%s".',
-            $type,
-        ));
+        return new self(\sprintf('not a GeoJSON FeatureCollection — this file is a "%s"', $type));
     }
 
     public static function projectedCrs(string $crs): self
     {
-        return new self(\sprintf(
-            'The file declares the coordinate system "%s". Zones are stored in WGS84 (longitude/latitude), so export the layer as EPSG:4326 — or CRS84 — and import it again.',
-            $crs,
-        ));
+        return new self(\sprintf('coordinates are projected (%s), not degrees', $crs));
     }
 
     public static function noGeometry(string $name): self
     {
-        return new self(\sprintf('Zone "%s" has no geometry in the file. Every zone needs one polygon.', $name));
+        return new self(\sprintf('"%s" has no geometry in the file', $name));
     }
 
     public static function unusableGeometry(string $name, string $detail, ?\Throwable $previous = null): self
     {
-        return new self(
-            \sprintf('Zone "%s" is not a polygon: %s Zones are Polygon or MultiPolygon features.', $name, $detail),
-            previous: $previous,
-        );
+        return new self(\sprintf('"%s" is not a polygon: %s', $name, $detail), previous: $previous);
     }
 
     public static function noFeatures(): self
     {
-        return new self('The file holds no features, so there is no zone in it to import.');
+        return new self('the file holds no polygon feature, so there is no zone in it');
     }
 
     /**
@@ -82,9 +76,27 @@ final class ZoneImportException extends \RuntimeException
     public static function noName(int $position, array $properties): self
     {
         return new self(\sprintf(
-            'Feature %d carries no zone name. Each feature needs a name in one of these properties: %s.',
+            'no usable name property — feature %d is named by none of %s',
             $position,
             implode(', ', $properties),
         ));
+    }
+
+    /** Replacing one zone's ring takes one polygon: several is not a replacement. */
+    public static function notOneRing(int $found): self
+    {
+        return new self(0 === $found
+            ? 'the file holds no polygon, so there is no ring to put in its place'
+            : \sprintf('the file holds %d polygons — replacing one zone\'s ring takes one', $found));
+    }
+
+    public static function ringOutsideTheBoundary(string $name, string $areaName): self
+    {
+        return new self(\sprintf('the new ring for "%s" falls outside the boundary of %s', $name, $areaName));
+    }
+
+    public static function ringOverlaps(string $conflicting): self
+    {
+        return new self(\sprintf('the new ring overlaps "%s" — zones may touch along an edge, never share interior', $conflicting));
     }
 }

@@ -400,7 +400,11 @@ final class AreaPagesTest extends WebTestCase
 
         self::assertStringContainsString('Widget library', $strip);
         self::assertStringContainsString('Area settings', $strip);
-        self::assertStringNotContainsString('Zones', $strip);
+        // THE ZONES SECTION IS A SCREEN WITH AN ADDRESS OF ITS OWN, and the
+        // strip still carries it: which of the two shapes a section is, is the
+        // section's business and not the strip's.
+        self::assertStringContainsString('/zones/settings">Zones</a>', $strip);
+        // The area's DATA tabs are what a configure page does not show.
         self::assertStringNotContainsString('Modules', $strip);
     }
 

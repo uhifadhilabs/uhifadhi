@@ -2551,20 +2551,6 @@ body[data-life="off"] .mb-band .avatar { opacity: .6; }
 }
 .scope.inherit { color: rgb(var(--c-dim)); border: 1px dashed var(--c-ln2); background: none; }
 
-/* ── THE REGISTER GROUP HEADER ───────────────────────────────────────────── */
-.deptgroup { display: flex; align-items: center; gap: 10px; margin: 24px 0 11px; }
-.deptgroup:first-of-type { margin-top: 6px; }
-.deptgroup .gh {
-    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 9px; font-weight: 700;
-    letter-spacing: .15em; text-transform: uppercase; color: rgb(var(--c-dim));
-}
-.deptgroup .gc {
-    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 9px; color: rgb(var(--c-dim));
-    border: 1px solid var(--c-ln2); border-radius: 999px; padding: 2px 8px; font-variant-numeric: tabular-nums;
-}
-.deptgroup .gl { flex: 1; height: 1px; background: var(--c-ln); }
-.deptgroup .gnote { font-size: 11.5px; color: rgb(var(--c-fog)); }
-
 /* ── THE REGISTER ROW ─────────────────────────────────────────────────────
    A fixed-column grid so the scope reads as a real aligned COLUMN, not a
    floating pill: mark, name, scope, count line up across rows because every

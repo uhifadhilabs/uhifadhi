@@ -70,6 +70,27 @@ final readonly class ZoneImportPlan
         return \count($this->features);
     }
 
+    /**
+     * "2 points · 1 line" — what the file carried that a zone cannot be made
+     * of, in the words somebody drew the layer in rather than the words GeoJSON
+     * spells the type in.
+     */
+    public function skippedGeometrySummary(): string
+    {
+        $words = [];
+        foreach ($this->skippedGeometries as $type => $count) {
+            $word = match ($type) {
+                'Point', 'MultiPoint' => 'point',
+                'LineString', 'MultiLineString' => 'line',
+                'GeometryCollection' => 'mixed shape',
+                default => strtolower($type),
+            };
+            $words[] = \sprintf('%d %s%s', $count, $word, 1 === $count ? '' : 's');
+        }
+
+        return implode(' · ', $words);
+    }
+
     /** The feature of that name, or null — how a confirm resolves the subset it was given. */
     public function feature(string $name): ?ZoneFeaturePlan
     {

@@ -58,11 +58,16 @@ class ZoneEvent
     #[ORM\Column(length: 32, enumType: ZoneEventKind::class)]
     private ?ZoneEventKind $kind = null;
 
-    #[ORM\Column(length: 255)]
+    /**
+     * 512, NOT 255: a sentence can hold two zone names and a zone name is 128
+     * characters, so the column is sized for the longest line the vocabulary
+     * can compose rather than for the longest anybody has written.
+     */
+    #[ORM\Column(length: 512)]
     private ?string $headline = null;
 
     /** The qualification after the headline, or null where the headline says it all. */
-    #[ORM\Column(length: 255, nullable: true)]
+    #[ORM\Column(length: 512, nullable: true)]
     private ?string $detail = null;
 
     /** Null where no user was known — a fixture loader or an installer has no session. */

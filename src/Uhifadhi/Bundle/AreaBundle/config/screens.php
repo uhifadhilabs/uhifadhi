@@ -18,9 +18,14 @@ use Uhifadhi\Bundle\AreaBundle\Controller\AreaCreateController;
 use Uhifadhi\Bundle\AreaBundle\Controller\AreaEditController;
 use Uhifadhi\Bundle\AreaBundle\Controller\AreaModulesController;
 use Uhifadhi\Bundle\AreaBundle\Controller\AreaWidgetsController;
+use Uhifadhi\Bundle\AreaBundle\Controller\ZoneConfigureController;
 use Uhifadhi\Bundle\AreaBundle\Controller\ZoneController;
+use Uhifadhi\Bundle\AreaBundle\Controller\ZoneEditController;
+use Uhifadhi\Bundle\AreaBundle\Controller\ZoneImportController;
 use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
+use Uhifadhi\Bundle\AreaBundle\Repository\ZoneEventRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
+use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportDraftService;
 use Uhifadhi\Bundle\AreaBundle\Shell\AreaConfigurationSections;
 use Uhifadhi\Bundle\AreaBundle\Shell\AreaNavigation;
 use Uhifadhi\Bundle\AreaBundle\Shell\AreaShellSource;
@@ -126,6 +131,62 @@ return static function (ContainerConfigurator $container): void {
         ])
         ->tag('controller.service_arguments');
     $services->alias(ZoneController::class, 'area.controller.zone')->public();
+
+    /*
+     * THE ZONES SECTION OF THE AREA'S CONFIGURE PAGE — a screen with an address
+     * of its own, because a section the shell renders is a template with no
+     * request of its own and this one posts files, previews them and writes.
+     *
+     * THE TOKEN MANAGER IS ASKED FOR BY EVERY ONE OF THE THREE: the page mints
+     * the tokens, the two writers check them. A screen that minted a token
+     * nobody checked would be furniture.
+     */
+    /*
+     * WHAT THE PERSON IS LOOKING AT BETWEEN THE UPLOAD AND THE CONFIRM. It
+     * lives with the screens rather than the model because it is the request's:
+     * a console importer has no session and needs none.
+     */
+    $services->set('area.zone_import_draft', ZoneImportDraftService::class)
+        ->args([service('request_stack')]);
+    $services->alias(ZoneImportDraftService::class, 'area.zone_import_draft');
+
+    $services->set('area.controller.zone_configure', ZoneConfigureController::class)
+        ->args([
+            service('twig'),
+            service('area.zone_set'),
+            service(ZoneEventRepository::class),
+            service('area.zone_import_draft'),
+            service('area.zone_export'),
+            service('security.csrf.token_manager'),
+        ])
+        ->tag('controller.service_arguments');
+    $services->alias(ZoneConfigureController::class, 'area.controller.zone_configure')->public();
+
+    $services->set('area.controller.zone_import', ZoneImportController::class)
+        ->args([
+            service('area.zone_import'),
+            service('area.zone_import_draft'),
+            service('area.zone_events'),
+            service(ZoneRepository::class),
+            service('security.csrf.token_manager'),
+            service('router'),
+            service('security.token_storage')->nullOnInvalid(),
+        ])
+        ->tag('controller.service_arguments');
+    $services->alias(ZoneImportController::class, 'area.controller.zone_import')->public();
+
+    $services->set('area.controller.zone_edit', ZoneEditController::class)
+        ->args([
+            service('area.zones'),
+            service('area.zone_import'),
+            service('area.zone_events'),
+            service('area.zone_import_draft'),
+            service('security.csrf.token_manager'),
+            service('router'),
+            service('security.token_storage')->nullOnInvalid(),
+        ])
+        ->tag('controller.service_arguments');
+    $services->alias(ZoneEditController::class, 'area.controller.zone_edit')->public();
 
     /*
      * THE MODULE SCREENS NEED THE SHELL'S PICTURE, so they are registered only

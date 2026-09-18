@@ -1,0 +1,371 @@
+{# THE ZONES SECTION OF AN AREA'S CONFIGURE PAGE — the set is changed here and
+   nowhere else, and the Zones tab is where it is read.
+
+   Design: areas/<area>/configure-zones.html.
+
+   THE SPLIT IS THE INCIDENT DETAIL PAGE'S, unchanged: the shell's own
+   `.recgrid` — a wide column beside a narrow one, 16px between them. LEFT, the
+   plate and the zones, whose cards are full-row and open in place. RIGHT, the
+   import card and the log, which keeps the sidebar alive when nothing is being
+   previewed.
+
+   NO PAGE-LEVEL SAVE anywhere. A rename, a ring and an import each commit from
+   their own control, so there is one form per write and no form around the page.
+
+   THE STATE OF THE IMPORT CARD IS THE DATA'S. An area with no zones gets the
+   first-import card; an area with zones gets the resting one; a plan held from
+   a preview replaces both; a file that could not be read shows its refusal. The
+   design's state switcher is a design tool and has no counterpart here.
+
+   SLICE TWO fills an open card's BODY: the module figures over the window, the
+   station board, the posted people and "N of M stations · View all". Station
+   lives in another module until then, so an open card here is its header and
+   its footer with nothing between them. #}
+{% extends '@Shell/page.html.twig' %}
+
+{% block title %}{{ area.name }} &middot; configure &middot; zones{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {{ include('@Area/_stylesheets.html.twig') }}
+{% endblock %}
+
+{% block shell_breadcrumbs %}
+    <a href="{{ path('area_index') }}">uhifadhi</a> / <a href="{{ path('area_show', {uuid: area.uuidString}) }}">{{ area.name }}</a> / configure / zones
+{% endblock %}
+
+{% block shell_page_title %}{{ area.name }} &middot; configure{% endblock %}
+
+{% block shell_page_subtitle %}The zone set is changed here &mdash; imported, named, added to; the <b>Zones</b> tab is where it is read.{% endblock %}
+
+{% block shell_page_actions %}
+    {# TAB-SPECIFIC ACTIONS SIT TO THE LEFT OF CONFIGURE, which the frame writes
+       itself at the right-hand end of every area page. #}
+    <a class="cta" href="{{ path('area_zones', {uuid: area.uuidString}) }}">Open Zones {{ ux_icon('shell:arrow-right') }}</a>
+{% endblock %}
+
+{% block shell_page %}
+{% set section = path('area_zones_configure', {uuid: area.uuidString}) %}
+<div class="recgrid">
+    <div class="col">
+        {# THE HOUSE MAP CONTRACT, and nothing on this plate is drawn
+           differently: the atlas draws the boundary with its scrim, the rings in
+           one layer, the controls where every other map in the product puts
+           them, and the key BELOW the plate — here the zone key, since hue is
+           the zone. #}
+        <div class="c">
+            {% if plan %}
+                <span class="tab">Preview<span class="src">&middot; the zones this file carries</span></span>
+            {% elseif set.isEmpty %}
+                <span class="tab">Preview<span class="src">&middot; the boundary, and nothing in it yet</span></span>
+            {% else %}
+                <span class="tab">Preview<span class="src">&middot; the zones on the ground</span></span>
+            {% endif %}
+            {{ render_map(map, {
+                'role': 'img',
+                'aria-label': plan
+                    ? 'The zones ' ~ plan.fileName ~ ' would add, drawn on ' ~ area.name
+                    : area.name ~ ' and its zones',
+            }) }}
+        </div>
+
+        {# THE SPINE. One card per zone, full row in a flex stack: a card that
+           opens must never sit in a grid, or opening it pushes its neighbours. #}
+        <div class="c">
+            {% if set.isEmpty %}
+                <span class="tab">The zones<span class="src">&middot; none yet</span></span>
+                <div class="deptgroup">
+                    <span class="gh">The set</span>
+                    <span class="gc">0</span>
+                    <span class="gnote">0{% if set.areaKm2 %} of {{ set.areaKm2|number_format }}{% endif %} km&sup2;</span>
+                    <span class="gl"></span>
+                </div>
+                <div class="zempty"><b class="zeh">No zones yet</b><span class="zemono">import a file, or draw one</span></div>
+            {% else %}
+                <span class="tab">The zones<span class="src">&middot; {{ set.count }} &middot; open one, rename, or add one</span></span>
+                <div class="deptgroup">
+                    <span class="gh">The set</span>
+                    <span class="gc">{{ set.count }}</span>
+                    <span class="gnote">
+                        {%- if set.lastImport -%}
+                            last import <time datetime="{{ set.lastImport.importedAt|date('c') }}" data-localtime-format="day">{{ set.lastImport.importedAt|date('j M Y') }}</time>
+                            {%- if set.lastImport.importedBy %} by {{ set.lastImport.importedBy }}{% endif %}
+                            &middot; names from <code>{{ set.lastImport.nameProperty }}</code> &middot;
+                        {%- endif -%}
+                        {{ set.zonedKm2|number_format }}{% if set.areaKm2 %} of {{ set.areaKm2|number_format }}{% endif %} km&sup2;
+                    </span>
+                    <span class="gl"></span>
+                </div>
+
+                <div class="zcstack">
+                    {% for row in set.rows %}
+                        {% set isOpen = openZone == row.uuid %}
+                        <article class="zcard{{ isOpen ? ' on' : '' }}">
+                            <div class="zc-hd">
+                                <a class="ovx" href="{{ isOpen ? section : section ~ '?open=' ~ row.uuid }}"
+                                   aria-expanded="{{ isOpen ? 'true' : 'false' }}"
+                                   aria-label="{{ isOpen ? 'Collapse' : 'Expand' }} {{ row.name }}">{{ ux_icon('shell:chevron-right') }}</a>
+                                <span class="zsw" style="background:{{ row.hue }}"></span>
+                                <div class="zc-bd">
+                                    <span class="nmrow"><a class="zc-nm" href="{{ path('area_zones', {uuid: area.uuidString}) }}">{{ row.name }}</a></span>
+                                </div>
+                                <span class="zcrun">
+                                    <span class="f"><b>{{ row.km2|number_format }}</b> km&sup2;</span>
+                                    {% if row.shareOfArea is not null %}<span class="f"><b>{{ row.shareOfArea }}</b>%</span>{% endif %}
+                                </span>
+                                {# RENAME IS INLINE AND COMMITS ON ITS OWN: it touches no geometry,
+                                   so it needs neither the map nor a file. #}
+                                <form class="zc-act" method="post" action="{{ path('area_zone_rename', {uuid: area.uuidString, zone: row.uuid}) }}">
+                                    <input type="hidden" name="_token" value="{{ renameToken }}">
+                                    <input class="fld zc-nmfld" type="text" name="name" value="{{ row.name }}" maxlength="128" aria-label="Rename {{ row.name }}">
+                                    <button type="submit" class="btn sm">{{ ux_icon('shell:square-pen') }} Rename</button>
+                                </form>
+                            </div>
+
+                            {% if isOpen %}
+                                <hr class="zc-rule">
+                                {# SLICE TWO draws the card's BODY here: the module figures over the
+                                   window and the station board with its posted people. #}
+                                {% if removeZone == row.uuid %}
+                                    <div class="pvrepl">
+                                        <span class="fog">Remove</span>
+                                        <div><b>{{ row.name }}</b> &middot; its ground becomes unzoned<br>no station, person or record deleted &middot; figures regroup by geometry</div>
+                                    </div>
+                                    <div class="pvfoot">
+                                        <a class="tgl" href="{{ section }}?open={{ row.uuid }}">Cancel</a>
+                                        <form method="post" action="{{ path('area_zone_remove', {uuid: area.uuidString, zone: row.uuid}) }}">
+                                            <input type="hidden" name="_token" value="{{ removeToken }}">
+                                            <button type="submit" class="cta dg">Remove {{ row.name }}</button>
+                                        </form>
+                                    </div>
+                                {% else %}
+                                    <div class="zcmore">
+                                        {# THE SAME VALIDATION PATH AS AN IMPORT — inside the boundary,
+                                           sharing interior with no sibling, this zone excluded from its
+                                           own check. A DRAWN ring is the other way in and needs a draw
+                                           mode on the atlas plate, which AtlasBundle does not have yet;
+                                           its destination is the plate controller in
+                                           AtlasBundle/assets/controllers/, writing through this same route. #}
+                                        <form class="zc-ring" method="post" enctype="multipart/form-data"
+                                              action="{{ path('area_zone_ring', {uuid: area.uuidString, zone: row.uuid}) }}">
+                                            <input type="hidden" name="_token" value="{{ ringToken }}">
+                                            <input type="file" class="fld zc-ringfld" name="zones"
+                                                   accept=".geojson,.json,application/geo+json,application/json"
+                                                   aria-label="A single-feature file for {{ row.name }}">
+                                            <button type="submit" class="btn sm" title="Replace the ring — one polygon, through the same checks">{{ ux_icon('shell:rotate-ccw') }} Replace the ring</button>
+                                        </form>
+                                        <a class="btn sm dg" href="{{ section }}?open={{ row.uuid }}&amp;remove={{ row.uuid }}"
+                                           title="Remove {{ row.name }} — its ground becomes unzoned; no station, person or record is deleted">{{ ux_icon('shell:trash-2') }} Remove the zone</a>
+                                    </div>
+                                {% endif %}
+                            {% endif %}
+                        </article>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            <div class="use">A person is posted to a <b>station</b>, never to a zone.</div>
+        </div>
+    </div>
+
+    <div class="col">
+        {# ONE CARD, THE STATES BELOW, AND THE MODEL HELD HERE.
+
+           IMPORT IS ADDITIVE and never overwrites. An empty area takes
+           everything; an area with zones takes every feature whose name is free
+           and whose ring overlaps nothing — zones may touch along an edge, and
+           identical geometry is the extreme case of overlap. A PARTIAL import
+           is legal because nothing is destroyed: the preview lists every
+           feature as arriving or flagged, the person confirms that subset, and
+           it writes in one transaction.
+
+           A WHOLE FILE is refused only when it cannot be read as GeoJSON, has
+           no usable name property, or is projected rather than degrees.
+
+           WHOLESALE replacement is clear-then-import: one explicit "Remove all
+           N zones", never N deletions. EXPORT sits beside the import and is
+           offered first in the clear confirmation. #}
+        <div class="c" id="import">
+            <span class="tab">Import zones<span class="src">&middot; additive</span></span>
+
+            {% if removingAll %}
+                <div class="pvrepl">
+                    <span class="fog">Remove all</span>
+                    <div><b>{{ set.count }} zone{{ set.count == 1 ? '' : 's' }}</b> &middot; <b>0 of 0 stations</b> become unzoned<br>no station, person or record deleted &middot; figures regroup by geometry</div>
+                </div>
+                <div class="pvfoot">
+                    <a class="btn sm" href="{{ path('area_zones_export', {uuid: area.uuidString}) }}">{{ ux_icon('shell:download') }} Download the set first</a>
+                    <a class="tgl" href="{{ section }}">Cancel</a>
+                    <form method="post" action="{{ path('area_zones_clear', {uuid: area.uuidString}) }}">
+                        <input type="hidden" name="_token" value="{{ clearToken }}">
+                        <button type="submit" class="cta dg">Remove all {{ set.count }} zone{{ set.count == 1 ? '' : 's' }}</button>
+                    </form>
+                </div>
+
+            {% elseif refusal %}
+                {# THE SENTENCE IS THE REASON AND NOTHING ELSE: what to do about
+                   it is the next step, not what happened. #}
+                <div class="upl-list">
+                    <div class="upl-file bad">
+                        {{ ux_icon('shell:triangle-alert') }}
+                        <span class="nm">{{ refusal.file }}</span>
+                        <span class="chip bad">not read</span>
+                        <span class="upl-gap"></span>
+                        <a class="upl-act x" href="{{ section }}" aria-label="Take this file off the zone">&times;</a>
+                    </div>
+                </div>
+                <div class="rln"><span class="fog">Refused</span><span class="mono">{{ refusal.why }}</span></div>
+                {{ include('@Area/zone/_name_property.html.twig', {nameProperties: nameProperties}, with_context: false) }}
+                <div class="pvfoot">
+                    <a class="tgl" href="{{ section }}">Cancel</a>
+                    <button class="cta" type="button" disabled>Add zones</button>
+                </div>
+
+            {% elseif plan %}
+                {# THE PREVIEW IS THE THING THAT IS CONFIRMED, not a rehearsal of
+                   the write: every feature is listed with its verdict, the
+                   arriving ones are ticked, and the confirm writes what is ticked. #}
+                <div class="upl-list">
+                    <div class="upl-file done">
+                        {{ ux_icon('shell:file-text') }}
+                        <span class="nm">{{ plan.fileName }}</span>
+                        <span class="chip ok">parsed</span>
+                        <span class="upl-gap"></span>
+                        <a class="upl-act x" href="{{ section }}?discard=1" aria-label="Take this file off the zone">&times;</a>
+                    </div>
+                </div>
+                <div class="rln">
+                    <span class="fog">Carries</span>
+                    <span class="mono">{{ plan.count }} feature{{ plan.count == 1 ? '' : 's' }} &middot;
+                        names from <b class="acc">{{ plan.nameProperty }}</b> ({{ plan.count }} of {{ plan.count }}) &middot; not stored
+                        {%- if plan.skippedGeometrySummary %} &middot; skipped: {{ plan.skippedGeometrySummary }}{% endif %}
+                        {%- if plan.ignoredProperties is not empty %}, all other properties{% endif %}</span>
+                </div>
+                <div class="rln">
+                    <span class="fog">Additive</span>
+                    <span class="mono">nothing here is overwritten &middot; a feature is skipped when its name exists or its ring overlaps a zone</span>
+                </div>
+
+                <form method="post" action="{{ path('area_zones_import_confirm', {uuid: area.uuidString}) }}">
+                    <input type="hidden" name="_token" value="{{ importToken }}">
+                    <div class="zfeats">
+                        {% for feature in plan.features %}
+                            <label class="zfeat{{ feature.isArriving ? '' : ' bad' }}">
+                                {% if feature.isArriving %}
+                                    <input type="checkbox" name="arriving[]" value="{{ feature.name }}" checked>
+                                    <span class="zsw" style="background:{{ hues[feature.name]|default('') }}"></span>
+                                {% else %}
+                                    <span class="zsw hollow"></span>
+                                {% endif %}
+                                <span class="zfnm">{{ feature.name }}</span>
+                                {% if feature.isArriving %}
+                                    <span class="zfm">{{ feature.km2|number_format }} km&sup2;</span>
+                                    <span class="chip ok">arriving</span>
+                                {% else %}
+                                    <span class="chip bad">flagged</span>
+                                    <span class="zfwhy">{{ feature.whyLead }}{% if feature.whySubject %}<b>{{ feature.whySubject }}</b>{% endif %}{{ feature.whyTail }}</span>
+                                {% endif %}
+                            </label>
+                        {% endfor %}
+                    </div>
+                    {% if set.isEmpty %}
+                        <div class="rln"><span class="fog">Also</span><span class="mono">the area has no zones yet &middot; every feature arrives</span></div>
+                    {% else %}
+                        <div class="rln">
+                            <span class="fog">On confirm</span>
+                            <span class="mono">{{ plan.arriving|length }} arrive in one transaction{% if plan.flagged|length %} &middot; {{ plan.flagged|length }} skipped{% endif %}</span>
+                        </div>
+                    {% endif %}
+                    <div class="pvfoot">
+                        <a class="tgl" href="{{ section }}?discard=1">Cancel</a>
+                        <button class="cta" type="submit"{{ plan.arriving|length ? '' : ' disabled' }}>Add {{ plan.arriving|length }} zone{{ plan.arriving|length == 1 ? '' : 's' }}</button>
+                    </div>
+                </form>
+
+            {% else %}
+                {% if outcome %}
+                    <div class="zlead">
+                        {{ ux_icon('shell:circle-check') }}
+                        <span><b>{{ outcome.headline }}</b>{% for line in outcome.lines %} &middot; {{ line }}{% endfor %}.</span>
+                    </div>
+                {% endif %}
+
+                {% if set.isEmpty %}
+                    <div class="zlead">
+                        {{ ux_icon('shell:upload') }}
+                        <span>One polygon feature, one zone &mdash; inside the boundary, in degrees, never overlapping.</span>
+                    </div>
+                {% else %}
+                    <div class="rln">
+                        <span class="fog">The set</span>
+                        <span class="mono">{{ set.count }} zone{{ set.count == 1 ? '' : 's' }}
+                            {%- if set.lastImport %} &middot; last import <time datetime="{{ set.lastImport.importedAt|date('c') }}" data-localtime-format="day">{{ set.lastImport.importedAt|date('j M Y') }}</time>
+                                {%- if set.lastImport.importedBy %} &middot; {{ set.lastImport.importedBy }}{% endif %}
+                                &middot; names from <b class="acc">{{ set.lastImport.nameProperty }}</b>
+                            {%- endif %} &middot; {{ set.zonedKm2|number_format }}{% if set.areaKm2 %} of {{ set.areaKm2|number_format }}{% endif %} km&sup2;</span>
+                    </div>
+                {% endif %}
+
+                {# THE UPLOADER IS THE SHELL'S OWN `.upl-*` COMPONENT, in the mode
+                   this page needs: the file is parsed and never stored. #}
+                <form method="post" action="{{ path('area_zones_import_preview', {uuid: area.uuidString}) }}" enctype="multipart/form-data"
+                      data-controller="uhifadhi--area-bundle--area-upload">
+                    <input type="hidden" name="_token" value="{{ importToken }}">
+                    <label class="upl-zone{{ set.isEmpty ? '' : ' slim' }}"
+                           data-uhifadhi--area-bundle--area-upload-target="drop"
+                           data-action="dragover->uhifadhi--area-bundle--area-upload#over dragleave->uhifadhi--area-bundle--area-upload#leave drop->uhifadhi--area-bundle--area-upload#drop">
+                        {{ ux_icon('shell:upload') }}
+                        <input type="file" name="zones" accept=".geojson,.json,application/geo+json,application/json"
+                               data-uhifadhi--area-bundle--area-upload-target="file"
+                               data-action="uhifadhi--area-bundle--area-upload#chosen" aria-label="Zones file">
+                        <span class="lead" data-uhifadhi--area-bundle--area-upload-target="label">{% if set.isEmpty %}Drop files here, or choose one{% else %}Add more &mdash; drop a file here, or choose one{% endif %}</span>
+                        <span class="upl-kinds">{% if set.isEmpty %}geojson &nbsp;&middot;&nbsp; one file at a time &middot; read, never stored{% else %}geojson &middot; never stored{% endif %}</span>
+                    </label>
+                    {% if set.isEmpty %}{{ include('@Area/zone/_name_property.html.twig', {nameProperties: nameProperties}, with_context: false) }}{% endif %}
+                    <div class="pvfoot">
+                        <button class="cta" type="submit">Preview the file</button>
+                    </div>
+                </form>
+
+                {% if not set.isEmpty %}
+                    <div class="zsetacts">
+                        <a class="btn sm" href="{{ path('area_zones_export', {uuid: area.uuidString}) }}"
+                           title="{{ exportName }} &middot; FeatureCollection &middot; EPSG:4326">{{ ux_icon('shell:download') }} Export the set</a>
+                        <a class="btn sm dg" href="{{ section }}?remove-all=1">{{ ux_icon('shell:trash-2') }} Remove all {{ set.count }} zone{{ set.count == 1 ? '' : 's' }}</a>
+                        <span class="zfrag">one FeatureCollection &middot; EPSG:4326 &middot; names and stored properties</span>
+                    </div>
+                {% endif %}
+
+                {# THE SINGLE-ZONE PATH, at rest. Drawing a ring needs a draw mode
+                   on the atlas plate, which AtlasBundle does not have yet, so the
+                   control is drawn as the design draws it and links nowhere. Its
+                   destination is a drawing mode over the boundary and the zones in
+                   AtlasBundle/assets/controllers/, writing through the same
+                   ZoneService the import writes through. #}
+                <div class="zdraw">
+                    <button type="button" class="btn soon" disabled title="Draw a zone — coming soon">{{ ux_icon('shell:pen-tool') }} Draw a zone<span class="soonlbl">soon</span></button>
+                    <span class="zfrag">adds one zone &middot; live checks &middot; stations re-read</span>
+                </div>
+            {% endif %}
+        </div>
+
+        {# A LOG LINE, NOT GEOMETRY: no superseded polygon is kept, so an earlier
+           scheme is seen again only by importing its file again. #}
+        <div class="c">
+            <span class="tab">History<span class="src">&middot; newest first</span></span>
+            {% if events is empty %}
+                <div class="use">Nothing has happened to this area&rsquo;s zones yet. Every import, rename, ring and removal writes one line here.</div>
+            {% else %}
+                <div class="zhist">
+                    {% for event in events %}
+                        <div class="zhrow">
+                            <span class="zhdot{{ event.kind.isRefusal ? ' bad' : (loop.first ? ' on' : '') }}"></span>
+                            <div><b>{{ event.headline }}{% if event.detail %} <span>&middot; {{ event.detail }}</span>{% endif %}</b></div>
+                            <time class="zhwhen" datetime="{{ event.occurredAt|date('c') }}" data-localtime-format="day">{{ event.occurredAt|date('j M') }}</time>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

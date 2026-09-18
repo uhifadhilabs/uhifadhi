@@ -108,21 +108,10 @@ final readonly class ZoneEventService
         $this->entityManager->persist(new ZoneEvent()
             ->setArea($area)
             ->setKind($kind)
-            ->setHeadline(self::within($headline, 255))
-            ->setDetail(null === $detail || '' === $detail ? null : self::within($detail, 255))
+            ->setHeadline($headline)
+            ->setDetail(null === $detail || '' === $detail ? null : $detail)
             ->setActor($actor)
             ->setOccurredAt(new \DateTimeImmutable()));
         $this->entityManager->flush();
-    }
-
-    /**
-     * A zone name is 128 characters and a sentence can hold two of them, so the
-     * line is cut rather than allowed to break the insert. A truncated line is
-     * a legible answer; a failed write in the middle of a successful import is
-     * not.
-     */
-    private static function within(string $sentence, int $limit): string
-    {
-        return mb_strlen($sentence) <= $limit ? $sentence : mb_substr($sentence, 0, $limit - 1).'…';
     }
 }

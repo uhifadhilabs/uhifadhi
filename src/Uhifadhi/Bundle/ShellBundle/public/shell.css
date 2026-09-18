@@ -289,6 +289,78 @@ body::before {
 .uinfo b { font-size: 12.5px; color: rgb(var(--c-tx)); font-weight: 600; }
 .uinfo em { font-style: normal; font-size: 10px; color: rgb(var(--c-fog)); }
 /* On a narrow viewport the words step aside and the mark stands alone. */
+/* ---- THE GROUP HEADER OVER A STACK OF CARDS (.deptgroup)
+   A heading, a count, the one-line note that qualifies both, and a rule filling
+   the rest of the row. It names what the stack under it IS, which is why it
+   lives here rather than in whichever bundle drew a stack first: the
+   departments register and an area's zone set read the same way round because
+   they wear the same header, and a second copy in a second sheet would render
+   differently depending on which loaded last. */
+.deptgroup { display: flex; align-items: center; gap: 10px; margin: 24px 0 11px; }
+.deptgroup:first-of-type { margin-top: 6px; }
+.deptgroup .gh {
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 9px; font-weight: 700;
+    letter-spacing: .15em; text-transform: uppercase; color: rgb(var(--c-dim));
+}
+.deptgroup .gc {
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 9px; color: rgb(var(--c-dim));
+    border: 1px solid var(--c-ln2); border-radius: 999px; padding: 2px 8px; font-variant-numeric: tabular-nums;
+}
+.deptgroup .gl { flex: 1; height: 1px; background: var(--c-ln); }
+.deptgroup .gnote { font-size: 11.5px; color: rgb(var(--c-fog)); }
+.deptgroup .gnote code { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10.5px; font-weight: 600; color: rgb(var(--c-acc)); }
+
+/* ---- THE QUIET BUTTON (.btn) — the third control, beside .cta and .tgl.
+   `.cta` is the one thing a card is FOR and there is one of it; `.tgl` is a
+   switch that carries a state. A `.btn` is neither: it is an ordinary action
+   offered beside others — export, rename, download this first — and a card may
+   hold several without any of them claiming to be the point. `.sm` is the size
+   a card header and a footer strip take; `.dg` says the action destroys
+   something; `.soon` is drawn where a control is shown before it works, so a
+   reader learns it exists without being able to press it. */
+.btn {
+    display: inline-flex; align-items: center; gap: 7px; white-space: nowrap;
+    background: rgb(var(--c-raised)); color: rgb(var(--c-tx));
+    border: 1px solid var(--c-ln2); border-radius: 9px;
+    padding: 7px 13px; font-size: 12px; font-weight: 600; font-family: inherit;
+    text-decoration: none; cursor: pointer;
+}
+.btn:hover { border-color: rgb(var(--c-fog)); }
+.btn:focus-visible { outline: 2px solid color-mix(in srgb, rgb(var(--c-acc)) 60%, transparent); outline-offset: 2px; }
+.btn svg { width: 14px; height: 14px; flex: none; display: block; }
+.btn.sm { padding: 5px 10px; font-size: 11.5px; border-radius: 8px; }
+.btn.sm svg { width: 13px; height: 13px; }
+.btn.dg, .cta.dg { color: rgb(var(--c-fail)); border-color: color-mix(in srgb, rgb(var(--c-fail)) 45%, transparent); }
+.cta.dg { background: none; font-weight: 700; }
+.btn.soon, .btn[disabled] { color: rgb(var(--c-dim)); border-style: dashed; cursor: default; }
+.btn.soon:hover, .btn[disabled]:hover { border-color: var(--c-ln2); }
+.soonlbl {
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 9px; font-weight: 700;
+    letter-spacing: .08em; text-transform: uppercase; color: rgb(var(--c-dim));
+    border: 1px solid var(--c-ln2); border-radius: 999px; padding: 1px 6px;
+}
+
+/* A PRIMARY ACTION THAT CANNOT BE TAKEN STILL SAYS WHAT IT WOULD DO. It is
+   drawn flat and unreachable rather than hidden, so a card that refused a file
+   still shows what the confirm would have been. */
+.cta:disabled, .cta[disabled] {
+    background: rgb(var(--c-raised)); color: rgb(var(--c-dim));
+    border: 1px solid var(--c-ln2); cursor: default;
+}
+
+/* The spacer that pushes a file tile's dismiss control to the far end. */
+.upl-gap { flex: 1; }
+
+/* ---- THE CARD FOOT (.pvfoot) — the separate operations at the bottom of a
+   card, in their own strip. A card reads as a header, a body and a foot, and
+   the foot is visually distinct so that "cancel" and "do it" are never mistaken
+   for more of the body. Right-aligned, wrapping, and ruled off above. */
+.pvfoot {
+    display: flex; gap: 10px; align-items: center; justify-content: flex-end; flex-wrap: wrap;
+    margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--c-ln);
+}
+.pvfoot form { display: contents; }
+
 @media (max-width: 640px) { .uinfo { display: none; } }
 
 /* The footer row. NOT `.page`: the frame owns that class and owns exactly one
@@ -1227,6 +1299,78 @@ table.tbl tr:hover .open-btn {
     margin: 0 0 16px;
     overflow-x: auto;
 }
+
+/* ---- THE GROUP HEADER OVER A STACK OF CARDS (.deptgroup)
+   A heading, a count, the one-line note that qualifies both, and a rule filling
+   the rest of the row. It names what the stack under it IS, which is why it
+   lives here rather than in whichever bundle drew a stack first: the
+   departments register and an area's zone set read the same way round because
+   they wear the same header, and a second copy in a second sheet would render
+   differently depending on which loaded last. */
+.deptgroup { display: flex; align-items: center; gap: 10px; margin: 24px 0 11px; }
+.deptgroup:first-of-type { margin-top: 6px; }
+.deptgroup .gh {
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 9px; font-weight: 700;
+    letter-spacing: .15em; text-transform: uppercase; color: rgb(var(--c-dim));
+}
+.deptgroup .gc {
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 9px; color: rgb(var(--c-dim));
+    border: 1px solid var(--c-ln2); border-radius: 999px; padding: 2px 8px; font-variant-numeric: tabular-nums;
+}
+.deptgroup .gl { flex: 1; height: 1px; background: var(--c-ln); }
+.deptgroup .gnote { font-size: 11.5px; color: rgb(var(--c-fog)); }
+.deptgroup .gnote code { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10.5px; font-weight: 600; color: rgb(var(--c-acc)); }
+
+/* ---- THE QUIET BUTTON (.btn) — the third control, beside .cta and .tgl.
+   `.cta` is the one thing a card is FOR and there is one of it; `.tgl` is a
+   switch that carries a state. A `.btn` is neither: it is an ordinary action
+   offered beside others — export, rename, download this first — and a card may
+   hold several without any of them claiming to be the point. `.sm` is the size
+   a card header and a footer strip take; `.dg` says the action destroys
+   something; `.soon` is drawn where a control is shown before it works, so a
+   reader learns it exists without being able to press it. */
+.btn {
+    display: inline-flex; align-items: center; gap: 7px; white-space: nowrap;
+    background: rgb(var(--c-raised)); color: rgb(var(--c-tx));
+    border: 1px solid var(--c-ln2); border-radius: 9px;
+    padding: 7px 13px; font-size: 12px; font-weight: 600; font-family: inherit;
+    text-decoration: none; cursor: pointer;
+}
+.btn:hover { border-color: rgb(var(--c-fog)); }
+.btn:focus-visible { outline: 2px solid color-mix(in srgb, rgb(var(--c-acc)) 60%, transparent); outline-offset: 2px; }
+.btn svg { width: 14px; height: 14px; flex: none; display: block; }
+.btn.sm { padding: 5px 10px; font-size: 11.5px; border-radius: 8px; }
+.btn.sm svg { width: 13px; height: 13px; }
+.btn.dg, .cta.dg { color: rgb(var(--c-fail)); border-color: color-mix(in srgb, rgb(var(--c-fail)) 45%, transparent); }
+.cta.dg { background: none; font-weight: 700; }
+.btn.soon, .btn[disabled] { color: rgb(var(--c-dim)); border-style: dashed; cursor: default; }
+.btn.soon:hover, .btn[disabled]:hover { border-color: var(--c-ln2); }
+.soonlbl {
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 9px; font-weight: 700;
+    letter-spacing: .08em; text-transform: uppercase; color: rgb(var(--c-dim));
+    border: 1px solid var(--c-ln2); border-radius: 999px; padding: 1px 6px;
+}
+
+/* A PRIMARY ACTION THAT CANNOT BE TAKEN STILL SAYS WHAT IT WOULD DO. It is
+   drawn flat and unreachable rather than hidden, so a card that refused a file
+   still shows what the confirm would have been. */
+.cta:disabled, .cta[disabled] {
+    background: rgb(var(--c-raised)); color: rgb(var(--c-dim));
+    border: 1px solid var(--c-ln2); cursor: default;
+}
+
+/* The spacer that pushes a file tile's dismiss control to the far end. */
+.upl-gap { flex: 1; }
+
+/* ---- THE CARD FOOT (.pvfoot) — the separate operations at the bottom of a
+   card, in their own strip. A card reads as a header, a body and a foot, and
+   the foot is visually distinct so that "cancel" and "do it" are never mistaken
+   for more of the body. Right-aligned, wrapping, and ruled off above. */
+.pvfoot {
+    display: flex; gap: 10px; align-items: center; justify-content: flex-end; flex-wrap: wrap;
+    margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--c-ln);
+}
+.pvfoot form { display: contents; }
 
 @media (max-width: 640px) {
     .side { position: fixed; transform: translateX(-100%); }

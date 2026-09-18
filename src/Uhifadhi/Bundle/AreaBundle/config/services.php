@@ -30,6 +30,7 @@ use Uhifadhi\Bundle\AreaBundle\Service\ZoneEventService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneExportService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneService;
+use Uhifadhi\Bundle\AreaBundle\Service\ZoneSetService;
 use Uhifadhi\Bundle\AreaBundle\Widget\AreaIndexWidgets;
 use Uhifadhi\Bundle\AtlasBundle\Map\MapBuilderInterface;
 use Uhifadhi\Bundle\RegistryBundle\Repository\AreaModuleRepository;
@@ -121,6 +122,20 @@ return static function (ContainerConfigurator $container): void {
     $services->set('area.zone_events', ZoneEventService::class)
         ->args([service('doctrine.orm.entity_manager')]);
     $services->alias(ZoneEventService::class, 'area.zone_events');
+
+    /*
+     * WHAT THE CONFIGURE PAGE READS ABOUT A SET — the rows, the totals and the
+     * plate, from one walk over one list, so the colour on a card, the colour
+     * in the key and the colour of the ring are the same colour.
+     */
+    $services->set('area.zone_set', ZoneSetService::class)
+        ->args([
+            service('doctrine.orm.entity_manager'),
+            service(ZoneRepository::class),
+            service('area.register'),
+            service(MapBuilderInterface::class),
+        ]);
+    $services->alias(ZoneSetService::class, 'area.zone_set');
 
     /*
      * What the register knows about each area — the measurements PostGIS makes

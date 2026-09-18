@@ -1,0 +1,15 @@
+{# WHICH PROPERTY NAMES THE ZONES — the one thing about a file the person may
+   know better than the reader does. A file with both `Name` and `layer` in it
+   has two plausible answers; left blank, the first spelling that names EVERY
+   feature is used and the summary says which it was.
+
+   IT IS READ ONCE AND DISCARDED with the rest of the file: what survives is the
+   property's name in the provenance row, not a setting the area now carries. #}
+<div class="zfrow">
+    <label class="fldlab" for="nameprop">Names from</label>
+    <select class="fld" id="nameprop" name="nameProperty">
+        <option value="">the first that names every feature</option>
+        {% for property in nameProperties %}<option value="{{ property }}">{{ property }}</option>{% endfor %}
+    </select>
+    <span class="zfnote">read once, then discarded</span>
+</div>

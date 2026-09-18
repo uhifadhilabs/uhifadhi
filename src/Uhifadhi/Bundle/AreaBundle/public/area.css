@@ -1131,3 +1131,151 @@ table.tbl.ax-reg em { font-style: normal; }
 .ax-scard.add { justify-content: center; flex-direction: column; gap: 5px; border-style: dashed; color: rgb(var(--c-dim)); font-weight: 700; font-size: 12.5px; }
 .ax-scard.add:hover { color: rgb(var(--c-acc)); border-color: rgb(var(--c-acc)); }
 .ax-scard.add svg { width: 20px; height: 20px; }
+
+/* ══ THE ZONES SECTION OF THE CONFIGURE PAGE ══════════════════════════════
+   Everything below is the area's own: the zone card, the per-feature preview
+   list, the set actions and the log. What this section BORROWS — the card, the
+   group header, the quiet button, the card foot, the uploader, the run-line —
+   is the shell's and is not restated here.
+
+   HUE IS THE ZONE. A swatch, a ring on the plate and a row in the key are the
+   same colour because one service decides it; the swatch below carries no
+   colour of its own for exactly that reason. */
+.zsw { width: 11px; height: 11px; flex: none; border-radius: 4px; display: inline-block; }
+.zsw.hollow { background: none; border: 1px dashed color-mix(in srgb, rgb(var(--c-fail)) 55%, transparent); }
+
+/* THE SPINE — a flex stack and never a grid: a card that opens must not move
+   its neighbours sideways. */
+.zcstack { display: flex; flex-direction: column; gap: 9px; }
+.zcard {
+    border: 1px solid var(--c-ln); border-radius: 13px; background: rgb(var(--c-cv));
+    padding: 11px 14px 12px; min-width: 0;
+}
+.zc-hd { display: flex; align-items: center; gap: 11px; flex-wrap: wrap; }
+.zc-bd { min-width: 120px; }
+.zc-nm { font-size: 13.5px; font-weight: 700; color: rgb(var(--c-tx)); text-decoration: none; }
+a.zc-nm:hover { color: rgb(var(--c-acc)); }
+.zcrun {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 4px 11px;
+    font-size: 11.5px; color: rgb(var(--c-fog)); margin-left: auto;
+}
+.zcrun .f { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.zcrun .f b { font-size: 13.5px; font-weight: 700; color: rgb(var(--c-tx)); line-height: 1; font-variant-numeric: tabular-nums; }
+/* RENAME IS INLINE AND COMMITS ON ITS OWN, so the field and its button are one
+   control at the end of the card's header row rather than a second card. */
+.zc-act { display: flex; align-items: center; gap: 7px; margin-left: auto; }
+.zc-nmfld { width: 148px; padding: 5px 9px; font-size: 12px; }
+
+/* THE PER-FEATURE LIST — the centre of an additive import: one row per
+   feature, arriving or flagged, and the reason beside the flagged ones. */
+.zfeats { display: flex; flex-direction: column; margin: 10px 0 0; border-top: 1px dashed var(--c-ln); }
+.zfeat {
+    display: flex; align-items: center; gap: 9px; padding: 7px 2px;
+    border-bottom: 1px dashed var(--c-ln); font-size: 12.5px; cursor: pointer;
+}
+.zfeat .zfnm { font-weight: 600; color: rgb(var(--c-tx)); flex: none; min-width: 104px; }
+.zfeat .zfm {
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10.5px; font-weight: 500;
+    color: rgb(var(--c-dim)); flex: none;
+}
+.zfeat .zfwhy { font-size: 11.5px; color: rgb(var(--c-fog)); line-height: 1.4; flex: 1; min-width: 120px; }
+.zfeat .zfwhy b { color: rgb(var(--c-tx)); }
+.zfeat .chip { margin-left: auto; flex: none; }
+.zfeat.bad .chip { margin-left: 0; }
+
+/* THE NAME-PROPERTY CHOICE, beside the uploader — read once, then discarded. */
+.zfrow { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-top: 12px; }
+.zfrow .fld { max-width: 200px; }
+.zfrow .zfnote { font-size: 11.5px; color: rgb(var(--c-dim)); line-height: 1.5; flex: 1; min-width: 180px; }
+
+/* EXPORT AND REMOVE-ALL, beside the import rather than hidden behind it. */
+.zsetacts { display: flex; gap: 9px; align-items: flex-start; flex-wrap: wrap; margin-top: 12px; }
+.zsetacts .zfrag { flex-basis: 100%; }
+
+/* THE SINGLE-ZONE PATH, at rest: the control and what it will do. */
+.zdraw {
+    display: flex; gap: 11px; align-items: flex-start;
+    margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--c-ln);
+}
+.zdraw .btn { flex: none; }
+.zfrag {
+    flex: 1; min-width: 190px; line-height: 1.65;
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10.5px; font-weight: 500;
+    color: rgb(var(--c-dim));
+}
+
+/* THE LEAD LINE — what this card is for, or what it just did. */
+.zlead {
+    display: flex; gap: 9px; align-items: flex-start; margin: 2px 0 12px;
+    font-size: 12.5px; line-height: 1.45; color: rgb(var(--c-fog));
+}
+.zlead svg { width: 16px; height: 16px; flex: none; color: rgb(var(--c-acc)); margin-top: 1px; }
+.zlead b { color: rgb(var(--c-tx)); }
+
+/* THE REMOVE-ALL CONFIRMATION — a page state, not a dialog, so it is read in
+   place with the count and the consequences in it. */
+.pvrepl {
+    display: flex; gap: 12px; align-items: flex-start; margin: 12px 0 0; padding: 10px 13px;
+    border-radius: 11px; font-size: 12.5px; line-height: 1.55; color: rgb(var(--c-fog));
+    background: color-mix(in srgb, rgb(var(--c-warn)) 7%, transparent);
+    border: 1px solid color-mix(in srgb, rgb(var(--c-warn)) 32%, transparent);
+}
+.pvrepl > .fog {
+    flex: none; width: 72px; padding-top: 2px; text-transform: uppercase;
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10px; font-weight: 700;
+    letter-spacing: .08em; color: rgb(var(--c-warn));
+}
+.pvrepl b { color: rgb(var(--c-tx)); }
+
+/* THE LOG — one line per event, newest first, and no geometry anywhere in it. */
+.zhist { display: flex; flex-direction: column; }
+.zhrow {
+    display: flex; align-items: baseline; gap: 10px; padding: 9px 0;
+    border-bottom: 1px dashed var(--c-ln); font-size: 12.5px;
+}
+.zhrow:last-child { border-bottom: 0; }
+.zhrow > div { flex: 1; min-width: 0; line-height: 1.45; }
+.zhrow b { font-weight: 600; color: rgb(var(--c-tx)); }
+.zhrow b span { font-weight: 400; color: rgb(var(--c-fog)); }
+.zhdot {
+    width: 7px; height: 7px; flex: none; border-radius: 50%; margin-top: 5px;
+    background: var(--c-ln2); align-self: flex-start;
+}
+.zhdot.on { background: rgb(var(--c-acc)); }
+.zhdot.bad { background: rgb(var(--c-fail)); }
+.zhwhen {
+    flex: none; font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10.5px;
+    color: rgb(var(--c-dim)); font-variant-numeric: tabular-nums;
+}
+
+/* THE EMPTY SET'S SECOND LINE — what to do about it, in the mono voice the
+   rest of the card's facts are stated in. */
+.zemono {
+    display: block; margin-top: 5px;
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10.5px;
+    color: rgb(var(--c-dim));
+}
+
+/* THE EXPANDER. A link and not a button, because opening a card is an address
+   here: the page draws the card the query names, so the state survives a write
+   and a reload the way every other page state on this screen does. */
+.ovx {
+    border: 1px solid var(--c-ln2); background: none; color: rgb(var(--c-fog));
+    border-radius: 6px; width: 20px; height: 20px; flex: none; padding: 0;
+    display: grid; place-items: center; text-decoration: none;
+}
+.ovx:hover { color: rgb(var(--c-tx)); border-color: rgb(var(--c-fog)); }
+.ovx svg { width: 11px; height: 11px; display: block; transition: transform .15s ease; }
+.ovx[aria-expanded="true"] { color: rgb(var(--c-acc)); border-color: color-mix(in srgb, rgb(var(--c-acc)) 45%, transparent); }
+.ovx[aria-expanded="true"] svg { transform: rotate(90deg); }
+.zcard.on { border-color: color-mix(in srgb, rgb(var(--c-acc)) 42%, transparent); box-shadow: inset 3px 0 0 rgb(var(--c-acc)); }
+.nmrow { display: flex; align-items: center; gap: 8px; }
+.zc-rule { border: 0; border-top: 1px solid var(--c-ln); margin: 11px 0; }
+
+/* THE OPEN CARD'S FOOTER STRIP — separate operations, visually distinct from
+   the body above them: this is where a zone's ring is replaced and where the
+   zone is removed. */
+.zcmore { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 11px 0 0; }
+.zc-ring { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.zc-ringfld { max-width: 230px; padding: 4px 8px; font-size: 11.5px; }
+.zcmore .btn.dg { margin-left: auto; }

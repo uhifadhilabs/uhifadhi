@@ -16,6 +16,7 @@ namespace Uhifadhi\Bundle\AreaBundle\Service;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\File\File;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\AreaBundle\Entity\Zone;
 use Uhifadhi\Bundle\AreaBundle\Entity\ZoneImport;
 use Uhifadhi\Bundle\AreaBundle\Exception\ZoneImportException;
 use Uhifadhi\Bundle\AreaBundle\Exception\ZoneOverlapException;
@@ -127,7 +128,7 @@ final readonly class ZoneImportService
      *
      * @throws ZoneImportException when the file cannot be read at all
      */
-    public function plan(AreaOfInterest $area, File $file, string $originalName): ZoneImportPlan
+    public function plan(AreaOfInterest $area, File $file, string $originalName, ?string $preferred = null): ZoneImportPlan
     {
         $features = $this->featuresOf($file, $originalName);
 
@@ -157,7 +158,7 @@ final readonly class ZoneImportService
             throw ZoneImportException::noFeatures();
         }
 
-        $nameProperty = $this->namePropertyOf($areal);
+        $nameProperty = $this->namePropertyOf($areal, $preferred);
 
         $planned = [];
         foreach ($areal as $feature) {
@@ -276,6 +277,55 @@ final readonly class ZoneImportService
             $result->ignoredProperties,
             $result->fileName,
         );
+    }
+
+    /**
+     * ONE RING, OUT OF A SINGLE-FEATURE FILE, FOR A ZONE THAT ALREADY EXISTS.
+     *
+     * THE SAME VALIDATION PATH AS AN IMPORT, and that is the whole reason this
+     * lives here rather than beside the zone: a ring that arrives one at a time
+     * is held to the invariant a ring that arrives eleven at a time is held to
+     * — inside the boundary, sharing interior with no sibling — and the zone
+     * being redrawn is excluded from its own check, or every edit would collide
+     * with itself.
+     *
+     * A FILE WITH MORE THAN ONE POLYGON IS REFUSED. Replacing one zone with
+     * several is not a replacement, and picking one of them for somebody is
+     * worse than asking.
+     *
+     * @return string the MultiPolygon a zone's column takes
+     *
+     * @throws ZoneImportException when the file is not one usable polygon for this zone
+     */
+    public function ringFor(Zone $zone, File $file, string $originalName): string
+    {
+        $area = $zone->getArea();
+        if (null === $area) {
+            throw new \LogicException('A zone always belongs to an area.');
+        }
+
+        $features = array_values(array_filter(
+            $this->featuresOf($file, $originalName),
+            fn (array $feature): bool => \in_array($this->geometryTypeOf($feature), self::AREAL_GEOMETRIES, true),
+        ));
+
+        if (1 !== \count($features)) {
+            throw ZoneImportException::notOneRing(\count($features));
+        }
+
+        $name = (string) $zone->getName();
+        $geom = $this->geometryOf($features[0], $name);
+
+        if (!$this->zoneRepository->stAreaCovers($area, $geom)) {
+            throw ZoneImportException::ringOutsideTheBoundary($name, $area->getName() ?? 'this area');
+        }
+
+        $conflict = $this->zoneRepository->findStInteriorConflict($area, $geom, $zone);
+        if (null !== $conflict) {
+            throw ZoneImportException::ringOverlaps($conflict->getName() ?? '');
+        }
+
+        return $geom;
     }
 
     /**
@@ -447,9 +497,20 @@ final readonly class ZoneImportService
      *
      * @param list<array<array-key, mixed>> $features
      */
-    private function namePropertyOf(array $features): string
+    private function namePropertyOf(array $features, ?string $preferred = null): string
     {
-        foreach (self::NAME_PROPERTIES as $property) {
+        /*
+         * THE PERSON'S CHOICE WINS WHERE IT WORKS. A file with both `Name` and
+         * `layer` in it has two plausible answers, and the one who exported it
+         * knows which; a choice that does NOT name every feature is not
+         * honoured silently, because a scheme half named out of one column and
+         * half out of another is a scheme nobody can check.
+         */
+        $order = null !== $preferred && \in_array($preferred, self::NAME_PROPERTIES, true)
+            ? [$preferred, ...self::NAME_PROPERTIES]
+            : self::NAME_PROPERTIES;
+
+        foreach ($order as $property) {
             foreach ($features as $feature) {
                 if ('' === $this->propertyOf($feature, $property)) {
                     continue 2;
