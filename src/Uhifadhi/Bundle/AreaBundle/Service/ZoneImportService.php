@@ -344,17 +344,28 @@ final readonly class ZoneImportService
     private function verdict(AreaOfInterest $area, array $feature, string $nameProperty, array $above): ZoneFeaturePlan
     {
         $name = $this->propertyOf($feature, $nameProperty);
+        $unusable = ZoneFeaturePlan::arriving($name, '{}', null);
+
+        /*
+         * EVERY FEATURE HERE DECLARES A POLYGON OR NOTHING — a point layer was
+         * counted and set aside before this — so there are exactly two ways to
+         * fail, and each gets its own short sentence rather than the reader
+         * being handed the parser's.
+         */
+        if (!\is_array($feature['geometry'] ?? null)) {
+            return $unusable->noGeometry();
+        }
 
         try {
             $geom = $this->geometryOf($feature, $name);
-        } catch (ZoneImportException $e) {
-            return ZoneFeaturePlan::arriving($name, '{}', null)->unusableGeometry($e->getMessage());
+        } catch (ZoneImportException) {
+            return $unusable->notAPolygon();
         }
 
         $planned = ZoneFeaturePlan::arriving($name, $geom, (int) round($this->zoneRepository->stGeometryKm2($geom)));
 
         if (!$this->zoneRepository->stAreaCovers($area, $geom)) {
-            return $planned->outsideTheBoundary($area->getName() ?? 'this area');
+            return $planned->outsideTheAreaBoundary();
         }
 
         foreach ($above as $earlier) {
@@ -432,17 +443,17 @@ final readonly class ZoneImportService
          * be told is the format.
          */
         if (!\in_array(strtolower(pathinfo($originalName, \PATHINFO_EXTENSION)), self::EXTENSIONS, true)) {
-            throw ZoneImportException::notGeoJson(\sprintf('"%s" is not one of those.', $originalName));
+            throw ZoneImportException::notGeoJson(\sprintf('"%s" is not .geojson or .json', $originalName));
         }
 
         try {
             $document = json_decode((string) file_get_contents($file->getPathname()), true, 512, \JSON_THROW_ON_ERROR);
         } catch (\JsonException $e) {
-            throw ZoneImportException::notGeoJson($e->getMessage().'.', $e);
+            throw ZoneImportException::notGeoJson(lcfirst($e->getMessage()), $e);
         }
 
         if (!\is_array($document)) {
-            throw ZoneImportException::notGeoJson('The file did not contain a GeoJSON object.');
+            throw ZoneImportException::notGeoJson('it holds no GeoJSON object');
         }
 
         $this->assertWgs84($document);

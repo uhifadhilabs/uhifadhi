@@ -102,7 +102,7 @@ final class ZoneAdditiveImportTest extends IntegrationTestCase
         $flagged = $plan->flagged();
         self::assertCount(1, $flagged);
         self::assertSame('Western Sector', $flagged[0]->name);
-        self::assertStringContainsString('name already here', $flagged[0]->why());
+        self::assertSame('name already here — rename it in the file, or edit the zone', $flagged[0]->why());
     }
 
     public function testARingThatOverlapsAStoredZoneIsFlaggedWithThatZonesNameAndTheOverlap(): void
@@ -156,7 +156,7 @@ final class ZoneAdditiveImportTest extends IntegrationTestCase
 
         self::assertSame(['Western Sector'], $plan->arrivingNames());
         self::assertSame('Western Sector', $plan->flagged()[0]->whySubject);
-        self::assertStringContainsString('in this same file', $plan->flagged()[0]->why());
+        self::assertSame('overlaps Western Sector in this file', $plan->flagged()[0]->why());
     }
 
     public function testADuplicateNameInTheFileFlagsTheSecondOccurrence(): void
@@ -167,7 +167,7 @@ final class ZoneAdditiveImportTest extends IntegrationTestCase
         ]));
 
         self::assertSame(['Western Sector'], $plan->arrivingNames());
-        self::assertStringContainsString('used twice in the file', $plan->flagged()[0]->why());
+        self::assertSame('this name is used twice in the file', $plan->flagged()[0]->why());
     }
 
     public function testAFeatureOutsideTheAreaBoundaryIsFlaggedAndNamed(): void
@@ -180,7 +180,7 @@ final class ZoneAdditiveImportTest extends IntegrationTestCase
         ]));
 
         self::assertSame(['Western Sector'], $plan->arrivingNames());
-        self::assertStringContainsString('outside the boundary', $plan->flagged()[0]->why());
+        self::assertSame('outside the area boundary', $plan->flagged()[0]->why());
     }
 
     /**
@@ -213,7 +213,7 @@ final class ZoneAdditiveImportTest extends IntegrationTestCase
         ], \JSON_THROW_ON_ERROR));
 
         self::assertSame(['Western Sector'], $plan->arrivingNames());
-        self::assertStringContainsString('not a polygon', $plan->flagged()[0]->why());
+        self::assertSame('no geometry in the file', $plan->flagged()[0]->why());
     }
 
     /** A point layer is counted and named, not turned into a zone and not refused. */

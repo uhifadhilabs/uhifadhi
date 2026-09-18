@@ -26,6 +26,11 @@ namespace Uhifadhi\Bundle\AreaBundle\Model;
  * confirmed in the next, and the file is gone by then: what the confirm writes
  * is this string, re-checked against the area as it stands at that moment.
  *
+ * A REASON IS ONE LINE, and it names a zone or a feature — never the area.
+ * The list is read by scanning it, the area is the page, and a sentence that
+ * wraps to three rows turns the scan into reading. The length is held by
+ * {@see \Uhifadhi\Bundle\AreaBundle\Tests\Unit\Model\ZoneFeaturePlanTest}.
+ *
  * THE REASON COMES IN THREE PIECES — a lead, the thing it is about, and a tail
  * — because the preview names the conflicting zone in bold and a single
  * sentence carrying markup would be a template written in PHP. {@see why()}
@@ -65,7 +70,7 @@ final readonly class ZoneFeaturePlan
     /** A second feature in the same file wearing a name an earlier one already took. */
     public function nameUsedTwiceInTheFile(): self
     {
-        return $this->because('this name is used twice in the file — the first of the two arrives');
+        return $this->because('this name is used twice in the file');
     }
 
     /**
@@ -80,18 +85,29 @@ final readonly class ZoneFeaturePlan
     /** Two features of one file cannot both arrive when they share interior. */
     public function overlapsFeatureInTheFile(string $featureName): self
     {
-        return $this->because('overlaps ', $featureName, ' in this same file');
+        return $this->because('overlaps ', $featureName, ' in this file');
     }
 
-    public function outsideTheBoundary(string $areaName): self
+    /**
+     * THE AREA IS NOT NAMED, because the area is the page: the heading above
+     * this list already says which one, and repeating it here costs two thirds
+     * of the row and tells the reader nothing they cannot see.
+     */
+    public function outsideTheAreaBoundary(): self
     {
-        return $this->because('falls outside the boundary of ', $areaName, ' — a zone subdivides its area');
+        return $this->because('outside the area boundary');
     }
 
-    /** A feature with no geometry, or one whose geometry is not an area at all. */
-    public function unusableGeometry(string $detail): self
+    /** A zone name with nothing behind it — somebody meant it to be a zone. */
+    public function noGeometry(): self
     {
-        return $this->because('not a polygon — '.$detail);
+        return $this->because('no geometry in the file');
+    }
+
+    /** A feature that declares a polygon the reader could not make one out of. */
+    public function notAPolygon(): self
+    {
+        return $this->because('not a usable polygon');
     }
 
     public function isArriving(): bool
