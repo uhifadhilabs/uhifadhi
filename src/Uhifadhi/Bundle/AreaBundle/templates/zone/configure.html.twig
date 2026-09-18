@@ -27,6 +27,12 @@
 
 {% block stylesheets %}
     {{ parent() }}
+    {# The platform's one map stylesheet — the plate's height, its chrome and
+       its legend — before this bundle's own sheet, exactly as the overview and
+       the edit screen link it. A page that draws a plate and does not link this
+       renders a 63-pixel box, a legend of raw text and a bare zoom control:
+       every class shipped by somebody and none of them served. #}
+    <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Bundle\\AtlasBundle\\AtlasBundle::STYLESHEET')) }}">
     {{ include('@Area/_stylesheets.html.twig') }}
 {% endblock %}
 

@@ -1018,6 +1018,15 @@ table.tbl tr:hover .open-btn {
 .upl-zone .lead a { color: var(--acc); text-decoration: none; font-weight: 600; }
 .upl-zone > svg { display: block; color: inherit; }
 .upl-kinds { font: 500 9.5px "JetBrains Mono", monospace; letter-spacing: .06em; color: var(--dim); line-height: 1.6; }
+/* THE INPUT IS THE ZONE'S WHOLE HIT AREA ALREADY, so the browser's own
+   "Choose file" control beside our caption would be the same offer twice —
+   and it lands on top of the caption, which is what it looked like. */
+.upl-zone input[type="file"] { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+/* THE RESTING DROPZONE: the same zone collapsed to one row, for a surface that
+   already holds something and is offering to take more. */
+.upl-zone.slim { flex-direction: row; align-items: center; gap: 10px; padding: 11px 14px; text-align: left; border-width: 1.5px; }
+.upl-zone.slim .lead { flex: 1; min-width: 150px; font-size: 12.5px; }
+.upl-zone.slim .upl-kinds { flex: none; }
 
 /* ── the queue: one row per file, one height per row ───────────── */
 .upl-list { display: flex; flex-direction: column; gap: 7px; width: 100%; max-width: 540px; margin-top: 2px; }
