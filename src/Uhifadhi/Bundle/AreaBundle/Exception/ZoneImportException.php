@@ -87,29 +87,4 @@ final class ZoneImportException extends \RuntimeException
             implode(', ', $properties),
         ));
     }
-
-    public static function duplicateInFile(string $name): self
-    {
-        return new self(\sprintf(
-            'The name "%s" is used twice in this file. Zone names are unique within an area, so rename one of the two and import it again.',
-            $name,
-        ));
-    }
-
-    public static function nameAlreadyUsed(string $name): self
-    {
-        return new self(\sprintf(
-            'This area already has a zone called "%s". Rename the one in the file, or delete the existing zone first.',
-            $name,
-        ));
-    }
-
-    public static function outsideTheBoundary(string $name, string $areaName): self
-    {
-        return new self(\sprintf(
-            'Zone "%s" falls outside the boundary of %s. A zone subdivides its area, so every part of it has to lie inside the area boundary.',
-            $name,
-            $areaName,
-        ));
-    }
 }

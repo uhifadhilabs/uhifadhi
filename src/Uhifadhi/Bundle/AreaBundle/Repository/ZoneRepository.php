@@ -159,6 +159,44 @@ class ZoneRepository extends SpatialEntityRepository
     }
 
     /**
+     * THE GROUND A CANDIDATE RING COVERS, on the spheroid, before it is stored.
+     * The preview prints a size beside every feature, and a size computed from
+     * degrees in PHP is wrong by a factor that grows with latitude — so the
+     * database answers, exactly as it does for a zone that already exists.
+     */
+    public function stGeometryKm2(string $geoJson): float
+    {
+        $km2 = $this->getEntityManager()->getConnection()->fetchOne(
+            'SELECT ST_Area(ST_GeomFromGeoJSON(:geom)::geography) / 1000000.0',
+            ['geom' => $geoJson],
+        );
+
+        return is_numeric($km2) ? (float) $km2 : 0.0;
+    }
+
+    /**
+     * HOW MUCH GROUND A CANDIDATE RING WOULD TAKE FROM A ZONE THAT IS ALREADY
+     * THERE. "Overlaps Crater" is a refusal; "overlaps Crater by 41 km²" is a
+     * refusal somebody can act on, because it says whether the file is wrong or
+     * the stored zone is.
+     */
+    public function stOverlapKm2(Zone $zone, string $geoJson): float
+    {
+        $id = $zone->getId();
+        if (null === $id) {
+            return 0.0;
+        }
+
+        $km2 = $this->getEntityManager()->getConnection()->fetchOne(
+            'SELECT ST_Area(ST_Intersection(z.geom, ST_GeomFromGeoJSON(:geom))::geography) / 1000000.0'
+            .' FROM zone z WHERE z.id = :id',
+            ['id' => $id, 'geom' => $geoJson],
+        );
+
+        return is_numeric($km2) ? (float) $km2 : 0.0;
+    }
+
+    /**
      * The same interior test between two geometries that are not stored yet —
      * what an import needs to compare the features of one file against each
      * other before writing any of them.

@@ -19,6 +19,8 @@ use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Entity\ZoneImport;
 use Uhifadhi\Bundle\AreaBundle\Exception\ZoneImportException;
 use Uhifadhi\Bundle\AreaBundle\Exception\ZoneOverlapException;
+use Uhifadhi\Bundle\AreaBundle\Model\ZoneFeaturePlan;
+use Uhifadhi\Bundle\AreaBundle\Model\ZoneImportPlan;
 use Uhifadhi\Bundle\AreaBundle\Model\ZoneImportResult;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
 
@@ -48,11 +50,15 @@ use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
  * the scheme somewhere off the coast of Africa, so it is refused by name and
  * the person is told to export as 4326.
  *
- * ALL OR NOTHING. A subdivision half-imported is not a smaller subdivision, it
- * is a wrong one — the zone invariant would then hold over a scheme that does
- * not exist. Every structural refusal happens before anything is written, and
- * the writes themselves run in one transaction that is rolled back on the first
- * spatial refusal, so an area refused an import has exactly the zones it had.
+ * ADDITIVE, AND NEVER OVERWRITING. An empty area takes every valid feature; an
+ * area that already has zones takes every feature whose name is free and whose
+ * ring shares interior with nothing. The rest are FLAGGED with their reason and
+ * left where they are — a partial import is legitimate precisely because
+ * nothing was destroyed to make room for it, and the person chose the subset.
+ *
+ * TWO STEPS, ONE DECISION. {@see plan()} reads the file and states a verdict per
+ * feature; {@see apply()} writes the subset it is given, in one transaction,
+ * re-checking each feature against the area as it stands at that moment.
  *
  * THE FILE IS NOT KEPT. It is read, validated, turned into geometry and let go;
  * what survives is the geometry in PostGIS and one {@see ZoneImport} row of
@@ -72,6 +78,13 @@ final readonly class ZoneImportService
      * usable, so it answers only when nothing better does.
      */
     public const array NAME_PROPERTIES = ['name', 'Name', 'NAME', 'zone', 'Zone', 'title', 'layer'];
+
+    /**
+     * THE GEOMETRY TYPES A ZONE CAN BE. Anything else in the collection is
+     * something other than a zone — a station point, a track — and is counted
+     * and named rather than refused: one export often carries them all.
+     */
+    private const array AREAL_GEOMETRIES = ['Polygon', 'MultiPolygon'];
 
     /** RFC 7946's own media type, plus what a browser sends for a `.geojson`. */
     private const array EXTENSIONS = ['geojson', 'json'];
@@ -98,69 +111,258 @@ final readonly class ZoneImportService
     }
 
     /**
-     * THE SCHEME, ONTO AN AREA THAT ALREADY EXISTS.
+     * WHAT THIS FILE WOULD DO TO THIS AREA — every feature, with a verdict, and
+     * nothing written.
+     *
+     * A WHOLE FILE IS REFUSED FOR THREE REASONS AND NO OTHERS: it cannot be read
+     * as GeoJSON, it carries no property that names every feature, or its
+     * coordinates are projected rather than degrees. Those are files nobody can
+     * act on feature by feature. Everything else — a name the area already has,
+     * a ring over a zone that is already there, ground outside the boundary, a
+     * feature that is not a polygon at all — is a line in the preview with its
+     * reason beside it, because the rest of the file still arrives.
+     *
+     * THE FILE IS READ HERE AND LET GO. The plan carries geometry as strings, so
+     * the confirm that follows needs neither the document nor a copy of it.
+     *
+     * @throws ZoneImportException when the file cannot be read at all
+     */
+    public function plan(AreaOfInterest $area, File $file, string $originalName): ZoneImportPlan
+    {
+        $features = $this->featuresOf($file, $originalName);
+
+        $skippedGeometries = [];
+        $areal = [];
+        foreach ($features as $feature) {
+            $type = $this->geometryTypeOf($feature);
+
+            /*
+             * A POINT IS NOT A SMALL ZONE. A scheme exported beside its stations
+             * carries them in the same collection, and counting them is the
+             * honest answer: they are stated in the summary and never offered as
+             * something to import. A feature with NO geometry is a different
+             * thing — a zone name with nothing behind it — and stays a flagged
+             * line, because somebody meant it to be a zone.
+             */
+            if (null !== $type && !\in_array($type, self::AREAL_GEOMETRIES, true)) {
+                $skippedGeometries[$type] = ($skippedGeometries[$type] ?? 0) + 1;
+
+                continue;
+            }
+
+            $areal[] = $feature;
+        }
+
+        if ([] === $areal) {
+            throw ZoneImportException::noFeatures();
+        }
+
+        $nameProperty = $this->namePropertyOf($areal);
+
+        $planned = [];
+        foreach ($areal as $feature) {
+            $planned[] = $this->verdict($area, $feature, $nameProperty, $planned);
+        }
+
+        return new ZoneImportPlan(
+            $originalName,
+            $nameProperty,
+            $this->ignoredPropertiesOf($areal, $nameProperty),
+            $planned,
+            $skippedGeometries,
+        );
+    }
+
+    /**
+     * THE SUBSET THE PERSON CONFIRMED, WRITTEN IN ONE TRANSACTION.
+     *
+     * THE PLAN IS NOT THE AUTHORITY. It was made against the area as it stood in
+     * an earlier request, and a zone written since can have taken a name or the
+     * ground; so every feature is checked again here, against the database, and
+     * one that no longer fits is reported rather than forced.
+     *
+     * PARTIAL IS NOT FAILURE. Nothing is overwritten to make room, so a run that
+     * writes nine of eleven has done exactly what was asked of it. The
+     * transaction is there so that a run either writes its whole subset or
+     * writes none of it — never half a confirm.
      *
      * $importedBy is the identifier of whoever is importing where that is known
      * — a screen knows, a fixture loader does not — and is recorded as
      * provenance rather than used for anything.
      *
-     * @throws ZoneImportException when the file, or any one feature in it, cannot become a zone
+     * @param list<string> $names the features to write, by the names the plan lists
+     */
+    public function apply(AreaOfInterest $area, ZoneImportPlan $plan, array $names, ?string $importedBy = null): ZoneImportResult
+    {
+        $wanted = [];
+        foreach ($plan->arriving() as $feature) {
+            if (\in_array($feature->name, $names, true)) {
+                $wanted[] = $feature;
+            }
+        }
+
+        $added = [];
+        $skipped = [];
+
+        if ([] !== $wanted) {
+            $this->entityManager->wrapInTransaction(function () use ($area, $plan, $wanted, $importedBy, &$added, &$skipped): void {
+                $import = new ZoneImport()
+                    ->setArea($area)
+                    ->setFileName($plan->fileName)
+                    ->setImportedAt(new \DateTimeImmutable())
+                    ->setImportedBy($importedBy)
+                    ->setZoneCount(0)
+                    ->setNameProperty($plan->nameProperty);
+                $this->entityManager->persist($import);
+
+                foreach ($wanted as $feature) {
+                    $geom = (string) $feature->geom;
+
+                    $refusal = $this->refusalOf($area, $feature->name, $geom);
+                    if (null !== $refusal) {
+                        $skipped[$feature->name] = $refusal;
+
+                        continue;
+                    }
+
+                    try {
+                        $this->zones->create($area, $feature->name, $geom)->setImport($import);
+                    } catch (ZoneOverlapException $e) {
+                        $skipped[$feature->name] = $e->getMessage();
+
+                        continue;
+                    }
+
+                    $added[] = $feature->name;
+                }
+
+                $import->setZoneCount(\count($added));
+                $this->entityManager->flush();
+            });
+        }
+
+        return new ZoneImportResult(
+            $added,
+            $skipped,
+            $plan->nameProperty,
+            $plan->ignoredProperties,
+            $plan->fileName,
+        );
+    }
+
+    /**
+     * THE WHOLE FILE, ADDED — what a console importer or a fixture loader wants,
+     * where there is nobody to confirm a subset. It is the same additive run the
+     * screen performs: the arriving features are written and the flagged ones
+     * are reported, never forced.
+     *
+     * @throws ZoneImportException when the file cannot be read at all
      */
     public function importInto(AreaOfInterest $area, File $file, string $originalName, ?string $importedBy = null): ZoneImportResult
     {
-        $features = $this->featuresOf($file, $originalName);
-        $nameProperty = $this->namePropertyOf($features);
+        $plan = $this->plan($area, $file, $originalName);
 
-        /** @var list<array{name: string, geom: string}> $candidates */
-        $candidates = [];
-        foreach ($features as $feature) {
-            $name = $this->nameOf($feature, $nameProperty);
-            $candidates[] = ['name' => $name, 'geom' => $this->geometryOf($feature, $name)];
+        $result = $this->apply($area, $plan, $plan->arrivingNames(), $importedBy);
+
+        $skipped = $result->skipped;
+        foreach ($plan->flagged() as $feature) {
+            $skipped[$feature->name] = $feature->why();
         }
 
-        $this->assertNamesAreFree($area, $candidates);
-
-        $import = new ZoneImport()
-            ->setArea($area)
-            ->setFileName($originalName)
-            ->setImportedAt(new \DateTimeImmutable())
-            ->setImportedBy($importedBy)
-            ->setZoneCount(\count($candidates))
-            ->setNameProperty($nameProperty);
-
-        /*
-         * ONE TRANSACTION. The zone invariant is measured against what is
-         * already stored, so the features are written one at a time and each is
-         * checked against the ones before it — which is also what makes the
-         * message name the pair. A refusal rolls the whole thing back, so the
-         * intermediate rows never existed.
-         */
-        $this->entityManager->wrapInTransaction(function () use ($area, $candidates, $import): void {
-            $this->entityManager->persist($import);
-
-            foreach ($candidates as $candidate) {
-                if (!$this->zoneRepository->stAreaCovers($area, $candidate['geom'])) {
-                    throw ZoneImportException::outsideTheBoundary($candidate['name'], $area->getName() ?? 'this area');
-                }
-
-                try {
-                    $zone = $this->zones->create($area, $candidate['name'], $candidate['geom']);
-                } catch (ZoneOverlapException $e) {
-                    throw new ZoneImportException($e->getMessage(), previous: $e);
-                }
-
-                $zone->setImport($import);
-            }
-
-            $this->entityManager->flush();
-        });
-
         return new ZoneImportResult(
-            array_column($candidates, 'name'),
-            $nameProperty,
-            $this->ignoredPropertiesOf($features, $nameProperty),
-            $originalName,
+            $result->added,
+            $skipped,
+            $result->nameProperty,
+            $result->ignoredProperties,
+            $result->fileName,
         );
+    }
+
+    /**
+     * ONE FEATURE'S VERDICT, measured against the area and against the features
+     * already planned above it.
+     *
+     * THE ORDER OF THE CHECKS IS THE ORDER OF THE ANSWERS somebody can act on.
+     * A feature whose name is taken AND whose ring overlaps the zone holding
+     * that name has one problem, not two, and it is the name: renaming it in
+     * the file is what they will do.
+     *
+     * @param array<array-key, mixed> $feature
+     * @param list<ZoneFeaturePlan>   $above   the features planned before this one
+     */
+    private function verdict(AreaOfInterest $area, array $feature, string $nameProperty, array $above): ZoneFeaturePlan
+    {
+        $name = $this->propertyOf($feature, $nameProperty);
+
+        try {
+            $geom = $this->geometryOf($feature, $name);
+        } catch (ZoneImportException $e) {
+            return ZoneFeaturePlan::arriving($name, '{}', null)->unusableGeometry($e->getMessage());
+        }
+
+        $planned = ZoneFeaturePlan::arriving($name, $geom, (int) round($this->zoneRepository->stGeometryKm2($geom)));
+
+        if (!$this->zoneRepository->stAreaCovers($area, $geom)) {
+            return $planned->outsideTheBoundary($area->getName() ?? 'this area');
+        }
+
+        foreach ($above as $earlier) {
+            if ($earlier->name === $name) {
+                return $planned->nameUsedTwiceInTheFile();
+            }
+        }
+
+        if (null !== $this->zoneRepository->findOneForName($area, $name)) {
+            return $planned->nameAlreadyHere();
+        }
+
+        foreach ($above as $earlier) {
+            if ($earlier->isArriving() && $this->zones->conflicts((string) $earlier->geom, $geom)) {
+                return $planned->overlapsFeatureInTheFile($earlier->name);
+            }
+        }
+
+        $conflict = $this->zoneRepository->findStInteriorConflict($area, $geom);
+        if (null !== $conflict) {
+            return $planned->overlapsZone(
+                $conflict->getName() ?? '',
+                (int) round($this->zoneRepository->stOverlapKm2($conflict, $geom)),
+            );
+        }
+
+        return $planned;
+    }
+
+    /**
+     * Why this feature cannot be written NOW, or null — the confirm's own check,
+     * run against the database inside the transaction rather than against the
+     * plan's memory of it.
+     */
+    private function refusalOf(AreaOfInterest $area, string $name, string $geom): ?string
+    {
+        if (!$this->zoneRepository->stAreaCovers($area, $geom)) {
+            return \sprintf('falls outside the boundary of %s', $area->getName() ?? 'this area');
+        }
+
+        if (null !== $this->zoneRepository->findOneForName($area, $name)) {
+            return 'name already here';
+        }
+
+        return null;
+    }
+
+    /**
+     * The feature's geometry type as the file spells it, or null where the
+     * feature carries none.
+     *
+     * @param array<array-key, mixed> $feature
+     */
+    private function geometryTypeOf(array $feature): ?string
+    {
+        $geometry = $feature['geometry'] ?? null;
+        $type = \is_array($geometry) ? ($geometry['type'] ?? null) : null;
+
+        return \is_string($type) ? $type : null;
     }
 
     /**
@@ -272,12 +474,6 @@ final readonly class ZoneImportService
         throw ZoneImportException::noName(1, self::NAME_PROPERTIES);
     }
 
-    /** @param array<array-key, mixed> $feature */
-    private function nameOf(array $feature, string $nameProperty): string
-    {
-        return $this->propertyOf($feature, $nameProperty);
-    }
-
     /** The property as a trimmed string, or '' where it is absent, null or not scalar. */
     private function propertyOf(mixed $feature, string $property): string
     {
@@ -302,28 +498,6 @@ final readonly class ZoneImportService
             return new GeoJsonNormalizer()->toMultiPolygon($feature);
         } catch (\InvalidArgumentException $e) {
             throw ZoneImportException::unusableGeometry($name, $e->getMessage(), $e);
-        }
-    }
-
-    /**
-     * NAMES ARE UNIQUE WITHIN AN AREA, and both ways of breaking that are worth
-     * separate sentences: two features called the same thing is a file to fix,
-     * a name the area already carries is a zone to rename or remove.
-     *
-     * @param list<array{name: string, geom: string}> $candidates
-     */
-    private function assertNamesAreFree(AreaOfInterest $area, array $candidates): void
-    {
-        $seen = [];
-        foreach ($candidates as $candidate) {
-            if (isset($seen[$candidate['name']])) {
-                throw ZoneImportException::duplicateInFile($candidate['name']);
-            }
-            $seen[$candidate['name']] = true;
-
-            if (null !== $this->zoneRepository->findOneForName($area, $candidate['name'])) {
-                throw ZoneImportException::nameAlreadyUsed($candidate['name']);
-            }
         }
     }
 

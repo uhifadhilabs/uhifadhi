@@ -14,26 +14,33 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\AreaBundle\Model;
 
 /**
- * WHAT AN IMPORT DID, IN THE WORDS THE SUMMARY PRINTS.
+ * WHAT A CONFIRMED IMPORT DID, IN THE WORDS THE SUMMARY PRINTS.
  *
- * A file is accepted with things left out of it — the KML residue an export
- * carries, the merge fields a layer merge added — and an import that quietly
- * dropped them would leave somebody wondering whether a description or a colour
- * had been kept somewhere. So the summary states BOTH halves: the zones that
- * were made, and the properties that were read past. It also names the property
- * the names came out of, because a file with both `Name` and `layer` in it has
- * two plausible answers and only one was used.
+ * BOTH HALVES ARE STATED. An import adds and never overwrites, so a run that
+ * left two features out is an ordinary run and not a failure — but a person who
+ * uploaded eleven and got nine has to be told which two and why, or they will
+ * upload the file again.
+ *
+ * WHAT ARRIVED IS NOT ALWAYS WHAT WAS PREVIEWED. The plan is made in one
+ * request and confirmed in the next, and the area can change in between, so the
+ * confirm re-checks every feature and reports what it actually found.
+ *
+ * It also names the property the names came out of and everything the file
+ * carried that was read past, because a file with both `Name` and `layer` in it
+ * has two plausible answers and only one was used.
  */
 final readonly class ZoneImportResult
 {
     /**
-     * @param list<string> $zoneNames         the zones created, in file order
-     * @param string       $nameProperty      which property supplied those names
-     * @param list<string> $ignoredProperties every other property the file carried, sorted
-     * @param string       $fileName          the name of the file that was read, and not kept
+     * @param list<string>          $added             the zones created, by name, in file order
+     * @param array<string, string> $skipped           the features left out, name to reason
+     * @param string                $nameProperty      which property supplied the names
+     * @param list<string>          $ignoredProperties every other property the file carried, sorted
+     * @param string                $fileName          the name of the file that was read, and not kept
      */
     public function __construct(
-        public array $zoneNames,
+        public array $added,
+        public array $skipped,
         public string $nameProperty,
         public array $ignoredProperties,
         public string $fileName,
@@ -42,6 +49,11 @@ final readonly class ZoneImportResult
 
     public function count(): int
     {
-        return \count($this->zoneNames);
+        return \count($this->added);
+    }
+
+    public function skippedCount(): int
+    {
+        return \count($this->skipped);
     }
 }

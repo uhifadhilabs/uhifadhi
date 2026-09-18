@@ -1,0 +1,112 @@
+<?php
+
+declare(strict_types=1);
+
+/*
+ * This file is part of the Uhifadhi core.
+ *
+ * (c) Ezekiel Mjema <https://github.com/eemjema>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace Uhifadhi\Bundle\AreaBundle\Model;
+
+/**
+ * ONE FEATURE OF AN UPLOADED FILE, AND WHETHER IT IS ARRIVING.
+ *
+ * AN IMPORT ADDS AND NEVER OVERWRITES, so a feature the area cannot take is not
+ * a reason to refuse the file: it is a line in the preview with the reason
+ * beside it. A feature is arriving when nothing stands in its way, and flagged
+ * when something does — and the flag carries the sentence the preview prints,
+ * because "2 features were skipped" is a number nobody can act on.
+ *
+ * THE GEOMETRY TRAVELS WITH THE VERDICT. A plan is made in one request and
+ * confirmed in the next, and the file is gone by then: what the confirm writes
+ * is this string, re-checked against the area as it stands at that moment.
+ *
+ * THE REASON COMES IN THREE PIECES — a lead, the thing it is about, and a tail
+ * — because the preview names the conflicting zone in bold and a single
+ * sentence carrying markup would be a template written in PHP. {@see why()}
+ * puts them back together for a log line and for the suite.
+ */
+final readonly class ZoneFeaturePlan
+{
+    /**
+     * @param string      $name       the zone name read out of the file's name property
+     * @param string|null $geom       the MultiPolygon GeoJSON a zone's column takes, or null where the feature had none
+     * @param int|null    $km2        the ground it covers, rounded, or null where there is no geometry to measure
+     * @param string      $whyLead    the reason up to the thing it names; empty when the feature is arriving
+     * @param string      $whySubject the zone or feature the reason is about, printed in bold; empty where there is none
+     * @param string      $whyTail    the rest of the reason
+     */
+    private function __construct(
+        public string $name,
+        public ?string $geom,
+        public ?int $km2,
+        public string $whyLead = '',
+        public string $whySubject = '',
+        public string $whyTail = '',
+    ) {
+    }
+
+    public static function arriving(string $name, string $geom, ?int $km2): self
+    {
+        return new self($name, $geom, $km2);
+    }
+
+    /** A name the area already carries. The file is the thing to change, or the zone. */
+    public function nameAlreadyHere(): self
+    {
+        return $this->because('name already here — rename it in the file, or edit the zone');
+    }
+
+    /** A second feature in the same file wearing a name an earlier one already took. */
+    public function nameUsedTwiceInTheFile(): self
+    {
+        return $this->because('this name is used twice in the file — the first of the two arrives');
+    }
+
+    /**
+     * The ring shares interior with a zone the area already has. Zones may touch
+     * along an edge; identical geometry is the extreme case of overlap.
+     */
+    public function overlapsZone(string $zoneName, ?int $km2): self
+    {
+        return $this->because('overlaps ', $zoneName, null === $km2 ? '' : \sprintf(' by %s km²', number_format($km2)));
+    }
+
+    /** Two features of one file cannot both arrive when they share interior. */
+    public function overlapsFeatureInTheFile(string $featureName): self
+    {
+        return $this->because('overlaps ', $featureName, ' in this same file');
+    }
+
+    public function outsideTheBoundary(string $areaName): self
+    {
+        return $this->because('falls outside the boundary of ', $areaName, ' — a zone subdivides its area');
+    }
+
+    /** A feature with no geometry, or one whose geometry is not an area at all. */
+    public function unusableGeometry(string $detail): self
+    {
+        return $this->because('not a polygon — '.$detail);
+    }
+
+    public function isArriving(): bool
+    {
+        return '' === $this->whyLead && null !== $this->geom;
+    }
+
+    /** The reason as one sentence, for a history line and for the suite. */
+    public function why(): string
+    {
+        return $this->whyLead.$this->whySubject.$this->whyTail;
+    }
+
+    private function because(string $lead, string $subject = '', string $tail = ''): self
+    {
+        return new self($this->name, $this->geom, $this->km2, $lead, $subject, $tail);
+    }
+}

@@ -35,10 +35,11 @@ use Uhifadhi\Bundle\AreaBundle\Tests\Integration\IntegrationTestCase;
  * it is a reason to refuse a file and none of it is stored; the summary simply
  * states what was ignored, so nobody is sent back to a text editor.
  *
- * REFUSALS ARE WHOLE-FILE AND THEY NAME THE OFFENDER. A scheme that is half
- * imported is worse than one that is not imported at all: the invariant would
- * hold over a subdivision that does not exist. So every refusal here leaves the
- * area with exactly the zones it had, and says which feature was the problem.
+ * A WHOLE FILE IS REFUSED FOR THREE REASONS AND NO OTHERS — it cannot be read
+ * as GeoJSON, it carries no property that names every feature, or its
+ * coordinates are projected rather than degrees. Those are the refusals here.
+ * What one FEATURE of a readable file can be turned away for is a verdict in
+ * the preview, and lives in {@see ZoneAdditiveImportTest}.
  */
 #[CoversClass(ZoneImportService::class)]
 #[CoversClass(ZoneImport::class)]
@@ -68,7 +69,7 @@ final class ZoneImportTest extends IntegrationTestCase
         self::assertSame(
             ['Sector 01', 'Sector 02', 'Sector 03', 'Sector 04', 'Sector 05', 'Sector 06',
                 'Sector 07', 'Sector 08', 'Sector 09', 'Sector 10', 'Sector 11'],
-            $result->zoneNames,
+            $result->added,
         );
 
         $stored = $this->em->getRepository(Zone::class)->findBy(['area' => $area], ['name' => 'ASC']);
@@ -104,7 +105,7 @@ final class ZoneImportTest extends IntegrationTestCase
         ]));
 
         self::assertSame('zone', $result->nameProperty);
-        self::assertSame(['Western Sector', 'Eastern Sector'], $result->zoneNames);
+        self::assertSame(['Western Sector', 'Eastern Sector'], $result->added);
     }
 
     /**
@@ -188,103 +189,6 @@ final class ZoneImportTest extends IntegrationTestCase
         self::assertSame(1, $bare->count());
     }
 
-    public function testTwoZonesThatShareInteriorAreRefusedAndBothAreNamed(): void
-    {
-        $area = $this->anArea();
-
-        $this->expectException(ZoneImportException::class);
-        $this->expectExceptionMessageMatches('/"Straddling Sector".*"Western Sector"/');
-
-        $this->import($area, $this->collection([
-            $this->feature(['Name' => 'Western Sector'], self::A_WEST_HALF_RING),
-            $this->feature(['Name' => 'Straddling Sector'], self::A_STRADDLING_RING),
-        ]));
-
-        self::assertSame(0, $this->countZones($area));
-    }
-
-    public function testAZoneOutsideTheAreasBoundaryIsRefusedAndNamed(): void
-    {
-        $area = $this->anArea();
-
-        $this->expectException(ZoneImportException::class);
-        $this->expectExceptionMessageMatches('/"Elsewhere Sector".*boundary/');
-
-        $this->import($area, $this->collection([
-            $this->feature(['Name' => 'Western Sector'], self::A_WEST_HALF_RING),
-            $this->feature(['Name' => 'Elsewhere Sector'], self::A_FAR_AWAY_RING),
-        ]));
-
-        self::assertSame(0, $this->countZones($area));
-    }
-
-    public function testADuplicateNameInTheFileIsRefusedAndNamed(): void
-    {
-        $area = $this->anArea();
-
-        $this->expectException(ZoneImportException::class);
-        $this->expectExceptionMessageMatches('/"Western Sector".*twice/');
-
-        $this->import($area, $this->collection([
-            $this->feature(['Name' => 'Western Sector'], self::A_WEST_HALF_RING),
-            $this->feature(['Name' => 'Western Sector'], self::A_EAST_HALF_RING),
-        ]));
-
-        self::assertSame(0, $this->countZones($area));
-    }
-
-    /** A name the area already carries is the same clash, one file later. */
-    public function testANameTheAreaAlreadyUsesIsRefusedAndNamed(): void
-    {
-        $area = $this->anArea();
-        $this->aZone($area, 'Western Sector', self::A_WEST_HALF);
-
-        $this->expectException(ZoneImportException::class);
-        $this->expectExceptionMessageMatches('/already has a zone called "Western Sector"/');
-
-        $this->import($area, $this->collection([
-            $this->feature(['Name' => 'Western Sector'], self::A_WEST_HALF_RING),
-        ]));
-
-        self::assertSame(1, $this->countZones($area));
-    }
-
-    public function testAFeatureWithNoGeometryIsRefusedAndNamed(): void
-    {
-        $area = $this->anArea();
-
-        $this->expectException(ZoneImportException::class);
-        $this->expectExceptionMessageMatches('/"Eastern Sector".*geometry/');
-
-        $this->import($area, (string) json_encode([
-            'type' => 'FeatureCollection',
-            'features' => [
-                $this->feature(['Name' => 'Western Sector'], self::A_WEST_HALF_RING),
-                ['type' => 'Feature', 'properties' => ['Name' => 'Eastern Sector'], 'geometry' => null],
-            ],
-        ], \JSON_THROW_ON_ERROR));
-
-        self::assertSame(0, $this->countZones($area));
-    }
-
-    /** A point layer is a file somebody exported the wrong layer from — say so. */
-    public function testAFeatureWhoseGeometryIsNotPolygonalIsRefusedAndNamed(): void
-    {
-        $area = $this->anArea();
-
-        $this->expectException(ZoneImportException::class);
-        $this->expectExceptionMessageMatches('/"Western Sector".*Point/');
-
-        $this->import($area, (string) json_encode([
-            'type' => 'FeatureCollection',
-            'features' => [[
-                'type' => 'Feature',
-                'properties' => ['Name' => 'Western Sector'],
-                'geometry' => ['type' => 'Point', 'coordinates' => [-29.8, -3.2]],
-            ]],
-        ], \JSON_THROW_ON_ERROR));
-    }
-
     public function testAFeatureWithNoUsableNamePropertyIsRefused(): void
     {
         $area = $this->anArea();
@@ -324,7 +228,7 @@ final class ZoneImportTest extends IntegrationTestCase
         ));
 
         self::assertSame(1, $result->count());
-        self::assertSame(['Western Sector'], $result->zoneNames);
+        self::assertSame(['Western Sector'], $result->added);
     }
 
     // ---------------------------------------------------------------- fixtures
@@ -336,8 +240,6 @@ final class ZoneImportTest extends IntegrationTestCase
      */
     private const array A_WEST_HALF_RING = [[[-30.0, -3.6, 1200.0], [-29.5, -3.6, 1200.0], [-29.5, -2.8, 1200.0], [-30.0, -2.8, 1200.0], [-30.0, -3.6, 1200.0]]];
     private const array A_EAST_HALF_RING = [[[-29.5, -3.6, 1200.0], [-29.0, -3.6, 1200.0], [-29.0, -2.8, 1200.0], [-29.5, -2.8, 1200.0], [-29.5, -3.6, 1200.0]]];
-    private const array A_STRADDLING_RING = [[[-29.75, -3.6], [-29.25, -3.6], [-29.25, -2.8], [-29.75, -2.8], [-29.75, -3.6]]];
-    private const array A_FAR_AWAY_RING = [[[10.0, 10.0], [11.0, 10.0], [11.0, 11.0], [10.0, 11.0], [10.0, 10.0]]];
 
     private function import(AreaOfInterest $area, string $document, string $originalName = 'zones.geojson'): ZoneImportResult
     {
