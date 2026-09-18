@@ -43,7 +43,8 @@
     {%- if depth == 1 %}<span>{{ item.label }}</span>
     {%- elseif depth == 2 %}<b>{{ item.label }}</b>
     {%- elseif depth == 3 %}{{ item.label }}
-    {%- elseif depth == 4 %}<i class="mdot{{ item.tone is not null ? ' ' ~ item.tone }}"></i>{{ item.label }}
+    {%- elseif depth == 4 %}<i class="mdot{{ item.tone is not null ? ' ' ~ item.tone }}"
+        {%- if item.swatch is not null %} style="background:{{ item.swatch }}"{% endif %}></i>{{ item.label }}
     {%- else %}{{ item.label }}{% endif -%}
     {%- if _kids %}<button class="chev" type="button" aria-label="Fold {{ item.label }}"
             data-action="uhifadhi--shell-bundle--sidebar-tree#fold">{{ ux_icon('shell:chevron-down') }}</button>{% endif -%}

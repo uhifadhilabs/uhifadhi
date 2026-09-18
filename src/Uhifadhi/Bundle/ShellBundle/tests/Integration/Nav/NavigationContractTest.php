@@ -226,6 +226,47 @@ final class NavigationContractTest extends ContractTestCase
     }
 
     /**
+     * A ROW'S DOT TAKES A CLASS OR A VALUE, and the shell draws both without
+     * knowing what either means.
+     *
+     * A MODULE'S HUE IS A CLASS it declares in its own stylesheet; a zone's is
+     * a VALUE its source computed from a palette, because there is no sheet
+     * that could know how many zones an installation has. The two live side by
+     * side on one rung, which is the whole point: the sidebar draws module rows
+     * and zone rows the same way.
+     */
+    public function testADotTakesAModulesClassOrARowsOwnColour(): void
+    {
+        HostKernel::$navSources = [
+            'obs' => new NavSection('Observatory', [
+                new NavItem(label: 'Areas', url: '/areas', children: [
+                    new NavItem(label: 'Test Area', url: '/areas/x', current: true, children: [
+                        new NavItem(label: 'Modules', url: '/areas/x/modules', children: [
+                            new NavItem(label: 'Incidents', url: '/areas/x/modules/incidents', tone: 'inc'),
+                        ]),
+                        new NavItem(label: 'Zones', url: '/areas/x/zones', children: [
+                            new NavItem(label: 'Crater', url: '/areas/x/zones/c', swatch: '#3FC7D4'),
+                        ]),
+                    ]),
+                ]),
+            ]),
+        ];
+
+        $crawler = $this->crawl('@fixtures/body_only_page.html.twig');
+
+        $dots = $crawler->filter('nav.nav .ntree .ntm .mdot');
+        self::assertCount(2, $dots);
+
+        // The module keeps its class and carries no inline colour.
+        self::assertSame('mdot inc', $dots->eq(0)->attr('class'));
+        self::assertNull($dots->eq(0)->attr('style'));
+
+        // The zone brings its own, and takes no class it did not ask for.
+        self::assertSame('mdot', $dots->eq(1)->attr('class'));
+        self::assertSame('background:#3FC7D4', $dots->eq(1)->attr('style'));
+    }
+
+    /**
      * ONE ACCENTED ROW IN THE TREE, AND THE PLACE ABOVE IT MARKED QUIETLY.
      *
      * The design draws a module dashboard with the accent (`on`) on the leaf

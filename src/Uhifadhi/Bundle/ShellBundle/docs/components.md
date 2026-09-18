@@ -9,6 +9,7 @@ just as much.
 - [Why it is here](#why-it-is-here)
 - [What passed the line, and what did not](#what-passed-the-line-and-what-did-not)
 - [The list](#the-list)
+- [Two ways to colour a sidebar dot](#two-ways-to-colour-a-sidebar-dot)
 - [Two rules the tests enforce](#two-rules-the-tests-enforce)
 - [What is furniture, and not yours to write](#what-is-furniture-and-not-yours-to-write)
 - [What you get without asking](#what-you-get-without-asking)
@@ -96,6 +97,32 @@ the name the design's own sheets write.
 **The colour words are not the start of a utility set.** They colour one word of
 a sentence, and they are the palette's own names. A fifth grey belongs in the
 token list or nowhere.
+
+## Two ways to colour a sidebar dot
+
+A row four rungs deep draws an identity dot, and there are two kinds of thing
+that colour it. They are not interchangeable and the difference is worth one
+paragraph, because picking the wrong one puts a palette in two places.
+
+**`NavItem::$tone` is a CLASS**, printed into `class="mdot …"`. A module's hue
+is fixed at build time and belongs to that module, so the module declares
+`.ntree .ntm .mdot.<tone>` in its own stylesheet and its navigation source
+hands the shell the class name. This is how `incidents` is amber and `roster`
+is violet without the shell naming either.
+
+**`NavItem::$swatch` is a VALUE**, printed into `style="background:…"`. Some
+rows have a colour their source *computed*: a zone's hue comes from a palette
+by its position in its area's set, so there is no class to declare and no
+stylesheet that could know how many zones an installation will have. Declaring
+them as classes would put the palette in a second place, and the map plate, its
+key and the zone cards already read it from one.
+
+The shell interprets neither — both are passthroughs, exactly like `icon`. The
+swatch is checked on the way in (`NavItem` refuses anything that is not a three-
+or six-digit hex colour), because the one thing a `style` passthrough must not
+become is a hole to write CSS through. A row may carry both, neither, or one;
+null on both keeps the shell's jade default, which is what the design gives a
+row with no colour of its own.
 
 ## Two rules the tests enforce
 
