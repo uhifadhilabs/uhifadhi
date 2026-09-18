@@ -126,38 +126,38 @@
                                 <hr class="zc-rule">
                                 {# SLICE TWO draws the card's BODY here: the module figures over the
                                    window and the station board with its posted people. #}
-                                {% if removeZone == row.uuid %}
-                                    <div class="pvrepl">
-                                        <span class="fog">Remove</span>
-                                        <div><b>{{ row.name }}</b> &middot; its ground becomes unzoned<br>no station, person or record deleted &middot; figures regroup by geometry</div>
-                                    </div>
-                                    <div class="pvfoot">
-                                        <a class="tgl" href="{{ section }}?open={{ row.uuid }}">Cancel</a>
-                                        <form method="post" action="{{ path('area_zone_remove', {uuid: area.uuidString, zone: row.uuid}) }}">
-                                            <input type="hidden" name="_token" value="{{ removeToken }}">
-                                            <button type="submit" class="cta dg">Remove {{ row.name }}</button>
-                                        </form>
-                                    </div>
-                                {% else %}
-                                    <div class="zcmore">
-                                        {# THE SAME VALIDATION PATH AS AN IMPORT — inside the boundary,
-                                           sharing interior with no sibling, this zone excluded from its
-                                           own check. A DRAWN ring is the other way in and needs a draw
-                                           mode on the atlas plate, which AtlasBundle does not have yet;
-                                           its destination is the plate controller in
-                                           AtlasBundle/assets/controllers/, writing through this same route. #}
-                                        <form class="zc-ring" method="post" enctype="multipart/form-data"
-                                              action="{{ path('area_zone_ring', {uuid: area.uuidString, zone: row.uuid}) }}">
-                                            <input type="hidden" name="_token" value="{{ ringToken }}">
-                                            <input type="file" class="fld zc-ringfld" name="zones"
-                                                   accept=".geojson,.json,application/geo+json,application/json"
-                                                   aria-label="A single-feature file for {{ row.name }}">
-                                            <button type="submit" class="btn sm" title="Replace the ring — one polygon, through the same checks">{{ ux_icon('shell:rotate-ccw') }} Replace the ring</button>
-                                        </form>
-                                        <a class="btn sm dg" href="{{ section }}?open={{ row.uuid }}&amp;remove={{ row.uuid }}"
-                                           title="Remove {{ row.name }} — its ground becomes unzoned; no station, person or record is deleted">{{ ux_icon('shell:trash-2') }} Remove the zone</a>
-                                    </div>
-                                {% endif %}
+                                <div class="zcmore">
+                                    {# THE SAME VALIDATION PATH AS AN IMPORT — inside the boundary,
+                                       sharing interior with no sibling, this zone excluded from its
+                                       own check. A DRAWN ring is the other way in and needs a draw
+                                       mode on the atlas plate, which AtlasBundle does not have yet;
+                                       its destination is the plate controller in
+                                       AtlasBundle/assets/controllers/, writing through this route. #}
+                                    <form class="zc-ring" method="post" enctype="multipart/form-data"
+                                          action="{{ path('area_zone_ring', {uuid: area.uuidString, zone: row.uuid}) }}">
+                                        <input type="hidden" name="_token" value="{{ ringToken }}">
+                                        <input type="file" class="fld zc-ringfld" name="zones"
+                                               accept=".geojson,.json,application/geo+json,application/json"
+                                               aria-label="A single-feature file for {{ row.name }}">
+                                        <button type="submit" class="btn sm" title="Replace the ring — one polygon, through the same checks">{{ ux_icon('shell:rotate-ccw') }} Replace the ring</button>
+                                    </form>
+                                    {# DESTRUCTIVE, SO IT ASKS — through the installation's reusable
+                                       confirm-modal controller, never the browser's own dialog and
+                                       never a page state of this module's invention. The button is
+                                       the form's own submit, so an installation that ships no
+                                       controller still posts, with the token, and loses nothing but
+                                       the question. #}
+                                    <form method="post" action="{{ path('area_zone_remove', {uuid: area.uuidString, zone: row.uuid}) }}">
+                                        <input type="hidden" name="_token" value="{{ removeToken }}">
+                                        <button type="submit" class="btn sm dg"
+                                                {{ stimulus_controller('confirm-modal') }}
+                                                data-action="click->confirm-modal#ask"
+                                                data-confirm-modal-title-value="Remove “{{ row.name }}”?"
+                                                data-confirm-modal-message-value="Its ground becomes unzoned, which is legal — an area is often only partly zoned. No station, person or record is deleted, and past figures regroup because they were always grouped by geometry."
+                                                data-confirm-modal-confirm-label-value="Remove the zone"
+                                                data-confirm-modal-danger-value="true">{{ ux_icon('shell:trash-2') }} Remove the zone</button>
+                                    </form>
+                                </div>
                             {% endif %}
                         </article>
                     {% endfor %}
@@ -187,21 +187,7 @@
         <div class="c" id="import">
             <span class="tab">Import zones<span class="src">&middot; additive</span></span>
 
-            {% if removingAll %}
-                <div class="pvrepl">
-                    <span class="fog">Remove all</span>
-                    <div><b>{{ set.count }} zone{{ set.count == 1 ? '' : 's' }}</b> &middot; <b>0 of 0 stations</b> become unzoned<br>no station, person or record deleted &middot; figures regroup by geometry</div>
-                </div>
-                <div class="pvfoot">
-                    <a class="btn sm" href="{{ path('area_zones_export', {uuid: area.uuidString}) }}">{{ ux_icon('shell:download') }} Download the set first</a>
-                    <a class="tgl" href="{{ section }}">Cancel</a>
-                    <form method="post" action="{{ path('area_zones_clear', {uuid: area.uuidString}) }}">
-                        <input type="hidden" name="_token" value="{{ clearToken }}">
-                        <button type="submit" class="cta dg">Remove all {{ set.count }} zone{{ set.count == 1 ? '' : 's' }}</button>
-                    </form>
-                </div>
-
-            {% elseif refusal %}
+            {% if refusal %}
                 {# THE SENTENCE IS THE REASON AND NOTHING ELSE: what to do about
                    it is the next step, not what happened. #}
                 <div class="upl-list">
@@ -228,6 +214,7 @@
                     <div class="upl-file done">
                         {{ ux_icon('shell:file-text') }}
                         <span class="nm">{{ plan.fileName }}</span>
+                        <span class="sz">{{ plan.fileSizeLabel }}</span>
                         <span class="chip ok">parsed</span>
                         <span class="upl-gap"></span>
                         <a class="upl-act x" href="{{ section }}?discard=1" aria-label="Take this file off the zone">&times;</a>
@@ -330,7 +317,21 @@
                     <div class="zsetacts">
                         <a class="btn sm" href="{{ path('area_zones_export', {uuid: area.uuidString}) }}"
                            title="{{ exportName }} &middot; FeatureCollection &middot; EPSG:4326">{{ ux_icon('shell:download') }} Export the set</a>
-                        <a class="btn sm dg" href="{{ section }}?remove-all=1">{{ ux_icon('shell:trash-2') }} Remove all {{ set.count }} zone{{ set.count == 1 ? '' : 's' }}</a>
+                        {# DESTRUCTIVE, SO IT ASKS, and the question carries the four facts
+                           the design states: how many zones, how many stations fall out of
+                           one, what is NOT deleted, and why past figures still add up. The
+                           export sits immediately beside it, because a set nobody
+                           downloaded is a set nobody can put back. #}
+                        <form method="post" action="{{ path('area_zones_clear', {uuid: area.uuidString}) }}">
+                            <input type="hidden" name="_token" value="{{ clearToken }}">
+                            <button type="submit" class="btn sm dg"
+                                    {{ stimulus_controller('confirm-modal') }}
+                                    data-action="click->confirm-modal#ask"
+                                    data-confirm-modal-title-value="Remove all {{ set.count }} zone{{ set.count == 1 ? '' : 's' }}?"
+                                    data-confirm-modal-message-value="{{ set.count }} zone{{ set.count == 1 ? '' : 's' }} · 0 of 0 stations become unzoned. No station, person or record is deleted, and past figures regroup because they were always grouped by geometry. Download the set first: nothing keeps superseded geometry."
+                                    data-confirm-modal-confirm-label-value="Remove all {{ set.count }} zone{{ set.count == 1 ? '' : 's' }}"
+                                    data-confirm-modal-danger-value="true">{{ ux_icon('shell:trash-2') }} Remove all {{ set.count }} zone{{ set.count == 1 ? '' : 's' }}</button>
+                        </form>
                         <span class="zfrag">one FeatureCollection &middot; EPSG:4326 &middot; names and stored properties</span>
                     </div>
                 {% endif %}

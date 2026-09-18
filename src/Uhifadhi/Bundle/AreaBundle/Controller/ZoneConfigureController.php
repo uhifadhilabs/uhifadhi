@@ -27,7 +27,7 @@ use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Model\ZonePalette;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneEventRepository;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneExportService;
-use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportDraftService;
+use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportDraftStore;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneSetService;
 
@@ -61,20 +61,23 @@ final readonly class ZoneConfigureController
     public const string ROUTE = 'area_zones_configure';
 
     /**
-     * THE PAGE STATES THAT ARE QUERIES, not dialogs. Each is read in place,
-     * with the thing it is about named in it, and each is a plain link a
-     * browser with no javascript follows exactly as one with it does.
+     * THE TWO THINGS THE ADDRESS CARRIES. Which card is open is a place, so it
+     * is a query a link can be shared and a write can come back to; taking an
+     * uploaded file back off the card is the other.
+     *
+     * A DESTRUCTIVE ACTION IS NOT ONE OF THEM. Removing a zone and removing the
+     * set both ask through the platform's shared confirm modal, which is the
+     * house rule and is also what keeps every destructive question in the
+     * product phrased and dismissed the same way.
      */
-    public const string REMOVE_ALL_QUERY = 'remove-all';
     public const string OPEN_QUERY = 'open';
-    public const string REMOVE_QUERY = 'remove';
     public const string DISCARD_QUERY = 'discard';
 
     public function __construct(
         private Environment $twig,
         private ZoneSetService $set,
         private ZoneEventRepository $events,
-        private ZoneImportDraftService $draft,
+        private ZoneImportDraftStore $draft,
         private ZoneExportService $export,
         private CsrfTokenManagerInterface $csrf,
     ) {
@@ -109,9 +112,7 @@ final readonly class ZoneConfigureController
             'plan' => $plan,
             'refusal' => $this->draft->takeRefusal($area),
             'outcome' => $this->draft->takeOutcome($area),
-            'removingAll' => $request->query->has(self::REMOVE_ALL_QUERY),
             'openZone' => self::uuidQuery($request, self::OPEN_QUERY),
-            'removeZone' => self::uuidQuery($request, self::REMOVE_QUERY),
             'exportName' => $this->export->fileName($area),
             'events' => $this->events->findByArea($area),
             'map' => null === $plan

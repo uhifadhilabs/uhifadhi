@@ -1212,20 +1212,6 @@ a.zc-nm:hover { color: rgb(var(--c-acc)); }
 .zlead svg { width: 16px; height: 16px; flex: none; color: rgb(var(--c-acc)); margin-top: 1px; }
 .zlead b { color: rgb(var(--c-tx)); }
 
-/* THE REMOVE-ALL CONFIRMATION — a page state, not a dialog, so it is read in
-   place with the count and the consequences in it. */
-.pvrepl {
-    display: flex; gap: 12px; align-items: flex-start; margin: 12px 0 0; padding: 10px 13px;
-    border-radius: 11px; font-size: 12.5px; line-height: 1.55; color: rgb(var(--c-fog));
-    background: color-mix(in srgb, rgb(var(--c-warn)) 7%, transparent);
-    border: 1px solid color-mix(in srgb, rgb(var(--c-warn)) 32%, transparent);
-}
-.pvrepl > .fog {
-    flex: none; width: 72px; padding-top: 2px; text-transform: uppercase;
-    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10px; font-weight: 700;
-    letter-spacing: .08em; color: rgb(var(--c-warn));
-}
-.pvrepl b { color: rgb(var(--c-tx)); }
 
 /* THE LOG — one line per event, newest first, and no geometry anywhere in it. */
 .zhist { display: flex; flex-direction: column; }
@@ -1271,6 +1257,11 @@ a.zc-nm:hover { color: rgb(var(--c-acc)); }
 .zcard.on { border-color: color-mix(in srgb, rgb(var(--c-acc)) 42%, transparent); box-shadow: inset 3px 0 0 rgb(var(--c-acc)); }
 .nmrow { display: flex; align-items: center; gap: 8px; }
 .zc-rule { border: 0; border-top: 1px solid var(--c-ln); margin: 11px 0; }
+
+/* A FORM AROUND ONE CONTROL IS NOT A ROW OF ITS OWN. Each destructive control
+   posts on its own, so it is wrapped in a form; `display: contents` keeps the
+   button in the strip's flex flow where the markup puts it. */
+.zcmore form, .zsetacts form { display: contents; }
 
 /* THE OPEN CARD'S FOOTER STRIP — separate operations, visually distinct from
    the body above them: this is where a zone's ring is replaced and where the

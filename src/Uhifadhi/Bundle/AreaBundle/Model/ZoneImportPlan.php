@@ -40,6 +40,7 @@ final readonly class ZoneImportPlan
      */
     public function __construct(
         public string $fileName,
+        public int $fileSize,
         public string $nameProperty,
         public array $ignoredProperties,
         public array $features,
@@ -68,6 +69,24 @@ final readonly class ZoneImportPlan
     public function count(): int
     {
         return \count($this->features);
+    }
+
+    /**
+     * THE SIZE THE TILE PRINTS. The file is gone, so this is the last thing
+     * anybody can say about it — and it is the fact that tells somebody whether
+     * the upload that arrived is the one they chose.
+     */
+    public function fileSizeLabel(): string
+    {
+        if ($this->fileSize < 1024) {
+            return $this->fileSize.' B';
+        }
+
+        $kb = $this->fileSize / 1024;
+
+        return $kb < 1024
+            ? number_format($kb).' KB'
+            : number_format($kb / 1024, 1).' MB';
     }
 
     /**

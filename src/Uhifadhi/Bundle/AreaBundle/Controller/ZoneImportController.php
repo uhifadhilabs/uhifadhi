@@ -30,7 +30,7 @@ use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Exception\ZoneImportException;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneEventService;
-use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportDraftService;
+use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportDraftStore;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportService;
 
 /**
@@ -60,7 +60,7 @@ final readonly class ZoneImportController
 
     public function __construct(
         private ZoneImportService $imports,
-        private ZoneImportDraftService $draft,
+        private ZoneImportDraftStore $draft,
         private ZoneEventService $events,
         private ZoneRepository $zones,
         private CsrfTokenManagerInterface $csrf,

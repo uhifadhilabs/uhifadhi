@@ -32,7 +32,7 @@ use Uhifadhi\Bundle\AreaBundle\Exception\ZoneImportException;
 use Uhifadhi\Bundle\AreaBundle\Exception\ZoneNameException;
 use Uhifadhi\Bundle\AreaBundle\Exception\ZoneOverlapException;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneEventService;
-use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportDraftService;
+use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportDraftStore;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneService;
 
@@ -61,7 +61,7 @@ final readonly class ZoneEditController
         private ZoneService $zones,
         private ZoneImportService $imports,
         private ZoneEventService $events,
-        private ZoneImportDraftService $draft,
+        private ZoneImportDraftStore $draft,
         private CsrfTokenManagerInterface $csrf,
         private UrlGeneratorInterface $urls,
         private ?TokenStorageInterface $tokens = null,

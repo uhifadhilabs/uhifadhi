@@ -30,11 +30,15 @@ use Uhifadhi\Bundle\AreaBundle\Model\ZoneImportPlan;
  * another must not find the first area's features waiting for them, so the key
  * carries the area's uuid.
  *
+ * A STORE AND NOT A SERVICE: it holds state between two requests and decides
+ * nothing. What it keeps is the viewer's own, in the viewer's own session, and
+ * it never outlives the confirm that reads it.
+ *
  * THE OUTCOME IS ALSO A ONE-SHOT. A confirm answers with a redirect — otherwise
  * a refresh imports the file again — so the sentence the page then prints has
  * to survive exactly one request and no more.
  */
-final readonly class ZoneImportDraftService
+final readonly class ZoneImportDraftStore
 {
     private const string PLAN = 'area.zones.plan.';
     private const string REFUSAL = 'area.zones.refusal.';

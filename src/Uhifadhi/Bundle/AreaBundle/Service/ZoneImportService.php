@@ -167,6 +167,7 @@ final readonly class ZoneImportService
 
         return new ZoneImportPlan(
             $originalName,
+            (int) $file->getSize(),
             $nameProperty,
             $this->ignoredPropertiesOf($areal, $nameProperty),
             $planned,

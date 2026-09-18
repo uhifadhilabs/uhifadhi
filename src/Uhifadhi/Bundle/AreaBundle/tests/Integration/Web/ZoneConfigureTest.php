@@ -170,7 +170,7 @@ final class ZoneConfigureTest extends WebTestCase
         $area = $this->anArea();
         $this->aZone($area, 'Western Sector', self::A_WEST_HALF);
 
-        $token = $this->tokenOn($this->body($this->section($area).'?remove-all=1'), '/zones/clear');
+        $token = $this->tokenOn($this->body($this->section($area)), '/zones/clear');
         $this->browser()->request('POST', '/areas/'.$area->getUuidString().'/zones/clear', ['_token' => $token]);
 
         self::assertSame(Response::HTTP_FOUND, $this->browser()->getResponse()->getStatusCode());
@@ -185,8 +185,7 @@ final class ZoneConfigureTest extends WebTestCase
         $area = $this->anArea();
         $zone = $this->aZone($area, 'Western Sector', self::A_WEST_HALF);
 
-        $open = $this->section($area).'?open='.$zone->getUuidString().'&remove='.$zone->getUuidString();
-        $token = $this->tokenOn($this->body($open), '/remove');
+        $token = $this->tokenOn($this->body($this->section($area).'?open='.$zone->getUuidString()), '/remove');
         $this->browser()->request('POST', '/areas/'.$area->getUuidString().'/zones/'.$zone->getUuidString().'/remove', [
             '_token' => $token,
         ]);

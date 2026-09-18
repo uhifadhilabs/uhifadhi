@@ -25,7 +25,7 @@ use Uhifadhi\Bundle\AreaBundle\Controller\ZoneImportController;
 use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneEventRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
-use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportDraftService;
+use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportDraftStore;
 use Uhifadhi\Bundle\AreaBundle\Shell\AreaConfigurationSections;
 use Uhifadhi\Bundle\AreaBundle\Shell\AreaNavigation;
 use Uhifadhi\Bundle\AreaBundle\Shell\AreaShellSource;
@@ -146,9 +146,9 @@ return static function (ContainerConfigurator $container): void {
      * lives with the screens rather than the model because it is the request's:
      * a console importer has no session and needs none.
      */
-    $services->set('area.zone_import_draft', ZoneImportDraftService::class)
+    $services->set('area.zone_import_draft', ZoneImportDraftStore::class)
         ->args([service('request_stack')]);
-    $services->alias(ZoneImportDraftService::class, 'area.zone_import_draft');
+    $services->alias(ZoneImportDraftStore::class, 'area.zone_import_draft');
 
     $services->set('area.controller.zone_configure', ZoneConfigureController::class)
         ->args([
