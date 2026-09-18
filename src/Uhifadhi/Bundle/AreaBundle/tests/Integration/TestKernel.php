@@ -23,7 +23,9 @@ use Uhifadhi\Bundle\AreaBundle\AreaBundle;
 use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Fixtures\CollectedModules;
+use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Fixtures\TaggedFigureProvider;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
+use Uhifadhi\Contracts\Kpi\ZoneFigureProviderInterface;
 
 use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
 
@@ -92,6 +94,16 @@ class TestKernel extends Kernel
         $services->alias('test_public.area.repository', AreaOfInterestRepository::class)->public();
         $services->alias('test_public.area.zones', 'area.zones')->public();
         $services->alias('test_public.area.zone_set', 'area.zone_set')->public();
+        $services->alias('test_public.area.zone_figures', 'area.zone_figures')->public();
+
+        /*
+         * A MODULE'S ZONE-FIGURE PROVIDER, tagged BY HAND exactly as a real
+         * module tags its own — a reusable bundle is not autoconfigured, so a
+         * fixture that relied on autoconfiguration would prove a wiring no
+         * installation uses.
+         */
+        $services->set(TaggedFigureProvider::class)
+            ->tag(ZoneFigureProviderInterface::TAG);
         $services->alias('test_public.area.zone_import', 'area.zone_import')->public();
         $services->alias('test_public.area.zone_export', 'area.zone_export')->public();
         $services->alias('test_public.area.zone_events', 'area.zone_events')->public();

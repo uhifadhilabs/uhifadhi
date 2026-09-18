@@ -28,6 +28,7 @@ use Uhifadhi\Bundle\AreaBundle\Service\AreaThumbnailer;
 use Uhifadhi\Bundle\AreaBundle\Service\BoundaryImport;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneEventService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneExportService;
+use Uhifadhi\Bundle\AreaBundle\Service\ZoneFigureService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneOverlapService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZonePlateService;
@@ -37,6 +38,7 @@ use Uhifadhi\Bundle\AreaBundle\Widget\AreaIndexWidgets;
 use Uhifadhi\Bundle\AtlasBundle\Map\MapBuilderInterface;
 use Uhifadhi\Bundle\RegistryBundle\Repository\AreaModuleRepository;
 use Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceInterface;
+use Uhifadhi\Contracts\Kpi\ZoneFigureProviderInterface;
 
 /*
  * The bundle's static service wiring.
@@ -91,6 +93,18 @@ return static function (ContainerConfigurator $container): void {
      */
     $services->set('area.zone_overlaps', ZoneOverlapService::class);
     $services->alias(ZoneOverlapService::class, 'area.zone_overlaps');
+
+    /*
+     * WHAT THE MODULES SAY ABOUT A ZONE — every tagged provider, asked once for
+     * the whole set, and only where the area runs that module.
+     *
+     * THE TAG IS READ HERE AND NO MODULE IS NAMED. A module that reports by
+     * zone tags a provider in its own extension; nothing in the core has to
+     * learn its name for its figures to appear on every zone surface at once.
+     */
+    $services->set('area.zone_figures', ZoneFigureService::class)
+        ->args([tagged_iterator(ZoneFigureProviderInterface::TAG)]);
+    $services->alias(ZoneFigureService::class, 'area.zone_figures');
 
     $services->set('area.zones', ZoneService::class)
         ->args([

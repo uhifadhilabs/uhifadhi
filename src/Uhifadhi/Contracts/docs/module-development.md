@@ -1381,10 +1381,36 @@ valid.
 | `PulseProviderInterface` | `uhifadhi.overview.pulse` | events in the activity feed |
 | `OverviewCopyProviderInterface` | `uhifadhi.overview.copy` | copy fragments for a named slot |
 | `Kpi\DepartmentKpiProviderInterface` | `uhifadhi.department_kpi` | a department's KPI figures |
+| `Kpi\ZoneFigureProviderInterface` | `uhifadhi.zone_kpi` | a zone's figures, for every zone of an area at once |
 
 Every one of them starts with `moduleSlug()`, and it must return the same slug your
 `ModuleProviderInterface` does: that is how a contribution disappears when an area switches your
 module off.
+
+**The zone seam is asked once for the whole set.** A zone has no numbers of its own — the area
+module owns the ground, the name and the ring, and every count over that ground is whichever
+module recorded it — so `ZoneFigureProviderInterface` is the only way a figure reaches a zone
+page. It differs from the department seam in one respect worth knowing before you implement it:
+the request carries **every zone the caller is about to draw** (`ZoneFigureRequest`), and the
+answer is **keyed by zone uuid** (`ZoneFigures`). The all-zones view draws a row per zone and the
+map legend draws another, so a provider asked zone by zone would cost a round trip per zone per
+module per page; handed the set, you run one query grouped by zone.
+
+The figures themselves are the same `DepartmentKpi` value the department seam returns, so one KPI
+card renderer serves both scopes and the two surfaces cannot drift apart — `null` is unknown and
+never zero, a share moves in points and a count in percent. Leave `areaName` null: the ref already
+says which area, and that field means "one area's share of a roll-up", which a zone figure never
+is. One key per zone per call, because a surface draws one card per key.
+
+One key is named on the interface rather than agreed by convention:
+`ZoneFigureProviderInterface::COVERED` (`'covered'`), a share, published by whoever measures how
+much of a zone's ground was worked. Three surfaces read that one key — the zones tab's Covered
+card, a zone record's identity band and the plate's legend — so a provider that spelled it
+differently would leave all three blank with nothing on the page to point at.
+
+Answering with nothing is legitimate (`ZoneFigures::none()`), and a zone left out of the answer is
+a zone your module has nothing to say about. Neither is a zero: until a module publishes, the zone
+surfaces say so in the product's own words rather than drawing naughts.
 
 Three rules that keep these contribution points honest:
 
