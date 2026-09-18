@@ -58,12 +58,56 @@ final readonly class GeoJsonNormalizer
         return match ($type) {
             'FeatureCollection' => $this->fromFeatures($document['features'] ?? null),
             'Feature' => $this->toMultiPolygonCoordinates($this->geometryOf($document)),
-            'Polygon' => [$this->coordinatesOf($document)],
-            'MultiPolygon' => array_values($this->coordinatesOf($document)),
+            'Polygon' => [$this->flatTo2d($this->coordinatesOf($document))],
+            'MultiPolygon' => $this->flatTo2d($this->coordinatesOf($document)),
             // NAMED, not "unsupported geometry": somebody who exported the wrong
             // layer needs to be told it was points, not that something was wrong.
             default => throw new \InvalidArgumentException(\sprintf('Unsupported geometry type "%s" (need Polygon/MultiPolygon).', $type)),
         };
+    }
+
+    /**
+     * The same document as the string a geometry column takes.
+     *
+     * @param array<array-key, mixed> $document a decoded GeoJSON object
+     *
+     * @throws \InvalidArgumentException when the document holds no polygonal geometry
+     */
+    public function toMultiPolygon(array $document): string
+    {
+        return (string) json_encode(
+            ['type' => 'MultiPolygon', 'coordinates' => $this->toMultiPolygonCoordinates($document)],
+            \JSON_THROW_ON_ERROR,
+        );
+    }
+
+    /**
+     * THE THIRD ORDINATE IS DROPPED, and it has to be dropped here rather than
+     * refused later. RFC 7946 allows a position to carry an altitude, KML
+     * carries one on every vertex, and a conversion from KMZ therefore produces
+     * three-element positions as a matter of course — while the column is
+     * `geometry(MULTIPOLYGON,4326)`, which is two-dimensional and rejects a
+     * geometry that arrives with Z. Nobody should be asked to strip altitudes
+     * out of a file by hand for a product that never reads them.
+     *
+     * A POSITION IS THE LIST WHOSE FIRST ELEMENT IS A NUMBER — the one place in
+     * the nest where the recursion stops, whatever depth a Polygon's rings or a
+     * MultiPolygon's polygons put it at.
+     *
+     * @param array<array-key, mixed> $coordinates
+     *
+     * @return list<mixed>
+     */
+    private function flatTo2d(array $coordinates): array
+    {
+        if (is_numeric($coordinates[0] ?? null)) {
+            return \array_slice(array_values($coordinates), 0, 2);
+        }
+
+        return array_map(
+            fn (mixed $nested): mixed => \is_array($nested) ? $this->flatTo2d($nested) : $nested,
+            array_values($coordinates),
+        );
     }
 
     /** @return list<mixed> */

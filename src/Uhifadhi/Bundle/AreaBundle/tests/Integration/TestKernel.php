@@ -91,6 +91,7 @@ class TestKernel extends Kernel
         // One public alias so the suite can reach it, keyed by service id.
         $services->alias('test_public.area.repository', AreaOfInterestRepository::class)->public();
         $services->alias('test_public.area.zones', 'area.zones')->public();
+        $services->alias('test_public.area.zone_import', 'area.zone_import')->public();
         $services->alias('test_public.area.zone_repository', ZoneRepository::class)->public();
 
         // Stands in for the registry's catalogue. It is here to record an ABSENCE —

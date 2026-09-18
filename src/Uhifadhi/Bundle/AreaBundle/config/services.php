@@ -25,6 +25,7 @@ use Uhifadhi\Bundle\AreaBundle\Service\AreaPresetLibrary;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaRegister;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaThumbnailer;
 use Uhifadhi\Bundle\AreaBundle\Service\BoundaryImport;
+use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneService;
 use Uhifadhi\Bundle\AreaBundle\Widget\AreaIndexWidgets;
 use Uhifadhi\Bundle\AtlasBundle\Map\MapBuilderInterface;
@@ -79,6 +80,21 @@ return static function (ContainerConfigurator $container): void {
             service(ZoneRepository::class),
         ]);
     $services->alias(ZoneService::class, 'area.zones');
+
+    /*
+     * A WHOLE ZONING SCHEME, FROM ONE FILE. Beside the model rather than with
+     * the screens, exactly like the boundary import: an installer, a fixture
+     * loader or an API with no twig in it must be able to import a scheme too.
+     * It writes through the zone service above, so a scheme is held to the same
+     * invariant a hand-drawn zone is.
+     */
+    $services->set('area.zone_import', ZoneImportService::class)
+        ->args([
+            service('doctrine.orm.entity_manager'),
+            service('area.zones'),
+            service(ZoneRepository::class),
+        ]);
+    $services->alias(ZoneImportService::class, 'area.zone_import');
 
     /*
      * What the register knows about each area — the measurements PostGIS makes

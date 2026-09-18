@@ -70,6 +70,19 @@ class Zone
     #[ORM\Column(type: 'multipolygon')]
     private ?string $geom = null;
 
+    /**
+     * WHERE THIS ZONE CAME FROM, where that is known. Null is the honest answer
+     * for a zone drawn by hand or seeded before the importer existed, and for
+     * every zone an installation already had: provenance is recorded from the
+     * day it is recorded, never backfilled with a guess.
+     *
+     * SET NULL, NOT CASCADE. Forgetting where a scheme came from must not
+     * delete the scheme.
+     */
+    #[ORM\ManyToOne(targetEntity: ZoneImport::class)]
+    #[ORM\JoinColumn(name: 'import_id', nullable: true, onDelete: 'SET NULL')]
+    private ?ZoneImport $import = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -107,6 +120,18 @@ class Zone
     public function setGeom(string $geom): static
     {
         $this->geom = $geom;
+
+        return $this;
+    }
+
+    public function getImport(): ?ZoneImport
+    {
+        return $this->import;
+    }
+
+    public function setImport(?ZoneImport $import): static
+    {
+        $this->import = $import;
 
         return $this;
     }

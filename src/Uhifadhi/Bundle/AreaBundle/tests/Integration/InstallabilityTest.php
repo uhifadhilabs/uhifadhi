@@ -128,8 +128,8 @@ final class InstallabilityTest extends KernelTestCase
 
     /**
      * THIS BUNDLE SHIPS ITS TABLES, NOT ONLY ITS ENTITIES. The DDL for
-     * `area_of_interest` and `zone` — and the PostGIS extension both of them
-     * need — arrives with the code that maps them, so an installation runs
+     * `area_of_interest`, `zone` and `zone_import` — and the PostGIS extension
+     * the first two need — arrives with the code that maps them, so an installation runs
      * `doctrine:migrations:migrate` and writes no version of its own.
      *
      * The installation's history stays the installation's: `diff` is still what
@@ -138,7 +138,7 @@ final class InstallabilityTest extends KernelTestCase
     public function testItShipsTheVersionsThatCreateItsOwnTables(): void
     {
         self::assertSame(
-            ['Version20260101000000.php', 'Version20260101000100.php'],
+            ['Version20260101000000.php', 'Version20260101000100.php', 'Version20260101000110.php'],
             array_map(basename(...), glob(\dirname(__DIR__, 2).'/migrations/*.php') ?: []),
         );
     }

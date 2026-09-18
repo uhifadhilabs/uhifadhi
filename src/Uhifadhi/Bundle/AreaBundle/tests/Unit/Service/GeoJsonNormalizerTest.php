@@ -52,6 +52,35 @@ final class GeoJsonNormalizerTest extends TestCase
         );
     }
 
+    /**
+     * A KML CONVERSION CARRIES AN ALTITUDE ON EVERY VERTEX, and the column is
+     * two-dimensional. The third ordinate is dropped here rather than refused
+     * later, because nobody should have to strip altitudes out of an export by
+     * hand for a product that never reads them.
+     */
+    public function testTheAltitudeOnEveryPositionIsDropped(): void
+    {
+        self::assertSame(
+            [self::A_RING],
+            new GeoJsonNormalizer()->toMultiPolygonCoordinates([
+                'type' => 'Polygon',
+                'coordinates' => [array_map(
+                    static fn (array $position): array => [...$position, 1200.0],
+                    self::A_RING[0],
+                )],
+            ]),
+        );
+    }
+
+    /** The same document as the string a geometry column takes. */
+    public function testItAlsoAnswersTheWholeMultiPolygonAsAString(): void
+    {
+        self::assertSame(
+            '{"type":"MultiPolygon","coordinates":'.json_encode([self::A_RING], \JSON_THROW_ON_ERROR).'}',
+            new GeoJsonNormalizer()->toMultiPolygon(['type' => 'Polygon', 'coordinates' => self::A_RING]),
+        );
+    }
+
     public function testAFeatureIsUnwrappedToItsGeometry(): void
     {
         self::assertSame(

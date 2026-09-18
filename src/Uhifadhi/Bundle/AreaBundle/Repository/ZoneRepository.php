@@ -130,6 +130,35 @@ class ZoneRepository extends SpatialEntityRepository
     }
 
     /**
+     * DOES THE AREA'S OWN BOUNDARY COVER THIS CANDIDATE ZONE? A zone SUBDIVIDES
+     * its area, so a polygon with any part of it outside the boundary is not a
+     * subdivision of anything — it is a file imported onto the wrong area, which
+     * is exactly what happens when an installation has several.
+     *
+     * ST_Covers, not ST_Contains: a zone that reaches the area's own edge — the
+     * outermost zone of any real scheme does — shares boundary with it, and
+     * ST_Contains calls that false.
+     *
+     * AN AREA WITH NO BOUNDARY COVERS NOTHING AND REFUSES NOTHING. There is no
+     * edge to be outside of, so the question does not arise and the answer is
+     * true; the check belongs to the boundary, not to the zone.
+     */
+    public function stAreaCovers(AreaOfInterest $area, string $geoJson): bool
+    {
+        $areaId = $area->getId();
+        if (null === $areaId || !$area->hasBoundary()) {
+            return true;
+        }
+
+        $covers = $this->getEntityManager()->getConnection()->fetchOne(
+            'SELECT ST_Covers(a.geom, ST_GeomFromGeoJSON(:geom))::int FROM area_of_interest a WHERE a.id = :area',
+            ['area' => $areaId, 'geom' => $geoJson],
+        );
+
+        return is_numeric($covers) && 1 === (int) $covers;
+    }
+
+    /**
      * The same interior test between two geometries that are not stored yet —
      * what an import needs to compare the features of one file against each
      * other before writing any of them.

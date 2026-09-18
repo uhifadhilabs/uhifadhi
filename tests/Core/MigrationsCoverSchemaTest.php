@@ -100,6 +100,7 @@ final class MigrationsCoverSchemaTest extends MigrationsTestCase
                 'widget_custom_preset',
                 'widget_preference',
                 'zone',
+                'zone_import',
             ],
             $this->tableNames(),
         );
@@ -144,6 +145,7 @@ final class MigrationsCoverSchemaTest extends MigrationsTestCase
             [
                 'Uhifadhi\\Bundle\\AreaBundle\\Migrations\\Version20260101000000',
                 'Uhifadhi\\Bundle\\AreaBundle\\Migrations\\Version20260101000100',
+                'Uhifadhi\\Bundle\\AreaBundle\\Migrations\\Version20260101000110',
                 'Uhifadhi\\Bundle\\RegistryBundle\\Migrations\\Version20260101000200',
                 'Uhifadhi\\Bundle\\TeamBundle\\Migrations\\Version20260101000300',
                 'Uhifadhi\\Bundle\\TeamBundle\\Migrations\\Version20260101000310',

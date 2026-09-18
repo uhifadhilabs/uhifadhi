@@ -10,6 +10,14 @@ Not released yet.
 
  * the area: its identity, its gazetted facts and its boundary as a PostGIS
    multipolygon, with the zones inside it held to a no-shared-interior invariant
+ * a whole zoning scheme from one GeoJSON FeatureCollection: names read from
+   whichever property the export used, altitudes and every other property read
+   past and then named in the summary, and a refusal that names the offending
+   zone for a projected coordinate system, an overlap, a polygon outside the
+   area boundary, a duplicate name or a missing geometry
+ * the provenance of an imported scheme — the file's name, the moment, the
+   person, the count and the property the names came out of — stored beside the
+   geometry, while the uploaded file itself is read and let go
  * the answer to the platform's area contract, so nothing has to be written by
    hand to point a module's record at an area
  * the area overview, composed from what the modules an area runs contribute:
