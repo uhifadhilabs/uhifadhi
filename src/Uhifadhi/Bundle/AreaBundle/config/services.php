@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
 use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
+use Uhifadhi\Bundle\AreaBundle\Repository\StationRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneEventRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaComposition;
@@ -26,6 +27,7 @@ use Uhifadhi\Bundle\AreaBundle\Service\AreaPresetLibrary;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaRegister;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaThumbnailer;
 use Uhifadhi\Bundle\AreaBundle\Service\BoundaryImport;
+use Uhifadhi\Bundle\AreaBundle\Service\StationService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneEventService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneExportService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneFigureService;
@@ -79,6 +81,10 @@ return static function (ContainerConfigurator $container): void {
         ->args([service('doctrine')])
         ->tag('doctrine.repository_service');
 
+    $services->set(StationRepository::class)
+        ->args([service('doctrine')])
+        ->tag('doctrine.repository_service');
+
     /*
      * THE ONLY SUPPORTED WAY A ZONE GETS A GEOMETRY. The invariant sibling zones
      * are held to — never sharing interior — is not expressible as a column
@@ -93,6 +99,20 @@ return static function (ContainerConfigurator $container): void {
      */
     $services->set('area.zone_overlaps', ZoneOverlapService::class);
     $services->alias(ZoneOverlapService::class, 'area.zone_overlaps');
+
+    /*
+     * THE ONLY SUPPORTED WAY A STATION GETS A POINT, and therefore a zone: the
+     * zone is derived from the point and cached, and every write that can move
+     * the answer comes through here. Beside the entity rather than with the
+     * screens, because a fixture loader and a console importer place stations
+     * too and neither has twig.
+     */
+    $services->set('area.stations', StationService::class)
+        ->args([
+            service('doctrine.orm.entity_manager'),
+            service(StationRepository::class),
+        ]);
+    $services->alias(StationService::class, 'area.stations');
 
     /*
      * WHAT THE MODULES SAY ABOUT A ZONE — every tagged provider, asked once for
@@ -111,6 +131,7 @@ return static function (ContainerConfigurator $container): void {
             service('doctrine.orm.entity_manager'),
             service(ZoneRepository::class),
             service('area.zone_overlaps'),
+            service('area.stations'),
         ]);
     $services->alias(ZoneService::class, 'area.zones');
 

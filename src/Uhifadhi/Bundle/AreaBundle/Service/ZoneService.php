@@ -32,6 +32,13 @@ use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
  * were meant to touch; {@see ZoneOverlapService} says which side of the area's
  * own tolerance that falls, and a real overlap names the zone and the size.
  *
+ * EVERY WRITE HERE RE-DERIVES THE AREA'S STATIONS. A station's zone is its
+ * point's answer, cached; moving the zones under it changes that answer
+ * without anybody touching the station, so the four writes below each end by
+ * re-asking. It is done here rather than in a listener because a listener
+ * would make the order of two writes decide the answer, and a caller that
+ * forgot would leave a stale zone nothing on the page could show was stale.
+ *
  * A ZONE MAY LIE OUTSIDE THE AREA BOUNDARY. That was once refused here and is
  * not any more: a gazetted edge and an operational subdivision are drawn by
  * different people from different sources, and the surfaces that import zones
@@ -48,6 +55,7 @@ class ZoneService
         private readonly EntityManagerInterface $em,
         private readonly ZoneRepository $zones,
         private readonly ZoneOverlapService $overlaps,
+        private readonly StationService $stations,
     ) {
     }
 
@@ -63,6 +71,7 @@ class ZoneService
         $zone = new Zone()->setArea($area)->setName($name)->setGeom($geomJson);
         $this->em->persist($zone);
         $this->em->flush();
+        $this->stations->rederiveFor($area);
 
         return $zone;
     }
@@ -83,6 +92,7 @@ class ZoneService
 
         $zone->setGeom($geomJson);
         $this->em->flush();
+        $this->stations->rederiveFor($area);
 
         return $zone;
     }
@@ -130,8 +140,13 @@ class ZoneService
      */
     public function remove(Zone $zone): void
     {
+        $area = $zone->getArea();
         $this->em->remove($zone);
         $this->em->flush();
+
+        if (null !== $area) {
+            $this->stations->rederiveFor($area);
+        }
     }
 
     /**
@@ -150,6 +165,8 @@ class ZoneService
             }
             $this->em->flush();
         });
+
+        $this->stations->rederiveFor($area);
 
         return \count($zones);
     }

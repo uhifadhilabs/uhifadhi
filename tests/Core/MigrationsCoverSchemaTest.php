@@ -91,6 +91,7 @@ final class MigrationsCoverSchemaTest extends MigrationsTestCase
                 // creates — not the core's, and not something a diff will ever
                 // offer to drop: the schema filter hides it.
                 'spatial_ref_sys',
+                'station',
                 'team_api_token',
                 'team_department',
                 'team_department_module',
@@ -149,6 +150,7 @@ final class MigrationsCoverSchemaTest extends MigrationsTestCase
                 'Uhifadhi\\Bundle\\AreaBundle\\Migrations\\Version20260101000110',
                 'Uhifadhi\\Bundle\\AreaBundle\\Migrations\\Version20260101000120',
                 'Uhifadhi\\Bundle\\AreaBundle\\Migrations\\Version20260101000130',
+                'Uhifadhi\\Bundle\\AreaBundle\\Migrations\\Version20260101000140',
                 'Uhifadhi\\Bundle\\RegistryBundle\\Migrations\\Version20260101000200',
                 'Uhifadhi\\Bundle\\TeamBundle\\Migrations\\Version20260101000300',
                 'Uhifadhi\\Bundle\\TeamBundle\\Migrations\\Version20260101000310',

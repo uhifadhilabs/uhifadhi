@@ -95,6 +95,7 @@ class TestKernel extends Kernel
         $services->alias('test_public.area.zones', 'area.zones')->public();
         $services->alias('test_public.area.zone_set', 'area.zone_set')->public();
         $services->alias('test_public.area.zone_figures', 'area.zone_figures')->public();
+        $services->alias('test_public.area.stations', 'area.stations')->public();
 
         /*
          * A MODULE'S ZONE-FIGURE PROVIDER, tagged BY HAND exactly as a real
