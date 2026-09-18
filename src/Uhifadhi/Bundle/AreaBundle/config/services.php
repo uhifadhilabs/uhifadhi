@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
 use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
+use Uhifadhi\Bundle\AreaBundle\Repository\ZoneEventRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaComposition;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaCreator;
@@ -25,6 +26,8 @@ use Uhifadhi\Bundle\AreaBundle\Service\AreaPresetLibrary;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaRegister;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaThumbnailer;
 use Uhifadhi\Bundle\AreaBundle\Service\BoundaryImport;
+use Uhifadhi\Bundle\AreaBundle\Service\ZoneEventService;
+use Uhifadhi\Bundle\AreaBundle\Service\ZoneExportService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneService;
 use Uhifadhi\Bundle\AreaBundle\Widget\AreaIndexWidgets;
@@ -67,6 +70,10 @@ return static function (ContainerConfigurator $container): void {
         ->args([service('doctrine')])
         ->tag('doctrine.repository_service');
 
+    $services->set(ZoneEventRepository::class)
+        ->args([service('doctrine')])
+        ->tag('doctrine.repository_service');
+
     /*
      * THE ONLY SUPPORTED WAY A ZONE GETS A GEOMETRY. The invariant sibling zones
      * are held to — never sharing interior — is not expressible as a column
@@ -95,6 +102,25 @@ return static function (ContainerConfigurator $container): void {
             service(ZoneRepository::class),
         ]);
     $services->alias(ZoneImportService::class, 'area.zone_import');
+
+    /*
+     * THE SET, BACK OUT. Beside the importer for the reason the importer is
+     * beside the entity: a console command that dumps an area's zones has no
+     * twig either, and the export is the only copy of a set that will ever
+     * exist — nothing keeps superseded geometry.
+     */
+    $services->set('area.zone_export', ZoneExportService::class)
+        ->args([service(ZoneRepository::class)]);
+    $services->alias(ZoneExportService::class, 'area.zone_export');
+
+    /*
+     * THE ZONE LOG, WRITTEN IN ONE VOCABULARY. Every screen and command that
+     * changes a set hands its facts here and the sentence is composed once, so
+     * two callers cannot log the same event in two different words.
+     */
+    $services->set('area.zone_events', ZoneEventService::class)
+        ->args([service('doctrine.orm.entity_manager')]);
+    $services->alias(ZoneEventService::class, 'area.zone_events');
 
     /*
      * What the register knows about each area — the measurements PostGIS makes

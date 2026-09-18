@@ -16,6 +16,7 @@ namespace Uhifadhi\Bundle\AreaBundle\Service;
 use Doctrine\ORM\EntityManagerInterface;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Entity\Zone;
+use Uhifadhi\Bundle\AreaBundle\Exception\ZoneNameException;
 use Uhifadhi\Bundle\AreaBundle\Exception\ZoneOverlapException;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
 
@@ -76,6 +77,73 @@ class ZoneService
         $this->em->flush();
 
         return $zone;
+    }
+
+    /**
+     * A ZONE IS RENAMED, AND NOTHING ELSE HAPPENS. The ground did not move, so
+     * no geometry is touched, no record changes zone and no history of the ring
+     * is involved — which is why this is the one zone edit that needs no file
+     * and no map.
+     *
+     * A ZONE MAY BE RENAMED TO WHAT IT IS ALREADY CALLED. Saving a form without
+     * changing the field is not a clash with itself, and refusing it would be a
+     * puzzle rather than a safeguard.
+     *
+     * @throws ZoneNameException when the name is blank, or already used in this area
+     */
+    public function rename(Zone $zone, string $name): Zone
+    {
+        $name = trim($name);
+        if ('' === $name) {
+            throw ZoneNameException::empty();
+        }
+
+        $area = $zone->getArea();
+        if (null === $area) {
+            throw new \LogicException('A zone always belongs to an area.');
+        }
+
+        $holder = $this->zones->findOneForName($area, $name);
+        if (null !== $holder && $holder->getId() !== $zone->getId()) {
+            throw ZoneNameException::alreadyUsed($name, $area->getName() ?? '');
+        }
+
+        $zone->setName($name);
+        $this->em->flush();
+
+        return $zone;
+    }
+
+    /**
+     * ONE ZONE, GONE. Its ground becomes unzoned, which is a legal state: an
+     * area is often only partly zoned, and every consumer already treats "in no
+     * zone" as a first-class answer. Nothing that referred to the ground is
+     * deleted with it.
+     */
+    public function remove(Zone $zone): void
+    {
+        $this->em->remove($zone);
+        $this->em->flush();
+    }
+
+    /**
+     * THE WHOLE SET, IN ONE ACT, answering how many it removed — so the sentence
+     * the person confirmed and the sentence they are told afterwards are about
+     * the same number. A loop of single deletions would leave an area half
+     * zoned if it stopped halfway, which is the one state nobody asked for.
+     */
+    public function removeAll(AreaOfInterest $area): int
+    {
+        $zones = $this->zones->zonesFor($area);
+
+        $this->em->wrapInTransaction(function () use ($zones): void {
+            foreach ($zones as $zone) {
+                $this->em->remove($zone);
+            }
+            $this->em->flush();
+        });
+
+        return \count($zones);
     }
 
     /**
