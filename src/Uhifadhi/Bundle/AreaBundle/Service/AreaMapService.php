@@ -57,7 +57,8 @@ final readonly class AreaMapService
 
     private const string LIVE_SWATCH = '#3ED9A8';
     private const string QUIET_SWATCH = '#B9C8BD';
-    private const string BOUNDARY_SWATCH = '#49E6B4';
+    /** Public: a second plate of the same ground draws the same edge in the same colour. */
+    public const string BOUNDARY_SWATCH = '#49E6B4';
 
     public function __construct(
         private MapBuilderInterface $maps,

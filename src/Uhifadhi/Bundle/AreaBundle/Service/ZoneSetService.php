@@ -25,6 +25,7 @@ use Uhifadhi\Bundle\AtlasBundle\Map\MapBuilderInterface;
 use Uhifadhi\Bundle\AtlasBundle\Model\AtlasMap;
 use Uhifadhi\Bundle\AtlasBundle\Model\Boundary;
 use Uhifadhi\Bundle\AtlasBundle\Model\GeoJsonLayer;
+use Uhifadhi\Bundle\AtlasBundle\Model\LayerShape;
 use Uhifadhi\Bundle\AtlasBundle\Model\LegendItem;
 use Uhifadhi\Bundle\AtlasBundle\Model\StyleRule;
 
@@ -156,7 +157,17 @@ final readonly class ZoneSetService
 
         $boundary = self::decode($area->getGeom());
         if (null !== $boundary) {
+            // EVERY LAYER SHIPS A LEGEND ROW, the boundary included: a line on
+            // a plate that nothing in the key accounts for is a line nobody can
+            // name.
             $map->boundary(new Boundary($boundary));
+            $map->addLegendItem(new LegendItem(
+                label: 'Boundary',
+                swatch: AreaMapService::BOUNDARY_SWATCH,
+                shape: LayerShape::Line,
+                group: AreaMapService::OWN_GROUP,
+                layerId: AtlasMap::BOUNDARY_LAYER_ID,
+            ));
         }
 
         $collection = [];
@@ -184,11 +195,18 @@ final readonly class ZoneSetService
             ));
         }
 
+        /*
+         * THE LAYER'S OWN ROW IS THE SWITCH; the rows above it are the key. The
+         * atlas gives every layer a row whether or not a caller asks, so the
+         * count goes on it and the colours stay on the zones, where hue means
+         * something.
+         */
         $map->addLayer(new GeoJsonLayer(
             id: self::ZONES_LAYER,
             label: 'Zones',
             features: ['type' => 'FeatureCollection', 'features' => $collection],
             visible: [] !== $collection,
+            count: \count($collection),
             group: $group,
             rules: $rules,
         ));

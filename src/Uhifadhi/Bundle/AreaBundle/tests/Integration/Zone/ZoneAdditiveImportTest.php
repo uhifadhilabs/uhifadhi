@@ -183,6 +183,25 @@ final class ZoneAdditiveImportTest extends IntegrationTestCase
         self::assertStringContainsString('outside the boundary', $plan->flagged()[0]->why());
     }
 
+    /**
+     * A RING TRACED ON THE AREA'S OWN EDGE ARRIVES. Every exporter writes
+     * GeoJSON to nine decimals, so the outermost zone of any real scheme is a
+     * ROUNDED copy of the boundary and a few of its vertices land a fraction of
+     * a millimetre outside. Refusing that is a refusal nobody can act on.
+     */
+    public function testARingRoundedOffTheBoundaryIsNotOutsideIt(): void
+    {
+        $area = $this->anArea();
+
+        $plan = $this->plan($area, $this->collection([
+            $this->feature(['Name' => 'The whole area'], [[
+                [-30.000000001, -3.600000001], [-29.0, -3.6], [-29.0, -2.8], [-30.0, -2.800000001], [-30.000000001, -3.600000001],
+            ]]),
+        ]));
+
+        self::assertSame(['The whole area'], $plan->arrivingNames());
+    }
+
     public function testAFeatureWithNoUsableGeometryIsFlaggedRatherThanRefusingTheFile(): void
     {
         $plan = $this->plan($this->anArea(), (string) json_encode([

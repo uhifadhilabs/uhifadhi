@@ -130,14 +130,32 @@ class ZoneRepository extends SpatialEntityRepository
     }
 
     /**
-     * DOES THE AREA'S OWN BOUNDARY COVER THIS CANDIDATE ZONE? A zone SUBDIVIDES
-     * its area, so a polygon with any part of it outside the boundary is not a
-     * subdivision of anything — it is a file imported onto the wrong area, which
-     * is exactly what happens when an installation has several.
+     * A SLIVER THIS SMALL IS ARITHMETIC, NOT GROUND. A ring traced along the
+     * area's own edge comes back from any exporter as a ROUNDED copy of that
+     * edge — GeoJSON writes nine decimals — so a few vertices land a tenth of a
+     * millimetre outside and the strict predicate says the zone is outside its
+     * area. Measured on the real thing that is about a square metre against
+     * four thousand square kilometres, which is a refusal nobody can act on and
+     * nobody deserves.
      *
-     * ST_Covers, not ST_Contains: a zone that reaches the area's own edge — the
-     * outermost zone of any real scheme does — shares boundary with it, and
-     * ST_Contains calls that false.
+     * The tolerance is therefore RELATIVE with an absolute floor: a part per
+     * million of the ring, but never less than a hundred square metres, which
+     * is smaller than anything anybody draws on purpose.
+     */
+    private const float OUTSIDE_FLOOR_M2 = 100.0;
+    private const float OUTSIDE_SHARE = 0.000001;
+
+    /**
+     * DOES THE AREA'S OWN BOUNDARY COVER THIS CANDIDATE ZONE? A zone SUBDIVIDES
+     * its area, so a polygon with any real part of it outside the boundary is
+     * not a subdivision of anything — it is a file imported onto the wrong area,
+     * which is exactly what happens when an installation has several.
+     *
+     * MEASURED, NOT PREDICATED. `ST_Covers` answers a question about exact
+     * arithmetic, and the question here is about ground: what is asked is how
+     * much of the ring falls outside, and the answer is compared against a
+     * tolerance no real zone can hide inside. A zone that reaches the area's own
+     * edge — the outermost zone of any real scheme does — passes either way.
      *
      * AN AREA WITH NO BOUNDARY COVERS NOTHING AND REFUSES NOTHING. There is no
      * edge to be outside of, so the question does not arise and the answer is
@@ -150,12 +168,19 @@ class ZoneRepository extends SpatialEntityRepository
             return true;
         }
 
-        $covers = $this->getEntityManager()->getConnection()->fetchOne(
-            'SELECT ST_Covers(a.geom, ST_GeomFromGeoJSON(:geom))::int FROM area_of_interest a WHERE a.id = :area',
+        $outside = $this->getEntityManager()->getConnection()->fetchOne(
+            'SELECT ST_Area(ST_Difference(ST_GeomFromGeoJSON(:geom), a.geom)::geography)'
+            .' FROM area_of_interest a WHERE a.id = :area',
             ['area' => $areaId, 'geom' => $geoJson],
         );
 
-        return is_numeric($covers) && 1 === (int) $covers;
+        if (!is_numeric($outside)) {
+            return false;
+        }
+
+        $tolerance = max(self::OUTSIDE_FLOOR_M2, $this->stGeometryKm2($geoJson) * 1000000.0 * self::OUTSIDE_SHARE);
+
+        return (float) $outside <= $tolerance;
     }
 
     /**
