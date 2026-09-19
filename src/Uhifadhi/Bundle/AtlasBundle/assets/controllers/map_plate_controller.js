@@ -58,6 +58,13 @@ const ATLAS = 'atlas';
 /** The id the drawn boundary is kept under, so a legend row can switch it. */
 const BOUNDARY_LAYER = 'atlas.boundary';
 
+/* THE HOUSE PADDING between what a plate is about and the plate's own edge. */
+const FIT_PADDING = [26, 26];
+
+/* How close a plate comes to a subject that is one point and nothing else,
+ * where the surface did not say. */
+const POINT_ZOOM = 13;
+
 /** How each shape is drawn. One answer for the whole platform. */
 const STYLES = {
     line: (color) => ({ color, weight: 2.2, opacity: 0.95, fill: false }),
@@ -155,6 +162,10 @@ export default class extends Controller {
         document.removeEventListener('fullscreenchange', this.onFullscreenChange);
         this.chrome?.destroy();
         this.chrome = null;
+        // The frame watch outlives the map otherwise, and a detached plate
+        // would go on invalidating a map nobody is looking at.
+        this.frameWatch?.disconnect();
+        this.frameWatch = null;
         this.layers.clear();
         this.specs.clear();
         this.byFeatureId.clear();
@@ -200,6 +211,7 @@ export default class extends Controller {
         this.L = L;
         this.bounds = L.latLngBounds([]);
         this.shouldFit = false !== atlas.fit;
+        this.subject = this.subjectOf(atlas.subject);
 
         this.mountBases(atlas.baseLayers ?? []);
 
@@ -225,6 +237,16 @@ export default class extends Controller {
         });
 
         this.refit();
+
+        /*
+         * AND AGAIN ONCE THE PAGE HAS SETTLED. A plate is fitted while its
+         * card is still being laid out — the filter row and the legend take
+         * their height after this runs — so the frame it was measured in is
+         * not the frame it ends up in, and the subject overflowed the plate
+         * by the difference. Leaflet is told its size changed and the frame
+         * is taken again, here and whenever the frame changes size after.
+         */
+        this.watchFrame();
 
         this.dispatch('connect', {
             prefix: 'atlas:map',
@@ -699,10 +721,73 @@ export default class extends Controller {
         return true === document.fullscreenElement?.contains(this.element);
     }
 
-    /** Re-frame the plate on everything it drew. */
+    /**
+     * THE PLATE IS FRAMED ON ITS SUBJECT, and on everything it drew only
+     * when nothing said what it is about. A zone's page draws the whole area
+     * as context and is about one zone.
+     */
     refit() {
-        if (this.shouldFit && this.bounds?.isValid()) {
-            this.map?.fitBounds(this.bounds, { padding: [26, 26] });
+        if (!this.shouldFit) {
+            return;
+        }
+
+        const subject = this.subject;
+        const bounds = subject?.bounds?.isValid() ? subject.bounds : this.bounds;
+        if (!bounds?.isValid()) {
+            return;
+        }
+
+        // A SUBJECT WITH NO EXTENT — one point — cannot be fitted to: fitting
+        // a degenerate box goes to the map's maximum zoom, which is a street
+        // corner. The surface says how close to come.
+        if (!bounds.getNorthEast().equals(bounds.getSouthWest())) {
+            this.map?.fitBounds(bounds, { padding: FIT_PADDING, maxZoom: subject?.zoom ?? undefined });
+
+            return;
+        }
+
+        this.map?.setView(bounds.getCenter(), subject?.zoom ?? POINT_ZOOM);
+    }
+
+    /**
+     * THE SUBJECT'S BOUNDS, drawn off the map so nothing of it is added to
+     * the plate: it is what the plate is ABOUT, and it is already drawn by
+     * whoever stated it — as the boundary, as a zone, as a mark.
+     */
+    subjectOf(subject) {
+        if (!subject?.geojson) {
+            return null;
+        }
+
+        try {
+            const bounds = this.L.geoJSON(subject.geojson).getBounds();
+
+            return { bounds, zoom: subject.zoom ?? null };
+        } catch (error) {
+            console.error('[atlas] the plate could not read its subject', error);
+
+            return null;
+        }
+    }
+
+    /**
+     * THE FRAME SETTLES AFTER THE MAP IS BUILT, and the plate is framed for
+     * the frame it ends up in. Without this the subject overflowed the plate
+     * by whatever the legend and the filter row took after the fit.
+     */
+    watchFrame() {
+        const frame = this.frame();
+
+        this.settle = () => {
+            this.map?.invalidateSize({ animate: false });
+            this.refit();
+        };
+
+        requestAnimationFrame(this.settle);
+
+        if ('undefined' !== typeof ResizeObserver) {
+            this.frameWatch = new ResizeObserver(() => this.settle());
+            this.frameWatch.observe(frame);
         }
     }
 

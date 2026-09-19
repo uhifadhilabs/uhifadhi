@@ -56,6 +56,32 @@ final class AreaMapServiceTest extends TestCase
         );
     }
 
+    /**
+     * A PLATE OPENS ON WHAT IT IS ABOUT.
+     *
+     * Framed on everything it drew, the overview opened on the union of the
+     * boundary and whatever a module's layer reached — a track that left the
+     * park pulled the whole plate out with it, and the area, which is the
+     * subject, came out smaller than its own card. The house rule from the
+     * map-control contract is that where there is a boundary, the whole of
+     * it is visible.
+     */
+    public function testTheOverviewPlateIsAboutTheArea(): void
+    {
+        $map = self::areaMap()->overview(self::payload());
+
+        self::assertSame(
+            ['geojson' => json_decode(self::BOUNDARY, true), 'zoom' => null],
+            $map->toArray()['subject'],
+        );
+    }
+
+    /** With no boundary there is no subject to state, and none is stated. */
+    public function testAnAreaWithNoBoundaryStatesNoSubject(): void
+    {
+        self::assertNull(self::areaMap()->overview(['boundary' => null, 'zones' => []])->toArray()['subject']);
+    }
+
     public function testAnAreaWithNoBoundaryHasAPlateWithNoBoundary(): void
     {
         $map = self::areaMap()->overview(['boundary' => null, 'zones' => []]);

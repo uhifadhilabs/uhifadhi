@@ -48,7 +48,28 @@ final class AtlasMapTest extends TestCase
             'baseLayers' => ['satellite', 'osm'],
             'fullscreen' => true,
             'fit' => true,
+            // NOTHING SAID WHAT THE PLATE IS ABOUT, so it frames itself on
+            // everything it drew — which is right for a map whose content
+            // IS its subject, and stated as a null rather than left out.
+            'subject' => null,
         ], $atlas->toArray());
+    }
+
+    /**
+     * A PLATE THAT IS ABOUT ONE THING SAYS SO, and the browser is told what
+     * and how close. A subject with an extent needs no zoom; a point cannot
+     * be fitted to and the surface states one.
+     */
+    public function testAPlateCarriesTheSubjectItOpensOn(): void
+    {
+        $atlas = new AtlasMap(self::uxMap())->fitTo(self::BOUNDARY);
+
+        self::assertSame(['geojson' => self::BOUNDARY, 'zoom' => null], $atlas->toArray()['subject']);
+
+        $point = ['type' => 'Point', 'coordinates' => [-29.5, -3.2]];
+        $post = new AtlasMap(self::uxMap())->fitTo($point, 12);
+
+        self::assertSame(['geojson' => $point, 'zoom' => 12], $post->toArray()['subject']);
     }
 
     public function testTheWholePayloadTravelsUnderOneNamespacedExtraKey(): void

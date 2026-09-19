@@ -65,6 +65,17 @@ final class AtlasMap
 
     private bool $fit = true;
 
+    /**
+     * WHAT THE PLATE IS ABOUT — the geometry it frames itself on, when that
+     * is not simply everything it drew.
+     *
+     * @var array<string, mixed>|null
+     */
+    private ?array $subject = null;
+
+    /** How close the plate may come to a subject with no extent of its own. */
+    private ?int $subjectZoom = null;
+
     /** @var array<string, mixed> */
     private array $extra = [];
 
@@ -145,6 +156,29 @@ final class AtlasMap
     }
 
     /**
+     * WHAT THE PLATE IS ABOUT, so it opens on its subject rather than on
+     * everything it happens to have drawn.
+     *
+     * A ZONE'S PAGE DRAWS THE AREA and is not about the area: framed on
+     * everything, the zone came out at a quarter of the plate's width with
+     * the rest of the park around it. The surface states its subject and the
+     * context stays context.
+     *
+     * A SUBJECT WITH NO EXTENT — a station's point — cannot be fitted to, so
+     * a zoom says how close the plate may come; the design draws a record's
+     * plate at that zoom, not at the map's maximum.
+     *
+     * @param array<string, mixed> $geojson a geometry, feature or collection
+     */
+    public function fitTo(array $geojson, ?int $zoom = null): self
+    {
+        $this->subject = $geojson;
+        $this->subjectZoom = $zoom;
+
+        return $this;
+    }
+
+    /**
      * The module's own data for the browser, forwarded beside the atlas key.
      *
      * @param array<string, mixed> $extra
@@ -180,6 +214,7 @@ final class AtlasMap
      *     baseLayers: list<string>,
      *     fullscreen: bool,
      *     fit: bool,
+     *     subject: array{geojson: array<string, mixed>, zoom: int|null}|null,
      * }
      */
     public function toArray(): array
@@ -190,6 +225,9 @@ final class AtlasMap
             'baseLayers' => array_map(static fn (BaseLayer $base) => $base->value, $this->baseLayers),
             'fullscreen' => $this->fullscreen,
             'fit' => $this->fit,
+            'subject' => null === $this->subject
+                ? null
+                : ['geojson' => $this->subject, 'zoom' => $this->subjectZoom],
         ];
     }
 

@@ -79,6 +79,11 @@ final readonly class AreaMapService
         $boundary = self::decode($payload['boundary']);
         if (null !== $boundary) {
             $map->boundary(new Boundary($boundary));
+
+            // THE AREA IS WHAT THIS PLATE IS ABOUT. A module's layer may
+            // reach outside the boundary — a track that left the park — and
+            // a plate framed on everything it drew would open on that.
+            $map->fitTo($boundary);
             $map->addLegendItem(new LegendItem(
                 label: 'Boundary',
                 swatch: self::BOUNDARY_SWATCH,

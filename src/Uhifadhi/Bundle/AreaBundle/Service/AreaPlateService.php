@@ -62,6 +62,16 @@ final readonly class AreaPlateService
     /** What the design draws around a post, so distance is read and not guessed. */
     public const array RINGS_KM = [5, 10];
 
+    /**
+     * HOW CLOSE A RECORD'S PLATE COMES TO ITS POST.
+     *
+     * A point has no extent to be fitted to, so the zoom is the statement.
+     * It is the design's: the station record draws a window 196 units wide
+     * over a park 768 units across — a quarter of the area, about thirty
+     * kilometres, which on a plate this size is this zoom.
+     */
+    public const int POST_ZOOM = 12;
+
     /** The property every feature carries so a style rule can colour it by zone. */
     private const string HUE_PROPERTY = 'zone';
 
@@ -193,6 +203,28 @@ final readonly class AreaPlateService
     }
 
     /**
+     * THE PLATE IS ABOUT THIS ONE THING, and the rest of what it draws is
+     * context.
+     *
+     * A ZONE'S PAGE DRAWS THE WHOLE AREA and is about one zone; a post's
+     * page draws every post and is about one. Stated here rather than by
+     * building a different map, because a second map of the same ground is
+     * a second map that drifts.
+     *
+     * @param string|null $geometry the subject's GeoJSON, as the database holds it
+     * @param int|null    $zoom     how close to come to a subject with no extent
+     */
+    public function focusOn(AtlasMap $map, ?string $geometry, ?int $zoom = null): AtlasMap
+    {
+        $subject = self::decode($geometry);
+        if (null !== $subject) {
+            $map->fitTo($subject, $zoom);
+        }
+
+        return $map;
+    }
+
+    /**
      * THE POSTS, AS ONE LAYER — one legend row, one thing to switch off.
      *
      * @param list<array{uuid: string, name: string, point: string|null, posted: int, here: bool, zone?: string|null, hue?: string|null}> $posts
@@ -283,6 +315,13 @@ final readonly class AreaPlateService
             // a plate that nothing in the key accounts for is a line nobody can
             // name.
             $map->boundary(new Boundary($boundary));
+
+            // AND THE AREA IS WHAT THE PLATE IS ABOUT, unless the page says
+            // otherwise. Framed on everything it drew, a plate opened on the
+            // union of the boundary and whatever stood outside it; the house
+            // rule is that where there is a boundary, the whole of it is
+            // visible.
+            $map->fitTo($boundary);
             $map->addLegendItem(new LegendItem(
                 label: 'Boundary',
                 swatch: AreaMapService::BOUNDARY_SWATCH,

@@ -165,7 +165,16 @@ final readonly class ZoneRecordController
             'figures' => $this->moduleFacts($figures, (string) $zone->getUuidString()),
             'events' => $this->events->findMentioning($area, (string) $zone->getName()),
             'lastImport' => $view->lastImport,
-            'map' => $this->plates->picker($area, $view->rows, $posts),
+            /*
+             * THE PLATE IS ABOUT THIS ZONE. It draws the whole area, the
+             * other zones and every post, because a zone is read against
+             * its neighbours — but opening on all of that put the zone at a
+             * quarter of the plate's width, which is a page about the park.
+             */
+            'map' => $this->plates->focusOn(
+                $this->plates->picker($area, $view->rows, $posts),
+                $zone->getGeom(),
+            ),
         ]));
     }
 

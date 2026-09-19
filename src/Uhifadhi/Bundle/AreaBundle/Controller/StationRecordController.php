@@ -123,7 +123,16 @@ final readonly class StationRecordController
             'dock' => $dock->dockFor((string) $station->getUuidString()),
             'dockPeriod' => $dock->period,
             'coordinates' => self::coordinatesOf($station),
-            'map' => $this->plates->aroundStation($area, $view->rows, $posts),
+            /*
+             * AND THIS ONE IS ABOUT THE POST — the ground around it at the
+             * distance the design draws, not the whole park with a dot in
+             * it. A point has no extent, so the zoom is the statement.
+             */
+            'map' => $this->plates->focusOn(
+                $this->plates->aroundStation($area, $view->rows, $posts),
+                $station->getPoint(),
+                AreaPlateService::POST_ZOOM,
+            ),
         ]));
     }
 
