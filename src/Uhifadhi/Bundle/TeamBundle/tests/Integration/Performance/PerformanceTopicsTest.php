@@ -44,7 +44,7 @@ final class PerformanceTopicsTest extends IntegrationTestCase
         $this->aCatalogue(['incidents' => 0, 'patrols' => 1]);
 
         self::assertSame(
-            ['staffing', 'incidents', 'patrols'],
+            ['staffing', 'goals', 'incidents', 'patrols'],
             $this->keysOf($this->topics()->forScope(PerformanceScope::organisation(), self::period())),
         );
     }
@@ -55,7 +55,7 @@ final class PerformanceTopicsTest extends IntegrationTestCase
         $this->aCatalogue(['patrols' => 0, 'incidents' => 1]);
 
         self::assertSame(
-            ['staffing', 'patrols', 'incidents'],
+            ['staffing', 'goals', 'patrols', 'incidents'],
             $this->keysOf($this->topics()->forScope(PerformanceScope::organisation(), self::period())),
         );
     }
@@ -66,7 +66,7 @@ final class PerformanceTopicsTest extends IntegrationTestCase
         $this->aCatalogue(['patrols' => 0]);
 
         self::assertSame(
-            ['staffing', 'patrols'],
+            ['staffing', 'goals', 'patrols'],
             $this->keysOf($this->topics()->forScope(PerformanceScope::organisation(), self::period())),
         );
     }
@@ -130,6 +130,104 @@ final class PerformanceTopicsTest extends IntegrationTestCase
         self::assertSame('staffing.over_threshold', $overThreshold->key);
         self::assertSame(1.0, $overThreshold->value);
         self::assertStringContainsString('1 more stood empty', $overThreshold->caption);
+    }
+
+    /**
+     * A GOAL'S STATE IS DERIVED AT THE MOMENT OF ASKING, from the figure
+     * it names against the target it set — so nothing is stored that a
+     * revised figure could contradict.
+     *
+     * AND "NO FIGURE YET" IS ITS OWN STATE. A goal whose module has
+     * published nothing is not a miss: counting a silence as a failure
+     * would mark a department down for somebody else's module, and the
+     * page states the two facts separately.
+     */
+    public function testAGoalWithNoFigureIsNeitherMetNorMissed(): void
+    {
+        $department = new \Uhifadhi\Bundle\TeamBundle\Entity\Department()->setName('Community Development');
+        $this->em->persist($department);
+
+        // A target nothing reports against: no module is attached, so the
+        // KPI this goal names is published by nobody.
+        $goal = new \Uhifadhi\Bundle\TeamBundle\Entity\DepartmentGoal()
+            ->setDepartment($department)
+            ->setStatement('Claims settled within 10 days')
+            ->setKpiRef('incidents.days_to_settle')
+            ->setTarget(10.0)
+            ->setUnit('days')
+            // A goal is a promise over a WINDOW; there is no such thing as
+            // one without dates, and the schema says so.
+            ->setOpensAt(new \DateTimeImmutable('-30 days'))
+            ->setClosesAt(new \DateTimeImmutable('+30 days'));
+        $this->em->persist($goal);
+        $this->em->flush();
+
+        $goals = $this->topics()->byKey('goals', PerformanceScope::organisation(), self::period());
+        self::assertNotNull($goals);
+
+        $figures = [];
+        foreach ($goals->kpis(PerformanceScope::organisation(), self::period()) as $kpi) {
+            $figures[$kpi->key] = $kpi->value;
+        }
+
+        self::assertSame(1.0, $figures['goals.no_figure']);
+        self::assertSame(0.0, $figures['goals.met']);
+        self::assertSame(0.0, $figures['goals.missed']);
+        self::assertSame(1.0, $figures['goals.declared']);
+    }
+
+    /**
+     * EVERY DEPARTMENT IS A ROW, INCLUDING THE ONES THAT DECLARED NONE.
+     * Any department can declare a goal, so a quiet one is a row saying
+     * nought rather than a row that is missing — which is the whole
+     * reason this matrix does not fold.
+     */
+    public function testADepartmentThatDeclaredNoGoalIsStillARow(): void
+    {
+        $quiet = new \Uhifadhi\Bundle\TeamBundle\Entity\Department()->setName('Finance');
+        $this->em->persist($quiet);
+        $this->em->flush();
+
+        $goals = $this->topics()->byKey('goals', PerformanceScope::organisation(), self::period());
+        self::assertNotNull($goals);
+
+        $matrix = $goals->matrix(PerformanceScope::organisation(), self::period());
+        $names = array_map(static fn (object $row): string => $row->departmentName, $matrix->rows);
+
+        self::assertContains('Finance', $names);
+        self::assertSame(0.0, $matrix->rows[0]->cells['goals.declared']->value);
+    }
+
+    /**
+     * PACE IS A CHIP PER GOAL, NOT AN AVERAGE OF THEM. Four goals in four
+     * states is four facts; a single number would answer a question
+     * nobody asked and a reader could not get back to the goals from it.
+     */
+    public function testThePaceColumnCountsStatesRatherThanMeasuringThem(): void
+    {
+        $department = new \Uhifadhi\Bundle\TeamBundle\Entity\Department()->setName('Ecology');
+        $this->em->persist($department);
+
+        foreach ([['Met one', 1.0], ['Met two', 1.0]] as [$statement, $target]) {
+            $goal = new \Uhifadhi\Bundle\TeamBundle\Entity\DepartmentGoal()
+                ->setDepartment($department)
+                ->setStatement($statement)
+                ->setTarget($target)
+                ->setUnit('')
+                ->setOpensAt(new \DateTimeImmutable('-30 days'))
+                ->setClosesAt(new \DateTimeImmutable('+30 days'));
+            $this->em->persist($goal);
+        }
+        $this->em->flush();
+
+        $goals = $this->topics()->byKey('goals', PerformanceScope::organisation(), self::period());
+        self::assertNotNull($goals);
+
+        $pace = $goals->matrix(PerformanceScope::organisation(), self::period())->rows[0]->cells['goals.pace'];
+
+        self::assertTrue($pace->isMarked(), 'the pace column counts states');
+        self::assertNull($pace->value, 'and states no figure, because there is none to state');
+        self::assertCount(2, $pace->marks, 'one chip a goal');
     }
 
     /** @param array<string, int> $modules slug to the position it is arranged at */

@@ -12,6 +12,9 @@ Not released yet.
    user entity contracts, the user badge and the devkit contracts
  * `Kpi\DepartmentKpiProviderInterface` and its value objects — how a module
    puts a figure on the performance surfaces of a department that attaches it
+ * `Performance\CellMark`, and a `MatrixCell` that may count STATES rather than
+   measure a figure — a department's goals pace is a chip a goal, and averaging
+   four states would answer a question nobody asked
  * `Atlas\CalendarFeedInterface` and its value objects — how a module has a
    month drawn: days, bounded pills, a hue role rather than a colour, and the
    surface naming the feed it wants as it names a plate's subject

@@ -8,6 +8,10 @@
 
 Not released yet.
 
+ * the Goals topic: every department is a row because any department can declare
+   a goal, each goal's state derived at the moment of asking rather than stored,
+   and "no figure yet" kept apart from a miss
+
  * no category bar on a permission group: a left mark on a card means focus, so
    a module's colour there said "you are here" on every group at once — the
    provenance is the heading's tag, its hue dot and its tint, as it already was

@@ -38,6 +38,7 @@ use Uhifadhi\Bundle\TeamBundle\EventListener\ApiErrorListener;
 use Uhifadhi\Bundle\TeamBundle\EventListener\ModuleHistoryListener;
 use Uhifadhi\Bundle\TeamBundle\People\TeamPersonDirectory;
 use Uhifadhi\Bundle\TeamBundle\People\TeamPersonFacets;
+use Uhifadhi\Bundle\TeamBundle\Performance\GoalsTopic;
 use Uhifadhi\Bundle\TeamBundle\Performance\StaffingTopic;
 use Uhifadhi\Bundle\TeamBundle\Repository\ApiTokenRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentGoalRepository;
@@ -522,6 +523,22 @@ return static function (ContainerConfigurator $container): void {
         ])
         ->tag(PerformanceTopicProviderInterface::TAG);
     $services->alias(StaffingTopic::class, 'team.performance.staffing_topic');
+
+    /*
+     * AND WHAT EACH DEPARTMENT SAID IT WOULD DO. The second host topic:
+     * every department can declare a goal, so every department is a row,
+     * and a goal's state is derived from the figure it names at the
+     * moment of asking rather than stored — which is why this needs the
+     * KPI collector and not a table of verdicts.
+     */
+    $services->set('team.performance.goals_topic', GoalsTopic::class)
+        ->args([
+            service(DepartmentRepository::class),
+            service(DepartmentGoalRepository::class),
+            service('team.department_performance'),
+        ])
+        ->tag(PerformanceTopicProviderInterface::TAG);
+    $services->alias(GoalsTopic::class, 'team.performance.goals_topic');
 
     /*
      * AND WHAT COLLECTS THEM: the host's topics first, then a module's in

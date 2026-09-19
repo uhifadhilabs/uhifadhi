@@ -14,7 +14,13 @@ declare(strict_types=1);
 namespace Uhifadhi\Contracts\Performance;
 
 /**
- * ONE FIGURE IN ONE DEPARTMENT'S ROW.
+ * ONE CELL OF ONE DEPARTMENT'S ROW — a figure, or a run of states.
+ *
+ * MOST COLUMNS MEASURE AND SOME COUNT STATES. A department's goals pace
+ * is four goals in four states, and averaging them would answer a
+ * question nobody asked; such a cell carries {@see CellMark}s instead of
+ * a value, and the renderer draws chips where it would otherwise draw a
+ * number. A cell never carries both — a column is one kind of question.
  *
  * THREE EMPTINESSES, AND THE PAGE DRAWS THEM DIFFERENTLY. `notMine` is a
  * column that does not apply to this department at all — it attaches no
@@ -35,7 +41,20 @@ final readonly class MatrixCell
         public array $history = [],
         /** True where this column is not this department's to answer. */
         public bool $notMine = false,
+        /**
+         * WHERE THE COLUMN COUNTS STATES RATHER THAN MEASURING. Empty on
+         * every ordinary cell.
+         *
+         * @var list<CellMark>
+         */
+        public array $marks = [],
     ) {
+    }
+
+    /** A cell that reads as a run of states — the goals pace, and its like. */
+    public static function marking(CellMark ...$marks): self
+    {
+        return new self(marks: array_values($marks));
     }
 
     public static function notMine(): self
@@ -45,6 +64,12 @@ final readonly class MatrixCell
 
     public function isKnown(): bool
     {
-        return !$this->notMine && null !== $this->value;
+        return !$this->notMine && (null !== $this->value || [] !== $this->marks);
+    }
+
+    /** Whether this cell counts states rather than measuring a figure. */
+    public function isMarked(): bool
+    {
+        return [] !== $this->marks;
     }
 }
