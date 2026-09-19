@@ -15,7 +15,10 @@ namespace Uhifadhi\Bundle\TeamBundle\Performance;
 
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
+use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
+use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Service\PerformanceHistory;
+use Uhifadhi\Bundle\TeamBundle\Service\PositionVacancy;
 use Uhifadhi\Bundle\TeamBundle\Service\StaffingFigures;
 use Uhifadhi\Contracts\Kpi\FigurePeriod;
 use Uhifadhi\Contracts\Performance\ChartKind;
@@ -56,10 +59,22 @@ final readonly class StaffingTopic implements PerformanceTopicProviderInterface
     /** What the sparkline is drawn over, and the run the charts use. */
     private const int PERIODS = 6;
 
+    /**
+     * HOW LONG A POST MAY STAND EMPTY BEFORE THE PAGE SAYS SO.
+     *
+     * The design's own default. It becomes an installation setting on the
+     * performance configure page; until that page exists, this is the one
+     * place it is written.
+     */
+    public const int THRESHOLD_DAYS = 60;
+
     public function __construct(
         private DepartmentRepository $departments,
         private StaffingFigures $staffing,
         private PerformanceHistory $history,
+        private PositionRepository $positions,
+        private UserRepository $users,
+        private PositionVacancy $vacancy,
     ) {
     }
 
@@ -100,19 +115,16 @@ final readonly class StaffingTopic implements PerformanceTopicProviderInterface
                 \sprintf('in %s positions', self::plainly($seats))),
             $this->figure(StaffingFigures::POSITIONS, 'Positions', $seats, $departments, $period, ColumnPolarity::None),
             /*
-             * THE FIFTH SLOT IS HELD OPEN AND SAYS SO. How long a post has
-             * stood vacant is a fact nothing in the core records yet, and
-             * a page of four where the design has five is a different
-             * page — so the figure states its own absence rather than
-             * being dropped or invented.
+             * AND HOW MANY POSTS HAVE STOOD EMPTY TOO LONG — counted from
+             * the day each fell vacant, which is written when it falls
+             * because it cannot be recovered afterwards.
+             *
+             * A POST WHOSE DAY NOBODY WROTE DOWN IS NOT COUNTED and the
+             * caption says how many those are: it may well be the oldest
+             * vacancy in the organisation, and counting it either way
+             * would be a guess.
              */
-            new TopicKpi(
-                key: 'staffing.over_threshold',
-                label: 'Vacant too long',
-                value: null,
-                caption: 'awaiting the day a post fell vacant',
-                polarity: ColumnPolarity::Down,
-            ),
+            $this->vacancies($departments, $period),
         ];
     }
 
@@ -183,6 +195,59 @@ final readonly class StaffingTopic implements PerformanceTopicProviderInterface
             $rows,
             'Every department has seats and people whatever it attaches, so every department is a row.',
         );
+    }
+
+    /**
+     * THE POSTS THAT HAVE STOOD EMPTY LONGER THAN THE INSTALLATION ALLOWS.
+     *
+     * @param list<Department> $departments
+     */
+    private function vacancies(array $departments, FigurePeriod $period): TopicKpi
+    {
+        $empty = [];
+        $undated = 0;
+        foreach ($this->positions->findAllOrdered() as $position) {
+            $department = $position->getDepartment();
+            if (null === $department || !$this->holds($departments, $department)) {
+                continue;
+            }
+
+            if (null === $position->getVacantSince()) {
+                // HELD, OR EMPTY SINCE BEFORE ANYBODY WROTE THE DAY DOWN.
+                // Which it is, is answered by whether somebody holds it.
+                if (0 === $this->users->countActiveHoldingAnyPosition([$position])) {
+                    ++$undated;
+                }
+
+                continue;
+            }
+
+            $empty[] = $position;
+        }
+
+        $over = $this->vacancy->overThreshold($empty, self::THRESHOLD_DAYS);
+
+        return new TopicKpi(
+            key: 'staffing.over_threshold',
+            label: \sprintf('Vacant over %d days', self::THRESHOLD_DAYS),
+            value: (float) $over,
+            caption: 0 === $undated
+                ? 'counted from the day each fell vacant'
+                : \sprintf('%d more stood empty before the day was recorded', $undated),
+            polarity: ColumnPolarity::Down,
+        );
+    }
+
+    /** @param list<Department> $departments */
+    private function holds(array $departments, Department $department): bool
+    {
+        foreach ($departments as $one) {
+            if ($one->getId() === $department->getId()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

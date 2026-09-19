@@ -28,7 +28,14 @@ use Uhifadhi\Bundle\TeamBundle\Model\RosterQuery;
 /**
  * @extends ServiceEntityRepository<User>
  */
-final class UserRepository extends ServiceEntityRepository
+/*
+ * NOT FINAL, for the reason DepartmentRepository is not: it is a
+ * COLLABORATOR now — whether a post stands empty is a count of who holds
+ * it — and a collaborator that cannot be doubled forces the unit that
+ * depends on it into a database it does not otherwise need. Nothing
+ * extends it; the modifier was a default rather than a decision.
+ */
+class UserRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {

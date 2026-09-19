@@ -22,6 +22,8 @@ use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Exception\PasswordTooShortException;
+use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
+use Uhifadhi\Bundle\TeamBundle\Service\PositionVacancy;
 use Uhifadhi\Bundle\TeamBundle\Service\SuperAdminInvariant;
 use Uhifadhi\Bundle\TeamBundle\Service\UserService;
 
@@ -139,6 +141,13 @@ final class UserServiceTest extends TestCase
             self::createStub(EntityManagerInterface::class),
             $hasher,
             new \ReflectionClass(SuperAdminInvariant::class)->newInstanceWithoutConstructor(),
+            // WHICH POSTS STAND EMPTY is a database question; this unit is
+            // about the hashing and the refusals, so the collaborator is
+            // real and its two reads are stubbed.
+            new PositionVacancy(
+                self::createStub(EntityManagerInterface::class),
+                self::createStub(UserRepository::class),
+            ),
         );
     }
 }

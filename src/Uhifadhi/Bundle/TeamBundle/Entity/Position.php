@@ -70,6 +70,18 @@ class Position
     private ?Department $department = null;
 
     /**
+     * THE DAY THIS POST FELL EMPTY, and null while somebody stands in it.
+     *
+     * NULL ALSO MEANS UNKNOWN, for a post that was already empty before
+     * the day was recorded: a surface reads that as "unknown" rather than
+     * starting the clock at the upgrade, which would make an
+     * eighteen-month vacancy look like a fresh one. Which of the two a
+     * null is, is answered by whether anybody holds the post.
+     */
+    #[ORM\Column(name: 'vacant_since', type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $vacantSince = null;
+
+    /**
      * The granted permissions, stored as plain strings — core values and
      * module-declared ones alike, in the order they were granted.
      *
@@ -85,6 +97,18 @@ class Position
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function getVacantSince(): ?\DateTimeImmutable
+    {
+        return $this->vacantSince;
+    }
+
+    public function setVacantSince(?\DateTimeImmutable $vacantSince): static
+    {
+        $this->vacantSince = $vacantSince;
+
+        return $this;
     }
 
     public function getName(): ?string

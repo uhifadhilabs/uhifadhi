@@ -335,6 +335,7 @@ final class TestKernel extends Kernel
             \Uhifadhi\Bundle\TeamBundle\Shell\DepartmentAreaNavChildren::class => 'team.area_nav_children',
             \Uhifadhi\Bundle\TeamBundle\Service\PerformanceHistory::class => 'team.performance_history',
             \Uhifadhi\Bundle\TeamBundle\Service\PerformanceTopics::class => 'team.performance_topics',
+            \Uhifadhi\Bundle\TeamBundle\Service\PositionVacancy::class => 'team.position_vacancy',
         ] as $class => $serviceId) {
             $container->services()->alias('test_public.'.$class, $serviceId)->public();
         }

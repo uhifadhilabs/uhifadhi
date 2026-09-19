@@ -63,7 +63,11 @@ final readonly class PositionService
      */
     public function create(string $name, ?Department $department): Position
     {
-        $position = new Position()->setName($name)->setDepartment($department);
+        // A POST IS BORN EMPTY, and the day it was born is the day it fell
+        // vacant: a position filed in March and never filled has stood
+        // empty since March, which is exactly what a director needs to see.
+        $position = new Position()->setName($name)->setDepartment($department)
+            ->setVacantSince(new \DateTimeImmutable());
 
         $this->entityManager->persist($position);
         $this->flush($name);

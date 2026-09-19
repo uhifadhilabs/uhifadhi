@@ -57,6 +57,7 @@ use Uhifadhi\Bundle\TeamBundle\Service\PerformanceHistory;
 use Uhifadhi\Bundle\TeamBundle\Service\PerformanceTopics;
 use Uhifadhi\Bundle\TeamBundle\Service\PermissionCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionService;
+use Uhifadhi\Bundle\TeamBundle\Service\PositionVacancy;
 use Uhifadhi\Bundle\TeamBundle\Service\StaffingFigures;
 use Uhifadhi\Bundle\TeamBundle\Service\SuperAdminInvariant;
 use Uhifadhi\Bundle\TeamBundle\Service\TeamOverview;
@@ -447,6 +448,17 @@ return static function (ContainerConfigurator $container): void {
      * THE FIGURES EVERY DEPARTMENT HAS WHATEVER IT ATTACHES — counted once,
      * for the snapshot, the matrix and the band alike.
      */
+    /*
+     * SINCE WHEN A POST HAS STOOD EMPTY — written at the moment it becomes
+     * true, because the day cannot be recovered afterwards.
+     */
+    $services->set('team.position_vacancy', PositionVacancy::class)
+        ->args([
+            service('doctrine.orm.entity_manager'),
+            service(UserRepository::class),
+        ]);
+    $services->alias(PositionVacancy::class, 'team.position_vacancy');
+
     $services->set('team.staffing_figures', StaffingFigures::class)
         ->args([
             service(PositionRepository::class),
@@ -464,6 +476,9 @@ return static function (ContainerConfigurator $container): void {
             service(DepartmentRepository::class),
             service('team.staffing_figures'),
             service('team.performance_history'),
+            service(PositionRepository::class),
+            service(UserRepository::class),
+            service('team.position_vacancy'),
         ])
         ->tag(PerformanceTopicProviderInterface::TAG);
     $services->alias(StaffingTopic::class, 'team.performance.staffing_topic');
@@ -552,6 +567,7 @@ return static function (ContainerConfigurator $container): void {
             service('doctrine.orm.entity_manager'),
             service('security.user_password_hasher'),
             service('team.super_admin_invariant'),
+            service('team.position_vacancy'),
         ]);
 
     /*

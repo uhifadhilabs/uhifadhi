@@ -53,6 +53,7 @@ final readonly class UserService
         private EntityManagerInterface $entityManager,
         private UserPasswordHasherInterface $hasher,
         private SuperAdminInvariant $invariant,
+        private PositionVacancy $vacancies,
     ) {
     }
 
@@ -94,6 +95,10 @@ final readonly class UserService
         $user->setPassword($this->hasher->hashPassword($user, $password));
 
         $this->save($user, $email);
+
+        // SEATING SOMEBODY AT BIRTH FILLS THE POST, exactly as seating them
+        // later does.
+        $this->vacancies->refreshAndFlush($position);
 
         return $user;
     }
@@ -165,7 +170,14 @@ final readonly class UserService
      */
     public function assignPosition(User $user, ?Position $position): void
     {
+        $was = $user->getPosition();
         $user->setPosition($position);
+        $this->entityManager->flush();
+
+        // WHICH POSTS ARE EMPTY HAS JUST CHANGED, on both sides: the one
+        // they left may now stand empty, and the one they joined does not.
+        $this->vacancies->refresh($was);
+        $this->vacancies->refresh($position);
         $this->entityManager->flush();
     }
 
@@ -182,12 +194,17 @@ final readonly class UserService
 
         $user->deactivate();
         $this->entityManager->flush();
+
+        // A POST WHOSE LAST HOLDER HAS LEFT IS EMPTY, however they left.
+        $this->vacancies->refreshAndFlush($user->getPosition());
     }
 
     public function reactivate(User $user): void
     {
         $user->reactivate();
         $this->entityManager->flush();
+
+        $this->vacancies->refreshAndFlush($user->getPosition());
     }
 
     /**

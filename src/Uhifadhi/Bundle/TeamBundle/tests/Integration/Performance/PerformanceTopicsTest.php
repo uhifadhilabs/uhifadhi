@@ -97,6 +97,41 @@ final class PerformanceTopicsTest extends IntegrationTestCase
         }
     }
 
+    /**
+     * THE STAFFING TOPIC COUNTS WHAT HAS STOOD EMPTY TOO LONG, from the day
+     * each post fell vacant — and says how many it could not count,
+     * because a post that was already empty before the day was recorded
+     * may be the oldest vacancy there is.
+     */
+    public function testTheStaffingTopicCountsThePostsThatHaveStoodEmptyTooLong(): void
+    {
+        $department = new \Uhifadhi\Bundle\TeamBundle\Entity\Department()->setName('Protection Service');
+        $this->em->persist($department);
+
+        $long = new \Uhifadhi\Bundle\TeamBundle\Entity\Position()->setName('Ranger')->setDepartment($department);
+        $long->setPermissionValues([], []);
+        $long->setVacantSince(new \DateTimeImmutable('-96 days'));
+        $fresh = new \Uhifadhi\Bundle\TeamBundle\Entity\Position()->setName('Warden')->setDepartment($department);
+        $fresh->setPermissionValues([], []);
+        $fresh->setVacantSince(new \DateTimeImmutable('-3 days'));
+        $undated = new \Uhifadhi\Bundle\TeamBundle\Entity\Position()->setName('Scout')->setDepartment($department);
+        $undated->setPermissionValues([], []);
+        $this->em->persist($long);
+        $this->em->persist($fresh);
+        $this->em->persist($undated);
+        $this->em->flush();
+
+        $staffing = $this->topics()->byKey('staffing', PerformanceScope::organisation(), self::period());
+        self::assertNotNull($staffing);
+
+        $figures = $staffing->kpis(PerformanceScope::organisation(), self::period());
+        $overThreshold = $figures[4];
+
+        self::assertSame('staffing.over_threshold', $overThreshold->key);
+        self::assertSame(1.0, $overThreshold->value);
+        self::assertStringContainsString('1 more stood empty', $overThreshold->caption);
+    }
+
     /** @param array<string, int> $modules slug to the position it is arranged at */
     private function aCatalogue(array $modules): void
     {
