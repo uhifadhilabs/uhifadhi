@@ -1,0 +1,182 @@
+<?php
+
+declare(strict_types=1);
+
+/*
+ * This file is part of the Uhifadhi core.
+ *
+ * (c) Ezekiel Mjema <https://github.com/eemjema>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace Uhifadhi\Bundle\AreaBundle\Controller;
+
+use Symfony\Bridge\Doctrine\Attribute\MapEntity;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Requirement\Requirement;
+use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Uid\Uuid;
+use Twig\Environment;
+use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\AreaBundle\Entity\Station;
+use Uhifadhi\Bundle\AreaBundle\Model\PostingQuery;
+use Uhifadhi\Bundle\AreaBundle\Model\StationQuery;
+use Uhifadhi\Bundle\AreaBundle\Model\StationRegister;
+use Uhifadhi\Bundle\AreaBundle\Model\StationRow;
+use Uhifadhi\Bundle\AreaBundle\Repository\PostingRepository;
+use Uhifadhi\Bundle\AreaBundle\Repository\StationEventRepository;
+use Uhifadhi\Bundle\AreaBundle\Repository\StationRepository;
+use Uhifadhi\Bundle\AreaBundle\Service\AreaPlateService;
+use Uhifadhi\Bundle\AreaBundle\Service\PersonDirectoryService;
+use Uhifadhi\Bundle\AreaBundle\Service\PostingBoardService;
+use Uhifadhi\Bundle\AreaBundle\Service\StationNoticeStore;
+use Uhifadhi\Bundle\AreaBundle\Service\StationRegisterService;
+use Uhifadhi\Bundle\AreaBundle\Service\StationService;
+use Uhifadhi\Bundle\AreaBundle\Service\ZoneSetService;
+
+/**
+ * THE STATIONS SECTION OF AN AREA'S CONFIGURE PAGE — where a post is added,
+ * moved, renamed and staffed, and the only place any of that happens.
+ *
+ * IT ONLY CONFIGURES. Reading a post is the station page's job and reading
+ * the ground is the Zones tab's; nothing here draws duty, patrols, incidents
+ * or any figure a module publishes, and there is no row of KPI cards —
+ * a configuration section has none worth carrying, and the group headings
+ * state the counts.
+ *
+ * A SCREEN, NOT A RENDERED SECTION, for the same reason Zones is one: it
+ * takes writes and answers them with redirects, so it has an address of its
+ * own. The frame is unchanged — the shell puts the section strip where a data
+ * page's tabs go and lights the Configure action.
+ *
+ * ONE CARD, ONE FLAT LIST, AND THE ZONE IS A FILTER. Grouping the register by
+ * zone would make the zone the only way in; a name or a code is how an
+ * operator actually arrives.
+ *
+ * READING IS GATED ON `area.view`, WRITING ON `area.edit` — the split every
+ * area surface makes.
+ */
+final readonly class StationConfigureController
+{
+    public const string ROUTE = 'area_stations_configure';
+
+    /** Which row is open is a place, so it is a query a link can carry. */
+    public const string OPEN_QUERY = 'open';
+
+    public function __construct(
+        private Environment $twig,
+        private StationRegisterService $register,
+        private StationRepository $stations,
+        private PostingRepository $postings,
+        private StationEventRepository $events,
+        private PostingBoardService $board,
+        private PersonDirectoryService $directory,
+        private StationService $stationService,
+        private ZoneSetService $set,
+        private AreaPlateService $plates,
+        private StationNoticeStore $notices,
+        private CsrfTokenManagerInterface $csrf,
+    ) {
+    }
+
+    #[Route('/areas/{uuid}/stations/settings', name: self::ROUTE, requirements: ['uuid' => Requirement::UUID], methods: ['GET'])]
+    #[IsGranted('area.view')]
+    public function configure(
+        Request $request,
+        #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
+    ): Response {
+        $query = self::queryFrom($request);
+        $register = $this->register->register($area, $query);
+        $view = $this->set->view($area);
+
+        $open = self::openRowOf($request, $area, $this->stations);
+        $board = null === $open ? [] : $this->board->at($open, new PostingQuery())['rows'];
+
+        $posts = [];
+        foreach ($this->stations->findByArea($area) as $post) {
+            $posts[] = [
+                'uuid' => (string) $post->getUuidString(),
+                'name' => (string) $post->getName(),
+                'point' => $post->getPoint(),
+                'posted' => $this->postings->countStandingByStation($post),
+                'here' => false,
+            ];
+        }
+
+        return new Response($this->twig->render('@Area/station/configure.html.twig', [
+            'area' => $area,
+            'register' => $register,
+            'query' => $query,
+            'open' => $open,
+            'openRow' => null === $open ? null : self::rowOf($register, (string) $open->getUuidString()),
+            'board' => $board,
+            'people' => $this->directory->people(),
+            'nextCode' => $this->stationService->nextCode($area),
+            'events' => $this->events->findByArea($area),
+            'refusal' => $this->notices->takeRefusal($area),
+            'outcome' => $this->notices->takeOutcome($area),
+            'map' => $this->plates->picker($area, $view->rows, $posts),
+            'addToken' => $this->csrf->getToken(StationEditController::ADD_TOKEN)->getValue(),
+            'editToken' => $this->csrf->getToken(StationEditController::EDIT_TOKEN)->getValue(),
+            'postingToken' => $this->csrf->getToken(StationEditController::POSTING_TOKEN)->getValue(),
+        ]));
+    }
+
+    /**
+     * THE OPEN ROW, IF IT IS THIS AREA'S. A uuid from another area opens
+     * nothing rather than opening somebody else's post — the same answer a
+     * mangled link gets.
+     */
+    private static function openRowOf(Request $request, AreaOfInterest $area, StationRepository $stations): ?Station
+    {
+        $uuid = $request->query->get(self::OPEN_QUERY);
+        if (!\is_string($uuid) || !Uuid::isValid($uuid)) {
+            return null;
+        }
+
+        $station = $stations->findOneBy(['uuid' => $uuid]);
+
+        return $station instanceof Station && $station->getArea()?->getId() === $area->getId() ? $station : null;
+    }
+
+    /** The open row as the register reads it, when this page of it holds one. */
+    private static function rowOf(StationRegister $register, string $uuid): ?StationRow
+    {
+        foreach ($register->rows as $row) {
+            if ($row->uuid === $uuid) {
+                return $row;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * AN UNKNOWN ANSWER FILTERS NOTHING and an unknown sort is the default: a
+     * stale link should show the register, not an error about how it was
+     * ordered.
+     */
+    private static function queryFrom(Request $request): StationQuery
+    {
+        $active = trim($request->query->getString(StationQuery::ACTIVE, StationQuery::YES));
+        $sort = $request->query->getString(StationQuery::SORT, StationQuery::BY_NAME);
+        $posted = trim($request->query->getString(StationQuery::POSTED));
+        $zone = trim($request->query->getString(StationQuery::ZONE));
+
+        return new StationQuery(
+            zone: '' === $zone ? null : $zone,
+            // "all" is how the address says both; anything else it does not
+            // know is the resting state rather than an empty register.
+            active: \in_array($active, StationQuery::ANSWERS, true) ? $active : ('all' === $active ? null : StationQuery::YES),
+            posted: \in_array($posted, StationQuery::ANSWERS, true) ? $posted : null,
+            search: trim($request->query->getString(StationQuery::SEARCH)),
+            sort: \in_array($sort, StationQuery::SORTS, true) ? $sort : StationQuery::BY_NAME,
+            page: max(1, $request->query->getInt(StationQuery::PAGE, 1)),
+        );
+    }
+}

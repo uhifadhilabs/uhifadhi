@@ -1,0 +1,380 @@
+<?php
+
+declare(strict_types=1);
+
+/*
+ * This file is part of the Uhifadhi core.
+ *
+ * (c) Ezekiel Mjema <https://github.com/eemjema>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web;
+
+use PHPUnit\Framework\Attributes\CoversClass;
+use Symfony\Component\HttpFoundation\Response;
+use Uhifadhi\Bundle\AreaBundle\Controller\StationConfigureController;
+use Uhifadhi\Bundle\AreaBundle\Controller\StationEditController;
+use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\AreaBundle\Entity\Station;
+use Uhifadhi\Bundle\AreaBundle\Enum\PostingSource;
+use Uhifadhi\Bundle\AreaBundle\Repository\StationRepository;
+use Uhifadhi\Bundle\AreaBundle\Service\PostingService;
+use Uhifadhi\Bundle\AreaBundle\Service\StationService;
+use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web\Fixtures\HostUser;
+
+/**
+ * THE STATIONS SECTION OF THE CONFIGURE PAGE, OVER REAL HTTP.
+ *
+ * IT ONLY CONFIGURES, and every write commits from its own control and
+ * answers with a redirect — so a refresh cannot repeat it and the row that
+ * was open stays open.
+ *
+ * THE ADDRESS IS THE STATE. Every filter, the order and the page are links,
+ * so a filtered register is something somebody can send and a browser can go
+ * back to; this suite exercises them the way a reader does.
+ */
+#[CoversClass(StationConfigureController::class)]
+#[CoversClass(StationEditController::class)]
+final class StationConfigureTest extends WebTestCase
+{
+    public function testTheSectionListsThePostsWithTheirCodeDerivedZoneAndCount(): void
+    {
+        $this->boot();
+        $this->signIn();
+        [$area] = $this->aStaffedPost();
+
+        $body = $this->body($this->section($area));
+
+        self::assertStringContainsString('Seneto Gate Post', $body);
+        self::assertStringContainsString('ST-01', $body);
+        self::assertStringContainsString('Western Sector', $body);
+        self::assertStringContainsString('2 posted', $body);
+        // The plate is the atlas's, wearing the house contract.
+        self::assertStringContainsString('map-plate', $body);
+        self::assertStringContainsString('map-legend', $body);
+    }
+
+    public function testAnAreaWithNoPostSaysSoAndOffersToAddTheFirst(): void
+    {
+        $this->boot();
+        $this->signIn();
+
+        $body = $this->body($this->section($this->anArea()));
+
+        self::assertStringContainsString('No station in this area yet', $body);
+        self::assertStringContainsString('Add the first station', $body);
+        // The code the next post will take is stated before it is issued.
+        self::assertStringContainsString('ST-01', $body);
+    }
+
+    public function testAddingAPostIssuesItsCodeDerivesItsZoneAndOpensItsRow(): void
+    {
+        $this->boot();
+        $this->signIn();
+        $area = $this->anArea();
+        $this->aZone($area, 'Western Sector', self::A_WEST_HALF);
+
+        $this->submit($area, '/stations/add', [
+            'name' => 'Seneto Gate Post', 'lat' => '-3.2', 'lon' => '-29.75',
+        ]);
+
+        self::assertSame(Response::HTTP_FOUND, $this->browser()->getResponse()->getStatusCode());
+        $station = $this->stationsRepository()->findOneBy(['name' => 'Seneto Gate Post']);
+        self::assertInstanceOf(Station::class, $station);
+        self::assertSame('ST-01', $station->getCode());
+        self::assertSame('Western Sector', $station->getZone()?->getName());
+        // The write comes back with the row it wrote still open.
+        self::assertStringContainsString('open='.$station->getUuidString(), (string) $this->browser()->getResponse()->headers->get('Location'));
+    }
+
+    /** A name with no point is not a post, and the refusal says which. */
+    public function testAPostWithNoPointIsRefusedAndNothingIsWritten(): void
+    {
+        $this->boot();
+        $this->signIn();
+        $area = $this->anArea();
+
+        $this->submit($area, '/stations/add', ['name' => 'Seneto Gate Post']);
+
+        self::assertNull($this->stationsRepository()->findOneBy(['name' => 'Seneto Gate Post']));
+        self::assertStringContainsString('it needs a point', $this->body($this->section($area)));
+    }
+
+    public function testTheNameThePointAndTheDescriptionEachCommitOnTheirOwn(): void
+    {
+        $this->boot();
+        $this->signIn();
+        [$area, $station] = $this->aStaffedPost();
+        $uuid = (string) $station->getUuidString();
+
+        $this->submit($area, '/stations/'.$uuid.'/rename', ['name' => 'Seneto Main Gate'], $uuid);
+        $this->submit($area, '/stations/'.$uuid.'/point', ['lat' => '-3.1', 'lon' => '-29.4'], $uuid);
+        $this->submit($area, '/stations/'.$uuid.'/describe', [
+            'elevation' => '2286', 'locality' => 'crater rim road',
+        ], $uuid);
+
+        $this->em->clear();
+        $station = $this->stationsRepository()->findOneBy(['uuid' => $uuid]);
+        self::assertInstanceOf(Station::class, $station);
+        self::assertSame('Seneto Main Gate', $station->getName());
+        self::assertSame(2286, $station->getElevationM());
+        self::assertSame('crater rim road', $station->getLocality());
+        // The point moved east, out of the western zone, and the zone followed it.
+        self::assertNull($station->getZone());
+    }
+
+    /** THE ADDRESS IS THE STATE: each filter is a link, and it filters. */
+    public function testTheRegisterIsFilteredByTheAddress(): void
+    {
+        $this->boot();
+        $this->signIn();
+        [$area] = $this->aStaffedPost();
+        $this->stations()->add($area, 'Eastern Outpost', -29.25, -3.2);
+
+        self::assertSame(['Eastern Outpost'], $this->listed($this->section($area).'?zone=unzoned'));
+        self::assertSame(['Seneto Gate Post'], $this->listed($this->section($area).'?q=seneto'));
+        self::assertSame(['Eastern Outpost'], $this->listed($this->section($area).'?posted=no'));
+    }
+
+    public function testAFilterThatMatchesNothingSaysSoAndOffersTheWayBack(): void
+    {
+        $this->boot();
+        $this->signIn();
+        [$area] = $this->aStaffedPost();
+
+        $body = $this->body($this->section($area).'?q=nothing-by-this-name');
+
+        self::assertStringContainsString('No station matches', $body);
+        self::assertStringContainsString('Clear the filters', $body);
+    }
+
+    /** THE CARD IS BOUNDED BY A PAGE, not by a scrollbar. */
+    public function testTheRegisterIsPagedEightAtATime(): void
+    {
+        $this->boot();
+        $this->signIn();
+        $area = $this->anArea();
+        for ($i = 1; $i <= 9; ++$i) {
+            $this->stations()->add($area, \sprintf('Post %02d', $i), -29.75, -3.2);
+        }
+
+        self::assertStringContainsString('1&ndash;8 of 9 stations', $this->body($this->section($area)));
+        self::assertCount(8, $this->listed($this->section($area)));
+        self::assertSame(['Post 09'], $this->listed($this->section($area).'?page=2'));
+    }
+
+    /**
+     * AN OPEN ROW CARRIES THE RECORD FIELDS AND THE BOARD, and the board is
+     * the only place a leader is appointed.
+     */
+    public function testAnOpenRowDrawsTheRecordFieldsAndThePostingsBoard(): void
+    {
+        $this->boot();
+        $this->signIn();
+        [$area, $station] = $this->aStaffedPost();
+
+        $body = $this->body($this->section($area).'?open='.$station->getUuidString());
+
+        self::assertStringContainsString('Posted here', $body);
+        self::assertStringContainsString('J. Mollel', $body);
+        self::assertStringContainsString('Leads', $body);
+        self::assertStringContainsString('Appoint leader', $body);
+        self::assertStringContainsString('Post to this station', $body);
+        self::assertStringContainsString('derived', $body);
+    }
+
+    public function testSomebodyIsPostedAppointedAndStoodDownFromTheOpenRow(): void
+    {
+        $this->boot();
+        $this->signIn();
+        [$area, $station] = $this->aStaffedPost();
+        $uuid = (string) $station->getUuidString();
+        $newcomer = $this->aPerson('B.', 'Mwita');
+
+        $this->submit($area, '/stations/'.$uuid.'/postings', [
+            'person' => (string) $newcomer->getUuidString(),
+        ], $uuid);
+
+        $body = $this->body($this->section($area).'?open='.$uuid);
+        self::assertStringContainsString('B. Mwita', $body);
+        self::assertSame(3, \count($this->postings()->standingAt($station)));
+
+        // The newcomer leads, which stands the old lead down in the same write.
+        $posting = $this->postings()->standingAt($station)[0];
+        foreach ($this->postings()->standingAt($station) as $standing) {
+            if ('B. Mwita' === $standing->getPerson()?->getFullName()) {
+                $posting = $standing;
+            }
+        }
+
+        $this->submit($area, '/postings/'.$posting->getUuidString().'/lead', [], $uuid);
+        self::assertSame('B. Mwita', $this->postings()->leaderAt($station)?->getPerson()?->getFullName());
+
+        $this->submit($area, '/postings/'.$posting->getUuidString().'/end', [], $uuid);
+        self::assertSame(2, \count($this->postings()->standingAt($station)));
+    }
+
+    /**
+     * CLOSED, NOT DELETED: it keeps its point, leaves the active register,
+     * stays reachable behind the filter and can be reopened.
+     */
+    public function testClosingAPostStandsEverybodyDownAndLeavesItBehindTheFilter(): void
+    {
+        $this->boot();
+        $this->signIn();
+        [$area, $station] = $this->aStaffedPost();
+        $uuid = (string) $station->getUuidString();
+
+        // The question is asked through the platform's shared confirm modal.
+        self::assertStringContainsString('confirm-modal', $this->body($this->section($area).'?open='.$uuid));
+
+        $this->submit($area, '/stations/'.$uuid.'/activity', ['active' => '0'], $uuid);
+
+        self::assertSame([], $this->postings()->standingAt($station));
+        self::assertSame([], $this->listed($this->section($area)));
+        self::assertSame(['Seneto Gate Post'], $this->listed($this->section($area).'?active=no'));
+
+        $this->submit($area, '/stations/'.$uuid.'/activity', ['active' => '1'], $uuid.'&active=no');
+        self::assertSame(['Seneto Gate Post'], $this->listed($this->section($area)));
+    }
+
+    /** A post of another area is not this section's to change. */
+    public function testAPostOfAnotherAreaIsRefused(): void
+    {
+        $this->boot();
+        $this->signIn();
+        [$area, $station] = $this->aStaffedPost();
+        $other = $this->anArea('Second Reserve');
+
+        // The token is this area's page's; the address is the other area's.
+        $this->submit($area, '/stations/'.$station->getUuidString().'/rename', ['name' => 'Elsewhere'], (string) $station->getUuidString(), $other);
+
+        self::assertSame(Response::HTTP_FORBIDDEN, $this->browser()->getResponse()->getStatusCode());
+    }
+
+    /** Reading how an area is set up is a lens; changing it is an edit. */
+    public function testAViewerWhoMayNotEditIsRefusedEveryWriteAndStillSeesTheSection(): void
+    {
+        $this->boot(['area.view']);
+        $this->signIn();
+        $area = $this->anArea();
+
+        $this->browser()->request('GET', $this->section($area));
+        self::assertSame(Response::HTTP_OK, $this->browser()->getResponse()->getStatusCode());
+
+        $this->browser()->request('POST', '/areas/'.$area->getUuidString().'/stations/add', ['_token' => 'whatever']);
+        self::assertSame(Response::HTTP_FORBIDDEN, $this->browser()->getResponse()->getStatusCode());
+    }
+
+    // ---------------------------------------------------------------- fixtures
+
+    private function section(AreaOfInterest $area): string
+    {
+        return '/areas/'.$area->getUuidString().'/stations/settings';
+    }
+
+    /**
+     * THE REGISTER'S ROWS ALONE.
+     *
+     * THE PLATE NAMES EVERY POST IN THE AREA, because a picker that hid the
+     * posts a filter excluded would be a picker you could put a new point on
+     * top of one with. So "this row is not in the register" is asked of the
+     * register and not of the page.
+     *
+     * @return list<string>
+     */
+    private function listed(string $url): array
+    {
+        preg_match_all('#<a class="zc-nm"[^>]*>([^<]+)</a>#', $this->body($url), $found);
+
+        return array_map(trim(...), $found[1]);
+    }
+
+    private function body(string $url): string
+    {
+        $this->browser()->request('GET', $url);
+
+        return (string) $this->browser()->getResponse()->getContent();
+    }
+
+    /**
+     * A WRITE, THE WAY A READER MAKES IT: the token comes off the page that
+     * carries the form, because a token minted outside a request belongs to
+     * no session and proves nothing about the form.
+     *
+     * @param array<string, string> $fields
+     */
+    private function submit(AreaOfInterest $area, string $path, array $fields, ?string $open = null, ?AreaOfInterest $to = null): void
+    {
+        $page = $this->body($this->section($area).(null === $open ? '' : '?open='.$open));
+
+        $this->browser()->request('POST', '/areas/'.($to ?? $area)->getUuidString().$path, [
+            ...$fields,
+            '_token' => $this->tokenOn($page, $path),
+        ]);
+    }
+
+    private function tokenOn(string $body, string $action): string
+    {
+        preg_match(
+            '#<form[^>]*action="[^"]*'.preg_quote($action, '#').'"[^>]*>.*?name="_token" value="([^"]+)"#s',
+            $body,
+            $matches,
+        );
+
+        $token = $matches[1] ?? '';
+        self::assertNotSame('', $token, \sprintf('The page carries no form posting to "%s".', $action));
+
+        return $token;
+    }
+
+    /** @return array{0: AreaOfInterest, 1: Station} */
+    private function aStaffedPost(): array
+    {
+        $area = $this->anArea();
+        $this->aZone($area, 'Western Sector', self::A_WEST_HALF);
+        $station = $this->stations()->add($area, 'Seneto Gate Post', -29.75, -3.2);
+
+        $lead = $this->postings()->post($station, $this->aPerson('J.', 'Mollel'), PostingSource::WrittenHere);
+        $this->postings()->appointLeader($lead);
+        $this->postings()->post($station, $this->aPerson('T.', 'Ndosi'), PostingSource::FromTheirPage);
+
+        return [$area, $station];
+    }
+
+    private function aPerson(string $first, string $last): HostUser
+    {
+        $person = new HostUser()->named($first, $last);
+        $this->em->persist($person);
+        $this->em->flush();
+
+        return $person;
+    }
+
+    private function stations(): StationService
+    {
+        /** @var StationService $service */
+        $service = static::getContainer()->get('test_public.area.stations');
+
+        return $service;
+    }
+
+    private function stationsRepository(): StationRepository
+    {
+        /** @var StationRepository $repository */
+        $repository = $this->em->getRepository(Station::class);
+
+        return $repository;
+    }
+
+    private function postings(): PostingService
+    {
+        /** @var PostingService $service */
+        $service = static::getContainer()->get('test_public.area.postings');
+
+        return $service;
+    }
+}

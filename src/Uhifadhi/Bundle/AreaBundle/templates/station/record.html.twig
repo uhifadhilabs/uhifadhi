@@ -98,22 +98,23 @@
                PostingDutyProviderInterface in the roster rework. #}
             <div class="lfilt stfilt">
                 {% if facets.knowsRoles %}
-                    {{ include('@Area/station/_filter.html.twig', {
+                    {{ include('@Area/_partial/_filter.html.twig', {
                         label: 'role', all: 'all roles', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\PostingQuery::ROLE'),
-                        chosen: query.role, counts: facets.roles, query: query, here: here,
+                        chosen: query.role, options: facets.roleOptions, query: query, here: here,
                     }) }}
-                    {{ include('@Area/station/_filter.html.twig', {
+                    {{ include('@Area/_partial/_filter.html.twig', {
                         label: 'dept', all: 'all departments', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\PostingQuery::DEPARTMENT'),
-                        chosen: query.department, counts: facets.departments, query: query, here: here,
+                        chosen: query.department, options: facets.departmentOptions, query: query, here: here,
                     }) }}
                 {% endif %}
-                {{ include('@Area/station/_filter.html.twig', {
+                {{ include('@Area/_partial/_filter.html.twig', {
                     label: 'source', all: 'either door', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\PostingQuery::SOURCE'),
-                    chosen: query.source, counts: facets.sources, query: query, here: here,
+                    chosen: query.source, options: facets.sourceOptions, query: query, here: here,
                 }) }}
-                {{ include('@Area/station/_filter.html.twig', {
+                {{ include('@Area/_partial/_filter.html.twig', {
                     label: 'a&ndash;z', all: 'a&ndash;z', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\PostingQuery::SORT'),
-                    chosen: query.sort == 'az' ? null : query.sort, counts: {'since': 0}, query: query, here: here,
+                    chosen: query.sort == 'az' ? null : query.sort,
+                    options: [{value: 'since', label: 'by how long', count: 0, hue: null}], query: query, here: here,
                 }) }}
 
                 <form class="lsearch" method="get" action="{{ here }}">

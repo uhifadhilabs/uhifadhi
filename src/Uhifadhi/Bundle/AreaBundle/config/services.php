@@ -34,11 +34,13 @@ use Uhifadhi\Bundle\AreaBundle\Service\AreaPresetLibrary;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaRegister;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaThumbnailer;
 use Uhifadhi\Bundle\AreaBundle\Service\BoundaryImport;
+use Uhifadhi\Bundle\AreaBundle\Service\PersonDirectoryService;
 use Uhifadhi\Bundle\AreaBundle\Service\PersonFacetService;
 use Uhifadhi\Bundle\AreaBundle\Service\PostingBoardService;
 use Uhifadhi\Bundle\AreaBundle\Service\PostingService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationEventService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationFigureService;
+use Uhifadhi\Bundle\AreaBundle\Service\StationRegisterService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneEventService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneExportService;
@@ -54,6 +56,7 @@ use Uhifadhi\Bundle\RegistryBundle\Repository\AreaModuleRepository;
 use Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceInterface;
 use Uhifadhi\Contracts\Kpi\StationFigureProviderInterface;
 use Uhifadhi\Contracts\Kpi\ZoneFigureProviderInterface;
+use Uhifadhi\Contracts\People\PersonDirectoryProviderInterface;
 use Uhifadhi\Contracts\People\PersonFacetProviderInterface;
 use Uhifadhi\Contracts\People\PersonPostingProviderInterface;
 
@@ -153,6 +156,7 @@ return static function (ContainerConfigurator $container): void {
             service('doctrine.orm.entity_manager'),
             service(StationRepository::class),
             service('area.station_events'),
+            service('area.postings'),
         ]);
     $services->alias(StationService::class, 'area.stations');
 
@@ -201,6 +205,18 @@ return static function (ContainerConfigurator $container): void {
     $services->alias(PersonFacetService::class, 'area.person_facets');
 
     /*
+     * THE AREA'S POSTS AS ONE FLAT, FILTERED, PAGED LIST — the register the
+     * stations section is, with every facet counted against the other filters.
+     */
+    $services->set('area.station_register', StationRegisterService::class)
+        ->args([
+            service(StationRepository::class),
+            service(PostingRepository::class),
+            service('area.zone_set'),
+        ]);
+    $services->alias(StationRegisterService::class, 'area.station_register');
+
+    /*
      * WHAT A ZONE KNOWS ABOUT THE POSTS ON ITS GROUND — the two numbers a shut
      * card states for the whole area at once, and the full board of the one
      * card somebody opened.
@@ -212,6 +228,18 @@ return static function (ContainerConfigurator $container): void {
             service('area.posting_board'),
         ]);
     $services->alias(ZoneStationService::class, 'area.zone_stations');
+
+    /*
+     * AND WHO THERE IS AT ALL, for the row that posts somebody to a station.
+     * The same seam one question further back, read the same way: by tag, and
+     * with nobody named here either.
+     */
+    $services->set('area.person_directory', PersonDirectoryService::class)
+        ->args([
+            tagged_iterator(PersonDirectoryProviderInterface::TAG),
+            service('doctrine.orm.entity_manager'),
+        ]);
+    $services->alias(PersonDirectoryService::class, 'area.person_directory');
 
     /*
      * WHAT THE MODULES SAY ABOUT A ZONE — every tagged provider, asked once for

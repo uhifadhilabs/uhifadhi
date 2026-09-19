@@ -175,7 +175,7 @@ final class StationEventTest extends IntegrationTestCase
     {
         $station = $this->aStation();
 
-        $this->stations()->deactivate($station, 'n.kileo');
+        $this->stations()->deactivate($station, actor: 'n.kileo');
         self::assertSame('by n.kileo · nothing was deleted', $this->lineOfKind($station, StationEventKind::Deactivated)?->getDetail());
 
         $this->stations()->reactivate($station, 'n.kileo');

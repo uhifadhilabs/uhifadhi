@@ -196,6 +196,37 @@ final class PostingTest extends IntegrationTestCase
 
     // ---------------------------------------------------------------- fixtures
 
+    /**
+     * CLOSING A POST STANDS EVERYBODY DOWN. A post that has closed has
+     * nobody at it, and people left posted to it would appear on next week's
+     * staffing list; the postings END rather than disappear, so last season's
+     * patrol still has its crew.
+     */
+    public function testDeactivatingAPostEndsThePostingsStandingAtIt(): void
+    {
+        $station = $this->aStation();
+        $lead = $this->postings()->post($station, $this->aPerson('J. Mollel'), PostingSource::WrittenHere);
+        $this->postings()->appointLeader($lead);
+        $this->postings()->post($station, $this->aPerson('T. Ndosi'), PostingSource::FromTheirPage);
+
+        $this->stations()->deactivate($station);
+
+        self::assertSame([], $this->postings()->standingAt($station));
+        self::assertNotNull($lead->getEndedAt());
+    }
+
+    /** Reopening a post does not repost anybody: who works there is a new fact. */
+    public function testReactivatingAPostDoesNotBringThePostingsBack(): void
+    {
+        $station = $this->aStation();
+        $this->postings()->post($station, $this->aPerson('J. Mollel'), PostingSource::WrittenHere);
+        $this->stations()->deactivate($station);
+
+        $this->stations()->reactivate($station);
+
+        self::assertSame([], $this->postings()->standingAt($station));
+    }
+
     private function postings(): PostingService
     {
         /** @var PostingService $service */

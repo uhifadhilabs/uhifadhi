@@ -126,18 +126,34 @@ final readonly class AreaPlateService
      */
     public function aroundStation(AreaOfInterest $area, array $rows, array $posts): AtlasMap
     {
-        $named = [];
-        foreach ($this->zones->zonesFor($area) as $zone) {
-            $named[(string) $zone->getName()] = (string) $zone->getGeom();
-        }
+        return $this->withPosts($this->plate($area, $rows), $posts, true);
+    }
 
-        $features = [];
-        foreach ($rows as $row) {
-            $features[] = [$row->name, $named[$row->name] ?? null, $row->hue, $row->km2];
-        }
+    /**
+     * THE PICKER: the same ground, with every post on it as a plain mark.
+     *
+     * IT IS NOT A READING MAP. Nothing on it is hued by a figure, sized by a
+     * count or ringed — a configuration surface that drew one would be a
+     * second, worse version of the Stations tab. It is here so that a point
+     * can be put somewhere on purpose, and the marks are there so that the
+     * somewhere is not on top of a post that already exists.
+     *
+     * @param list<ZoneRow>                                                                        $rows  the area's zones, hued as everywhere else
+     * @param list<array{uuid: string, name: string, point: string|null, posted: int, here: bool}> $posts every station in the area
+     */
+    public function picker(AreaOfInterest $area, array $rows, array $posts): AtlasMap
+    {
+        return $this->withPosts($this->plate($area, $rows), $posts, false);
+    }
 
-        $map = $this->draw($area, $features, self::ZONES_GROUP);
-
+    /**
+     * THE POSTS, AS ONE LAYER — one legend row, one thing to switch off.
+     *
+     * @param list<array{uuid: string, name: string, point: string|null, posted: int, here: bool}> $posts
+     * @param bool                                                                                 $accentHere whether the post the page is about is drawn apart from the rest
+     */
+    private function withPosts(AtlasMap $map, array $posts, bool $accentHere): AtlasMap
+    {
         $pins = [];
         foreach ($posts as $post) {
             $point = self::decode($post['point']);
@@ -168,7 +184,9 @@ final readonly class AreaPlateService
             visible: [] !== $pins,
             count: \count($pins),
             group: self::STATIONS_GROUP,
-            rules: [StyleRule::when('here', true)->color(self::HERE_SWATCH)->fillColor(self::HERE_SWATCH)],
+            rules: $accentHere
+                ? [StyleRule::when('here', true)->color(self::HERE_SWATCH)->fillColor(self::HERE_SWATCH)]
+                : [],
         ));
 
         return $map;

@@ -15,6 +15,7 @@ namespace Uhifadhi\Bundle\AreaBundle\Shell;
 
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Uid\Uuid;
+use Uhifadhi\Bundle\AreaBundle\Controller\StationConfigureController;
 use Uhifadhi\Bundle\AreaBundle\Controller\ZoneConfigureController;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
@@ -70,7 +71,7 @@ final readonly class AreaConfigurationSections implements ConfigurationSectionsI
 
     public function summary(): string
     {
-        return 'Everything this area is set up with, in one place: how its dashboard is composed, and the area’s own identity, access and zones.';
+        return 'Everything this area is set up with, in one place: how its dashboard is composed, and the area’s own identity, access, zones and the posts standing on them.';
     }
 
     public function sections(): array
@@ -104,6 +105,17 @@ final readonly class AreaConfigurationSections implements ConfigurationSectionsI
                 'zones',
                 'Zones',
                 ZoneConfigureController::ROUTE,
+                ['uuid' => (string) $area->getUuidString()],
+            );
+
+            /*
+             * STATIONS IS A SCREEN TOO, and it sits beside Zones because the
+             * two are read together: the ground, then the places on it.
+             */
+            $sections[] = ConfigurationSection::screen(
+                'stations',
+                'Stations',
+                StationConfigureController::ROUTE,
                 ['uuid' => (string) $area->getUuidString()],
             );
 

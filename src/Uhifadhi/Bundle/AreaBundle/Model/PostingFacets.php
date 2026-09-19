@@ -38,6 +38,43 @@ final readonly class PostingFacets
     ) {
     }
 
+    /**
+     * ONE FACET AS THE FILTER BAR TAKES IT. The bar is shared with surfaces
+     * whose options are identifiers rather than words, so every bar speaks
+     * options and this is where a map of counts becomes them.
+     *
+     * @param array<string, int> $counts
+     *
+     * @return list<FilterOption>
+     */
+    public static function optionsOf(array $counts): array
+    {
+        $options = [];
+        foreach ($counts as $value => $count) {
+            $options[] = new FilterOption((string) $value, (string) $value, $count);
+        }
+
+        return $options;
+    }
+
+    /** @return list<FilterOption> */
+    public function roleOptions(): array
+    {
+        return self::optionsOf($this->roles);
+    }
+
+    /** @return list<FilterOption> */
+    public function departmentOptions(): array
+    {
+        return self::optionsOf($this->departments);
+    }
+
+    /** @return list<FilterOption> */
+    public function sourceOptions(): array
+    {
+        return self::optionsOf($this->sources);
+    }
+
     /** Whether anybody answered the person seam at all — two columns depend on it. */
     public function knowsRoles(): bool
     {

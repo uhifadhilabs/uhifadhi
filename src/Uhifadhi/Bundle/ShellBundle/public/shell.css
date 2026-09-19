@@ -1415,6 +1415,10 @@ table.tbl tr:hover .open-btn {
 }
 .i-ddopt:hover { background: rgb(var(--c-cv)); }
 .i-ddopt.on { color: rgb(var(--c-acc)); }
+/* AN OPTION'S OWN COLOUR, where the thing it names has one — the same hue the
+   plate drew it in, so a filter and a map cannot disagree about which zone is
+   which. An option with no colour draws no dot rather than an empty square. */
+.i-dot { width: 9px; height: 9px; border-radius: 3px; flex: none; background: var(--c-ln2); }
 .i-ddopt-l { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .i-ddopt-n {
     flex: none; font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10.5px;

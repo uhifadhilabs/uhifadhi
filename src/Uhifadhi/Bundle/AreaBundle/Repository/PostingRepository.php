@@ -176,6 +176,37 @@ class PostingRepository extends ServiceEntityRepository
     }
 
     /**
+     * HOW MANY PEOPLE STAND AT EACH POST OF THE AREA, in one statement — what
+     * a register of posts draws a count on every row of.
+     *
+     * @return array<string, int> station uuid to the people standing there
+     */
+    public function countStandingPerStation(AreaOfInterest $area): array
+    {
+        /** @var list<array{station: mixed, total: mixed}> $rows */
+        $rows = $this->createQueryBuilder('p')
+            ->select('s.uuid AS station, COUNT(p.id) AS total')
+            ->join('p.station', 's')
+            ->where('p.endedAt IS NULL')
+            ->andWhere('s.area = :area')
+            ->setParameter('area', $area)
+            ->groupBy('s.uuid')
+            ->getQuery()
+            ->getResult();
+
+        $counts = [];
+        foreach ($rows as $row) {
+            $station = $row['station'];
+            $total = $row['total'];
+            if ((\is_string($station) || $station instanceof \Stringable) && is_numeric($total)) {
+                $counts[(string) $station] = (int) $total;
+            }
+        }
+
+        return $counts;
+    }
+
+    /**
      * HOW MANY PEOPLE WORK OUT OF EACH ZONE'S POSTS, in one statement, for the
      * same reason the station count is one: a card per zone must not be a
      * query per zone.

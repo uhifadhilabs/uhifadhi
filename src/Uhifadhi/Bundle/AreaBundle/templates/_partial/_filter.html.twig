@@ -1,0 +1,43 @@
+{# ONE GROUPED DROPDOWN OF THE HOUSE FILTER BAR.
+
+   A CLOSED CHIP THAT OPENS A PANEL OF OPTIONS WITH LIVE COUNTS — the
+   incidents pattern, which is the standing rule for every filter bar in the
+   product.
+
+   IT IS A `<details>`, AND EVERY OPTION IS A LINK. The address is the state,
+   so a filtered list is a link somebody can send and a page a browser can go
+   back to; and the whole control opens, chooses and clears with no script of
+   ours, which is what keeps a filter bar working on a page that has none.
+
+   AN OPTION IS A VALUE, A LABEL, A COUNT AND SOMETIMES A COLOUR. A role
+   filters by the word it is spelt with; a zone filters by an identifier and
+   reads as a name with its own hue. One control serves both because the
+   caller hands it {@see Uhifadhi\Bundle\AreaBundle\Model\FilterOption}s
+   rather than a map it would have to guess the shape of.
+
+   THE COUNTS ARE OF THE WHOLE SET, not of what is already filtered: a count
+   that moved as you filtered could not tell you what picking an option would
+   do, which is the one thing it is for. #}
+{% set picked = chosenLabel is defined and chosenLabel is not null ? chosenLabel : chosen %}
+<details class="i-dd">
+    <summary class="mchip i-ddt{{ chosen is not null ? ' on' : '' }}">
+        <span class="i-ddval">{{ picked is not null ? picked : all|raw }}</span>
+        <span class="i-ddcaret">&#9662;</span>
+    </summary>
+    <div class="i-ddmenu">
+        <span class="i-ddhead">{{ label|raw }}</span>
+        <a class="i-ddopt{{ chosen ? '' : ' on' }}"
+           href="{{ path(app.request.attributes.get('_route'), app.request.attributes.get('_route_params')|merge(query.with(key, null))) }}">
+            <span class="i-ddopt-l">{{ all|raw }}</span>
+        </a>
+        <span class="i-ddsep"></span>
+        {% for option in options %}
+            <a class="i-ddopt{{ chosen == option.value ? ' on' : '' }}"
+               href="{{ path(app.request.attributes.get('_route'), app.request.attributes.get('_route_params')|merge(query.with(key, option.value))) }}">
+                {% if option.hue %}<span class="i-dot" style="background:{{ option.hue }}"></span>{% endif %}
+                <span class="i-ddopt-l">{{ option.label }}</span>
+                {% if option.count > 0 %}<span class="i-ddopt-n">{{ option.count }}</span>{% endif %}
+            </a>
+        {% endfor %}
+    </div>
+</details>

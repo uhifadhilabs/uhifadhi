@@ -29,6 +29,7 @@ use Symfony\UX\Map\UXMapBundle;
 use Symfony\UX\StimulusBundle\StimulusBundle;
 use Uhifadhi\Bundle\AreaBundle\AreaBundle;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\CheckoutTempDirTrait;
+use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web\Fixtures\HostDirectory;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web\Fixtures\HostUser;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web\Fixtures\PatrolsModuleTabs;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web\Fixtures\SignedInPerson;
@@ -36,6 +37,7 @@ use Uhifadhi\Bundle\AtlasBundle\AtlasBundle;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
 use Uhifadhi\Bundle\ShellBundle\ShellBundle;
 use Uhifadhi\Contracts\Entity\UserInterface;
+use Uhifadhi\Contracts\People\PersonDirectoryProviderInterface;
 
 /**
  * AN INSTALLATION WITH SCREENS — the same minimal kernel as
@@ -238,6 +240,15 @@ final class WebKernel extends Kernel
             ->args(['patrols'])
             ->tag('uhifadhi.overview.pulse');
 
+        /*
+         * THE INSTALLATION'S PEOPLE DIRECTORY, played by the stand-in — the
+         * seam the stations section's chooser reads. Tagged by hand, as every
+         * seam in this platform is.
+         */
+        $services->set(HostDirectory::class)
+            ->args([new Reference('doctrine.orm.entity_manager')])
+            ->tag(PersonDirectoryProviderInterface::TAG);
+
         // The suite's own voter, standing in for TeamBundle's. It answers
         // the same permission strings, which is the whole of what these screens
         // depend on.
@@ -259,6 +270,7 @@ final class WebKernel extends Kernel
         $services->alias('test_public.area.shell_source', 'area.shell_source')->public();
         $services->alias('test_public.area.stations', 'area.stations')->public();
         $services->alias('test_public.area.postings', 'area.postings')->public();
+        $services->alias('test_public.area.zones', 'area.zones')->public();
         // The ledger's writer, so a test can arrange an area's composition the
         // same way the screen does rather than inserting rows behind it.
         $services->alias('test_public.registry.area_modules', 'registry.area_modules')->public();

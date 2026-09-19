@@ -156,7 +156,10 @@ class StationRepository extends SpatialEntityRepository
         $metres = (int) round((float) $row['metres']);
         $bearing = is_numeric($row['bearing'] ?? null) ? (float) $row['bearing'] : 0.0;
 
-        return [$metres, self::COMPASS[(int) round(($bearing % 360) / 45) % 8]];
+        // THE BEARING IS DEGREES AND DEGREES ARE NOT WHOLE: the modulus has
+        // to be the floating-point one, or the language rounds the angle to a
+        // whole number on its way into the operator and says so.
+        return [$metres, self::COMPASS[(int) round(fmod($bearing, 360.0) / 45.0) % 8]];
     }
 
     /**

@@ -49,7 +49,29 @@ final readonly class StationService
         private EntityManagerInterface $entityManager,
         private StationRepository $stations,
         private StationEventService $events,
+        private PostingService $postings,
     ) {
+    }
+
+    /**
+     * THE NEXT CODE THIS AREA HAS NOT ISSUED — ST-01, ST-02, and so on.
+     *
+     * ISSUED ON SAVE AND NEVER AGAIN. A code is what a radio call and a paper
+     * form say instead of a name, so it is short, it is the area's own
+     * sequence, and it outlives every rename. It counts UP from the highest
+     * ever issued rather than filling gaps: reissuing a retired post's code
+     * would make two different places in the archive read as one.
+     */
+    public function nextCode(AreaOfInterest $area): string
+    {
+        $highest = 0;
+        foreach ($this->stations->findByArea($area) as $station) {
+            if (1 === preg_match('/^ST-(\\d+)$/', (string) $station->getCode(), $found)) {
+                $highest = max($highest, (int) $found[1]);
+            }
+        }
+
+        return \sprintf('ST-%02d', $highest + 1);
     }
 
     /**
@@ -71,7 +93,7 @@ final readonly class StationService
         $station = new Station()
             ->setArea($area)
             ->setName(trim($name))
-            ->setCode(self::orNull($code))
+            ->setCode(self::orNull($code) ?? $this->nextCode($area))
             ->setPoint(self::pointAt($lon, $lat))
             ->setElevationM($elevationM)
             ->setLocality(self::orNull($locality))
@@ -160,13 +182,26 @@ final readonly class StationService
     }
 
     /** Closed, not deleted: every line, every posting and every patrol stays. */
-    public function deactivate(Station $station, ?string $actor = null): Station
+    public function deactivate(Station $station, ?\DateTimeImmutable $on = null, ?string $actor = null): Station
     {
-        if ($station->isActive()) {
-            $station->setActive(false);
-            $this->entityManager->flush();
-            $this->events->deactivated($station, $actor);
+        if (!$station->isActive()) {
+            return $station;
         }
+
+        /*
+         * THE POSTINGS END WITH IT. A post that has closed has nobody
+         * standing at it, and leaving people posted to a closed post would
+         * put them on next week's staffing list. They END rather than
+         * disappear: last season's patrol still has its crew, and every
+         * record already made against this post still points at it.
+         */
+        foreach ($this->postings->standingAt($station) as $posting) {
+            $this->postings->end($posting, $on, $actor);
+        }
+
+        $station->setActive(false);
+        $this->entityManager->flush();
+        $this->events->deactivated($station, $actor);
 
         return $station;
     }

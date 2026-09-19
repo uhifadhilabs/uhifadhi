@@ -31,6 +31,7 @@ use Uhifadhi\Bundle\TeamBundle\Controller\TeamController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamWidgetsController;
 use Uhifadhi\Bundle\TeamBundle\Devkit\TeamContentProvider;
 use Uhifadhi\Bundle\TeamBundle\EventListener\ApiErrorListener;
+use Uhifadhi\Bundle\TeamBundle\People\TeamPersonDirectory;
 use Uhifadhi\Bundle\TeamBundle\People\TeamPersonFacets;
 use Uhifadhi\Bundle\TeamBundle\Repository\ApiTokenRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
@@ -57,6 +58,7 @@ use Uhifadhi\Bundle\TeamBundle\Shell\UserBadgeSource;
 use Uhifadhi\Bundle\TeamBundle\Twig\AreaScopeExtension;
 use Uhifadhi\Bundle\TeamBundle\Widget\PositionWidgets;
 use Uhifadhi\Bundle\TeamBundle\Widget\TeamWidgets;
+use Uhifadhi\Contracts\People\PersonDirectoryProviderInterface;
 use Uhifadhi\Contracts\People\PersonFacetProviderInterface;
 
 /*
@@ -132,6 +134,15 @@ return static function (ContainerConfigurator $container): void {
     $services->set('team.person_facets', TeamPersonFacets::class)
         ->args([service(UserRepository::class)])
         ->tag(PersonFacetProviderInterface::TAG);
+
+    /*
+     * AND WHO THERE IS AT ALL — the same seam one question further back, so a
+     * surface that posts somebody somewhere can offer the people without
+     * knowing whose class they are.
+     */
+    $services->set('team.person_directory', TeamPersonDirectory::class)
+        ->args([service(UserRepository::class)])
+        ->tag(PersonDirectoryProviderInterface::TAG);
 
     $services->set(UserRepository::class)
         ->args([service('doctrine')])

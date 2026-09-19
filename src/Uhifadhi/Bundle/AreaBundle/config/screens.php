@@ -18,6 +18,8 @@ use Uhifadhi\Bundle\AreaBundle\Controller\AreaCreateController;
 use Uhifadhi\Bundle\AreaBundle\Controller\AreaEditController;
 use Uhifadhi\Bundle\AreaBundle\Controller\AreaModulesController;
 use Uhifadhi\Bundle\AreaBundle\Controller\AreaWidgetsController;
+use Uhifadhi\Bundle\AreaBundle\Controller\StationConfigureController;
+use Uhifadhi\Bundle\AreaBundle\Controller\StationEditController;
 use Uhifadhi\Bundle\AreaBundle\Controller\StationRecordController;
 use Uhifadhi\Bundle\AreaBundle\Controller\ZoneConfigureController;
 use Uhifadhi\Bundle\AreaBundle\Controller\ZoneController;
@@ -29,6 +31,7 @@ use Uhifadhi\Bundle\AreaBundle\Repository\StationEventRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\StationRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneEventRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
+use Uhifadhi\Bundle\AreaBundle\Service\StationNoticeStore;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportDraftStore;
 use Uhifadhi\Bundle\AreaBundle\Shell\AreaConfigurationSections;
 use Uhifadhi\Bundle\AreaBundle\Shell\AreaNavigation;
@@ -172,6 +175,50 @@ return static function (ContainerConfigurator $container): void {
         ])
         ->tag('controller.service_arguments');
     $services->alias(StationRecordController::class, 'area.controller.station_record')->public();
+
+    /*
+     * THE STATIONS SECTION — a screen for the reason Zones is one: it writes,
+     * and it answers its writes with redirects, so it has an address of its own.
+     */
+    $services->set('area.controller.station_configure', StationConfigureController::class)
+        ->args([
+            service('twig'),
+            service('area.station_register'),
+            service(StationRepository::class),
+            service(PostingRepository::class),
+            service(StationEventRepository::class),
+            service('area.posting_board'),
+            service('area.person_directory'),
+            service('area.stations'),
+            service('area.zone_set'),
+            service('area.zone_plate'),
+            service('area.station_notices'),
+            service('security.csrf.token_manager'),
+        ])
+        ->tag('controller.service_arguments');
+    $services->alias(StationConfigureController::class, 'area.controller.station_configure')->public();
+
+    $services->set('area.controller.station_edit', StationEditController::class)
+        ->args([
+            service('area.stations'),
+            service('area.postings'),
+            service('area.person_directory'),
+            service('area.station_notices'),
+            service('security.csrf.token_manager'),
+            service('router'),
+            service('security.token_storage')->nullOnInvalid(),
+        ])
+        ->tag('controller.service_arguments');
+    $services->alias(StationEditController::class, 'area.controller.station_edit')->public();
+
+    /*
+     * WHAT A WRITE LEFT THE READER TO READ. Beside the screens rather than
+     * with the model, exactly like the zone draft store: it is the request's,
+     * and a console caller has no session and needs none.
+     */
+    $services->set('area.station_notices', StationNoticeStore::class)
+        ->args([service('request_stack')]);
+    $services->alias(StationNoticeStore::class, 'area.station_notices');
 
     $services->set('area.controller.zone_configure', ZoneConfigureController::class)
         ->args([

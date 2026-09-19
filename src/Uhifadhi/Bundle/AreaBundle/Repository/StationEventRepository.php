@@ -15,6 +15,7 @@ namespace Uhifadhi\Bundle\AreaBundle\Repository;
 
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Entity\Station;
 use Uhifadhi\Bundle\AreaBundle\Entity\StationEvent;
 
@@ -49,6 +50,29 @@ class StationEventRepository extends ServiceEntityRepository
             ->setParameter('station', $station)
             // Two events of one request share a second; the id breaks the tie so
             // the order a page shows is the order they happened in.
+            ->orderBy('e.occurredAt', 'DESC')
+            ->addOrderBy('e.id', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+
+        return $entries;
+    }
+
+    /**
+     * THE WHOLE AREA'S STATION LOG — what the configure section's history
+     * card reads, because that section is about every post at once and a log
+     * per card would be twelve logs nobody reads.
+     *
+     * @return list<StationEvent>
+     */
+    public function findByArea(AreaOfInterest $area, int $limit = self::RECENT): array
+    {
+        /** @var list<StationEvent> $entries */
+        $entries = $this->createQueryBuilder('e')
+            ->join('e.station', 's')
+            ->where('s.area = :area')
+            ->setParameter('area', $area)
             ->orderBy('e.occurredAt', 'DESC')
             ->addOrderBy('e.id', 'DESC')
             ->setMaxResults($limit)
