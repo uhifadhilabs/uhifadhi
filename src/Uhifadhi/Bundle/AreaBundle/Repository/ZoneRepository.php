@@ -14,9 +14,9 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\AreaBundle\Repository;
 
 use Doctrine\Persistence\ManagerRegistry;
-use FundiStadi\PostGISBundle\Repository\SpatialEntityRepository;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Entity\Zone;
+use UtafitiLabs\PostGISBundle\Repository\SpatialEntityRepository;
 
 /**
  * Zone lookups, including the two predicates the zone invariant is built on.

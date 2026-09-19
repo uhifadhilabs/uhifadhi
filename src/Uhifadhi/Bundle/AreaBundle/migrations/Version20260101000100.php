@@ -25,7 +25,7 @@ use Doctrine\Migrations\AbstractMigration;
  * team's area-scoped departments — and a referenced table has to exist first.
  *
  * The GiST index on each geometry column comes from the mapping, not from a
- * hand-written line: `fundistadi/postgis-bundle` declares it, and it is here
+ * hand-written line: `utafitilabs/postgis-bundle` declares it, and it is here
  * because a diff put it here.
  */
 final class Version20260101000100 extends AbstractMigration

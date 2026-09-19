@@ -14,9 +14,9 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\AreaBundle\Repository;
 
 use Doctrine\Persistence\ManagerRegistry;
-use FundiStadi\PostGISBundle\Repository\SpatialEntityRepository;
 use Symfony\Component\Uid\Uuid;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use UtafitiLabs\PostGISBundle\Repository\SpatialEntityRepository;
 
 /**
  * Extends the PostGIS bundle's repository base rather than

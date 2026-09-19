@@ -30,7 +30,6 @@
         "doctrine/migrations": "^3.9",
         "doctrine/orm": "^3.5",
         "doctrine/persistence": "^3.1 || ^4.0",
-        "fundistadi/postgis-bundle": "^0.5.1",
         "symfony/asset-mapper": "^7.3 || ^8.0",
         "symfony/dependency-injection": "^7.3 || ^8.0",
         "symfony/doctrine-bridge": "^7.3 || ^8.0",
@@ -47,7 +46,8 @@
         "uhifadhi/atlas-bundle": "^1.0",
         "uhifadhi/contracts": "^1.0",
         "uhifadhi/registry-bundle": "^1.0",
-        "uhifadhi/shell-bundle": "^1.0"
+        "uhifadhi/shell-bundle": "^1.0",
+        "utafitilabs/postgis-bundle": "^0.1"
     },
     "require-dev": {
         "symfony/security-bundle": "^7.3 || ^8.0",

@@ -8,6 +8,13 @@
 
 Not released yet.
 
+ * **BREAKING for an installation** — the spatial base and the geometry types
+   now come from `utafitilabs/postgis-bundle` instead of
+   `fundistadi/postgis-bundle`. An installation replaces the bundle class in
+   `config/bundles.php` with `UtafitiLabs\PostGISBundle\UtafitiLabsPostGISBundle`
+   and renames the configuration root key `fundi_stadi_post_gis` to
+   `utafiti_labs_post_gis`; both packages register the same DBAL type names, so
+   the old one has to be removed, not merely superseded
  * the area: its identity, its gazetted facts and its boundary as a PostGIS
    multipolygon, with the zones inside it held to a no-shared-interior invariant
  * a whole zoning scheme from one GeoJSON FeatureCollection: names read from

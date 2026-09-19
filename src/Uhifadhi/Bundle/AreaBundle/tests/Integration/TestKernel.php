@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\AreaBundle\Tests\Integration;
 
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
-use FundiStadi\PostGISBundle\FundiStadiPostGISBundle;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Kernel;
@@ -30,6 +29,7 @@ use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Fixtures\TaggedFigureProvider;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
 use Uhifadhi\Contracts\Entity\UserInterface;
 use Uhifadhi\Contracts\Kpi\ZoneFigureProviderInterface;
+use UtafitiLabs\PostGISBundle\UtafitiLabsPostGISBundle;
 
 use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
 
@@ -64,7 +64,7 @@ class TestKernel extends Kernel
     {
         yield new FrameworkBundle();
         yield new DoctrineBundle();
-        yield new FundiStadiPostGISBundle();
+        yield new UtafitiLabsPostGISBundle();
         yield new RegistryBundle();
         yield new AreaBundle();
     }

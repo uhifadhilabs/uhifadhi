@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web;
 
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
-use FundiStadi\PostGISBundle\FundiStadiPostGISBundle;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Bundle\SecurityBundle\SecurityBundle;
@@ -42,6 +41,7 @@ use Uhifadhi\Contracts\Entity\UserInterface;
 use Uhifadhi\Contracts\People\PersonDirectoryProviderInterface;
 use Uhifadhi\Contracts\Shell\AreaNavChildrenInterface;
 use Uhifadhi\Contracts\Shell\AreaSectionsInterface;
+use UtafitiLabs\PostGISBundle\UtafitiLabsPostGISBundle;
 
 /**
  * AN INSTALLATION WITH SCREENS — the same minimal kernel as
@@ -97,7 +97,7 @@ final class WebKernel extends Kernel
         yield new TwigBundle();
         yield new SecurityBundle();
         yield new DoctrineBundle();
-        yield new FundiStadiPostGISBundle();
+        yield new UtafitiLabsPostGISBundle();
         yield new RegistryBundle();
         // The shell's frame draws its icons with ux_icon(); it is a hard
         // requirement of the shell, so an installation that has the shell has it.

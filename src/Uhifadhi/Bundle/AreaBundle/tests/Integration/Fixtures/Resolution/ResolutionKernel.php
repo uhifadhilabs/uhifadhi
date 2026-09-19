@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\AreaBundle\Tests\Integration\Fixtures\Resolution;
 
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
-use FundiStadi\PostGISBundle\FundiStadiPostGISBundle;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Kernel;
@@ -22,6 +21,7 @@ use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 use Uhifadhi\Bundle\AreaBundle\AreaBundle;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\CheckoutTempDirTrait;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
+use UtafitiLabs\PostGISBundle\UtafitiLabsPostGISBundle;
 
 /**
  * THE SMALLEST INSTALLATION THE QUESTION CAN HONESTLY BE ASKED IN: framework,
@@ -57,7 +57,7 @@ final class ResolutionKernel extends Kernel
     {
         yield new FrameworkBundle();
         yield new DoctrineBundle();
-        yield new FundiStadiPostGISBundle();
+        yield new UtafitiLabsPostGISBundle();
         yield new RegistryBundle();
         yield new AreaBundle();
     }

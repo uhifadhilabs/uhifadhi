@@ -22,7 +22,7 @@ use Uhifadhi\Bundle\AreaBundle\Tests\Integration\IntegrationTestCase;
  * product actually uses, and measure it on the spheroid.
  *
  * The measuring is not this repository's code — it is
- * {@see \FundiStadi\PostGISBundle\Repository\SpatialEntityRepository}, extended
+ * {@see \UtafitiLabs\PostGISBundle\Repository\SpatialEntityRepository}, extended
  * rather than reimplemented, which is why there is no SQL in this bundle. It is
  * exercised here anyway: a base class that was never called against a real
  * PostGIS from this entity's metadata would be a geometry column nobody has

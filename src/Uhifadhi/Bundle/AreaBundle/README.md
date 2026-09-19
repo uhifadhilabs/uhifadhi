@@ -94,7 +94,7 @@ writes.
 
 **MultiPolygon, not Polygon**, because a gazetted boundary is regularly more
 than one ring: an enclave, an outlying block, a lake excluded from the middle.
-The column is `fundistadi/postgis-bundle`'s geometry type, so PostGIS is a
+The column is `utafitilabs/postgis-bundle`'s geometry type, so PostGIS is a
 requirement of the database.
 
 **The boundary is nullable, and the gazetted facts are optional.** An area is

@@ -14,10 +14,10 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\AreaBundle\Repository;
 
 use Doctrine\Persistence\ManagerRegistry;
-use FundiStadi\PostGISBundle\Repository\SpatialEntityRepository;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Entity\Station;
 use Uhifadhi\Bundle\AreaBundle\Entity\Zone;
+use UtafitiLabs\PostGISBundle\Repository\SpatialEntityRepository;
 
 /**
  * Station lookups, and the one spatial question a station asks: which of its

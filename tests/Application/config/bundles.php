@@ -14,7 +14,6 @@ declare(strict_types=1);
 use ApiPlatform\Symfony\Bundle\ApiPlatformBundle;
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
 use Doctrine\Bundle\MigrationsBundle\DoctrineMigrationsBundle;
-use FundiStadi\PostGISBundle\FundiStadiPostGISBundle;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Bundle\SecurityBundle\SecurityBundle;
 use Symfony\Bundle\TwigBundle\TwigBundle;
@@ -26,6 +25,7 @@ use Uhifadhi\Bundle\AtlasBundle\AtlasBundle;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
 use Uhifadhi\Bundle\ShellBundle\ShellBundle;
 use Uhifadhi\Bundle\TeamBundle\TeamBundle;
+use UtafitiLabs\PostGISBundle\UtafitiLabsPostGISBundle;
 
 /*
  * What the throwaway application has installed. It grows one line per core
@@ -36,7 +36,7 @@ return [
     FrameworkBundle::class => ['all' => true],
     DoctrineBundle::class => ['all' => true],
     DoctrineMigrationsBundle::class => ['all' => true],
-    FundiStadiPostGISBundle::class => ['all' => true],
+    UtafitiLabsPostGISBundle::class => ['all' => true],
     TwigBundle::class => ['all' => true],
     UXIconsBundle::class => ['all' => true],
     StimulusBundle::class => ['all' => true],

@@ -26,7 +26,7 @@ jobs:
     # not connect. Locally the same database lives on port 5434.
     services:
       postgres:
-        image: ghcr.io/fundistadi/postgis:17
+        image: ghcr.io/utafitilabs/postgis:17
         env:
           POSTGRES_USER: app
           POSTGRES_PASSWORD: app
@@ -120,11 +120,11 @@ jobs:
           # own workflow rather than flattened into one: a module tested with
           # something other than what it asks for is not the module's suite.
           - module: patrol
-            image: ghcr.io/fundistadi/postgis:17
+            image: ghcr.io/utafitilabs/postgis:17
             database: patrol_bundle_test
             extensions: ctype, iconv, pdo_pgsql
           - module: incident
-            image: ghcr.io/fundistadi/postgis:17
+            image: ghcr.io/utafitilabs/postgis:17
             database: incidents_bundle_test
             extensions: ctype, iconv, pdo_pgsql
           - module: storage
@@ -134,11 +134,11 @@ jobs:
             # module's own CI exercises the GD-only path on purpose.
             extensions: ctype, iconv, gd, fileinfo, pdo_pgsql
           - module: devkit
-            image: ghcr.io/fundistadi/postgis:17
+            image: ghcr.io/utafitilabs/postgis:17
             database: uhifadhi_devkit_test
             extensions: ctype, iconv
           - module: roster
-            image: ghcr.io/fundistadi/postgis:17
+            image: ghcr.io/utafitilabs/postgis:17
             database: roster_bundle_test
             extensions: ctype, iconv, pdo_pgsql
 
