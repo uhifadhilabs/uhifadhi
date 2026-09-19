@@ -70,10 +70,20 @@
     --c-ok: 30 122 70;
     --c-warn: 154 107 20;
     --c-fail: 186 66 39;
+    /* THE FOURTH STATE, AND IT IS NOT A LOUDER --c-fail. `fail` is a thing
+       that went wrong; `crit` is a thing that is still going wrong and wants
+       somebody NOW. A product with one token for both either shouts at every
+       closed incident or whispers at the open one. */
+    --c-crit: 143 29 14;
     --c-ln: rgba(23, 38, 30, 0.11);
     --c-ln2: rgba(23, 38, 30, 0.20);
     --glass: rgba(255, 255, 255, 0.85);
     --shadow: 0 6px 22px rgba(23, 38, 30, 0.10);
+    /* AN OVERLAY'S GROUND. Dark in BOTH themes on purpose: a scrim's job is to
+       put the page behind it, and a pale scrim on a pale page does not. Stated
+       here so no sheet writes its own rgba and no two overlays disagree about
+       how far back the page goes. */
+    --scrim: rgba(4, 8, 6, 0.52);
     --accGlow: rgba(15, 138, 104, 0.13);
     --logo-tile: rgb(var(--c-acc));
     --logo-child: rgb(var(--c-cv));
@@ -100,6 +110,7 @@
     --ok: rgb(var(--c-ok));
     --warn: rgb(var(--c-warn));
     --fail: rgb(var(--c-fail));
+    --crit: rgb(var(--c-crit));
     --ln: var(--c-ln);
     --ln2: var(--c-ln2);
 
@@ -155,10 +166,13 @@ html.dark {
     --c-ok: 99 201 127;
     --c-warn: 219 163 63;
     --c-fail: 224 91 65;
+    --c-crit: 255 74 56;
     --c-ln: rgba(216, 236, 224, 0.09);
     --c-ln2: rgba(216, 236, 224, 0.17);
     --glass: rgba(12, 19, 15, 0.78);
     --shadow: 0 8px 26px rgba(0, 0, 0, 0.34);
+    /* Deeper after dark, because there is more page to put behind. */
+    --scrim: rgba(4, 8, 6, 0.62);
     --accGlow: rgba(62, 217, 168, 0.18);
 
     /* THE NINE AS THEY READ ON THE NIGHT CANVAS — which is also how they

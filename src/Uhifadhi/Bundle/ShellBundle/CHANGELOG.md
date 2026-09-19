@@ -8,6 +8,10 @@
 
 Not released yet.
 
+ * `--c-crit`/`--crit` and `--scrim` — the fourth state (a thing that is still
+   going wrong, not a louder `fail`) and an overlay's ground, dark in both
+   themes. Both were in the design's palette and in no sheet here, so modules
+   were declaring one and spending a literal for the other
  * `.cal-nav .sp` — the stepper row's spacer, so a surface's own picker sits at
    the trailing end of the month's one line of chrome
  * `Contract\StylesheetSourceInterface` — a package whose COMPONENTS are drawn

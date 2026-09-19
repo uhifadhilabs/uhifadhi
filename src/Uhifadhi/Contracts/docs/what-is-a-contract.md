@@ -85,7 +85,7 @@ the token and every module's cards render transparent on a screen nobody happens
 "a stylesheet defines a custom property named that".
 
 So that contract is enforced by a different mechanism, and it lives with the shell rather than
-here. `LayoutContract` is a frozen manifest: the twenty-three block names and the twenty-three
+here. `LayoutContract` is a frozen manifest: the twenty-three block names and the
 theme tokens, as data. Beside it sits a test that types **the same two lists out again by hand**.
 
 The duplication is deliberate. A list derived from the templates would agree with whatever the

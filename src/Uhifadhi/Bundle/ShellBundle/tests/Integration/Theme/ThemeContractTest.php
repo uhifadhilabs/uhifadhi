@@ -67,16 +67,21 @@ final class ThemeContractTest extends ContractTestCase
             '--c-acc',
             '--c-accT',
 
-            // STATE — three, matching the platform's chip vocabulary.
+            // STATE — four. `fail` is a thing that went wrong and `crit` is a
+            // thing that is still going wrong and wants somebody now; one
+            // token for both either shouts at every closed incident or
+            // whispers at the open one.
             '--c-ok',
             '--c-warn',
             '--c-fail',
+            '--c-crit',
 
             // EDGES AND DEPTH
             '--c-ln',       // hairline
             '--c-ln2',      // emphasised hairline
             '--glass',      // the translucent ground under sticky chrome
             '--shadow',     // the one elevation
+            '--scrim',      // an overlay's ground — dark in both themes
             '--accGlow',    // the accent's halo
 
             // DERIVED SEMANTIC ALIASES — the design's own token names (--tx/--fail
@@ -94,6 +99,7 @@ final class ThemeContractTest extends ContractTestCase
             '--ok',
             '--warn',
             '--fail',
+            '--crit',
             '--ln',
             '--ln2',
 
@@ -171,7 +177,7 @@ final class ThemeContractTest extends ContractTestCase
         return array_values(array_diff(self::contractV1(), [
             // Derived — ride the channels, single definition, no dark redefinition.
             '--cv', '--p1', '--p2', '--raised', '--tx', '--fog', '--dim',
-            '--acc', '--accT', '--ok', '--warn', '--fail', '--ln', '--ln2',
+            '--acc', '--accT', '--ok', '--warn', '--fail', '--crit', '--ln', '--ln2',
             '--logo-tile', '--logo-child', '--logo-accent',
             '--font-display', '--font-body', '--font-mono',
 

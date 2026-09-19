@@ -16,7 +16,7 @@ namespace Uhifadhi\Bundle\ShellBundle\Contract;
 /**
  * THE FROZEN MANIFEST — the shell's public API, as data.
  *
- * Three frames, twenty-three sockets, twenty-three theme tokens and one
+ * Three frames, twenty-three sockets, the theme tokens and one
  * version number. Everything a module is allowed to know about the
  * shell is on this class, and everything on this class is pinned by a test
  * that types the same list out by hand (tests/Sockets/BlockContractTest and
@@ -110,7 +110,7 @@ final class LayoutContract
     ];
 
     /**
-     * THE TWENTY-THREE THEME TOKENS. A module's stylesheet is written against
+     * THE THEME TOKENS. A module's stylesheet is written against
      * these names, so they are frozen exactly as the blocks are.
      *
      * The last six are DERIVED or non-colour and must not be restated per
@@ -140,12 +140,14 @@ final class LayoutContract
         '--c-ok',
         '--c-warn',
         '--c-fail',
+        '--c-crit',
 
         // edges and depth
         '--c-ln',
         '--c-ln2',
         '--glass',
         '--shadow',
+        '--scrim',
         '--accGlow',
 
         // derived semantic aliases — the design's own token names, mapped ONCE
@@ -164,6 +166,7 @@ final class LayoutContract
         '--ok',
         '--warn',
         '--fail',
+        '--crit',
         '--ln',
         '--ln2',
 

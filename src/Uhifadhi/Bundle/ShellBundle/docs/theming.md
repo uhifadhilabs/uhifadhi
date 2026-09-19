@@ -57,10 +57,17 @@ a promise the shell made.
 | surfaces | `--c-cv` `--c-p1` `--c-p2` `--c-raised` |
 | ink (three weights, and only three) | `--c-tx` `--c-fog` `--c-dim` |
 | accent | `--c-acc` `--c-accT` |
-| state | `--c-ok` `--c-warn` `--c-fail` |
-| edges and depth | `--c-ln` `--c-ln2` `--glass` `--shadow` `--accGlow` |
+| state | `--c-ok` `--c-warn` `--c-fail` `--c-crit` |
+| edges and depth | `--c-ln` `--c-ln2` `--glass` `--shadow` `--scrim` `--accGlow` |
 | brand (derived) | `--logo-tile` `--logo-child` `--logo-accent` |
 | type | `--font-display` `--font-body` `--font-mono` |
+
+`--c-crit` is the fourth state and not a louder `--c-fail`: `fail` is a thing
+that went wrong, `crit` a thing that is still going wrong and wants somebody
+now. A product with one token for both either shouts at every closed incident
+or whispers at the open one. `--scrim` is an overlay's ground, and it is dark
+in BOTH themes on purpose — a scrim's job is to put the page behind it, and a
+pale scrim on a pale page does not.
 
 **Light and dark are both first-class** — two complete palettes, not a filter over
 one. Every token in the first five groups must carry a dark value, and the test
