@@ -18,6 +18,7 @@ use Uhifadhi\Bundle\RegistryBundle\Entity\Module;
 use Uhifadhi\Bundle\RegistryBundle\Enum\ModuleCategory;
 use Uhifadhi\Bundle\RegistryBundle\Enum\ModuleStatus;
 use Uhifadhi\Bundle\TeamBundle\Service\PerformanceTopics;
+use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\FakeTopicProvider;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\IntegrationTestCase;
 use Uhifadhi\Contracts\Kpi\FigurePeriod;
 use Uhifadhi\Contracts\Performance\PerformanceScope;
@@ -44,7 +45,7 @@ final class PerformanceTopicsTest extends IntegrationTestCase
         $this->aCatalogue(['incidents' => 0, 'patrols' => 1]);
 
         self::assertSame(
-            ['staffing', 'goals', 'incidents', 'patrols'],
+            ['staffing', 'goals', 'attention', 'incidents', 'patrols'],
             $this->keysOf($this->topics()->forScope(PerformanceScope::organisation(), self::period())),
         );
     }
@@ -55,7 +56,7 @@ final class PerformanceTopicsTest extends IntegrationTestCase
         $this->aCatalogue(['patrols' => 0, 'incidents' => 1]);
 
         self::assertSame(
-            ['staffing', 'goals', 'patrols', 'incidents'],
+            ['staffing', 'goals', 'attention', 'patrols', 'incidents'],
             $this->keysOf($this->topics()->forScope(PerformanceScope::organisation(), self::period())),
         );
     }
@@ -66,7 +67,7 @@ final class PerformanceTopicsTest extends IntegrationTestCase
         $this->aCatalogue(['patrols' => 0]);
 
         self::assertSame(
-            ['staffing', 'goals', 'patrols'],
+            ['staffing', 'goals', 'attention', 'patrols'],
             $this->keysOf($this->topics()->forScope(PerformanceScope::organisation(), self::period())),
         );
     }
@@ -228,6 +229,111 @@ final class PerformanceTopicsTest extends IntegrationTestCase
         self::assertTrue($pace->isMarked(), 'the pace column counts states');
         self::assertNull($pace->value, 'and states no figure, because there is none to state');
         self::assertCount(2, $pace->marks, 'one chip a goal');
+    }
+
+    /**
+     * A DEPARTMENT WITH NO COMPUTING MODULE IS FOLDED, NOT DRAWN AT
+     * NOUGHT. Only a module raises an item or writes a record, so a
+     * nought there would say the department was asked and answered
+     * none — which is a different, untrue statement.
+     *
+     * AND THE FOLDED LINE SAYS WHAT THEY DO HAVE. Seats and goals are
+     * the host's own and every department has them, so the line carries
+     * both: the reader can see the quiet ones are accounted for rather
+     * than dropped.
+     */
+    public function testADepartmentWithNoComputingModuleIsFoldedRatherThanScoredNought(): void
+    {
+        $measuring = new \Uhifadhi\Bundle\TeamBundle\Entity\Department()->setName('Protection Service');
+        $quiet = new \Uhifadhi\Bundle\TeamBundle\Entity\Department()->setName('Finance');
+        $this->em->persist($measuring);
+        $this->em->persist($quiet);
+        $this->em->flush();
+
+        $attention = $this->attentionReading((string) $measuring->getUuidString());
+        $matrix = $attention->matrix(PerformanceScope::organisation(), self::period());
+
+        $names = array_map(static fn (object $row): string => $row->departmentName, $matrix->rows);
+
+        self::assertContains('Protection Service', $names, 'the department a module measures is its own row');
+        self::assertNotContains('Finance', $names, 'and the quiet one is not a row of noughts');
+
+        $fold = array_values(array_filter($matrix->rows, static fn (object $row): bool => '' === $row->departmentUuid));
+        self::assertCount(1, $fold, 'one folded line a scope band');
+        self::assertStringContainsString('1 department with no computing module', $fold[0]->departmentName);
+        self::assertStringContainsString('seats', $fold[0]->departmentName);
+        self::assertStringContainsString('goals', $fold[0]->departmentName);
+    }
+
+    /**
+     * AND THE FOLDED LINE'S CELLS ARE AN HONEST ABSENCE, not a zero:
+     * the column does not apply to those departments at all, which is
+     * the emptiness the matrix draws as a dash.
+     */
+    public function testTheFoldedLinesCellsSayTheColumnIsNotTheirs(): void
+    {
+        $measuring = new \Uhifadhi\Bundle\TeamBundle\Entity\Department()->setName('Protection Service');
+        $this->em->persist($measuring);
+        $this->em->persist(new \Uhifadhi\Bundle\TeamBundle\Entity\Department()->setName('Finance'));
+        $this->em->flush();
+
+        $matrix = $this->attentionReading((string) $measuring->getUuidString())
+            ->matrix(PerformanceScope::organisation(), self::period());
+
+        $fold = array_values(array_filter($matrix->rows, static fn (object $row): bool => '' === $row->departmentUuid))[0];
+
+        foreach ($fold->cells as $cell) {
+            self::assertTrue($cell->notMine);
+            self::assertNull($cell->value, 'not nought — the question was never put to them');
+        }
+    }
+
+    /**
+     * THE FIGURES ARE FOUND BY ROLE, NEVER BY LABEL. A module calls its
+     * records "cases", "sightings" or "patrols logged"; the host reads
+     * the role the column declares and adds those up.
+     */
+    public function testTheItemsAreFoundByRoleAndNotByLabel(): void
+    {
+        $department = new \Uhifadhi\Bundle\TeamBundle\Entity\Department()->setName('Protection Service');
+        $this->em->persist($department);
+        $this->em->flush();
+
+        $figures = [];
+        foreach ($this->attentionReading((string) $department->getUuidString())
+            ->kpis(PerformanceScope::organisation(), self::period()) as $kpi) {
+            $figures[$kpi->key] = $kpi->value;
+        }
+
+        // The stand-in module publishes 12 under a column it calls "Open",
+        // declaring the items-raised role; the host never reads the word.
+        self::assertSame(12.0, $figures['attention.raised']);
+        self::assertSame(1.0, $figures['attention.measuring']);
+    }
+
+    /**
+     * The attention topic, reading ONE stand-in module that measures the
+     * department named — built by hand because the fixture modules in
+     * the kernel answer for a department no suite owns.
+     */
+    private function attentionReading(string $departmentUuid): \Uhifadhi\Bundle\TeamBundle\Performance\AttentionTopic
+    {
+        $container = static::getContainer();
+
+        $departments = $container->get('test_public.'.\Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository::class);
+        $goals = $container->get('test_public.'.\Uhifadhi\Bundle\TeamBundle\Repository\DepartmentGoalRepository::class);
+        $staffing = $container->get('test_public.'.\Uhifadhi\Bundle\TeamBundle\Service\StaffingFigures::class);
+
+        \assert($departments instanceof \Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository);
+        \assert($goals instanceof \Uhifadhi\Bundle\TeamBundle\Repository\DepartmentGoalRepository);
+        \assert($staffing instanceof \Uhifadhi\Bundle\TeamBundle\Service\StaffingFigures);
+
+        return new \Uhifadhi\Bundle\TeamBundle\Performance\AttentionTopic(
+            $departments,
+            $goals,
+            $staffing,
+            [new FakeTopicProvider('patrols', $departmentUuid)],
+        );
     }
 
     /** @param array<string, int> $modules slug to the position it is arranged at */

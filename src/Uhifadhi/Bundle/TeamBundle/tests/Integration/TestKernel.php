@@ -321,7 +321,6 @@ final class TestKernel extends Kernel
             \Uhifadhi\Bundle\TeamBundle\ArgumentResolver\AreaValueResolver::class => 'team.area_value_resolver',
             \Uhifadhi\Bundle\TeamBundle\Repository\UserRepository::class => \Uhifadhi\Bundle\TeamBundle\Repository\UserRepository::class,
             \Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository::class => \Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository::class,
-            \Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository::class => \Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository::class,
             \Uhifadhi\Bundle\TeamBundle\Repository\DepartmentScopeChangeRepository::class => \Uhifadhi\Bundle\TeamBundle\Repository\DepartmentScopeChangeRepository::class,
             \Uhifadhi\Bundle\TeamBundle\Repository\ApiTokenRepository::class => \Uhifadhi\Bundle\TeamBundle\Repository\ApiTokenRepository::class,
             \Uhifadhi\Bundle\TeamBundle\Service\ApiTokenManager::class => 'team.api_token.manager',
@@ -336,6 +335,9 @@ final class TestKernel extends Kernel
             \Uhifadhi\Bundle\TeamBundle\Service\PerformanceHistory::class => 'team.performance_history',
             \Uhifadhi\Bundle\TeamBundle\Service\PerformanceTopics::class => 'team.performance_topics',
             \Uhifadhi\Bundle\TeamBundle\Service\PositionVacancy::class => 'team.position_vacancy',
+            \Uhifadhi\Bundle\TeamBundle\Service\StaffingFigures::class => 'team.staffing_figures',
+            \Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository::class => \Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository::class,
+            \Uhifadhi\Bundle\TeamBundle\Repository\DepartmentGoalRepository::class => \Uhifadhi\Bundle\TeamBundle\Repository\DepartmentGoalRepository::class,
             \Uhifadhi\Bundle\TeamBundle\Service\DepartmentDirectory::class => 'team.department_directory',
             // The registry's own write path, for the suites that ask what a
             // department can be asked about.

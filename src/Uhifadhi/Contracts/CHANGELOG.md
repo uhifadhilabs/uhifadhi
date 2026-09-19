@@ -12,6 +12,9 @@ Not released yet.
    user entity contracts, the user badge and the devkit contracts
  * `Kpi\DepartmentKpiProviderInterface` and its value objects — how a module
    puts a figure on the performance surfaces of a department that attaches it
+ * `KpiRole::ItemsRaised` and `::ItemsUnowned`, and a `MatrixColumn` that may
+   carry a role — the host adds a figure up per department across topics by the
+   role a column declares, never by the word a module chose for it
  * `Performance\CellMark`, and a `MatrixCell` that may count STATES rather than
    measure a figure — a department's goals pace is a chip a goal, and averaging
    four states would answer a question nobody asked

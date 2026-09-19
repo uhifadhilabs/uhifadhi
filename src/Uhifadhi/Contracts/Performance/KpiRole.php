@@ -22,6 +22,12 @@ namespace Uhifadhi\Contracts\Performance;
  * exception — a figure the HOST has to find among somebody else's five
  * in order to add it up across topics.
  *
+ * IT IS READ IN TWO PLACES. On a topic's five figures it says what a
+ * scope-wide total is; on a MATRIX COLUMN it says the same thing per
+ * department, which is the only way the host can add a figure up for
+ * one department across every topic. The same role means the same
+ * thing in both.
+ *
  * THE FIRST IS RECORDS. "Records written, by department" sums what every
  * topic wrote this period, and without a role the host would have to
  * guess which of five figures that is — by label, which is the module's
@@ -35,4 +41,25 @@ enum KpiRole: string
 {
     /** How many records this topic's module wrote in the period. */
     case Records = 'records';
+
+    /**
+     * HOW MANY THINGS THIS MODULE PUT IN FRONT OF SOMEBODY — an open
+     * incident, an overdue patrol, a claim past its target.
+     *
+     * ONLY A MODULE RAISES ONE. A department that attaches nothing has
+     * no items and cannot have any, which is why the host's Attention
+     * topic folds those departments rather than drawing them at nought:
+     * a nought there would say they were asked and answered none.
+     */
+    case ItemsRaised = 'items_raised';
+
+    /**
+     * AND HOW MANY OF THEM NOBODY OWNS — raised against a department
+     * but with no position answerable for them.
+     *
+     * A SEPARATE ROLE BECAUSE IT IS A SEPARATE QUESTION. "52 raised" is
+     * workload and "9 unowned" is a gap in the org chart; one number
+     * covering both would hide whichever moved.
+     */
+    case ItemsUnowned = 'items_unowned';
 }

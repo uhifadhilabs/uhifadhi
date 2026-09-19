@@ -17,6 +17,7 @@ use Uhifadhi\Contracts\Kpi\FigurePeriod;
 use Uhifadhi\Contracts\Performance\ChartKind;
 use Uhifadhi\Contracts\Performance\ChartSeries;
 use Uhifadhi\Contracts\Performance\ColumnPolarity;
+use Uhifadhi\Contracts\Performance\KpiRole;
 use Uhifadhi\Contracts\Performance\MatrixCell;
 use Uhifadhi\Contracts\Performance\MatrixColumn;
 use Uhifadhi\Contracts\Performance\MatrixRow;
@@ -37,7 +38,12 @@ use Uhifadhi\Contracts\Performance\TopicMatrix;
  */
 final readonly class FakeTopicProvider implements PerformanceTopicProviderInterface
 {
-    public function __construct(private string $slug)
+    /**
+     * @param string|null $departmentUuid the one department this module's
+     *                                    matrix has a row for; the fixed
+     *                                    stand-in where a suite does not care
+     */
+    public function __construct(private string $slug, private ?string $departmentUuid = null)
     {
     }
 
@@ -86,8 +92,11 @@ final readonly class FakeTopicProvider implements PerformanceTopicProviderInterf
     public function matrix(PerformanceScope $scope, FigurePeriod $period): TopicMatrix
     {
         return new TopicMatrix(
-            [new MatrixColumn($this->slug.'.open', 'Open', polarity: ColumnPolarity::Down)],
-            [new MatrixRow('0198f0a0-0000-7000-8000-00000000dead', 'Protection Service', [
+            // THE COLUMN CARRIES ITS ROLE, as a real module's does: the
+            // host's Attention topic finds "items raised" by role and never
+            // by label, because a module may call them cases or sightings.
+            [new MatrixColumn($this->slug.'.open', 'Open', polarity: ColumnPolarity::Down, role: KpiRole::ItemsRaised)],
+            [new MatrixRow($this->departmentUuid ?? '0198f0a0-0000-7000-8000-00000000dead', 'Protection Service', [
                 $this->slug.'.open' => new MatrixCell(value: 12.0, delta: 3.0, history: [9.0, 10.0, null, 11.0, 12.0, 12.0]),
             ], band: 'Org-wide')],
             'Only the departments that read this module are rows.',

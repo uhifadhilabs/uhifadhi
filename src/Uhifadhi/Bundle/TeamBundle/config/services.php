@@ -38,6 +38,7 @@ use Uhifadhi\Bundle\TeamBundle\EventListener\ApiErrorListener;
 use Uhifadhi\Bundle\TeamBundle\EventListener\ModuleHistoryListener;
 use Uhifadhi\Bundle\TeamBundle\People\TeamPersonDirectory;
 use Uhifadhi\Bundle\TeamBundle\People\TeamPersonFacets;
+use Uhifadhi\Bundle\TeamBundle\Performance\AttentionTopic;
 use Uhifadhi\Bundle\TeamBundle\Performance\GoalsTopic;
 use Uhifadhi\Bundle\TeamBundle\Performance\StaffingTopic;
 use Uhifadhi\Bundle\TeamBundle\Repository\ApiTokenRepository;
@@ -539,6 +540,27 @@ return static function (ContainerConfigurator $container): void {
         ])
         ->tag(PerformanceTopicProviderInterface::TAG);
     $services->alias(GoalsTopic::class, 'team.performance.goals_topic');
+
+    /*
+     * AND WHAT THE MODULES PUT IN FRONT OF SOMEBODY. The third host
+     * topic is the one the host cannot compute: only a module raises an
+     * item or writes a record, so this adds up what the other topics
+     * publish — found BY ROLE, because a module calls its records
+     * "cases" or "sightings" and matching words would be a guess.
+     *
+     * IT TAKES THE TAGGED ITERATOR AND NOT THE COLLECTOR: the collector
+     * holds this topic too, and asking it would be a circle. The
+     * iterator is lazy and the host's own topics are skipped by slug.
+     */
+    $services->set('team.performance.attention_topic', AttentionTopic::class)
+        ->args([
+            service(DepartmentRepository::class),
+            service(DepartmentGoalRepository::class),
+            service('team.staffing_figures'),
+            tagged_iterator(PerformanceTopicProviderInterface::TAG),
+        ])
+        ->tag(PerformanceTopicProviderInterface::TAG);
+    $services->alias(AttentionTopic::class, 'team.performance.attention_topic');
 
     /*
      * AND WHAT COLLECTS THEM: the host's topics first, then a module's in

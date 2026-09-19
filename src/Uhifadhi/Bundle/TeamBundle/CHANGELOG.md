@@ -8,6 +8,10 @@
 
 Not released yet.
 
+ * the Attention & output topic: it adds up what the other topics publish, found
+   by ROLE and never by label, and folds the departments with no computing
+   module into one line a scope band — stating their seats and goals, because a
+   nought there would say they were asked and answered none
  * the Goals topic: every department is a row because any department can declare
    a goal, each goal's state derived at the moment of asking rather than stored,
    and "no figure yet" kept apart from a miss
