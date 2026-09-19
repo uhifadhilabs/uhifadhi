@@ -24,6 +24,8 @@ use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Uhifadhi\Bundle\ShellBundle\ShellBundle;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Security\ApiTokenAuthenticator;
+use Uhifadhi\Contracts\Roster\WatchProviderInterface;
+use Uhifadhi\Core\Tests\Core\FakeRoster;
 
 /**
  * THE THROWAWAY APPLICATION the core's own functional tests run inside.
@@ -213,6 +215,20 @@ final class Kernel extends BaseKernel
         $container->services()
             ->alias('test_public.team.api_token.manager', 'team.api_token.manager')
             ->public();
+
+        /*
+         * THE ROSTER MODULE AN INSTALLATION WOULD HAVE, played by a fixture
+         * and TAGGED BY HAND as a reusable bundle's own contributor is — a
+         * fixture relying on autoconfiguration would prove a wiring no
+         * installation uses.
+         *
+         * It is here rather than in the area bundle's own kernel because the
+         * endpoint that reads it exists only where api-platform and security
+         * are both installed, which is this application and nowhere else.
+         */
+        $container->services()
+            ->set(FakeRoster::class)
+            ->tag(WatchProviderInterface::TAG);
 
         // The security file an installation gets from the skeleton, as this
         // throwaway application's own: the hashers, the entity provider over

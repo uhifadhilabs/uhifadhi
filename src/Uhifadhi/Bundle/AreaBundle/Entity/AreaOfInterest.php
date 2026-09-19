@@ -110,6 +110,27 @@ class AreaOfInterest implements AreaInterface
     #[ORM\Column(nullable: true)]
     private ?float $zoneOverlapTolerancePct = null;
 
+    /**
+     * HOW OFTEN A HANDSET ON DUTY REPORTS ITS POSITION, in minutes.
+     *
+     * A BATTERY BUDGET THE ORGANISATION OWNS, and the reason it is a
+     * setting rather than a constant in the app: an area that works long
+     * foot patrols out of radio range spends its battery differently from
+     * one whose posts are on a road, and neither should wait for a release
+     * to say so. It reaches every handset at the next sync.
+     *
+     * AN AREA'S OWN, BECAUSE THE GROUND IS. It sits beside the station
+     * catchment it is coupled to — how far apart two fixes can be and
+     * still mean "at the post" depends on how far apart in time they are.
+     *
+     * NULL IS NOT ZERO, it is "not set", and it reads as the default —
+     * {@see \Uhifadhi\Bundle\AreaBundle\Service\DutyRosterService::DEFAULT_PING_INTERVAL_MINUTES}.
+     * Shipping the default as a column value would freeze today's number
+     * into every row and make changing it a migration.
+     */
+    #[ORM\Column(nullable: true)]
+    private ?int $pingIntervalMinutes = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -182,6 +203,18 @@ class AreaOfInterest implements AreaInterface
     public function setEstablishedYear(?int $establishedYear): static
     {
         $this->establishedYear = $establishedYear;
+
+        return $this;
+    }
+
+    public function getPingIntervalMinutes(): ?int
+    {
+        return $this->pingIntervalMinutes;
+    }
+
+    public function setPingIntervalMinutes(?int $pingIntervalMinutes): static
+    {
+        $this->pingIntervalMinutes = $pingIntervalMinutes;
 
         return $this;
     }

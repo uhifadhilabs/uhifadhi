@@ -1,0 +1,140 @@
+<?php
+
+declare(strict_types=1);
+
+/*
+ * This file is part of the Uhifadhi core.
+ *
+ * (c) Ezekiel Mjema <https://github.com/eemjema>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace Uhifadhi\Bundle\AreaBundle\Service;
+
+use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\AreaBundle\Entity\CheckInStatus;
+use Uhifadhi\Contracts\Entity\UserInterface;
+use Uhifadhi\Contracts\Roster\Watch;
+use Uhifadhi\Contracts\Roster\WatchProviderInterface;
+
+/**
+ * WHAT A HANDSET READS AT SIGN-IN AND ON EVERY SYNC — API-CONTRACT.md §13D.
+ *
+ * THREE THINGS THAT TRAVEL TOGETHER because the phone needs all three
+ * before it can draw a month: the watches somebody is rostered for, the
+ * words this area lets them check in with, and how often to ping while
+ * a watch is open.
+ *
+ * THE AREA ASKS AND DOES NOT KEEP THE ROSTER. Who is on which watch is
+ * a module this platform has not written yet, so it arrives through
+ * {@see WatchProviderInterface}; an installation with no roster answers
+ * nothing, and that is not an error. **A DAY WITH NO WATCH IS A REST
+ * DAY** — the app draws no row, no dot and no reminder for it, so an
+ * absence here is the answer rather than a gap.
+ *
+ * TWO PROVIDERS ARE TWO ROSTERS, NOT A MERGE. In practice an
+ * installation runs one, and folding two together would invent watches
+ * neither of them published; they are concatenated in registration
+ * order and the phone reads a longer list.
+ *
+ * THE INTERVAL IS THE AREA'S AND IS HARDCODED NOWHERE IN THE APP. A
+ * host that omits it leaves the phone on the last value it was given —
+ * behind, not wrong — which is why it is always sent.
+ */
+final readonly class DutyRosterService
+{
+    /**
+     * HALF AN HOUR, UNTIL AN AREA SAYS OTHERWISE.
+     *
+     * Not a number with a reason of its own so much as the one the
+     * design was drawn against: often enough that a watch has a track
+     * rather than two points, rare enough that a day's duty is not what
+     * flattens the phone. An area that works differently changes it
+     * without waiting for a release.
+     */
+    public const int DEFAULT_PING_INTERVAL_MINUTES = 30;
+
+    /** @param iterable<WatchProviderInterface> $rosters */
+    public function __construct(
+        private CheckInStatusService $statuses,
+        private iterable $rosters = [],
+    ) {
+    }
+
+    /**
+     * ONE PERSON'S MONTH IN ONE AREA, as the contract's document.
+     *
+     * @param string $from `2026-09-01`
+     * @param string $to   `2026-09-30`
+     *
+     * @return array{pingIntervalMinutes: int, watches: list<array<string, mixed>>, checkInStatuses: list<array<string, mixed>>, updatedAt: string|null}
+     */
+    public function readFor(AreaOfInterest $area, UserInterface $person, string $from, string $to): array
+    {
+        return [
+            'pingIntervalMinutes' => $this->pingIntervalFor($area),
+            'watches' => array_map(
+                static fn (Watch $watch): array => [
+                    'localDate' => $watch->localDate,
+                    'startsAt' => $watch->startsAt->format(\DateTimeInterface::ATOM),
+                    'endsAt' => $watch->endsAt->format(\DateTimeInterface::ATOM),
+                    'stationUuid' => $watch->stationUuid,
+                    'label' => $watch->label,
+                ],
+                $this->watches($area, $person, $from, $to),
+            ),
+            'checkInStatuses' => array_map(
+                static fn (CheckInStatus $status): array => [
+                    'key' => $status->getKey(),
+                    'label' => $status->getLabel(),
+                    'kind' => $status->getKind()->value,
+                    'takesStation' => $status->takesStation(),
+                    'order' => $status->getPosition(),
+                ],
+                $this->statuses->offeredBy($area),
+            ),
+            /*
+             * WHEN THE WORDS LAST CHANGED, so a phone can tell whether the
+             * list it is holding is the list the area publishes. Null is a
+             * real answer: an area whose statuses have never been touched
+             * has nothing to compare against, and the phone takes what it
+             * was sent.
+             */
+            'updatedAt' => $this->statuses->lastChangedFor($area)?->format(\DateTimeInterface::ATOM),
+        ];
+    }
+
+    /** What this area set, or the product's default where it set nothing. */
+    public function pingIntervalFor(AreaOfInterest $area): int
+    {
+        $set = $area->getPingIntervalMinutes();
+
+        // ZERO AND BELOW ARE NOT AN INTERVAL. A phone given one would
+        // either never ping or ping continuously, and both are worse than
+        // the default it would otherwise have kept.
+        return null === $set || $set < 1 ? self::DEFAULT_PING_INTERVAL_MINUTES : $set;
+    }
+
+    /**
+     * @return list<Watch>
+     */
+    private function watches(AreaOfInterest $area, UserInterface $person, string $from, string $to): array
+    {
+        $areaUuid = $area->getUuidString();
+        $personUuid = $person->getUuidString();
+        if (null === $areaUuid || null === $personUuid) {
+            return [];
+        }
+
+        $watches = [];
+        foreach ($this->rosters as $roster) {
+            foreach ($roster->watchesFor($areaUuid, $personUuid, $from, $to) as $watch) {
+                $watches[] = $watch;
+            }
+        }
+
+        return $watches;
+    }
+}

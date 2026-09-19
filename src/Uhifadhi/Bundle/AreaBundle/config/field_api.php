@@ -17,6 +17,8 @@ use Uhifadhi\Bundle\AreaBundle\Api\DutyApiContext;
 use Uhifadhi\Bundle\AreaBundle\Api\FieldRoster;
 use Uhifadhi\Bundle\AreaBundle\Api\State\AreasMineProvider;
 use Uhifadhi\Bundle\AreaBundle\Api\State\CreateCheckInProcessor;
+use Uhifadhi\Bundle\AreaBundle\Api\State\DutyStationsProvider;
+use Uhifadhi\Bundle\AreaBundle\Api\State\MyRosterProvider;
 use Uhifadhi\Bundle\AreaBundle\Api\State\UpdateCheckInProcessor;
 use Uhifadhi\Bundle\AreaBundle\Api\State\UploadPositionsProcessor;
 use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
@@ -26,6 +28,9 @@ use Uhifadhi\Bundle\AreaBundle\Repository\PersonPositionRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\StationRepository;
 use Uhifadhi\Bundle\AreaBundle\Service\CheckInService;
 use Uhifadhi\Bundle\AreaBundle\Service\CheckInStatusService;
+use Uhifadhi\Bundle\AreaBundle\Service\DutyRosterService;
+use Uhifadhi\Bundle\AreaBundle\Service\DutyStationService;
+use Uhifadhi\Contracts\Roster\WatchProviderInterface;
 
 /*
  * WHAT THIS BUNDLE SERVES A FIELD CLIENT: `GET /api/areas/mine`, the offline
@@ -49,6 +54,8 @@ use Uhifadhi\Bundle\AreaBundle\Service\CheckInStatusService;
  *   area.api.checkin_create    POST   /areas/{areaUuid}/checkins
  *   area.api.checkin_update    PATCH  /areas/{areaUuid}/checkins/{clientRef}
  *   area.api.positions_upload  POST   /areas/{areaUuid}/positions
+ *   area.api.my_roster         GET    /areas/{areaUuid}/me/roster
+ *   area.api.duty_stations     GET    /areas/{areaUuid}/stations
  *
  *   — https://symfony.com/doc/current/bundles/best_practices.html
  */
@@ -138,4 +145,40 @@ return static function (ContainerConfigurator $container): void {
             service('area.checkins'),
         ])
         ->tag('api_platform.state_processor', ['key' => UploadPositionsProcessor::class]);
+
+    /*
+     * AND THE TWO READS THE DUTY TAB LIVES ON. Both must work from the
+     * phone's cache, so both are small whole documents rather than
+     * anything paged: the month, and the posts with their rings.
+     *
+     * THE ROSTER SERVICE IS DEFINED HERE rather than beside the area's
+     * other services because it is this endpoint's answer and nothing
+     * else reads it yet — and because the watches it folds in arrive
+     * through a seam an installation may have no implementor for, which
+     * is a legitimate state and not a missing dependency.
+     */
+    $services->set('area.duty_roster', DutyRosterService::class)
+        ->args([
+            service(CheckInStatusService::class),
+            tagged_iterator(WatchProviderInterface::TAG),
+        ]);
+    $services->alias(DutyRosterService::class, 'area.duty_roster');
+
+    $services->set('area.duty_stations', DutyStationService::class)
+        ->args([service(StationRepository::class)]);
+    $services->alias(DutyStationService::class, 'area.duty_stations');
+
+    $services->set('area.api.my_roster', MyRosterProvider::class)
+        ->args([
+            service('area.api.duty'),
+            service('area.duty_roster'),
+        ])
+        ->tag('api_platform.state_provider', ['key' => MyRosterProvider::class]);
+
+    $services->set('area.api.duty_stations', DutyStationsProvider::class)
+        ->args([
+            service('area.api.duty'),
+            service('area.duty_stations'),
+        ])
+        ->tag('api_platform.state_provider', ['key' => DutyStationsProvider::class]);
 };

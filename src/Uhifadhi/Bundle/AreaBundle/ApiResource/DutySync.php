@@ -14,9 +14,12 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\AreaBundle\ApiResource;
 
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Post;
 use Uhifadhi\Bundle\AreaBundle\Api\State\CreateCheckInProcessor;
+use Uhifadhi\Bundle\AreaBundle\Api\State\DutyStationsProvider;
+use Uhifadhi\Bundle\AreaBundle\Api\State\MyRosterProvider;
 use Uhifadhi\Bundle\AreaBundle\Api\State\UpdateCheckInProcessor;
 use Uhifadhi\Bundle\AreaBundle\Api\State\UploadPositionsProcessor;
 
@@ -29,6 +32,11 @@ use Uhifadhi\Bundle\AreaBundle\Api\State\UploadPositionsProcessor;
  * answering for data it does not hold, and the roster module — which
  * does not exist yet — would have to exist before anybody could check
  * in at all.
+ *
+ * TWO READS BESIDE THE THREE WRITES, and they are on this resource
+ * rather than a second one because they are the same surface: the same
+ * bearer, the same area in the URI, the same refusal document, and the
+ * same rule that "me" is the token's account and never a parameter.
  *
  * NO SECOND TRANSPORT AND NO SECOND IDENTITY. These are the patrol
  * sync's own shapes with the subject changed: a client-minted
@@ -90,6 +98,24 @@ use Uhifadhi\Bundle\AreaBundle\Api\State\UploadPositionsProcessor;
             validate: false,
             read: false,
             processor: UploadPositionsProcessor::class,
+        ),
+        /*
+         * NO `read: false` ON THE READS, and the asymmetry with the writes
+         * above is not an oversight. `read` IS the provider stage: turning
+         * it off on a Post is what stops API Platform trying to load an
+         * entity before a processor that needs none, and turning it off on
+         * a Get would skip the provider that IS the answer — the endpoint
+         * would match its route and return an empty document.
+         */
+        new Get(
+            uriTemplate: '/areas/{areaUuid}/me/roster',
+            description: 'The watches the bearer is rostered for between two days, the words this area lets them check in with, and how often to ping. A day with no watch is a rest day: an absence here is the answer, not a gap.',
+            provider: MyRosterProvider::class,
+        ),
+        new Get(
+            uriTemplate: '/areas/{areaUuid}/stations',
+            description: 'Every post the area still takes postings at, each with the catchment that says what inside it means. "near" is a hint the order may follow; null catchment is a real state.',
+            provider: DutyStationsProvider::class,
         ),
     ],
 )]

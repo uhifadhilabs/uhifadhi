@@ -21,8 +21,11 @@ Not released yet.
  * the day a ranger reports: the check-in a handset claims, the words an area
    lets them claim it with, the corrections appended to it and the duty pings —
    with `verified` and `unverified` derived on every read and never stored
- * the duty endpoints a handset writes through, and the station sections a
-   module contributes to a post's record and its configure card
+ * the duty endpoints a handset writes through and the two reads its Duty tab
+   lives on — the month, the words the area publishes and the ping interval it
+   set, and the posts with the catchment each of them carries
+ * the station sections a module contributes to a post's record and its
+   configure card
  * the answer to the platform's area contract, so nothing has to be written by
    hand to point a module's record at an area
  * the area overview, composed from what the modules an area runs contribute:

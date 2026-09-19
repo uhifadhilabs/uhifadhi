@@ -62,6 +62,21 @@ final readonly class CheckInStatusService
     }
 
     /**
+     * WHEN THIS AREA'S WORDS LAST CHANGED, so a handset can tell whether
+     * the list it holds is the list the area publishes.
+     *
+     * ASKED THROUGH THE SERVICE and not the repository, because a caller
+     * that reached past it for this one fact would read a moment from
+     * before the seeding the same call is about to do — and an area
+     * being asked for the first time would answer "never changed" for a
+     * list it had just been given.
+     */
+    public function lastChangedFor(AreaOfInterest $area): ?\DateTimeImmutable
+    {
+        return $this->statuses->lastChangedFor($area);
+    }
+
+    /**
      * THE FOUR AN AREA STARTS WITH, in the order the design offers them.
      *
      * @return list<CheckInStatus>
