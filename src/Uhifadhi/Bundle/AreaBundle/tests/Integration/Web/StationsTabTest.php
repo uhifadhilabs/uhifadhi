@@ -45,7 +45,6 @@ final class StationsTabTest extends WebTestCase
 
         $body = $this->body($this->tab($area));
 
-        self::assertStringContainsString('All stations', $body);
         self::assertStringContainsString('Leaders appointed', $body);
         self::assertStringContainsString('People posted', $body);
         self::assertStringContainsString('Seneto Gate Post', $body);
@@ -69,6 +68,28 @@ final class StationsTabTest extends WebTestCase
         self::assertStringContainsString('Posted people', $body);
         self::assertStringContainsString('J. Mollel', $body);
         self::assertStringContainsString('Leads', $body);
+    }
+
+    /**
+     * THE BAND IS FOLLOWED BY THE FIGURES, and by nothing in between.
+     *
+     * RULED 2026-09-20: the selection row goes, here as on the zones tab. It
+     * named a selection the page cannot change and put two module actions a
+     * third of the way down a page whose first job is to state the set.
+     */
+    public function testTheBandIsFollowedByTheFiguresWithNoSelectionRow(): void
+    {
+        $this->boot();
+        $this->signIn();
+        [$area] = $this->aStaffedPost();
+
+        $body = $this->body($this->tab($area));
+
+        self::assertStringNotContainsString('zsel', $body);
+        // The plate's own heading still says it — "All stations on the ground" is
+        // what the card is about, and the row that went was the selection.
+        self::assertStringNotContainsString('<h2', $body);
+        self::assertMatchesRegularExpression('#</div>\s*<div class="grid kstrip dp-kstrip">#', $body);
     }
 
     /**

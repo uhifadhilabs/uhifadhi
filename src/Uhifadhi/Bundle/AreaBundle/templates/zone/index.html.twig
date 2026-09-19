@@ -47,18 +47,6 @@
     <a class="more" href="{{ path('area_settings', {uuid: area.uuidString}) }}">Area settings &rarr;</a>
 </div>
 
-{# WHAT IS SELECTED, AND WHAT ELSE READS IT — the house identity row, directly
-   under the band. The links out are whatever modules report by zone; the core
-   resolves each module's own entry route and names none of them. #}
-<h2 class="zone zsel">
-    <span class="sw allsw"></span>
-    <span>All zones</span><em>the whole area</em>
-    <span class="sp"></span>
-    {% for module in modules|filter(module => module.route) %}
-        <a class="btn sm" href="{{ path(module.route, {uuid: area.uuidString}) }}">See {{ module.module|lower }} {{ ux_icon('shell:arrow-right') }}</a>
-    {% endfor %}
-</h2>
-
 {# FIVE FIGURES OR NONE. Three are the area's own; two are whatever the
    modules publish about a zone. A card whose module is not installed says so
    and keeps its slot, or the row would be three. #}
