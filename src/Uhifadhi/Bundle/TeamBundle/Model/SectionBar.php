@@ -25,7 +25,6 @@ final readonly class SectionBar
 {
     public function __construct(
         public string $label,
-        public string $slug,
         public int $value,
         public int $total,
         public int $people,
@@ -44,7 +43,6 @@ final readonly class SectionBar
 
         return new self(
             label: $this->label,
-            slug: $this->slug,
             value: $this->value,
             total: $this->total,
             people: $this->people,

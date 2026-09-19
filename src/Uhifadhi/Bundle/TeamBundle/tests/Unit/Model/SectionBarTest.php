@@ -32,7 +32,7 @@ final class SectionBarTest extends TestCase
      */
     public function testTheWidthsAreTakenAgainstTheLargestRow(): void
     {
-        $bar = (new SectionBar('Ecology', 'ecology', value: 9, total: 11, people: 9, note: ''))->scaledTo(35);
+        $bar = (new SectionBar('Ecology', value: 9, total: 11, people: 9, note: ''))->scaledTo(35);
 
         self::assertSame(25.7, $bar->filledWidth);
         self::assertSame(5.7, $bar->restWidth);
@@ -41,7 +41,7 @@ final class SectionBarTest extends TestCase
     /** The largest row fills its track exactly, and nothing overflows it. */
     public function testTheLargestRowFillsTheTrack(): void
     {
-        $bar = (new SectionBar('Protection Service', 'protection-service', value: 31, total: 35, people: 31, note: ''))->scaledTo(35);
+        $bar = (new SectionBar('Protection Service', value: 31, total: 35, people: 31, note: ''))->scaledTo(35);
 
         self::assertSame(100.0, $bar->filledWidth + $bar->restWidth);
     }
@@ -53,7 +53,7 @@ final class SectionBarTest extends TestCase
      */
     public function testARowWithNoTotalIsQuietAndDrawsNoBar(): void
     {
-        $bar = (new SectionBar('Veterinary Services', 'veterinary-services', value: 0, total: 0, people: 0, note: 'no positions'))->scaledTo(35);
+        $bar = (new SectionBar('Veterinary Services', value: 0, total: 0, people: 0, note: 'no positions'))->scaledTo(35);
 
         self::assertTrue($bar->isQuiet());
         self::assertSame(0.0, $bar->filledWidth);
@@ -66,7 +66,7 @@ final class SectionBarTest extends TestCase
      */
     public function testAnEmptyInstallationDividesByNothing(): void
     {
-        $bar = (new SectionBar('Ecology', 'ecology', value: 0, total: 0, people: 0, note: ''))->scaledTo(0);
+        $bar = (new SectionBar('Ecology', value: 0, total: 0, people: 0, note: ''))->scaledTo(0);
 
         self::assertSame(0.0, $bar->filledWidth);
     }

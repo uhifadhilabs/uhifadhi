@@ -197,7 +197,6 @@ final readonly class DepartmentSectionOverview
 
             $bars[] = new SectionBar(
                 label: (string) $department->getName(),
-                slug: self::slug((string) $department->getName()),
                 value: $filled,
                 total: $total,
                 people: $people,
@@ -233,7 +232,6 @@ final readonly class DepartmentSectionOverview
 
             $bars[] = new SectionBar(
                 label: (string) $department->getName(),
-                slug: self::slug((string) $department->getName()),
                 value: \count($names),
                 total: $installed,
                 people: 0,
@@ -395,13 +393,6 @@ final readonly class DepartmentSectionOverview
         }
 
         return array_map(static fn (SectionBar $bar): SectionBar => $bar->scaledTo($largest), $bars);
-    }
-
-    private static function slug(string $name): string
-    {
-        $slug = strtolower(trim((string) preg_replace('/[^a-zA-Z0-9]+/', '-', $name), '-'));
-
-        return '' === $slug ? 'unnamed' : $slug;
     }
 
     private static function trim(float $value): string
