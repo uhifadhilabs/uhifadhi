@@ -27,11 +27,14 @@ use Uhifadhi\Contracts\Performance\ColumnPolarity;
 use Uhifadhi\Contracts\Performance\MatrixCell;
 use Uhifadhi\Contracts\Performance\MatrixColumn;
 use Uhifadhi\Contracts\Performance\MatrixRow;
+use Uhifadhi\Contracts\Performance\MovementTone;
 use Uhifadhi\Contracts\Performance\PerformanceScope;
 use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
 use Uhifadhi\Contracts\Performance\TopicChart;
 use Uhifadhi\Contracts\Performance\TopicKpi;
 use Uhifadhi\Contracts\Performance\TopicMatrix;
+use Uhifadhi\Contracts\Performance\TopicMovement;
+use Uhifadhi\Contracts\Performance\TopicMovementInterface;
 
 /**
  * SEATS AND PEOPLE — the host's own topic, and the reason the host has
@@ -52,7 +55,7 @@ use Uhifadhi\Contracts\Performance\TopicMatrix;
  * closed period cannot be recomputed. Where nothing was written down the
  * figures still draw and their deltas say there is no history yet.
  */
-final readonly class StaffingTopic implements PerformanceTopicProviderInterface
+final readonly class StaffingTopic implements PerformanceTopicProviderInterface, TopicMovementInterface
 {
     public const string KEY = 'staffing';
 
@@ -126,6 +129,65 @@ final readonly class StaffingTopic implements PerformanceTopicProviderInterface
              */
             $this->vacancies($departments, $period),
         ];
+    }
+
+    /**
+     * WHAT MOVED IN THE ESTABLISHMENT — the seats, and the posts that
+     * have stood empty too long.
+     *
+     * THE SECOND HALF IS THE POINT. "Three more seats filled" reads as
+     * a good month on its own; a month that filled three and left two
+     * posts past the threshold is the month somebody has to act on, and
+     * only this topic knows those two figures belong in one sentence.
+     */
+    public function movement(PerformanceScope $scope, FigurePeriod $period): ?TopicMovement
+    {
+        $kpis = $this->kpis($scope, $period);
+        $filled = self::figureOf($kpis, StaffingFigures::FILLED);
+        $stale = self::figureOf($kpis, 'staffing.over_threshold');
+
+        if (null === $filled) {
+            return null;
+        }
+
+        $moved = $filled->delta ?? 0.0;
+        $overdue = null === $stale ? 0 : (int) ($stale->value ?? 0.0);
+
+        // NOTHING MOVED AND NOTHING IS OVERDUE IS NOT A SENTENCE. A
+        // briefing that said "no change" five times would be five lines
+        // a reader learns to skip.
+        if (0.0 === $moved && 0 === $overdue) {
+            return null;
+        }
+
+        $seats = 0.0 === $moved
+            ? 'No seat changed hands'
+            : \sprintf('%s %s filled', 0 < $moved ? 'Another '.self::plainly(abs($moved)) : self::plainly(abs($moved)).' fewer', 1.0 === abs($moved) ? 'seat' : 'seats');
+
+        if (0 === $overdue) {
+            return new TopicMovement($seats.', and no post is past the threshold.', 0 < $moved ? MovementTone::Good : MovementTone::Bad);
+        }
+
+        return new TopicMovement(
+            \sprintf('%s — but %d %s now past the 60-day threshold.', $seats, $overdue, 1 === $overdue ? 'post is' : 'posts are'),
+            MovementTone::Attention,
+        );
+    }
+
+    /**
+     * One of this topic's own five, by the key it published it under.
+     *
+     * @param list<TopicKpi> $kpis
+     */
+    private static function figureOf(array $kpis, string $key): ?TopicKpi
+    {
+        foreach ($kpis as $kpi) {
+            if ($key === $kpi->key) {
+                return $kpi;
+            }
+        }
+
+        return null;
     }
 
     public function charts(PerformanceScope $scope, FigurePeriod $period): array

@@ -396,3 +396,38 @@
 .tpch.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 @media (max-width: 1180px) { .tpch.three { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 900px) { .tpch.two, .tpch.three { grid-template-columns: minmax(0, 1fr); } }
+
+/* ── what changed ────────────────────────────────────────────────────────── */
+/* ONE ROW A TOPIC, and the row is the door into that topic's record. The
+   sentence is the topic's own; the tone is the platform's, so two topics
+   cannot ship two ambers. */
+.mvlist { display: flex; flex-direction: column; gap: 2px; }
+.mvrow {
+    display: flex; align-items: flex-start; gap: 10px; padding: 9px 2px;
+    text-decoration: none; color: inherit; border-radius: 8px;
+}
+.mvrow + .mvrow { border-top: 1px solid var(--c-ln); }
+.mvrow:hover { text-decoration: none; }
+.mvrow:hover .ov-open { color: rgb(var(--c-acc)); }
+.mvrow .i {
+    flex: none; width: 8px; height: 8px; border-radius: 3px; margin-top: 6px;
+    background: color-mix(in srgb, rgb(var(--c-fog)) 45%, transparent);
+}
+.mvrow .i.good { background: rgb(var(--c-ok)); }
+.mvrow .i.bad { background: rgb(var(--c-fail)); }
+.mvrow .i.attention { background: rgb(var(--c-warn)); }
+.mvrow .l { flex: 1; min-width: 0; font-size: 12.5px; line-height: 1.55; color: rgb(var(--c-fog)); }
+.mvrow .l b { color: rgb(var(--c-tx)); font-weight: 600; margin-right: 7px; }
+.mvrow .ov-open { flex: none; margin-top: 2px; }
+
+/* WHAT MOVED, ON THE CARD. The sentence is the topic's and the dot is the
+   platform's tone — the same four a briefing row wears, so a reader learns
+   them once. */
+.tpcard .mv { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; line-height: 1.55; color: rgb(var(--c-fog)); }
+.tpcard .mv .i {
+    flex: none; width: 8px; height: 8px; border-radius: 3px; margin-top: 6px;
+    background: color-mix(in srgb, rgb(var(--c-fog)) 45%, transparent);
+}
+.tpcard .mv .i.good { background: rgb(var(--c-ok)); }
+.tpcard .mv .i.bad { background: rgb(var(--c-fail)); }
+.tpcard .mv .i.attention { background: rgb(var(--c-warn)); }

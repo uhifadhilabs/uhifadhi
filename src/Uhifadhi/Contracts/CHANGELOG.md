@@ -40,6 +40,13 @@ Not released yet.
    would be right about seats and wrong about days-to-settle, where a sum of
    averages is a number nobody measured. A column that stays silent simply has
    no total in its header.
+ * `Performance\TopicMovementInterface`, `TopicMovement` and `MovementTone` —
+   what moved this period, in the TOPIC's own words. An optional second
+   interface, because a topic with nothing to say has no answer to give and a
+   contract that made it answer anyway has started guessing. The host has
+   every figure and still cannot say that distance rose while coverage fell:
+   knowing which of a topic's figures explain each other is knowing what they
+   MEAN, which is the one thing a seam never carries
  * `Atlas\PlatePalette` — the token NAMES a module may colour a map layer with,
    and never values: the five semantic ones, and `category($position)` for one
    of a set, which resolves to the PLATE's reading of the nine. **BREAKING for

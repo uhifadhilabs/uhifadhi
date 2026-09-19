@@ -26,6 +26,7 @@ use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Performance\AcrossTopicsMatrix;
 use Uhifadhi\Bundle\TeamBundle\Performance\ChartBridge;
+use Uhifadhi\Bundle\TeamBundle\Performance\GoalsTopic;
 use Uhifadhi\Bundle\TeamBundle\Performance\PeriodKind;
 use Uhifadhi\Bundle\TeamBundle\Performance\TopicCard;
 use Uhifadhi\Bundle\TeamBundle\Performance\TopicCards;
@@ -36,6 +37,7 @@ use Uhifadhi\Contracts\Performance\DepartmentDirectoryInterface;
 use Uhifadhi\Contracts\Performance\PerformanceScope;
 use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
 use Uhifadhi\Contracts\Performance\TopicChart;
+use Uhifadhi\Contracts\Performance\TopicMovementInterface;
 
 /**
  * PERFORMANCE — the organisation's own surface, wearing the area idiom.
@@ -190,12 +192,52 @@ final readonly class PerformanceController
         ]));
     }
 
-    /** What needs a decision. Routed for the same reason, filled the same way. */
+    /**
+     * WHAT CHANGED, AND WHAT TO DECIDE — the third screen, and the one
+     * a director opens first.
+     *
+     * IT ADDS UP NOTHING OF ITS OWN. Every line on it is published: the
+     * band is the Goals topic's own five figures, "what changed" is one
+     * line per topic that can write one
+     * ({@see TopicMovementInterface}),
+     * and the ledger is the Goals topic's matrix drawn in the one
+     * grammar every matrix is drawn in.
+     */
     #[Route('/departments/performance/briefing', name: self::BRIEFING_ROUTE, methods: ['GET'])]
     #[IsGranted(PermissionEnum::TeamManage->value)]
-    public function briefing(): Response
+    public function briefing(Request $request): Response
     {
-        throw new NotFoundHttpException('The briefing is not drawn yet.');
+        $kind = PeriodKind::fromRequest($request->query->getString('period'));
+        $period = $kind->period(new \DateTimeImmutable());
+        $scope = $this->scope($request);
+
+        $topics = $this->topics->forScope($scope, $period);
+
+        $moved = [];
+        foreach ($topics as $topic) {
+            // A TOPIC THAT CANNOT WRITE A SENTENCE IS NOT ASKED, and one
+            // with nothing worth saying answers null — both are silence
+            // rather than an empty row.
+            $movement = $topic instanceof TopicMovementInterface ? $topic->movement($scope, $period) : null;
+            if (null !== $movement) {
+                $moved[] = ['topic' => $topic->title(), 'movement' => $movement, 'url' => $this->urls->generate(
+                    self::TOPIC_ROUTE,
+                    ['key' => $topic->key(), 'period' => $kind->value, 'area' => $scope->areaUuid],
+                )];
+            }
+        }
+
+        $goals = $this->topics->byKey(GoalsTopic::KEY, $scope, $period);
+
+        return new Response($this->twig->render('@Team/performance/briefing.html.twig', [
+            ...$this->frame($scope, $period, $kind, self::BRIEFING_ROUTE),
+            // THE BAND IS THE GOALS TOPIC'S OWN FIVE, by the keys it
+            // published them under — a briefing that summed them itself
+            // would be a second answer to a question already answered.
+            'goals' => $goals?->kpis($scope, $period) ?? [],
+            'ledger' => $goals?->matrix($scope, $period),
+            'moved' => $moved,
+        ]));
     }
 
     /**

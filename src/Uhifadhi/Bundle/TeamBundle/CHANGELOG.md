@@ -32,6 +32,12 @@ Not released yet.
    exactly the loose bucket the overview draws as its own line. A period
    nobody wrote gets no pill.
 
+ * `/departments/performance/briefing` — what changed, and what to decide: the
+   goals' own figures as a band, one movement a topic, and the goal ledger in
+   the one matrix grammar. It adds up nothing of its own
+ * Staffing, Goals and Attention each publish their own movement — the seats
+   against the posts past the threshold, a goal that CROSSED a state rather
+   than a count that drifted, and the items nobody owns
  * `/departments/performance/topics` and `/departments/performance/topics/{key}`
    — the register of topic records, and the record. An INDEX and not an
    accordion (ruled 09-20): a card answers "is there anything here for me this

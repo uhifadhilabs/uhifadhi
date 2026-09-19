@@ -25,11 +25,14 @@ use Uhifadhi\Contracts\Performance\KpiRole;
 use Uhifadhi\Contracts\Performance\MatrixCell;
 use Uhifadhi\Contracts\Performance\MatrixColumn;
 use Uhifadhi\Contracts\Performance\MatrixRow;
+use Uhifadhi\Contracts\Performance\MovementTone;
 use Uhifadhi\Contracts\Performance\PerformanceScope;
 use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
 use Uhifadhi\Contracts\Performance\TopicChart;
 use Uhifadhi\Contracts\Performance\TopicKpi;
 use Uhifadhi\Contracts\Performance\TopicMatrix;
+use Uhifadhi\Contracts\Performance\TopicMovement;
+use Uhifadhi\Contracts\Performance\TopicMovementInterface;
 
 /**
  * WHAT WAS PUT IN FRONT OF SOMEBODY, AND WHAT GOT WRITTEN DOWN — the
@@ -55,7 +58,7 @@ use Uhifadhi\Contracts\Performance\TopicMatrix;
  * slug rather than by identity so that a second host topic added later
  * cannot start counting itself.
  */
-final readonly class AttentionTopic implements PerformanceTopicProviderInterface
+final readonly class AttentionTopic implements PerformanceTopicProviderInterface, TopicMovementInterface
 {
     public const string KEY = 'attention';
 
@@ -142,6 +145,67 @@ final readonly class AttentionTopic implements PerformanceTopicProviderInterface
                 polarity: ColumnPolarity::None,
             ),
         ];
+    }
+
+    /**
+     * WHAT MOVED IN THE WORKLOAD — and the sentence this topic exists
+     * to write is about the items NOBODY OWNS.
+     *
+     * "52 raised, up 18" is workload and it is on the card. An item
+     * raised against a department with no position answerable for it is
+     * a gap in the org chart, and it is the one figure here that does
+     * not fix itself by somebody working harder.
+     */
+    public function movement(PerformanceScope $scope, FigurePeriod $period): ?TopicMovement
+    {
+        $kpis = $this->kpis($scope, $period);
+        $raised = self::figureOf($kpis, 'attention.raised');
+        $unowned = self::figureOf($kpis, 'attention.unowned');
+
+        $items = (int) ($raised->value ?? 0.0);
+        $orphans = (int) ($unowned->value ?? 0.0);
+        $moved = (int) ($raised->delta ?? 0.0);
+
+        if (0 === $items && 0 === $orphans) {
+            return null;
+        }
+
+        if (0 < $orphans) {
+            return new TopicMovement(
+                \sprintf(
+                    '%d of the %d raised %s no owning position — a gap in the org chart rather than a workload.',
+                    $orphans,
+                    $items,
+                    1 === $orphans ? 'carries' : 'carry',
+                ),
+                MovementTone::Bad,
+            );
+        }
+
+        if (0 === $moved) {
+            return new TopicMovement(\sprintf('%d raised, the same as last period, and every one owned.', $items), MovementTone::Quiet);
+        }
+
+        return new TopicMovement(
+            \sprintf('%d raised, %s on last period, and every one owned.', $items, 0 < $moved ? 'up '.$moved : 'down '.abs($moved)),
+            0 < $moved ? MovementTone::Attention : MovementTone::Good,
+        );
+    }
+
+    /**
+     * One of this topic's own five, by the key it published it under.
+     *
+     * @param list<TopicKpi> $kpis
+     */
+    private static function figureOf(array $kpis, string $key): ?TopicKpi
+    {
+        foreach ($kpis as $kpi) {
+            if ($key === $kpi->key) {
+                return $kpi;
+            }
+        }
+
+        return null;
     }
 
     public function charts(PerformanceScope $scope, FigurePeriod $period): array

@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Performance;
 
+use Uhifadhi\Contracts\Performance\TopicMovement;
+
 /**
  * ONE TOPIC ON THE OVERVIEW: its name, its headline figure, where that
  * figure moved, and the way into the topic.
@@ -43,6 +45,13 @@ final readonly class TopicCard
         /** Whether a module publishes this topic, or the host does. */
         public bool $byModule = false,
         public ?string $url = null,
+        /**
+         * WHAT MOVED, IN THE TOPIC'S OWN WORDS — null where the topic
+         * cannot write a sentence, or had nothing worth saying. The
+         * figure says how much; this says what it means, which is the
+         * one thing a seam cannot compute.
+         */
+        public ?TopicMovement $movement = null,
     ) {
     }
 

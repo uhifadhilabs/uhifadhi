@@ -9,11 +9,8 @@
    answers the topic. Five topics stacked on one page would be five pages
    nobody scrolls to the bottom of.
 
-   WHAT THE DESIGN DRAWS THAT IS NOT HERE YET, named rather than dropped: the
-   `.mv` sentence under each figure — "two ranger posts filled at Protection
-   Service, but 2 posts are past the 60-day threshold". It is prose ABOUT a
-   topic's own figures, so it is the topic's to write and no seam publishes it
-   yet. #}
+   THE `.mv` SENTENCE IS THE TOPIC'S OWN, published through
+   TopicMovementInterface — the host places it and never writes it. #}
 {% extends '@Team/performance/_frame.html.twig' %}
 
 {% block perf_crumb %}<a href="{{ path('team_performance') }}">performance</a> / topics{% endblock %}
@@ -52,6 +49,15 @@
                         {% endif %}
                         {%- if card.delta %}<span class="delta{{ card.deltaTone ? ' ' ~ card.deltaTone }}">{{ card.delta }}</span>{% endif %}
                     </span>
+                    {% if card.movement %}
+                        {# WHAT MOVED, IN THE TOPIC'S OWN WORDS. The figure
+                           above says how much; this says what it means, which
+                           is the one thing the host cannot compute. #}
+                        <span class="mv">
+                            <span class="i {{ card.movement.tone.value }}"></span>
+                            <span>{{ card.movement.sentence }}</span>
+                        </span>
+                    {% endif %}
                     {% if card.spark %}
                         <svg class="sk" width="100" height="26" viewBox="0 0 100 26" preserveAspectRatio="none" aria-hidden="true">
                             {%- for points in card.spark %}<polyline class="{{ card.sparkTone }}" points="{{ points }}"/>{% endfor -%}

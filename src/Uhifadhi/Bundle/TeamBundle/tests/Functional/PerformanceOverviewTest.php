@@ -172,6 +172,20 @@ final class PerformanceOverviewTest extends WebTestCaseWithSchema
         self::assertCount(1, $crawler->filter('.tpkey'));
     }
 
+    /** And a card carries the topic's own sentence about what moved. */
+    public function testACardCarriesTheTopicsOwnSentenceAboutWhatMoved(): void
+    {
+        $this->seed();
+
+        $crawler = $this->client->request('GET', '/departments/performance/topics');
+
+        self::assertGreaterThan(0, $crawler->filter('.tpcard .mv')->count());
+        self::assertMatchesRegularExpression(
+            '/^i (good|bad|attention|quiet)$/',
+            (string) $crawler->filter('.tpcard .mv .i')->first()->attr('class'),
+        );
+    }
+
     /** Every card opens its own record, carrying the scope and the period. */
     public function testEveryCardOpensItsOwnRecord(): void
     {
@@ -228,6 +242,54 @@ final class PerformanceOverviewTest extends WebTestCaseWithSchema
 
         self::assertContains('Staffing', $rows);
         self::assertContains('Goals', $rows);
+    }
+
+    /**
+     * THE BRIEFING ADDS UP NOTHING OF ITS OWN: the band is the Goals
+     * topic's five figures, "what changed" is one line per topic that
+     * can write one, and the ledger is the Goals matrix in the one
+     * grammar every matrix is drawn in.
+     */
+    public function testTheBriefingReadsTheGoalsFiguresTheMovementsAndTheLedger(): void
+    {
+        $this->seed();
+
+        $crawler = $this->client->request('GET', '/departments/performance/briefing');
+
+        self::assertResponseIsSuccessful();
+        self::assertSame('Briefing', $crawler->filter('.atabs a.on')->text());
+
+        // The band is the goals topic's own, by the keys it published them under.
+        $band = $crawler->filter('.factband .f .k')->each(static fn (Crawler $c): string => $c->text());
+        self::assertContains('Declared', $band);
+        self::assertContains('Met', $band);
+
+        self::assertSame(['What changed', 'Goals declared'], $crawler->filter('h2.zone')->each(
+            static fn (Crawler $c): string => $c->text(),
+        ));
+        self::assertCount(1, $crawler->filter('#tp-ledger.pfc'));
+    }
+
+    /**
+     * A MOVEMENT IS THE TOPIC'S SENTENCE AND THE PLATFORM'S TONE, and
+     * the row is the door into that topic's record.
+     */
+    public function testEveryMovementIsATopicsOwnSentenceAndOpensItsRecord(): void
+    {
+        $this->seed();
+
+        $crawler = $this->client->request('GET', '/departments/performance/briefing');
+        $rows = $crawler->filter('.mvlist .mvrow');
+
+        self::assertGreaterThan(0, $rows->count(), 'the host topics report their own movements');
+
+        $first = $rows->first();
+        self::assertMatchesRegularExpression(
+            '/^i (good|bad|attention|quiet)$/',
+            (string) $first->filter('.i')->attr('class'),
+            'the tone is one of the four the platform names, never a colour',
+        );
+        self::assertStringContainsString('/departments/performance/topics/', (string) $first->attr('href'));
     }
 
     /** Performance is in the sidebar, under Observatory, with its screens. */

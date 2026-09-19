@@ -16,6 +16,7 @@ namespace Uhifadhi\Bundle\TeamBundle\Performance;
 use Uhifadhi\Contracts\Kpi\FigurePeriod;
 use Uhifadhi\Contracts\Performance\PerformanceScope;
 use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
+use Uhifadhi\Contracts\Performance\TopicMovementInterface;
 
 /**
  * THE OVERVIEW'S TOP ROW: one card a topic, and where its headline
@@ -48,6 +49,9 @@ final readonly class TopicCards
             $kpi = $topic->kpis($scope, $period)[0] ?? null;
             $byModule = PerformanceTopicProviderInterface::HOST !== $topic->moduleSlug();
             $url = null === $urlFor ? null : $urlFor($topic->key());
+            // A TOPIC THAT CANNOT WRITE A SENTENCE IS NOT ASKED, and one
+            // with nothing worth saying answers null.
+            $movement = $topic instanceof TopicMovementInterface ? $topic->movement($scope, $period) : null;
 
             if (null === $kpi) {
                 $cards[] = new TopicCard(
@@ -58,6 +62,7 @@ final readonly class TopicCards
                     word: 'publishes no figure',
                     byModule: $byModule,
                     url: $url,
+                    movement: $movement,
                 );
 
                 continue;
@@ -79,6 +84,7 @@ final readonly class TopicCards
                 caption: $kpi->caption,
                 byModule: $byModule,
                 url: $url,
+                movement: $movement,
             );
         }
 

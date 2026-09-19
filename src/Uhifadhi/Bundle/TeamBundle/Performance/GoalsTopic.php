@@ -27,11 +27,14 @@ use Uhifadhi\Contracts\Performance\ColumnPolarity;
 use Uhifadhi\Contracts\Performance\MatrixCell;
 use Uhifadhi\Contracts\Performance\MatrixColumn;
 use Uhifadhi\Contracts\Performance\MatrixRow;
+use Uhifadhi\Contracts\Performance\MovementTone;
 use Uhifadhi\Contracts\Performance\PerformanceScope;
 use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
 use Uhifadhi\Contracts\Performance\TopicChart;
 use Uhifadhi\Contracts\Performance\TopicKpi;
 use Uhifadhi\Contracts\Performance\TopicMatrix;
+use Uhifadhi\Contracts\Performance\TopicMovement;
+use Uhifadhi\Contracts\Performance\TopicMovementInterface;
 
 /**
  * WHAT EACH DEPARTMENT SAID IT WOULD DO — the host's second topic.
@@ -57,7 +60,7 @@ use Uhifadhi\Contracts\Performance\TopicMatrix;
  * IT PUBLISHES THROUGH THE SAME SEAM A MODULE DOES, as
  * {@see StaffingTopic} does and for the same reason.
  */
-final readonly class GoalsTopic implements PerformanceTopicProviderInterface
+final readonly class GoalsTopic implements PerformanceTopicProviderInterface, TopicMovementInterface
 {
     public const string KEY = 'goals';
 
@@ -148,6 +151,69 @@ final readonly class GoalsTopic implements PerformanceTopicProviderInterface
                 polarity: ColumnPolarity::None,
             ),
         ];
+    }
+
+    /**
+     * WHAT MOVED IN THE GOALS — and for a goal, what moved is a STATE
+     * crossed, not a figure that drifted.
+     *
+     * A GOAL THAT WENT MET → MISSED IS THE LINE. The count of met goals
+     * falling by one says the same arithmetic and none of the meaning:
+     * somebody declared a thing, and this period it stopped being true.
+     * And a department that declared NOTHING is the other half — it
+     * cannot miss a goal it never made, and a board that only counted
+     * misses would call it the best department in the organisation.
+     */
+    public function movement(PerformanceScope $scope, FigurePeriod $period): ?TopicMovement
+    {
+        $kpis = $this->kpis($scope, $period);
+        $met = self::figureOf($kpis, 'goals.met');
+        $missed = self::figureOf($kpis, 'goals.missed');
+        $risk = self::figureOf($kpis, 'goals.at_risk');
+
+        $crossed = (int) abs($met->delta ?? 0.0);
+        $failing = (int) ($missed->value ?? 0.0) + (int) ($risk->value ?? 0.0);
+
+        if (0 === $crossed && 0 === $failing) {
+            return null;
+        }
+
+        if (0 === $crossed) {
+            return new TopicMovement(
+                \sprintf('No goal crossed a state, and %d %s still short of pace.', $failing, 1 === $failing ? 'is' : 'are'),
+                MovementTone::Attention,
+            );
+        }
+
+        $improving = 0.0 < ($met->delta ?? 0.0);
+
+        return new TopicMovement(
+            \sprintf(
+                '%d %s crossed a state this period, %s. %d %s short of pace.',
+                $crossed,
+                1 === $crossed ? 'goal' : 'goals',
+                $improving ? 'into met' : 'out of met',
+                $failing,
+                1 === $failing ? 'is' : 'are',
+            ),
+            $improving ? MovementTone::Good : MovementTone::Bad,
+        );
+    }
+
+    /**
+     * One of this topic's own five, by the key it published it under.
+     *
+     * @param list<TopicKpi> $kpis
+     */
+    private static function figureOf(array $kpis, string $key): ?TopicKpi
+    {
+        foreach ($kpis as $kpi) {
+            if ($key === $kpi->key) {
+                return $kpi;
+            }
+        }
+
+        return null;
     }
 
     public function charts(PerformanceScope $scope, FigurePeriod $period): array
