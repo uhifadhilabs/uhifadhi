@@ -42,7 +42,8 @@ it is not the firewall — it is the account those two ask about.
 | the screens | sign in, forgotten password, reset, accept an invitation, the roster, one person's record, the permission matrix, departments |
 | the widget surfaces | the roster and the matrix, each a catalogue the shell's widget machinery arranges |
 | the sidebar row | one Team row, contributed to the shell's navigation where a shell is installed |
-| the first administrator | `team:user:create` — the one console command the core ships, run once on a deployment because every screen is behind the sign-in it creates |
+| the first administrator | `team:user:create` — run once on a deployment, because every screen is behind the sign-in it creates |
+| what the figures were | `team:performance:snapshot` — run on the first of each period, because a closed period cannot be recomputed |
 
 It also answers the platform's user contract. Registering the bundle prepends
 `doctrine.orm.resolve_target_entities` for
@@ -395,6 +396,28 @@ stranger reaches with nobody to ask, so they work with no session at all. Behind
 them: the roster, one person's record, the permission matrix and the
 departments. There is no delete route and there will not be one — an account is
 deactivated, never removed, so everything it recorded keeps its author.
+
+## The one scheduled task
+
+A closed period cannot be recomputed. "Positions filled in July" is not a query
+anybody can write in September — posts are filled and emptied, people move,
+records are edited — so the host writes each period down while it is still
+true, and every movement, sparkline and rank change on the performance page is
+read back out of that record.
+
+```cron
+0 1 1 * *  php bin/console team:performance:snapshot
+```
+
+It writes **the period that has just closed**; the period a page is currently
+showing is computed live and is never snapshotted, because it is still moving.
+Run it by hand to correct a period (`--period=2026-08`), and after installing a
+module so that module's first period is a figure rather than a hole. Running it
+twice for one period corrects the history rather than doubling it.
+
+An installation that has never run it has no history, and the surfaces say so
+in words. They do not read the absence as nought: a department nobody measured
+last July and a department that measured nought are not the same thing.
 
 ## Configuration
 

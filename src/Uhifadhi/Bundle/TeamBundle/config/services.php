@@ -19,6 +19,7 @@ use Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceInterface;
 use Uhifadhi\Bundle\TeamBundle\Api\State\MeProvider;
 use Uhifadhi\Bundle\TeamBundle\ArgumentResolver\AreaValueResolver;
 use Uhifadhi\Bundle\TeamBundle\Command\CreateUserCommand;
+use Uhifadhi\Bundle\TeamBundle\Command\PerformanceSnapshotCommand;
 use Uhifadhi\Bundle\TeamBundle\Controller\ApiAuthController;
 use Uhifadhi\Bundle\TeamBundle\Controller\AreaDepartmentController;
 use Uhifadhi\Bundle\TeamBundle\Controller\DepartmentController;
@@ -36,6 +37,7 @@ use Uhifadhi\Bundle\TeamBundle\People\TeamPersonDirectory;
 use Uhifadhi\Bundle\TeamBundle\People\TeamPersonFacets;
 use Uhifadhi\Bundle\TeamBundle\Repository\ApiTokenRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentGoalRepository;
+use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentPeriodFigureRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentScopeChangeRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
@@ -50,8 +52,10 @@ use Uhifadhi\Bundle\TeamBundle\Service\DepartmentService;
 use Uhifadhi\Bundle\TeamBundle\Service\FieldSignIn;
 use Uhifadhi\Bundle\TeamBundle\Service\Mail;
 use Uhifadhi\Bundle\TeamBundle\Service\PasswordResetService;
+use Uhifadhi\Bundle\TeamBundle\Service\PerformanceHistory;
 use Uhifadhi\Bundle\TeamBundle\Service\PermissionCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionService;
+use Uhifadhi\Bundle\TeamBundle\Service\StaffingFigures;
 use Uhifadhi\Bundle\TeamBundle\Service\SuperAdminInvariant;
 use Uhifadhi\Bundle\TeamBundle\Service\TeamOverview;
 use Uhifadhi\Bundle\TeamBundle\Service\UserService;
@@ -170,6 +174,10 @@ return static function (ContainerConfigurator $container): void {
         ->args([service('doctrine')])
         ->tag('doctrine.repository_service');
 
+    $services->set(DepartmentPeriodFigureRepository::class)
+        ->args([service('doctrine')])
+        ->tag('doctrine.repository_service');
+
     $services->set(ApiTokenRepository::class)
         ->args([service('doctrine')])
         ->tag('doctrine.repository_service');
@@ -215,6 +223,19 @@ return static function (ContainerConfigurator $container): void {
         $services->set('team.command.create_user', CreateUserCommand::class)
             ->args([service('team.accounts')])
             ->tag('console.command');
+
+        /*
+         * AND THE ONE THAT MAKES HISTORY. Scheduled on the first of each
+         * period; it writes the period that has just closed.
+         */
+        $services->set('team.command.performance_snapshot', PerformanceSnapshotCommand::class)
+            ->args([
+                service(DepartmentRepository::class),
+                service('team.staffing_figures'),
+                service('team.department_performance'),
+                service('team.performance_history'),
+            ])
+            ->tag('console.command');
     }
 
     /*
@@ -228,6 +249,8 @@ return static function (ContainerConfigurator $container): void {
             service('team.positions'),
             service('team.departments'),
             service(UserRepository::class),
+            service('team.staffing_figures'),
+            service('team.performance_history'),
         ])
         ->tag('uhifadhi.devkit.content_provider');
 
@@ -412,6 +435,29 @@ return static function (ContainerConfigurator $container): void {
      * bundle collects whatever is tagged — so an installation with no areas
      * simply has nothing that collects it.
      */
+    /*
+     * THE ONLY THING IN THE CORE THAT REMEMBERS — what each figure was in
+     * each period that has closed, which every movement on the performance
+     * page is measured against.
+     */
+    /*
+     * THE FIGURES EVERY DEPARTMENT HAS WHATEVER IT ATTACHES — counted once,
+     * for the snapshot, the matrix and the band alike.
+     */
+    $services->set('team.staffing_figures', StaffingFigures::class)
+        ->args([
+            service(PositionRepository::class),
+            service(UserRepository::class),
+        ]);
+    $services->alias(StaffingFigures::class, 'team.staffing_figures');
+
+    $services->set('team.performance_history', PerformanceHistory::class)
+        ->args([
+            service('doctrine.orm.entity_manager'),
+            service(DepartmentPeriodFigureRepository::class),
+        ]);
+    $services->alias(PerformanceHistory::class, 'team.performance_history');
+
     $services->set('team.area_sections', DepartmentAreaSections::class)
         ->tag(AreaSectionsInterface::TAG);
     $services->alias(DepartmentAreaSections::class, 'team.area_sections');

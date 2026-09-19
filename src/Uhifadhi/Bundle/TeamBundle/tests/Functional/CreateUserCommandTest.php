@@ -112,8 +112,15 @@ final class CreateUserCommandTest extends KernelTestCase
         self::assertInstanceOf(CreateUserCommand::class, $command->getCommand());
     }
 
-    /** And it is the only command this bundle contributes. */
-    public function testItIsTheOnlyCommandTheBundleContributes(): void
+    /**
+     * AND THESE ARE THE ONLY TWO COMMANDS THIS BUNDLE CONTRIBUTES.
+     *
+     * A bundle's commands are its console surface and the list is short on
+     * purpose: one an installation is bootstrapped with, and one it
+     * schedules because a closed period cannot be recomputed. Anything
+     * that could be a screen is a screen.
+     */
+    public function testTheseAreTheOnlyCommandsTheBundleContributes(): void
     {
         $loader = static::getContainer()->get('console.command_loader');
         self::assertInstanceOf(CommandLoaderInterface::class, $loader);
@@ -123,7 +130,8 @@ final class CreateUserCommandTest extends KernelTestCase
             static fn (string $name): bool => str_starts_with($name, 'team:'),
         ));
 
-        self::assertSame(['team:user:create'], $mine);
+        sort($mine);
+        self::assertSame(['team:performance:snapshot', 'team:user:create'], $mine);
     }
 
     /**

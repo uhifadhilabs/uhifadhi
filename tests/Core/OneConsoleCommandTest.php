@@ -18,15 +18,26 @@ use Symfony\Component\Console\CommandLoader\CommandLoaderInterface;
 use Uhifadhi\Core\Tests\Application\Kernel;
 
 /**
- * THE CORE SHIPS ONE CONSOLE COMMAND, AND THIS IS WHERE THAT IS TRUE OR NOT.
+ * THE CORE'S CONSOLE SURFACE IS TWO COMMANDS, AND THIS IS WHERE THAT IS TRUE
+ * OR NOT.
  *
- * The rule and its exception, stated once for all five bundles at once:
- * `team:user:create` — the first administrator, the one account an installation
- * cannot make through a screen — and nothing else. Every other command the
- * platform has belongs to devkit, which installs through `require-dev` and is
- * absent from a production build; the exception exists because a production
- * installation is built WITHOUT development packages, and that is precisely
- * where the first account has to be made.
+ * The rule and its exceptions, stated once for all five bundles at once.
+ * Everything the platform can be told to do is a screen, because a command is
+ * a door with no page and nobody to explain itself to; the two that are not
+ * screens are both things a PRODUCTION installation must be able to run
+ * without development packages, which is the whole of the exception:
+ *
+ *   `team:user:create`          the first administrator — the one account an
+ *                               installation cannot make through a screen,
+ *                               because every screen is behind the sign-in it
+ *                               creates.
+ *   `team:performance:snapshot` what the figures were — run on the first of
+ *                               each period, because a closed period cannot be
+ *                               recomputed and every movement on the
+ *                               performance page is measured against one.
+ *
+ * Every other command the platform has belongs to devkit, which installs
+ * through `require-dev` and is absent from a production build.
  *
  * The assertion is about a CATEGORY rather than about one name: whatever the
  * five bundles register under their own namespaces is listed here, so a seeder
@@ -64,7 +75,7 @@ final class OneConsoleCommandTest extends KernelTestCase
         }
     }
 
-    public function testTheOnlyCommandTheCoreShipsIsTheFirstAdministrator(): void
+    public function testTheOnlyCommandsTheCoreShipsAreTheTwoAProductionInstallationRuns(): void
     {
         self::bootKernel();
 
@@ -86,8 +97,8 @@ final class OneConsoleCommandTest extends KernelTestCase
 
         sort($ours);
 
-        self::assertSame(['team:user:create'], $ours, \sprintf(
-            'The core ships one command; this installation carries [%s]. Everything else belongs to devkit.',
+        self::assertSame(['team:performance:snapshot', 'team:user:create'], $ours, \sprintf(
+            'The core ships two commands, both of them things a production installation must run; this one carries [%s]. Everything else belongs to devkit.',
             implode(', ', $ours),
         ));
     }

@@ -154,4 +154,23 @@ final class DemoOrganisationTest extends IntegrationTestCase
 
         return $collector;
     }
+
+    /**
+     * AND A YEAR OF CLOSED PERIODS BEHIND IT, so the performance page has
+     * something to compare against the first time it is opened. An
+     * installation that has not run the devkit has no history, and its
+     * pages say so rather than drawing a flat line at nought.
+     */
+    public function testItLeavesTwelveMonthsOfHistoryBehindEveryDepartment(): void
+    {
+        $this->collector()->seed('team');
+        $this->em->clear();
+
+        $periods = $this->em->getConnection()->fetchOne(
+            "SELECT COUNT(DISTINCT period_key) FROM team_department_period_figure WHERE figure_key = 'staffing.filled'",
+        );
+        self::assertIsNumeric($periods);
+
+        self::assertSame(12, (int) (string) $periods);
+    }
 }

@@ -18,7 +18,9 @@ use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentService;
+use Uhifadhi\Bundle\TeamBundle\Service\PerformanceHistory;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionService;
+use Uhifadhi\Bundle\TeamBundle\Service\StaffingFigures;
 use Uhifadhi\Bundle\TeamBundle\Service\UserService;
 use Uhifadhi\Contracts\Devkit\ContentProviderInterface;
 
@@ -83,6 +85,8 @@ final readonly class TeamContentProvider implements ContentProviderInterface
         private PositionService $positions,
         private DepartmentService $departments,
         private UserRepository $roster,
+        private StaffingFigures $staffing,
+        private PerformanceHistory $history,
     ) {
     }
 
@@ -132,6 +136,59 @@ final readonly class TeamContentProvider implements ContentProviderInterface
         // SOMEBODY WITH NO POSITION, because that is a real state the roster has
         // to draw: verified, able to sign in, and able to do nothing at all.
         $this->person(self::ACCOUNTS['unseated'], 'Yara', 'Benali', TeamRoleEnum::Staff, null);
+
+        $this->twelveMonthsOfHistory([$protection, $ecology, $operations]);
+    }
+
+    /**
+     * A YEAR OF CLOSED PERIODS, so the performance page has something to
+     * compare against on the day it is first opened.
+     *
+     * THE FIGURES ARE THE STAFFING ONES the host answers for, walked
+     * backwards from what is true now: a department that holds four seats
+     * today held three or four last spring, which is how an organisation
+     * actually moves. Nothing here is a module's — a module publishes its
+     * own history through its own snapshot.
+     *
+     * IT IS DEMO CONTENT AND IT SAYS SO BY BEING HERE: an installation
+     * that has not run the devkit has no history, and its pages say "no
+     * history yet" rather than drawing a flat line at nought.
+     *
+     * @param list<\Uhifadhi\Bundle\TeamBundle\Entity\Department> $departments
+     */
+    private function twelveMonthsOfHistory(array $departments): void
+    {
+        $now = new \DateTimeImmutable('first day of this month');
+
+        foreach ($departments as $index => $department) {
+            $today = $this->staffing->of($department);
+
+            // ONE MONTH AT A TIME, OLDEST FIRST, arriving at today's figure:
+            // the run reads as a department that grew rather than as noise.
+            for ($back = 12; $back >= 1; --$back) {
+                $period = PerformanceHistory::monthKey($now->modify(\sprintf('-%d months', $back)));
+                $shrink = min($back, 2 + $index % 2);
+
+                foreach ($today as $key => $value) {
+                    $then = match ($key) {
+                        StaffingFigures::POSITIONS, StaffingFigures::FILLED, StaffingFigures::PEOPLE => max(0.0, $value - $shrink),
+                        default => $value,
+                    };
+
+                    $this->history->record($department, $period, $key, $then);
+                }
+
+                // AND VACANCY IS THE DIFFERENCE, not a figure of its own:
+                // two numbers that disagree about the same month would be
+                // two histories.
+                $this->history->record(
+                    $department,
+                    $period,
+                    StaffingFigures::VACANT,
+                    max(0.0, ($today[StaffingFigures::POSITIONS] - $shrink) - ($today[StaffingFigures::FILLED] - $shrink)),
+                );
+            }
+        }
     }
 
     /**
