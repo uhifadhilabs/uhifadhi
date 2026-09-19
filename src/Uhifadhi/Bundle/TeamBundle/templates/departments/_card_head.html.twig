@@ -1,0 +1,78 @@
+{# THE BANDED HEAD OF A DEPARTMENT CARD — the mark, the name, the scope, what
+   it reads, and the run of figures its modules publish.
+
+   ONE HEAD, THREE SURFACES. The organisation's register, an area's Departments
+   tab and that area's configure section all draw a department the same way; only
+   what is under the head differs. Two heads would be two departments.
+
+   `expandable` is the one switch: a card whose body opens carries the labelled
+   disclosure, and a card that is already open — the configure section's — does
+   not offer to open it again. #}
+{% set uuid = department.uuidString %}
+{% set area = department.area %}
+{% set filled = people %}
+{% set expandable = expandable|default(false) %}
+    <div class="dc-hd">
+        <span class="ov-mk{{ department.active ? ' on' : '' }}">{{ mark }}</span>
+        <div class="dc-bd">
+            <span class="nmrow">
+                <a class="ov-nm" href="{{ path('team_department_show', {uuid: uuid}) }}">{{ department.name }}</a>
+                <span class="ov-sc{{ area ? ' area' : '' }}">{{ area ? area.name : 'Org-wide' }}</span>
+                {% if not department.active %}<span class="chip stoff">inactive</span>{% endif %}
+            </span>
+            <div class="dc-sub">
+                {%- if modules is not empty -%}
+                    Reads <b>{{ modules|map(m => m.name)|join('</b>, <b>')|raw }}</b>
+                    {{- area ? ' in ' ~ area.name : ' across every area' }}
+                {%- else -%}
+                    Attaches no module yet &mdash; it shapes emphasis and holds positions
+                {%- endif -%}
+                &middot; {{ positions|length }} position{{ positions|length == 1 ? '' : 's' }}
+                &middot; <b>{{ filled }}</b> {{ filled == 1 ? 'person' : 'people' }}
+            </div>
+        </div>
+        <div class="dc-act">
+            {% if expandable %}
+            {# THE DISCLOSURE IS LABELLED AND IT NAMES ITS STATE. A bare
+               chevron in the corner said neither what it did nor which way
+               it was; this reads EXPAND shut and COLLAPSE open, in the
+               action cluster beside Open and at Open's own height.
+
+               A STATE VERB, NEVER A COUNT. "3 positions" on a button says
+               what is inside rather than what pressing it does, and it
+               changes under the reader when somebody files a position.
+
+               IT IS A LINK, so which card is open stays in the address and
+               the label is the server's answer — there is no state in the
+               browser to keep in step. #}
+            <a class="ovx xdisc" href="{{ open ? here : here ~ ('?' in here ? '&' : '?') ~ 'open=' ~ uuid ~ '#d-' ~ uuid }}"
+               aria-expanded="{{ open ? 'true' : 'false' }}"
+               aria-label="{{ open ? 'Collapse' : 'Expand' }} {{ department.name }}">
+                <span class="t">{{ open ? 'Collapse' : 'Expand' }}</span>{{ ux_icon('shell:chevron-down') }}
+            </a>
+            {% endif %}
+            <a class="ov-open" href="{{ path('team_department_show', {uuid: uuid}) }}" title="Open {{ department.name }}">Open {{ ux_icon('shell:arrow-right') }}</a>
+        </div>
+        {# WHAT THE ATTACHED MODULES PUBLISH. A department that attaches one
+           which publishes nothing for the period says that, in the module's
+           name, rather than leaving the run empty. #}
+        <div class="dcrun">
+            {% for figure in figures %}
+                <span class="f"><b>{{ figure.display }}</b>{{ figure.unit }} {{ figure.label|lower }}</span>
+            {% else %}
+                <span class="f q">{{ modules is empty ? 'No module attached — no figure' : 'The attached modules publish no figure for this period' }}</span>
+            {% endfor %}
+            {# GOALS ARE DEFERRED, and the card says so in the house's words
+               rather than drawing an empty dot rail.
+
+               WHEN THEY ARRIVE THE RAIL HAS FOUR STATES, not three — the
+               design settled them on 2026-09-19: met, at risk and missed as
+               filled dots; NO GOAL DECLARED as a DASHED hollow ring; and NO
+               FIGURE YET as a SOLID hollow ring (`.gdots i.nofig`). The last
+               two read alike at a glance and mean opposite things — nobody
+               set a target, versus nobody has reported one — so the goals
+               port ships all four or it ships a rail that lies. #}
+            <span class="gl"><span class="gn">Goals not kept yet</span></span>
+        </div>
+    </div>
+

@@ -1,0 +1,126 @@
+{# ONE OF THIS AREA'S OWN DEPARTMENTS, EDITABLE.
+
+   Design: areas/<area>/configure-departments.html.
+
+   THE HEAD IS THE REGISTER'S HEAD, the same partial the tab and the
+   organisation's register draw — a department must read the same wherever it
+   is looked at. What differs is what is under it: the body is the fields
+   rather than the positions, because this is where a department is changed
+   and the positions are read elsewhere.
+
+   THE BODY IS ALWAYS OPEN. A configure section is a list of things to edit,
+   so there is nothing to expand — and that is why the head is asked for no
+   disclosure.
+
+   EVERY CONTROL RETURNS HERE. The writes are the register's own routes, so
+   the audit line reads the same whichever door was used; `_return` is what
+   makes the door the way back. #}
+{% set uuid = department.uuidString %}
+{% set area = department.area %}
+<article id="d-{{ uuid }}" class="dcard on{{ department.active ? '' : ' dcinactive' }}" data-department="{{ uuid }}">
+    {{ include('@Team/departments/_card_head.html.twig', {
+        department: department, mark: mark, positions: positions, people: people,
+        figures: figures, modules: modules, here: returnTo, open: true, expandable: false,
+    }, with_context: false) }}
+
+    <div class="dc-body">
+        <div class="dpfields">
+            <form class="dpf dc-renameform" method="post" action="{{ path('team_department_rename', {uuid: uuid}) }}">
+                <input type="hidden" name="_token" value="{{ csrfToken }}">
+                <input type="hidden" name="_return" value="{{ returnTo }}">
+                <span class="k">Name</span>
+                <input class="fld" type="text" name="name" value="{{ department.name }}" maxlength="120"
+                       aria-label="Rename {{ department.name }}" required>
+                <button class="softbtn" type="submit">Rename</button>
+            </form>
+
+            {# ATTACHING A MODULE IS EMPHASIS, NOT ACCESS — it says which
+               module this department leads for, and grants nobody anything.
+               One toggle route serves both directions, so attaching and
+               detaching are the same write. #}
+            <div class="dpf">
+                <span class="k">Modules it reads</span>
+                <span class="dpchips">
+                    {% for module in attachable %}
+                        {% if not department.hasModule(module) %}
+                            <form method="post" action="{{ path('team_department_module_toggle', {uuid: uuid, slug: module.slug}) }}">
+                                <input type="hidden" name="_token" value="{{ csrfToken }}">
+                                <input type="hidden" name="_return" value="{{ returnTo }}">
+                                <button class="softbtn" type="submit">{{ ux_icon('shell:plus') }} {{ module.name }}</button>
+                            </form>
+                        {% endif %}
+                    {% else %}
+                        <span class="dpchip none">no module on this installation</span>
+                    {% endfor %}
+                </span>
+            </div>
+
+            <div class="dpf grow">
+                <span class="k">Attached</span>
+                <span class="dpchips">
+                    {% for module in modules %}
+                        <span class="dpchip">
+                            <i class="{{ module.slug }}"></i>{{ module.name }}
+                            <form method="post" action="{{ path('team_department_module_toggle', {uuid: uuid, slug: module.slug}) }}">
+                                <input type="hidden" name="_token" value="{{ csrfToken }}">
+                                <input type="hidden" name="_return" value="{{ returnTo }}">
+                                <button type="submit" aria-label="Detach {{ module.name }} from {{ department.name }}">&times;</button>
+                            </form>
+                        </span>
+                    {% else %}
+                        <span class="dpchip none">nothing attached</span>
+                    {% endfor %}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="dc-foot">
+        <div class="dc-line dc-scopeline">
+            <span><b>Scope</b> &middot; <b>area-level</b> &middot; {{ area.name }} &mdash; the other areas do not see it</span>
+            <span class="sp"></span>
+
+            {# PROMOTING IS AN ORGANISATION-WIDE ACT and it is recorded, so it
+               asks for a reason before it widens. Confining an org-wide
+               department is not offered here at all: a shared object is not
+               re-scoped from inside one area. #}
+            <details class="dc-more">
+                <summary class="softbtn">Promote &#9662;</summary>
+                <div class="dc-panel">
+                    <form class="dc-scopeform" method="post" action="{{ path('team_department_scope', {uuid: uuid}) }}">
+                        <input type="hidden" name="_token" value="{{ csrfToken }}">
+                        <input type="hidden" name="_return" value="{{ returnTo }}">
+                        <input type="hidden" name="scope" value="org">
+                        <b class="sbt">Promote {{ department.name }} to org-wide</b>
+                        <label class="sbf grow"><span class="k">Reason &middot; required</span>
+                            <input class="fld" type="text" name="reason" placeholder="Why promote {{ department.name }}?"
+                                   aria-label="Reason for promoting {{ department.name }}" required>
+                        </label>
+                        <button class="softbtn" type="submit">Promote to org-wide</button>
+                        <span class="sbn">It reads every area from then on; its {{ positions|length }} position{{ positions|length == 1 ? '' : 's' }} and the {{ people }} {{ people == 1 ? 'person' : 'people' }} in them are not re-scoped.</span>
+                    </form>
+                </div>
+            </details>
+
+            {% if department.active %}
+                <form method="post" action="{{ path('team_department_deactivate', {uuid: uuid}) }}">
+                    <input type="hidden" name="_token" value="{{ csrfToken }}">
+                    <input type="hidden" name="_return" value="{{ returnTo }}">
+                    <button class="softbtn danger" type="submit"
+                            {{ stimulus_controller('confirm-modal') }}
+                            data-action="click->confirm-modal#ask"
+                            data-confirm-modal-title-value="Deactivate “{{ department.name }}”?"
+                            data-confirm-modal-message-value="{% if positions|length %}{{ positions|length }} position{{ positions|length == 1 ? '' : 's' }} ({{ people }} {{ people == 1 ? 'person' : 'people' }}) stay filed under it and keep what they grant.{% else %}Nothing is filed under it — an empty footprint.{% endif %} It is hidden from the pickers and greyed here; nothing is deleted, and it is one click from coming back."
+                            data-confirm-modal-confirm-label-value="Deactivate anyway"
+                            data-confirm-modal-danger-value="true">Deactivate</button>
+                </form>
+            {% else %}
+                <form method="post" action="{{ path('team_department_reactivate', {uuid: uuid}) }}">
+                    <input type="hidden" name="_token" value="{{ csrfToken }}">
+                    <input type="hidden" name="_return" value="{{ returnTo }}">
+                    <button class="softbtn" type="submit">Reactivate</button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+</article>

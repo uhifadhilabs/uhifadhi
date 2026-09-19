@@ -823,7 +823,31 @@ final readonly class DepartmentController
     {
         $this->flash($request, $message, $kind);
 
-        return new RedirectResponse($this->router->generate('team_departments'));
+        return new RedirectResponse($this->returnTo($request) ?? $this->router->generate('team_departments'));
+    }
+
+    /**
+     * WHERE A WRITE GOES BACK TO, when the door was not the register.
+     *
+     * The same write is offered on the organisation's register and in an
+     * area's configure section, and a person is returned to the page they
+     * pressed the button on — otherwise editing one area's department throws
+     * the reader out to the organisation.
+     *
+     * ONLY A PATH ON THIS SITE. The value is posted, so it is the visitor's;
+     * anything but a single leading slash — an absolute URL, a
+     * protocol-relative `//host`, a backslash — is refused and the register
+     * answers instead. There is no open redirect to be had here.
+     */
+    private function returnTo(Request $request): ?string
+    {
+        $to = trim((string) $request->request->get('_return'));
+
+        if ('' === $to || !str_starts_with($to, '/') || str_starts_with($to, '//') || str_starts_with($to, '/\\')) {
+            return null;
+        }
+
+        return $to;
     }
 
     /**
@@ -835,7 +859,7 @@ final readonly class DepartmentController
     {
         $this->flash($request, $message, $kind);
 
-        return new RedirectResponse($this->router->generate('team_department_show', [
+        return new RedirectResponse($this->returnTo($request) ?? $this->router->generate('team_department_show', [
             'uuid' => (string) $department->getUuidString(),
         ]));
     }

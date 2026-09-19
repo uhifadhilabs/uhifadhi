@@ -417,6 +417,29 @@ final class AreaPagesTest extends WebTestCase
         self::assertStringNotContainsString('Modules', $strip);
     }
 
+    /**
+     * A SECTION ANOTHER BUNDLE CONTRIBUTES stands between the area's own
+     * sections and Area settings, which stays last. The area bundle may not
+     * name departments — the bundle that owns them puts them on the strip.
+     */
+    public function testAContributedSectionStandsBeforeAreaSettings(): void
+    {
+        $this->boot();
+        $area = $this->anArea();
+
+        $strip = $this->tabStrip($this->body('/areas/'.$area->getUuidString().'/configure'));
+
+        $order = [];
+        foreach (['Zones', 'Stations', 'Contributed', 'Area settings'] as $label) {
+            $at = strpos($strip, $label);
+            self::assertIsInt($at, $label.' is on the strip');
+            $order[$label] = $at;
+        }
+
+        self::assertTrue($order['Stations'] < $order['Contributed'], 'a contribution follows the area’s own sections');
+        self::assertTrue($order['Contributed'] < $order['Area settings'], 'Area settings stays last');
+    }
+
     /** The strip above the page body, whatever is currently in it. */
     private function tabStrip(string $body): string
     {

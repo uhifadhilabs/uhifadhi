@@ -22,6 +22,7 @@ use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaRegister;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneOverlapService;
+use Uhifadhi\Contracts\Shell\AreaSectionsInterface;
 use Uhifadhi\Contracts\Shell\ConfigurationSection;
 use Uhifadhi\Contracts\Shell\ConfigurationSectionsInterface;
 
@@ -50,6 +51,14 @@ final readonly class AreaConfigurationSections implements ConfigurationSectionsI
         private AreaOfInterestRepository $areas,
         private AreaRegister $register,
         private ZoneRepository $zones,
+        /**
+         * WHAT OTHER BUNDLES CONFIGURE ABOUT AN AREA. Departments are the
+         * first: they belong to the team bundle, and an area naming them
+         * would be this bundle depending on one it does not require.
+         *
+         * @var iterable<AreaSectionsInterface>
+         */
+        private iterable $contributors = [],
     ) {
     }
 
@@ -118,6 +127,18 @@ final readonly class AreaConfigurationSections implements ConfigurationSectionsI
                 StationConfigureController::ROUTE,
                 ['uuid' => (string) $area->getUuidString()],
             );
+
+            /*
+             * CONTRIBUTED SECTIONS STAND HERE — after the area's own, before
+             * Area settings, which is last on every configure page in the
+             * platform. They are told the area by identifier and by name, so
+             * neither bundle learns the other's classes.
+             */
+            foreach ($this->contributors as $contributor) {
+                foreach ($contributor->sectionsFor((string) $area->getUuidString(), (string) $area->getName()) as $section) {
+                    $sections[] = $section;
+                }
+            }
 
             $sections[] = ConfigurationSection::page(
                 ConfigurationSection::SETTINGS,

@@ -17,6 +17,7 @@ use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Uid\Uuid;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
+use Uhifadhi\Contracts\Entity\AreaInterface;
 
 /**
  * @extends ServiceEntityRepository<Department>
@@ -96,6 +97,30 @@ class DepartmentRepository extends ServiceEntityRepository
         /** @var list<Department> $departments */
         $departments = $this->createQueryBuilder('d')
             ->andWhere('d.area IS NOT NULL')
+            ->orderBy('d.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        return $departments;
+    }
+
+    /**
+     * THE DEPARTMENTS OF ONE AREA — the ones confined to it, in name order.
+     *
+     * THE ORG-WIDE ONES ARE NOT IN HERE and are not meant to be: an area's
+     * page reads them as a separate group, under a heading that says they
+     * are inherited, because "ours" and "everybody's" are two different
+     * facts about a department and a list that mixed them would state
+     * neither.
+     *
+     * @return list<Department>
+     */
+    public function findForArea(AreaInterface $area): array
+    {
+        /** @var list<Department> $departments */
+        $departments = $this->createQueryBuilder('d')
+            ->andWhere('d.area = :area')
+            ->setParameter('area', $area)
             ->orderBy('d.name', 'ASC')
             ->getQuery()
             ->getResult();

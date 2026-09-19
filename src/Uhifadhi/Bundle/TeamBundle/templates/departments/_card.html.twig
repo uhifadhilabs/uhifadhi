@@ -21,59 +21,10 @@
 {% set filled = people %}
 <article id="d-{{ uuid }}" class="dcard{{ open ? ' on' : '' }}{{ focused ? ' dcfocus' : '' }}{{ department.active ? '' : ' dcinactive' }}"
          data-department="{{ uuid }}">
-    <div class="dc-hd">
-        <span class="ov-mk{{ department.active ? ' on' : '' }}">{{ mark }}</span>
-        <div class="dc-bd">
-            <span class="nmrow">
-                <a class="ov-nm" href="{{ path('team_department_show', {uuid: uuid}) }}">{{ department.name }}</a>
-                <span class="ov-sc">{{ area ? area.name : 'Org-wide' }}</span>
-                {% if not department.active %}<span class="chip stoff">inactive</span>{% endif %}
-            </span>
-            <div class="dc-sub">
-                {%- if modules is not empty -%}
-                    Reads <b>{{ modules|map(m => m.name)|join('</b>, <b>')|raw }}</b>
-                    {{- area ? ' in ' ~ area.name : ' across every area' }}
-                {%- else -%}
-                    Attaches no module yet &mdash; it shapes emphasis and holds positions
-                {%- endif -%}
-                &middot; {{ positions|length }} position{{ positions|length == 1 ? '' : 's' }}
-                &middot; <b>{{ filled }}</b> {{ filled == 1 ? 'person' : 'people' }}
-            </div>
-        </div>
-        <div class="dc-act">
-            {# THE DISCLOSURE IS LABELLED AND IT NAMES ITS STATE. A bare
-               chevron in the corner said neither what it did nor which way
-               it was; this reads EXPAND shut and COLLAPSE open, in the
-               action cluster beside Open and at Open's own height.
-
-               A STATE VERB, NEVER A COUNT. "3 positions" on a button says
-               what is inside rather than what pressing it does, and it
-               changes under the reader when somebody files a position.
-
-               IT IS A LINK, so which card is open stays in the address and
-               the label is the server's answer — there is no state in the
-               browser to keep in step. #}
-            <a class="ovx xdisc" href="{{ open ? here : here ~ ('?' in here ? '&' : '?') ~ 'open=' ~ uuid ~ '#d-' ~ uuid }}"
-               aria-expanded="{{ open ? 'true' : 'false' }}"
-               aria-label="{{ open ? 'Collapse' : 'Expand' }} {{ department.name }}">
-                <span class="t">{{ open ? 'Collapse' : 'Expand' }}</span>{{ ux_icon('shell:chevron-down') }}
-            </a>
-            <a class="ov-open" href="{{ path('team_department_show', {uuid: uuid}) }}" title="Open {{ department.name }}">Open {{ ux_icon('shell:arrow-right') }}</a>
-        </div>
-        {# WHAT THE ATTACHED MODULES PUBLISH. A department that attaches one
-           which publishes nothing for the period says that, in the module's
-           name, rather than leaving the run empty. #}
-        <div class="dcrun">
-            {% for figure in figures %}
-                <span class="f"><b>{{ figure.display }}</b>{{ figure.unit }} {{ figure.label|lower }}</span>
-            {% else %}
-                <span class="f q">{{ modules is empty ? 'No module attached — no figure' : 'The attached modules publish no figure for this period' }}</span>
-            {% endfor %}
-            {# GOALS ARE DEFERRED, and the card says so in the house's words
-               rather than drawing an empty dot rail. #}
-            <span class="gl"><span class="gn">Goals not kept yet</span></span>
-        </div>
-    </div>
+    {{ include('@Team/departments/_card_head.html.twig', {
+        department: department, mark: mark, positions: positions, people: people,
+        figures: figures, modules: modules, here: here, open: open, expandable: true,
+    }, with_context: false) }}
 
     {% if open %}
         <div class="dc-body">
@@ -125,6 +76,12 @@
         </div>
     {% endif %}
 
+    {% set readOnly = readOnly|default(false) %}
+    {# WHERE A WRITE RETURNS TO. The register leaves it unset and the writes
+       answer with the register; a card on an area's configure section sets
+       it to that section, so the page a person pressed the button on is the
+       page they get back. #}
+    {% set returnTo = returnTo|default(null) %}
     {# THE FOOTER IS ONE LINE UNTIL IT IS ASKED FOR MORE.
 
        A COLLAPSED CARD IS A ROW IN A LIST, and a register is read by running
@@ -140,12 +97,18 @@
         <div class="dc-line dc-scopeline">
             <span><b>Scope</b> &middot; <b>{{ area ? area.name : 'org-wide' }}</b> &mdash; {{ area ? 'the other areas do not see it' : 'every area reads it' }}</span>
             <span class="sp"></span>
+{# A READING SURFACE DRAWS THE FACT AND NONE OF THE CONTROLS. The area's tab
+   states a department's scope and sends every change to the two places that
+   own one — this area's configure section, and the organisation's register
+   for an org-wide department. #}
+{% if not readOnly %}
 
             <details class="dc-more">
                 <summary class="softbtn">{{ area ? 'Promote' : 'Change scope' }} &#9662;</summary>
                 <div class="dc-panel">
                     <form class="dc-scopeform" method="post" action="{{ path('team_department_scope', {uuid: uuid}) }}">
                         <input type="hidden" name="_token" value="{{ csrfToken }}">
+                        {% if returnTo %}<input type="hidden" name="_return" value="{{ returnTo }}">{% endif %}
                         {% if area %}
                             <input type="hidden" name="scope" value="org">
                             <b class="sbt">Promote {{ department.name }} to org-wide</b>
@@ -180,6 +143,7 @@
                 <div class="dc-panel">
                     <form class="dc-renameform" method="post" action="{{ path('team_department_rename', {uuid: uuid}) }}">
                         <input type="hidden" name="_token" value="{{ csrfToken }}">
+                        {% if returnTo %}<input type="hidden" name="_return" value="{{ returnTo }}">{% endif %}
                         <label class="sbf grow"><span class="k">Name</span>
                             <input class="fld" type="text" name="name" value="{{ department.name }}" maxlength="120" aria-label="Rename {{ department.name }}" required>
                         </label>
@@ -191,6 +155,7 @@
                            what stays filed, and the administrator proceeds. #}
                         <form method="post" action="{{ path('team_department_deactivate', {uuid: uuid}) }}" data-deactivate>
                             <input type="hidden" name="_token" value="{{ csrfToken }}">
+                        {% if returnTo %}<input type="hidden" name="_return" value="{{ returnTo }}">{% endif %}
                             <button class="softbtn danger" type="submit"
                                     {{ stimulus_controller('confirm-modal') }}
                                     data-action="click->confirm-modal#ask"
@@ -202,11 +167,13 @@
                     {% else %}
                         <form method="post" action="{{ path('team_department_reactivate', {uuid: uuid}) }}">
                             <input type="hidden" name="_token" value="{{ csrfToken }}">
+                        {% if returnTo %}<input type="hidden" name="_return" value="{{ returnTo }}">{% endif %}
                             <button class="softbtn" type="submit">Reactivate</button>
                         </form>
                     {% endif %}
                 </div>
             </details>
+{% endif %}
         </div>
     </div>
 </article>

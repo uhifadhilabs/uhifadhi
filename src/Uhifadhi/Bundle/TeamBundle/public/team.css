@@ -2933,6 +2933,9 @@ a.ov-nm:hover { color: rgb(var(--c-acc)); }
     text-transform: uppercase; color: rgb(var(--c-dim)); border: 1px solid var(--c-ln2);
     border-radius: 99px; padding: 3px 8px 2px;
 }
+/* AN AREA-LEVEL SCOPE IS THE ACCENT ONE — the narrow, area-shaped fact reads
+   as this area's, and an org-wide one stays quiet. */
+.ov-sc.area { color: rgb(var(--c-acc)); border-color: color-mix(in srgb, rgb(var(--c-acc)) 38%, transparent); }
 .dc-sub { font-size: 11.5px; color: rgb(var(--c-fog)); margin-top: 3px; }
 .dc-sub b { color: rgb(var(--c-tx)); font-weight: 600; }
 .dc-act { display: flex; align-items: center; gap: 7px; margin-left: auto; }
@@ -3019,3 +3022,81 @@ a.ov-nm:hover { color: rgb(var(--c-acc)); }
 .dcstack.dcreg .dcard:has(.dc-more[open]) { z-index: 5; }
 
 
+
+/* ════════════════════════════════════════════════════════════════════════
+   AN AREA'S DEPARTMENTS — the tab's find row, and the configure section's
+   fields, chips and org-wide rows.
+
+   Design: areas/<area>/departments-page.css. The register itself is ruled
+   above; this adds only what the two area surfaces need and restates none
+   of it.
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* ── the find row, without the create controls the org register carries ── */
+.ov-find.dpfind { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 0 0 14px; }
+.dpfind .fld { min-width: 260px; flex: 0 1 320px; }
+.dpfind .sp { flex: 1; }
+.dpfind .cnt { font: 500 10.5px var(--font-mono); color: rgb(var(--c-dim)); }
+
+/* ── one configure section per card, the zones/stations shape ─────────── */
+.dpsec { margin-bottom: 20px; }
+.dpsec .dcstack { margin-bottom: 0; }
+.dpsec .crcard { margin-bottom: 0; }
+.dplock { height: 38px; display: inline-flex; align-items: center; gap: 7px; padding: 0 12px; font-size: 9.5px; }
+.dplock svg { width: 14px; height: 14px; flex: none; }
+
+/* the editable fields inside a configure card's BODY */
+.dpfields { display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap; }
+.dpf { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.dpf.grow { flex: 1; min-width: 220px; }
+.dpf > .k {
+    font: 600 8.5px var(--font-mono); letter-spacing: .15em;
+    text-transform: uppercase; color: rgb(var(--c-dim));
+}
+.dpf .fld { height: 38px; }
+.dpf input.fld { min-width: 240px; }
+/* A FIELD THAT IS ITS OWN FORM still reads as one field: the control sits
+   beside the input rather than under it, because one write is one row. */
+form.dpf { flex-direction: row; align-items: flex-end; gap: 7px; flex-wrap: wrap; }
+form.dpf > .k { flex-basis: 100%; }
+
+.dpchips { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; min-height: 38px; }
+.dpchip {
+    display: inline-flex; align-items: center; gap: 7px; height: 28px; padding: 0 6px 0 10px;
+    border: 1px solid var(--c-ln2); border-radius: 8px; background: rgb(var(--c-raised));
+    font-size: 11.5px; font-weight: 600; color: rgb(var(--c-tx));
+}
+.dpchip i { width: 7px; height: 7px; border-radius: 50%; background: rgb(var(--c-fog)); flex: none; }
+.dpchip i.patrols { background: rgb(var(--c-acc)); }
+.dpchip i.incidents { background: #C85A93; }
+.dpchip i.roster { background: #4FA8E8; }
+.dpchip button {
+    width: 18px; height: 18px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 5px;
+    background: transparent; color: rgb(var(--c-dim)); font-size: 13px; line-height: 1; cursor: pointer;
+}
+.dpchip button:hover { color: rgb(var(--c-tx)); background: var(--c-ln); }
+.dpchip.none { border-style: dashed; color: rgb(var(--c-dim)); font-weight: 500; padding: 0 10px; }
+
+/* ── the read-only row an org-wide department gets inside an area ─────── */
+.dprows { display: flex; flex-direction: column; gap: 9px; }
+.dprow {
+    display: flex; align-items: center; gap: 12px; padding: 10px 13px; border: 1px solid var(--c-ln);
+    border-radius: 11px; background: rgb(var(--c-raised));
+}
+.dprow .ov-mk { flex: none; }
+.dprb { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.dprn { font-size: 13.5px; font-weight: 600; color: rgb(var(--c-tx)); }
+.dprs { font: 500 10px var(--font-mono); color: rgb(var(--c-dim)); }
+.dprm { font: 600 10.5px var(--font-mono); color: rgb(var(--c-fog)); flex: none; }
+.dpsc {
+    display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 9px; border-radius: 7px;
+    border: 1px solid var(--c-ln2); font: 600 9px var(--font-mono);
+    letter-spacing: .12em; text-transform: uppercase; color: rgb(var(--c-fog)); flex: none;
+}
+.dpsc svg { width: 12px; height: 12px; }
+.dprow .softbtn { flex: none; }
+
+@media (max-width: 1100px) {
+    .dprow { flex-wrap: wrap; }
+    .dprb { flex-basis: 100%; }
+}

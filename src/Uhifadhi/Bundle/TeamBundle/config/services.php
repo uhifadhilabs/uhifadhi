@@ -20,6 +20,7 @@ use Uhifadhi\Bundle\TeamBundle\Api\State\MeProvider;
 use Uhifadhi\Bundle\TeamBundle\ArgumentResolver\AreaValueResolver;
 use Uhifadhi\Bundle\TeamBundle\Command\CreateUserCommand;
 use Uhifadhi\Bundle\TeamBundle\Controller\ApiAuthController;
+use Uhifadhi\Bundle\TeamBundle\Controller\AreaDepartmentController;
 use Uhifadhi\Bundle\TeamBundle\Controller\DepartmentController;
 use Uhifadhi\Bundle\TeamBundle\Controller\InviteController;
 use Uhifadhi\Bundle\TeamBundle\Controller\MemberController;
@@ -53,6 +54,7 @@ use Uhifadhi\Bundle\TeamBundle\Service\PositionService;
 use Uhifadhi\Bundle\TeamBundle\Service\SuperAdminInvariant;
 use Uhifadhi\Bundle\TeamBundle\Service\TeamOverview;
 use Uhifadhi\Bundle\TeamBundle\Service\UserService;
+use Uhifadhi\Bundle\TeamBundle\Shell\DepartmentAreaSections;
 use Uhifadhi\Bundle\TeamBundle\Shell\TeamNavigation;
 use Uhifadhi\Bundle\TeamBundle\Shell\UserBadgeSource;
 use Uhifadhi\Bundle\TeamBundle\Twig\AreaScopeExtension;
@@ -60,6 +62,7 @@ use Uhifadhi\Bundle\TeamBundle\Widget\PositionWidgets;
 use Uhifadhi\Bundle\TeamBundle\Widget\TeamWidgets;
 use Uhifadhi\Contracts\People\PersonDirectoryProviderInterface;
 use Uhifadhi\Contracts\People\PersonFacetProviderInterface;
+use Uhifadhi\Contracts\Shell\AreaSectionsInterface;
 
 /*
  * The bundle's static service wiring.
@@ -397,6 +400,16 @@ return static function (ContainerConfigurator $container): void {
     }
 
     /*
+     * DEPARTMENTS ON AN AREA'S CONFIGURE STRIP. The contract is in the
+     * contracts package, which this bundle already carries, and the area
+     * bundle collects whatever is tagged — so an installation with no areas
+     * simply has nothing that collects it.
+     */
+    $services->set('team.area_sections', DepartmentAreaSections::class)
+        ->tag(AreaSectionsInterface::TAG);
+    $services->alias(DepartmentAreaSections::class, 'team.area_sections');
+
+    /*
      * WHO THE TOP BAR NAMES — team's answer to the shell's user-badge contract.
      *
      * Team is the core bundle that owns the account, the position and the tier,
@@ -630,6 +643,26 @@ return static function (ContainerConfigurator $container): void {
         ])
         ->tag('controller.service_arguments');
     $services->alias(DepartmentController::class, 'team.controller.department')->public();
+
+    /*
+     * ONE AREA'S DEPARTMENTS — the tab and its configure section. Team's
+     * routes, because a department already knows which area it belongs to;
+     * the area's tab strip picks them up by name, tolerantly.
+     */
+    $services->set('team.controller.area_department', AreaDepartmentController::class)
+        ->args([
+            service('twig'),
+            service(DepartmentRepository::class),
+            service(PositionRepository::class),
+            service(UserRepository::class),
+            service('doctrine.orm.entity_manager'),
+            service('team.department_performance'),
+            service('security.csrf.token_manager'),
+            service('router'),
+            service('registry.catalogue'),
+        ])
+        ->tag('controller.service_arguments');
+    $services->alias(AreaDepartmentController::class, 'team.controller.area_department')->public();
 
     $services->set('team.controller.position_widgets', PositionWidgetsController::class)
         ->args([

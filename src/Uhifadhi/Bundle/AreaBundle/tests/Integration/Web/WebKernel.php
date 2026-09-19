@@ -39,6 +39,7 @@ use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
 use Uhifadhi\Bundle\ShellBundle\ShellBundle;
 use Uhifadhi\Contracts\Entity\UserInterface;
 use Uhifadhi\Contracts\People\PersonDirectoryProviderInterface;
+use Uhifadhi\Contracts\Shell\AreaSectionsInterface;
 
 /**
  * AN INSTALLATION WITH SCREENS — the same minimal kernel as
@@ -269,6 +270,13 @@ final class WebKernel extends Kernel
         $services->set(FakeOverviewWidgets::class)
             ->args(['patrols'])
             ->tag(OverviewContributorInterface::TAG);
+
+        /*
+         * A BUNDLE CONTRIBUTING A SECTION TO THE AREA'S CONFIGURE STRIP,
+         * tagged as the team bundle tags Departments.
+         */
+        $services->set(FakeAreaSections::class)
+            ->tag(AreaSectionsInterface::TAG);
 
         $services->set(HostDirectory::class)
             ->args([new Reference('doctrine.orm.entity_manager')])

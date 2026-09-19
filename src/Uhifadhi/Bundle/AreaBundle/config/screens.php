@@ -391,6 +391,7 @@ return static function (ContainerConfigurator $container): void {
                 service(AreaOfInterestRepository::class),
                 service('area.register'),
                 service(ZoneRepository::class),
+                tagged_iterator('uhifadhi.area_sections'),
             ])
             ->tag('uhifadhi.configuration_sections');
         $services->alias(AreaConfigurationSections::class, 'area.configuration_sections');

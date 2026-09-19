@@ -1,0 +1,101 @@
+{# ONE AREA'S DEPARTMENTS — the tab that reads them.
+
+   Design: areas/<area>/departments.html.
+
+   THE CARDS ARE THE ORGANISATION REGISTER'S CARDS, the same partial: two
+   registers of one thing are two registers that drift. What differs is
+   which departments are on the page and in what order — this area's OWN
+   first, then the org-wide ones it inherits, each under a heading that says
+   which it is.
+
+   IT ONLY READS. Nothing here writes: adding, renaming, scoping and
+   attaching are the configure section's, and the header's two actions are
+   the way to the organisation's whole register and the way to Configure. #}
+{% extends '@Shell/page.html.twig' %}
+{% import '@Team/positions/_bits.html.twig' as pm %}
+
+{% block title %}{{ area.name }} &middot; departments{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {{ include('@Team/_stylesheets.html.twig') }}
+{% endblock %}
+
+{% block shell_breadcrumbs %}
+    {% if homeHref %}<a href="{{ homeHref }}">uhifadhi</a>{% else %}uhifadhi{% endif %} / {% if areaHref %}<a href="{{ areaHref }}">{{ area.name }}</a>{% else %}{{ area.name }}{% endif %} / departments
+{% endblock %}
+
+{% block shell_page_title %}{{ area.name }}{% endblock %}
+
+{% block shell_page_subtitle %}Departments that read {{ area.name }} &mdash; added and edited under <b>Configure</b>.{% endblock %}
+
+{% block shell_page_actions %}
+    {# THE WAY OUT TO THE WHOLE REGISTER. An org-wide department is not this
+       area's to change, and the organisation's register is where it is. #}
+    <a class="cta" href="{{ path('team_departments') }}">{{ ux_icon('shell:building-2') }} Manage departments {{ ux_icon('shell:arrow-right') }}</a>
+{% endblock %}
+
+{% block shell_page %}
+{% set here = path('area_departments', {uuid: area.uuidString}) %}
+
+{# THE IDENTITY BAND, the same one every area tab wears — with the two facts
+   this tab is about. #}
+<div class="factband">
+    <span class="f"><span class="k">Departments</span><span class="v">{{ ownCount + orgCount }}<em>{{ ownCount }} of this area, {{ orgCount }} org-wide</em></span></span>
+    <span class="f"><span class="k">Own positions</span><span class="v">{{ positionCount }}<em>{{ filled }} of {{ positionCount }} filled</em></span></span>
+    <span class="sp"></span>
+    <a class="more" href="{{ path('area_departments_configure', {uuid: area.uuidString}) }}">Configure departments &rarr;</a>
+</div>
+
+<div class="ov-find dpfind">
+    <form class="lsearch" method="get" action="{{ here }}">
+        {{ ux_icon('shell:search') }}
+        <input class="fld" type="search" name="q" value="{{ query.search }}" placeholder="Find a department&hellip;"
+               aria-label="Find a department">
+    </form>
+    <span class="sp"></span>
+    <span class="cnt">{{ ownCount + orgCount }} departments read {{ area.name }} &middot; {{ ownCount }} of this area &middot; {{ orgCount }} org-wide</span>
+</div>
+
+{% for group in groups %}
+    <details class="nvsec" open>
+        <summary class="deptgroup nvgrp">
+            <span class="nvfold">{{ ux_icon('shell:chevron-right') }}</span>
+            <span class="gh">{{ group.label }}</span>
+            <span class="gc">{{ group.departments|length }}</span>
+            <span class="gnote">{{ group.note }}</span>
+            <span class="gl"></span>
+        </summary>
+        {% if group.departments is empty %}
+            <div class="zdnone">
+                <b>{{ query.isFiltered ? 'Nothing here matches' : (group.key == 'own' ? 'No department of its own yet' : 'No org-wide department yet') }}</b>
+                <span>{{ query.isFiltered
+                    ? 'clear the search'
+                    : (group.key == 'own'
+                        ? 'one is added in Configure, with its scope fixed to this area'
+                        : 'an org-wide department is created on the organisation’s register') }}</span>
+            </div>
+        {% else %}
+            <div class="dcstack dcreg">
+                {% for department in group.departments %}
+                    {{ include('@Team/departments/_card.html.twig', {
+                        department: department,
+                        positions: owned[department.uuidString]|default([]),
+                        people: headcount[department.uuidString]|default(0),
+                        figures: figures[department.uuidString]|default([]),
+                        modules: department.modules,
+                        holders: holders,
+                        areas: [],
+                        mark: marks[department.uuidString]|default('—'),
+                        open: openDepartment == department.uuidString,
+                        focused: query.focus == department.uuidString,
+                        here: here,
+                        csrfToken: null,
+                        readOnly: true,
+                    }, with_context: false) }}
+                {% endfor %}
+            </div>
+        {% endif %}
+    </details>
+{% endfor %}
+{% endblock %}

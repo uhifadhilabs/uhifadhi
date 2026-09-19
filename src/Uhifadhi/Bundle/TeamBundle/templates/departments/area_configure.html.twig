@@ -1,0 +1,122 @@
+{# THE DEPARTMENTS SECTION OF AN AREA'S CONFIGURE PAGE.
+
+   Design: areas/<area>/configure-departments.html.
+
+   THIS AREA'S OWN, WHOLE: created with the scope locked to this area,
+   renamed, attached to modules, promoted with a recorded reason, deactivated.
+   The organisation-wide departments are LISTED and carry no control — a
+   shared object is not edited from inside one area's context, and the row
+   says where it is edited instead.
+
+   THE WRITES ARE THE REGISTER'S OWN ROUTES. One door per act, whichever page
+   it was pressed from, so the audit trail reads the same; what this section
+   adds is the way back to itself. #}
+{% extends '@Shell/page.html.twig' %}
+
+{% block title %}{{ area.name }} &middot; configure &middot; departments{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {{ include('@Team/_stylesheets.html.twig') }}
+{% endblock %}
+
+{% block shell_breadcrumbs %}
+    {% if homeHref %}<a href="{{ homeHref }}">uhifadhi</a>{% else %}uhifadhi{% endif %} / {% if areaHref %}<a href="{{ areaHref }}">{{ area.name }}</a>{% else %}{{ area.name }}{% endif %} / configure / departments
+{% endblock %}
+
+{% block shell_page_title %}{{ area.name }} &middot; configure{% endblock %}
+
+{% block shell_page_subtitle %}Departments of {{ area.name }} are added and edited here; the <b>Departments</b> tab is where they are read.{% endblock %}
+
+{% block shell_page_actions %}
+    <a class="cta" href="{{ path('area_departments', {uuid: area.uuidString}) }}">Open Departments {{ ux_icon('shell:arrow-right') }}</a>
+{% endblock %}
+
+{% block shell_page %}
+{% set section = path('area_departments_configure', {uuid: area.uuidString}) %}
+
+{# ADD ONE — the scope is not asked, it is stated. A department created here
+   belongs to this area; an organisation-wide one is created on the
+   organisation's register, and the hint says so rather than offering a
+   chooser that would have one wrong answer. #}
+<div class="c dpsec">
+    <span class="tab">Add a department<span class="src">&middot; scope fixed to {{ area.name }}</span></span>
+    <form class="crcard" method="post" action="{{ path('team_department_create') }}">
+        <input type="hidden" name="_token" value="{{ csrfToken }}">
+        <input type="hidden" name="_return" value="{{ section }}">
+        <input type="hidden" name="scope" value="area">
+        <input type="hidden" name="area" value="{{ area.uuidString }}">
+        <div class="crgrid">
+            <div class="crfield">
+                <span class="crlab">Scope</span>
+                <span class="chip dplock">{{ ux_icon('shell:layers') }} Area &middot; {{ area.name }} &middot; locked</span>
+            </div>
+            <div class="crfield grow">
+                <span class="crlab">Name</span>
+                <input class="fld" type="text" name="name" maxlength="120"
+                       placeholder="New department for {{ area.name }}" aria-label="New department name" required>
+            </div>
+            <button class="cta" type="submit">{{ ux_icon('shell:plus') }} Add to {{ area.name }}</button>
+        </div>
+        <div class="crhint">
+            {{ ux_icon('shell:info') }}
+            <span>Created here it belongs to <b>{{ area.name }} only</b>. An organisation-wide department is created on the <a href="{{ path('team_departments') }}">organisation register</a>.</span>
+        </div>
+    </form>
+</div>
+
+<div class="c dpsec">
+    <span class="tab">{{ area.name }}&rsquo;s own<span class="src">&middot; {{ own|length }} &middot; edited here</span></span>
+    {% if own is empty %}
+        <div class="zdnone">
+            <b>No department of its own yet</b>
+            <span>add one above &mdash; it will belong to {{ area.name }} and to no other area</span>
+        </div>
+    {% else %}
+        <div class="dcstack dcreg">
+            {% for department in own %}
+                {{ include('@Team/departments/_configure_card.html.twig', {
+                    department: department,
+                    positions: owned[department.uuidString]|default([]),
+                    people: headcount[department.uuidString]|default(0),
+                    figures: figures[department.uuidString]|default([]),
+                    modules: department.modules,
+                    attachable: attachable,
+                    mark: marks[department.uuidString]|default('—'),
+                    csrfToken: csrfToken,
+                    returnTo: section,
+                }, with_context: false) }}
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+
+{# THE ORG-WIDE ONES, READ-ONLY. They read this area too, so they are listed
+   — leaving them out would say this area has three departments when nine
+   read it — and they carry no control, because changing one changes every
+   area at once. #}
+<div class="c dpsec">
+    <span class="tab">Org-wide departments<span class="src">&middot; {{ inherited|length }} &middot; read-only here</span></span>
+    {% if inherited is empty %}
+        <div class="zdnone">
+            <b>No org-wide department yet</b>
+            <span>one is created on the organisation&rsquo;s register, and every area reads it from then on</span>
+        </div>
+    {% else %}
+        <div class="dprows">
+            {% for department in inherited %}
+                <div class="dprow">
+                    <span class="ov-mk{{ department.active ? ' on' : '' }}">{{ marks[department.uuidString]|default('—') }}</span>
+                    <div class="dprb">
+                        <span class="dprn">{{ department.name }}</span>
+                        <span class="dprs">Reads every area, {{ area.name }} included</span>
+                    </div>
+                    <span class="dpsc">{{ ux_icon('shell:building-2') }} Org-wide</span>
+                    <span class="dprm">{{ department.modules is empty ? 'no module' : department.modules|map(m => m.name)|join(', ') }}</span>
+                    <a class="softbtn" href="{{ path('team_departments') }}?focus={{ department.uuidString }}#d-{{ department.uuidString }}">Configured at the organisation {{ ux_icon('shell:arrow-right') }}</a>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
