@@ -61,6 +61,16 @@ const BOUNDARY_LAYER = 'atlas.boundary';
 /* THE HOUSE PADDING between what a plate is about and the plate's own edge. */
 const FIT_PADDING = [26, 26];
 
+/* HOW FINELY A PLATE MAY ZOOM.
+ *
+ * Leaflet's default is whole levels, and a whole level is a factor of two:
+ * fitting an area to a frame, one level in overflowed the plate and one
+ * level out drew the boundary at half the frame's height, centred, with the
+ * subject filling a quarter of the card. Quarter levels let `fitBounds`
+ * actually reach the padding, and the +/- controls step by the same amount
+ * so the two cannot disagree about what a zoom is. */
+const ZOOM_SNAP = 0.25;
+
 /* How close a plate comes to a subject that is one point and nothing else,
  * where the surface did not say. */
 const POINT_ZOOM = 13;
@@ -179,9 +189,18 @@ export default class extends Controller {
      * control stack, and a second pair of buttons in the opposite corner is not
      * a thing a module should be able to reintroduce by handing the renderer
      * its own options.
+     *
+     * AND THE PLATE ZOOMS IN QUARTER LEVELS, so that framing a subject can
+     * actually reach the padding rather than stopping at whichever whole
+     * level happens to fit — see {@link ZOOM_SNAP}.
      */
     beforeMap(event) {
-        event.detail.bridgeOptions = { ...(event.detail.bridgeOptions ?? {}), zoomControl: false };
+        event.detail.bridgeOptions = {
+            ...(event.detail.bridgeOptions ?? {}),
+            zoomControl: false,
+            zoomSnap: ZOOM_SNAP,
+            zoomDelta: ZOOM_SNAP,
+        };
     }
 
     /**
