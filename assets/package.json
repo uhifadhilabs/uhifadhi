@@ -1,6 +1,6 @@
 {
     "name": "@uhifadhi/uhifadhi",
-    "description": "Front-end behaviour of the core — every Stimulus controller the registry, the shell, the team screens and the area screens ship, mapped into an installation through AssetMapper.",
+    "description": "Front-end behaviour of the core \u2014 every Stimulus controller the registry, the shell, the team screens and the area screens ship, mapped into an installation through AssetMapper.",
     "license": "AGPL-3.0-or-later",
     "symfony": {
         "controllers": {
@@ -25,6 +25,12 @@
             "localtime": {
                 "main": "../src/Uhifadhi/Bundle/ShellBundle/assets/controllers/localtime_controller.js",
                 "name": "uhifadhi--shell-bundle--localtime",
+                "fetch": "eager",
+                "enabled": true
+            },
+            "confirm-modal": {
+                "main": "../src/Uhifadhi/Bundle/ShellBundle/assets/controllers/confirm_modal_controller.js",
+                "name": "uhifadhi--shell-bundle--confirm-modal",
                 "fetch": "eager",
                 "enabled": true
             },

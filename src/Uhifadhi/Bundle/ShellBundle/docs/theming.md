@@ -123,6 +123,7 @@ an application.
 | the top bar's sun | `theme` | writes the choice; the head's pre-paint script still applies it |
 | the sidebar's chevrons | `sidebar` | collapses to the icon rail, and remembers |
 | a tree caret | `sidebar-tree` | folds one branch; never navigates, never persisted |
+| a destructive submit | `confirm-modal` | asks the question, then submits the form it interrupted |
 
 Three consequences worth naming:
 
@@ -144,6 +145,56 @@ the sidebar's width now is too, through a `shell-rail` class the head's inline
 script puts on `<html>` and the stylesheet draws the rail from — otherwise a
 remembered rail arrives when the controller connects and a 236px sidebar visibly
 jumps to 66px on every load.
+
+## One question before something is destroyed
+
+**Removing a zone, closing a post, throwing away a saved layout and resetting a
+dashboard are four modules' actions and one question.** A person should not have
+to learn four ways of being asked, so a module marks its destructive submit and
+hands over the words; the dialog, its look, its keyboard and its focus are the
+frame's.
+
+```twig
+<button type="submit"
+        {{ stimulus_controller('confirm-modal') }}
+        data-action="click->confirm-modal#ask"
+        data-confirm-modal-title-value="Remove “Crater”?"
+        data-confirm-modal-message-value="Its ground becomes unzoned, which is legal…"
+        data-confirm-modal-confirm-label-value="Remove the zone"
+        data-confirm-modal-danger-value="true">Remove the zone</button>
+```
+
+Four things about that markup are deliberate:
+
+- **The button is the form's own submit.** The controller intercepts the click;
+  it does not replace the control. An installation with no JavaScript — or a page
+  where the file did not load — still posts, still carries its CSRF token, and
+  loses nothing but the question. A destructive control must never become
+  unreachable because a script did not arrive.
+- **The name is short.** Every other controller here is written as
+  `uhifadhi--shell-bundle--…`, the identifier StimulusBundle derives from the
+  composer name. This one is written `confirm-modal`, because a module's button
+  must not have to spell the shell's package to ask a question. The shell mounts
+  the controller once on the `<body>` it owns, and that instance registers the
+  class under the short public name; every trigger in every module then binds to
+  it. The body's own instance has no trigger and asks nothing.
+- **The words are the module's, the markup is not.** The dialog is built by the
+  controller and described nowhere in a page — so a module cannot depend on its
+  shape, and the frame can change it everywhere at once. The title, message and
+  confirm label are written with `textContent`, never as HTML.
+- **It says so before it submits.** `confirm-modal:confirmed` is dispatched on
+  the trigger, so a page that wants to know can listen rather than wrap the
+  button; then the trigger's own form is submitted with `requestSubmit`, which
+  runs validation and fires `submit` exactly as a real click would.
+
+Escape and a click on the backdrop cancel; focus opens on **Cancel**, never on
+the destructive answer, and returns to the control that asked.
+
+*This shipped referenced and unshipped once — four bundles wrote the trigger and
+nobody wrote the controller, so every destructive button in the product deleted
+without asking, and no functional test could see it: a test that builds its own
+request never looks at an attribute. `tests/Unit/Assets/ConfirmModalContractTest`
+reads both sides of the seam as text for that reason.*
 
 ## A time reads in the reader's zone
 

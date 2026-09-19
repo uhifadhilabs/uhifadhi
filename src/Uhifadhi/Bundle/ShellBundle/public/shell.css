@@ -1432,3 +1432,35 @@ table.tbl tr:hover .open-btn {
     color: rgb(var(--c-dim)); font-variant-numeric: tabular-nums;
 }
 .i-ddsep { height: 1px; margin: 4px 6px; background: var(--c-ln); }
+
+/* ---- THE QUESTION BEFORE SOMETHING IS DESTROYED -------------------------
+   One dialog for the whole product, built by the shell's `confirm-modal`
+   controller and described nowhere in a module's markup — so a module cannot
+   depend on its shape and the frame can change it everywhere at once.
+
+   IT WEARS THE HOUSE SHEET: the same backdrop, the same gradient card, the
+   same rule above the answers as the report sheet the designs draw. A second
+   dialog look would be a second product. */
+.cmodalbd {
+    position: fixed; inset: 0; z-index: 120;
+    display: flex; align-items: center; justify-content: center; padding: 6vh 20px;
+    background: rgba(4, 8, 6, .62); backdrop-filter: blur(3px);
+    overflow-y: auto;
+}
+.cmodal {
+    width: 100%; max-width: 440px; border-radius: 16px; border: 1px solid var(--c-ln2);
+    background: linear-gradient(180deg, rgb(var(--c-p1)), rgb(var(--c-p2)));
+    box-shadow: 0 22px 60px rgba(0, 0, 0, .45);
+    padding: 20px 22px 18px;
+}
+/* A destructive question says so at its edge, before anything is read. */
+.cmodal.dg { border-color: color-mix(in srgb, rgb(var(--c-fail)) 45%, transparent); }
+.cmodalhd {
+    font-family: var(--font-display); font-size: 17px; font-weight: 700; letter-spacing: -.02em;
+    margin: 0 0 8px; color: rgb(var(--c-tx));
+}
+.cmodalbody { margin: 0; font-size: 12.5px; line-height: 1.55; color: rgb(var(--c-fog)); }
+.cmodalfoot {
+    display: flex; align-items: center; justify-content: flex-end; gap: 10px;
+    border-top: 1px solid var(--c-ln); padding-top: 14px; margin-top: 16px;
+}

@@ -103,8 +103,17 @@
    zone, so a module names no controller and its templates stay portable to a
    host that renders through this same frame. `shell_body_attributes` never
    carries a second `data-controller` (it is basemap data only), so the two do
-   not collide. See docs/theming.md, "A time reads in the reader's zone". #}
-<body data-controller="uhifadhi--shell-bundle--localtime"{% if shell_body_attributes is defined %} {{ shell_body_attributes|raw }}{% endif %}>
+   not collide. See docs/theming.md, "A time reads in the reader's zone".
+
+   `confirm-modal` rides here for a different reason: a module's destructive
+   button names the controller as `confirm-modal`, not as this bundle's
+   composer-derived identifier, because a module must not have to spell the
+   shell's package name to ask a question. Mounted once on the body, the
+   controller registers itself under that short public name, and every
+   trigger in every module binds to it. The body instance has no trigger and
+   asks nothing. See docs/theming.md, "One question before something is
+   destroyed". #}
+<body data-controller="uhifadhi--shell-bundle--localtime uhifadhi--shell-bundle--confirm-modal"{% if shell_body_attributes is defined %} {{ shell_body_attributes|raw }}{% endif %}>
 {% block body %}{% endblock %}
 </body>
 </html>

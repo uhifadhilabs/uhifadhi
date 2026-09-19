@@ -197,19 +197,21 @@ final class PageFrameTest extends ContractTestCase
      *
      * The value is emitted as markup — attributes are markup, and an escaped
      * `data-x="y"` is a broken tag — so a host escapes its own values. The one
-     * attribute the shell puts there itself is the `localtime` scanner (see
-     * theming.md): a page's own attributes ride alongside it, with no stray
-     * space, and a page that sets nothing gets the scanner and nothing else.
+     * attributes the shell puts there itself are the two it mounts on the
+     * document — the `localtime` scanner and the `confirm-modal` dialog (see
+     * theming.md): a page's own attributes ride alongside them, with no stray
+     * space, and a page that sets nothing gets those two and nothing else.
      */
     public function testTheBodyTagCarriesTheAttributesAPageGivesItAndNoOthers(): void
     {
         self::assertStringContainsString(
-            '<body data-controller="uhifadhi--shell-bundle--localtime" data-basemap="esri" data-basemap-key="">',
+            '<body data-controller="uhifadhi--shell-bundle--localtime uhifadhi--shell-bundle--confirm-modal"'
+            .' data-basemap="esri" data-basemap-key="">',
             $this->render('@fixtures/body_attributes_page.html.twig'),
         );
 
         self::assertStringContainsString(
-            '<body data-controller="uhifadhi--shell-bundle--localtime">',
+            '<body data-controller="uhifadhi--shell-bundle--localtime uhifadhi--shell-bundle--confirm-modal">',
             $this->render('@fixtures/bare_document_page.html.twig'),
         );
     }
