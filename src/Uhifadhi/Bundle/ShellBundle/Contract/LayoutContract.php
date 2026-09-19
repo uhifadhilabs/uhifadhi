@@ -268,5 +268,10 @@ final class LayoutContract
 
         // the form field every filter/search input is drawn as
         'fld',
+
+        // a form's actions, as the last row of its own body — one hairline,
+        // the quiet controls first and the accent last. Not a footer strip,
+        // which is the card's furniture and means something else.
+        'staddrow',
     ];
 }

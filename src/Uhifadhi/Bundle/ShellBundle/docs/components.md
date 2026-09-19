@@ -66,6 +66,7 @@ you write on an element; the parts each one brings are in the table.
 | What the card is for | `.use` | `b` for the emphasis |
 | The way back | `.backbtn` | the chevron `svg`, sized by the rule; carries `margin-bottom: 16px` |
 | The identity band | `.factband` | `.f` a fact, `.k`/`.v` its halves (`em` the unit), `.sp` then `.more`; wraps below 900px |
+| The form's action row | `.staddrow` | the last row of a form's BODY — `.fld` grows, `.sp` pushes, the controls state their own 32px height |
 | The focus line | `.focusline` | the **only** left mark a card may carry, and it means focus — a category is a chip or an 8px hue dot, a state is a chip or a stamp |
 | The card's quiet door | `.more` (direct child of `.c`) | pinned to the card's top edge, lower case; **at most one per card** — page actions go in the page header, row actions on the row |
 | The KPI plate | `.kpi` | `b`/`.disp` the number, `em` the unit, `.sub` the sub-line, `.hot` for the one that matters |

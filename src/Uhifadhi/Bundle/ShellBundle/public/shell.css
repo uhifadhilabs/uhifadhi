@@ -336,25 +336,29 @@ body::before {
    a card header and a footer strip take; `.dg` says the action destroys
    something; `.soon` is drawn where a control is shown before it works, so a
    reader learns it exists without being able to press it. */
-.btn {
-    /* THE SAME CONTROL ON AN <a>, A <button> AND AN <input type="submit">.
-       A button is not an anchor that happens to be pressable: the user agent
-       gives it a ground, a border, a font and a line box of its own, and every
-       one of them has to be turned off here or a Discard beside a Save comes
-       out as the browser's grey button. `appearance` kills the chrome (iOS
-       keeps drawing it otherwise), `font-family: inherit` stops the system
-       font, and `line-height: inherit` is what makes the two the same HEIGHT —
-       a button's UA line-height is `normal` while an anchor takes the page's,
-       so the pair sat a few pixels apart with nothing saying why. Inherit
-       rather than a number, because the number the anchor already computes is
-       the one to match and nothing here should move it. */
+/* THE THREE CONTROLS SHARE ONE BASE, and that is where every user-agent
+   default is turned off. `.btn`, `.cta` and `.tgl` are written on `<a>`, on
+   `<button>` and on `<input type="submit">` all over the product, and a
+   button is not an anchor that happens to be pressable: the agent gives it a
+   ground, a border, a font and a line box of its own. `appearance` kills the
+   chrome (iOS keeps drawing it otherwise), `font: inherit` stops the system
+   font, and the LINE BOX is stated rather than inherited — `line-height:
+   1.15` with `min-height: 32px` is what puts a Discard, a Save and a toggle
+   on one baseline whatever element each is. The design states all five here
+   for exactly that reason. */
+.btn, .cta, .tgl {
     appearance: none; -webkit-appearance: none;
-    display: inline-flex; align-items: center; gap: 7px; white-space: nowrap;
+    font: inherit; cursor: pointer; white-space: nowrap;
+    box-sizing: border-box; line-height: 1.15; min-height: 32px;
+    justify-content: center;
+}
+
+.btn {
+    display: inline-flex; align-items: center; gap: 7px;
     background: rgb(var(--c-raised)); color: rgb(var(--c-tx));
     border: 1px solid var(--c-ln2); border-radius: 9px;
     padding: 7px 13px; font-size: 12px; font-weight: 600;
-    font-family: inherit; line-height: inherit;
-    text-decoration: none; cursor: pointer;
+    text-decoration: none;
 }
 .btn:hover { border-color: rgb(var(--c-fog)); }
 .btn:focus-visible { outline: 2px solid color-mix(in srgb, rgb(var(--c-acc)) 60%, transparent); outline-offset: 2px; }
@@ -720,26 +724,20 @@ h2.zone::after { content: ""; flex: 1; height: 1px; background: var(--c-ln2); }
     box-shadow: var(--shadow);
     box-sizing: border-box;
 }
-.cta {
-    /* THE SAME THREE ELEMENT TYPES, and this rule was the one that got it
-       wrong: it named no font at all, so an `<a class="cta">` took the page's
-       and a `<button class="cta">` took the user agent's — the accent button
-       rendered in the system font wherever a form submitted rather than
-       linked. See `.btn` above for why each of the three lines is here. */
-    appearance: none; -webkit-appearance: none;
+/* The accent one. Everything it shares with the quiet control is stated in
+   the base above, including the line box it once had no answer for. */
+.cta, .btn.cta {
+    display: inline-flex; align-items: center; gap: 7px;
     background: rgb(var(--c-acc));
     color: rgb(var(--c-accT));
+    border: 1px solid transparent;
     border-radius: 9px;
     padding: 7px 15px;
     font-weight: 800;
     font-size: 12px;
-    font-family: inherit;
-    line-height: inherit;
     text-decoration: none;
-    display: inline-block;
-    border: none;
-    cursor: pointer;
 }
+.cta:hover, .btn.cta:hover { color: rgb(var(--c-accT)); border-color: transparent; }
 
 /* ---- SHARED FORM INPUT (.fld) — every text/number/date field the app renders.
    Design-system vocabulary from the global uhifadhi.css; lives here so a module's
@@ -789,7 +787,16 @@ h2.zone::after { content: ""; flex: 1; height: 1px; background: var(--c-ln2); }
     background: rgb(var(--c-cv));
 }
 .mchip:hover { border-color: rgb(var(--c-fog)); }
-.mchip.on { border-color: rgb(var(--c-acc)); color: rgb(var(--c-acc)); }
+/* CHOSEN IS FILLED, NOT OUTLINED. A row of chips is scanned along its length,
+   and an outline two shades from its neighbours is not a selection anybody
+   sees — the same reason the dropdown's chosen option is a tinted row rather
+   than coloured text. The ink goes to `--c-accT`, which is what survives on
+   the accent, and the grip and the remove cross go with it. */
+.mchip.on { color: rgb(var(--c-accT)); background: rgb(var(--c-acc)); border-color: rgb(var(--c-acc)); }
+.mchip .grip { display: inline-flex; cursor: grab; color: rgb(var(--c-fog)); }
+.mchip .grip svg { display: block; height: 12px; width: auto; }
+.mchip .rm { display: inline-flex; align-items: center; color: rgb(var(--c-fail)); text-decoration: none; font-size: 14px; line-height: 1; }
+.mchip.on .grip, .mchip.on .rm { color: rgb(var(--c-accT)); }
 /* THE QUIET ONE: dashed and muted, for a chip that is a control rather than a
    state — a month stepper's two arrows beside the month it is showing. It is a
    modifier of the chip and not a chip of its own, so a stepper cannot come out
@@ -1112,8 +1119,8 @@ table.tbl tr:hover .open-btn {
 /* The secondary to .cta: same row, deliberately quieter. */
 .tgl {
     border: 1px solid var(--c-ln2); background: none; color: rgb(var(--c-fog));
-    border-radius: 8px; padding: 5px 11px; font-size: 11px; cursor: pointer;
-    font-family: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 7px;
+    border-radius: 8px; padding: 5px 11px; font-size: 11px;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 7px;
 }
 .tgl:hover { color: rgb(var(--c-tx)); border-color: rgb(var(--c-fog)); }
 .tgl svg { width: 15px; height: 15px; flex: none; }
@@ -1164,6 +1171,25 @@ table.tbl tr:hover .open-btn {
     font: 600 9.5px "JetBrains Mono", monospace; letter-spacing: .12em; text-transform: uppercase;
     color: var(--fog);
 }
+/* ---- A FORM'S ACTIONS ARE THE LAST ROW OF ITS BODY ----------------------
+   RULED, and the reference is the area's Stations configure card. A form
+   inside a card ends with its own actions on one hairline — NOT with a
+   footer strip, which is the card's own furniture and means something else.
+   The quiet controls come first and the accent last.
+
+   THE ROW STATES NO HEIGHT. `.btn` and `.cta` agree on 32px for every
+   element type they are written on, which is where a control's height
+   belongs; a row that stated one would be a second answer to the same
+   question. */
+.staddrow {
+    display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
+    margin-top: 11px; padding-top: 11px; border-top: 1px solid var(--c-ln);
+}
+.staddrow .fld { flex: 1 1 200px; min-width: 160px; }
+.staddrow .sp { flex: 1; }
+
+/* The older right-aligned save row. Modules still write it; `.staddrow` is
+   what a configure card's form takes, and this goes when they have moved. */
 .save-row { display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin-top: 18px; }
 
 /* THE SETTINGS LIST ROW — a named thing with its own actions.

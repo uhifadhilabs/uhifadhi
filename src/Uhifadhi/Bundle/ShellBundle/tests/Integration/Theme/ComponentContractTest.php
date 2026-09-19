@@ -123,6 +123,9 @@ final class ComponentContractTest extends ContractTestCase
 
             // THE FORM FIELD every filter/search input is drawn as.
             'fld',
+
+            // a form's actions, as the last row of its own body
+            'staddrow',
         ];
     }
 
@@ -444,6 +447,71 @@ final class ComponentContractTest extends ContractTestCase
     }
 
     /**
+     * CHOSEN IS FILLED, NOT OUTLINED — and a form's actions are the last row
+     * of its body.
+     *
+     * A ROW OF CHIPS IS SCANNED ALONG ITS LENGTH, and an outline two shades
+     * from its neighbours is not a selection anybody sees; the shell drew
+     * `.mchip.on` as a tinted border while the design fills it. Same reading
+     * as the dropdown's chosen option, which is a tinted ROW rather than
+     * coloured text, for the same reason.
+     *
+     * THE INK GOES WITH THE GROUND. `--c-accT` is what survives on the
+     * accent, and the grip and the remove cross take it too — a chip whose
+     * label flipped but whose controls stayed dark would read as half-chosen.
+     *
+     * AND `.staddrow` IS THE FRAME'S. A form inside a configure card ends
+     * with its own actions on one hairline, not with a footer strip, which is
+     * the card's own furniture and means something else. It was the area's
+     * private rule; every configure card in the product wants it.
+     *
+     * The values are the design's, read value for value.
+     *
+     * @see /Users/eemjema/Programming/DesignsProjects/uhifadhi-web/uhifadhi.css lines 242-248, 337-340
+     */
+    #[DataProvider('chosenChipAndFormRowDeclarations')]
+    public function testTheChosenChipIsFilledAndAFormsActionsAreItsLastRow(string $selector, string $property, string $value): void
+    {
+        self::assertMatchesRegularExpression(
+            '/(?:^|;)\s*'.preg_quote($property, '/').'\s*:\s*'.preg_quote($value, '/').'\s*(?:;|$)/',
+            $this->rule($selector),
+            \sprintf('%s must state `%s: %s` — the design\'s own value.', $selector, $property, $value),
+        );
+    }
+
+    /**
+     * @return \Generator<string, array{string, string, string}>
+     */
+    public static function chosenChipAndFormRowDeclarations(): \Generator
+    {
+        $declarations = [
+            '.mchip.on' => [
+                'color' => 'rgb(var(--c-accT))',
+                'background' => 'rgb(var(--c-acc))',
+                'border-color' => 'rgb(var(--c-acc))',
+            ],
+            '.mchip.on .grip' => ['color' => 'rgb(var(--c-accT))'],
+            '.staddrow' => [
+                'display' => 'flex',
+                'align-items' => 'center',
+                'gap' => '9px',
+                'flex-wrap' => 'wrap',
+                'margin-top' => '11px',
+                'padding-top' => '11px',
+                'border-top' => '1px solid var(--c-ln)',
+            ],
+            '.staddrow .fld' => ['flex' => '1 1 200px', 'min-width' => '160px'],
+            '.staddrow .sp' => ['flex' => '1'],
+        ];
+
+        foreach ($declarations as $selector => $properties) {
+            foreach ($properties as $property => $value) {
+                yield $selector.' — '.$property => [$selector, $property, $value];
+            }
+        }
+    }
+
+    /**
      * THE FOCUS LINE IS THE ONE LEFT MARK A CARD MAY CARRY.
      *
      * RULED 2026-09-21. It means FOCUS — this is the card the reader is on.
@@ -569,28 +637,31 @@ final class ComponentContractTest extends ContractTestCase
      */
     public static function buttonNeutraliserDeclarations(): \Generator
     {
-        // The four a user agent supplies for a <button> and would otherwise
-        // win: the chrome, the font, the line box, and the ground the house
-        // rule states for itself.
+        // What a user agent supplies for a <button> and would otherwise win:
+        // the chrome, the font, and the line box. Stated once on the shared
+        // base and therefore true of all three controls — which is what puts
+        // a Discard, a Save and a toggle on ONE baseline whatever element
+        // each is written on. A lookup by single selector collects the shared
+        // block and the control's own, so this asks the question the page
+        // asks: does this control end up with the declaration.
         $neutralisers = [
             'appearance' => 'none',
             '-webkit-appearance' => 'none',
-            'font-family' => 'inherit',
-            'line-height' => 'inherit',
+            'font' => 'inherit',
+            'line-height' => '1.15',
+            'min-height' => '32px',
+            'box-sizing' => 'border-box',
         ];
 
-        foreach (['.btn', '.cta'] as $selector) {
+        foreach (['.btn', '.cta', '.tgl'] as $selector) {
             foreach ($neutralisers as $property => $value) {
                 yield $selector.' — '.$property => [$selector, $property, $value];
             }
         }
 
-        // And the house's own ground, border and radius, stated on both so
-        // neither falls back to anything.
+        // And the house's own radius, stated on both so neither falls back.
         yield '.btn — border-radius' => ['.btn', 'border-radius', '9px'];
         yield '.cta — border-radius' => ['.cta', 'border-radius', '9px'];
-        yield '.btn — cursor' => ['.btn', 'cursor', 'pointer'];
-        yield '.cta — cursor' => ['.cta', 'cursor', 'pointer'];
     }
 
     /**

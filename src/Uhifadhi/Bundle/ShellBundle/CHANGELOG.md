@@ -12,6 +12,11 @@ Not released yet.
  * the design-system stylesheet every module's own sheet is written against
  * the widget machinery under `Widget/`: the surface registry, the stored
    layouts and the library component every dashboard is arranged through
+ * the chosen chip is FILLED, not outlined (`.mchip.on`, with the grip and the
+   remove cross taking the accent's own ink), and `.staddrow` — a form's
+   actions as the last row of its body — is the frame's rather than the area's
+ * `.btn`, `.cta` and `.tgl` share one base: one line box, one 32px minimum,
+   so the three sit on one baseline whatever element each is written on
  * `.focusline`, the one left mark a card may carry — it means focus, it is
    paint rather than box, and the conformance suite now fails a module sheet
    that draws a left rail on a card of its own
