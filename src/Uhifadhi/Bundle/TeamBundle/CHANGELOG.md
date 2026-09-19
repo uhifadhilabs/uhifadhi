@@ -8,6 +8,10 @@
 
 Not released yet.
 
+ * no category bar on a permission group: a left mark on a card means focus, so
+   a module's colour there said "you are here" on every group at once — the
+   provenance is the heading's tag, its hue dot and its tint, as it already was
+
  * the account, the position that bundles permissions, and departments
  * the modules a department attaches — the lens that decides which modules
    lead its view and whose KPIs its performance surfaces roll up, granting

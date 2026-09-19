@@ -750,19 +750,15 @@ html.dark .pm-by.roster i { background: #7FA6F0; }
 
      1. A CONTAINER. The umbrella's permissions live inside its own bordered
         box; the heading is part of that box, not a card floating above it.
-     2. A COLOURED EDGE. A 3px left stripe in the module's own colour — the
-        same colour its tag, its dot and its map layer already wear. Provenance
-        becomes a thing you see at arm's length rather than read.
-     3. A SPACING RHYTHM. Big air BETWEEN groups, tight rows WITHIN them. This
+     2. A SPACING RHYTHM. Big air BETWEEN groups, tight rows WITHIN them. This
         does more work than the border does: proximity is what the eye groups
         by, and the previous layout spaced everything equally.
 
-   `--pm-edge` is the one place a group's colour is chosen; every rule below
-   spends it, so adding a module means adding one line.
+   AND NO COLOURED EDGE. It was drawn as one and is ruled out: a left mark on
+   a card means FOCUS, so a module's colour there says "you are here" on every
+   group at once. The provenance is the heading's `.pm-by` tag — the module's
+   name in words, its hue as a dot — and the heading's own tint behind it.
    ======================================================================== */
-
-/* The edge colours are declared once, a little further down, beside the
-   module-boundary note that explains them. */
 
 /* THE MODULE BOUNDARY — the review finding this section exists for, and it is
    scoped to what was actually wrong.
@@ -773,23 +769,16 @@ html.dark .pm-by.roster i { background: #7FA6F0; }
    are rows inside it, and the group carries its module's own colour.
 
    B and D were NOT wrong — each already gives an umbrella its own bordered card
-   — so they keep exactly the chrome they were drawn with. All three gain one
-   additive thing: a 3px left edge in the module's colour, the same colour its
-   tag, its nav dot and its map layer already wear. Provenance you can see at
-   arm's length rather than read.
+   — so they keep exactly the chrome they were drawn with.
 
-   `--pm-edge` is the one place a group's colour is chosen; every rule below
-   spends it, so adding a module means adding one line.  */
-
-.pm-group, .pm-qgroup, .pm-pack { --pm-edge: var(--c-ln2); }
-.pm-mod-patrols   { --pm-edge: rgb(var(--c-acc)); }
-.pm-mod-incidents { --pm-edge: var(--i-poach, #E05B41); }
-.pm-mod-roster    { --pm-edge: #3457B5; }
-html.dark .pm-mod-roster { --pm-edge: #7FA6F0; }
-.pm-mod-surveys   { --pm-edge: rgb(var(--c-warn)); }
-.pm-core          { --pm-edge: rgb(var(--c-fog)); }
-
-.pm-group, .pm-qgroup, .pm-pack { border-left: 3px solid var(--pm-edge); }
+   AND NONE OF THEM WEARS A LEFT BAR. Ruled 2026-09-21: the one left mark a
+   card may carry is the focus line, and it means focus. A CATEGORY is not
+   focus — a reader who has learnt that a left mark means "you are here" reads
+   a module's colour there as that, on every card at once. The provenance is
+   already said, twice and better, by the heading this group opens with: the
+   `.pm-by` tag names the module in words and carries its hue as a dot, and
+   the heading's own tint says it again. Nothing was lost by taking the bar
+   away, which is why it went rather than moving.  */
 
 /* ==================== C · PERMISSION FIRST ===============================
    The permission is the thing you open, and you tick which positions hold it —
@@ -802,11 +791,11 @@ html.dark .pm-mod-roster { --pm-edge: #7FA6F0; }
    BETWEEN groups against hairlines WITHIN them: proximity is what the eye
    groups by, and the old layout spaced everything equally. */
 .pm-qgroup {
-    border: 1px solid var(--c-ln2); border-left-width: 3px; border-radius: 13px;
+    border: 1px solid var(--c-ln2); border-radius: 13px;
     overflow: hidden; margin-bottom: 26px;
 }
 .pm-qgroup:last-child { margin-bottom: 0; }
-.pm-qgroup.gone { border-style: dashed; border-left-style: solid; opacity: .72; }
+.pm-qgroup.gone { border-style: dashed; opacity: .72; }
 .pm-qgroup > .pm-umb { border-bottom: 1px solid var(--c-ln2); }
 .pm-q { border-top: 1px dashed var(--c-ln); }
 .pm-q:first-of-type { border-top: 0; }
@@ -1230,7 +1219,6 @@ html.dark .pm-mod-roster { --pm-edge: #7FA6F0; }
     background: repeating-linear-gradient(135deg,
         transparent 0 7px, color-mix(in srgb, rgb(var(--c-fog)) 7%, transparent) 7px 14px);
 }
-.pm-mod-orphan { --pm-edge: rgb(var(--c-dim)); }
 
 /* A permission whose module is gone has no umbrella and no action left — the
    JSON only ever held the value, so that is all there is to print. */
@@ -1272,7 +1260,6 @@ html.dark .pm-mod-roster { --pm-edge: #7FA6F0; }
 }
 .pm-row.elevated.on { background: color-mix(in srgb, rgb(var(--c-acc)) 7%, transparent); }
 .pm-umb.pm-mod-team { background: color-mix(in srgb, rgb(var(--c-acc)) 6%, transparent); }
-.pm-mod-team { --pm-edge: rgb(var(--c-acc)); }
 
 /* ==================== AN OPEN DECISION ASKS ITS QUESTION FIRST ===========
    REVIEW FINDING, and it kept recurring: the verdict prose was written by
