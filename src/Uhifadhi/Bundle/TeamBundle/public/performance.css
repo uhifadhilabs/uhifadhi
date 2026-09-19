@@ -309,3 +309,90 @@
 .sk polyline.up { stroke: rgb(var(--c-ok)); }
 .sk polyline.dn { stroke: rgb(var(--c-fail)); }
 .sk polyline.fl { stroke: color-mix(in srgb, rgb(var(--c-fog)) 62%, transparent); }
+
+/* ── the topics register ─────────────────────────────────────────────────── */
+/* RULED 09-20: an index, not tabs and not an accordion. A card answers "is
+   there anything here for me this period" in one line; the record behind it
+   answers the topic. */
+.tpkey {
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin: 0 0 13px;
+    font: 600 9px "JetBrains Mono", ui-monospace, monospace; line-height: normal;
+    letter-spacing: .09em; text-transform: uppercase; color: rgb(var(--c-dim));
+}
+.tpkey span { display: inline-flex; align-items: center; gap: 6px; }
+.tpkey i { width: 9px; height: 9px; border-radius: 3px; font-style: normal; flex: none; }
+.tpkey i.host { background: color-mix(in srgb, rgb(var(--c-acc)) 50%, transparent); }
+.tpkey i.mod {
+    background: color-mix(in srgb, rgb(var(--c-warn)) 50%, transparent);
+    border: 1px dashed rgb(var(--c-warn));
+}
+
+.tpgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 0 0 18px; align-items: stretch; }
+@media (max-width: 1180px) { .tpgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 760px) { .tpgrid { grid-template-columns: minmax(0, 1fr); } }
+
+/* A CARD IS THE HOUSE CARD: a head, a body and a bounded foot, and the whole
+   of it is the door. Nothing here invents a second one. */
+.tpcard {
+    display: flex; flex-direction: column; border: 1px solid var(--c-ln); border-radius: 13px;
+    background: rgb(var(--c-p1)); box-shadow: var(--shadow); overflow: hidden;
+    text-decoration: none; color: inherit;
+}
+.tpcard:hover { border-color: color-mix(in srgb, rgb(var(--c-acc)) 45%, transparent); text-decoration: none; }
+.tpcard:hover .ov-open { color: rgb(var(--c-acc)); }
+.tpcard > .hd {
+    display: flex; align-items: center; gap: 9px; flex-wrap: wrap; padding: 11px 14px 10px;
+    border-bottom: 1px solid var(--c-ln); background: rgb(var(--c-raised));
+}
+.tpcard > .hd .t { font-size: 14px; font-weight: 700; color: rgb(var(--c-tx)); letter-spacing: -.01em; }
+.tpcard > .hd .sp, .tpcard > .ft .sp { flex: 1; }
+.tpcard > .hd .by {
+    font: 700 7.5px "JetBrains Mono", ui-monospace, monospace; line-height: normal;
+    letter-spacing: .13em; text-transform: uppercase; border: 1px solid var(--c-ln2);
+    border-radius: 6px; padding: 3px 7px 2px; color: rgb(var(--c-dim)); flex: none;
+}
+.tpcard > .hd .by.mod {
+    border-style: dashed; color: rgb(var(--c-warn));
+    border-color: color-mix(in srgb, rgb(var(--c-warn)) 45%, transparent);
+}
+.tpcard > .bd { flex: 1; display: flex; flex-direction: column; gap: 9px; padding: 13px 14px 14px; }
+.tpcard > .ft {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 9px 14px 10px;
+    border-top: 1px solid var(--c-ln); background: rgb(var(--c-raised));
+    font-size: 11.5px; color: rgb(var(--c-fog));
+}
+.tpcard .fig { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.tpcard .fig b {
+    font-family: "Archivo", system-ui, sans-serif; font-size: 27px; font-weight: 700;
+    letter-spacing: -.035em; color: rgb(var(--c-tx)); line-height: 1;
+}
+.tpcard .fig b em { font-style: normal; font-size: 13px; font-weight: 500; color: rgb(var(--c-fog)); margin-left: 4px; }
+/* A CARD WITH NO FIGURE SAYS SO, at the size of a sentence rather than at the
+   size of a number it does not have. */
+.tpcard .fig b.none { font-family: inherit; font-size: 14px; font-weight: 600; color: rgb(var(--c-dim)); letter-spacing: 0; }
+
+/* ── one topic's record ──────────────────────────────────────────────────── */
+/* The line that says what the topic is and who publishes it. */
+.tphead { display: flex; align-items: center; gap: 11px; flex-wrap: wrap; margin: 0 0 14px; }
+.tphead .t {
+    font-family: "Archivo", system-ui, sans-serif; font-size: 16px; font-weight: 700;
+    letter-spacing: -.02em; color: rgb(var(--c-tx));
+}
+.tphead .sp { flex: 1; }
+.tphead .by {
+    font: 700 8px "JetBrains Mono", ui-monospace, monospace; line-height: normal;
+    letter-spacing: .13em; text-transform: uppercase; border-radius: 6px; padding: 4px 9px 3px;
+    border: 1px solid var(--c-ln2); color: rgb(var(--c-dim));
+}
+.tphead .by.mod {
+    border-style: dashed; color: rgb(var(--c-warn));
+    border-color: color-mix(in srgb, rgb(var(--c-warn)) 45%, transparent);
+}
+
+/* TWO OR THREE CHARTS, SIDE BY SIDE, each bounded: a chart never grows with
+   its data, so a topic's record has a height a reader can learn. */
+.tpch { display: grid; gap: 16px; margin: 0 0 18px; align-items: start; }
+.tpch.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.tpch.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 1180px) { .tpch.three { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 900px) { .tpch.two, .tpch.three { grid-template-columns: minmax(0, 1fr); } }

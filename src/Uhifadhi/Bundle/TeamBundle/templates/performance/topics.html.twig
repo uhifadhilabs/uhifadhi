@@ -1,0 +1,71 @@
+{# PERFORMANCE · TOPICS — the register of topic records.
+
+   PORTED from departments/performance/topics.html: the strip, the key that
+   says once which cards are the host's and which a module's, and one card a
+   topic — a figure, where it moved, and the way in.
+
+   RULED 09-20: an INDEX, not tabs and not an accordion. A card answers "is
+   there anything here for me this period" in one line; the record behind it
+   answers the topic. Five topics stacked on one page would be five pages
+   nobody scrolls to the bottom of.
+
+   WHAT THE DESIGN DRAWS THAT IS NOT HERE YET, named rather than dropped: the
+   `.mv` sentence under each figure — "two ranger posts filled at Protection
+   Service, but 2 posts are past the 60-day threshold". It is prose ABOUT a
+   topic's own figures, so it is the topic's to write and no seam publishes it
+   yet. #}
+{% extends '@Team/performance/_frame.html.twig' %}
+
+{% block perf_crumb %}<a href="{{ path('team_performance') }}">performance</a> / topics{% endblock %}
+
+{% block perf_page %}
+    <div class="sphalf">
+        <span class="lb">Topics</span>
+        <span class="t">{{ cards|length }} {{ cards|length == 1 ? 'topic' : 'topics' }}, a record each</span>
+        <span class="s">a card says whether there is anything here for you this period; the record behind it answers the topic in full</span>
+        <span class="sp"></span>
+        <span class="n">{{ cards|length - byModule }} the host&rsquo;s &middot; {{ byModule }} a module&rsquo;s</span>
+    </div>
+
+    {# THE KEY IS SAID ONCE, ABOVE THE GRID, because the difference it names is
+       about WHOSE FIGURES THESE ARE and a reader needs it before the first
+       card rather than beside every one. #}
+    <div class="tpkey">
+        <span><i class="host"></i>the host&rsquo;s &mdash; every department is a row</span>
+        <span><i class="mod"></i>a module&rsquo;s own &mdash; only the departments that read it</span>
+    </div>
+
+    <div class="tpgrid">
+        {% for card in cards %}
+            <a class="tpcard" href="{{ card.url }}">
+                <span class="hd">
+                    <span class="t">{{ card.title }}</span>
+                    <span class="sp"></span>
+                    <span class="by{{ card.byModule ? ' mod' }}">{{ card.byModule ? 'A module' : 'The host' }}</span>
+                </span>
+                <span class="bd">
+                    <span class="fig">
+                        {% if card.isKnown %}
+                            <b>{{ card.figure }}{% if card.unit %}<em>{{ card.unit }}</em>{% endif %}</b>
+                        {% else %}
+                            <b class="none">{{ card.word }}</b>
+                        {% endif %}
+                        {%- if card.delta %}<span class="delta{{ card.deltaTone ? ' ' ~ card.deltaTone }}">{{ card.delta }}</span>{% endif %}
+                    </span>
+                    {% if card.spark %}
+                        <svg class="sk" width="100" height="26" viewBox="0 0 100 26" preserveAspectRatio="none" aria-hidden="true">
+                            {%- for points in card.spark %}<polyline class="{{ card.sparkTone }}" points="{{ points }}"/>{% endfor -%}
+                        </svg>
+                    {% endif %}
+                </span>
+                <span class="ft">
+                    <span>{{ card.label }}</span>
+                    <span class="sp"></span>
+                    <span class="ov-open">Open {{ ux_icon('shell:chevron-right') }}</span>
+                </span>
+            </a>
+        {% else %}
+            <p class="perf-empty">No topic publishes a figure for this scope yet, which is not the same as every topic scoring nothing.</p>
+        {% endfor %}
+    </div>
+{% endblock %}

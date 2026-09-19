@@ -150,6 +150,86 @@ final class PerformanceOverviewTest extends WebTestCaseWithSchema
         self::assertGreaterThan(0, $crawler->filter('#tp-heat a.open-btn')->count());
     }
 
+    /**
+     * THE TOPICS REGISTER IS AN INDEX, one card a topic — ruled 09-20:
+     * not tabs and not an accordion, because five topics stacked on one
+     * page are five pages nobody scrolls to the bottom of.
+     */
+    public function testTheTopicsRegisterIsOneCardATopic(): void
+    {
+        $this->seed();
+
+        $crawler = $this->client->request('GET', '/departments/performance/topics');
+
+        self::assertResponseIsSuccessful();
+        self::assertSame('Topics', $crawler->filter('.atabs a.on')->text());
+
+        $titles = $crawler->filter('.tpgrid .tpcard .hd .t')->each(static fn (Crawler $c): string => $c->text());
+        self::assertContains('Staffing', $titles);
+        self::assertContains('Goals', $titles);
+
+        // AND THE KEY THAT SAYS WHOSE FIGURES THESE ARE, once, above the grid.
+        self::assertCount(1, $crawler->filter('.tpkey'));
+    }
+
+    /** Every card opens its own record, carrying the scope and the period. */
+    public function testEveryCardOpensItsOwnRecord(): void
+    {
+        $this->seed();
+
+        $crawler = $this->client->request('GET', '/departments/performance/topics?period=quarter');
+        $href = (string) $crawler->filter('.tpgrid .tpcard')->first()->attr('href');
+
+        self::assertStringContainsString('/departments/performance/topics/', $href);
+        self::assertStringContainsString('period=quarter', $href);
+
+        $record = $this->client->request('GET', $href);
+
+        self::assertResponseIsSuccessful();
+        self::assertSame('Quarter', $record->filter('.periodpick a.on')->text());
+    }
+
+    /**
+     * A RECORD IS THE SAME PAGE FOR EVERY TOPIC: the five figures, the
+     * charts, and the matrix of the departments the topic applies to.
+     */
+    public function testATopicsRecordDrawsItsFiguresItsChartsAndItsMatrix(): void
+    {
+        $this->seed();
+
+        $crawler = $this->client->request('GET', '/departments/performance/topics/staffing');
+
+        self::assertResponseIsSuccessful();
+        self::assertSame('Staffing', $crawler->filter('.tphead .t')->text());
+        self::assertSame('the host', $crawler->filter('.tphead .by')->text());
+        self::assertCount(5, $crawler->filter('.tpk .c.kpi'), 'exactly five, or a reader cannot tell a short row from a quiet month');
+        self::assertCount(1, $crawler->filter('#tp-matrix.pfc'));
+        self::assertGreaterThan(0, $crawler->filter('#tp-matrix .legend')->count());
+    }
+
+    /** A topic this installation does not carry is not an empty page. */
+    public function testATopicNobodyPublishesIsNotAPage(): void
+    {
+        $this->seed();
+
+        $this->client->request('GET', '/departments/performance/topics/whale-counts');
+
+        self::assertResponseStatusCodeSame(404);
+    }
+
+    /** Standing on the register, the sidebar unfolds Topics to the topics. */
+    public function testTheSidebarUnfoldsTopicsToItsTopics(): void
+    {
+        $this->seed();
+
+        $crawler = $this->client->request('GET', '/departments/performance/topics');
+
+        $rows = $crawler->filter('.nav .ntree .ntgroup a.ntm')->each(static fn (Crawler $c): string => $c->text());
+
+        self::assertContains('Staffing', $rows);
+        self::assertContains('Goals', $rows);
+    }
+
     /** Performance is in the sidebar, under Observatory, with its screens. */
     public function testTheSidebarCarriesPerformanceAndItsThreeScreens(): void
     {

@@ -544,6 +544,9 @@ return static function (ContainerConfigurator $container): void {
                 service('security.token_storage'),
                 service('security.authorization_checker'),
                 service('request_stack'),
+                // THE SAME COLLECTOR THE REGISTER READS, so the tree and the
+                // page cannot list two different sets of topics.
+                service('team.performance_topics'),
             ])
             ->tag('shell.nav_section');
 

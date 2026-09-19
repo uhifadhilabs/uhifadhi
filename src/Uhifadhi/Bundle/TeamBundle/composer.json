@@ -48,6 +48,7 @@
         "symfony/security-http": "^7.3 || ^8.0",
         "symfony/uid": "^7.3 || ^8.0",
         "twig/twig": "^3.14",
+        "uhifadhi/atlas-bundle": "^1.0",
         "uhifadhi/contracts": "^1.0",
         "uhifadhi/registry-bundle": "^1.0",
         "uhifadhi/shell-bundle": "^1.0"

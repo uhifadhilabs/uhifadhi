@@ -1,0 +1,62 @@
+{# ONE TOPIC'S RECORD — its five figures, its charts, and the matrix of the
+   departments it applies to.
+
+   PORTED from departments/performance/staffing.html, and it is the SAME page
+   for every topic: the host's Staffing and a module's Patrols publish the
+   same three things through the same seam, so one template draws both and a
+   module's record cannot quietly lack an ability the host's has.
+
+   WHAT THE DESIGN DRAWS THAT IS NOT HERE YET, named rather than dropped: the
+   six-figure band under the head and the sentence beneath it. Both are the
+   topic's own words about its own figures, and no seam publishes them. #}
+{% extends '@Team/performance/_frame.html.twig' %}
+
+{% block title %}{{ topic }} &mdash; Performance{% endblock %}
+
+{% block perf_crumb %}
+    <a href="{{ path('team_performance') }}">performance</a> /
+    <a href="{{ path('team_performance_topics') }}">topics</a> / {{ topic|lower }}
+{% endblock %}
+
+{% block perf_page %}
+    {# THE LINE THAT SAYS WHAT THIS TOPIC IS AND WHO PUBLISHES IT. A figure a
+       module computed and one the host computed are different promises, and a
+       reader who cannot tell them apart cannot tell whom to ask about one. #}
+    <div class="tphead">
+        <span class="t">{{ topic }}</span>
+        <span class="sp"></span>
+        <span class="by{{ byModule ? ' mod' }}" title="Who publishes this topic">{{ publisher }}</span>
+    </div>
+
+    <div class="tpk">
+        {% for kpi in kpis %}
+            <span class="c kpi">
+                <span class="tab">{{ kpi.label }}</span>
+                {% if kpi.isKnown %}
+                    <b class="disp">{{ kpi.value|round(kpi.value == kpi.value|round ? 0 : 1) }}{% if kpi.unit %}<em>{{ kpi.unit }}</em>{% endif %}</b>
+                {% else %}
+                    {# A FIGURE NOBODY PUBLISHED SAYS SO. A blank where a number
+                       goes reads as a nought, and a nought is a measurement. #}
+                    <b class="disp none">no figure yet</b>
+                {% endif %}
+                {% if kpi.caption %}<span class="sub"><span class="lb">{{ kpi.caption }}</span></span>{% endif %}
+            </span>
+        {% endfor %}
+    </div>
+
+    {% if charts %}
+        <div class="tpch {{ charts|length == 3 ? 'three' : 'two' }}">
+            {% for chart in charts %}
+                {{ atlas_chart(chart.chart, chart.title, chart.caption) }}
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {{ render_matrix(matrix, {
+        title: topic,
+        publisher: publisher,
+        byModule: byModule,
+        openLabel: 'Open',
+        id: 'tp-matrix',
+    }) }}
+{% endblock %}

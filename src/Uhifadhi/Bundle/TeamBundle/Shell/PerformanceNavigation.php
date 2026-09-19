@@ -23,6 +23,10 @@ use Uhifadhi\Bundle\ShellBundle\Model\NavItem;
 use Uhifadhi\Bundle\ShellBundle\Model\NavSection;
 use Uhifadhi\Bundle\TeamBundle\Controller\PerformanceController;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
+use Uhifadhi\Bundle\TeamBundle\Service\PerformanceTopics;
+use Uhifadhi\Contracts\Kpi\FigurePeriod;
+use Uhifadhi\Contracts\Performance\PerformanceScope;
+use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
 
 /**
  * PERFORMANCE IN THE SIDEBAR, with its three screens under it.
@@ -61,6 +65,7 @@ final readonly class PerformanceNavigation implements NavigationSourceInterface
         private TokenStorageInterface $tokens,
         private AuthorizationCheckerInterface $authorization,
         private RequestStack $requests,
+        private PerformanceTopics $topics,
     ) {
     }
 
@@ -84,9 +89,10 @@ final readonly class PerformanceNavigation implements NavigationSourceInterface
             return;
         }
 
+        $topics = $this->child('Topics', PerformanceController::TOPICS_ROUTE);
         $children = array_values(array_filter([
             $this->child('Overview', PerformanceController::ROUTE),
-            $this->child('Topics', PerformanceController::TOPICS_ROUTE),
+            null === $topics ? null : $this->withTopics($topics),
             $this->child('Briefing', PerformanceController::BRIEFING_ROUTE),
         ]));
 
@@ -104,6 +110,50 @@ final readonly class PerformanceNavigation implements NavigationSourceInterface
             // at the screen rung rather than as three places.
             screens: true,
         )], position: self::POSITION);
+    }
+
+    /**
+     * TOPICS UNFOLDS TO THE TOPICS, because a reader who can see that
+     * Patrols has a record does not have to open Topics to learn it —
+     * and the tree and the register cannot disagree, since both are the
+     * same list from the same collector.
+     *
+     * DRILLED ONLY WHERE IT CAN BE SEEN, the rule the areas tree and the
+     * departments tree both keep: an installation with a dozen modules
+     * would otherwise pay for a dozen rows on every page in the product.
+     */
+    private function withTopics(NavItem $topics): NavItem
+    {
+        $here = $this->requests->getCurrentRequest();
+        $inside = null !== $here && str_starts_with($here->getBaseUrl().$here->getPathInfo(), (string) $topics->url);
+        if (!$inside) {
+            return $topics;
+        }
+
+        $period = FigurePeriod::month(new \DateTimeImmutable());
+        $scope = PerformanceScope::organisation();
+
+        $rows = [];
+        foreach ($this->topics->forScope($scope, $period) as $topic) {
+            $url = $this->urls->generate(PerformanceController::TOPIC_ROUTE, ['key' => $topic->key()]);
+            $rows[] = new NavItem(
+                label: $topic->title(),
+                url: $url,
+                current: $this->here($url),
+                // A MODULE'S TOPIC WEARS THE MODULE'S OWN DOT, exactly as a
+                // module row does under an area — the sidebar says the same
+                // thing the register's key does.
+                tone: PerformanceTopicProviderInterface::HOST === $topic->moduleSlug() ? null : $topic->moduleSlug(),
+            );
+        }
+
+        return new NavItem(
+            label: $topics->label,
+            url: $topics->url,
+            current: $topics->current && !self::litAnywhere($rows),
+            open: true,
+            children: $rows,
+        );
     }
 
     private function child(string $label, string $route): ?NavItem

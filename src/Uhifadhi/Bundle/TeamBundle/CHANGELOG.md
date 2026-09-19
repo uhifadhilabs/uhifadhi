@@ -32,6 +32,14 @@ Not released yet.
    exactly the loose bucket the overview draws as its own line. A period
    nobody wrote gets no pill.
 
+ * `/departments/performance/topics` and `/departments/performance/topics/{key}`
+   — the register of topic records, and the record. An INDEX and not an
+   accordion (ruled 09-20): a card answers "is there anything here for me this
+   period" and the record answers the topic. ONE record page for every topic,
+   host's and module's alike — five figures, the charts, the matrix — so a
+   module that publishes a topic gets a record the day it is installed
+ * the sidebar unfolds Topics to the topics while a reader is inside them, a
+   module's wearing its own dot
  * `/departments/performance` — the organisation's own surface, wearing the
    AREA idiom: one header carrying the scope and the period, the Overview ·
    Topics · Briefing strip, one card a topic with its headline figure, and

@@ -23,8 +23,10 @@ use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigura
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
+use Symfony\UX\Chartjs\ChartjsBundle;
 use Symfony\UX\Icons\UXIconsBundle;
 use Symfony\UX\StimulusBundle\StimulusBundle;
+use Uhifadhi\Bundle\AtlasBundle\AtlasBundle;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
 use Uhifadhi\Bundle\ShellBundle\ShellBundle;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
@@ -71,6 +73,12 @@ final class TestKernel extends Kernel
         yield new SecurityBundle();
         yield new RegistryBundle();
         yield new ShellBundle();
+        // THE CHARTS A TOPIC'S RECORD DRAWS. The performance pages state a
+        // chart through the contracts and the atlas draws it, so a kernel
+        // without these two renders a record with a hole where its charts go —
+        // which is exactly the failure a suite has to be able to see.
+        yield new ChartjsBundle();
+        yield new AtlasBundle();
         yield new TeamBundle();
     }
 

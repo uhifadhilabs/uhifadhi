@@ -25,12 +25,17 @@ use Uhifadhi\Bundle\ShellBundle\Model\AreaTab;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Performance\AcrossTopicsMatrix;
+use Uhifadhi\Bundle\TeamBundle\Performance\ChartBridge;
 use Uhifadhi\Bundle\TeamBundle\Performance\PeriodKind;
+use Uhifadhi\Bundle\TeamBundle\Performance\TopicCard;
 use Uhifadhi\Bundle\TeamBundle\Performance\TopicCards;
 use Uhifadhi\Bundle\TeamBundle\Service\PerformanceTopics;
 use Uhifadhi\Contracts\Entity\AreaInterface;
+use Uhifadhi\Contracts\Kpi\FigurePeriod;
 use Uhifadhi\Contracts\Performance\DepartmentDirectoryInterface;
 use Uhifadhi\Contracts\Performance\PerformanceScope;
+use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
+use Uhifadhi\Contracts\Performance\TopicChart;
 
 /**
  * PERFORMANCE — the organisation's own surface, wearing the area idiom.
@@ -60,6 +65,7 @@ final readonly class PerformanceController
 {
     public const string ROUTE = 'team_performance';
     public const string TOPICS_ROUTE = 'team_performance_topics';
+    public const string TOPIC_ROUTE = 'team_performance_topic';
     public const string BRIEFING_ROUTE = 'team_performance_briefing';
 
     /** What the scope picker calls the organisation, on the page and in the picker. */
@@ -87,23 +93,16 @@ final readonly class PerformanceController
         $topics = $this->topics->forScope($scope, $period);
 
         return new Response($this->twig->render('@Team/performance/overview.html.twig', [
-            'scope' => $scope,
-            'organisation' => self::ORGANISATION,
-            'areas' => $this->areas(),
-            'period' => $period,
-            'previous' => $period->previous(),
-            'kind' => $kind,
-            'kinds' => PeriodKind::labels(),
-            'urls' => $this->periodUrls($scope),
-            'tabs' => $this->tabs(self::ROUTE, $scope, $kind),
+            ...$this->frame($scope, $period, $kind, self::ROUTE),
             'cards' => $this->cards->build(
                 $topics,
                 $scope,
                 $period,
-                fn (string $key): string => $this->urls->generate(self::TOPICS_ROUTE, [
+                fn (string $key): string => $this->urls->generate(self::TOPIC_ROUTE, [
+                    'key' => $key,
                     'period' => $kind->value,
                     'area' => $scope->areaUuid,
-                ]).'#'.$key,
+                ]),
             ),
             'matrix' => $this->across->build(
                 $topics,
@@ -118,17 +117,77 @@ final readonly class PerformanceController
     /**
      * ONE TOPIC AT A TIME — the register of topic records.
      *
-     * NOT BUILT YET, AND ROUTED ANYWAY. The tab strip is a set of live
-     * links or it is not a tab strip; an Overview drawn beside two words
-     * of dead text would be a page that had learnt a different idiom
-     * from every other section. The address exists, the next commit
-     * fills it.
+     * AN INDEX AND NOT AN ACCORDION. Ruled 2026-09-20: a card answers
+     * "is there anything here for me this period" in one line, and the
+     * record behind it answers the topic. Five topics stacked on one
+     * page would be five pages nobody scrolls to the bottom of.
      */
     #[Route('/departments/performance/topics', name: self::TOPICS_ROUTE, methods: ['GET'])]
     #[IsGranted(PermissionEnum::TeamManage->value)]
-    public function topics(): Response
+    public function topics(Request $request): Response
     {
-        throw new NotFoundHttpException('The topics register is not drawn yet.');
+        $kind = PeriodKind::fromRequest($request->query->getString('period'));
+        $period = $kind->period(new \DateTimeImmutable());
+        $scope = $this->scope($request);
+
+        $topics = $this->topics->forScope($scope, $period);
+        $cards = $this->cards->build($topics, $scope, $period, fn (string $key): string => $this->urls->generate(
+            self::TOPIC_ROUTE,
+            ['key' => $key, 'period' => $kind->value, 'area' => $scope->areaUuid],
+        ));
+
+        return new Response($this->twig->render('@Team/performance/topics.html.twig', [
+            ...$this->frame($scope, $period, $kind, self::TOPICS_ROUTE),
+            'cards' => $cards,
+            // HOW MANY OF THEM ARE THE HOST'S, said once above the grid —
+            // the same distinction the key below it explains, counted.
+            'byModule' => \count(array_filter($cards, static fn (TopicCard $card): bool => $card->byModule)),
+        ]));
+    }
+
+    /**
+     * ONE TOPIC'S RECORD: its five figures, its charts, and the matrix
+     * of the departments it applies to.
+     *
+     * THE PAGE IS THE SAME FOR EVERY TOPIC, host's and module's alike.
+     * A topic publishes five KPIs, two or three charts and a matrix, and
+     * this draws exactly those — so a module that publishes a topic gets
+     * a record the day it is installed and the host writes nothing.
+     */
+    #[Route('/departments/performance/topics/{key}', name: self::TOPIC_ROUTE, requirements: ['key' => '[a-z0-9_.-]+'], methods: ['GET'])]
+    #[IsGranted(PermissionEnum::TeamManage->value)]
+    public function topic(Request $request, string $key): Response
+    {
+        $kind = PeriodKind::fromRequest($request->query->getString('period'));
+        $period = $kind->period(new \DateTimeImmutable());
+        $scope = $this->scope($request);
+
+        $topic = $this->topics->byKey($key, $scope, $period);
+        if (null === $topic) {
+            // A TOPIC THIS INSTALLATION DOES NOT CARRY is not an empty
+            // page: the module was switched off, or never installed, and
+            // the address means nothing here.
+            throw new NotFoundHttpException(\sprintf('No topic answers to "%s" in this installation.', $key));
+        }
+
+        return new Response($this->twig->render('@Team/performance/topic.html.twig', [
+            ...$this->frame($scope, $period, $kind, self::TOPICS_ROUTE),
+            'topic' => $topic->title(),
+            'byModule' => PerformanceTopicProviderInterface::HOST !== $topic->moduleSlug(),
+            'kpis' => $topic->kpis($scope, $period),
+            'charts' => array_map(
+                static fn (TopicChart $chart): array => [
+                    'chart' => ChartBridge::atlas($chart),
+                    'title' => $chart->title,
+                    'caption' => $chart->caption,
+                ],
+                $topic->charts($scope, $period),
+            ),
+            'matrix' => $topic->matrix($scope, $period),
+            'publisher' => PerformanceTopicProviderInterface::HOST === $topic->moduleSlug()
+                ? 'the host'
+                : $topic->moduleSlug().' module',
+        ]));
     }
 
     /** What needs a decision. Routed for the same reason, filled the same way. */
@@ -137,6 +196,29 @@ final readonly class PerformanceController
     public function briefing(): Response
     {
         throw new NotFoundHttpException('The briefing is not drawn yet.');
+    }
+
+    /**
+     * WHAT EVERY SCREEN IN THIS SECTION CARRIES: the scope and the
+     * period in the action row, the strip of sibling screens, and the
+     * subline that names all three. Composed once, because a reader
+     * moving between them is moving screen and never subject.
+     *
+     * @return array<string, mixed>
+     */
+    private function frame(PerformanceScope $scope, FigurePeriod $period, PeriodKind $kind, string $current): array
+    {
+        return [
+            'scope' => $scope,
+            'organisation' => self::ORGANISATION,
+            'areas' => $this->areas(),
+            'period' => $period,
+            'previous' => $period->previous(),
+            'kind' => $kind,
+            'kinds' => PeriodKind::labels(),
+            'urls' => $this->periodUrls($scope),
+            'tabs' => $this->tabs($current, $scope, $kind),
+        ];
     }
 
     /**

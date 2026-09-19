@@ -1,0 +1,61 @@
+{# WHAT EVERY SCREEN IN THIS SECTION WEARS — the crumb, the head, the two
+   controls and the strip. Written once, because a reader moving from the
+   Overview to a topic is changing screen and never subject, and a header
+   rebuilt per page is a header that drifts per page.
+
+   A page fills `perf_page` and nothing else. #}
+{% extends '@Shell/page.html.twig' %}
+
+{% block title %}Performance{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {{ include('@Team/performance/_stylesheets.html.twig') }}
+{% endblock %}
+
+{% block shell_breadcrumbs %}
+    <a href="{{ path('team_index') }}">uhifadhi</a> /
+    <a href="{{ path('team_departments') }}">departments</a> /
+    {% block perf_crumb %}performance{% endblock %}
+{% endblock %}
+
+{% block shell_page_title %}Performance{% endblock %}
+
+{% block shell_page_subtitle %}
+    {{ scope.label }} &middot; {{ period.label }}, against {{ previous.label }}.
+{% endblock %}
+
+{% block shell_page_actions %}
+    {# THE SCOPE IS A PLACE, so every option is a link and the control needs
+       no script of ours: the organisation's page and one area's page are two
+       addresses, and either can be sent to somebody. #}
+    <label class="ov-ctl">
+        <span class="k">Scope</span>
+        <details class="i-dd">
+            <summary class="mchip i-ddt">
+                <span class="i-ddval">{{ scope.label }}</span>
+                <span class="i-ddcaret">&#9662;</span>
+            </summary>
+            <div class="i-ddmenu">
+                <span class="i-ddhead">whose performance</span>
+                <a class="i-ddopt{{ scope.isOrganisation ? ' on' }}" href="{{ path('team_performance', {period: kind.value}) }}">
+                    <span class="i-ddopt-l">{{ organisation }}</span>
+                </a>
+                {% for area in areas %}
+                    <a class="i-ddopt{{ scope.areaUuid == area.uuidString ? ' on' }}"
+                       href="{{ path('team_performance', {period: kind.value, area: area.uuidString}) }}">
+                        <span class="i-ddopt-l">{{ area.name }}</span>
+                    </a>
+                {% endfor %}
+            </div>
+        </details>
+    </label>
+
+    {{ include('@Shell/_period_group.html.twig', {kinds: kinds, chosen: kind.value, urls: urls}, with_context = false) }}
+{% endblock %}
+
+{% block shell_page_tabs %}
+    {{ include('@Shell/_area_tabs.html.twig', {tabs: tabs}, with_context = false) }}
+{% endblock %}
+
+{% block shell_page %}{% block perf_page %}{% endblock %}{% endblock %}
