@@ -387,6 +387,70 @@ final class AreaNavigationTest extends WebTestCase
         )));
     }
 
+    /**
+     * THE FIFTH RUNG, AND THE ONE THAT IS COLOURED BY A VALUE. The zones of
+     * the area being viewed hang under its Zones row, each carrying the hue
+     * the plate and the key draw it in — a colour that comes from the set's
+     * own order, so there is no class for a stylesheet to declare.
+     */
+    public function testTheZonesOfTheAreaBeingViewedHangUnderTheZonesRowWithTheirHues(): void
+    {
+        $this->boot();
+        $area = $this->anArea('Northern Conservation Reserve');
+        $this->aZone($area, 'Western Sector', self::A_WEST_HALF);
+        $uuid = (string) $area->getUuidString();
+
+        $zones = $this->zonesBranch($this->navAt('/areas/'.$uuid.'/zones'));
+
+        self::assertSame(['Western Sector'], array_map(static fn (NavItem $i): string => $i->label, $zones));
+        self::assertMatchesRegularExpression('/^#[0-9A-Fa-f]{6}$/', (string) $zones[0]->swatch);
+        self::assertStringContainsString('/zones/', (string) $zones[0]->url);
+    }
+
+    /** Standing on a zone, the zone carries the light and Zones is the branch above it. */
+    public function testAPickedZoneCarriesTheLightAndZonesIsOnlyTheBranchAboveIt(): void
+    {
+        $this->boot();
+        $area = $this->anArea('Northern Conservation Reserve');
+        $zone = $this->aZone($area, 'Western Sector', self::A_WEST_HALF);
+        $uuid = (string) $area->getUuidString();
+
+        $nav = $this->navAtRoute(
+            '/areas/'.$uuid.'/zones/'.$zone->getUuidString(),
+            'area_zone_show',
+            self::ALL_AREA_PERMISSIONS,
+            ['uuid' => $uuid, 'zone' => (string) $zone->getUuidString()],
+        );
+
+        self::assertSame(['Western Sector'], self::litUnder($this->areaRow($nav)));
+    }
+
+    /** An area the viewer is not inside does not drill its zones. */
+    public function testAnAreaTheViewerIsNotInsideDoesNotUnfoldItsZones(): void
+    {
+        $this->boot();
+        $area = $this->anArea('Northern Conservation Reserve');
+        $this->aZone($area, 'Western Sector', self::A_WEST_HALF);
+
+        self::assertSame([], $this->zonesBranch($this->navAt('/areas')));
+    }
+
+    /**
+     * The zone rows under the area's Zones screen.
+     *
+     * @return list<NavItem>
+     */
+    private function zonesBranch(AreaNavigation $nav): array
+    {
+        foreach ($this->areaRow($nav)->children as $screen) {
+            if ('Zones' === $screen->label) {
+                return $screen->children;
+            }
+        }
+
+        return [];
+    }
+
     /** The row for the one area this suite creates. */
     private function areaRow(AreaNavigation $nav): NavItem
     {

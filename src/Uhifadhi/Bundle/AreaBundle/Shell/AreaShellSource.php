@@ -105,7 +105,16 @@ final class AreaShellSource implements AreaShellSourceInterface
             return [];
         }
 
-        return $this->screensOf($area);
+        /*
+         * THE STRIP IS DRAWN BY THE PLACES THEMSELVES, and this is where that
+         * rule lives. The tree keeps every screen listed wherever you are
+         * inside the area, because "you are here, on none of these" is an
+         * answer; a strip that lit nothing would instead read as links to
+         * somewhere else, so on a record or a form it says nothing at all.
+         */
+        $tabs = $this->screensOf($area);
+
+        return $this->lights($tabs) ? $tabs : [];
     }
 
     /**
@@ -154,15 +163,6 @@ final class AreaShellSource implements AreaShellSourceInterface
         $configuring = $inThisArea && $this->isConfiguring($path);
 
         $here = $inThisArea && !$configuring ? $this->whereWeAre(\is_string($route) ? $route : '', $path) : null;
-        if ($inThisArea && !$configuring && null === $here) {
-            /*
-             * WE DO NOT KNOW WHERE WE ARE, SO WE DO NOT CLAIM TO. A strip whose
-             * job is to say which of these screens you are on, and which cannot
-             * say it, is worse than no strip: it would light nothing and read as
-             * links to somewhere else.
-             */
-            return [];
-        }
 
         $tabs = [];
         foreach (self::SCREENS as [$label, $routeName, $permission]) {
@@ -177,11 +177,22 @@ final class AreaShellSource implements AreaShellSourceInterface
             $tabs[] = new AreaTab(label: $label, url: $url, current: $label === $here);
         }
 
-        // The screen we are on turned out to be one this viewer may not reach —
-        // possible only if a permission changed mid-session. Say nothing rather
-        // than light nothing. A configure page lights nothing BY DESIGN and is
-        // exempt.
-        return !$inThisArea || $configuring || $this->lights($tabs) ? $tabs : [];
+        /*
+         * NOTHING LIT IS AN ANSWER, AND THE ROWS STAY.
+         *
+         * A page inside the area that is none of its screens — a configure
+         * page, a station's record, a zone's — lights none of them, and that
+         * is the truthful answer rather than a missing branch: you are here,
+         * on none of these. The STRIP still says nothing, because
+         * {@see tabs()} draws it only when one of these rows is lit; the TREE
+         * keeps the branch open, which is where "where you are" is answered
+         * — and it is what lets a record's own row light one rung further
+         * down, under the screen it belongs to.
+         *
+         * Folding the branch instead told a person they had left the area,
+         * which they had not.
+         */
+        return $tabs;
     }
 
     /**

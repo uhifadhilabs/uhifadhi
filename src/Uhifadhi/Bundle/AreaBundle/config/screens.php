@@ -404,6 +404,9 @@ return static function (ContainerConfigurator $container): void {
                 // data places, read from the SAME declaration the strip under
                 // its head is drawn from.
                 service('shell.frame'),
+                // And for the fifth: the area's zones, hued by the same walk
+                // over the same ordered set the plate and the key read.
+                service('area.zone_set'),
             ])
             ->tag('shell.nav_section');
         $services->alias(AreaNavigation::class, 'area.navigation');

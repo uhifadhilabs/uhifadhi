@@ -18,9 +18,11 @@ use Symfony\Component\Routing\Exception\RouteNotFoundException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use Uhifadhi\Bundle\AreaBundle\Controller\ZoneRecordController;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaComposition;
+use Uhifadhi\Bundle\AreaBundle\Service\ZoneSetService;
 use Uhifadhi\Bundle\ShellBundle\Contract\NavigationSourceInterface;
 use Uhifadhi\Bundle\ShellBundle\Frame\Service\ModuleFrameService;
 use Uhifadhi\Bundle\ShellBundle\Model\AreaTab;
@@ -70,6 +72,7 @@ final readonly class AreaNavigation implements NavigationSourceInterface
         private AreaShellSource $screens,
         private AreaComposition $composition,
         private ModuleFrameService $frame,
+        private ZoneSetService $set,
     ) {
     }
 
@@ -119,8 +122,22 @@ final readonly class AreaNavigation implements NavigationSourceInterface
             $hereArea = $this->viewerIsHere($url);
             $children = [];
             foreach ($this->screens->screensOf($area) as $tab) {
-                $children[] = $hereArea && $this->isModulesScreen($tab->url)
-                    ? $this->modulesNode($area, $tab)
+                if ($hereArea && $this->isModulesScreen($tab->url)) {
+                    $children[] = $this->modulesNode($area, $tab);
+
+                    continue;
+                }
+
+                /*
+                 * AND THE ZONES SCREEN UNFOLDS TO THE ZONES THEMSELVES — the
+                 * picker for the zones pages, which is why those pages have
+                 * no picker column of their own and keep the band's full
+                 * width. Only the area being viewed drills, for the reason
+                 * the modules branch does: rows nobody can see cost a query
+                 * per area on every render.
+                 */
+                $children[] = $hereArea && self::isZonesScreen($tab)
+                    ? $this->zonesNode($area, $tab)
                     : new NavItem(label: $tab->label, url: $tab->url, current: $tab->current);
             }
 
@@ -219,6 +236,57 @@ final readonly class AreaNavigation implements NavigationSourceInterface
             open: $tab->current || $litBelow,
             children: $modules,
         );
+    }
+
+    /**
+     * THE "ZONES" SCREEN, WITH THE AREA'S OWN ZONES HANGING FROM IT.
+     *
+     * THE HUE IS A VALUE, NOT A CLASS, AND THAT IS THE WHOLE REASON
+     * {@see NavItem::$swatch} EXISTS. A module's colour is fixed and can be
+     * one rule in that module's stylesheet; a zone's comes from the palette
+     * by its position in its area's set, so there is no class to declare and
+     * no sheet that could know how many zones an installation will have.
+     * These rows read the colour from the same walk over the same ordered set
+     * the plate, the key and the cards read it from — one palette, one order,
+     * four surfaces that cannot disagree.
+     *
+     * THE ZONE ROW CARRIES THE LIGHT AND "ZONES" IS THE BRANCH ABOVE IT, the
+     * way a module's own screen lights and the module stays the legible
+     * ancestor. The Zones row IS all zones, so it keeps its own light on the
+     * tab itself.
+     */
+    private function zonesNode(AreaOfInterest $area, AreaTab $tab): NavItem
+    {
+        $zones = [];
+        foreach ($this->set->view($area)->rows as $row) {
+            $url = $this->urls->generate(ZoneRecordController::ROUTE, [
+                'uuid' => (string) $area->getUuidString(),
+                'zone' => $row->uuid,
+            ]);
+
+            $zones[] = new NavItem(
+                label: $row->name,
+                url: $url,
+                current: $this->viewerIsExactly($url),
+                swatch: $row->hue,
+            );
+        }
+
+        $litBelow = self::litAnywhere($zones);
+
+        return new NavItem(
+            label: $tab->label,
+            url: $tab->url,
+            current: $tab->current && !$litBelow,
+            open: $tab->current || $litBelow,
+            children: $zones,
+        );
+    }
+
+    /** The area's Zones screen, recognised by the route its tab points at. */
+    private static function isZonesScreen(AreaTab $tab): bool
+    {
+        return 'Zones' === $tab->label;
     }
 
     /**
