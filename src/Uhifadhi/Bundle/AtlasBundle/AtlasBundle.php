@@ -22,10 +22,12 @@ use Uhifadhi\Bundle\AtlasBundle\Calendar\CalendarBuilder;
 use Uhifadhi\Bundle\AtlasBundle\Chart\ChartBuilder;
 use Uhifadhi\Bundle\AtlasBundle\DependencyInjection\AtlasConfiguration;
 use Uhifadhi\Bundle\AtlasBundle\Model\SatelliteSource;
+use Uhifadhi\Bundle\AtlasBundle\Shell\AtlasStylesheets;
 use Uhifadhi\Bundle\AtlasBundle\Twig\CalendarRuntime;
 use Uhifadhi\Bundle\AtlasBundle\Twig\ChartRuntime;
 use Uhifadhi\Bundle\AtlasBundle\Twig\MapExtension;
 use Uhifadhi\Bundle\AtlasBundle\Twig\MapPlateRuntime;
+use Uhifadhi\Bundle\ShellBundle\Contract\StylesheetSourceInterface;
 
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 
@@ -82,6 +84,21 @@ final class AtlasBundle extends AbstractBundle
      * it: the Leaflet bridge's controller imports it.
      */
     public const string STYLESHEET = 'bundles/atlas/map.css';
+
+    /**
+     * THE CHART'S OWN SHEET, and the month's.
+     *
+     * A MAP IS ASKED FOR AND A COMPONENT IS WRITTEN IN. A page that draws
+     * a map knows it draws one and links the sheet above for itself; a
+     * chart or a month is written into somebody else's page — a module's
+     * Calendar tab, a topic's record — and that page cannot link a sheet
+     * for a component it has never heard of. Neither can the component:
+     * a stylesheet link outside the head is not conforming HTML. So these
+     * two are published through the shell's stylesheet contract and land
+     * in every head; see {@see AtlasStylesheets}.
+     */
+    public const string CHART_STYLESHEET = 'bundles/atlas/chart.css';
+    public const string CALENDAR_STYLESHEET = 'bundles/atlas/calendar.css';
 
     /**
      * The AssetMapper namespace this bundle's JavaScript is served under, and
@@ -264,6 +281,21 @@ final class AtlasBundle extends AbstractBundle
                 ->args([service('twig'), service('atlas.calendars')])
                 ->tag('twig.runtime');
         }
+
+        /*
+         * AND THE TWO SHEETS THOSE TWO COMPONENTS NEED, published to the
+         * shell so they land in every head. Unconditional: the shell is
+         * a REQUIREMENT of this bundle, not a suggestion — a plate, a
+         * chart and a month are all written against its tokens — so the
+         * contract is always there to implement.
+         *
+         * The tag string is written out rather than read off the shell's
+         * bundle class, exactly as every other tag in the fleet is: a
+         * constant reference would load that class while this one is
+         * still being loaded.
+         */
+        $services->set('atlas.stylesheets', AtlasStylesheets::class)
+            ->tag(StylesheetSourceInterface::TAG);
     }
 
     /**

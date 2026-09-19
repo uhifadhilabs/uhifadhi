@@ -35,6 +35,10 @@ final class ShellExtension extends AbstractExtension
         return [
             // The sidebar's content, collected from the tagged sources.
             new TwigFunction('shell_nav', [ShellRuntime::class, 'nav']),
+            // The sheets a page links because a component of somebody
+            // else's may be drawn on it — a stylesheet link in the body
+            // is not conforming HTML, so the head asks first.
+            new TwigFunction('shell_stylesheets', [ShellRuntime::class, 'stylesheets']),
             // The tab strip: the sibling screens of wherever the viewer is —
             // an area's screens, a module's data places, or, on a configure
             // page, that surface's configure sections in their place.

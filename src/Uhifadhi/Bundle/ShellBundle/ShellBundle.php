@@ -153,6 +153,15 @@ final class ShellBundle extends AbstractBundle
      */
     public const string NAV_TAG = 'shell.nav_section';
 
+    /**
+     * WHAT A PACKAGE TAGS TO HAVE ITS COMPONENT'S SHEET IN EVERY HEAD.
+     *
+     * The same string as {@see StylesheetSourceInterface::TAG}, written
+     * out for the same reason the nav tag is: this file is read by an
+     * installation that may not have the contract class loaded.
+     */
+    public const string STYLESHEET_TAG = 'shell.stylesheet';
+
     /** Config lives under "shell:", not the class-derived "uhifadhi_shell:". */
     protected string $extensionAlias = 'shell';
 

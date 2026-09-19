@@ -21,6 +21,7 @@ use Uhifadhi\Bundle\ShellBundle\Model\AreaTab;
 use Uhifadhi\Bundle\ShellBundle\Model\NavSection;
 use Uhifadhi\Bundle\ShellBundle\Service\AreaShell;
 use Uhifadhi\Bundle\ShellBundle\Service\Navigation;
+use Uhifadhi\Bundle\ShellBundle\Service\Stylesheets;
 use Uhifadhi\Bundle\ShellBundle\Service\Theme;
 use Uhifadhi\Bundle\ShellBundle\Service\UserBadgeReader;
 use Uhifadhi\Contracts\Shell\UserBadge;
@@ -36,6 +37,7 @@ final class ShellRuntime implements RuntimeExtensionInterface
 {
     public function __construct(
         private readonly Navigation $navigation,
+        private readonly Stylesheets $stylesheets,
         private readonly AreaShell $areaShell,
         private readonly ModuleFrameService $frame,
         private readonly UserBadgeReader $userBadge,
@@ -52,6 +54,18 @@ final class ShellRuntime implements RuntimeExtensionInterface
     public function nav(): array
     {
         return $this->navigation->sections();
+    }
+
+    /**
+     * THE SHEETS EVERY PAGE LINKS FOR THE COMPONENTS IT MAY DRAW — the
+     * middle rung between the shell's own sheet and whatever the page
+     * links for itself.
+     *
+     * @return list<string>
+     */
+    public function stylesheets(): array
+    {
+        return $this->stylesheets->all();
     }
 
     /**

@@ -37,6 +37,16 @@ final class VocabularyConformanceTest extends VocabularyConformanceTestCase
 
     protected static function ownStylesheets(): array
     {
-        return ['map.css'];
+        return ['map.css', 'chart.css', 'calendar.css'];
+    }
+
+    /**
+     * THIS IS THE PACKAGE THAT SHIPS THE MONTH. Every other package is
+     * refused a `.cal` rule; this one writes them, because writing them
+     * once here is what makes refusing them everywhere else honest.
+     */
+    protected static function ownsTheMonthGrid(): bool
+    {
+        return true;
     }
 }

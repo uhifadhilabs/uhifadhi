@@ -40,6 +40,14 @@ final class HostKernel extends TestKernel
     /** @var array<string, NavSection> */
     public static array $navSources = [];
 
+    /**
+     * The sheets a package's COMPONENTS need — what a page cannot link
+     * for itself because it does not know it is about to draw one.
+     *
+     * @var list<string>
+     */
+    public static array $stylesheets = [];
+
     /** @var list<AreaTab> */
     public static array $areaTabs = [];
 
@@ -81,6 +89,7 @@ final class HostKernel extends TestKernel
     public static function reset(): void
     {
         self::$navSources = [];
+        self::$stylesheets = [];
         self::$areaTabs = [];
         self::$mirrorAreaTabsIntoNav = false;
         self::$place = 'Test Area';
@@ -106,6 +115,10 @@ final class HostKernel extends TestKernel
         // contract would not work for the bundles it exists for.
         $services->set(FixtureNavigationSource::class)
             ->tag(ShellBundle::NAV_TAG)
+            ->public();
+
+        $services->set(FixtureStylesheetSource::class)
+            ->tag(ShellBundle::STYLESHEET_TAG)
             ->public();
 
         $services->set(FixtureAreaShellSource::class)

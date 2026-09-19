@@ -1,0 +1,55 @@
+/*
+ * This file is part of the Uhifadhi core.
+ *
+ * (c) Ezekiel Mjema <https://github.com/eemjema>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+/* THE CHART'S OWN SHEET.
+   A chart is drawn INSIDE somebody else's page — a topic record, a dashboard
+   card — by `atlas_chart()`, and that page cannot link a sheet for a component
+   it does not know it is about to render. So the sheet is the component's and
+   the shell links it in every head, through AtlasStylesheets; see
+   AtlasBundle::CHART_STYLESHEET, the one place this path is written.
+
+   It is separate from the map's sheet because a page that draws a chart and no
+   map should not pay for Leaflet's chrome, and because a sheet that carried
+   three components would be linked for all three whichever one was wanted. */
+
+/* ════════════════════════════════════════════════════════════════════════
+   THE CHART, THE PLATE'S SIBLING.
+
+   A module states what its series is and this is the box it lands in: a
+   title on the top edge, a FIXED height, and the caption under it. A chart
+   that grew with its data would make one topic's page twice another's —
+   which is the same reason a plate states its height — so the number is
+   here and a caller changes it only through `--chart-height`.
+
+   Design: departments/performance/*.html, where every chart is drawn at the
+   same height whatever it plots.
+   ════════════════════════════════════════════════════════════════════════ */
+.chart-plate { position: relative; display: flex; flex-direction: column; }
+.chart-plate > .chart-box {
+    position: relative;
+    height: var(--chart-height, 196px);
+    margin-top: 10px;
+}
+/* THE CANVAS FILLS THE BOX and never sizes it: Chart.js writes width and
+   height onto the element as it measures, and a canvas left to its own
+   devices grows a little on every resize. */
+.chart-plate > .chart-box canvas { position: absolute; inset: 0; width: 100% !important; height: 100% !important; }
+.chart-plate > .use { margin: 10px 2px 0; }
+
+/* NOBODY PUBLISHED A POINT. Not an empty box with axes — which reads as a
+   measurement of nought — but a sentence, in the same dashed treatment
+   every honest absence in this platform wears. */
+.chart-none {
+    display: flex; flex-direction: column; gap: 4px; justify-content: center;
+    height: var(--chart-height, 196px); margin-top: 10px; padding: 0 16px;
+    border: 1px dashed var(--c-ln2); border-radius: 12px;
+    background: color-mix(in srgb, rgb(var(--c-fog)) 4%, transparent);
+}
+.chart-none b { font-size: 13px; color: rgb(var(--c-tx)); }
+.chart-none span { font-family: var(--font-mono); font-size: 10.5px; color: rgb(var(--c-dim)); }

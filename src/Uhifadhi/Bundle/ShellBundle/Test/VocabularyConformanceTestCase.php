@@ -134,6 +134,16 @@ abstract class VocabularyConformanceTestCase extends TestCase
         return is_dir($directory) ? $directory : null;
     }
 
+    /**
+     * WHETHER THIS BUNDLE IS THE ONE THAT OWNS THE MONTH GRID. Exactly
+     * one package answers true — the atlas, which ships the component —
+     * and every other package leaves it alone.
+     */
+    protected static function ownsTheMonthGrid(): bool
+    {
+        return false;
+    }
+
     public function testEveryIconReferenceUsesAPrefixThisBundleMayUse(): void
     {
         $allowed = static::allowedIconPrefixes();
@@ -286,6 +296,47 @@ abstract class VocabularyConformanceTestCase extends TestCase
 
         self::assertSame([], $offenders, \sprintf(
             'This bundle restates [%s]; a rule written twice renders differently depending on which sheet loaded last.',
+            implode(', ', $offenders),
+        ));
+    }
+
+    /**
+     * NOBODY REDRAWS THE MONTH. The grid, the day head, the cell and its
+     * height are the atlas's `atlas_calendar()`, and a module that
+     * writes `.cal` rules of its own has forked the one component two
+     * modules already share — the patrols month and the roster's are the
+     * same month with different marks in it.
+     *
+     * WHAT TO DO INSTEAD: draw through the component and change the one
+     * thing that is yours to change, the cell's height, through
+     * `--cal-cell-height`. What goes IN a cell is yours; the grid it
+     * sits in is not.
+     *
+     * THE GRID, AND NOT THE MARKS IN IT. `.cal-mark`, `.cal-more` and
+     * `.cal-nav` are the SHELL's — they were host vocabulary before this
+     * component existed, because modules were already drawing marks —
+     * and a module decorating one of those is decorating a shared
+     * component, which is allowed. What is refused is `.cal` and
+     * `.cal-plate`: the seven columns, the cell and its height.
+     *
+     * A twin under another name — `.patrol-cal`, `.roster-month` — is
+     * the same fork and cannot be caught by a text sweep. This catches
+     * the honest half.
+     */
+    public function testNoOwnSheetRedrawsTheMonthGrid(): void
+    {
+        // The package that SHIPS the month writes these rules; the rule
+        // is about everybody else, and one exemption is what makes it
+        // enforceable at all.
+        $offenders = static::ownsTheMonthGrid() ? [] : array_values(array_filter(
+            self::selectors(self::ownCss()),
+            static fn (string $selector): bool => 1 === preg_match('/(?:^|[\s>+~])\.cal(?:-plate)?(?:[.:\[\s]|$)/', $selector),
+        ));
+        sort($offenders);
+
+        self::assertSame([], $offenders, \sprintf(
+            'This bundle writes its own month grid [%s]. The month is the atlas\'s `atlas_calendar()`: '
+            .'draw through it and set the cell height with --cal-cell-height; what goes in a cell is yours.',
             implode(', ', $offenders),
         ));
     }

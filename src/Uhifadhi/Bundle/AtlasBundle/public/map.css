@@ -12,6 +12,12 @@
    identically. A consumer links it beside Leaflet's own sheet
    (AtlasBundle::STYLESHEET / ::LEAFLET_CSS).
 
+   THE CHART AND THE MONTH HAVE SHEETS OF THEIR OWN (chart.css, calendar.css):
+   each is drawn inside somebody else's page, so each is linked in every head
+   rather than by a page that cannot know it is about to draw one. A map is
+   different — a page that draws a map knows it does — so the map's sheet stays
+   the one a consumer links for itself.
+
    The theme tokens (--c-acc, --font-mono, …) come from the shell stylesheet a
    consumer already loads; the map-only --z-* tokens are defined here so this
    sheet is self-contained for the ground, the labels and the boundary colour. */
@@ -258,100 +264,3 @@
 /* A card that goes fullscreen with a bare frame inside it — a consumer that
    frames imagery without the plate — still fills the screen. */
 .c:fullscreen .viewer { height: auto; flex: 1; min-height: 0; }
-
-/* ════════════════════════════════════════════════════════════════════════
-   THE CHART, THE PLATE'S SIBLING.
-
-   A module states what its series is and this is the box it lands in: a
-   title on the top edge, a FIXED height, and the caption under it. A chart
-   that grew with its data would make one topic's page twice another's —
-   which is the same reason a plate states its height — so the number is
-   here and a caller changes it only through `--chart-height`.
-
-   Design: departments/performance/*.html, where every chart is drawn at the
-   same height whatever it plots.
-   ════════════════════════════════════════════════════════════════════════ */
-.chart-plate { position: relative; display: flex; flex-direction: column; }
-.chart-plate > .chart-box {
-    position: relative;
-    height: var(--chart-height, 196px);
-    margin-top: 10px;
-}
-/* THE CANVAS FILLS THE BOX and never sizes it: Chart.js writes width and
-   height onto the element as it measures, and a canvas left to its own
-   devices grows a little on every resize. */
-.chart-plate > .chart-box canvas { position: absolute; inset: 0; width: 100% !important; height: 100% !important; }
-.chart-plate > .use { margin: 10px 2px 0; }
-
-/* NOBODY PUBLISHED A POINT. Not an empty box with axes — which reads as a
-   measurement of nought — but a sentence, in the same dashed treatment
-   every honest absence in this platform wears. */
-.chart-none {
-    display: flex; flex-direction: column; gap: 4px; justify-content: center;
-    height: var(--chart-height, 196px); margin-top: 10px; padding: 0 16px;
-    border: 1px dashed var(--c-ln2); border-radius: 12px;
-    background: color-mix(in srgb, rgb(var(--c-fog)) 4%, transparent);
-}
-.chart-none b { font-size: 13px; color: rgb(var(--c-tx)); }
-.chart-none span { font-family: var(--font-mono); font-size: 10.5px; color: rgb(var(--c-dim)); }
-
-/* ════════════════════════════════════════════════════════════════════════
-   THE MONTH GRID — the plate's and the chart's third sibling.
-   ────────────────────────────────────────────────────────────────────────
-   Patrols drew this month first and the roster draws the same month with
-   different marks in it: the grid, the day head, the cell and its number
-   belong to neither of them, and what goes IN a cell is the module's.
-
-   THE CELL IS ONE HEIGHT WHATEVER IT HOLDS. That is the rule the whole
-   component exists to keep — a busy week must not make the month taller
-   than a quiet one — so the height is stated here and a caller changes it
-   only through `--cal-cell-height`, the same custom-property door a
-   plate's and a chart's height come through. Anything that does not fit
-   is a "+N more", counted where the height is known.
-
-   `.mchip` IN THE STEPPER IS THE SHELL'S and is not restated: a chip that
-   looked different above a calendar than above a filter bar would be two
-   products. Only the row it sits in is here.
-
-   Design: areas/ngorongoro/modules/roster/*.html and the patrols month.
-   ════════════════════════════════════════════════════════════════════════ */
-.cal-plate { position: relative; display: flex; flex-direction: column; }
-.cal-plate > .use { margin: 10px 2px 0; }
-
-.cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 10px; }
-.cal .dh {
-    font-family: var(--font-mono); font-size: 9.5px; font-weight: 600;
-    letter-spacing: .14em; text-transform: uppercase;
-    color: rgb(var(--c-fog)); padding: 2px 4px;
-}
-.cal .dc {
-    position: relative; box-sizing: border-box;
-    height: var(--cal-cell-height, 96px);
-    display: flex; flex-direction: column; gap: 3px; align-items: stretch;
-    padding: 20px 6px 6px; overflow: hidden;
-    border: 1px solid var(--c-ln); border-radius: 9px;
-    background: color-mix(in srgb, rgb(var(--c-fog)) 3%, transparent);
-}
-/* The days either side of the month are real dates, drawn faint. */
-.cal .dc.out { opacity: .4; }
-.cal .dc.today { border-color: color-mix(in srgb, rgb(var(--c-acc)) 55%, transparent);
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, rgb(var(--c-acc)) 25%, transparent); }
-.cal .dc .dn {
-    position: absolute; top: 6px; right: 8px;
-    font-family: var(--font-mono); font-size: 9.5px; font-weight: 600; color: rgb(var(--c-dim));
-}
-.cal .dc.today .dn { color: rgb(var(--c-acc)); }
-/* The day's own count, top-left, so a full cell still says how full it is. */
-.cal .dc .dcount {
-    position: absolute; top: 6px; left: 8px;
-    font-family: var(--font-mono); font-size: 9.5px; font-weight: 700; color: rgb(var(--c-fog));
-    font-variant-numeric: tabular-nums;
-}
-
-/* THE MARK, THE "+N MORE" AND THE STEPPER ROW ARE THE SHELL'S and are NOT
-   restated here. They were host vocabulary before this component existed —
-   modules were already drawing marks — and a rule written twice renders
-   differently depending on which sheet loaded last. What the atlas adds is
-   the GRID those marks sit in; see shell.css for `.cal-mark`, `.cal-more`
-   and `.cal-nav`. The pill's hue reaches the mark as `--pill-hue`, which
-   the shell's rule reads. */

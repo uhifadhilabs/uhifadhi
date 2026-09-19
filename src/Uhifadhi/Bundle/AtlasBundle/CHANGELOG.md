@@ -8,6 +8,14 @@
 
 Not released yet.
 
+ * the month and the chart get sheets of their own, `bundles/atlas/calendar.css`
+   and `bundles/atlas/chart.css`, published to the shell so they reach every
+   head: both are drawn INSIDE somebody else's page, which cannot link a sheet
+   for a component it has never heard of — the roster's Calendar tab drew a
+   month as a list of days, and no test in the fleet could see it. The map's
+   sheet stays the one a page links for itself, because a page that draws a map
+   knows it does
+
  * the month grid as a component, the plate's and the chart's third sibling:
    `atlas_calendar(feed, '2026-09')` draws the grid, the day heads, the cells
    at one fixed height, the day numbers, the "+N more" and the stepper, and a

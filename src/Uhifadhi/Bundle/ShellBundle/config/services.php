@@ -22,6 +22,7 @@ use Uhifadhi\Bundle\ShellBundle\Frame\Service\ModuleFrameService;
 use Uhifadhi\Bundle\ShellBundle\Service\AreaShell;
 use Uhifadhi\Bundle\ShellBundle\Service\Installation;
 use Uhifadhi\Bundle\ShellBundle\Service\Navigation;
+use Uhifadhi\Bundle\ShellBundle\Service\Stylesheets;
 use Uhifadhi\Bundle\ShellBundle\Service\Theme;
 use Uhifadhi\Bundle\ShellBundle\Service\UserBadgeReader;
 use Uhifadhi\Bundle\ShellBundle\ShellBundle;
@@ -76,6 +77,16 @@ return static function (ContainerConfigurator $container): void {
      */
     $services->set('shell.navigation', Navigation::class)
         ->args([tagged_iterator(ShellBundle::NAV_TAG)]);
+
+    /*
+     * THE SHEETS A PAGE LINKS FOR COMPONENTS IT DOES NOT KNOW IT WILL
+     * DRAW. A tagged iterator again, and the tag's priority is the load
+     * order — a component's vocabulary has to reach the head, because a
+     * stylesheet link in the body is not conforming HTML and a component
+     * therefore cannot bring its own.
+     */
+    $services->set('shell.stylesheets', Stylesheets::class)
+        ->args([tagged_iterator(ShellBundle::STYLESHEET_TAG)]);
 
     /*
      * THE AREA CONTRACT'S READER. One source, aliased by the host to the id below —
@@ -199,6 +210,7 @@ return static function (ContainerConfigurator $container): void {
     $services->set('shell.twig.runtime', ShellRuntime::class)
         ->args([
             service('shell.navigation'),
+            service('shell.stylesheets'),
             service('shell.area_shell'),
             service('shell.frame'),
             service('shell.user_badge'),

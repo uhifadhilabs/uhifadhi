@@ -142,12 +142,13 @@ final class CalendarContractTest extends TestCase
     /**
      * A CELL IS ONE HEIGHT WHATEVER IT HOLDS, off ONE custom property with
      * the design's own default behind it — the same door a plate's and a
-     * chart's height come through. A text check over the sheet, which is the
-     * limit of what it promises.
+     * chart's height come through. A text check over the month's OWN sheet —
+     * which is where these rules live, because the month is drawn on pages
+     * that link no map — and that is the limit of what it promises.
      */
     public function testTheCellTakesItsHeightFromOneCustomProperty(): void
     {
-        $sheet = (string) file_get_contents(\dirname(__DIR__, 3).'/public/map.css');
+        $sheet = (string) file_get_contents(\dirname(__DIR__, 3).'/public/calendar.css');
 
         self::assertStringContainsString(
             \sprintf('height: var(%s, %s);', self::CELL_HEIGHT_PROPERTY, self::DEFAULT_CELL_HEIGHT),

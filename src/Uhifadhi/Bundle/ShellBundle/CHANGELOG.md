@@ -8,6 +8,10 @@
 
 Not released yet.
 
+ * `Contract\StylesheetSourceInterface` — a package whose COMPONENTS are drawn
+   inside other people's pages publishes the sheets they need and the head
+   links them, because a stylesheet link outside the head is not conforming
+   HTML and a page cannot link one for a component it has never heard of
  * every caption ported from a design `font:` shorthand states its leading:
    the shorthand resets line-height to normal and the longhand port inherited
    1.5, which is where the action row's three pixels came from

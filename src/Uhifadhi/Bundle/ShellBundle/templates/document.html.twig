@@ -67,6 +67,16 @@
         {# The shell's sheet, first. A module base calls parent() and then adds
            its own, because its rules are written to override these. #}
         <link rel="stylesheet" href="{{ asset('bundles/shell/shell.css') }}">
+
+        {# THEN THE SHEETS THE COMPONENTS NEED, before any page's own.
+           A component — an atlas month, an atlas chart — is written into a
+           page whose package has never heard of it, so the page cannot link a
+           sheet for it and the component cannot link one for itself: a
+           stylesheet link outside the head is not conforming HTML. The head
+           asks instead. See Contract\StylesheetSourceInterface. #}
+        {% for sheet in shell_stylesheets() %}
+            <link rel="stylesheet" href="{{ asset(sheet) }}">
+        {% endfor %}
     {% endblock %}
 
     {% block javascripts %}

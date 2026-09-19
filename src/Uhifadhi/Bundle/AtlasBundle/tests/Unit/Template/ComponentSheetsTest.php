@@ -1,0 +1,97 @@
+<?php
+
+declare(strict_types=1);
+
+/*
+ * This file is part of the Uhifadhi core.
+ *
+ * (c) Ezekiel Mjema <https://github.com/eemjema>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace Uhifadhi\Bundle\AtlasBundle\Tests\Unit\Template;
+
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\TestCase;
+use Uhifadhi\Bundle\AtlasBundle\AtlasBundle;
+use Uhifadhi\Bundle\AtlasBundle\Shell\AtlasStylesheets;
+
+/**
+ * A MONTH DRAWN ON A PAGE THAT LINKS NO MAP SHEET IS STILL A MONTH.
+ *
+ * THE BUG, NAMED: the roster's Calendar tab drew `atlas_calendar()` and
+ * got a LIST — seven columns of nothing — because `.cal` lived in the
+ * map's stylesheet and only map pages link that. The markup was right,
+ * the page returned 200, and no test in the fleet could see it.
+ *
+ * SO THE COMPONENT'S RULES LIVE WITH THE COMPONENT, in a sheet the
+ * shell links in every head. This asserts the two halves of that: the
+ * grid is in the month's own sheet and no longer in the map's, and the
+ * bundle publishes that sheet to the shell.
+ */
+#[CoversClass(AtlasStylesheets::class)]
+final class ComponentSheetsTest extends TestCase
+{
+    /** The design's month: seven columns, and a cell of one height. */
+    public function testTheMonthsOwnSheetCarriesTheSevenColumnGridAndTheCellHeight(): void
+    {
+        $calendar = self::sheet('calendar.css');
+
+        self::assertMatchesRegularExpression('/\.cal\s*\{[^}]*grid-template-columns:\s*repeat\(7, 1fr\)/', $calendar);
+        self::assertMatchesRegularExpression('/\.cal \.dc\s*\{[^}]*height:\s*var\(--cal-cell-height, 96px\)/', $calendar);
+    }
+
+    /**
+     * AND THE MAP'S SHEET NO LONGER CARRIES THEM — the whole point. A
+     * copy left behind is the copy a page links by accident, and the two
+     * drift the first time one is edited.
+     */
+    public function testTheMapsSheetKeepsNoCopyOfTheMonthOrTheChart(): void
+    {
+        $map = self::sheet('map.css');
+
+        self::assertStringNotContainsString('.cal ', $map);
+        self::assertStringNotContainsString('.cal-plate', $map);
+        self::assertStringNotContainsString('.chart-plate', $map);
+    }
+
+    /** The chart is in the same arrangement, and for the same reason. */
+    public function testTheChartsOwnSheetCarriesItsFixedHeight(): void
+    {
+        self::assertMatchesRegularExpression(
+            '/\.chart-plate > \.chart-box\s*\{[^}]*height:\s*var\(--chart-height, 196px\)/',
+            self::sheet('chart.css'),
+        );
+    }
+
+    /**
+     * BOTH ARE PUBLISHED TO THE SHELL and the map is not: a page that
+     * draws a map knows it draws one and links that sheet for itself,
+     * and a page with no map does not pay for Leaflet's chrome.
+     */
+    public function testTheTwoComponentSheetsArePublishedAndTheMapsIsNot(): void
+    {
+        $published = new AtlasStylesheets()->stylesheets();
+
+        self::assertSame([AtlasBundle::CHART_STYLESHEET, AtlasBundle::CALENDAR_STYLESHEET], $published);
+        self::assertNotContains(AtlasBundle::STYLESHEET, $published);
+    }
+
+    /** And each published path is a file this bundle actually ships. */
+    public function testEveryPublishedPathIsAFileTheBundleShips(): void
+    {
+        foreach (new AtlasStylesheets()->stylesheets() as $path) {
+            self::assertFileExists(\dirname(__DIR__, 3).'/public/'.basename($path));
+        }
+    }
+
+    private static function sheet(string $name): string
+    {
+        $css = file_get_contents(\dirname(__DIR__, 3).'/public/'.$name);
+        self::assertIsString($css, $name.' must ship.');
+
+        return $css;
+    }
+}
