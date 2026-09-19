@@ -27,6 +27,8 @@ use Uhifadhi\Bundle\AreaBundle\Service\StationService;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Fixtures\HostPerson;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\IntegrationTestCase;
 use Uhifadhi\Contracts\Area\DayState;
+use Uhifadhi\Contracts\Area\PersonDay;
+use Uhifadhi\Contracts\Area\PersonWatch;
 use Uhifadhi\Contracts\Area\UnverifiedReason;
 
 /**
@@ -56,8 +58,8 @@ final class PresenceTest extends IntegrationTestCase
         $day = $this->today($area);
 
         self::assertSame(DayState::AtPostVerified, $day->state);
-        self::assertNull($day->unverifiedReason);
-        self::assertNotNull($day->distanceM);
+        self::assertNull($this->watchOf($day)->unverifiedReason);
+        self::assertNotNull($this->watchOf($day)->distanceM);
         self::assertSame(1, $day->pings);
     }
 
@@ -72,7 +74,7 @@ final class PresenceTest extends IntegrationTestCase
         $day = $this->today($area);
 
         self::assertSame(DayState::AtPostUnverified, $day->state);
-        self::assertSame(UnverifiedReason::OutsideRing, $day->unverifiedReason);
+        self::assertSame(UnverifiedReason::OutsideRing, $this->watchOf($day)->unverifiedReason);
     }
 
     /**
@@ -87,7 +89,7 @@ final class PresenceTest extends IntegrationTestCase
         $day = $this->today($area);
 
         self::assertSame(DayState::AtPostUnverified, $day->state);
-        self::assertSame(UnverifiedReason::NoFix, $day->unverifiedReason);
+        self::assertSame(UnverifiedReason::NoFix, $this->watchOf($day)->unverifiedReason);
         self::assertSame(0, $day->pings);
     }
 
@@ -101,7 +103,7 @@ final class PresenceTest extends IntegrationTestCase
         $day = $this->today($area);
 
         self::assertSame(DayState::AtPostUnverified, $day->state);
-        self::assertSame(UnverifiedReason::NoRing, $day->unverifiedReason);
+        self::assertSame(UnverifiedReason::NoRing, $this->watchOf($day)->unverifiedReason);
     }
 
     /**
@@ -136,7 +138,7 @@ final class PresenceTest extends IntegrationTestCase
         $day = $this->today($area);
 
         self::assertSame(DayState::WorkingElsewhere, $day->state);
-        self::assertNull($day->unverifiedReason);
+        self::assertNull($this->watchOf($day)->unverifiedReason);
         self::assertTrue($day->state->countsAsPresent());
     }
 
@@ -181,12 +183,109 @@ final class PresenceTest extends IntegrationTestCase
     private string $personUuid = '';
 
     /** The one person's day as it reads now — asserted to exist, once. */
-    private function today(AreaOfInterest $area): \Uhifadhi\Contracts\Area\PersonDay
+    private function today(AreaOfInterest $area): PersonDay
     {
         $day = $this->presence()->dayFor((string) $area->getUuidString(), $this->personUuid, self::DAY);
-        self::assertInstanceOf(\Uhifadhi\Contracts\Area\PersonDay::class, $day);
+        self::assertInstanceOf(PersonDay::class, $day);
 
         return $day;
+    }
+
+    /**
+     * A DAY HOLDS ANY NUMBER OF WATCHES — ruled 2026-09-21. Somebody
+     * checks in at dawn, checks out at noon and checks in again at four,
+     * and all three facts are ONE day: a timesheet, not a from-to.
+     */
+    public function testADayHoldsEveryWatchSomebodyWorked(): void
+    {
+        [$area, $station] = $this->anAreaWithAPost(300);
+
+        $morning = $this->aClaim($area, $station, 'at_post');
+        $morning->setEndedAt(new \DateTimeImmutable('2026-09-19T12:00:00+03:00'));
+
+        $afternoon = $this->anotherClaim($area, $station, 'at_post', 'c0ffee00-0000-4000-8000-000000000002', '2026-09-19T16:00:00+03:00');
+        $afternoon->setEndedAt(new \DateTimeImmutable('2026-09-19T18:30:00+03:00'));
+        $this->em->flush();
+
+        $day = $this->presence()->dayFor((string) $area->getUuidString(), $this->personUuid, self::DAY);
+        self::assertInstanceOf(PersonDay::class, $day);
+
+        self::assertCount(2, $day->watches, 'a second check-in after a check-out is a second watch, not a second day');
+        self::assertSame('2026-09-19T06:08:12+03:00', $day->watches[0]->occurredAt?->format(\DateTimeInterface::ATOM));
+        self::assertSame('2026-09-19T16:00:00+03:00', $day->watches[1]->occurredAt?->format(\DateTimeInterface::ATOM));
+    }
+
+    /** And the person appears ONCE, not once per claim. */
+    public function testAPersonWhoWorkedTwiceIsOnePersonInTheDay(): void
+    {
+        [$area, $station] = $this->anAreaWithAPost(300);
+
+        $this->aClaim($area, $station, 'at_post')->setEndedAt(new \DateTimeImmutable('2026-09-19T12:00:00+03:00'));
+        $this->anotherClaim($area, $station, 'at_post', 'c0ffee00-0000-4000-8000-000000000002', '2026-09-19T16:00:00+03:00');
+        $this->em->flush();
+
+        $read = $this->presence()->dayIn((string) $area->getUuidString(), self::DAY);
+
+        self::assertCount(1, $read, 'two claims by one person on one date are one day');
+        self::assertSame($this->personUuid, $read[0]->personUuid);
+    }
+
+    /**
+     * THE DAY TOTALS THE WATCHES THAT CLOSED. An open watch adds nothing
+     * YET and is not nought — it has no length until somebody checks
+     * out, and guessing one would make a total that moves while nobody
+     * is doing anything.
+     */
+    public function testTheDayTotalsTheClosedWatchesAndSaysOneIsStillOpen(): void
+    {
+        [$area, $station] = $this->anAreaWithAPost(300);
+
+        // 06:08 → 12:00 is 351 minutes; the afternoon is still open.
+        $this->aClaim($area, $station, 'at_post')->setEndedAt(new \DateTimeImmutable('2026-09-19T12:00:00+03:00'));
+        $this->anotherClaim($area, $station, 'at_post', 'c0ffee00-0000-4000-8000-000000000002', '2026-09-19T16:00:00+03:00');
+        $this->em->flush();
+
+        $day = $this->presence()->dayFor((string) $area->getUuidString(), $this->personUuid, self::DAY);
+        self::assertInstanceOf(PersonDay::class, $day);
+
+        self::assertSame(351, $day->minutesOnDuty());
+        self::assertTrue($day->hasOpenWatch());
+        self::assertNull($day->watches[1]->minutes(), 'an open watch has no length yet');
+    }
+
+    /**
+     * THE DAY READS AS ITS LAST WATCH. What somebody is doing now — or
+     * finished the day doing — is what a board is asking when it colours
+     * a name; the earlier watches are there for anybody who needs more.
+     */
+    public function testTheDayReadsAsTheLastWatch(): void
+    {
+        [$area, $station] = $this->anAreaWithAPost(300);
+
+        $this->aClaim($area, $station, 'at_post')->setEndedAt(new \DateTimeImmutable('2026-09-19T12:00:00+03:00'));
+        $this->anotherClaim($area, $station, 'outside', 'c0ffee00-0000-4000-8000-000000000002', '2026-09-19T16:00:00+03:00');
+        $this->em->flush();
+
+        $day = $this->presence()->dayFor((string) $area->getUuidString(), $this->personUuid, self::DAY);
+        self::assertInstanceOf(PersonDay::class, $day);
+
+        self::assertSame(DayState::WorkingElsewhere, $day->state);
+        self::assertSame('at_post', $day->watches[0]->statusKey, 'and the morning keeps what it was');
+    }
+
+    /** The day's first claim is the first, whatever came after it. */
+    public function testTheDaysFirstClaimIsTheFirstOne(): void
+    {
+        [$area, $station] = $this->anAreaWithAPost(300);
+
+        $this->aClaim($area, $station, 'at_post')->setEndedAt(new \DateTimeImmutable('2026-09-19T12:00:00+03:00'));
+        $this->anotherClaim($area, $station, 'at_post', 'c0ffee00-0000-4000-8000-000000000002', '2026-09-19T16:00:00+03:00');
+        $this->em->flush();
+
+        $day = $this->presence()->dayFor((string) $area->getUuidString(), $this->personUuid, self::DAY);
+        self::assertInstanceOf(PersonDay::class, $day);
+
+        self::assertSame('2026-09-19T06:08:12+03:00', $day->occurredAt?->format(\DateTimeInterface::ATOM));
     }
 
     /** @return array{0: AreaOfInterest, 1: Station} */
@@ -237,6 +336,53 @@ final class PresenceTest extends IntegrationTestCase
         $this->em->flush();
 
         return $checkIn;
+    }
+
+    /**
+     * A SECOND WATCH ON THE SAME DAY, for the same person — checked in
+     * again after checking out. Nothing about the model has to allow this
+     * specially: it is another row, with its own client reference.
+     */
+    private function anotherClaim(AreaOfInterest $area, ?Station $station, string $statusKey, string $ref, string $at): CheckIn
+    {
+        /** @var CheckInStatusService $statuses */
+        $statuses = static::getContainer()->get('test_public.area.checkin_statuses');
+
+        $status = null;
+        foreach ($statuses->offeredBy($area) as $one) {
+            if ($statusKey === $one->getKey()) {
+                $status = $one;
+            }
+        }
+        self::assertInstanceOf(CheckInStatus::class, $status);
+
+        $person = $this->em->getRepository(HostPerson::class)->findOneBy(['uuid' => $this->personUuid]);
+        self::assertInstanceOf(HostPerson::class, $person);
+
+        $checkIn = new CheckIn()
+            ->setArea($area)
+            ->setPerson($person)
+            ->setClientRef($ref)
+            ->setLocalDate(new \DateTimeImmutable(self::DAY))
+            ->setStatus($status)
+            ->setStation($station)
+            ->setOccurredAt(new \DateTimeImmutable($at))
+            ->setDeviceId('0f9ca41e')
+            ->setAppVersion('0.1.0');
+
+        $this->em->persist($checkIn);
+        $this->em->flush();
+
+        return $checkIn;
+    }
+
+    /** The watch a day reads as — the last one somebody worked. */
+    private function watchOf(PersonDay $day): PersonWatch
+    {
+        $watch = $day->lastWatch();
+        self::assertInstanceOf(PersonWatch::class, $watch, 'a day that was read has a watch in it');
+
+        return $watch;
     }
 
     private function aCorrection(CheckIn $checkIn, string $statusKey, string $from): void

@@ -15,6 +15,9 @@ Not released yet.
  * `Atlas\CalendarFeedInterface` and its value objects — how a module has a
    month drawn: days, bounded pills, a hue role rather than a colour, and the
    surface naming the feed it wants as it names a plate's subject
+ * `Area\PersonWatch`, and `Area\PersonDay` as a LIST of them with the day's
+   totals — a day holds any number of check-in/check-out pairs, so the shape
+   that could hold only one from-to is gone
  * `Area\PresenceProviderInterface` and its value objects — how a day at a post
    reads, derived on every read and never stored
  * `Roster\WatchProviderInterface` — the watches an area expects, which the area

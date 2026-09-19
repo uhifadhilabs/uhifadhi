@@ -421,6 +421,32 @@ final class FieldDutyEndpointsTest extends FieldApiTestCase
         self::assertCount(1, $this->em->getRepository(PersonPosition::class)->findAll());
     }
 
+    /**
+     * A DAY HOLDS ANY NUMBER OF WATCHES — ruled 2026-09-21. Somebody
+     * checks out at noon and checks in again at four, and the second
+     * claim is an ordinary claim: a new client reference, a new row.
+     * Nothing caps a day, and nothing about the second write is special.
+     */
+    public function testAChecKInAfterACheckOutOpensAnotherWatchOnTheSameDay(): void
+    {
+        $area = $this->area('Northern Conservation Reserve');
+        $station = $this->station($area, 'North Gate Post', self::POST_LON, self::POST_LAT);
+        $token = $this->tokenFor($this->onDuty());
+
+        $this->send('POST', $this->checkIns($area), $this->claim($area, self::uuidOf($station)), $token);
+        $this->send('PATCH', $this->checkIn($area, self::CLAIM_REF), ['endedAt' => '2026-09-19T12:00:00+03:00'], $token);
+
+        $afternoon = $this->claim($area, self::uuidOf($station));
+        $afternoon['clientRef'] = 'c0ffee00-0000-4000-8000-000000000002';
+        $afternoon['occurredAt'] = '2026-09-19T16:00:00+03:00';
+
+        $body = $this->send('POST', $this->checkIns($area), $afternoon, $token);
+
+        self::assertSame(Response::HTTP_CREATED, $this->client->getResponse()->getStatusCode());
+        self::assertFalse(self::leaf($body, 'duplicate'), 'a second watch is not a repeat of the first');
+        self::assertCount(2, $this->em->getRepository(CheckIn::class)->findAll());
+    }
+
     /** An area the URI names that this installation does not have. */
     public function testAnUnknownAreaIsRefused(): void
     {
