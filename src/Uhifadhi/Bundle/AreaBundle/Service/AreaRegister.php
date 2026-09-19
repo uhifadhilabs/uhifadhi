@@ -149,6 +149,33 @@ final readonly class AreaRegister
         return (int) round($this->areas->stAreaKm2(['id' => $id]));
     }
 
+    /**
+     * WHERE THE AREA IS, as a band states it: "3.2°S 35.5°E".
+     *
+     * HEMISPHERES, NEVER SIGNS. A minus in front of a latitude is a fact
+     * about a coordinate system; south is a fact about the place, and it is
+     * the one a person reading a band is after.
+     */
+    public function centroid(AreaOfInterest $area): ?string
+    {
+        $id = $area->getId();
+        $point = null === $id ? null : $this->areas->stCentroid($id);
+
+        if (null === $point) {
+            return null;
+        }
+
+        [$lat, $lon] = $point;
+
+        return \sprintf(
+            '%.1f°%s %.1f°%s',
+            abs($lat),
+            $lat < 0 ? 'S' : 'N',
+            abs($lon),
+            $lon < 0 ? 'W' : 'E',
+        );
+    }
+
     /** A now-tile as the card reads it: the value with its unit, and its label. */
     private static function stat(NowTile $tile): CardStat
     {

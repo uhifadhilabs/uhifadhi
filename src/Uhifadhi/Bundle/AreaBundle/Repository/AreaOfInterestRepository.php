@@ -73,6 +73,35 @@ class AreaOfInterestRepository extends SpatialEntityRepository
         return \is_string($geojson) ? $geojson : null;
     }
 
+    /**
+     * WHERE THE AREA ROUGHLY IS — the boundary's centroid, as a pair of
+     * degrees.
+     *
+     * THE DATABASE ANSWERS IT. A centroid averaged from a ring's vertices in
+     * PHP is wrong for every polygon whose vertices are not evenly spaced,
+     * which is every real boundary; `ST_Centroid` is right and costs one
+     * round trip on a page that already made several.
+     *
+     * NULL WHERE THERE IS NO BOUNDARY, which is an ordinary state: an area is
+     * gazetted and named before its edge is imported.
+     *
+     * @return array{0: float, 1: float}|null latitude, then longitude — the order it is read out in
+     */
+    public function stCentroid(int $id): ?array
+    {
+        $row = $this->getEntityManager()->getConnection()->fetchAssociative(
+            'SELECT ST_Y(ST_Centroid(geom)) AS lat, ST_X(ST_Centroid(geom)) AS lon'
+            .' FROM area_of_interest WHERE id = :id AND geom IS NOT NULL',
+            ['id' => $id],
+        );
+
+        if (false === $row || !is_numeric($row['lat'] ?? null) || !is_numeric($row['lon'] ?? null)) {
+            return null;
+        }
+
+        return [(float) $row['lat'], (float) $row['lon']];
+    }
+
     public function findOneByUuid(string $uuid): ?AreaOfInterest
     {
         if (!Uuid::isValid($uuid)) {

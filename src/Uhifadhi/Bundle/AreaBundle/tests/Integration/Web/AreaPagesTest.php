@@ -340,8 +340,17 @@ final class AreaPagesTest extends WebTestCase
         self::assertStringContainsString('Not installed in this area', $body);
         self::assertStringContainsString('drawn with invented data', $body);
         self::assertStringContainsString('Nothing is asking for attention', $body);
-        // Absent, not zero: no tile claiming it measured and found none.
-        self::assertStringNotContainsString('class="disp"', $body);
+        /*
+         * ABSENT IS NOT ZERO, and the strip says which. The row is five cards
+         * wherever it is drawn — a row of one where the design has five is a
+         * different design, and a reader cannot tell a short row from a quiet
+         * morning — so the cards nobody filled state that nobody publishes
+         * them. What none of them does is claim a measurement: the only
+         * figure on the strip the page states itself is the length of the
+         * attention list it draws below.
+         */
+        self::assertStringContainsString('no module publishes this', $body);
+        self::assertSame(4, substr_count($body, 'no module publishes this'));
     }
 
     /** An unzoned area is the normal state, and the page explains what a zone is. */

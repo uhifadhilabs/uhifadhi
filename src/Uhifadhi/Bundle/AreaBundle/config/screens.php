@@ -71,6 +71,7 @@ return static function (ContainerConfigurator $container): void {
         ->args([
             service('twig'),
             service(ZoneRepository::class),
+            service(StationRepository::class),
             service('area.register'),
             service('area.overview'),
             service('area.map_payload'),

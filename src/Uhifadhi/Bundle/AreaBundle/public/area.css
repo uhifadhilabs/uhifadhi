@@ -150,7 +150,12 @@
 /* The KPI strip is a `.grid`, and the shell's grid carries the card-gap rhythm
    as its own margin-bottom. Here the strip is the first band of a stack that
    sets its own spacing, so it gives that margin back. */
-.dp-kstrip { display: grid; grid-template-columns: repeat(auto-fit, minmax(168px, 1fr)); gap: 20px; margin-bottom: 0; }
+/* THE TRACK IS THE SHELL'S — `.grid kstrip` — and this modifier now says the
+   one thing that is this surface's: the strip is the first band of a stack
+   that sets its own spacing, so it gives the grid's margin back. Restating
+   the track here at 168px squeezed five cards into a row the design fits at
+   196, on three pages. */
+.dp-kstrip { margin-bottom: 0; }
 
 /* THE FIGURE CARD IS THE SHELL'S, WHOLE. This sheet used to restate it —
    the label, the figure, the qualifier and the two tones — and being linked

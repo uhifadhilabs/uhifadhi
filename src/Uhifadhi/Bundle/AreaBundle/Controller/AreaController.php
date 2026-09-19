@@ -23,6 +23,7 @@ use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInt
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Environment;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\AreaBundle\Repository\StationRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaMapPayload;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaMapService;
@@ -56,6 +57,7 @@ final readonly class AreaController
     public function __construct(
         private Environment $twig,
         private ZoneRepository $zones,
+        private StationRepository $stations,
         private AreaRegister $register,
         private AreaOverview $overview,
         private AreaMapPayload $mapPayload,
@@ -116,6 +118,10 @@ final readonly class AreaController
             'area' => $area,
             'areaKm2' => $this->register->areaKm2($area),
             'zoneCount' => $this->zones->countFor($area),
+            // WHAT STANDS ON THE GROUND AND WHERE THE GROUND IS — the area's
+            // own two facts the band was missing.
+            'stationCount' => $this->stations->countByArea($area),
+            'centroid' => $this->register->centroid($area),
             'map' => $this->areaMap->overview($this->mapPayload->forArea($area), $mapLayers),
             'nowTiles' => $this->overview->nowTilesFor($area, $now),
             'attention' => $this->overview->attentionFor($area, $now),

@@ -47,31 +47,61 @@
     <div class="factband">
         <span class="f"><span class="k">Area</span><span class="v">{{ areaKm2|number_format }}<em>km&sup2;</em></span></span>
         <span class="f"><span class="k">Zones</span><span class="v">
-            {%- if zoneCount > 0 -%}{{ zoneCount }}{%- else -%}&mdash;<em>none yet</em>{%- endif -%}
+            {%- if zoneCount > 0 -%}{{ zoneCount }}<em>presence-driven</em>{%- else -%}&mdash;<em>none yet</em>{%- endif -%}
+        </span></span>
+        <span class="f"><span class="k">Stations</span><span class="v">
+            {%- if stationCount > 0 -%}{{ stationCount }}{%- else -%}&mdash;<em>none yet</em>{%- endif -%}
         </span></span>
         {% if area.iucnCategory %}<span class="f"><span class="k">IUCN</span><span class="v">{{ area.iucnCategory }}</span></span>{% endif %}
         {% if area.establishedYear %}<span class="f"><span class="k">Established</span><span class="v">{{ area.establishedYear }}</span></span>{% endif %}
         <span class="f"><span class="k">Boundary</span><span class="v">
             {%- if area.hasBoundary -%}on file{%- else -%}&mdash;<em>not set</em>{%- endif -%}
         </span></span>
+        {# WHERE THE AREA IS, from the database's own centroid — in
+           hemispheres, because a minus sign is a fact about a coordinate
+           system and south is a fact about the place. #}
+        <span class="f"><span class="k">Centroid</span><span class="v">
+            {%- if centroid -%}{{ centroid }}{%- else -%}&mdash;<em>not set</em>{%- endif -%}
+        </span></span>
         <span class="sp"></span>
         <a class="more" href="{{ path('area_settings', {uuid: area.uuidString}) }}">Area settings &rarr;</a>
     </div>
 
     <div class="grid">
-        {# THE RIGHT-NOW STRIP. Every tile is a module's; the area page lays them out
-           and orders them and counts nothing itself. #}
-        {% if nowTiles is not empty %}
-            <div class="grid dp-kstrip">
-                {% for tile in nowTiles %}
-                    <div class="c kpi{{ tile.tone == 'hot' ? ' hot' : '' }}{{ tile.tone == 'bad' ? ' bad' : '' }}">
-                        <span class="tab">{{ tile.label }}{% if tile.live %}<span class="src">&middot; <span class="ao-live"><i></i></span></span>{% endif %}</span>
-                        <b class="disp">{{ tile.value }}{% if tile.unit %}<em>{{ tile.unit }}</em>{% endif %}</b>
-                        {% if tile.subline %}<span class="sub">{{ tile.subline }}{% if tile.alarm %} &middot; <span class="r">{{ tile.alarm }}</span>{% endif %}</span>{% endif %}
+        {# THE RIGHT-NOW STRIP — FIVE TILES OR NONE, like every figure row in
+           the product. Every filled tile is a module's: the area page lays
+           them out, orders them and counts nothing itself. Where a module has
+           not published one, the card keeps its slot and says so — a row of
+           two where the design has five is a different design, and a reader
+           cannot tell a short row from a quiet morning.
+
+           THE AREA'S OWN TILE IS THE ATTENTION COUNT, which is the one figure
+           on this strip the page may state itself: it is the length of a list
+           the page already draws. #}
+        {% set tiles = nowTiles|slice(0, 4) %}
+        <div class="grid kstrip dp-kstrip">
+            {% for tile in tiles %}
+                <div class="c kpi{{ tile.tone == 'hot' ? ' hot' : '' }}{{ tile.tone == 'bad' ? ' bad' : '' }}">
+                    <span class="tab">{{ tile.label }}{% if tile.live %}<span class="src">&middot; <span class="ao-live"><i></i></span></span>{% endif %}</span>
+                    <b class="disp">{{ tile.value }}{% if tile.unit %}<em>{{ tile.unit }}</em>{% endif %}</b>
+                    {% if tile.subline %}<span class="sub">{{ tile.subline }}{% if tile.alarm %} &middot; <span class="r">{{ tile.alarm }}</span>{% endif %}</span>{% endif %}
+                </div>
+            {% endfor %}
+            <div class="c kpi{{ attention is not empty ? ' bad' : '' }}">
+                <span class="tab">Needs attention</span>
+                <b class="disp">{{ attention|length }}</b>
+                <span class="sub">{{ attention is empty ? 'a good day' : 'across every installed module' }}</span>
+            </div>
+            {% if tiles|length < 4 %}
+                {% for _ in 1..(4 - tiles|length) %}
+                    <div class="c kpi">
+                        <span class="tab">From the modules</span>
+                        <b class="disp">&mdash;</b>
+                        <span class="sub">no module publishes this</span>
                     </div>
                 {% endfor %}
-            </div>
-        {% endif %}
+            {% endif %}
+        </div>
 
         {# NEEDS ATTENTION — sorted by urgency, never by module. #}
         <div class="c">
