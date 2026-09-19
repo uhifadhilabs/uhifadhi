@@ -24,6 +24,11 @@ use Uhifadhi\Bundle\AreaBundle\Enum\PostingSource;
  * where nobody answered. A board with no such provider draws its lines
  * without those two columns rather than with two empty ones.
  *
+ * THE POST IS ON THE ROW because one board is sometimes read grouped: a zone
+ * asks for everybody working on its ground in one question, and then has to
+ * know which post each of them stands at. A row that did not carry it would
+ * make that a query per station.
+ *
  * THE SOURCE IS A FACT ABOUT THE ROW, not about the person: which door the
  * posting came in by. Two people reading one posting from two places should
  * be able to tell.
@@ -33,6 +38,7 @@ final readonly class PostingRow
     public function __construct(
         public string $postingUuid,
         public string $personUuid,
+        public string $stationUuid,
         public string $name,
         public string $initials,
         public ?string $role,

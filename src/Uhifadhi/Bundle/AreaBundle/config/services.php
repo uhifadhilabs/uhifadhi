@@ -47,6 +47,7 @@ use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneOverlapService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneSetService;
+use Uhifadhi\Bundle\AreaBundle\Service\ZoneStationService;
 use Uhifadhi\Bundle\AreaBundle\Widget\AreaIndexWidgets;
 use Uhifadhi\Bundle\AtlasBundle\Map\MapBuilderInterface;
 use Uhifadhi\Bundle\RegistryBundle\Repository\AreaModuleRepository;
@@ -198,6 +199,19 @@ return static function (ContainerConfigurator $container): void {
     $services->set('area.person_facets', PersonFacetService::class)
         ->args([tagged_iterator(PersonFacetProviderInterface::TAG)]);
     $services->alias(PersonFacetService::class, 'area.person_facets');
+
+    /*
+     * WHAT A ZONE KNOWS ABOUT THE POSTS ON ITS GROUND — the two numbers a shut
+     * card states for the whole area at once, and the full board of the one
+     * card somebody opened.
+     */
+    $services->set('area.zone_stations', ZoneStationService::class)
+        ->args([
+            service(StationRepository::class),
+            service(PostingRepository::class),
+            service('area.posting_board'),
+        ]);
+    $services->alias(ZoneStationService::class, 'area.zone_stations');
 
     /*
      * WHAT THE MODULES SAY ABOUT A ZONE — every tagged provider, asked once for

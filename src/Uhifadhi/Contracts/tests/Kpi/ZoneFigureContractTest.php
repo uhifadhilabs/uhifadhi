@@ -106,6 +106,30 @@ final class ZoneFigureContractTest extends TestCase
     }
 
     /**
+     * A ROLLING WINDOW, ENDING NOW, AND IT SAYS SO IN ITS LABEL — what a card
+     * opened inside another surface asks for, so that a calendar boundary
+     * cannot make busy ground read as quiet on the second of the month.
+     */
+    public function testARollingWindowEndsAtTheInstantAndNamesItsLength(): void
+    {
+        $period = FigurePeriod::days(90, new \DateTimeImmutable('2026-09-19 10:00:00'));
+
+        self::assertSame('2026-06-21 10:00:00', $period->from->format('Y-m-d H:i:s'));
+        self::assertSame('2026-09-19 10:00:00', $period->until->format('Y-m-d H:i:s'));
+        self::assertSame('90 days', $period->label);
+        self::assertTrue($period->contains(new \DateTimeImmutable('2026-08-14')));
+        self::assertFalse($period->contains(new \DateTimeImmutable('2026-06-20')));
+    }
+
+    /** A window of no days is not a window; it is a mistake worth refusing. */
+    public function testAWindowOfNoDaysIsRefused(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        FigurePeriod::days(0, new \DateTimeImmutable());
+    }
+
+    /**
      * THE ANSWER STATES THE PERIOD IT ACTUALLY COVERS. A provider asked for
      * August may only be able to answer over a rolling ninety days, and a card
      * captioned "aug" over ninety days of data is a lie nobody can see.

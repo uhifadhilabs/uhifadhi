@@ -80,6 +80,41 @@ class StationRepository extends SpatialEntityRepository
         return $stations;
     }
 
+    /**
+     * HOW MANY POSTS STAND IN EACH ZONE, in one statement.
+     *
+     * UNZONED POSTS ARE NOT IN THE ANSWER. A station on ground no zone covers
+     * is a legal and common state, and it belongs to no key here; the zones
+     * surface counts zones, and the area's own count is what says how many
+     * posts exist altogether.
+     *
+     * @return array<string, int> zone uuid to the number of posts in it
+     */
+    public function countPerZone(AreaOfInterest $area): array
+    {
+        /** @var list<array{zone: mixed, total: mixed}> $rows */
+        $rows = $this->createQueryBuilder('s')
+            ->select('z.uuid AS zone, COUNT(s.id) AS total')
+            ->join('s.zone', 'z')
+            ->where('s.area = :area')
+            ->setParameter('area', $area)
+            ->groupBy('z.uuid')
+            ->getQuery()
+            ->getResult();
+
+        $counts = [];
+        foreach ($rows as $row) {
+            $zone = $row['zone'];
+            $total = $row['total'];
+            // The uuid comes back as the platform's own type, which prints itself.
+            if ((\is_string($zone) || $zone instanceof \Stringable) && is_numeric($total)) {
+                $counts[(string) $zone] = (int) $total;
+            }
+        }
+
+        return $counts;
+    }
+
     public function countByArea(AreaOfInterest $area): int
     {
         return (int) $this->createQueryBuilder('s')

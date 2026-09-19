@@ -17,10 +17,12 @@
    a preview replaces both; a file that could not be read shows its refusal. The
    design's state switcher is a design tool and has no counterpart here.
 
-   SLICE TWO fills an open card's BODY: the module figures over the window, the
-   station board, the posted people and "N of M stations · View all". Station
-   lives in another module until then, so an open card here is its header and
-   its footer with nothing between them. #}
+   AN OPEN CARD'S BODY is what the modules publish about that ground over a
+   rolling window, then the posts standing on it — one card per post, with who
+   is there and the way through to its record — and a footer strip stating how
+   many of the zone's posts were drawn. A zone has no people of its own: it
+   has the ground its stations stand on, which is why the people are read per
+   post and never as a zone-level list. #}
 {% extends '@Shell/page.html.twig' %}
 
 {% block title %}{{ area.name }} &middot; configure &middot; zones{% endblock %}
@@ -115,9 +117,18 @@
                                 <div class="zc-bd">
                                     <span class="nmrow"><a class="zc-nm" href="{{ path('area_zones', {uuid: area.uuidString}) }}">{{ row.name }}</a></span>
                                 </div>
+                                {# THE RUN IS READ WITH THE CARD SHUT, so nought is a word and not a
+                                   measurement: "no station" says a thing about the ground, where
+                                   "0 st" reads as something that was counted wrong. #}
+                                {% set covered = figures.covered(row.uuid) %}
+                                {% set posts = staffing.stationsIn(row.uuid) %}
+                                {% set people = staffing.peopleIn(row.uuid) %}
                                 <span class="zcrun">
                                     <span class="f"><b>{{ row.km2|number_format }}</b> km&sup2;</span>
                                     {% if row.shareOfArea is not null %}<span class="f"><b>{{ row.shareOfArea }}</b>%</span>{% endif %}
+                                    {% if covered %}<span class="f"><b>{{ covered.display }}</b>{{ covered.unit }} covered</span>{% endif %}
+                                    <span class="f">{% if posts %}<b>{{ posts }}</b> st{% else %}no station{% endif %}</span>
+                                    <span class="f">{% if people %}<b>{{ people }}</b> posted{% else %}nobody posted{% endif %}</span>
                                 </span>
                                 {# RENAME IS INLINE AND COMMITS ON ITS OWN: it touches no geometry,
                                    so it needs neither the map nor a file. #}
@@ -130,9 +141,77 @@
 
                             {% if isOpen %}
                                 <hr class="zc-rule">
-                                {# SLICE TWO draws the card's BODY here: the module figures over the
-                                   window and the station board with its posted people. #}
+
+                                {# WHAT THE MODULES PUBLISH ABOUT THIS GROUND, over the rolling
+                                   window the controller asked for. The covered share is already in
+                                   the run above, so it is not drawn twice; a zone nobody publishes
+                                   about draws no row at all rather than a line of dashes. #}
+                                {% set zonefigs = figures.forZone(row.uuid)|filter(figure => figure.key != constant('Uhifadhi\\Contracts\\Kpi\\ZoneFigureProviderInterface::COVERED')) %}
+                                {% if zonefigs is not empty %}
+                                    <div class="zcfigs">
+                                        {% for figure in zonefigs %}
+                                            <span class="f"><b>{{ figure.display }}</b>{{ figure.unit }} {{ figure.label|lower }}</span>
+                                        {% endfor %}
+                                        <span class="q">{{ figures.period.label }}</span>
+                                    </div>
+                                {% endif %}
+
+                                {# THE POSTS ON THIS GROUND. A zone has no people of its own — it has
+                                   the ground its stations stand on — so the people are read here per
+                                   post and never as a zone-level list. Manage people NAVIGATES to
+                                   the post's own record, which is the surface that edits postings. #}
+                                <div class="stgroup">
+                                    <div class="stgh">
+                                        <span class="zsw" style="background:{{ row.hue }}"></span>
+                                        <b>{{ row.name }}</b>
+                                        <span class="stghm">
+                                            {{- row.km2|number_format }} km&sup2;
+                                            {%- if covered %} &middot; {{ covered.display }}{{ covered.unit }} covered{% endif -%}
+                                            {{ ' ' }}&middot; {{ people }} {{ people == 1 ? 'person' : 'people' -}}
+                                        </span>
+                                    </div>
+                                    {% if stationCards is empty %}
+                                        <div class="stcard none">
+                                            <b>No post stands in this zone</b>
+                                            <span class="stnone">ordinary &middot; a post is recorded in the Stations section</span>
+                                        </div>
+                                    {% else %}
+                                        <div class="stcards">
+                                            {% for card in stationCards %}
+                                                <div class="stcard{{ card.posted ? '' : ' empty' }}">
+                                                    <div class="stcardhd">
+                                                        <span class="stpin{{ card.posted ? '' : ' hollow' }}">{{ card.posted }}</span>
+                                                        <b>{{ card.name }}</b>
+                                                        {% if card.code %}<span class="stcode">{{ card.code }}</span>{% endif %}
+                                                    </div>
+                                                    <div class="stcardppl{{ card.posted ? '' : ' empty' }}">
+                                                        {% if card.faces is not empty %}
+                                                            <span class="avstack">
+                                                                {%- for face in card.faces -%}
+                                                                    <span class="tav sm" title="{{ face.name }}{% if face.role %} &middot; {{ face.role }}{% endif %}">{{ face.initials|slice(0, 1) }}</span>
+                                                                {%- endfor -%}
+                                                                {%- if card.beyondTheFaces %}<span class="tav sm more">+{{ card.beyondTheFaces }}</span>{% endif -%}
+                                                            </span>
+                                                        {% endif %}
+                                                        <span class="stcardlead">
+                                                            {%- if card.leaderName %}{{ card.leaderName }} leads &middot; {{ card.posted }} posted
+                                                            {%- elseif card.posted %}{{ card.posted }} posted &middot; no lead appointed
+                                                            {%- else %}nobody posted yet{% endif -%}
+                                                        </span>
+                                                    </div>
+                                                    <div class="stcardfoot">
+                                                        <span class="mono d">in {{ row.name }}</span>
+                                                        <a class="btn sm" href="{{ path('area_station_show', {uuid: area.uuidString, station: card.uuid}) }}"
+                                                           title="{{ card.name }} &middot; posted people">Manage people &rarr;</a>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
                                 <div class="zcmore">
+                                    <span class="mono">{{ stationCards|length }} of {{ posts }} {{ posts == 1 ? 'station' : 'stations' }}</span>
                                     {# THE SAME VALIDATION PATH AS AN IMPORT — inside the boundary,
                                        sharing interior with no sibling, this zone excluded from its
                                        own check. A DRAWN ring is the other way in and needs a draw

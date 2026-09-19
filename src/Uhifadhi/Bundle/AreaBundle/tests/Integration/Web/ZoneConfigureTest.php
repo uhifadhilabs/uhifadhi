@@ -21,6 +21,10 @@ use Uhifadhi\Bundle\AreaBundle\Controller\ZoneEditController;
 use Uhifadhi\Bundle\AreaBundle\Controller\ZoneImportController;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Entity\Zone;
+use Uhifadhi\Bundle\AreaBundle\Enum\PostingSource;
+use Uhifadhi\Bundle\AreaBundle\Service\PostingService;
+use Uhifadhi\Bundle\AreaBundle\Service\StationService;
+use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web\Fixtures\HostUser;
 
 /**
  * THE ZONES SECTION OF THE CONFIGURE PAGE, OVER REAL HTTP.
@@ -234,6 +238,117 @@ final class ZoneConfigureTest extends WebTestCase
         // permission is the gate, and a viewer never reaches the form.
         $this->browser()->request('POST', '/areas/'.$area->getUuidString().'/zones/clear', ['_token' => 'whatever']);
         self::assertSame(Response::HTTP_FORBIDDEN, $this->browser()->getResponse()->getStatusCode());
+    }
+
+    /**
+     * A ZONE HAS NO PEOPLE OF ITS OWN; it has the ground its stations stand
+     * on. The run says how many of each so the card can be read shut.
+     */
+    public function testAZoneCardRunsItsStationsAndThePeoplePostedInThem(): void
+    {
+        $this->boot();
+        $this->signIn();
+        [$area] = $this->aZoneWithAStaffedPost();
+
+        $body = $this->body($this->section($area));
+
+        self::assertMatchesRegularExpression('#<b>1</b> st#', $body);
+        self::assertMatchesRegularExpression('#<b>2</b> posted#', $body);
+    }
+
+    /** Nought is stated in words, because "0 st" reads as a measurement. */
+    public function testAZoneWithNoStationSaysSoRatherThanCountingNought(): void
+    {
+        $this->boot();
+        $this->signIn();
+        $area = $this->anArea();
+        $this->aZone($area, 'Western Sector', self::A_WEST_HALF);
+
+        $body = $this->body($this->section($area));
+
+        self::assertStringContainsString('no station', $body);
+        self::assertStringContainsString('nobody posted', $body);
+    }
+
+    public function testAnOpenZoneCardDrawsAStationCardForEachPostInIt(): void
+    {
+        $this->boot();
+        $this->signIn();
+        [$area, $zone] = $this->aZoneWithAStaffedPost();
+
+        $body = $this->body($this->section($area).'?open='.$zone->getUuidString());
+
+        self::assertStringContainsString('Seneto Gate Post', $body);
+        self::assertStringContainsString('ST-01', $body);
+        self::assertStringContainsString('J. Mollel leads', $body);
+        // The card links to the post's own record, which is where people are read.
+        self::assertStringContainsString('/stations/', $body);
+        // BOUNDED, AND IT SAYS SO: the footer states the whole against the drawn.
+        self::assertStringContainsString('1 of 1 station', $body);
+    }
+
+    /** A zone with no post in it is an ordinary state, and the card says which. */
+    public function testAnOpenZoneWithNoPostSaysSoInsteadOfAnEmptyGrid(): void
+    {
+        $this->boot();
+        $this->signIn();
+        $area = $this->anArea();
+        $zone = $this->aZone($area, 'Western Sector', self::A_WEST_HALF);
+
+        $body = $this->body($this->section($area).'?open='.$zone->getUuidString());
+
+        self::assertStringContainsString('No post stands in this zone', $body);
+        self::assertStringNotContainsString('Manage people', $body);
+    }
+
+    /**
+     * NO MODULE PUBLISHES YET, so the open card draws no figures row at all
+     * rather than a row of dashes — the same honesty the station dock keeps.
+     */
+    public function testAnOpenCardDrawsNoFiguresRowWhileNobodyPublishes(): void
+    {
+        $this->boot();
+        $this->signIn();
+        [$area, $zone] = $this->aZoneWithAStaffedPost();
+
+        $body = $this->body($this->section($area).'?open='.$zone->getUuidString());
+
+        self::assertStringNotContainsString('zcfigs', $body);
+        self::assertStringNotContainsString('% covered', $body);
+    }
+
+    /**
+     * ONE ZONE, ONE POST IN IT, TWO PEOPLE ON THE POST — the shape every
+     * assertion above reads, built through the verbs so the derived zone is
+     * derived rather than asserted into place.
+     *
+     * @return array{0: AreaOfInterest, 1: Zone}
+     */
+    private function aZoneWithAStaffedPost(): array
+    {
+        $area = $this->anArea();
+        $zone = $this->aZone($area, 'Western Sector', self::A_WEST_HALF);
+
+        /** @var StationService $stations */
+        $stations = static::getContainer()->get('test_public.area.stations');
+        /** @var PostingService $postings */
+        $postings = static::getContainer()->get('test_public.area.postings');
+
+        $station = $stations->add($area, 'Seneto Gate Post', -29.75, -3.2, 'ST-01');
+        $lead = $postings->post($station, $this->aPerson('J.', 'Mollel'), PostingSource::WrittenHere);
+        $postings->appointLeader($lead);
+        $postings->post($station, $this->aPerson('T.', 'Ndosi'), PostingSource::FromTheirPage);
+
+        return [$area, $zone];
+    }
+
+    private function aPerson(string $first, string $last): HostUser
+    {
+        $person = new HostUser()->named($first, $last);
+        $this->em->persist($person);
+        $this->em->flush();
+
+        return $person;
     }
 
     // ---------------------------------------------------------------- fixtures

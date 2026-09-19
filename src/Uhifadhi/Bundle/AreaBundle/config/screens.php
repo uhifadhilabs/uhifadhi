@@ -181,6 +181,10 @@ return static function (ContainerConfigurator $container): void {
             service(ZoneEventRepository::class),
             service('area.zone_import_draft'),
             service('area.zone_export'),
+            service(ZoneRepository::class),
+            service('area.zone_stations'),
+            service('area.zone_figures'),
+            service('registry.area_modules'),
             service('security.csrf.token_manager'),
         ])
         ->tag('controller.service_arguments');

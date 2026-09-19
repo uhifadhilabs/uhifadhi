@@ -106,9 +106,15 @@ final readonly class PostingBoardService
 
         $facet = $facts[$uuid] ?? null;
 
+        $station = $posting->getStation()?->getUuidString();
+        if (null === $station) {
+            return null;
+        }
+
         return new PostingRow(
             postingUuid: (string) $posting->getUuidString(),
             personUuid: $uuid,
+            stationUuid: (string) $station,
             name: $person->getFullName(),
             initials: self::initialsOf($person->getFullName()),
             role: $facet?->position,

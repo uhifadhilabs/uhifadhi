@@ -24,13 +24,20 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Uid\Uuid;
 use Twig\Environment;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\AreaBundle\Entity\Zone;
 use Uhifadhi\Bundle\AreaBundle\Model\ZonePalette;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneEventRepository;
+use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaPlateService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneExportService;
+use Uhifadhi\Bundle\AreaBundle\Service\ZoneFigureService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportDraftStore;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneSetService;
+use Uhifadhi\Bundle\AreaBundle\Service\ZoneStationService;
+use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleService;
+use Uhifadhi\Contracts\Kpi\FigurePeriod;
+use Uhifadhi\Contracts\Kpi\ZoneRef;
 
 /**
  * THE ZONES SECTION OF AN AREA'S CONFIGURE PAGE — where the set is changed, and
@@ -72,6 +79,14 @@ final readonly class ZoneConfigureController
      * product phrased and dismissed the same way.
      */
     public const string OPEN_QUERY = 'open';
+
+    /**
+     * THE WINDOW AN OPEN CARD REPORTS OVER. Ninety days is a season, which is
+     * the unit a zone is busy or quiet in; the Zones tab states a month
+     * because a month is what a report is written about. Both captions name
+     * their own window, so the two cannot be read as each other.
+     */
+    public const int OPEN_CARD_DAYS = 90;
     public const string DISCARD_QUERY = 'discard';
 
     public function __construct(
@@ -81,6 +96,10 @@ final readonly class ZoneConfigureController
         private ZoneEventRepository $events,
         private ZoneImportDraftStore $draft,
         private ZoneExportService $export,
+        private ZoneRepository $zones,
+        private ZoneStationService $zoneStations,
+        private ZoneFigureService $figures,
+        private AreaModuleService $areaModules,
         private CsrfTokenManagerInterface $csrf,
     ) {
     }
@@ -108,13 +127,35 @@ final readonly class ZoneConfigureController
             $hues[$feature->name] = ZonePalette::hueFor($position);
         }
 
+        $openZone = self::uuidQuery($request, self::OPEN_QUERY);
+        $open = null === $openZone ? null : $this->openZoneOf($area, $openZone);
+
+        /*
+         * THE MODULES ARE ASKED ABOUT EVERY ZONE AT ONCE, over a rolling
+         * window rather than the calendar month the Zones tab reports: an open
+         * card is answering "is this ground busy", which the second of a month
+         * answers badly. The period comes back from the providers, so the
+         * caption says the window they could actually give.
+         */
+        $figures = $this->figures->collect(
+            array_map(
+                static fn ($row): ZoneRef => new ZoneRef($row->uuid, (string) $area->getUuidString(), $row->name),
+                $view->rows,
+            ),
+            FigurePeriod::days(self::OPEN_CARD_DAYS, new \DateTimeImmutable()),
+            fn (string $slug): bool => $this->areaModules->isActive($area, $slug),
+        );
+
         return new Response($this->twig->render('@Area/zone/configure.html.twig', [
             'area' => $area,
             'set' => $view,
             'plan' => $plan,
             'refusal' => $this->draft->takeRefusal($area),
             'outcome' => $this->draft->takeOutcome($area),
-            'openZone' => self::uuidQuery($request, self::OPEN_QUERY),
+            'openZone' => null === $open ? null : $openZone,
+            'staffing' => $this->zoneStations->staffing($area),
+            'stationCards' => null === $open ? [] : $this->zoneStations->cardsFor($open),
+            'figures' => $figures,
             'exportName' => $this->export->fileName($area),
             'events' => $this->events->findByArea($area),
             'map' => null === $plan
@@ -141,6 +182,19 @@ final readonly class ZoneConfigureController
         $value = $request->query->get($key);
 
         return \is_string($value) && Uuid::isValid($value) ? $value : null;
+    }
+
+    /**
+     * THE OPEN CARD'S ZONE, IF IT IS THIS AREA'S. A uuid from another area on
+     * this address opens nothing rather than opening somebody else's zone —
+     * the same answer a mangled link gets, for the same reason.
+     */
+    private function openZoneOf(AreaOfInterest $area, string $uuid): ?Zone
+    {
+        /** @var Zone|null $zone */
+        $zone = $this->zones->findOneBy(['uuid' => $uuid, 'area' => $area]);
+
+        return $zone;
     }
 
     /**

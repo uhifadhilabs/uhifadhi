@@ -176,6 +176,40 @@ class PostingRepository extends ServiceEntityRepository
     }
 
     /**
+     * HOW MANY PEOPLE WORK OUT OF EACH ZONE'S POSTS, in one statement, for the
+     * same reason the station count is one: a card per zone must not be a
+     * query per zone.
+     *
+     * @return array<string, int> zone uuid to the people standing at its posts
+     */
+    public function countStandingPerZone(AreaOfInterest $area): array
+    {
+        /** @var list<array{zone: mixed, total: mixed}> $rows */
+        $rows = $this->createQueryBuilder('p')
+            ->select('z.uuid AS zone, COUNT(p.id) AS total')
+            ->join('p.station', 's')
+            ->join('s.zone', 'z')
+            ->where('p.endedAt IS NULL')
+            ->andWhere('s.area = :area')
+            ->setParameter('area', $area)
+            ->groupBy('z.uuid')
+            ->getQuery()
+            ->getResult();
+
+        $counts = [];
+        foreach ($rows as $row) {
+            $zone = $row['zone'];
+            $total = $row['total'];
+            // The uuid comes back as the platform's own type, which prints itself.
+            if ((\is_string($zone) || $zone instanceof \Stringable) && is_numeric($total)) {
+                $counts[(string) $zone] = (int) $total;
+            }
+        }
+
+        return $counts;
+    }
+
+    /**
      * THE STANDING SET, and the ordering every surface reads them in: the
      * leader first, because the design puts the lead at the top of the board,
      * then by how long they have been there.

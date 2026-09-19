@@ -51,6 +51,26 @@ final readonly class FigurePeriod
         return new self($from, $from->modify('+1 month'), $from->format('F Y'));
     }
 
+    /**
+     * A ROLLING WINDOW OF SO MANY DAYS, ending now — what a card inside
+     * something else asks for.
+     *
+     * NOT EVERY SURFACE ASKS THE SAME QUESTION, deliberately. A tab states a
+     * month because a month is what a report is written about; a card opened
+     * inside a configure screen is asking "is this place busy", which a
+     * calendar boundary answers badly on the second of the month. The label
+     * says which window it is, so two cards on one screen can differ and
+     * neither has to be read as the other.
+     */
+    public static function days(int $days, \DateTimeImmutable $now): self
+    {
+        if ($days < 1) {
+            throw new \InvalidArgumentException('A window of days is at least one day long.');
+        }
+
+        return new self($now->modify(\sprintf('-%d days', $days)), $now, \sprintf('%d days', $days));
+    }
+
     /** The period before this one, of the same length — what a move is measured against. */
     public function previous(): self
     {
