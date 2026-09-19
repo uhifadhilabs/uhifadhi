@@ -134,8 +134,11 @@ final readonly class ZoneListService
     }
 
     /**
-     * ONE COLUMN PER MODULE THE AREA RUNS, in the area's own module order —
-     * the order its Modules tab reads.
+     * ONE COLUMN PER MODULE THE AREA RUNS, IN THE AREA'S OWN MODULE ORDER —
+     * the order its Modules tab lists them in, which is the order somebody
+     * arranged. The catalogue's order is the order the installation happens
+     * to hold them in, and reading it here put Incidents left of Patrols on
+     * a page whose every other module list reads the other way.
      *
      * A MODULE THAT PUBLISHES NOTHING KEEPS ITS COLUMN and every cell in it
      * says so: the column is named after a module that IS installed here, so
@@ -147,11 +150,19 @@ final readonly class ZoneListService
      */
     private function columnsFor(AreaOfInterest $area): array
     {
-        $columns = [];
+        $named = [];
         foreach ($this->catalogue->all() as $module) {
-            $slug = (string) $module->getSlug();
-            if ($this->areaModules->isActive($area, $slug)) {
-                $columns[$slug] = (string) $module->getName();
+            $named[(string) $module->getSlug()] = (string) $module->getName();
+        }
+
+        $columns = [];
+        foreach ($this->areaModules->activeFor($area) as $assignment) {
+            $slug = $assignment->getModule()?->getSlug();
+            // A MODULE THE MACHINE NO LONGER HAS is a row in the ledger and
+            // not a capability: the catalogue is the intersection, so a slug
+            // it does not name has no column.
+            if (\is_string($slug) && isset($named[$slug])) {
+                $columns[$slug] = $named[$slug];
             }
         }
 

@@ -17,6 +17,10 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Service\StationService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneListService;
+use Uhifadhi\Bundle\RegistryBundle\Entity\Module;
+use Uhifadhi\Bundle\RegistryBundle\Enum\ModuleCategory;
+use Uhifadhi\Bundle\RegistryBundle\Enum\ModuleStatus;
+use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleService;
 
 /**
  * THE AREA'S ZONES, LISTED — owner-ruled: the zones tab lists every zone the
@@ -175,6 +179,44 @@ final class ZonesTableTest extends WebTestCase
 
         self::assertStringNotContainsString('zltbl', $body);
         self::assertStringNotContainsString('Zones in the area', $body);
+    }
+
+    /**
+     * A MODULE COLUMN PER MODULE THE AREA RUNS, IN THE AREA'S OWN ORDER —
+     * the order its Modules tab lists them in, which is the order somebody
+     * arranged. Read off the catalogue instead, the columns came out in
+     * whichever order the installation happened to hold its modules.
+     */
+    public function testTheModuleColumnsFollowTheAreasModuleOrder(): void
+    {
+        $this->boot();
+        $this->signIn();
+        $area = $this->threeZones();
+
+        // The catalogue holds them the other way about on purpose.
+        $this->aModule('incidents', 'Incidents', 0);
+        $this->aModule('patrols', 'Patrols', 1);
+
+        /** @var AreaModuleService $modules */
+        $modules = static::getContainer()->get('test_public.registry.area_modules');
+        $modules->install($area, 'patrols');
+        $modules->install($area, 'incidents');
+
+        preg_match_all('#<th class="num">([A-Z][a-z]+) [a-z]{3}</th>#', $this->body($this->tab($area)), $found);
+
+        self::assertSame(['Patrols', 'Incidents'], $found[1]);
+    }
+
+    private function aModule(string $slug, string $name, int $position): void
+    {
+        $this->em->persist(new Module()
+            ->setSlug($slug)
+            ->setName($name)
+            ->setCategory(ModuleCategory::Pressure)
+            ->setStatus(ModuleStatus::Live)
+            ->setDataSource('the stand-in')
+            ->setPosition($position));
+        $this->em->flush();
     }
 
     private function threeZones(): AreaOfInterest
