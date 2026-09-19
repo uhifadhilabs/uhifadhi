@@ -102,6 +102,39 @@
     --fail: rgb(var(--c-fail));
     --ln: var(--c-ln);
     --ln2: var(--c-ln2);
+
+    /* ---- THE CATEGORICAL NINE ------------------------------------------
+       ONE PALETTE FOR EVERY CATEGORY IN THE PRODUCT: an incident kind, a
+       patrol type, a zone, a department. A category takes `--cat-n` by its
+       POSITION IN ITS DECLARED ORDER, computed — never picked, and never a
+       colour a module chose. Kinds are ordered PER AREA, so the same
+       wire-code may wear a different hue in two areas; that is correct, and
+       it is what "an area owns its vocabulary" means.
+
+       CHOSEN FOR TELLING APART, not for prettiness: nine hues round the
+       wheel, and where two sit close they are separated by LIGHTNESS and
+       CHROMA instead — which is what survives deuteranopia and protanopia.
+       None of them is the accent: the accent means "live" and "the primary
+       action" and must never read as a category. The ninth is achromatic on
+       purpose — the tail of a taxonomy is honestly grey.
+
+       TWO SETS, AND THE SECOND IS NOT A THEME. `--cat-p-*` is the PLATE
+       value: satellite imagery is dark whichever way the interface is
+       turned, so a category drawn on a plate keeps the dark reading and
+       never takes the light one. The theme values live here and under
+       `html.dark`; the plate values are stated once, below, outside both.
+
+       Order beyond nine wraps to 1 — a taxonomy with more than nine members
+       is a design problem, not a palette problem. */
+    --cat-1: #1E7A46;
+    --cat-2: #8A6410;
+    --cat-3: #15678F;
+    --cat-4: #A83A52;
+    --cat-5: #6A3FA8;
+    --cat-6: #3F3FB5;
+    --cat-7: #94500D;
+    --cat-8: #8E2C70;
+    --cat-9: #4C5C66;
 }
 
 /* ==================== THE TOKENS — dark (night canvas) ====================
@@ -127,6 +160,19 @@ html.dark {
     --glass: rgba(12, 19, 15, 0.78);
     --shadow: 0 8px 26px rgba(0, 0, 0, 0.34);
     --accGlow: rgba(62, 217, 168, 0.18);
+
+    /* THE NINE AS THEY READ ON THE NIGHT CANVAS — which is also how they
+       read on imagery, so the dark values and the plate values are the same
+       nine and are stated once, as `--cat-p-*` below. */
+    --cat-1: var(--cat-p-1);
+    --cat-2: var(--cat-p-2);
+    --cat-3: var(--cat-p-3);
+    --cat-4: var(--cat-p-4);
+    --cat-5: var(--cat-p-5);
+    --cat-6: var(--cat-p-6);
+    --cat-7: var(--cat-p-7);
+    --cat-8: var(--cat-p-8);
+    --cat-9: var(--cat-p-9);
 }
 
 /* ==================== BASE ==================== */
@@ -802,6 +848,125 @@ h2.zone::after { content: ""; flex: 1; height: 1px; background: var(--c-ln2); }
    modifier of the chip and not a chip of its own, so a stepper cannot come out
    looking like a filter that happens to be off. */
 .mchip.ghost { border-style: dashed; color: rgb(var(--c-fog)); cursor: pointer; }
+
+/* ==================== THE PLATE, AND THE CATEGORY ON IT ==================
+   A PLATE IS IMAGERY, AND IMAGERY IS DARK IN BOTH THEMES. Every token here
+   is stated once and there is deliberately NO light block: a plate that
+   turned over with the theme would be unreadable half the time. A module
+   drawing on `.viewer` spends these and never writes a literal.
+   ======================================================================== */
+:root {
+    --plate-ink: #EAF2EC;
+    --plate-veil: rgba(10, 14, 11, .72);
+    --plate-rule: rgba(234, 242, 236, .55);
+    --plate-edge: rgba(234, 242, 236, .18);
+    --plate-acc: #3ED9A8;
+    --plate-ring: #0A0F0C;
+    --plate-ok: #3ED9A8;
+    --plate-warn: #E0A15A;
+    --plate-fail: #E05B41;
+    --plate-dim: #9BB0A2;
+    /* THE GROUND ITSELF, where a design stands in for satellite imagery. One
+       token, so an evidence tile and a map plate are the same picture and no
+       sheet has to restate four stops. */
+    --plate-base: #20241F;
+    --plate-panel: rgba(10, 14, 11, .9);
+    --plate-ground:
+        radial-gradient(340px 240px at 28% 38%, #2A3327 0%, transparent 70%),
+        radial-gradient(420px 300px at 72% 62%, #33301F 0%, transparent 70%),
+        radial-gradient(260px 200px at 55% 20%, #26302B 0%, transparent 70%),
+        var(--plate-base);
+    --plate-ground-sm:
+        radial-gradient(90px 60px at 40% 35%, #2A3327 0%, transparent 70%),
+        var(--plate-base);
+
+    /* THE NINE AS THEY READ ON IMAGERY. Not a theme: these are the values
+       the dark interface also uses, which is why `html.dark` aliases them
+       rather than restating them. */
+    --cat-p-1: #4FA86A;   /* green   */
+    --cat-p-2: #EFD27E;   /* gold    */
+    --cat-p-3: #5FB0E8;   /* sky     */
+    --cat-p-4: #E8899B;   /* rose    */
+    --cat-p-5: #B68BE8;   /* violet  */
+    --cat-p-6: #8A87E8;   /* indigo  */
+    --cat-p-7: #E0742E;   /* orange  */
+    --cat-p-8: #DA7CB6;   /* magenta */
+    --cat-p-9: #9DAAB4;   /* slate   */
+}
+
+/* ONE ASSIGNMENT, NINE RULES, EVERY CONSUMER DOWNSTREAM. A surface puts
+   `data-cat="1".."9"` on the element (or any ancestor) and reads `var(--cat)`;
+   nothing downstream needs to know the nine values, and no module ever writes
+   one. Each rule resolves TWO things: `--cat`, which turns over with the
+   theme, and `--cat-plate`, which does not.
+
+   `--cat` FALLS BACK TO THE MUTED TEXT COLOUR, so an unindexed or unknown
+   category still draws — as a grey mark, which is the honest thing. */
+[data-cat] { --cat: var(--fog); --cat-plate: var(--plate-dim); }
+[data-cat="1"] { --cat: var(--cat-1); --cat-plate: var(--cat-p-1); }
+[data-cat="2"] { --cat: var(--cat-2); --cat-plate: var(--cat-p-2); }
+[data-cat="3"] { --cat: var(--cat-3); --cat-plate: var(--cat-p-3); }
+[data-cat="4"] { --cat: var(--cat-4); --cat-plate: var(--cat-p-4); }
+[data-cat="5"] { --cat: var(--cat-5); --cat-plate: var(--cat-p-5); }
+[data-cat="6"] { --cat: var(--cat-6); --cat-plate: var(--cat-p-6); }
+[data-cat="7"] { --cat: var(--cat-7); --cat-plate: var(--cat-p-7); }
+[data-cat="8"] { --cat: var(--cat-8); --cat-plate: var(--cat-p-8); }
+[data-cat="9"] { --cat: var(--cat-9); --cat-plate: var(--cat-p-9); }
+
+/* INSIDE A PLATE THE THEME STOPS APPLYING. */
+.viewer [data-cat] { --cat: var(--cat-plate); }
+
+/* AND THE SAME FOR SVG PAINT WRITTEN AS AN ATTRIBUTE. A presentation
+   attribute loses to a stylesheet, so a plate marker that says
+   `fill="var(--cat-3)"` is repainted with the plate value HERE rather than in
+   every map's markup — which means a map can be authored with the ordinary
+   token and still obey the imagery rule. A CHART is not a plate and is
+   deliberately not matched. */
+.viewer [fill="var(--cat-1)"] { fill: var(--cat-p-1); }
+.viewer [stroke="var(--cat-1)"] { stroke: var(--cat-p-1); }
+.viewer [fill="var(--cat-2)"] { fill: var(--cat-p-2); }
+.viewer [stroke="var(--cat-2)"] { stroke: var(--cat-p-2); }
+.viewer [fill="var(--cat-3)"] { fill: var(--cat-p-3); }
+.viewer [stroke="var(--cat-3)"] { stroke: var(--cat-p-3); }
+.viewer [fill="var(--cat-4)"] { fill: var(--cat-p-4); }
+.viewer [stroke="var(--cat-4)"] { stroke: var(--cat-p-4); }
+.viewer [fill="var(--cat-5)"] { fill: var(--cat-p-5); }
+.viewer [stroke="var(--cat-5)"] { stroke: var(--cat-p-5); }
+.viewer [fill="var(--cat-6)"] { fill: var(--cat-p-6); }
+.viewer [stroke="var(--cat-6)"] { stroke: var(--cat-p-6); }
+.viewer [fill="var(--cat-7)"] { fill: var(--cat-p-7); }
+.viewer [stroke="var(--cat-7)"] { stroke: var(--cat-p-7); }
+.viewer [fill="var(--cat-8)"] { fill: var(--cat-p-8); }
+.viewer [stroke="var(--cat-8)"] { stroke: var(--cat-p-8); }
+.viewer [fill="var(--cat-9)"] { fill: var(--cat-p-9); }
+.viewer [stroke="var(--cat-9)"] { stroke: var(--cat-p-9); }
+
+/* THE READ-ONLY SWATCH. A category's colour is SHOWN, never picked: this is
+   the one mark that says "this is the hue this thing wears". It is a square,
+   not a button, and it carries no hover and no cursor. */
+.catsw {
+    display: inline-block; width: 12px; height: 12px; border-radius: 3px; flex: none;
+    background: var(--cat, var(--fog));
+    border: 1px solid color-mix(in srgb, var(--tx) 20%, transparent);
+    vertical-align: -1px;
+}
+.catsw.sm { width: 9px; height: 9px; border-radius: 2px; }
+.catsw.lg { width: 16px; height: 16px; border-radius: 4px; }
+
+/* THE DEPARTMENT PALETTE IS NOT A SECOND PALETTE. The nine departments, in
+   their declared order, are the categorical set — a department is a category
+   like any other and owns no colour of its own. These are ALIASES. */
+:root {
+    --dept-ecology:               var(--cat-1);
+    --dept-tourism:               var(--cat-2);
+    --dept-engineering:           var(--cat-3);
+    --dept-human-resource:        var(--cat-4);
+    --dept-planning:              var(--cat-5);
+    --dept-ict:                   var(--cat-6);
+    --dept-protection-service:    var(--cat-7);
+    --dept-community-development: var(--cat-8);
+    --dept-veterinary-services:   var(--cat-9);
+}
 
 /* ==================== THE COMPONENT VOCABULARY ====================
    The classes a module writes on its own elements: the card's tab, the KPI

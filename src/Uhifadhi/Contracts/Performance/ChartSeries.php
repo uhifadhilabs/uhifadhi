@@ -24,12 +24,15 @@ final readonly class ChartSeries
 {
     /**
      * @param list<float|null> $points one per label on the chart's axis, in the same order
-     * @param string|null      $swatch the series' own colour, where the module owns one
+     * @param int|null         $cat    the category this series wears, 1 to 9 — its
+     *                                 position in its own declared order, never a
+     *                                 colour: the host owns the palette and it turns
+     *                                 over with the theme
      */
     public function __construct(
         public string $label,
         public array $points,
-        public ?string $swatch = null,
+        public ?int $cat = null,
     ) {
     }
 }

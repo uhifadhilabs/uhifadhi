@@ -63,8 +63,9 @@ final class NavItem
      * @param bool        $open     whether this row's children are unfolded
      * @param list<self>  $children the branch under this row, if any
      * @param string|null $tone     a module row's dot class, or null for jade
-     * @param string|null $swatch   a row's own dot colour as a hex value, or
-     *                              null when it has none
+     * @param string|null $swatch   a row's own dot colour, as a hex value or as
+     *                              the palette token the host resolved a category
+     *                              into; null when it has none
      */
     public function __construct(
         public string $label,
@@ -84,8 +85,18 @@ final class NavItem
          * escaped at the template, because a row that cannot be drawn is a
          * mistake in the source and should fail where it was made.
          */
-        if (null !== $swatch && 1 !== preg_match('/^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i', $swatch)) {
-            throw new \InvalidArgumentException(\sprintf('A nav row\'s swatch is a hex colour the shell prints onto its dot; "%s" is not one.', $swatch));
+        /*
+         * A HEX, OR ONE OF THE PALETTE'S OWN CATEGORY TOKENS. The second is
+         * what the host writes when a contributor handed it a CATEGORY rather
+         * than a colour: a module never knows what green is here — the palette
+         * turns over with the theme and again on imagery — so it says "the
+         * third category" and the resolution happens on this side.
+         */
+        if (null !== $swatch
+            && 1 !== preg_match('/^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i', $swatch)
+            && 1 !== preg_match('/^var\\(--cat-[1-9]\\)$/', $swatch)
+        ) {
+            throw new \InvalidArgumentException(\sprintf('A nav row\'s swatch is a hex colour or a category token the shell prints onto its dot; "%s" is neither.', $swatch));
         }
     }
 }

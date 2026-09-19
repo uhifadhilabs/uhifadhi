@@ -108,6 +108,54 @@ final class ThemeContractTest extends ContractTestCase
             '--font-display',
             '--font-body',
             '--font-mono',
+
+            // THE CATEGORICAL NINE. A surface writes `data-cat` and reads
+            // `--cat`; the numbered nine are listed because painting an SVG
+            // attribute is the one place that indirection cannot reach.
+            '--cat-1',
+            '--cat-2',
+            '--cat-3',
+            '--cat-4',
+            '--cat-5',
+            '--cat-6',
+            '--cat-7',
+            '--cat-8',
+            '--cat-9',
+            '--cat-p-1',
+            '--cat-p-2',
+            '--cat-p-3',
+            '--cat-p-4',
+            '--cat-p-5',
+            '--cat-p-6',
+            '--cat-p-7',
+            '--cat-p-8',
+            '--cat-p-9',
+            // WHAT A PLATE DRAWS WITH. Imagery is dark under both themes.
+            '--plate-ink',
+            '--plate-veil',
+            '--plate-rule',
+            '--plate-edge',
+            '--plate-acc',
+            '--plate-ring',
+            '--plate-ok',
+            '--plate-warn',
+            '--plate-fail',
+            '--plate-dim',
+            '--plate-base',
+            '--plate-panel',
+            '--plate-ground',
+            '--plate-ground-sm',
+
+            // The nine departments, as aliases of the nine — not a second palette.
+            '--dept-ecology',
+            '--dept-tourism',
+            '--dept-engineering',
+            '--dept-human-resource',
+            '--dept-planning',
+            '--dept-ict',
+            '--dept-protection-service',
+            '--dept-community-development',
+            '--dept-veterinary-services',
         ];
     }
 
@@ -126,6 +174,34 @@ final class ThemeContractTest extends ContractTestCase
             '--acc', '--accT', '--ok', '--warn', '--fail', '--ln', '--ln2',
             '--logo-tile', '--logo-child', '--logo-accent',
             '--font-display', '--font-body', '--font-mono',
+
+            // The plate reading of each category, and everything else a plate
+            // draws with: imagery is dark under both themes, so none of these
+            // turns over.
+            '--cat-p-1',
+            '--cat-p-2',
+            '--cat-p-3',
+            '--cat-p-4',
+            '--cat-p-5',
+            '--cat-p-6',
+            '--cat-p-7',
+            '--cat-p-8',
+            '--cat-p-9',
+            '--plate-ink', '--plate-veil', '--plate-rule', '--plate-edge',
+            '--plate-acc', '--plate-ring', '--plate-ok', '--plate-warn',
+            '--plate-fail', '--plate-dim', '--plate-base', '--plate-panel',
+            '--plate-ground', '--plate-ground-sm',
+
+            // Aliases of the nine — they turn over with what they alias.
+            '--dept-ecology',
+            '--dept-tourism',
+            '--dept-engineering',
+            '--dept-human-resource',
+            '--dept-planning',
+            '--dept-ict',
+            '--dept-protection-service',
+            '--dept-community-development',
+            '--dept-veterinary-services',
         ]));
     }
 

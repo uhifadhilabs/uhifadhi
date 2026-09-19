@@ -333,7 +333,14 @@ final readonly class AreaNavigation implements NavigationSourceInterface
                     label: $child->label,
                     url: $child->url,
                     current: $child->current,
-                    swatch: $child->swatch,
+                    /*
+                     * THE HOST RESOLVES THE CATEGORY. A contributor says
+                     * "the third one in my order"; what the third one looks
+                     * like is the palette's, it turns over with the theme,
+                     * and a module that handed over a hex would be right in
+                     * one theme and wrong in the other.
+                     */
+                    swatch: null === $child->cat ? null : \sprintf('var(--cat-%d)', $child->cat),
                 );
             }
         }

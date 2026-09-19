@@ -67,6 +67,7 @@ you write on an element; the parts each one brings are in the table.
 | The way back | `.backbtn` | the chevron `svg`, sized by the rule; carries `margin-bottom: 16px` |
 | The identity band | `.factband` | `.f` a fact, `.k`/`.v` its halves (`em` the unit), `.sp` then `.more`; wraps below 900px |
 | The form's action row | `.staddrow` | the last row of a form's BODY — `.fld` grows, `.sp` pushes, the controls state their own 32px height |
+| The category swatch | `.catsw` (+ `.sm` `.lg`) | inside a `[data-cat="1".."9"]`; shows the hue, never picks it |
 | The focus line | `.focusline` | the **only** left mark a card may carry, and it means focus — a category is a chip or an 8px hue dot, a state is a chip or a stamp |
 | The card's quiet door | `.more` (direct child of `.c`) | pinned to the card's top edge, lower case; **at most one per card** — page actions go in the page header, row actions on the row |
 | The KPI plate | `.kpi` | `b`/`.disp` the number, `em` the unit, `.sub` the sub-line, `.hot` for the one that matters |
@@ -180,3 +181,37 @@ contract](changing-the-contract.md). Adding a component is a minor version and a
 new row in the frozen list. Renaming one is a major version — module templates
 across the platform write these names, and a renamed class does not fail a
 build, it just stops applying.
+
+
+## One palette, and a module never writes a colour
+
+Every category in the product — an incident kind, a patrol type, a zone, a
+department — takes **`--cat-1` … `--cat-9` by its position in its own declared
+order**. A surface writes `data-cat="1".."9"` on the element (or an ancestor)
+and reads `var(--cat)`; nothing downstream knows the nine values, and no module
+ever names one.
+
+**Kinds are ordered per area.** An area owns its vocabulary, so the same
+wire-code may wear a different hue in two areas. That is correct, not a bug.
+
+**A module hands over an index, never a colour.** `AreaNavChild::$cat` and
+`Performance\ChartSeries::$cat` are `?int` 1–9; the host resolves them. A hex
+across that seam would be right in one theme and wrong in the other, and wrong
+again on imagery.
+
+**Three readings, one index.** `--cat-n` turns over with the theme.
+`--cat-p-n` is the plate value and does **not**: satellite imagery is dark
+whichever way the interface is turned, so `.viewer [data-cat]` swaps `--cat` for
+`--cat-plate`, and an SVG authored `fill="var(--cat-3)"` is repainted on a
+plate by the shell rather than in every map's markup.
+
+`--cat` falls back to the muted text colour, so an unknown category still draws
+— grey, which is the honest thing for a remainder. Order beyond nine wraps to 1;
+a taxonomy with more than nine members is a design problem, not a palette one.
+
+### FLAGGED: the palette is written twice
+
+`widget.css` restates the palette as Tailwind channel triplets beside the hex
+tokens here. The root fix is **one source publishing both forms** — the shell's
+build, not a hand copy — and until that lands the two can drift. Do not add a
+third copy.

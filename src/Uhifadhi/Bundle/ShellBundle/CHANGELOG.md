@@ -17,6 +17,10 @@ Not released yet.
    actions as the last row of its body — is the frame's rather than the area's
  * `.btn`, `.cta` and `.tgl` share one base: one line box, one 32px minimum,
    so the three sit on one baseline whatever element each is written on
+ * ONE PALETTE for every category in the product: `--cat-1..9` in both themes,
+   `--cat-p-1..9` for imagery, the `[data-cat]` indirection, the `.viewer`
+   repaint rules, `.catsw`, the plate tokens, and the nine `--dept-*` as
+   aliases — a module writes an index and never a colour
  * `.focusline`, the one left mark a card may carry — it means focus, it is
    paint rather than box, and the conformance suite now fails a module sheet
    that draws a left rail on a card of its own

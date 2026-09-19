@@ -94,6 +94,10 @@ final class ComponentContractTest extends ContractTestCase
             // THE IDENTITY BAND a detail screen opens with.
             'factband',     // .f the fact, .k/.v its halves, .sp and .more the tail
 
+            // The read-only category swatch — a category's colour is shown,
+            // never picked.
+            'catsw',
+
             // The one left mark a card may carry, and it means focus.
             'focusline',
 
@@ -509,6 +513,104 @@ final class ComponentContractTest extends ContractTestCase
                 yield $selector.' — '.$property => [$selector, $property, $value];
             }
         }
+    }
+
+    /**
+     * ONE PALETTE, AND A MODULE NEVER WRITES A COLOUR.
+     *
+     * Every category in the product — an incident kind, a patrol type, a
+     * zone, a department — takes `--cat-n` by its POSITION in its own
+     * declared order. The surface writes `data-cat="1".."9"` and reads
+     * `var(--cat)`; nothing downstream knows the nine values.
+     *
+     * THE INDIRECTION IS THE POINT. A module that handed over a hex would
+     * be right in one theme and wrong in the other, and wrong again on
+     * imagery — which is why `[data-cat]` resolves TWO things, and why
+     * `.viewer` overrides one of them.
+     *
+     * `--cat` FALLS BACK TO THE MUTED TEXT COLOUR, so an unknown category
+     * still draws — grey, which is the honest thing for a remainder.
+     */
+    #[DataProvider('categoryPaletteDeclarations')]
+    public function testOnePaletteServesEveryCategory(string $selector, string $property, string $value): void
+    {
+        self::assertMatchesRegularExpression(
+            '/(?:^|;)\s*'.preg_quote($property, '/').'\s*:\s*'.preg_quote($value, '/').'\s*(?:;|$)/',
+            $this->rule($selector),
+            \sprintf('%s must state `%s: %s` — the design\'s own value.', $selector, $property, $value),
+        );
+    }
+
+    /**
+     * @return \Generator<string, array{string, string, string}>
+     */
+    public static function categoryPaletteDeclarations(): \Generator
+    {
+        $declarations = [
+            // The unindexed fallback, and the plate's.
+            '[data-cat]' => ['--cat' => 'var(--fog)', '--cat-plate' => 'var(--plate-dim)'],
+            '[data-cat="1"]' => ['--cat' => 'var(--cat-1)', '--cat-plate' => 'var(--cat-p-1)'],
+            '[data-cat="9"]' => ['--cat' => 'var(--cat-9)', '--cat-plate' => 'var(--cat-p-9)'],
+            // Inside a plate the theme stops applying.
+            '.viewer [data-cat]' => ['--cat' => 'var(--cat-plate)'],
+            // And an SVG authored with the ordinary token is repainted.
+            '.viewer [fill="var(--cat-3)"]' => ['fill' => 'var(--cat-p-3)'],
+            '.viewer [stroke="var(--cat-3)"]' => ['stroke' => 'var(--cat-p-3)'],
+            // The swatch reads the resolved value and nothing else.
+            '.catsw' => ['background' => 'var(--cat, var(--fog))', 'width' => '12px'],
+        ];
+
+        foreach ($declarations as $selector => $properties) {
+            foreach ($properties as $property => $value) {
+                yield $selector.' — '.$property => [$selector, $property, $value];
+            }
+        }
+    }
+
+    /**
+     * THE NINE ARE DEFINED IN BOTH THEMES AND ON THE PLATE, and the plate
+     * set is NOT a theme: satellite imagery is dark whichever way the
+     * interface is turned, so `--cat-p-*` is stated once outside both
+     * blocks and the dark theme aliases it rather than restating it.
+     */
+    public function testTheNineAreDefinedForBothThemesAndForImagery(): void
+    {
+        $sheet = $this->stylesheet();
+
+        for ($n = 1; $n <= 9; ++$n) {
+            self::assertMatchesRegularExpression(
+                '/--cat-'.$n.'\s*:/',
+                $sheet,
+                \sprintf('the palette defines --cat-%d', $n),
+            );
+            self::assertMatchesRegularExpression(
+                '/--cat-p-'.$n.'\s*:\s*#[0-9A-Fa-f]{6}/',
+                $sheet,
+                \sprintf('and --cat-p-%d, the value imagery keeps', $n),
+            );
+        }
+
+        // The dark theme aliases the plate values rather than restating them.
+        self::assertStringContainsString('--cat-1: var(--cat-p-1);', $sheet);
+    }
+
+    /**
+     * AND A DEPARTMENT IS A CATEGORY LIKE ANY OTHER. The nine `--dept-*`
+     * tokens are ALIASES of the nine, not a second palette — a department
+     * owns no colour of its own.
+     */
+    public function testTheDepartmentTokensAreAliasesAndNotASecondPalette(): void
+    {
+        $sheet = $this->stylesheet();
+
+        self::assertStringContainsString('--dept-ecology:               var(--cat-1);', $sheet);
+        self::assertStringContainsString('--dept-veterinary-services:   var(--cat-9);', $sheet);
+
+        self::assertDoesNotMatchRegularExpression(
+            '/--dept-[a-z-]+:\s*#[0-9A-Fa-f]{3,6}/',
+            $sheet,
+            'a department that named its own colour would be a second palette',
+        );
     }
 
     /**

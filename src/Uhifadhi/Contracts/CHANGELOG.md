@@ -12,6 +12,11 @@ Not released yet.
    user entity contracts, the user badge and the devkit contracts
  * `Kpi\DepartmentKpiProviderInterface` and its value objects — how a module
    puts a figure on the performance surfaces of a department that attaches it
+ * BREAKING: `Shell\AreaNavChild::$swatch` and `Performance\ChartSeries::$swatch`
+   are gone; both now take `cat: ?int` (1..9), the category's position in its own
+   declared order, and the HOST resolves it to the palette. A module never hands
+   the host a colour — a hex is right in one theme and wrong in the other, and
+   wrong again on imagery. Callers in the patrol and incident modules follow.
  * `KpiRole::ItemsRaised` and `::ItemsUnowned`, and a `MatrixColumn` that may
    carry a role — the host adds a figure up per department across topics by the
    role a column declares, never by the word a module chose for it

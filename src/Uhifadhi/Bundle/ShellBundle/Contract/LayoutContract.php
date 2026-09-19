@@ -176,6 +176,60 @@ final class LayoutContract
         '--font-display',
         '--font-body',
         '--font-mono',
+
+        // THE CATEGORICAL NINE, and the plate reading of each. A surface
+        // writes `data-cat` and reads `--cat`; these are listed because a
+        // module legitimately reads one to paint an SVG attribute, which is
+        // the one place the indirection cannot reach.
+        '--cat-1',
+        '--cat-2',
+        '--cat-3',
+        '--cat-4',
+        '--cat-5',
+        '--cat-6',
+        '--cat-7',
+        '--cat-8',
+        '--cat-9',
+        '--cat-p-1',
+        '--cat-p-2',
+        '--cat-p-3',
+        '--cat-p-4',
+        '--cat-p-5',
+        '--cat-p-6',
+        '--cat-p-7',
+        '--cat-p-8',
+        '--cat-p-9',
+        // `--cat` and `--cat-plate` are deliberately absent: they are set per
+        // element by `[data-cat]`, never on the root, and a module reads them
+        // rather than choosing one of the nine by number.
+
+        // WHAT A PLATE DRAWS WITH. Imagery is dark in both themes, so none of
+        // these turns over and a module never writes a literal on a `.viewer`.
+        '--plate-ink',
+        '--plate-veil',
+        '--plate-rule',
+        '--plate-edge',
+        '--plate-acc',
+        '--plate-ring',
+        '--plate-ok',
+        '--plate-warn',
+        '--plate-fail',
+        '--plate-dim',
+        '--plate-base',
+        '--plate-panel',
+        '--plate-ground',
+        '--plate-ground-sm',
+
+        // The nine departments, as aliases of the nine — not a second palette.
+        '--dept-ecology',
+        '--dept-tourism',
+        '--dept-engineering',
+        '--dept-human-resource',
+        '--dept-planning',
+        '--dept-ict',
+        '--dept-protection-service',
+        '--dept-community-development',
+        '--dept-veterinary-services',
     ];
 
     /**
@@ -236,6 +290,12 @@ final class LayoutContract
 
         // the identity band a detail screen opens with
         'factband',
+
+        // THE READ-ONLY CATEGORY SWATCH. A category's colour is shown, never
+        // picked: `.catsw` on an element inside a `[data-cat="1".."9"]` reads
+        // `var(--cat)` and draws the one mark that says what hue this thing
+        // wears. A module never writes a colour — it writes the index.
+        'catsw',
 
         // THE ONE LEFT MARK A CARD MAY CARRY, and it means FOCUS: this is
         // the card the reader is on. Never open, never selected-and-showing,
