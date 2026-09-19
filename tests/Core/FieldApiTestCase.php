@@ -18,6 +18,7 @@ use Doctrine\ORM\Tools\SchemaTool;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\AreaBundle\Entity\Station;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
@@ -140,17 +141,26 @@ abstract class FieldApiTestCase extends WebTestCase
      * org-level authority — the reach of somebody the installation has not
      * confined to one area.
      *
+     * A MODULE-DECLARED PERMISSION IS A STRING HERE, deliberately. The
+     * enum names only what the TEAM bundle owns; `duty.checkin` is the
+     * area's and reaches the catalogue through a declaration, so a suite
+     * that could only spell the enum's seven could never grant it — and
+     * the endpoint that enforces it could not be specified at all.
+     *
      * @param list<PermissionEnum> $permissions
+     * @param list<string>         $declared    values other bundles declare, granted verbatim
      */
     protected function ranger(
         string $rangerCode = 'sl-0142',
         array $permissions = [PermissionEnum::AreaView],
         ?Department $department = null,
+        array $declared = [],
     ): User {
         $position = new Position()->setName('Field Ranger')->setDepartment($department);
+        $core = array_map(static fn (PermissionEnum $p): string => $p->value, PermissionEnum::all());
         $position->setPermissionValues(
-            array_map(static fn (PermissionEnum $p): string => $p->value, $permissions),
-            array_map(static fn (PermissionEnum $p): string => $p->value, PermissionEnum::all()),
+            [...array_map(static fn (PermissionEnum $p): string => $p->value, $permissions), ...$declared],
+            [...$core, ...$declared],
         );
         $this->em->persist($position);
 
@@ -218,6 +228,46 @@ abstract class FieldApiTestCase extends WebTestCase
         $body = json_decode((string) $this->client->getResponse()->getContent(), true);
 
         return \is_array($body) ? $body : [];
+    }
+
+    /** A post on the ground, with the ring that says what "inside" it means. */
+    protected function station(AreaOfInterest $area, string $name, float $lon, float $lat, ?int $catchmentM = 300): Station
+    {
+        $station = new Station()
+            ->setArea($area)
+            ->setName($name)
+            ->setPoint(\sprintf('{"type":"Point","coordinates":[%s,%s]}', $lon, $lat))
+            ->setCatchmentM($catchmentM);
+        $this->em->persist($station);
+        $this->em->flush();
+
+        return $station;
+    }
+
+    /**
+     * A WRITE, SENT THE WAY THE HANDSET SENDS IT: the body encoded as JSON,
+     * `Content-Type: application/json`, and the credential in the header a
+     * stateless firewall reads.
+     *
+     * @param array<string, mixed> $body
+     *
+     * @return array<array-key, mixed>
+     */
+    protected function send(string $method, string $path, array $body, ?string $token = null): array
+    {
+        $this->client->request(
+            $method,
+            $path,
+            server: array_merge(
+                ['CONTENT_TYPE' => 'application/json'],
+                null === $token ? [] : ['HTTP_AUTHORIZATION' => 'Bearer '.$token],
+            ),
+            content: json_encode($body, \JSON_THROW_ON_ERROR),
+        );
+
+        $decoded = json_decode((string) $this->client->getResponse()->getContent(), true);
+
+        return \is_array($decoded) ? $decoded : [];
     }
 
     /**

@@ -46,10 +46,6 @@ use Uhifadhi\Contracts\ModuleProviderInterface;
 final readonly class PermissionCatalogue
 {
     /**
-     * @param iterable<ModuleProviderInterface> $moduleProviders every installed
-     *                                                           module bundle, in registration order (the uhifadhi.module tag)
-     */
-    /**
      * @param iterable<ModuleProviderInterface>                            $moduleProviders every tagged module, in registration order
      * @param iterable<\Uhifadhi\Contracts\PermissionDeclarationInterface> $declarers       the bundles that enforce a permission without being a module
      */

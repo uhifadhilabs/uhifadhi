@@ -13,13 +13,24 @@ declare(strict_types=1);
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
+use Uhifadhi\Bundle\AreaBundle\Api\DutyApiContext;
 use Uhifadhi\Bundle\AreaBundle\Api\FieldRoster;
 use Uhifadhi\Bundle\AreaBundle\Api\State\AreasMineProvider;
+use Uhifadhi\Bundle\AreaBundle\Api\State\CreateCheckInProcessor;
+use Uhifadhi\Bundle\AreaBundle\Api\State\UpdateCheckInProcessor;
+use Uhifadhi\Bundle\AreaBundle\Api\State\UploadPositionsProcessor;
 use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
+use Uhifadhi\Bundle\AreaBundle\Repository\CheckInCorrectionRepository;
+use Uhifadhi\Bundle\AreaBundle\Repository\CheckInRepository;
+use Uhifadhi\Bundle\AreaBundle\Repository\PersonPositionRepository;
+use Uhifadhi\Bundle\AreaBundle\Repository\StationRepository;
+use Uhifadhi\Bundle\AreaBundle\Service\CheckInService;
+use Uhifadhi\Bundle\AreaBundle\Service\CheckInStatusService;
 
 /*
  * WHAT THIS BUNDLE SERVES A FIELD CLIENT: `GET /api/areas/mine`, the offline
- * cache a handset fills at sign-in.
+ * cache a handset fills at sign-in, and the duty surface a ranger reports
+ * the day through — the claim, its amendments and the batched pings.
  *
  * IMPORTED ONLY WHERE BOTH HALVES ARE PRESENT — see AreaBundle::loadExtension().
  * Without api-platform there is no `/api` to attach to; without security there is
@@ -31,8 +42,13 @@ use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
  * Everything here is defined EXPLICITLY, with ids prefixed by the bundle alias, as
  * everywhere else in this bundle:
  *
- *   area.api.roster          the people a client may name on a record
- *   area.api.areas_provider  the areas the bearer account may work in
+ *   area.api.roster            the people a client may name on a record
+ *   area.api.areas_provider    the areas the bearer account may work in
+ *   area.api.duty              request, token and area, resolved once per call
+ *   area.checkins              the writes behind the duty surface
+ *   area.api.checkin_create    POST   /areas/{areaUuid}/checkins
+ *   area.api.checkin_update    PATCH  /areas/{areaUuid}/checkins/{clientRef}
+ *   area.api.positions_upload  POST   /areas/{areaUuid}/positions
  *
  *   — https://symfony.com/doc/current/bundles/best_practices.html
  */
@@ -65,4 +81,61 @@ return static function (ContainerConfigurator $container): void {
             service('security.authorization_checker'),
         ])
         ->tag('api_platform.state_provider', ['key' => AreasMineProvider::class]);
+
+    /*
+     * THE DUTY SURFACE — API-CONTRACT.md §13.
+     *
+     * The context is the one place the request, the bearer's account and the
+     * area in the URI are resolved, so that the three processors agree on who
+     * is reporting and where: the person is read off the TOKEN and never off
+     * the body, which is why no processor takes a person as input.
+     *
+     * The writes sit in their own service rather than in the processors,
+     * because the check-in an operator amends from the web and the check-in a
+     * handset claims are the same rules — one upsert, one append-only
+     * correction trail — and a second copy of them would drift.
+     *
+     * Each processor is tagged BY HAND with the `key` attribute, for the reason
+     * spelt out above the provider.
+     */
+    $services->set('area.checkins', CheckInService::class)
+        ->args([
+            service('doctrine.orm.entity_manager'),
+            service(CheckInRepository::class),
+            service(CheckInCorrectionRepository::class),
+            service(PersonPositionRepository::class),
+            service(StationRepository::class),
+            service(CheckInStatusService::class),
+        ]);
+    $services->alias(CheckInService::class, 'area.checkins');
+
+    $services->set('area.api.duty', DutyApiContext::class)
+        ->args([
+            service('request_stack'),
+            service('security.token_storage'),
+            service('security.authorization_checker'),
+            service(AreaOfInterestRepository::class),
+        ]);
+
+    $services->set('area.api.checkin_create', CreateCheckInProcessor::class)
+        ->args([
+            service('area.api.duty'),
+            service('area.checkins'),
+        ])
+        ->tag('api_platform.state_processor', ['key' => CreateCheckInProcessor::class]);
+
+    $services->set('area.api.checkin_update', UpdateCheckInProcessor::class)
+        ->args([
+            service('area.api.duty'),
+            service(CheckInRepository::class),
+            service('area.checkins'),
+        ])
+        ->tag('api_platform.state_processor', ['key' => UpdateCheckInProcessor::class]);
+
+    $services->set('area.api.positions_upload', UploadPositionsProcessor::class)
+        ->args([
+            service('area.api.duty'),
+            service('area.checkins'),
+        ])
+        ->tag('api_platform.state_processor', ['key' => UploadPositionsProcessor::class]);
 };

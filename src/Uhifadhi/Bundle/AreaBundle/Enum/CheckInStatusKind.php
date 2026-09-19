@@ -55,6 +55,20 @@ enum CheckInStatusKind: string
     }
 
     /**
+     * WHETHER A CLAIM OF THIS KIND CARRIES A NOTE.
+     *
+     * A post needs no explaining and neither does being off duty — a
+     * reason for being unfit is medical, and this product is not where
+     * that is recorded. The two kinds that DO take one are the two that
+     * describe something the office cannot see from the roster: where
+     * somebody went, and what they were sent to do.
+     */
+    public function takesNote(): bool
+    {
+        return self::WorkingElsewhere === $this || self::Special === $this;
+    }
+
+    /**
      * WHETHER SOMEBODY OF THIS KIND IS ON DUTY TODAY.
      *
      * Derived from the kind and never stored on the status: an area that

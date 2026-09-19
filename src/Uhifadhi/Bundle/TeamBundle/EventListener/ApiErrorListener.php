@@ -19,6 +19,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Uhifadhi\Bundle\TeamBundle\Exception\ApiProblemException;
+use Uhifadhi\Contracts\Api\FieldErrorDocument;
 
 /**
  * GIVES EVERY `/api` FAILURE ONE SHAPE: `{code, message, retryable, details}`.
@@ -54,8 +55,16 @@ use Uhifadhi\Bundle\TeamBundle\Exception\ApiProblemException;
  */
 final class ApiErrorListener
 {
-    /** Marks a body this listener already wrote, so the second pass leaves it alone. */
-    public const string HANDLED_HEADER = 'X-Uhifadhi-Api-Error';
+    /**
+     * Marks a body that is already this document, so the second pass
+     * leaves it alone — whether this listener wrote it or a bundle
+     * serving the same URL space did.
+     *
+     * THE NAME IS THE CONTRACTS' because both sides need it and they do
+     * not depend on each other. Kept here as well so that nothing that
+     * already reads it has to move.
+     */
+    public const string HANDLED_HEADER = FieldErrorDocument::HANDLED_HEADER;
 
     /**
      * Status → code, for failures raised outside anything that knows this
