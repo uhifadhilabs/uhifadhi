@@ -57,6 +57,13 @@ use Uhifadhi\Contracts\Shell\ConfigurationSection;
  */
 final readonly class AreaController
 {
+    /**
+     * HOW MANY OF THE ATTENTION LIST THE OVERVIEW'S CARD DRAWS before it
+     * stops and states the count. A card bounded by a number the template
+     * chose would be a number nobody could find; it is the page's, here.
+     */
+    public const int ATTENTION_SHOWN = 6;
+
     public function __construct(
         private Environment $twig,
         private ZoneRepository $zones,
@@ -133,10 +140,17 @@ final readonly class AreaController
             static fn (array $cell): bool => $cell['on'],
         ));
 
-        return new Response($this->twig->render('@Area/area/overview.html.twig', [
+        /*
+         * ONE MAP FOR EVERY CELL, AND THE CONTRACT'S OWN SHAPE. A
+         * contributed partial is rendered with `with_context: false` and
+         * reads its own figures under `by.<slug>`; the host's own cells read
+         * the page's facts from the same map. So the map is assembled here,
+         * once, and handed to every cell alike — the page cannot then give
+         * a module something it did not ask for, or withhold what it did.
+         */
+        $cellContext = [
             'area' => $area,
-            'cells' => $cells,
-            'partials' => $this->catalogue->partialsFor($area),
+            'by' => $this->catalogue->contextFor($area, $now),
             'areaKm2' => $this->register->areaKm2($area),
             'zoneCount' => $this->zones->countFor($area),
             // WHAT STANDS ON THE GROUND AND WHERE THE GROUND IS — the area's
@@ -149,8 +163,15 @@ final readonly class AreaController
             'installedSlugs' => $this->overview->installedSlugs($area),
             'moduleCards' => $this->composition->moduleLinksFor($area),
             'catalogueCount' => $this->modules->count(),
-            // AND WHAT EVERY CONTRIBUTED CELL READS, asked once per module.
-            ...$this->catalogue->contextFor($area, $now),
+            // HOW MANY OF A BOUNDED LIST A CARD DRAWS.
+            'latest' => self::ATTENTION_SHOWN,
+        ];
+
+        return new Response($this->twig->render('@Area/area/overview.html.twig', [
+            ...$cellContext,
+            'cells' => $cells,
+            'cellContext' => $cellContext,
+            'partials' => $this->catalogue->partialsFor($area),
         ]));
     }
 

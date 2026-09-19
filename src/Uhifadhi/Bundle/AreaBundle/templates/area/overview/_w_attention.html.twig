@@ -8,10 +8,12 @@
 {% set latest = latest|default(6) %}
 {# NEEDS ATTENTION — sorted by urgency, never by module. #}
 <div class="c">
+    {# THE CAPTION CARRIES IT: how many, and whose. Sorted by urgency and never
+   by module, and an item leaves when the thing that raised it is dealt with
+   — both true, both facts about the card rather than sentences for it, so
+   they live here and not in the body. #}
     <span class="tab">Needs attention<span class="src">&middot; {{ attention|length }} item{{ attention|length == 1 ? '' : 's' }} &middot; every installed module</span></span>
     <span class="ao-by"><i></i>the area &middot; module items</span>
-    <div class="use" style="margin:0 2px 8px">Sorted by urgency, not by module. An item leaves this list when
-        the thing that raised it is dealt with &mdash; nobody dismisses one by hand, because the area page did not raise it.</div>
 
     {% for item in attention|slice(0, latest) %}
         <a class="ao-att {{ item.severity.cssClass }}" href="{{ item.url }}">

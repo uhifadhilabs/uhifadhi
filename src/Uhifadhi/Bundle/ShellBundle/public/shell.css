@@ -1551,6 +1551,44 @@ table.tbl tr:hover .open-btn {
     font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10.5px; color: rgb(var(--c-dim));
 }
 
+/* THE LABELLED DISCLOSURE ON A REGISTER CARD. A bare chevron in the corner
+   said neither what it did nor which state it was in; this reads its state
+   as a word, sits in the action cluster beside Open and matches Open's
+   height and radius so the pair reads as one cluster. The chevron turns with
+   `aria-expanded`, which is the same fact the screen reader is given. */
+.ovx.xdisc {
+    width: auto; height: 24px; border-radius: 7px; padding: 0 8px; gap: 6px;
+    display: inline-flex; align-items: center; border: 1px solid var(--c-ln2); background: none;
+    color: rgb(var(--c-fog)); cursor: pointer; flex: none; text-decoration: none;
+}
+.ovx.xdisc .t {
+    font-family: var(--font-mono); font-size: 9.5px; font-weight: 700; letter-spacing: .1em;
+    text-transform: uppercase; white-space: nowrap; padding-top: 1px;
+}
+.ovx.xdisc:hover { color: rgb(var(--c-tx)); border-color: rgb(var(--c-fog)); }
+.ovx.xdisc svg { width: 11px; height: 11px; display: block; transition: transform .15s ease; }
+.ovx.xdisc[aria-expanded="true"] svg { transform: rotate(180deg); }
+
+/* ---- THE WAY INTO A RECORD, FROM ITS CARD ------------------------------
+   `Open →` sits in a register card's action cluster beside the disclosure,
+   and the two are ONE cluster: same height, same radius, one baseline. Its
+   height is STATED rather than left to type and padding — that is what let
+   it drift to 27 against the disclosure's 24 the day the page's base
+   line-height changed, and a pair of controls whose tops are two pixels
+   apart reads as a mistake from across the room.
+
+   Two surfaces draw it — the organisation's department register and the
+   area's departments tab — so it is the shell's. */
+.ov-open {
+    display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px;
+    font-family: var(--font-mono); font-size: 9.5px; font-weight: 700; letter-spacing: .1em;
+    text-transform: uppercase; line-height: 1; white-space: nowrap; text-decoration: none;
+    color: rgb(var(--c-acc)); border-radius: 7px;
+    border: 1px solid color-mix(in srgb, rgb(var(--c-acc)) 42%, transparent);
+}
+.ov-open:hover { background: color-mix(in srgb, rgb(var(--c-acc)) 10%, transparent); text-decoration: none; }
+.ov-open svg { width: 11px; height: 11px; display: block; }
+
 /* ---- A DISCLOSURE THAT HOLDS A SMALL FORM -------------------------------
    Two surfaces wanted the same control: the department register's footer,
    where the scope change and the rest of the operations live, and the zones

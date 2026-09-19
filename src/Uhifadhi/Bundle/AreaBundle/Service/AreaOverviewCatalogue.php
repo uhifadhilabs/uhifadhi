@@ -115,23 +115,35 @@ final readonly class AreaOverviewCatalogue
     }
 
     /**
-     * EVERYTHING EVERY CELL READS, for this one area, at one moment.
+     * EVERYTHING EVERY CELL READS, for this one area, at one moment —
+     * KEYED BY THE MODULE THAT ANSWERED.
      *
-     * ONE CONTEXT PER CONTRIBUTOR, MERGED. A module computes its reading of
-     * the day once for all of its cards: that is the difference between one
-     * query and nine, and between two cards that agree and two that were
-     * measured a second apart.
+     * THE SHAPE IS THE PUBLISHED CONTRACT AND NOT THIS CLASS'S CHOICE. A
+     * contributed partial is rendered with `with_context: false` and given
+     * ONE map, its own figures under `by.<slug>`; every module template in
+     * the product says so in its header and the contract document says so
+     * in its table. Merging the answers flat instead read beautifully for
+     * the host's own cells — which take their facts from the page — and
+     * fataled on every module's, because `by` was not there at all.
      *
-     * @return array<string, mixed>
+     * KEYING BY SLUG IS ALSO WHAT KEEPS TWO MODULES APART. Two contributors
+     * publishing `total` would otherwise overwrite each other, silently,
+     * and the second card would draw the first one's number.
+     *
+     * ONE CALL PER CONTRIBUTOR. A module computes its reading of the day
+     * once for all of its cards: the difference between one query and nine,
+     * and between two cards that agree and two measured a second apart.
+     *
+     * @return array<string, array<string, mixed>> module slug to that module's context
      */
     public function contextFor(AreaOfInterest $area, \DateTimeImmutable $now): array
     {
-        $context = [];
+        $by = [];
         foreach ($this->contributorsFor($area) as $contributor) {
-            $context = [...$context, ...$contributor->context($area, $now)];
+            $by[$contributor->moduleSlug()] = $contributor->context($area, $now);
         }
 
-        return $context;
+        return $by;
     }
 
     /**
@@ -145,14 +157,29 @@ final readonly class AreaOverviewCatalogue
     {
         $running = $this->overview->installedSlugs($area);
 
-        $contributors = [];
+        /*
+         * THE AREA'S OWN CELLS LEAD, whatever order the container happened
+         * to tag the contributors in. The page is read from the place
+         * outwards — what this area IS, what is happening in it, what needs
+         * somebody, the ground — and only then what each module has to add.
+         * Leaving it to tag order made a module's card the first thing on
+         * the page in one installation and the last in another.
+         */
+        $own = null;
+        $modules = [];
         foreach ($this->contributors as $contributor) {
             $slug = $contributor->moduleSlug();
-            if (AreaOverviewWidgets::SLUG === $slug || \in_array($slug, $running, true)) {
-                $contributors[] = $contributor;
+            if (AreaOverviewWidgets::SLUG === $slug) {
+                $own = $contributor;
+
+                continue;
+            }
+
+            if (\in_array($slug, $running, true)) {
+                $modules[] = $contributor;
             }
         }
 
-        return $contributors;
+        return array_values(array_filter([$own, ...$modules]));
     }
 }

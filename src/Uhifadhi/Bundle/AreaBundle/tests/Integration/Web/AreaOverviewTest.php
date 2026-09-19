@@ -143,6 +143,45 @@ final class AreaOverviewTest extends WebTestCase
     }
 
     /**
+     * A MODULE'S CELL RENDERS, AND IT RENDERS BY THE PUBLISHED CONTRACT.
+     *
+     * THE CONTRACT IS `by.<slug>`. A contributed partial is rendered with
+     * `with_context: false` and everything it needs in ONE map, its own
+     * figures under its own slug — the module templates say so in their
+     * headers and the contract document says so in its table. A host that
+     * merged those figures flat into the page's own context rendered its
+     * own cells perfectly and fataled on every module's, and no test caught
+     * it because the only area the suite rendered had nothing switched on.
+     */
+    public function testAModulesCellRendersFromItsOwnSlugInTheContext(): void
+    {
+        $this->boot();
+        $this->signIn();
+        $area = $this->anArea();
+        $this->aModuleInstalledIn($area);
+
+        $body = $this->body($area);
+
+        self::assertStringContainsString('data-w="pl_now"', $body);
+        self::assertStringContainsString('3 open', $body);
+        self::assertStringContainsString('96 km walked today', $body);
+    }
+
+    /** And it joins the grid at the span its module asked for. */
+    public function testAModulesCellTakesTheSpanItAskedFor(): void
+    {
+        $this->boot();
+        $this->signIn();
+        $area = $this->anArea();
+        $this->aModuleInstalledIn($area);
+
+        self::assertSame(
+            ['w-span-12', 'w-span-12', 'w-span-12', 'w-span-12', 'w-span-6', 'w-span-6', 'w-span-6'],
+            self::spansOf($this->body($area)),
+        );
+    }
+
+    /**
      * THE ROSTER'S SLOT IS HELD OPEN, not dropped. The design's composition
      * has a roster card in that half-row; until roster publishes one the
      * cell says which module owes it, so the row keeps its shape and the

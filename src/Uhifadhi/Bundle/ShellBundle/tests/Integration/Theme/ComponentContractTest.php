@@ -281,6 +281,43 @@ final class ComponentContractTest extends ContractTestCase
     }
 
     /**
+     * A CARD'S ACTION CLUSTER IS ONE CLUSTER: the labelled disclosure and
+     * the way into the record share a height, a radius and a baseline.
+     *
+     * BOTH HEIGHTS ARE STATED, not left to type and padding. That is what
+     * let `Open` drift to 27 against the disclosure's 24 the day the page's
+     * base line-height changed — a pair of controls two pixels out of line
+     * reads as a mistake from across the room, and nothing in either rule
+     * said what the height was supposed to be.
+     */
+    #[DataProvider('actionClusterDeclarations')]
+    public function testACardsActionClusterIsOneCluster(string $selector, string $property, string $value): void
+    {
+        self::assertMatchesRegularExpression(
+            '/(?:^|;)\s*'.preg_quote($property, '/').'\s*:\s*'.preg_quote($value, '/').'\s*(?:;|$)/',
+            $this->rule($selector),
+            \sprintf('%s must state `%s: %s` — the design\'s own value.', $selector, $property, $value),
+        );
+    }
+
+    /**
+     * @return \Generator<string, array{string, string, string}>
+     */
+    public static function actionClusterDeclarations(): \Generator
+    {
+        $declarations = [
+            '.ov-open' => ['height' => '24px', 'border-radius' => '7px', 'padding' => '0 9px', 'line-height' => '1'],
+            '.ovx.xdisc' => ['height' => '24px', 'border-radius' => '7px'],
+        ];
+
+        foreach ($declarations as $selector => $properties) {
+            foreach ($properties as $property => $value) {
+                yield $selector.' — '.$property => [$selector, $property, $value];
+            }
+        }
+    }
+
+    /**
      * A FILTER ROW IS ONE LINE, AND THE PANEL UNDER IT IS ONE PANEL.
      *
      * FOUR BUNDLES DRAW THIS ROW — the incidents register, patrol's list, the

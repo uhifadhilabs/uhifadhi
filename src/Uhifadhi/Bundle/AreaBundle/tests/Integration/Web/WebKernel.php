@@ -28,6 +28,7 @@ use Symfony\UX\Icons\UXIconsBundle;
 use Symfony\UX\Map\UXMapBundle;
 use Symfony\UX\StimulusBundle\StimulusBundle;
 use Uhifadhi\Bundle\AreaBundle\AreaBundle;
+use Uhifadhi\Bundle\AreaBundle\Overview\OverviewContributorInterface;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\CheckoutTempDirTrait;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web\Fixtures\HostDirectory;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web\Fixtures\HostUser;
@@ -147,7 +148,14 @@ final class WebKernel extends Kernel
 
         // STRICT: a template that reads a variable the controller did not pass
         // fails here rather than rendering a blank cell in an installation.
-        $container->extension('twig', ['strict_variables' => true]);
+        $container->extension('twig', [
+            'strict_variables' => true,
+            // THE STAND-IN MODULE'S OWN TEMPLATE NAMESPACE. A contributed
+            // cell is rendered from its own bundle's namespace, so the
+            // fixture needs one of its own or it would be testing the area's
+            // template loader rather than the contract.
+            'paths' => [__DIR__.'/Fixtures/templates' => 'fixtures'],
+        ]);
         $container->extension('ux_map', ['renderer' => 'leaflet://default']);
 
         $container->extension('doctrine', [
@@ -252,6 +260,16 @@ final class WebKernel extends Kernel
          * seam the stations section's chooser reads. Tagged by hand, as every
          * seam in this platform is.
          */
+        /*
+         * A MODULE PUTTING A CARD ON THE OVERVIEW, tagged the way a real one
+         * tags itself. Registered always; the catalogue only asks it where
+         * the area has 'patrols' switched on, which is the behaviour under
+         * test.
+         */
+        $services->set(FakeOverviewWidgets::class)
+            ->args(['patrols'])
+            ->tag(OverviewContributorInterface::TAG);
+
         $services->set(HostDirectory::class)
             ->args([new Reference('doctrine.orm.entity_manager')])
             ->tag(PersonDirectoryProviderInterface::TAG);

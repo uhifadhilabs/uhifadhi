@@ -58,7 +58,13 @@
     <div class="w-grid">
         {% for cell in cells %}
             <div class="w-cell w-span-{{ cell.cols }}">
-                {{ include(partials[cell.id], {'latest': 6}, with_context: true) }}
+                {# ONE MAP, AND NOT THE PAGE'S CONTEXT. A contributed cell is
+                   rendered `with_context: false` and reads its own figures
+                   under `by.<slug>` — the contract every module template is
+                   written against. Handing the page's variables instead
+                   would work for the host's own cells and fatal on every
+                   module's, which is exactly what it did. #}
+                {{ include(partials[cell.id], cellContext, with_context: false) }}
             </div>
         {% endfor %}
     </div>
