@@ -3100,3 +3100,22 @@ form.dpf > .k { flex-basis: 100%; }
     .dprow { flex-wrap: wrap; }
     .dprb { flex-basis: 100%; }
 }
+
+/* ════════════════════════════════════════════════════════════════════════
+   WHAT A DEPARTMENT SAID IT WOULD DO — the goal rail.
+
+   Design: departments/overview-designs.css. FIVE STATES AND TWO OF THEM
+   ARE EMPTINESSES: a DASHED ring means nobody declared a goal, a SOLID
+   hollow one means a goal is declared and no installed module publishes
+   the figure that would judge it. They look alike and mean opposite
+   things, so they are drawn differently and both are drawn.
+   ════════════════════════════════════════════════════════════════════════ */
+.gdots { display: inline-flex; gap: 3px; align-items: center; vertical-align: middle; margin-right: 7px; }
+.gdots i { width: 8px; height: 8px; border-radius: 50%; font-style: normal; background: rgb(var(--c-ok)); }
+.gdots i.warn { background: rgb(var(--c-warn)); }
+.gdots i.fail { background: rgb(var(--c-fail)); }
+/* NOBODY DECLARED ONE. Not a failure, and never drawn as one. */
+.gdots i.none { background: none; border: 1px dashed color-mix(in srgb, rgb(var(--c-fog)) 60%, transparent); }
+/* DECLARED, AND NOT MEASURABLE YET — green and amber are reserved for
+   marks a real figure supports. */
+.gdots i.nofig { background: none; border: 1px solid color-mix(in srgb, rgb(var(--c-fog)) 72%, transparent); }

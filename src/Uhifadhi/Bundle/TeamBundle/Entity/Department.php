@@ -203,11 +203,28 @@ class Department
     #[ORM\OrderBy(['recordedAt' => 'ASC'])]
     private Collection $scopeChanges;
 
+    /**
+     * WHAT THIS DEPARTMENT SAID IT WOULD DO. Soonest to close first, which
+     * is the order anybody reads a list of commitments in.
+     *
+     * @var Collection<int, DepartmentGoal>
+     */
+    #[ORM\OneToMany(targetEntity: DepartmentGoal::class, mappedBy: 'department', cascade: ['persist'], orphanRemoval: true)]
+    #[ORM\OrderBy(['closesAt' => 'ASC'])]
+    private Collection $goals;
+
     public function __construct()
     {
         $this->positions = new ArrayCollection();
         $this->scopeChanges = new ArrayCollection();
+        $this->goals = new ArrayCollection();
         $this->modules = new ArrayCollection();
+    }
+
+    /** @return Collection<int, DepartmentGoal> */
+    public function getGoals(): Collection
+    {
+        return $this->goals;
     }
 
     public function getId(): ?int

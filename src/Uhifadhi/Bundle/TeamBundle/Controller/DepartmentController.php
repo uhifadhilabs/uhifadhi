@@ -32,10 +32,13 @@ use Twig\Environment;
 use Uhifadhi\Bundle\RegistryBundle\Service\ModuleCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
+use Uhifadhi\Bundle\TeamBundle\Enum\GoalDirectionEnum;
+use Uhifadhi\Bundle\TeamBundle\Enum\GoalStateEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Exception\MissingScopeChangeReasonException;
 use Uhifadhi\Bundle\TeamBundle\Exception\NameNotUniqueException;
 use Uhifadhi\Bundle\TeamBundle\Model\DepartmentQuery;
+use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentGoalRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
@@ -113,6 +116,7 @@ final readonly class DepartmentController
         private UserRepository $users,
         private EntityManagerInterface $entityManager,
         private DepartmentService $departmentWrites,
+        private DepartmentGoalRepository $goals,
         private PositionService $positionWrites,
         private CsrfTokenManagerInterface $csrf,
         private UrlGeneratorInterface $router,
@@ -322,6 +326,18 @@ final readonly class DepartmentController
             'attached' => $attached,
             'detached' => $detached,
             'kpis' => $this->performance->kpisFor($department),
+            // WHAT IT SAID IT WOULD DO, and how each one reads today. The
+            // state is derived from the figure that answers it, so a page
+            // and a rail can never disagree about whether a goal was met.
+            'goals' => $this->goals->findForDepartment($department),
+            'goalStates' => $this->goalStates($department),
+            // THE DEFAULT WINDOW IS THIS MONTH, resolved here rather than in
+            // the template: a form's default is the server's answer, and a
+            // date printed in a template is a date in the server's zone.
+            'goalWindow' => [
+                'opens' => new \DateTimeImmutable('first day of this month')->format('Y-m-d'),
+                'closes' => new \DateTimeImmutable('last day of this month')->format('Y-m-d'),
+            ],
             // HOW MANY DEPARTMENTS EACH MODULE SERVES, so a card can say "shared"
             // truthfully. One query for the page; a per-card count is how two rows
             // come to disagree about one module.
@@ -548,6 +564,102 @@ final readonly class DepartmentController
      * deactivated department is hidden from the pickers, greyed in the register,
      * and one click from coming back.
      */
+    /**
+     * DECLARE A GOAL, ON THE DEPARTMENT'S OWN PAGE.
+     *
+     * The target only means anything beside the figures it is judged by, so
+     * this is where it is declared — never on a screen of its own, which
+     * would be a second place to look for one.
+     *
+     * NOTHING FOLLOWS FROM IT. A goal is a commitment and a measurement: no
+     * permission, no filing and no access, which is why the gate is the
+     * same department-management one every other write here carries.
+     */
+    #[Route('/departments/{uuid}/goals', name: 'team_department_goal_declare', requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]
+    #[IsGranted(PermissionEnum::TeamManage->value)]
+    public function declareGoal(Request $request, string $uuid): Response
+    {
+        $department = $this->department($uuid);
+        $this->assertCsrf($request);
+        $this->assertMayManage($department);
+
+        $direction = GoalDirectionEnum::tryFrom((string) $request->request->get('direction'))
+            ?? GoalDirectionEnum::AtLeast;
+
+        $owner = null;
+        $ownerUuid = trim((string) $request->request->get('owner'));
+        if ('' !== $ownerUuid) {
+            $owner = $this->positions->findOneBy(['uuid' => $ownerUuid]);
+        }
+
+        try {
+            $goal = $this->departmentWrites->declareGoal(
+                $department,
+                (string) $request->request->get('statement'),
+                (float) $request->request->get('target'),
+                (string) $request->request->get('unit'),
+                $direction,
+                self::dayOf($request, 'opensAt'),
+                self::dayOf($request, 'closesAt'),
+                trim((string) $request->request->get('kpiRef')),
+                $owner,
+            );
+        } catch (\InvalidArgumentException $refused) {
+            return $this->toLens($request, $department, $refused->getMessage(), 'error');
+        }
+
+        return $this->toLens($request, $department, \sprintf(
+            '“%s” is declared, %s %s%s by %s. It grants nobody anything — it is what this department said it would do, and the figure that answers it is whatever the modules publish.',
+            $goal->getStatement(),
+            $goal->getDirection()->label(),
+            self::plainly($goal->getTarget()),
+            '' === $goal->getUnit() ? '' : ' '.$goal->getUnit(),
+            $goal->getClosesAt()?->format('j M Y') ?? 'the close of the period',
+        ));
+    }
+
+    /**
+     * WITHDRAW ONE, ENTIRELY. A goal is not an audit record — it is a
+     * commitment somebody made and may unmake — and one left greyed on the
+     * page would be read as a miss.
+     */
+    #[Route('/departments/{uuid}/goals/{goal}/withdraw', name: 'team_department_goal_withdraw', requirements: ['uuid' => Requirement::UUID, 'goal' => Requirement::UUID], methods: ['POST'])]
+    #[IsGranted(PermissionEnum::TeamManage->value)]
+    public function withdrawGoal(Request $request, string $uuid, string $goal): Response
+    {
+        $department = $this->department($uuid);
+        $this->assertCsrf($request);
+        $this->assertMayManage($department);
+
+        $declared = $this->goals->findOneBy(['uuid' => $goal]);
+        if (null === $declared || $declared->getDepartment()?->getId() !== $department->getId()) {
+            throw new NotFoundHttpException('That goal is not one this department declared.');
+        }
+
+        $statement = $declared->getStatement();
+        $this->departmentWrites->withdrawGoal($declared);
+
+        return $this->toLens($request, $department, \sprintf('“%s” is withdrawn. Nothing else changed.', $statement));
+    }
+
+    /** A day off the form, at its own start, or today when nothing was sent. */
+    private static function dayOf(Request $request, string $field): \DateTimeImmutable
+    {
+        $day = trim((string) $request->request->get($field));
+
+        try {
+            return new \DateTimeImmutable('' === $day ? 'today' : $day)->setTime(0, 0);
+        } catch (\Exception) {
+            return new \DateTimeImmutable('today')->setTime(0, 0);
+        }
+    }
+
+    /** A target without its trailing noughts: 60 rather than 60.00. */
+    private static function plainly(float $value): string
+    {
+        return rtrim(rtrim(number_format($value, 2, '.', ''), '0'), '.');
+    }
+
     #[Route('/departments/{uuid}/deactivate', name: 'team_department_deactivate', requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]
     #[IsGranted(PermissionEnum::TeamManage->value)]
     public function deactivate(Request $request, string $uuid): Response
@@ -747,6 +859,36 @@ final readonly class DepartmentController
             'positions' => \count($positions),
             'people' => $this->users->countActiveHoldingAnyPosition($positions),
         ];
+    }
+
+    /**
+     * HOW EACH OF A DEPARTMENT'S GOALS READS TODAY, keyed by its uuid.
+     *
+     * THE FIGURE COMES FROM WHATEVER THE MODULES PUBLISH, matched to the
+     * goal by the key it named. No module publishing it is not a miss and
+     * not a nought: the goal reads "no figure yet", which is the state the
+     * design draws as a solid hollow ring.
+     *
+     * @return array<string, GoalStateEnum>
+     */
+    private function goalStates(Department $department): array
+    {
+        $published = [];
+        foreach ($this->performance->kpisFor($department) as $kpi) {
+            $published[$kpi->moduleSlug.'.'.$kpi->key] = $kpi->value;
+        }
+
+        $now = new \DateTimeImmutable();
+        $states = [];
+        foreach ($this->goals->findForDepartment($department) as $goal) {
+            $ref = $goal->getKpiRef();
+            $states[(string) $goal->getUuidString()] = $goal->stateFor(
+                null === $ref ? null : ($published[$ref] ?? null),
+                $now,
+            );
+        }
+
+        return $states;
     }
 
     private function mark(string $name): string

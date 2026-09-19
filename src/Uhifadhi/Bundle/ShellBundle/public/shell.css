@@ -817,6 +817,35 @@ h2.zone::after { content: ""; flex: 1; height: 1px; background: var(--c-ln2); }
 .more:hover { color: rgb(var(--c-acc)); }
 @media (max-width: 900px) { .factband .f + .f::before { display: none; } }
 
+/* ---- THREE THINGS A FORM AND A TABLE NEED, ON EVERY SURFACE ------------
+   A SELECT WITH THE HOUSE'S OWN CARET, a field narrowed to a number, and a
+   table that scrolls sideways inside a card rather than widening it. Each
+   was defined in whichever bundle first needed it, and the second bundle to
+   need one either copied it or wrote a page with an unstyled control. They
+   are the design's, from its base sheet, and they belong where every
+   surface can reach them. */
+.fsel { position: relative; display: inline-block; max-width: 100%; }
+.fsel > select.fld {
+    appearance: none; -webkit-appearance: none; padding-right: 30px;
+    font-size: 12.5px; padding-top: 7px; padding-bottom: 8px; cursor: pointer;
+}
+.fsel > select.fld:focus { outline: none; border-color: rgb(var(--c-acc)); }
+.fsel::after {
+    content: ""; position: absolute; right: 12px; top: 50%; width: 7px; height: 7px;
+    margin-top: -5px; border-right: 1.6px solid rgb(var(--c-fog)); border-bottom: 1.6px solid rgb(var(--c-fog));
+    transform: rotate(45deg); pointer-events: none;
+}
+/* A wide select still leaves its row: what says the answer is wanted sits
+   beside it, never under it. */
+.fsel.w { width: 100%; max-width: 300px; }
+.fsel.n > select.fld { width: 158px; }
+
+/* A FIELD THAT HOLDS A NUMBER is as wide as the number. */
+.zfld-sm { max-width: 110px; }
+
+/* AND A TABLE SCROLLS RATHER THAN WIDENING ITS CARD. */
+.ovx-tbl { overflow-x: auto; }
+
 /* ---- THE KPI PLATE — a label on the tab, one number, one sub-line --------
    The number is display type at 30px and BLOCK, and the block is the whole
    composition: as an inline run the label, the count and the sub-line collapse

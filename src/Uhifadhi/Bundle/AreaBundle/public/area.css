@@ -1456,7 +1456,6 @@ a.zc-nm:hover { color: rgb(var(--c-acc)); }
 .stpt { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
 .stpt .fld { width: 112px; font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 12px; }
 .stpt .sep { color: rgb(var(--c-dim)); font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 11px; font-weight: 600; }
-.zfld-sm { max-width: 110px; }
 
 /* THE POSTINGS BOARD INSIDE AN OPEN ROW: the station page's line, plus the
    one action that page refuses — appointing the leader. */
@@ -1512,7 +1511,6 @@ a.zc-nm:hover { color: rgb(var(--c-acc)); }
 
 /* A TABLE THAT MAY BE WIDER THAN ITS CARD scrolls in its own box rather than
    making the page scroll sideways. */
-.ovx-tbl { overflow-x: auto; }
 /* THE REGISTER TABLE'S OWN ROWS. The shell's `.tbl` states the type and the
    rules; what is this table's is the height a row settles at — the name cell
    carries a pin, and a row that hugged the text would put the pin's own

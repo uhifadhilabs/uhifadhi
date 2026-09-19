@@ -35,6 +35,7 @@ use Uhifadhi\Bundle\TeamBundle\EventListener\ApiErrorListener;
 use Uhifadhi\Bundle\TeamBundle\People\TeamPersonDirectory;
 use Uhifadhi\Bundle\TeamBundle\People\TeamPersonFacets;
 use Uhifadhi\Bundle\TeamBundle\Repository\ApiTokenRepository;
+use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentGoalRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentScopeChangeRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
@@ -162,6 +163,10 @@ return static function (ContainerConfigurator $container): void {
         ->tag('doctrine.repository_service');
 
     $services->set(DepartmentScopeChangeRepository::class)
+        ->args([service('doctrine')])
+        ->tag('doctrine.repository_service');
+
+    $services->set(DepartmentGoalRepository::class)
         ->args([service('doctrine')])
         ->tag('doctrine.repository_service');
 
@@ -649,6 +654,7 @@ return static function (ContainerConfigurator $container): void {
             service(UserRepository::class),
             service('doctrine.orm.entity_manager'),
             service('team.departments'),
+            service(DepartmentGoalRepository::class),
             service('team.positions'),
             service('security.csrf.token_manager'),
             service('router'),

@@ -17,7 +17,10 @@ use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Uhifadhi\Bundle\RegistryBundle\Entity\Module;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
+use Uhifadhi\Bundle\TeamBundle\Entity\DepartmentGoal;
+use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
+use Uhifadhi\Bundle\TeamBundle\Enum\GoalDirectionEnum;
 use Uhifadhi\Bundle\TeamBundle\Exception\MissingScopeChangeReasonException;
 use Uhifadhi\Bundle\TeamBundle\Exception\NameNotUniqueException;
 use Uhifadhi\Contracts\Entity\AreaInterface;
@@ -130,6 +133,62 @@ final readonly class DepartmentService
     public function detach(Department $department, Module $module): void
     {
         $department->detachModule($module);
+        $this->entityManager->flush();
+    }
+
+    /**
+     * DECLARE A GOAL. Everything about it is settled by the screen: what it
+     * says, which published figure answers it, the number, the direction
+     * and the window. This writes it and nothing else — a goal grants
+     * nobody anything, so there is no authority to re-check here.
+     *
+     * @throws \InvalidArgumentException when the sentence is empty or the window closes before it opens
+     */
+    public function declareGoal(
+        Department $department,
+        string $statement,
+        float $target,
+        string $unit,
+        GoalDirectionEnum $direction,
+        \DateTimeImmutable $opensAt,
+        \DateTimeImmutable $closesAt,
+        ?string $kpiRef = null,
+        ?Position $owner = null,
+    ): DepartmentGoal {
+        $statement = trim($statement);
+        if ('' === $statement) {
+            throw new \InvalidArgumentException('A goal is a sentence with a number in it; this one has no sentence.');
+        }
+
+        if ($closesAt < $opensAt) {
+            throw new \InvalidArgumentException('A goal cannot close before it opens.');
+        }
+
+        $goal = new DepartmentGoal()
+            ->setDepartment($department)
+            ->setStatement($statement)
+            ->setTarget($target)
+            ->setUnit(trim($unit))
+            ->setDirection($direction)
+            ->setOpensAt($opensAt)
+            ->setClosesAt($closesAt)
+            ->setKpiRef($kpiRef)
+            ->setOwner($owner);
+
+        $this->entityManager->persist($goal);
+        $this->entityManager->flush();
+
+        return $goal;
+    }
+
+    /**
+     * WITHDRAW ONE, ENTIRELY. A goal is not an audit record: it is a
+     * commitment somebody made and may unmake, and a withdrawn one that
+     * stayed on the page greyed out would be read as a miss.
+     */
+    public function withdrawGoal(DepartmentGoal $goal): void
+    {
+        $this->entityManager->remove($goal);
         $this->entityManager->flush();
     }
 

@@ -221,6 +221,122 @@
                     </div>
                 </div>
             </div>
+
+            {# ── WHAT THIS DEPARTMENT SAID IT WOULD DO ──────────────────────
+               A GOAL IS DECLARED WHERE THE FIGURES ARE READ, because a
+               target means nothing beside nothing: it is judged by whatever
+               the modules publish, and a screen of its own would be a
+               second place to look for one.
+
+               FIVE STATES, AND TWO OF THEM ARE EMPTINESSES. "No goal
+               declared" and "no figure yet" look alike and mean opposite
+               things — nobody set a target, versus nobody has reported one
+               — so the rail says which. #}
+            <div class="grid">
+                <div class="c">
+                    <span class="tab">Goals<span class="src">&middot; {{ goals|length }} declared</span></span>
+                    <p class="use">What this department said it would do, and the published figure that answers it.
+                        A goal grants nobody anything &mdash; it is a commitment and a measurement.</p>
+
+                    {% if goals is empty %}
+                        <div class="dp-empty">
+                            <b>No goal declared</b>
+                            <span>which is not a miss &mdash; declare one below and the modules&rsquo; own figures judge it.</span>
+                        </div>
+                    {% else %}
+                        <div class="ovx-tbl">
+                            <table class="tbl">
+                                <thead>
+                                    <tr><th>Goal</th><th>Target</th><th>Answers for it</th><th>Closes</th><th>State</th><th></th></tr>
+                                </thead>
+                                <tbody>
+                                {% for goal in goals %}
+                                    <tr>
+                                        <td><b>{{ goal.statement }}</b>{% if goal.kpiRef %}<span class="mono d" style="margin-left:7px">{{ goal.kpiRef }}</span>{% endif %}</td>
+                                        <td class="mono">{{ goal.direction.label }} {{ goal.target }}{{ goal.unit ? ' ' ~ goal.unit : '' }}</td>
+                                        <td>{% if goal.owner %}{{ goal.owner.name }}{% else %}<em class="pnone">nobody yet</em>{% endif %}</td>
+                                        <td><time datetime="{{ goal.closesAt|date('c') }}" data-localtime-format="day">{{ goal.closesAt|date('j M Y') }}</time></td>
+                                        <td><span class="gdots"><i class="{{ goalStates[goal.uuidString].mark }}"></i></span>{{ goalStates[goal.uuidString].label }}</td>
+                                        <td class="num">
+                                            <form method="post" action="{{ path('team_department_goal_withdraw', {uuid: department.uuidString, goal: goal.uuidString}) }}">
+                                                <input type="hidden" name="_token" value="{{ csrfToken }}">
+                                                <button class="softbtn danger" type="submit"
+                                                        {{ stimulus_controller('confirm-modal') }}
+                                                        data-action="click->confirm-modal#ask"
+                                                        data-confirm-modal-title-value="Withdraw “{{ goal.statement }}”?"
+                                                        data-confirm-modal-message-value="The commitment is taken away entirely — a withdrawn goal left on the page greyed out would be read as a miss. Nothing else changes."
+                                                        data-confirm-modal-confirm-label-value="Withdraw it"
+                                                        data-confirm-modal-danger-value="true">Withdraw</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
+
+                    {# DECLARING ONE IS ONE ROW OF FIELDS, the house create card. #}
+                    <form class="crcard" method="post" action="{{ path('team_department_goal_declare', {uuid: department.uuidString}) }}">
+                        <input type="hidden" name="_token" value="{{ csrfToken }}">
+                        <div class="crgrid">
+                            <div class="crfield grow">
+                                <span class="crlab">The goal</span>
+                                <input class="fld" type="text" name="statement" maxlength="200" required
+                                       placeholder="Cover 60 % of the ground every month" aria-label="What the goal says">
+                            </div>
+                            <div class="crfield">
+                                <span class="crlab">Direction</span>
+                                <span class="fsel">
+                                    <select class="fld" name="direction" aria-label="Which way the goal is met">
+                                        <option value="at_least">at least</option>
+                                        <option value="at_most">at most</option>
+                                    </select>
+                                </span>
+                            </div>
+                            <div class="crfield">
+                                <span class="crlab">Target</span>
+                                <input class="fld zfld-sm" type="text" name="target" inputmode="decimal" required
+                                       placeholder="60" aria-label="The target">
+                            </div>
+                            <div class="crfield">
+                                <span class="crlab">Unit</span>
+                                <input class="fld zfld-sm" type="text" name="unit" maxlength="16" placeholder="%" aria-label="The target’s unit">
+                            </div>
+                        </div>
+                        <div class="crgrid">
+                            <div class="crfield">
+                                <span class="crlab">Answers for it</span>
+                                <span class="fsel">
+                                    <select class="fld" name="owner" aria-label="The position that answers for it">
+                                        <option value="">nobody yet</option>
+                                        {% for position in positions %}<option value="{{ position.uuidString }}">{{ position.name }}</option>{% endfor %}
+                                    </select>
+                                </span>
+                            </div>
+                            <div class="crfield">
+                                <span class="crlab">Opens</span>
+                                <input class="fld zfld-sm" type="date" name="opensAt" value="{{ goalWindow.opens }}" aria-label="The day the window opens">
+                            </div>
+                            <div class="crfield">
+                                <span class="crlab">Closes</span>
+                                <input class="fld zfld-sm" type="date" name="closesAt" value="{{ goalWindow.closes }}" aria-label="The day the window closes">
+                            </div>
+                            <div class="crfield grow">
+                                <span class="crlab">Judged by</span>
+                                <input class="fld" type="text" name="kpiRef" maxlength="80" placeholder="patrols.covered"
+                                       aria-label="The published figure that answers it">
+                            </div>
+                            <button class="cta" type="submit">{{ pm.icon_plus() }} Declare it</button>
+                        </div>
+                        <div class="crhint">
+                            {{ pm.icon_info() }}
+                            <span>The figure is <b>whatever the modules publish</b>. A goal nobody can measure yet reads
+                                <b>no figure yet</b> &mdash; never a miss.</span>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </section>
 
         {# ── PEOPLE & POSITIONS ── the real positions filed under this department. ── #}
