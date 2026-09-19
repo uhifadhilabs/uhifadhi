@@ -132,6 +132,18 @@ class Department
     private ?AreaInterface $area = null;
 
     /**
+     * WHAT KIND OF DEPARTMENT THIS IS — Operational, Scientific, Support — or
+     * null for one nobody has kinded, which is legal and reads as unkinded.
+     *
+     * IT IS A LENS AND NOT A SCOPE. A kind bands the register and orders a
+     * list; it grants nothing and confines nothing. SET NULL on delete,
+     * because removing a word must not remove the thing it described.
+     */
+    #[ORM\ManyToOne(targetEntity: DepartmentKind::class, inversedBy: 'departments')]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?DepartmentKind $kind = null;
+
+    /**
      * @var Collection<int, Position>
      */
     #[ORM\OneToMany(targetEntity: Position::class, mappedBy: 'department')]
@@ -283,6 +295,18 @@ class Department
     public function detachModule(Module $module): static
     {
         $this->modules->removeElement($module);
+
+        return $this;
+    }
+
+    public function getKind(): ?DepartmentKind
+    {
+        return $this->kind;
+    }
+
+    public function setKind(?DepartmentKind $kind): static
+    {
+        $this->kind = $kind;
 
         return $this;
     }

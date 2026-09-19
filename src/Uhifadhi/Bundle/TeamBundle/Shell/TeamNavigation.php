@@ -19,8 +19,10 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Uhifadhi\Bundle\ShellBundle\Contract\NavigationSourceInterface;
+use Uhifadhi\Bundle\ShellBundle\Frame\Service\ModuleFrameService;
 use Uhifadhi\Bundle\ShellBundle\Model\NavItem;
 use Uhifadhi\Bundle\ShellBundle\Model\NavSection;
+use Uhifadhi\Bundle\TeamBundle\Controller\DepartmentSectionController;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Model\DepartmentQuery;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
@@ -140,10 +142,27 @@ final readonly class TeamNavigation implements NavigationSourceInterface
      * product, folded away — the same rule the areas tree follows for its
      * modules.
      */
+    /**
+     * DEPARTMENTS IN THE SIDEBAR — the row, and the SECTION SUBTREE under it.
+     *
+     * A SECTION WEARS THE AREA IDIOM, and an area's row opens into its screens.
+     * So does this one: Overview, the register with its departments hanging off
+     * it, and Modules — the same three the tab strip carries, in the same
+     * order, because the tree and the strip are two readings of one list and a
+     * reader who learns one has learnt the other.
+     *
+     * IT OPENS FOR THE WHOLE SECTION, not just for the register. Standing on
+     * Modules and seeing the tree collapse would say the section had one
+     * screen; the row is expanded wherever you are inside it.
+     */
     private function departmentsRow(): ?NavItem
     {
         $row = $this->row('Departments', self::DEPARTMENTS_ROUTE, 'shell:building-2');
-        if (null === $row || !$row->current) {
+        if (null === $row) {
+            return null;
+        }
+
+        if (!$this->viewerIsInTheSection()) {
             return $row;
         }
 
@@ -185,16 +204,76 @@ final readonly class TeamNavigation implements NavigationSourceInterface
             );
         }
 
+        // THE SCREENS ARE LIT BY ROUTE, NOT BY ADDRESS. `/departments` is a
+        // PREFIX of `/departments/overview`, so the register's own row lit on
+        // every screen in the section and the tree answered "where am I" with
+        // two rows at once. A screen is the one whose route the request
+        // matched; nothing else is.
+        $onTheRegister = self::DEPARTMENTS_ROUTE === $this->routeHere();
+
+        $register = new NavItem(
+            label: 'Departments',
+            url: $row->url,
+            // The register IS all departments, the way the area row is the
+            // area: it stays lit while none of the cards under it is.
+            current: $onTheRegister && !self::litAnywhere($children),
+            open: true,
+            children: $children,
+        );
+
+        $screens = array_values(array_filter([
+            $this->screen('Overview', DepartmentSectionController::OVERVIEW),
+            $register,
+            $this->screen('Modules', DepartmentSectionController::MODULES),
+        ]));
+
         return new NavItem(
             label: $row->label,
             url: $row->url,
             icon: $row->icon,
-            // The register IS all departments, the way the area row is the
-            // area: it stays lit while none of its children is.
-            current: !self::litAnywhere($children),
+            // THE SECTION'S ROW IS LIT ANYWHERE INSIDE THE SECTION, and the
+            // child says which screen. Two marks on one path is not two
+            // answers to "where am I": it is the path. The invariant the shell
+            // enforces is one lit row among SIBLINGS, and that still holds —
+            // exactly one screen is lit, and exactly one card under it.
+            current: true,
             open: true,
-            children: $children,
+            children: $screens,
         );
+    }
+
+    /** One screen of the section, or nothing where its address is not mounted. */
+    private function screen(string $label, string $route): ?NavItem
+    {
+        try {
+            $url = $this->urls->generate($route);
+        } catch (RouteNotFoundException) {
+            return null;
+        }
+
+        return new NavItem(label: $label, url: $url, current: $route === $this->routeHere());
+    }
+
+    /** The route the request matched, or '' outside a request. */
+    private function routeHere(): string
+    {
+        $route = $this->requests->getCurrentRequest()?->attributes->get('_route');
+
+        return \is_string($route) ? $route : '';
+    }
+
+    /**
+     * WHETHER THE VIEWER IS ANYWHERE IN THE DEPARTMENTS SECTION — read off the
+     * surface marker the section's routes carry, which is the same reading the
+     * shell's frame makes to draw the tab strip. Reading the marker rather
+     * than listing route names means a screen added to the section opens the
+     * tree without this class being told about it.
+     */
+    private function viewerIsInTheSection(): bool
+    {
+        $declared = $this->requests->getCurrentRequest()?->attributes->get(ModuleFrameService::MODULE_ROUTE_ATTRIBUTE);
+
+        return DepartmentSectionTabs::SURFACE === $declared;
     }
 
     /** @param list<NavItem> $rows */

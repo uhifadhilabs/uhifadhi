@@ -46,6 +46,7 @@ use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPerformance;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentService;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionService;
+use Uhifadhi\Bundle\TeamBundle\Shell\DepartmentSectionTabs;
 use Uhifadhi\Contracts\Entity\AreaInterface;
 
 /**
@@ -109,6 +110,24 @@ final readonly class DepartmentController
 {
     public const string CSRF_ID = 'team_department';
 
+    /**
+     * THE SURFACE MARKER — the route default that tells the shell this page is
+     * inside the Departments section, so the frame draws the section's strip,
+     * its header and its one Configure action. It is a route DEFAULT and not a
+     * path segment, so no address changes to gain a frame.
+     *
+     * It names no module: nothing in the registry answers for "departments",
+     * and the registry's gate only closes a declared route that ALSO names an
+     * area — which none of this section's do.
+     */
+    public const array SURFACE = ['_uhifadhi_module' => DepartmentSectionTabs::SURFACE];
+
+    /** The register — the section's second tab, and the list every row opens from. */
+    public const string REGISTER = 'team_departments';
+
+    /** A department's own page: inside the section, and not one of its screens. */
+    public const string RECORD = 'team_department_show';
+
     public function __construct(
         private Environment $twig,
         private DepartmentRepository $departments,
@@ -132,7 +151,7 @@ final readonly class DepartmentController
      * application's URL space and the drawn sidebar agree on: Departments is a
      * sibling of Team under Organization, not a screen inside the roster.
      */
-    #[Route('/departments', name: 'team_departments', methods: ['GET'])]
+    #[Route('/departments', name: self::REGISTER, defaults: self::SURFACE, methods: ['GET'])]
     #[IsGranted(PermissionEnum::TeamManage->value)]
     public function index(Request $request): Response
     {
@@ -294,7 +313,7 @@ final readonly class DepartmentController
      * not offered, because attaching it would point at code this deployment does
      * not have.
      */
-    #[Route('/departments/{uuid}', name: 'team_department_show', requirements: ['uuid' => Requirement::UUID], methods: ['GET'])]
+    #[Route('/departments/{uuid}', name: self::RECORD, requirements: ['uuid' => Requirement::UUID], methods: ['GET'])]
     #[IsGranted(PermissionEnum::TeamManage->value)]
     public function show(string $uuid): Response
     {

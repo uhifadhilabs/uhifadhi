@@ -23,10 +23,13 @@ use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorage;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use Uhifadhi\Bundle\ShellBundle\Frame\Service\ModuleFrameService;
 use Uhifadhi\Bundle\ShellBundle\Model\NavItem;
 use Uhifadhi\Bundle\ShellBundle\Model\NavSection;
+use Uhifadhi\Bundle\TeamBundle\Controller\DepartmentSectionController;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
+use Uhifadhi\Bundle\TeamBundle\Shell\DepartmentSectionTabs;
 use Uhifadhi\Bundle\TeamBundle\Shell\TeamNavigation;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\Area\HostArea;
 
@@ -186,15 +189,16 @@ final class TeamNavigationTest extends TestCase
     }
 
     /**
-     * THE REGISTER'S PICKER IS THE SIDEBAR. The departments page keeps no
-     * picker column of its own, so the subtree is how one is chosen: the
-     * organisation's own first, then each area's under its name, and the
-     * entry points at the register with that card focused.
+     * THE SECTION UNFOLDS INTO ITS SCREENS, and the register unfolds into its
+     * departments. A section wears the area idiom, so its row opens the way an
+     * area's does: the three screens the tab strip carries, in that order, and
+     * the register's own picker hanging off the middle one — the page keeps no
+     * picker column, so the sidebar is where a department is chosen.
      */
-    public function testTheDepartmentsRowUnfoldsToTheRegisterItPointsAt(): void
+    public function testTheDepartmentsRowUnfoldsIntoTheSectionsScreens(): void
     {
         $requests = new RequestStack();
-        $requests->push(Request::create('/departments'));
+        $requests->push(self::inTheSection('/departments', TeamNavigation::DEPARTMENTS_ROUTE));
 
         $navigation = new TeamNavigation(
             $this->urlsAnsweringByRoute(),
@@ -208,7 +212,15 @@ final class TeamNavigationTest extends TestCase
         $section = $sections[0];
         self::assertInstanceOf(NavSection::class, $section);
 
-        $groups = $section->items[0]->children;
+        $screens = $section->items[0]->children;
+        self::assertSame(
+            ['Overview', 'Departments', 'Modules'],
+            array_map(static fn (NavItem $i): string => $i->label, $screens),
+        );
+        self::assertTrue($screens[1]->current, 'The register is the screen this request is on.');
+        self::assertFalse($screens[0]->current, 'Overview is lit on a screen it does not lead to.');
+
+        $groups = $screens[1]->children;
         self::assertSame(['Org-wide', 'Northern Reserve'], array_map(static fn (NavItem $i): string => $i->label, $groups));
         self::assertSame(['Ecology'], array_map(static fn (NavItem $i): string => $i->label, $groups[0]->children));
         self::assertSame(['Wetland Management'], array_map(static fn (NavItem $i): string => $i->label, $groups[1]->children));
@@ -279,11 +291,30 @@ final class TeamNavigationTest extends TestCase
     private function urlsAnsweringByRoute(): UrlGeneratorInterface
     {
         $urls = $this->createStub(UrlGeneratorInterface::class);
-        $urls->method('generate')->willReturnCallback(
-            static fn (string $route): string => TeamNavigation::ROUTE === $route ? '/team' : '/departments',
-        );
+        $urls->method('generate')->willReturnCallback(static fn (string $route): string => match ($route) {
+            TeamNavigation::ROUTE => '/team',
+            DepartmentSectionController::OVERVIEW => '/departments/overview',
+            DepartmentSectionController::MODULES => '/departments/modules',
+            default => '/departments',
+        });
 
         return $urls;
+    }
+
+    /**
+     * A REQUEST INSIDE THE DEPARTMENTS SECTION, marked the way the router
+     * marks one: the surface default the section's routes carry, and the route
+     * that matched. The sidebar reads both — the marker to know it is inside
+     * the section at all, the route to know WHICH screen — so a bare Request
+     * would be testing a request the application never makes.
+     */
+    private static function inTheSection(string $path, string $route): Request
+    {
+        $request = Request::create($path);
+        $request->attributes->set('_route', $route);
+        $request->attributes->set(ModuleFrameService::MODULE_ROUTE_ATTRIBUTE, DepartmentSectionTabs::SURFACE);
+
+        return $request;
     }
 
     private function urlsAnsweringTeam(): UrlGeneratorInterface

@@ -101,6 +101,7 @@ final class MigrationsCoverSchemaTest extends MigrationsTestCase
                 'team_api_token',
                 'team_department',
                 'team_department_goal',
+                'team_department_kind',
                 'team_department_module',
                 'team_department_period_figure',
                 'team_department_scope_change',
@@ -171,6 +172,7 @@ final class MigrationsCoverSchemaTest extends MigrationsTestCase
                 'Uhifadhi\\Bundle\\TeamBundle\\Migrations\\Version20260920000300',
                 'Uhifadhi\\Bundle\\AreaBundle\\Migrations\\Version20260921000100',
                 'Uhifadhi\\Bundle\\AreaBundle\\Migrations\\Version20260921000200',
+                'Uhifadhi\\Bundle\\TeamBundle\\Migrations\\Version20260921000300',
             ],
             $this->plannedVersions(),
         );

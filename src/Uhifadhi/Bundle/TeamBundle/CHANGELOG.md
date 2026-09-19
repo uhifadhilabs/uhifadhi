@@ -28,6 +28,38 @@ Not released yet.
    and fewer than three figures in a band place nothing
  * a second sheet, `bundles/team/performance.css`, carrying the board's own
    vocabulary, and a sort that runs INSIDE each band and never across one
+ * Departments wears the AREA IDIOM. It is a section now, not a single screen:
+   the same header on every tab (the section's name), a subline that is that
+   tab's own, one strip between the head and the body with exactly one tab lit,
+   and the one Configure action at the right-hand end of the action row on
+   every one of them. The tab set is Overview · Departments · Modules; the
+   configure screens are Lists and Departments settings. Both are declared
+   through the contracts a MODULE's tabs and configure sections already use —
+   nothing here is a second implementation of a strip — and the sidebar row
+   opens into the same three screens, because the tree and the strip are two
+   readings of one list.
+
+ * the section's OVERVIEW: the identity band, the five indexed KPI cards,
+   positions filled per department and modules per department as ranked bars,
+   and the bounded attention cards (departments reading no module, positions
+   nobody holds, goals declared). It writes nothing and owns no figure on it:
+   every one belongs to the register, to Team or to Performance.
+
+ * the section's MODULES matrix: one row a department, one column an installed
+   module, with the row and column totals. Absence is DRAWN, not left blank.
+   The matrix reads and does not write — attaching is done on the department's
+   own card, and a grid of checkboxes would be a second write path for one fact.
+
+ * the section's CONFIGURE screens. Settings states the rules the model
+   actually enforces and changes none of them; Lists edits the one list this
+   section owns.
+
+ * `DepartmentKind` — Operational, Scientific, Support: a way of grouping
+   departments for READING. It grants nothing, confines nothing and changes no
+   figure, which is why it is a row and not a PHP enum. A department with no
+   kind is legal and reads as unkinded, and removing a kind leaves its
+   departments standing.
+
  * the Attention & output topic: it adds up what the other topics publish, found
    by ROLE and never by label, and folds the departments with no computing
    module into one line a scope band — stating their seats and goals, because a

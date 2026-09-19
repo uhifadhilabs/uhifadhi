@@ -24,7 +24,9 @@ use Uhifadhi\Bundle\TeamBundle\Command\CreateUserCommand;
 use Uhifadhi\Bundle\TeamBundle\Command\PerformanceSnapshotCommand;
 use Uhifadhi\Bundle\TeamBundle\Controller\ApiAuthController;
 use Uhifadhi\Bundle\TeamBundle\Controller\AreaDepartmentController;
+use Uhifadhi\Bundle\TeamBundle\Controller\DepartmentConfigureController;
 use Uhifadhi\Bundle\TeamBundle\Controller\DepartmentController;
+use Uhifadhi\Bundle\TeamBundle\Controller\DepartmentSectionController;
 use Uhifadhi\Bundle\TeamBundle\Controller\InviteController;
 use Uhifadhi\Bundle\TeamBundle\Controller\MemberController;
 use Uhifadhi\Bundle\TeamBundle\Controller\PasswordResetController;
@@ -48,6 +50,7 @@ use Uhifadhi\Bundle\TeamBundle\Performance\StaffingTopic;
 use Uhifadhi\Bundle\TeamBundle\Performance\TopicCards;
 use Uhifadhi\Bundle\TeamBundle\Repository\ApiTokenRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentGoalRepository;
+use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentKindRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentPeriodFigureRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentScopeChangeRepository;
@@ -59,7 +62,9 @@ use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
 use Uhifadhi\Bundle\TeamBundle\Security\PermissionVoter;
 use Uhifadhi\Bundle\TeamBundle\Service\ApiTokenManager;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentDirectory;
+use Uhifadhi\Bundle\TeamBundle\Service\DepartmentKindService;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPerformance;
+use Uhifadhi\Bundle\TeamBundle\Service\DepartmentSectionOverview;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentService;
 use Uhifadhi\Bundle\TeamBundle\Service\FieldSignIn;
 use Uhifadhi\Bundle\TeamBundle\Service\Mail;
@@ -76,6 +81,8 @@ use Uhifadhi\Bundle\TeamBundle\Service\UserService;
 use Uhifadhi\Bundle\TeamBundle\Shell\DepartmentAreaNavChildren;
 use Uhifadhi\Bundle\TeamBundle\Shell\DepartmentAreaSections;
 use Uhifadhi\Bundle\TeamBundle\Shell\PerformanceNavigation;
+use Uhifadhi\Bundle\TeamBundle\Shell\DepartmentSectionConfiguration;
+use Uhifadhi\Bundle\TeamBundle\Shell\DepartmentSectionTabs;
 use Uhifadhi\Bundle\TeamBundle\Shell\TeamNavigation;
 use Uhifadhi\Bundle\TeamBundle\Shell\UserBadgeSource;
 use Uhifadhi\Bundle\TeamBundle\Twig\AreaScopeExtension;
@@ -89,6 +96,8 @@ use Uhifadhi\Contracts\Performance\DepartmentDirectoryInterface;
 use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
 use Uhifadhi\Contracts\Shell\AreaNavChildrenInterface;
 use Uhifadhi\Contracts\Shell\AreaSectionsInterface;
+use Uhifadhi\Contracts\Shell\ConfigurationSectionsInterface;
+use Uhifadhi\Contracts\Shell\ModuleTabsInterface;
 
 /*
  * The bundle's static service wiring.
@@ -190,6 +199,10 @@ return static function (ContainerConfigurator $container): void {
         ->tag('doctrine.repository_service');
 
     $services->set(DepartmentGoalRepository::class)
+        ->args([service('doctrine')])
+        ->tag('doctrine.repository_service');
+
+    $services->set(DepartmentKindRepository::class)
         ->args([service('doctrine')])
         ->tag('doctrine.repository_service');
 
@@ -916,6 +929,78 @@ return static function (ContainerConfigurator $container): void {
         ])
         ->tag('controller.service_arguments');
     $services->alias(PerformanceController::class, 'team.controller.performance')->public();
+
+    /*
+     * THE DEPARTMENTS SECTION'S FRAME — its tab strip and its configure
+     * sections, declared through the SAME contracts a module's are. A section
+     * wears the area idiom, and the cheapest way to mean that is to reuse the
+     * contract rather than to grow a second one: the shell resolves the strip,
+     * the header and the one Configure action from the surface marker the
+     * section's routes carry.
+     *
+     * NEITHER IS GUARDED BY interface_exists. Both contracts live in the
+     * contracts package, which this bundle already carries; it is the SHELL
+     * that is optional, and an installation without one simply has nothing
+     * collecting these tags.
+     */
+    $services->set('team.department_section_tabs', DepartmentSectionTabs::class)
+        ->tag(ModuleTabsInterface::TAG);
+    $services->alias(DepartmentSectionTabs::class, 'team.department_section_tabs');
+
+    $services->set('team.department_section_configuration', DepartmentSectionConfiguration::class)
+        ->tag(ConfigurationSectionsInterface::TAG);
+    $services->alias(DepartmentSectionConfiguration::class, 'team.department_section_configuration');
+
+    /*
+     * WHAT THE SECTION'S OVERVIEW READS. It owns no figure on that page: every
+     * one of them is the register's, Team's or Performance's, which is what
+     * makes a reading screen safe to open first.
+     */
+    $services->set('team.department_section_overview', DepartmentSectionOverview::class)
+        ->args([
+            service(DepartmentRepository::class),
+            service(PositionRepository::class),
+            service(UserRepository::class),
+            service(DepartmentGoalRepository::class),
+            service('registry.catalogue'),
+        ]);
+    $services->alias(DepartmentSectionOverview::class, 'team.department_section_overview');
+
+    $services->set('team.controller.department_section', DepartmentSectionController::class)
+        ->args([
+            service('twig'),
+            service('team.department_section_overview'),
+            service(DepartmentRepository::class),
+            service('registry.catalogue'),
+        ])
+        ->tag('controller.service_arguments');
+    $services->alias(DepartmentSectionController::class, 'team.controller.department_section')->public();
+
+    /*
+     * THE ONE DOOR A KIND IS WRITTEN THROUGH — trimmed, not empty, unique.
+     * Rules about a word live beside the word and not in the screen that
+     * happens to ask, so a second caller gets the same answer.
+     */
+    $services->set('team.department_kind_service', DepartmentKindService::class)
+        ->args([
+            service('doctrine.orm.entity_manager'),
+            service(DepartmentKindRepository::class),
+        ]);
+    $services->alias(DepartmentKindService::class, 'team.department_kind_service');
+
+    $services->set('team.controller.department_configure', DepartmentConfigureController::class)
+        ->args([
+            service('twig'),
+            service(DepartmentRepository::class),
+            service(DepartmentKindRepository::class),
+            service(DepartmentGoalRepository::class),
+            service('team.department_kind_service'),
+            service('security.csrf.token_manager'),
+            service('router'),
+            service('request_stack'),
+        ])
+        ->tag('controller.service_arguments');
+    $services->alias(DepartmentConfigureController::class, 'team.controller.department_configure')->public();
 
     /*
      * ONE AREA'S DEPARTMENTS — the tab and its configure section. Team's

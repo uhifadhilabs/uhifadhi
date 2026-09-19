@@ -1,0 +1,101 @@
+{# DEPARTMENTS · MODULES — one row a department, one column a module.
+
+   THE MATRIX READS, IT DOES NOT WRITE. Attaching a module is done on the
+   department's own card in the register; a grid of checkboxes would be a
+   second write path for one fact, and the two would disagree the first time
+   one of them was changed without the other.
+
+   ABSENCE IS DRAWN. A cell a reader cannot tell apart from a rendering failure
+   is not an answer, so a department that does not read a module gets a dashed
+   ring and a title that says so in words. #}
+{% extends '@Shell/page.html.twig' %}
+
+{% block title %}Departments{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {{ include('@Team/_stylesheets.html.twig') }}
+{% endblock %}
+
+{% block shell_breadcrumbs %}
+    <a href="{{ path('team_departments_overview') }}">uhifadhi</a> / departments / modules
+{% endblock %}
+
+{% block shell_page_title %}Departments{% endblock %}
+{% block shell_page_subtitle %}Which department reads which module.{% endblock %}
+
+{% block shell_page %}
+    <div data-dp>
+        <div class="factband">
+            <span class="f"><span class="k">Departments</span><span class="v">{{ rows|length }}</span></span>
+            <span class="f"><span class="k">Modules installed</span><span class="v">{{ modules|length }}</span></span>
+            <span class="f"><span class="k">Attachments</span><span class="v">{{ attachments }}<em>{{ rows|length - readsNothing|length }} departments</em></span></span>
+            <span class="f"><span class="k">Read by nobody</span><span class="v">{{ unread|length }}<em>{{ unread|length > 0 ? unread|map(m => m.name ?? m.slug)|join(', ') : 'every module is read' }}</em></span></span>
+            <span class="f"><span class="k">No module</span><span class="v">{{ readsNothing|length }}<em>departments</em></span></span>
+        </div>
+
+        <div class="c">
+            <span class="tab">Which department reads which module<span class="src">&middot; {{ rows|length }} &times; {{ modules|length }}</span></span>
+            <div class="sxmxkey">
+                <span><i class="sxdot"></i>attached</span>
+                <span><i class="sxdot no"></i>not attached</span>
+                <span>an org-wide department&rsquo;s attachment is read in every area</span>
+            </div>
+            <table class="tbl sxmx">
+                <thead>
+                <tr>
+                    <th>Department</th>
+                    <th>Scope</th>
+                    {% for module in modules %}<th>{{ module.name ?? module.slug }}</th>{% endfor %}
+                    <th class="num">Attached</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for row in rows %}
+                    <tr>
+                        <td><b><a href="{{ path('team_department_show', {uuid: row.department.uuidString}) }}">{{ row.department.name }}</a></b></td>
+                        <td><span class="mono d">{{ row.scope }}</span></td>
+                        {% for cell in row.cells %}
+                            <td><span class="sxdot{{ cell.reads ? '' : ' no' }}" title="{{ row.department.name }} {{ cell.reads ? 'reads' : 'does not read' }} {{ cell.module.name ?? cell.module.slug }}"></span></td>
+                        {% endfor %}
+                        <td class="num">{% if row.attached > 0 %}<b>{{ row.attached }}</b>{% else %}<span class="d">0</span>{% endif %}</td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="{{ 3 + modules|length }}"><span class="d">No department yet.</span></td></tr>
+                {% endfor %}
+                {% if rows|length > 0 %}
+                    <tr class="sxgrp">
+                        <td colspan="2"><span class="mono d">Departments reading it</span></td>
+                        {% for module in modules %}<td class="num"><b>{{ perModule[module.slug] }}</b></td>{% endfor %}
+                        <td class="num"><b>{{ attachments }}</b></td>
+                    </tr>
+                {% endif %}
+                </tbody>
+            </table>
+            <div class="sxfoot"><span>Attaching a module is done on the department&rsquo;s own card in the register &mdash; this matrix reads, it does not write.</span><span class="sp"></span><a class="tgl" href="{{ path('team_departments') }}">The register</a></div>
+        </div>
+
+        <div class="grid g2">
+            <div class="c">
+                <span class="tab">Modules no department reads<span class="src">&middot; needs attention</span></span>
+                {% for module in unread %}
+                    <div class="rln"><span>{{ module.name ?? module.slug }}</span><span class="mono d">installed &middot; attached by nobody</span></div>
+                {% else %}
+                    <div class="rln"><span class="d">Every installed module is read by at least one department.</span></div>
+                {% endfor %}
+                <div class="sxmore"><span>{{ unread|length }} of {{ modules|length }} modules</span><span class="sp"></span><a href="{{ path('team_departments') }}">The register &rarr;</a></div>
+            </div>
+
+            <div class="c">
+                <span class="tab">Departments that read nothing<span class="src">&middot; needs attention</span></span>
+                {% for department in readsNothing|slice(0, 5) %}
+                    <div class="rln"><span><a href="{{ path('team_department_show', {uuid: department.uuidString}) }}">{{ department.name }}</a></span><span class="mono d">{{ department.orgLevel ? 'org-wide' : department.area.name }}</span></div>
+                {% else %}
+                    <div class="rln"><span class="d">Every department reads at least one module.</span></div>
+                {% endfor %}
+                <p class="use">A department with no module has people and positions but no figure of its own, so it does not reach Performance.</p>
+                <div class="sxmore"><span>{{ min(readsNothing|length, 5) }} of {{ readsNothing|length }} departments</span><span class="sp"></span><a href="{{ path('team_departments') }}">The register &rarr;</a></div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

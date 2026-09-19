@@ -25,15 +25,13 @@
     {{ include('@Team/_stylesheets.html.twig') }}
 {% endblock %}
 
-{% block shell_page_tabs %}{% endblock %}
-
 {% block shell_breadcrumbs %}
     <a href="{{ path('team_index') }}">uhifadhi</a> / departments
 {% endblock %}
 
 {% block shell_page_title %}Departments{% endblock %}
 
-{% block shell_page_subtitle %}Org-wide first, then area-level.{% endblock %}
+{% block shell_page_subtitle %}Every department, created and scoped here.{% endblock %}
 
 {% block shell_page %}
     {{ include('@Team/team/_scope_banner.html.twig') }}
