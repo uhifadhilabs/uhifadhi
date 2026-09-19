@@ -281,6 +281,156 @@ final class ComponentContractTest extends ContractTestCase
     }
 
     /**
+     * A FILTER ROW IS ONE LINE, AND THE PANEL UNDER IT IS ONE PANEL.
+     *
+     * FOUR BUNDLES DRAW THIS ROW — the incidents register, patrol's list, the
+     * zones pages and the stations register — and every one of them writes
+     * the shell's classes and nothing of its own. So the row is the shell's,
+     * whole: the chip, the search field, the panel, its head, its options and
+     * its dots. A module that found the panel here was the wrong panel would
+     * restate it in its own sheet, which is the drift the vocabulary test
+     * forbids, and four bundles would then have four filter bars.
+     *
+     * EVERY CONTROL IS 30px ON ONE BASELINE. The chip's own padding computes
+     * to 28 and the search field to 32, which sat the row on two tops; inside
+     * a filter row both are 30, the vertical padding traded for a line-height.
+     *
+     * THE LABEL IS NOT CLIPPED. A chip reading "all categories · 47" loses the
+     * count to an ellipsis the moment the label is truncated, and the count is
+     * the half the reader is filtering on.
+     *
+     * THE CHOSEN OPTION IS A TINTED ROW, not coloured text: a panel of twelve
+     * options is scanned down its left edge, and a word two shades different
+     * from its neighbours is not a selection anybody sees.
+     *
+     * The values are the design's, read value for value.
+     *
+     * @see /Users/eemjema/Programming/DesignsProjects/uhifadhi-web/uhifadhi.css lines 234-256, 1268-1278
+     */
+    #[DataProvider('filterRowDeclarations')]
+    public function testTheFrameDrawsTheFilterRowAndItsDropdown(string $selector, string $property, string $value): void
+    {
+        $rule = $this->rule($selector);
+
+        self::assertMatchesRegularExpression(
+            '/(?:^|;)\s*'.preg_quote($property, '/').'\s*:\s*'.preg_quote($value, '/').'\s*(?:;|$)/',
+            $rule,
+            \sprintf(
+                '%s must state `%s: %s` — the design\'s own value. Four bundles draw this row, and one '
+                .'of them finding it wrong here restates it in its own sheet.',
+                $selector,
+                $property,
+                $value,
+            ),
+        );
+    }
+
+    /**
+     * @return \Generator<string, array{string, string, string}>
+     */
+    public static function filterRowDeclarations(): \Generator
+    {
+        $declarations = [
+            // The row, and the one rule that puts every control on one line.
+            '.lfilt' => [
+                'display' => 'flex',
+                'gap' => '8px',
+                'align-items' => 'center',
+            ],
+            // Asserted a side at a time, because a grouped prelude is read
+            // one selector at a time — and both sides have to carry it, which
+            // is the whole point of the rule.
+            '.lfilt .mchip' => [
+                'height' => '30px',
+                'padding-top' => '0',
+                'padding-bottom' => '0',
+                'line-height' => '28px',
+            ],
+            '.lfilt .lsearch .fld' => [
+                'height' => '30px',
+                'line-height' => '28px',
+            ],
+            // The search sits at the far end of the row, at one width.
+            '.lsearch' => [
+                'margin-left' => 'auto',
+            ],
+            '.lsearch .fld' => [
+                'width' => '246px',
+            ],
+            // The trigger and its caret.
+            '.i-dd' => [
+                'display' => 'inline-flex',
+            ],
+            '.i-ddcaret' => [
+                'font-size' => '9px',
+                'opacity' => '.7',
+            ],
+            // The panel.
+            '.i-ddmenu' => [
+                'min-width' => '196px',
+                'padding' => '5px',
+                'gap' => '1px',
+                'border-radius' => '11px',
+            ],
+            '.i-ddhead' => [
+                'font-size' => '8.5px',
+                'letter-spacing' => '.14em',
+                'padding' => '6px 9px 4px',
+            ],
+            '.i-ddopt' => [
+                'gap' => '9px',
+                'font-size' => '12px',
+                'padding' => '7px 9px',
+                'border-radius' => '7px',
+            ],
+            '.i-ddopt-l' => [
+                'flex' => '1',
+                'white-space' => 'nowrap',
+            ],
+            '.i-ddopt-n' => [
+                'font-size' => '10.5px',
+            ],
+            '.i-ddsep' => [
+                'height' => '1px',
+                'margin' => '4px 2px',
+            ],
+            '.i-dot' => [
+                'width' => '8px',
+                'height' => '8px',
+                'border-radius' => '2px',
+            ],
+        ];
+
+        foreach ($declarations as $selector => $properties) {
+            foreach ($properties as $property => $value) {
+                yield $selector.' — '.$property => [$selector, $property, $value];
+            }
+        }
+    }
+
+    /**
+     * THE CHOSEN OPTION IS A TINTED ROW. Stated apart from the values above
+     * because it is the one rule of the family that is a DECISION rather than
+     * a measurement: the design tints the row and accents its count, and an
+     * implementation that coloured the label instead would pass every size
+     * assertion and still not read as a selection.
+     */
+    public function testTheChosenOptionIsATintedRowAndNotColouredText(): void
+    {
+        self::assertMatchesRegularExpression(
+            '/background:\s*color-mix\(in srgb,\s*rgb\(var\(--c-acc\)\)\s*12%/',
+            $this->rule('.i-ddopt.on'),
+            'A panel of twelve options is scanned down its left edge; a word two shades different is not a selection anybody sees.',
+        );
+
+        self::assertMatchesRegularExpression(
+            '/color:\s*rgb\(var\(--c-acc\)\)/',
+            $this->rule('.i-ddopt.on .i-ddopt-n'),
+            'The count on the chosen row carries the accent, so the row reads as one thing.',
+        );
+    }
+
+    /**
      * THE EVIDENCE TILE SHOWS THE PICTURE STORAGE MADE. The tile family is the
      * frame's, and the module that keeps files emits the markup for it: one
      * thumbnail per photograph, drawn in the same `.sh` shell wherever the file

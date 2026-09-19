@@ -189,21 +189,10 @@
                     {% endfor %}
                 </table>
 
-                {% if register.pages > 1 %}
-                    <div class="pgr">
-                        <span class="cnt">{{ register.from }}&ndash;{{ register.to }} of {{ register.total }} {{ register.total == 1 ? 'station' : 'stations' }}</span>
-                        <span class="sp"></span>
-                        <a class="{{ register.page == 1 ? 'off' : '' }}" href="{{ path('area_stations', {uuid: area.uuidString}|merge(query.with('page', max(1, register.page - 1) ~ ''))) }}">&larr; Newer</a>
-                        {% for number in register.pageNumbers %}
-                            {% if number == register.page %}
-                                <span class="pg-n on">{{ number }}</span>
-                            {% else %}
-                                <a href="{{ path('area_stations', {uuid: area.uuidString}|merge(query.with('page', number ~ ''))) }}">{{ number }}</a>
-                            {% endif %}
-                        {% endfor %}
-                        <a class="{{ register.page == register.pages ? 'off' : '' }}" href="{{ path('area_stations', {uuid: area.uuidString}|merge(query.with('page', min(register.pages, register.page + 1) ~ ''))) }}">Older &rarr;</a>
-                    </div>
-                {% endif %}
+                {{ include('@Area/_partial/_pager.html.twig', {
+                    query: query, page: register.page, pages: register.pages,
+                    from: register.from, to: register.to, total: register.total, scope: register.scope, noun: 'stations',
+                }) }}
             {% endif %}
         </div>
 
@@ -226,21 +215,12 @@
                     {% endfor %}
                 </div>
 
-                {% if peoplePages > 1 %}
-                    <div class="pgr">
-                        <span class="cnt">{{ peopleTotal }} posted in the area</span>
-                        <span class="sp"></span>
-                        <a class="{{ peoplePage == 1 ? 'off' : '' }}" href="{{ here }}?ppage={{ max(1, peoplePage - 1) }}">&larr; Newer</a>
-                        {% for number in 1..peoplePages %}
-                            {% if number == peoplePage %}
-                                <span class="pg-n on">{{ number }}</span>
-                            {% else %}
-                                <a href="{{ here }}?ppage={{ number }}">{{ number }}</a>
-                            {% endif %}
-                        {% endfor %}
-                        <a class="{{ peoplePage == peoplePages ? 'off' : '' }}" href="{{ here }}?ppage={{ min(peoplePages, peoplePage + 1) }}">Older &rarr;</a>
-                    </div>
-                {% endif %}
+                {{ include('@Area/_partial/_pager.html.twig', {
+                    base: here, param: 'ppage',
+                    page: peoplePage, pages: peoplePages,
+                    from: (peoplePage - 1) * 8 + 1, to: min(peoplePage * 8, peopleTotal),
+                    total: peopleTotal, noun: 'people',
+                }) }}
             {% endif %}
         </div>
     {% endif %}

@@ -782,6 +782,19 @@ h2.zone::after { content: ""; flex: 1; height: 1px; background: var(--c-ln2); }
    The number is display type at 30px and BLOCK, and the block is the whole
    composition: as an inline run the label, the count and the sub-line collapse
    into a sentence ("People 2 2 active") that states a number nobody can find. */
+/* EVERY FIGURE CARD IS THE SAME HEIGHT, whatever it says. A row of cards is
+   read across, and one that shrank because its qualifier was a line shorter
+   would make the row read as a chart of something. The height is the design's
+   and the content sits inside it — including the card that says no module
+   publishes the figure, which is exactly as tall as one that does. */
+.c.kpi, .kpi {
+    height: 107px;
+    /* A COLUMN, so the figure and its qualifier stack under the label
+       whatever the card is put inside. */
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
 .kpi b, .kpi .disp {
     font-family: var(--font-display); font-size: 30px; font-weight: 700; letter-spacing: -.035em;
     display: block; line-height: 1; font-variant-numeric: tabular-nums;
@@ -794,8 +807,13 @@ h2.zone::after { content: ""; flex: 1; height: 1px; background: var(--c-ln2); }
     font-family: var(--font-mono); font-size: 9.5px; color: rgb(var(--c-dim));
     margin-top: 8px; display: flex; align-items: center; gap: 9px;
 }
+/* The one tone a qualifier may raise an alarm in, and only inside the line. */
+.kpi .sub .r { color: rgb(var(--c-fail)); }
+
 /* One plate in a strip may be the one that matters. Exactly one. */
 .kpi.hot b, .kpi.hot .disp { color: rgb(var(--c-acc)); }
+.kpi.hot { border-color: color-mix(in srgb, rgb(var(--c-acc)) 45%, var(--c-ln)); }
+.kpi.bad { border-color: color-mix(in srgb, rgb(var(--c-fail)) 45%, var(--c-ln)); }
 
 /* A strip of plates is not the page's four-up: the same strip has to sit in
    twelve columns and in six, so the plates fold on their own content width
@@ -1001,6 +1019,13 @@ table.tbl tr:hover .open-btn {
 .lsearch svg { position: absolute; left: 11px; width: 14px; height: 14px; color: var(--dim); pointer-events: none; }
 .lsearch .fld { width: 246px; padding: 7px 12px 8px 32px; font-size: 12.5px; border-radius: 99px; }
 .lsearch .fld::-webkit-search-cancel-button { filter: grayscale(1); opacity: .5; }
+/* EVERY CONTROL IN A FILTER ROW IS ONE HEIGHT ON ONE BASELINE. The chip's own
+   padding computes to 28px and the search field to 32px, which sat the row on
+   two tops; inside a filter row both are 30px, the vertical padding traded for
+   a line-height. Said once here, so the incidents list, patrol's list, the
+   zones pages and the stations register agree rather than each saying it for
+   itself. */
+.lfilt .mchip, .lfilt .lsearch .fld { height: 30px; padding-top: 0; padding-bottom: 0; line-height: 28px; }
 
 /* ---- THE UPLOAD COMPONENT — one component, two presentations. ------------
    Every place a file enters the product wears one of these. The
@@ -1399,39 +1424,52 @@ table.tbl tr:hover .open-btn {
    every option is a link, so the whole control opens, chooses and clears with
    no script: the address is the state, a filtered list is a link somebody can
    send, and a browser can go back to it. */
-.i-dd { position: relative; display: inline-block; }
-.i-dd > summary { list-style: none; cursor: pointer; }
+/* THE TRIGGER IS A CHIP AND THE PANEL HANGS UNDER IT. Written as a
+   `<details>`, so the whole control opens, chooses and clears with no script
+   of ours — which is what keeps a filter bar working on a page that has none. */
+.i-dd { position: relative; display: inline-flex; }
+.i-dd > summary { list-style: none; cursor: pointer; background: none; }
 /* The chip itself is `.mchip`; this is only what makes it a summary. */
 .i-ddt { user-select: none; }
 .i-dd > summary::-webkit-details-marker { display: none; }
-.i-ddval { max-width: 15ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.i-ddcaret { font-size: 9px; line-height: 1; opacity: .7; }
+/* THE LABEL IS NOT CLIPPED. "all categories · 47" loses the count to an
+   ellipsis the moment the label is truncated, and the count is the half the
+   reader is filtering on. */
+.i-ddval { white-space: nowrap; }
+.i-ddcaret { font-size: 9px; line-height: 1; opacity: .7; transition: transform .12s; }
+.i-dd[open] .i-ddcaret { transform: rotate(180deg); }
 .i-ddmenu {
-    position: absolute; z-index: 40; top: calc(100% + 6px); left: 0; min-width: 190px;
-    display: flex; flex-direction: column; gap: 1px; padding: 7px;
-    border: 1px solid var(--c-ln2); border-radius: 11px; background: rgb(var(--c-raised));
+    position: absolute; z-index: 50; top: calc(100% + 6px); left: 0; min-width: 196px;
+    display: flex; flex-direction: column; gap: 1px; padding: 5px;
+    border: 1px solid var(--c-ln2); border-radius: 11px; background: rgb(var(--c-p1));
     box-shadow: var(--shadow);
 }
 .i-ddhead {
-    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 9px; font-weight: 700;
-    letter-spacing: .12em; text-transform: uppercase; color: rgb(var(--c-dim)); padding: 3px 8px 5px;
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 8.5px;
+    letter-spacing: .14em; text-transform: uppercase; color: rgb(var(--c-dim)); padding: 6px 9px 4px;
 }
 .i-ddopt {
-    display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 7px;
-    font-size: 12.5px; color: rgb(var(--c-tx)); text-decoration: none;
+    display: flex; align-items: center; gap: 9px; width: 100%; text-align: left;
+    padding: 7px 9px; border-radius: 7px;
+    font-size: 12px; color: rgb(var(--c-tx)); text-decoration: none;
 }
-.i-ddopt:hover { background: rgb(var(--c-cv)); }
-.i-ddopt.on { color: rgb(var(--c-acc)); }
+.i-ddopt:hover { background: rgb(var(--c-raised)); }
+/* THE CHOSEN OPTION IS A TINTED ROW, not coloured text: a panel of twelve is
+   scanned down its left edge, and a word two shades different from its
+   neighbours is not a selection anybody sees. */
+.i-ddopt.on { background: color-mix(in srgb, rgb(var(--c-acc)) 12%, transparent); }
+.i-ddopt.on .i-ddopt-n { color: rgb(var(--c-acc)); }
 /* AN OPTION'S OWN COLOUR, where the thing it names has one — the same hue the
    plate drew it in, so a filter and a map cannot disagree about which zone is
-   which. An option with no colour draws no dot rather than an empty square. */
-.i-dot { width: 9px; height: 9px; border-radius: 3px; flex: none; background: var(--c-ln2); }
-.i-ddopt-l { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+   which. The base is colourless, which keeps the column aligned on the rows
+   that name no coloured thing. */
+.i-dot { width: 8px; height: 8px; border-radius: 2px; flex: none; background: transparent; }
+.i-ddopt-l { flex: 1; white-space: nowrap; }
 .i-ddopt-n {
     flex: none; font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10.5px;
     color: rgb(var(--c-dim)); font-variant-numeric: tabular-nums;
 }
-.i-ddsep { height: 1px; margin: 4px 6px; background: var(--c-ln); }
+.i-ddsep { height: 1px; margin: 4px 2px; background: var(--c-ln); }
 
 /* ---- THE QUESTION BEFORE SOMETHING IS DESTROYED -------------------------
    One dialog for the whole product, built by the shell's `confirm-modal`

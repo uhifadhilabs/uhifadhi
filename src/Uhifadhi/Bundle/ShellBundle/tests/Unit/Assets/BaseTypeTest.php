@@ -48,6 +48,24 @@ final class BaseTypeTest extends TestCase
     }
 
     /**
+     * EVERY FIGURE CARD IS THE SAME HEIGHT, whatever its content.
+     *
+     * A ROW OF CARDS IS READ ACROSS, and a card that shrank because its
+     * qualifier was one line shorter would make the row look like a chart of
+     * something. The design fixes the plate's height and lets the content sit
+     * inside it, so a card saying "no module publishes this" is exactly as
+     * tall as one saying "88 · from 10 stations".
+     */
+    public function testEveryFigureCardIsTheSameHeightWhateverItSays(): void
+    {
+        self::assertMatchesRegularExpression(
+            '/height:\s*107px/',
+            self::ruleFor(self::shell(), '.c.kpi, .kpi'),
+            'A figure card whose height follows its content makes a row of them read as a chart.',
+        );
+    }
+
+    /**
      * NO LAYERED SHEET RESTATES THE CARD LABEL. It is the shell's, at the
      * design's 9.5px, and a second copy of it is how one screen ends up
      * wearing a different size from the rest of the product.

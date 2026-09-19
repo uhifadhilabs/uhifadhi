@@ -286,21 +286,10 @@
 
                 {# BOUNDED BY A PAGE, NOT BY A SCROLLBAR: the count on the left,
                    the pages on the right, eight rows between them. #}
-                {% if register.pages > 1 %}
-                    <div class="pgr">
-                        <span class="cnt">{{ register.from }}&ndash;{{ register.to }} of {{ register.total }} {{ register.total == 1 ? 'station' : 'stations' }}</span>
-                        <span class="sp"></span>
-                        <a class="{{ register.page == 1 ? 'off' : '' }}" href="{{ path('area_stations_configure', {uuid: area.uuidString}|merge(query.with('page', max(1, register.page - 1) ~ ''))) }}">&larr; Newer</a>
-                        {% for number in register.pageNumbers %}
-                            {% if number == register.page %}
-                                <span class="pg-n on">{{ number }}</span>
-                            {% else %}
-                                <a href="{{ path('area_stations_configure', {uuid: area.uuidString}|merge(query.with('page', number ~ ''))) }}">{{ number }}</a>
-                            {% endif %}
-                        {% endfor %}
-                        <a class="{{ register.page == register.pages ? 'off' : '' }}" href="{{ path('area_stations_configure', {uuid: area.uuidString}|merge(query.with('page', min(register.pages, register.page + 1) ~ ''))) }}">Older &rarr;</a>
-                    </div>
-                {% endif %}
+                {{ include('@Area/_partial/_pager.html.twig', {
+                    query: query, page: register.page, pages: register.pages,
+                    from: register.from, to: register.to, total: register.total, scope: register.scope, noun: 'stations',
+                }) }}
             {% endif %}
         </div>
     </div>

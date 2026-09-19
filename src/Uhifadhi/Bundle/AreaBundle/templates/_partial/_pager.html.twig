@@ -4,26 +4,48 @@
    on the left, the pages on the right, and the window between them. Every
    page number is a link, so where you are in a list is in the address.
 
+   ONE IDIOM, AND THE LIST'S ORDER PICKS THE WORDS. A list ordered by TIME
+   pages backwards through it, so its ends are "newer" and "older"; a list
+   ordered by a name or a number has no such ends and pages "previous" and
+   "next". The words follow the ORDER and never the page, so one list that
+   can be reordered says both at different times, and two lists in the same
+   order always say the same.
+
+   TWO WAYS TO ADDRESS A PAGE, because a page may hold two lists. A list that
+   owns the address hands over its `query` and the links are the route's own
+   parameters; a second list on the same page hands over `base`, its own
+   `param` and whatever else it must carry, so two searches and two pagers on
+   one card stack cannot filter each other.
+
    IT SAYS WHEN IT IS FILTERED. "5 of 12 stations · filtered from 30" is two
    different facts about one list, and a reader who cannot see the second one
    reads the first as the whole. #}
+{% set byTime = byTime ?? false %}
+{% set back = byTime ? '&larr; Newer' : '&larr; Previous' %}
+{% set on = byTime ? 'Older &rarr;' : 'Next &rarr;' %}
+{% set extra = extra ?? '' %}
+{# Every page's address, built once, so the markup below is the design and
+   nothing else. #}
+{% set urls = range(1, max(1, pages))|map(number => query is defined
+    ? path(app.request.attributes.get('_route'), app.request.attributes.get('_route_params')|merge(query.with('page', number ~ '')))
+    : base ~ '?' ~ param ~ '=' ~ number ~ extra) %}
 {% if pages > 1 or (scope is defined and scope > total) %}
     <div class="pgr">
         <span class="cnt">
-            {{- total ? from ~ '&ndash;' ~ to : 0 }} of {{ total }} {{ noun }}
+            {%- if total %}{{ from }}&ndash;{{ to }}{% else %}0{% endif %} of {{ total }} {{ noun }}
             {%- if scope is defined and scope > total %} &middot; filtered from {{ scope }}{% endif -%}
         </span>
         <span class="sp"></span>
         {% if pages > 1 %}
-            <a class="{{ page == 1 ? 'off' : '' }}" href="{{ path(app.request.attributes.get('_route'), app.request.attributes.get('_route_params')|merge(query.with('page', max(1, page - 1) ~ ''))) }}">&larr; Previous</a>
+            <a class="{{ page == 1 ? 'off' : '' }}" href="{{ urls[max(1, page - 1) - 1] }}">{{ back|raw }}</a>
             {% for number in 1..pages %}
                 {% if number == page %}
                     <span class="pg-n on">{{ number }}</span>
                 {% else %}
-                    <a href="{{ path(app.request.attributes.get('_route'), app.request.attributes.get('_route_params')|merge(query.with('page', number ~ ''))) }}">{{ number }}</a>
+                    <a href="{{ urls[number - 1] }}">{{ number }}</a>
                 {% endif %}
             {% endfor %}
-            <a class="{{ page == pages ? 'off' : '' }}" href="{{ path(app.request.attributes.get('_route'), app.request.attributes.get('_route_params')|merge(query.with('page', min(pages, page + 1) ~ ''))) }}">Next &rarr;</a>
+            <a class="{{ page == pages ? 'off' : '' }}" href="{{ urls[min(pages, page + 1) - 1] }}">{{ on|raw }}</a>
         {% endif %}
     </div>
 {% endif %}

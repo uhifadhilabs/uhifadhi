@@ -150,21 +150,12 @@
                     {% endfor %}
                 </div>
 
-                {% if peoplePages > 1 %}
-                    <div class="pgr">
-                        <span class="cnt">{{ peopleMatching }} of {{ peopleTotal }} people</span>
-                        <span class="sp"></span>
-                        <a class="{{ peoplePage == 1 ? 'off' : '' }}" href="{{ here }}?ppage={{ max(1, peoplePage - 1) }}{{ peopleSearch ? '&person=' ~ peopleSearch : '' }}">&larr; Previous</a>
-                        {% for number in 1..peoplePages %}
-                            {% if number == peoplePage %}
-                                <span class="pg-n on">{{ number }}</span>
-                            {% else %}
-                                <a href="{{ here }}?ppage={{ number }}{{ peopleSearch ? '&person=' ~ peopleSearch : '' }}">{{ number }}</a>
-                            {% endif %}
-                        {% endfor %}
-                        <a class="{{ peoplePage == peoplePages ? 'off' : '' }}" href="{{ here }}?ppage={{ min(peoplePages, peoplePage + 1) }}{{ peopleSearch ? '&person=' ~ peopleSearch : '' }}">Next &rarr;</a>
-                    </div>
-                {% endif %}
+                {{ include('@Area/_partial/_pager.html.twig', {
+                    base: here, param: 'ppage', extra: peopleSearch ? '&person=' ~ peopleSearch : '',
+                    page: peoplePage, pages: peoplePages,
+                    from: (peoplePage - 1) * 4 + 1, to: min(peoplePage * 4, peopleMatching),
+                    total: peopleMatching, scope: peopleTotal, noun: 'people',
+                }) }}
             {% endif %}
         </div>
 
