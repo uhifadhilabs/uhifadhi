@@ -12,6 +12,9 @@ Not released yet.
    user entity contracts, the user badge and the devkit contracts
  * `Kpi\DepartmentKpiProviderInterface` and its value objects — how a module
    puts a figure on the performance surfaces of a department that attaches it
+ * `Atlas\CalendarFeedInterface` and its value objects — how a module has a
+   month drawn: days, bounded pills, a hue role rather than a colour, and the
+   surface naming the feed it wants as it names a plate's subject
  * `Area\PresenceProviderInterface` and its value objects — how a day at a post
    reads, derived on every read and never stored
  * `Roster\WatchProviderInterface` — the watches an area expects, which the area

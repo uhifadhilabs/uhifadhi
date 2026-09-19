@@ -1,0 +1,68 @@
+{# THE MONTH GRID EVERY CALENDAR IN THE PRODUCT IS DRAWN IN.
+
+   THE PLATE'S AND THE CHART'S SIBLING: a module says what happened on which
+   day and this is the whole picture around it — the stepper, the day heads,
+   the cells, their fixed height, the day numbers and the "+N more".
+
+   THE CELL IS ONE HEIGHT WHATEVER IT HOLDS, which is the rule the component
+   exists to keep: a busy week must not make the month taller than a quiet
+   one. What does not fit was counted into `hidden` by the builder, where the
+   height is known — a module is never asked to guess it.
+
+   A PILL'S COLOUR IS A ROLE THE MODULE NAMED and a paint the atlas chose.
+   Filled means open, hollow means finished — the same reading the map plate
+   uses, so a mark means one thing across the product.
+
+   Rendered by Twig\CalendarRuntime, never included by hand — a surface writes
+   {{ atlas_calendar(feed, '2026-09') }}. #}
+<div class="cal-plate">
+    {% if title %}<span class="tab">{{ title }}</span>{% endif %}
+
+    {# THE STEPPER: the same three controls on every month. An arrow with
+       nowhere to go is drawn and not offered, so the row never changes
+       width between months. #}
+    <div class="cal-nav">
+        {% if calendar.previousUrl %}<a class="mchip ghost" href="{{ calendar.previousUrl }}" aria-label="The month before {{ calendar.month.label }}">&lsaquo;</a>
+        {% else %}<span class="mchip ghost" aria-hidden="true">&lsaquo;</span>{% endif %}
+        <span class="mchip on">{{ calendar.month.label|lower }}</span>
+        {% if calendar.nextUrl %}<a class="mchip ghost" href="{{ calendar.nextUrl }}" aria-label="The month after {{ calendar.month.label }}">&rsaquo;</a>
+        {% else %}<span class="mchip ghost" aria-hidden="true">&rsaquo;</span>{% endif %}
+    </div>
+
+    <div class="cal"{% if gridStyle %} style="{{ gridStyle }}"{% endif %}
+         {%- for name, value in attributes %} {{ name }}="{{ value }}"{% endfor %}>
+        {% for weekday in weekdays %}<div class="dh">{{ weekday }}</div>{% endfor %}
+
+        {% for cell in calendar.cells %}
+            <div class="dc{{ cell.inMonth ? '' : ' out' }}{{ cell.isToday ? ' today' : '' }}">
+                {% if cell.total > 0 %}<span class="dcount">{{ cell.total }}</span>{% endif %}
+                <span class="dn">{{ cell.dayOfMonth }}</span>
+
+                {% for pill in cell.pills %}
+                    {% set hue = hues[pill.hue.value]|default(hues['subject']) %}
+                    {% if pill.url %}
+                        <a class="cal-mark{{ pill.closed ? ' done' : '' }}" href="{{ pill.url }}"
+                           {%- if pill.title %} title="{{ pill.title }}"{% endif %}><i style="--pill-hue:{{ hue }}"></i><span class="l">{{ pill.label }}</span></a>
+                    {% else %}
+                        <span class="cal-mark{{ pill.closed ? ' done' : '' }}"
+                              {%- if pill.title %} title="{{ pill.title }}"{% endif %}><i style="--pill-hue:{{ hue }}"></i><span class="l">{{ pill.label }}</span></span>
+                    {% endif %}
+                {% endfor %}
+
+                {% if cell.hidden > 0 %}
+                    {% if cell.url %}<a class="cal-more" href="{{ cell.url }}">+{{ cell.hidden }} more</a>
+                    {% else %}<span class="cal-more">+{{ cell.hidden }} more</span>{% endif %}
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+
+    {% if empty %}
+        {# AN EMPTY SEPTEMBER IS A FACT ABOUT SEPTEMBER. The grid is still
+           drawn — a missing month is a broken page — and the sentence under
+           it says why it is bare, in the house's own words. #}
+        <p class="use">Nothing on this month yet &mdash; which is not a nought.</p>
+    {% elseif caption %}
+        <p class="use">{{ caption }}</p>
+    {% endif %}
+</div>

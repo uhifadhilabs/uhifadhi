@@ -294,3 +294,64 @@
 }
 .chart-none b { font-size: 13px; color: rgb(var(--c-tx)); }
 .chart-none span { font-family: var(--font-mono); font-size: 10.5px; color: rgb(var(--c-dim)); }
+
+/* ════════════════════════════════════════════════════════════════════════
+   THE MONTH GRID — the plate's and the chart's third sibling.
+   ────────────────────────────────────────────────────────────────────────
+   Patrols drew this month first and the roster draws the same month with
+   different marks in it: the grid, the day head, the cell and its number
+   belong to neither of them, and what goes IN a cell is the module's.
+
+   THE CELL IS ONE HEIGHT WHATEVER IT HOLDS. That is the rule the whole
+   component exists to keep — a busy week must not make the month taller
+   than a quiet one — so the height is stated here and a caller changes it
+   only through `--cal-cell-height`, the same custom-property door a
+   plate's and a chart's height come through. Anything that does not fit
+   is a "+N more", counted where the height is known.
+
+   `.mchip` IN THE STEPPER IS THE SHELL'S and is not restated: a chip that
+   looked different above a calendar than above a filter bar would be two
+   products. Only the row it sits in is here.
+
+   Design: areas/ngorongoro/modules/roster/*.html and the patrols month.
+   ════════════════════════════════════════════════════════════════════════ */
+.cal-plate { position: relative; display: flex; flex-direction: column; }
+.cal-plate > .use { margin: 10px 2px 0; }
+
+.cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 10px; }
+.cal .dh {
+    font-family: var(--font-mono); font-size: 9.5px; font-weight: 600;
+    letter-spacing: .14em; text-transform: uppercase;
+    color: rgb(var(--c-fog)); padding: 2px 4px;
+}
+.cal .dc {
+    position: relative; box-sizing: border-box;
+    height: var(--cal-cell-height, 96px);
+    display: flex; flex-direction: column; gap: 3px; align-items: stretch;
+    padding: 20px 6px 6px; overflow: hidden;
+    border: 1px solid var(--c-ln); border-radius: 9px;
+    background: color-mix(in srgb, rgb(var(--c-fog)) 3%, transparent);
+}
+/* The days either side of the month are real dates, drawn faint. */
+.cal .dc.out { opacity: .4; }
+.cal .dc.today { border-color: color-mix(in srgb, rgb(var(--c-acc)) 55%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, rgb(var(--c-acc)) 25%, transparent); }
+.cal .dc .dn {
+    position: absolute; top: 6px; right: 8px;
+    font-family: var(--font-mono); font-size: 9.5px; font-weight: 600; color: rgb(var(--c-dim));
+}
+.cal .dc.today .dn { color: rgb(var(--c-acc)); }
+/* The day's own count, top-left, so a full cell still says how full it is. */
+.cal .dc .dcount {
+    position: absolute; top: 6px; left: 8px;
+    font-family: var(--font-mono); font-size: 9.5px; font-weight: 700; color: rgb(var(--c-fog));
+    font-variant-numeric: tabular-nums;
+}
+
+/* THE MARK, THE "+N MORE" AND THE STEPPER ROW ARE THE SHELL'S and are NOT
+   restated here. They were host vocabulary before this component existed —
+   modules were already drawing marks — and a rule written twice renders
+   differently depending on which sheet loaded last. What the atlas adds is
+   the GRID those marks sit in; see shell.css for `.cal-mark`, `.cal-more`
+   and `.cal-nav`. The pill's hue reaches the mark as `--pill-hue`, which
+   the shell's rule reads. */

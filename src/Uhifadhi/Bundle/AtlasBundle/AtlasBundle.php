@@ -18,9 +18,11 @@ use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
+use Uhifadhi\Bundle\AtlasBundle\Calendar\CalendarBuilder;
 use Uhifadhi\Bundle\AtlasBundle\Chart\ChartBuilder;
 use Uhifadhi\Bundle\AtlasBundle\DependencyInjection\AtlasConfiguration;
 use Uhifadhi\Bundle\AtlasBundle\Model\SatelliteSource;
+use Uhifadhi\Bundle\AtlasBundle\Twig\CalendarRuntime;
 use Uhifadhi\Bundle\AtlasBundle\Twig\ChartRuntime;
 use Uhifadhi\Bundle\AtlasBundle\Twig\MapExtension;
 use Uhifadhi\Bundle\AtlasBundle\Twig\MapPlateRuntime;
@@ -245,6 +247,21 @@ final class AtlasBundle extends AbstractBundle
 
             $services->set('atlas.twig_chart_runtime', ChartRuntime::class)
                 ->args([service('twig'), service('atlas.charts'), service('chartjs.twig_extension')])
+                ->tag('twig.runtime');
+        }
+
+        /*
+         * THE MONTH, THE THIRD SIBLING — and the only one of the three
+         * that stands on nothing but Twig. A grid of divs needs no
+         * library, so it is registered wherever Twig is: an installation
+         * without UX Map or Chart.js still gets its calendars.
+         */
+        if (\is_array($bundles) && isset($bundles['TwigBundle'])) {
+            $services->set('atlas.calendars', CalendarBuilder::class);
+            $services->alias(CalendarBuilder::class, 'atlas.calendars');
+
+            $services->set('atlas.twig_calendar_runtime', CalendarRuntime::class)
+                ->args([service('twig'), service('atlas.calendars')])
                 ->tag('twig.runtime');
         }
     }

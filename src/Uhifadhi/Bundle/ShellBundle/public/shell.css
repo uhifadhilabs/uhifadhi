@@ -769,6 +769,11 @@ h2.zone::after { content: ""; flex: 1; height: 1px; background: var(--c-ln2); }
 }
 .mchip:hover { border-color: rgb(var(--c-fog)); }
 .mchip.on { border-color: rgb(var(--c-acc)); color: rgb(var(--c-acc)); }
+/* THE QUIET ONE: dashed and muted, for a chip that is a control rather than a
+   state — a month stepper's two arrows beside the month it is showing. It is a
+   modifier of the chip and not a chip of its own, so a stepper cannot come out
+   looking like a filter that happens to be off. */
+.mchip.ghost { border-style: dashed; color: rgb(var(--c-fog)); cursor: pointer; }
 
 /* ==================== THE COMPONENT VOCABULARY ====================
    The classes a module writes on its own elements: the card's tab, the KPI
@@ -1371,8 +1376,13 @@ table.tbl tr:hover .open-btn {
     background: var(--cv); line-height: 1.2;
 }
 .cal-mark:hover { border-color: var(--fog); }
-.cal-mark i { width: 6px; height: 6px; border-radius: 2px; flex: none; background: var(--acc); }
-.cal-mark.done i { background: none; box-shadow: inset 0 0 0 1.5px var(--acc); }
+/* THE ROLE'S COLOUR ARRIVES AS `--pill-hue`, set on the dot by whoever draws
+   the mark, and never as a background written over this rule. It is read in
+   both states, so a FINISHED PROBLEM is a hollow red mark and not a hollow
+   accent one — the role survives the shape. A mark drawn without it is the
+   accent, which is what an ordinary thing on a day has always been. */
+.cal-mark i { width: 6px; height: 6px; border-radius: 2px; flex: none; background: var(--pill-hue, var(--acc)); }
+.cal-mark.done i { background: none; box-shadow: inset 0 0 0 1.5px var(--pill-hue, var(--acc)); }
 .cal-mark .l { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cal-more { font: 600 9px "JetBrains Mono", monospace; color: var(--dim); text-decoration: none; padding: 1px 5px; }
 .cal-more:hover { color: var(--acc); }

@@ -8,6 +8,12 @@
 
 Not released yet.
 
+ * the month grid as a component, the plate's and the chart's third sibling:
+   `atlas_calendar(feed, '2026-09')` draws the grid, the day heads, the cells
+   at one fixed height, the day numbers, the "+N more" and the stepper, and a
+   module implements `Atlas\CalendarFeedInterface` to say what happened on
+   which day and what each thing should read as
+
  * the map builder and the map model: GeoJSON layers, the boundary, the base
    layers, the legend, fullscreen — a UX Map map with the atlas around it
  * render_map(): the plate, its filter row and its legend, rendered through the

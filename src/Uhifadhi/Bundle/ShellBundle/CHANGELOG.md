@@ -12,6 +12,8 @@ Not released yet.
  * the design-system stylesheet every module's own sheet is written against
  * the widget machinery under `Widget/`: the surface registry, the stored
    layouts and the library component every dashboard is arranged through
+ * `.mchip.ghost`, the quiet chip a month stepper's arrows wear, and the mark's
+   hue read from `--pill-hue` so a finished problem is a hollow red mark
  * no library door on a surface: `.w-addtile` is gone and the dashed add tile
    belongs to the library's composer as `.w-addwidget`, so a module that draws
    "Add widgets — open the library" at the foot of a page writes a class the

@@ -79,6 +79,15 @@ final class MapExtension extends AbstractExtension
              * one to write is this.
              */
             new TwigFunction('atlas_chart', [ChartRuntime::class, 'renderChart'], ['is_safe' => ['html']]),
+
+            /*
+             * AND THE MONTH, THE THIRD SIBLING. `atlas_calendar` for
+             * the same reason `atlas_chart` is not `render_chart`: a
+             * surface NAMES the feed it wants — as it names a plate's
+             * subject — and what a month looks like is the atlas's to
+             * decide, not the caller's.
+             */
+            new TwigFunction('atlas_calendar', [CalendarRuntime::class, 'renderCalendar'], ['is_safe' => ['html']]),
         ];
     }
 
