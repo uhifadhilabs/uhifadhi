@@ -93,6 +93,30 @@ final class PlateFitTest extends TestCase
     }
 
     /**
+     * A FIT MEASURES THE FRAME FIRST, on every path into it.
+     *
+     * Leaflet frames against the size it last measured, and it measures when
+     * the map is created; everything the card does afterwards — a two-column
+     * grid narrowing it, a legend taking its height — leaves that stale. The
+     * hooks that told the plate to look again were each a guess about WHEN
+     * the page settles, and on a zone's record none of them was right: the
+     * plate framed 765 pixels as though they were 1141. Asking at the moment
+     * of fitting cannot be out of date.
+     */
+    public function testEveryFitMeasuresTheFrameBeforeItFrames(): void
+    {
+        $controller = self::controller();
+
+        self::assertMatchesRegularExpression(
+            '/refit\(\) \{.*?invalidateSize\(\{ animate: false, pan: false \}\).*?fitBounds\(/s',
+            $controller,
+            'A fit that trusts an older measurement frames a card that no longer exists.',
+        );
+        // AND IT CANNOT RECURSE: measuring fires `resize`, which refits.
+        self::assertStringContainsString('if (!this.shouldFit || this.fitting) {', $controller);
+    }
+
+    /**
      * NO FIT IS ANIMATED. An eased fit is still moving when the next one is
      * asked for, and Leaflet answers the second from where the first was
      * going rather than from the frame as it now is — which is how a zone's

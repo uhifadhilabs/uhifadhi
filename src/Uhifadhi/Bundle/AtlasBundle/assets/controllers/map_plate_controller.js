@@ -750,8 +750,35 @@ export default class extends Controller {
      * as context and is about one zone.
      */
     refit() {
-        if (!this.shouldFit) {
+        if (!this.shouldFit || this.fitting) {
             return;
+        }
+
+        /*
+         * MEASURE, THEN FRAME — always, on every path into this method.
+         *
+         * Leaflet frames against the size it last measured, and it measures
+         * when the map is created. Everything that happens to the card
+         * after that — a two-column grid narrowing it, a legend taking its
+         * height, a sidebar restoring its width — leaves that measurement
+         * stale, and the fit is then computed for a frame that no longer
+         * exists: measured on a zone's record, a plate 765 wide framed as
+         * though it were 1141, so the zone sat off to the left and hung
+         * below the plate.
+         *
+         * ASKING FIRST RATHER THAN BEING TOLD. Hooks fire in whatever order
+         * the page settles in, and every one of them was a guess about
+         * when; this cannot be out of date, because it is the same call the
+         * hooks were there to make. It costs a cached read when nothing has
+         * changed, and `invalidateSize` is a no-op then — it only fires
+         * `resize` when the size really moved, which is what the guard
+         * above keeps from recursing.
+         */
+        this.fitting = true;
+        try {
+            this.map?.invalidateSize({ animate: false, pan: false });
+        } finally {
+            this.fitting = false;
         }
 
         const subject = this.subject;
@@ -814,10 +841,8 @@ export default class extends Controller {
     watchFrame() {
         const frame = this.frame();
 
-        this.settle = () => {
-            this.map?.invalidateSize({ animate: false, pan: false });
-            this.refit();
-        };
+        // THE FIT MEASURES FOR ITSELF, so settling is simply fitting again.
+        this.settle = () => this.refit();
 
         /*
          * AND THE MAP'S OWN ANSWER IS THE LAST WORD. `invalidateSize` tells
