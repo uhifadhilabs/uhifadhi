@@ -70,6 +70,15 @@ final class MapExtension extends AbstractExtension
             // draws no map builds neither Twig's renderer nor UX Map's: the
             // function is always known, the machinery arrives on first use.
             new TwigFunction('render_map', [MapPlateRuntime::class, 'renderMap'], ['is_safe' => ['html']]),
+            /*
+             * AND THE CHART, THE PLATE'S SIBLING. Named `atlas_chart`
+             * rather than `render_chart` because the library ships a
+             * function of that name and this platform's chart is not the
+             * library's: a module states a kind and a series, and what
+             * that looks like is the atlas's to decide. Both exist; the
+             * one to write is this.
+             */
+            new TwigFunction('atlas_chart', [ChartRuntime::class, 'renderChart'], ['is_safe' => ['html']]),
         ];
     }
 

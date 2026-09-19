@@ -19,6 +19,7 @@ use Symfony\Bundle\TwigBundle\TwigBundle;
 use Symfony\Component\AssetMapper\AssetMapperInterface;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Kernel;
+use Symfony\UX\Chartjs\ChartjsBundle;
 use Symfony\UX\Map\UXMapBundle;
 use Symfony\UX\StimulusBundle\StimulusBundle;
 use Uhifadhi\Bundle\AtlasBundle\AtlasBundle;
@@ -52,6 +53,9 @@ final class TestKernel extends Kernel
         yield new TwigBundle();
         yield new StimulusBundle();
         yield new UXMapBundle();
+        // The library the platform's chart stands on — registered here for
+        // the same reason UX Map is: the runtime references its services.
+        yield new ChartjsBundle();
         yield new AtlasBundle();
     }
 

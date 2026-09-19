@@ -32,9 +32,37 @@ final readonly class DepartmentDirectory
     }
 
     /**
-     * THE ROWS A MODULE'S MATRIX HAS: the departments that attach it AND
-     * can be asked about it. A department that attaches the module in an
-     * area nobody runs it in is not a row of empties — it is not a row.
+     * THE ROWS A MODULE'S MATRIX HAS: the departments that ATTACH it.
+     *
+     * ATTACHING IS WHAT MAKES A ROW. A department that attached the
+     * module said this is work it leads for; leaving it off the matrix
+     * because no area it reads is running the module yet would hide the
+     * very department somebody is about to ask about. It is a row, and
+     * its cells are {@see MatrixCell::notMine()} until the module is
+     * running somewhere it can see.
+     *
+     * A DEPARTMENT THAT ATTACHES NOTHING OF THE KIND is not a row at
+     * all: the module is not its work, and a dash across a whole row
+     * would be the old board's mistake in miniature.
+     *
+     * @return list<DepartmentEntry>
+     */
+    public function attaching(string $slug): array
+    {
+        return array_values(array_filter(
+            $this->entries,
+            static fn (DepartmentEntry $entry): bool => $entry->attaches($slug),
+        ));
+    }
+
+    /**
+     * THE ROWS WHOSE CELLS ARE REAL — those that attach the module AND
+     * can be asked about it, which is the set a module actually computes
+     * figures for.
+     *
+     * Not the matrix's rows: {@see attaching()} is. This is what a
+     * provider loops over when it queries, and what a page counts when
+     * it says how many departments are measuring.
      *
      * @return list<DepartmentEntry>
      */

@@ -37,6 +37,7 @@ use Uhifadhi\Contracts\Performance\TopicKpi;
 #[CoversClass(TopicKpi::class)]
 #[CoversClass(MatrixCell::class)]
 #[CoversClass(DepartmentEntry::class)]
+#[CoversClass(DepartmentDirectory::class)]
 #[CoversClass(ColumnPolarity::class)]
 final class TopicContractTest extends TestCase
 {
@@ -91,17 +92,43 @@ final class TopicContractTest extends TestCase
         self::assertTrue($running->canAnswerFor('patrols'));
     }
 
-    /** A matrix's rows are the askable ones, and the bands keep their order. */
-    public function testTheDirectoryAnswersWithTheRowsAMatrixHas(): void
+    /**
+     * ATTACHING IS WHAT MAKES A ROW; being askable is what makes a cell.
+     *
+     * A department that attached the module said this is work it leads
+     * for, so it is a row even where no area it reads runs the module
+     * yet — its cells are `notMine` until one does. A department that
+     * attaches nothing of the kind is not a row at all.
+     */
+    public function testAttachingMakesARowAndAnsweringMakesACell(): void
     {
-        $directory = new DepartmentDirectory([
+        $directory = self::threeDepartments();
+
+        self::assertSame(
+            ['Ecology', 'Wetlands'],
+            array_map(static fn (DepartmentEntry $e): string => $e->name, $directory->attaching('patrols')),
+            'both attach it; one cannot answer yet, and is still a row',
+        );
+        self::assertSame(
+            ['Ecology'],
+            array_map(static fn (DepartmentEntry $e): string => $e->name, $directory->answeringFor('patrols')),
+            'and only one of them has cells to fill',
+        );
+    }
+
+    /** The bands keep the order the surfaces read them in. */
+    public function testTheBandsKeepTheirOrder(): void
+    {
+        self::assertSame(['Org-wide', 'Northern Reserve'], self::threeDepartments()->bands());
+    }
+
+    private static function threeDepartments(): DepartmentDirectory
+    {
+        return new DepartmentDirectory([
             new DepartmentEntry('a', 'Ecology', null, 'Org-wide', ['patrols'], ['patrols' => new \DateTimeImmutable()]),
             new DepartmentEntry('b', 'Wetlands', 'area', 'Northern Reserve', ['patrols'], ['patrols' => null]),
             new DepartmentEntry('c', 'Tourism', null, 'Org-wide'),
         ]);
-
-        self::assertSame(['Ecology'], array_map(static fn (DepartmentEntry $e): string => $e->name, $directory->answeringFor('patrols')));
-        self::assertSame(['Org-wide', 'Northern Reserve'], $directory->bands());
     }
 
     /** A column with no polarity makes no claim, and colours nothing. */

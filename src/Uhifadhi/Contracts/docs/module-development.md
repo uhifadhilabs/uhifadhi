@@ -1469,16 +1469,21 @@ and — the part that is easy to miss — **since when each of those modules has
 been running somewhere that department can see it**.
 
 ```php
-foreach ($this->directory->forScope($scope)->answeringFor('patrols') as $entry) {
-    // $entry->uuid, ->name, ->band, ->mark, ->runningSince['patrols']
+foreach ($this->directory->forScope($scope)->attaching('patrols') as $entry) {
+    $cell = $entry->canAnswerFor('patrols')
+        ? new MatrixCell(value: $this->coverageFor($entry), delta: …, history: …)
+        : MatrixCell::notMine();
 }
 ```
 
-`answeringFor()` is your matrix's rows: the departments that attach you **and**
-can be asked. A department that attaches your module in an area nobody runs it
-in is `MatrixCell::notMine()` — not an empty figure and never a nought, because
-nobody asked it. Periods before its `runningSince` are holes in the history for
-the same reason.
+**`attaching()` is your matrix's rows; `canAnswerFor()` decides each cell.** A
+department that attached your module said this is work it leads for, so it is a
+row even where no area it reads is running the module yet — its cells are
+`MatrixCell::notMine()` until one is. A department that attaches nothing of the
+kind is not a row at all: the module is not its work, and a dash across a whole
+row is the old board's mistake in miniature. Periods before an entry's
+`runningSince` are holes in its history for the same reason. `answeringFor()`
+is the narrower set — the rows you will actually query.
 
 Four rules the host will hold you to, and they are the same four the rest of
 this platform states:

@@ -18,8 +18,10 @@ use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
+use Uhifadhi\Bundle\AtlasBundle\Chart\ChartBuilder;
 use Uhifadhi\Bundle\AtlasBundle\DependencyInjection\AtlasConfiguration;
 use Uhifadhi\Bundle\AtlasBundle\Model\SatelliteSource;
+use Uhifadhi\Bundle\AtlasBundle\Twig\ChartRuntime;
 use Uhifadhi\Bundle\AtlasBundle\Twig\MapExtension;
 use Uhifadhi\Bundle\AtlasBundle\Twig\MapPlateRuntime;
 
@@ -225,6 +227,24 @@ final class AtlasBundle extends AbstractBundle
         if (\is_array($bundles) && isset($bundles['TwigBundle'], $bundles['UXMapBundle'])) {
             $services->set('atlas.twig_plate_runtime', MapPlateRuntime::class)
                 ->args([service('twig'), service('ux_map.renderers')])
+                ->tag('twig.runtime');
+        }
+
+        /*
+         * THE CHART, ON THE SAME TERMS AS THE PLATE. What a stated chart
+         * becomes is one decision made here — the type behind each shape,
+         * the scales, the colours — so two modules cannot disagree about
+         * what a bar chart is; and like the plate it is registered only
+         * where the library it stands on is, so a host that installed
+         * this bundle for its maps alone still boots.
+         */
+        if (\is_array($bundles) && isset($bundles['TwigBundle'], $bundles['ChartjsBundle'])) {
+            $services->set('atlas.charts', ChartBuilder::class)
+                ->args([service('chartjs.builder')]);
+            $services->alias(ChartBuilder::class, 'atlas.charts');
+
+            $services->set('atlas.twig_chart_runtime', ChartRuntime::class)
+                ->args([service('twig'), service('atlas.charts'), service('chartjs.twig_extension')])
                 ->tag('twig.runtime');
         }
     }
