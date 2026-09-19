@@ -132,10 +132,24 @@ return static function (ContainerConfigurator $container): void {
         ->tag('controller.service_arguments');
     $services->alias(AreaEditController::class, 'area.controller.edit')->public();
 
+    /*
+     * THE ZONES TAB — how the area is divided, read: the set's figures, the
+     * whole ground on one plate, and the stations and people those zones
+     * account for. The picker is the sidebar, not a column of the page.
+     */
     $services->set('area.controller.zone', ZoneController::class)
         ->args([
             service('twig'),
-            service(ZoneRepository::class),
+            service('area.zone_set'),
+            service('area.station_register'),
+            service(StationRepository::class),
+            service(PostingRepository::class),
+            service('area.posting_board'),
+            service('area.register'),
+            service('area.zone_plate'),
+            service('area.zone_figures'),
+            service('registry.area_modules'),
+            service('registry.entry_routes'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(ZoneController::class, 'area.controller.zone')->public();

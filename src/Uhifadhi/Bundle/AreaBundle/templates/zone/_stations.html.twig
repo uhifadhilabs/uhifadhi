@@ -1,0 +1,44 @@
+{# THE STATIONS OF A SELECTION, as the zones pages draw them.
+
+   ONE SHAPE, TWO SURFACES: the zones tab draws every post in the area and
+   needs the zone column; a zone record draws its own and does not, because
+   the answer would be the same word on every row. #}
+<div class="ovx-tbl">
+    <table class="tbl zdtbl">
+        <tr>
+            <th>Station</th>
+            <th>Code</th>
+            {% if withZone %}<th>Zone</th>{% endif %}
+            <th>Point</th>
+            <th>Posted</th>
+            <th>Lead</th>
+            <th></th>
+        </tr>
+        {% for row in rows %}
+            <tr>
+                <td class="zname">
+                    <span class="zn-in">
+                        <span class="stpin{{ row.posted ? '' : ' hollow' }}">{{ row.posted ?: '' }}</span>
+                        <b>{{ row.name }}</b>
+                    </span>
+                </td>
+                <td class="mono d">{{ row.code ?? '&mdash;'|raw }}</td>
+                {% if withZone %}
+                    <td>
+                        {%- if row.zoneName -%}
+                            <span class="stzone"><i{% if row.zoneHue %} style="background:{{ row.zoneHue }}"{% endif %}></i>{{ row.zoneName }}</span>
+                        {%- else -%}
+                            <em class="pnone">unzoned</em>
+                        {%- endif -%}
+                    </td>
+                {% endif %}
+                <td class="mono d">{{ row.point ? row.point.label : '&mdash;'|raw }}</td>
+                <td>{{ row.posted ?: '<em class="pnone">nobody posted</em>'|raw }}</td>
+                <td>{{ row.led ? 'appointed' : '<em class="pnone">no lead</em>'|raw }}</td>
+                <td class="act">
+                    <a class="open-btn" href="{{ path('area_station_show', {uuid: area.uuidString, station: row.uuid}) }}">Open {{ ux_icon('shell:arrow-right') }}</a>
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+</div>

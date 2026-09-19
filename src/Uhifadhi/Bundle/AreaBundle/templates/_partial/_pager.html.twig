@@ -1,0 +1,29 @@
+{# ONE PAGER, FOR EVERY LIST THAT PAGES RATHER THAN SCROLLS.
+
+   A CARD IS BOUNDED BY ITS PAGE SIZE, not by a scrollbar inside it: the count
+   on the left, the pages on the right, and the window between them. Every
+   page number is a link, so where you are in a list is in the address.
+
+   IT SAYS WHEN IT IS FILTERED. "5 of 12 stations · filtered from 30" is two
+   different facts about one list, and a reader who cannot see the second one
+   reads the first as the whole. #}
+{% if pages > 1 or (scope is defined and scope > total) %}
+    <div class="pgr">
+        <span class="cnt">
+            {{- total ? from ~ '&ndash;' ~ to : 0 }} of {{ total }} {{ noun }}
+            {%- if scope is defined and scope > total %} &middot; filtered from {{ scope }}{% endif -%}
+        </span>
+        <span class="sp"></span>
+        {% if pages > 1 %}
+            <a class="{{ page == 1 ? 'off' : '' }}" href="{{ path(app.request.attributes.get('_route'), app.request.attributes.get('_route_params')|merge(query.with('page', max(1, page - 1) ~ ''))) }}">&larr; Previous</a>
+            {% for number in 1..pages %}
+                {% if number == page %}
+                    <span class="pg-n on">{{ number }}</span>
+                {% else %}
+                    <a href="{{ path(app.request.attributes.get('_route'), app.request.attributes.get('_route_params')|merge(query.with('page', number ~ ''))) }}">{{ number }}</a>
+                {% endif %}
+            {% endfor %}
+            <a class="{{ page == pages ? 'off' : '' }}" href="{{ path(app.request.attributes.get('_route'), app.request.attributes.get('_route_params')|merge(query.with('page', min(pages, page + 1) ~ ''))) }}">Next &rarr;</a>
+        {% endif %}
+    </div>
+{% endif %}

@@ -50,7 +50,7 @@ final readonly class StationRegisterService
     ) {
     }
 
-    public function register(AreaOfInterest $area, StationQuery $query): StationRegister
+    public function register(AreaOfInterest $area, StationQuery $query, int $perPage = StationRegister::PER_PAGE): StationRegister
     {
         $hues = [];
         $zoneNames = [];
@@ -80,11 +80,11 @@ final readonly class StationRegisterService
         $matching = array_values(array_filter($all, static fn (StationRow $row): bool => self::answers($row, $query, null)));
         usort($matching, static fn (StationRow $a, StationRow $b): int => self::order($a, $b, $query->sort));
 
-        $pages = max(1, (int) ceil(\count($matching) / StationRegister::PER_PAGE));
+        $pages = max(1, (int) ceil(\count($matching) / $perPage));
         $page = max(1, min($query->page, $pages));
 
         return new StationRegister(
-            rows: \array_slice($matching, ($page - 1) * StationRegister::PER_PAGE, StationRegister::PER_PAGE),
+            rows: \array_slice($matching, ($page - 1) * $perPage, $perPage),
             total: \count($matching),
             // THE SCOPE IS THE ACTIVE FILTER'S, so "3 of 12" means three of the
             // twelve the register is currently about.
@@ -96,6 +96,7 @@ final readonly class StationRegisterService
             lead: self::leadOptions($all, $query),
             page: $page,
             pages: $pages,
+            perPage: $perPage,
         );
     }
 

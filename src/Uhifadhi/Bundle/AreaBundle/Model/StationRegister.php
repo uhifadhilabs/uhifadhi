@@ -29,7 +29,13 @@ namespace Uhifadhi\Bundle\AreaBundle\Model;
  */
 final readonly class StationRegister
 {
-    /** How many rows one page of the register draws. */
+    /**
+     * HOW MANY ROWS A PAGE OF THE REGISTER DRAWS, where the surface does not
+     * say otherwise. A card in a narrow column shows fewer than a card that
+     * owns the page, and the number is the design's per surface — so it
+     * travels with the answer rather than being a constant three screens
+     * quietly disagree about.
+     */
     public const int PER_PAGE = 8;
 
     /**
@@ -50,6 +56,7 @@ final readonly class StationRegister
         public array $lead,
         public int $page,
         public int $pages,
+        public int $perPage = self::PER_PAGE,
     ) {
     }
 
@@ -61,12 +68,12 @@ final readonly class StationRegister
     /** The first row of this window, counting from one, for "9–12 of 12". */
     public function from(): int
     {
-        return 0 === $this->total ? 0 : ($this->page - 1) * self::PER_PAGE + 1;
+        return 0 === $this->total ? 0 : ($this->page - 1) * $this->perPage + 1;
     }
 
     public function to(): int
     {
-        return min($this->page * self::PER_PAGE, $this->total);
+        return min($this->page * $this->perPage, $this->total);
     }
 
     /**
