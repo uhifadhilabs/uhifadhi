@@ -315,8 +315,11 @@
         </div>
 
         {% if editable %}
-            {# The dashed ghost add-tile, the platform's one add affordance. #}
-            <button type="button" class="w-addtile w-addwidget" data-picker-open>{{ ux_icon('shell:plus') }}<span>Add widget</span></button>
+            {# THE COMPOSER'S OWN ADD AFFORDANCE, and the only one the platform
+               ships. It adds a widget to the preset being composed HERE; it is
+               not a door to the library, because a surface reaches the library
+               through the action in its page header. #}
+            <button type="button" class="w-addwidget" data-picker-open>{{ ux_icon('shell:plus') }}<span>Add widget</span></button>
         {% endif %}
     </div>
 

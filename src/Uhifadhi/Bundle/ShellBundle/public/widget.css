@@ -202,22 +202,30 @@
 .w-act { display: inline-flex; align-items: center; gap: 7px; text-decoration: none; }
 
 
-/* ---- widget framework: the add affordance ---- */
-/* THE ADD AFFORDANCE, platform-wide: a dashed ghost tile — transparent fill,
-   muted until hover, then the accent. ONE style everywhere it appears (the
-   dashboard's "Add widgets — open the library", the canvas's "Add widget", an
-   area's "Add a module"), sized to its context.
+/* ---- widget framework: the composer's add affordance ---- */
+/* ONE AFFORDANCE, AND IT BELONGS TO THE COMPOSER. A dashed ghost tile —
+   transparent fill, muted until hover, then the accent — for adding a widget
+   to the preset being composed, on the library page, where composing is what
+   somebody came to do.
+
+   IT IS NOT A DOOR TO THE LIBRARY, and there is deliberately no class for one.
+   A surface reaches the library through the action in its page header, which
+   every design carries; "Add widgets — open the library" at the bottom of a
+   dashboard was ruled against, and the way to keep it gone is for the class it
+   was written with to have no definition at all. That is why this rule is
+   named for the composer rather than for a generic tile: a module that writes
+   its own door now writes a word the shell does not ship, and its vocabulary
+   test says so.
 
    `background:none` and `font:inherit` are stated because this is worn by a
-   <button> as often as by an <a>, and a bare <button> would otherwise arrive
-   with the browser's own grey-white fill — which is exactly the odd solid button
-   this rule exists to prevent. */
-.w-addtile{display:flex;align-items:center;justify-content:center;gap:8px;min-height:64px;width:100%;
+   <button>, which would otherwise arrive with the browser's own grey-white
+   fill — exactly the odd solid button this rule exists to prevent. */
+.w-addwidget{display:flex;align-items:center;justify-content:center;gap:8px;min-height:64px;width:100%;
      box-sizing:border-box;border:1px dashed var(--c-ln2);border-radius:10px;background:none;
      color:rgb(var(--c-dim));font:inherit;font-size:12.5px;text-decoration:none;cursor:pointer;
      transition:color .15s,border-color .15s}
-.w-addtile:hover{color:rgb(var(--c-acc));border-color:rgb(var(--c-acc))}
-.w-addtile svg{width:16px;height:16px}
+.w-addwidget:hover{color:rgb(var(--c-acc));border-color:rgb(var(--c-acc))}
+.w-addwidget svg{width:16px;height:16px}
 
 /* ---- THE PRESET COMPONENT ----------------------------------------------- */
 /* ONE component, identical on every surface that ships a WidgetCatalog — team,

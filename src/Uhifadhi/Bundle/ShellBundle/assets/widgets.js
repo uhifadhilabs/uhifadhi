@@ -493,7 +493,7 @@ export function initWidgetLibrary(root = document.querySelector(ROOT_SELECTOR)) 
         if (sel.editable && !addTile) {
             const tile = document.createElement('button');
             tile.type = 'button';
-            tile.className = 'w-addtile w-addwidget';
+            tile.className = 'w-addwidget';
             tile.setAttribute('data-picker-open', '');
             tile.innerHTML = icon('plus') + '<span>Add widget</span>';
             body.appendChild(tile);

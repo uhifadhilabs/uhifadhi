@@ -196,6 +196,17 @@ final class LayoutContract
      * writes those itself, from its own templates; a module that typed one
      * would be drawing the frame instead of filling it.
      *
+     * AND NO LIBRARY DOOR ON A SURFACE. There is no component for "Add
+     * widgets — open the library" at the foot of a dashboard, an overview or
+     * any other surface, and there will not be one: a page reaches its widget
+     * library through the action in its PAGE HEADER, which is where every
+     * design puts it and where a person looks for what a page can do. The
+     * dashed ghost tile the shell does ship is the LIBRARY's own composer
+     * affordance (`.w-addwidget`), for adding a widget to the preset being
+     * composed on that page — it is not a door and must not be borrowed as
+     * one. A module that writes a door writes a class the shell does not
+     * define, and its vocabulary test fails, which is the enforcement.
+     *
      * @var list<string>
      */
     public const array COMPONENTS = [
