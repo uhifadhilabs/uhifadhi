@@ -148,18 +148,34 @@ final readonly class AreaController
          * once, and handed to every cell alike — the page cannot then give
          * a module something it did not ask for, or withhold what it did.
          */
+        $plate = $this->areaMap->overview($this->mapPayload->forArea($area), $mapLayers);
+        $tiles = $this->overview->nowTilesFor($area, $now);
+        $attention = $this->overview->attentionFor($area, $now);
+
+        /*
+         * THE SHARED HALF OF THE CONTRACT, in the names the contract
+         * publishes: `area`, `now`, `tiles`, `attention`, `layers` and
+         * `legend`, alongside each module's own reading under `by.<slug>`.
+         * A module template is written against those names, so the host
+         * supplies all of them and not merely the ones today's modules
+         * happen to read.
+         */
         $cellContext = [
             'area' => $area,
             'by' => $this->catalogue->contextFor($area, $now),
+            'now' => $now,
+            'tiles' => $tiles,
+            'layers' => $mapLayers,
+            'legend' => $plate->legend(),
             'areaKm2' => $this->register->areaKm2($area),
             'zoneCount' => $this->zones->countFor($area),
             // WHAT STANDS ON THE GROUND AND WHERE THE GROUND IS — the area's
             // own two facts the band was missing.
             'stationCount' => $this->stations->countByArea($area),
             'centroid' => $this->register->centroid($area),
-            'map' => $this->areaMap->overview($this->mapPayload->forArea($area), $mapLayers),
-            'nowTiles' => $this->overview->nowTilesFor($area, $now),
-            'attention' => $this->overview->attentionFor($area, $now),
+            'map' => $plate,
+            'nowTiles' => $tiles,
+            'attention' => $attention,
             'installedSlugs' => $this->overview->installedSlugs($area),
             'moduleCards' => $this->composition->moduleLinksFor($area),
             'catalogueCount' => $this->modules->count(),

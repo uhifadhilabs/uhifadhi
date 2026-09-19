@@ -167,6 +167,33 @@ final class AreaOverviewTest extends WebTestCase
         self::assertStringContainsString('96 km walked today', $body);
     }
 
+    /**
+     * AND THE SHARED HALF OF THE MAP IS ALL OF IT. A module template is
+     * written against the names the contract publishes — `area`, `now`,
+     * `tiles`, `attention`, `layers`, `legend` — so the host supplies every
+     * one, not merely the ones today's modules happen to read. The next
+     * module to read `legend` should not be the one that discovers it is
+     * missing.
+     */
+    public function testTheSharedHalfOfTheContextCarriesEveryPublishedName(): void
+    {
+        $this->boot();
+        $this->signIn();
+        $area = $this->anArea();
+        $this->aModuleInstalledIn($area);
+
+        // The fixture's partial reads one of them and `by`; the rest are
+        // proven by the page rendering with strict_variables on, which is
+        // how a missing name fails here rather than in an installation.
+        self::assertStringContainsString('data-w="pl_now"', $this->body($area));
+
+        $context = new \ReflectionClass(AreaController::class);
+        $source = (string) file_get_contents((string) $context->getFileName());
+        foreach (["'area' =>", "'now' =>", "'tiles' =>", "'attention' =>", "'layers' =>", "'legend' =>", "'by' =>"] as $name) {
+            self::assertStringContainsString($name, $source, \sprintf('The shared map does not carry %s.', $name));
+        }
+    }
+
     /** And it joins the grid at the span its module asked for. */
     public function testAModulesCellTakesTheSpanItAskedFor(): void
     {
