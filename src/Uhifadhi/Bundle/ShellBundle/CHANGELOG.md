@@ -12,6 +12,10 @@ Not released yet.
  * the design-system stylesheet every module's own sheet is written against
  * the widget machinery under `Widget/`: the surface registry, the stored
    layouts and the library component every dashboard is arranged through
+ * `.btn` and `.cta` render identically on `<a>`, `<button>` and
+   `<input type="submit">` — appearance, font and line box neutralised, so a
+   Discard beside a Save is not the browser's grey button (`.cta` named no
+   font at all), and the duplicated `.btn` block is one block again
  * `.c > .more`, the card's one quiet door pinned to its top edge, so a module
    that draws a way out of a card does not pin it with a rule of its own
  * `.mchip.ghost`, the quiet chip a month stepper's arrows wear, and the mark's

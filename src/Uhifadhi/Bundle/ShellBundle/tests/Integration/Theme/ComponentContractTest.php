@@ -441,6 +441,100 @@ final class ComponentContractTest extends ContractTestCase
     }
 
     /**
+     * A BUTTON IS NOT AN ANCHOR THAT HAPPENS TO BE PRESSABLE.
+     *
+     * `.btn` and `.cta` are written on all three of `<a>`, `<button>` and
+     * `<input type="submit">` across the product — a link out of a card, a
+     * Discard beside a Save, a form that submits. The user agent gives the
+     * last two a ground, a border, a font and a line box of their own, and
+     * every one of them has to be turned off in the rule or the pair renders
+     * as one house control beside one browser-grey button.
+     *
+     * `.cta` WAS THE ONE THAT GOT IT WRONG: it named no font at all, so the
+     * accent button came out in the system font wherever a form submitted
+     * rather than linked. `.btn` had the font and still had no `appearance`
+     * and no line-height.
+     *
+     * LINE-HEIGHT IS `inherit`, NOT A NUMBER. A button's UA line-height is
+     * `normal` and an anchor takes the page's, which is what sat the two a
+     * few pixels apart; inheriting makes the button match the anchor and
+     * moves the anchor not at all, where a stated number would move both.
+     *
+     * WHAT THIS PROMISES AND WHAT IT DOES NOT. It is a check over the SHEET,
+     * like the plate's height: it says the rule carries the declarations that
+     * make the three element types render alike, and — with the sibling test
+     * below — that nothing narrows the rule to one of them. It cannot say the
+     * three COMPUTE alike, because no browser runs here; that is a sweep.
+     */
+    #[DataProvider('buttonNeutraliserDeclarations')]
+    public function testTheButtonRulesReachEveryElementTypeTheyAreWrittenOn(string $selector, string $property, string $value): void
+    {
+        self::assertMatchesRegularExpression(
+            '/(?:^|;)\s*'.preg_quote($property, '/').'\s*:\s*'.preg_quote($value, '/').'\s*(?:;|$)/',
+            $this->rule($selector),
+            \sprintf(
+                '%s must state `%s: %s`, or a <button> wearing it renders as the browser\'s own.',
+                $selector,
+                $property,
+                $value,
+            ),
+        );
+    }
+
+    /**
+     * @return \Generator<string, array{string, string, string}>
+     */
+    public static function buttonNeutraliserDeclarations(): \Generator
+    {
+        // The four a user agent supplies for a <button> and would otherwise
+        // win: the chrome, the font, the line box, and the ground the house
+        // rule states for itself.
+        $neutralisers = [
+            'appearance' => 'none',
+            '-webkit-appearance' => 'none',
+            'font-family' => 'inherit',
+            'line-height' => 'inherit',
+        ];
+
+        foreach (['.btn', '.cta'] as $selector) {
+            foreach ($neutralisers as $property => $value) {
+                yield $selector.' — '.$property => [$selector, $property, $value];
+            }
+        }
+
+        // And the house's own ground, border and radius, stated on both so
+        // neither falls back to anything.
+        yield '.btn — border-radius' => ['.btn', 'border-radius', '9px'];
+        yield '.cta — border-radius' => ['.cta', 'border-radius', '9px'];
+        yield '.btn — cursor' => ['.btn', 'cursor', 'pointer'];
+        yield '.cta — cursor' => ['.cta', 'cursor', 'pointer'];
+    }
+
+    /**
+     * AND NOTHING NARROWS THEM TO AN ELEMENT TYPE.
+     *
+     * A single `a.btn` anywhere in the chain would make the rule an anchor's
+     * rule, and every `<button class="btn">` in the product would quietly
+     * stop being a house control. The neutralisers above are only worth
+     * stating if the selector they are stated on reaches all three.
+     */
+    public function testNoSheetNarrowsAButtonRuleToOneElementType(): void
+    {
+        $narrowed = [];
+        foreach (['btn', 'cta'] as $class) {
+            if (1 === preg_match('/\b(?:a|button|input)\.'.$class.'\b/', $this->stylesheet(), $match)) {
+                $narrowed[] = $match[0];
+            }
+        }
+
+        self::assertSame(
+            [],
+            $narrowed,
+            'a rule typed to one element is a rule the other two element types do not get.',
+        );
+    }
+
+    /**
      * A FILTER ROW IS ONE LINE, AND THE PANEL UNDER IT IS ONE PANEL.
      *
      * FOUR BUNDLES DRAW THIS ROW — the incidents register, patrol's list, the

@@ -337,10 +337,23 @@ body::before {
    something; `.soon` is drawn where a control is shown before it works, so a
    reader learns it exists without being able to press it. */
 .btn {
+    /* THE SAME CONTROL ON AN <a>, A <button> AND AN <input type="submit">.
+       A button is not an anchor that happens to be pressable: the user agent
+       gives it a ground, a border, a font and a line box of its own, and every
+       one of them has to be turned off here or a Discard beside a Save comes
+       out as the browser's grey button. `appearance` kills the chrome (iOS
+       keeps drawing it otherwise), `font-family: inherit` stops the system
+       font, and `line-height: inherit` is what makes the two the same HEIGHT —
+       a button's UA line-height is `normal` while an anchor takes the page's,
+       so the pair sat a few pixels apart with nothing saying why. Inherit
+       rather than a number, because the number the anchor already computes is
+       the one to match and nothing here should move it. */
+    appearance: none; -webkit-appearance: none;
     display: inline-flex; align-items: center; gap: 7px; white-space: nowrap;
     background: rgb(var(--c-raised)); color: rgb(var(--c-tx));
     border: 1px solid var(--c-ln2); border-radius: 9px;
-    padding: 7px 13px; font-size: 12px; font-weight: 600; font-family: inherit;
+    padding: 7px 13px; font-size: 12px; font-weight: 600;
+    font-family: inherit; line-height: inherit;
     text-decoration: none; cursor: pointer;
 }
 .btn:hover { border-color: rgb(var(--c-fog)); }
@@ -708,12 +721,20 @@ h2.zone::after { content: ""; flex: 1; height: 1px; background: var(--c-ln2); }
     box-sizing: border-box;
 }
 .cta {
+    /* THE SAME THREE ELEMENT TYPES, and this rule was the one that got it
+       wrong: it named no font at all, so an `<a class="cta">` took the page's
+       and a `<button class="cta">` took the user agent's — the accent button
+       rendered in the system font wherever a form submitted rather than
+       linked. See `.btn` above for why each of the three lines is here. */
+    appearance: none; -webkit-appearance: none;
     background: rgb(var(--c-acc));
     color: rgb(var(--c-accT));
     border-radius: 9px;
     padding: 7px 15px;
     font-weight: 800;
     font-size: 12px;
+    font-family: inherit;
+    line-height: inherit;
     text-decoration: none;
     display: inline-block;
     border: none;
@@ -1542,30 +1563,6 @@ table.tbl tr:hover .open-btn {
 .deptgroup .gnote { font-size: 11.5px; color: rgb(var(--c-fog)); }
 .deptgroup .gnote code { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10.5px; font-weight: 600; color: rgb(var(--c-acc)); }
 
-/* ---- THE QUIET BUTTON (.btn) — the third control, beside .cta and .tgl.
-   `.cta` is the one thing a card is FOR and there is one of it; `.tgl` is a
-   switch that carries a state. A `.btn` is neither: it is an ordinary action
-   offered beside others — export, rename, download this first — and a card may
-   hold several without any of them claiming to be the point. `.sm` is the size
-   a card header and a footer strip take; `.dg` says the action destroys
-   something; `.soon` is drawn where a control is shown before it works, so a
-   reader learns it exists without being able to press it. */
-.btn {
-    display: inline-flex; align-items: center; gap: 7px; white-space: nowrap;
-    background: rgb(var(--c-raised)); color: rgb(var(--c-tx));
-    border: 1px solid var(--c-ln2); border-radius: 9px;
-    padding: 7px 13px; font-size: 12px; font-weight: 600; font-family: inherit;
-    text-decoration: none; cursor: pointer;
-}
-.btn:hover { border-color: rgb(var(--c-fog)); }
-.btn:focus-visible { outline: 2px solid color-mix(in srgb, rgb(var(--c-acc)) 60%, transparent); outline-offset: 2px; }
-.btn svg { width: 14px; height: 14px; flex: none; display: block; }
-.btn.sm { padding: 5px 10px; font-size: 11.5px; border-radius: 8px; }
-.btn.sm svg { width: 13px; height: 13px; }
-.btn.dg, .cta.dg { color: rgb(var(--c-fail)); border-color: color-mix(in srgb, rgb(var(--c-fail)) 45%, transparent); }
-.cta.dg { background: none; font-weight: 700; }
-.btn.soon, .btn[disabled] { color: rgb(var(--c-dim)); border-style: dashed; cursor: default; }
-.btn.soon:hover, .btn[disabled]:hover { border-color: var(--c-ln2); }
 .soonlbl {
     font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 9px; font-weight: 700;
     letter-spacing: .08em; text-transform: uppercase; color: rgb(var(--c-dim));
