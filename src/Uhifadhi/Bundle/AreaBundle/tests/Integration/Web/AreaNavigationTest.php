@@ -103,7 +103,7 @@ final class AreaNavigationTest extends WebTestCase
         self::assertCount(1, $areas);
         self::assertSame('Northern Conservation Reserve', $areas[0]->label);
         self::assertSame(
-            ['Overview', 'Zones'],
+            ['Overview', 'Zones', 'Stations'],
             array_map(static fn (NavItem $i): string => $i->label, $areas[0]->children),
         );
     }
@@ -344,7 +344,7 @@ final class AreaNavigationTest extends WebTestCase
 
         self::assertTrue($row->open, 'the area group folds shut on its own configure page');
         self::assertSame(
-            ['Overview', 'Modules', 'Zones'],
+            ['Overview', 'Modules', 'Zones', 'Stations'],
             array_map(static fn (NavItem $i): string => $i->label, $row->children),
         );
         self::assertSame([], array_values(array_filter(

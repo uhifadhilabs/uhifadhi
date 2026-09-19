@@ -21,6 +21,7 @@ use Uhifadhi\Bundle\AreaBundle\Controller\AreaWidgetsController;
 use Uhifadhi\Bundle\AreaBundle\Controller\StationConfigureController;
 use Uhifadhi\Bundle\AreaBundle\Controller\StationEditController;
 use Uhifadhi\Bundle\AreaBundle\Controller\StationRecordController;
+use Uhifadhi\Bundle\AreaBundle\Controller\StationsController;
 use Uhifadhi\Bundle\AreaBundle\Controller\ZoneConfigureController;
 use Uhifadhi\Bundle\AreaBundle\Controller\ZoneController;
 use Uhifadhi\Bundle\AreaBundle\Controller\ZoneEditController;
@@ -175,6 +176,28 @@ return static function (ContainerConfigurator $container): void {
         ])
         ->tag('controller.service_arguments');
     $services->alias(StationRecordController::class, 'area.controller.station_record')->public();
+
+    /*
+     * EVERY STATION IN ONE AREA — the tab. It reads; the section beside it is
+     * where a post is added, moved and staffed.
+     */
+    $services->set('area.controller.stations', StationsController::class)
+        ->args([
+            service('twig'),
+            service('area.station_register'),
+            service(StationRepository::class),
+            service(PostingRepository::class),
+            service('area.posting_board'),
+            service('area.zone_set'),
+            service(ZoneRepository::class),
+            service('area.register'),
+            service('area.zone_plate'),
+            service('area.station_figures'),
+            service('registry.area_modules'),
+            service('registry.entry_routes'),
+        ])
+        ->tag('controller.service_arguments');
+    $services->alias(StationsController::class, 'area.controller.stations')->public();
 
     /*
      * THE STATIONS SECTION — a screen for the reason Zones is one: it writes,

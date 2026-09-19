@@ -29,9 +29,8 @@
     <a href="{{ path('area_index') }}">uhifadhi</a> /
     <a href="{{ path('area_show', {uuid: area.uuidString}) }}">{{ area.name }}</a> /
     {# THE STATIONS STEP IS THE AREA'S STATIONS TAB, the list this record
-       belongs to. Until that tab exists the step is the zones tab, which is
-       where stations are read today. #}
-    <a href="{{ path('area_zones', {uuid: area.uuidString}) }}">stations</a> /
+       belongs to. #}
+    <a href="{{ path('area_stations', {uuid: area.uuidString}) }}">stations</a> /
     {{ station.name|lower }}
 {% endblock %}
 
@@ -47,7 +46,7 @@
     {# THE RECORD IS EDITED ON THE AREA'S CONFIGURE PAGE, in the Stations
        section beside Zones. This page only reads, so the control is a link
        out and not a form. #}
-    <a class="tgl w-act" href="{{ path('area_zones_configure', {uuid: area.uuidString}) }}">{{ ux_icon('shell:square-pen') }} Edit the station</a>
+    <a class="tgl w-act" href="{{ path('area_stations_configure', {uuid: area.uuidString}) }}?open={{ station.uuidString }}">{{ ux_icon('shell:square-pen') }} Edit the station</a>
 {% endblock %}
 
 {% block shell_page %}
@@ -70,7 +69,7 @@
         <span class="f"><span class="k">Opened</span><span class="v"><time datetime="{{ station.openedAt|date('c') }}" data-localtime-format="day">{{ station.openedAt|date('j M Y') }}</time><em>{{ station.active ? 'active' : 'closed' }}</em></span></span>
     {% endif %}
     <span class="sp"></span>
-    {% if zone %}<a class="more" href="{{ path('area_zones', {uuid: area.uuidString}) }}">{{ zone.name }} zone &rarr;</a>{% endif %}
+    {% if zone %}<a class="more" href="{{ path('area_stations', {uuid: area.uuidString}) }}?zone={{ zone.uuidString }}">{{ zone.name }} zone &rarr;</a>{% endif %}
 </div>
 
 <div class="recgrid">

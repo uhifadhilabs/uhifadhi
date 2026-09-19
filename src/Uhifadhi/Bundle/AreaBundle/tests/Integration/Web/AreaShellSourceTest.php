@@ -72,7 +72,7 @@ final class AreaShellSourceTest extends WebTestCase
     {
         $source = $this->sourceAt('/areas/{uuid}');
 
-        self::assertSame(['Overview', 'Zones'], $this->labels($source));
+        self::assertSame(['Overview', 'Zones', 'Stations'], $this->labels($source));
     }
 
     /**
@@ -134,7 +134,7 @@ final class AreaShellSourceTest extends WebTestCase
         self::assertSame([], $this->labels($source));
 
         $branch = $source->screensOf($area);
-        self::assertSame(['Overview', 'Zones'], array_map(
+        self::assertSame(['Overview', 'Zones', 'Stations'], array_map(
             static fn (AreaTab $t): string => $t->label,
             $branch,
         ));

@@ -1,0 +1,234 @@
+{# EVERY STATION IN ONE AREA — where each one stands and who is posted to it.
+
+   Design: areas/<area>/stations/index.html.
+
+   A TAB, NOT A CONFIGURE SCREEN. It reads; adding, moving and staffing a post
+   is the Stations section's job, and the Configure action the frame draws is
+   the way there.
+
+   ONE FLAT TABLE, FOUND BY FILTER. No zone-grouped twin: grouping by zone
+   makes the zone the only way in, when the way an operator arrives is a name
+   or a code. The zone is a filter here, and a column. #}
+{% extends '@Shell/page.html.twig' %}
+
+{% block title %}{{ area.name }} &middot; stations{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Bundle\\AtlasBundle\\AtlasBundle::STYLESHEET')) }}">
+    {{ include('@Area/_stylesheets.html.twig') }}
+{% endblock %}
+
+{% block shell_breadcrumbs %}
+    <a href="{{ path('area_index') }}">uhifadhi</a> / <a href="{{ path('area_show', {uuid: area.uuidString}) }}">{{ area.name }}</a> / stations
+{% endblock %}
+
+{% block shell_page_title %}{{ area.name }}{% endblock %}
+
+{% block shell_page_subtitle %}Every station in this area, where it stands and who is posted to it. Adding and editing one is Configure&rsquo;s job.{% endblock %}
+
+{% block shell_page %}
+{% set here = path('area_stations', {uuid: area.uuidString}) %}
+
+{# THE IDENTITY BAND, the same one every area tab wears. #}
+<div class="factband">
+    <span class="f"><span class="k">Area</span><span class="v">{{ areaKm2|number_format }}<em>km&sup2;</em></span></span>
+    <span class="f"><span class="k">Zones</span><span class="v">
+        {%- if zoneCount > 0 -%}{{ zoneCount }}<em>presence-driven</em>{%- else -%}&mdash;<em>none yet</em>{%- endif -%}
+    </span></span>
+    <span class="f"><span class="k">Stations</span><span class="v">
+        {%- if stationCount > 0 -%}{{ stationCount }}<em>{{ staffed }} posted</em>{%- else -%}&mdash;<em>none yet</em>{%- endif -%}
+    </span></span>
+    {% if area.iucnCategory %}<span class="f"><span class="k">IUCN</span><span class="v">{{ area.iucnCategory }}</span></span>{% endif %}
+    {% if area.establishedYear %}<span class="f"><span class="k">Established</span><span class="v">{{ area.establishedYear }}</span></span>{% endif %}
+    <span class="sp"></span>
+    <a class="more" href="{{ path('area_stations_configure', {uuid: area.uuidString}) }}">Configure stations &rarr;</a>
+</div>
+
+{# WHAT IS SELECTED, AND WHAT ELSE READS IT — the house identity row, directly
+   under the band. The links out are whatever modules publish about a post:
+   the core resolves each module's own entry route and names none of them. #}
+<h2 class="zone zsel">
+    <span>All stations</span><em>the whole area</em>
+    <span class="sp"></span>
+    {% for module in modules|filter(module => module.route) %}
+        <a class="btn sm" href="{{ path(module.route, {uuid: area.uuidString}) }}">See {{ module.module|lower }} {{ ux_icon('shell:arrow-right') }}</a>
+    {% endfor %}
+</h2>
+
+{# FIVE FIGURES OR NONE. Three are the area's own; two come from whatever
+   modules publish about a station. A card whose module is not installed says
+   so rather than being dropped, or the row would be three. #}
+<div class="grid dp-kstrip">
+    <div class="c kpi">
+        <span class="tab">Stations</span>
+        <b class="disp">{{ stationCount }}</b>
+        <span class="sub">{{ staffed }} posted</span>
+    </div>
+    <div class="c kpi">
+        <span class="tab">People posted</span>
+        <b class="disp">{{ peopleTotal }}</b>
+        <span class="sub">across {{ staffed }} {{ staffed == 1 ? 'station' : 'stations' }}</span>
+    </div>
+    <div class="c kpi">
+        <span class="tab">Leaders appointed</span>
+        <b class="disp">{{ leaders }}</b>
+        <span class="sub">one per staffed station</span>
+    </div>
+    {% for module in modules %}
+        <div class="c kpi">
+            <span class="tab">{{ module.label }}</span>
+            <b class="disp">{{ module.value|number_format }}</b>
+            <span class="sub">{{ module.module|lower }} &middot; {{ module.caption|lower }}</span>
+        </div>
+    {% endfor %}
+    {% if modules|length < moduleCards %}
+        {% for _ in 1..(moduleCards - modules|length) %}
+            <div class="c kpi">
+                <span class="tab">From the modules</span>
+                <b class="disp">&mdash;</b>
+                <span class="sub">no module publishes figures for these posts</span>
+            </div>
+        {% endfor %}
+    {% endif %}
+</div>
+
+<div class="grid">
+    {% if stationCount == 0 %}
+        <div class="c zempty">
+            <b class="zeh">No station in this area yet</b>
+            <p class="zeb">A station is a named point &mdash; a gate, a post, a camp. The first one is added in Configure; its zone is read from wherever it is put.</p>
+            <span class="zea"><a class="btn sm" href="{{ path('area_stations_configure', {uuid: area.uuidString}) }}">Configure stations {{ ux_icon('shell:arrow-right') }}</a></span>
+        </div>
+    {% else %}
+        {# ONE MAP CONTRACT: controls where every plate puts them, the key below.
+           Hue is the zone the point falls in, exactly as on the zones pages. #}
+        <div class="c">
+            <span class="tab">All stations on the ground<span class="src">&middot; the whole area &middot; {{ stationCount }} {{ stationCount == 1 ? 'station' : 'stations' }}</span></span>
+            {{ render_map(map, {'role': 'img', 'aria-label': 'Every station of ' ~ area.name ~ ', hued by the zone it stands in'}) }}
+        </div>
+
+        <div class="c">
+            <span class="tab">The stations<span class="src">&middot;
+                {%- if register.total == register.scope %} {{ register.scope }} {{ register.scope == 1 ? 'station' : 'stations' }}
+                {%- else %} {{ register.total }} of {{ register.scope }} {{ register.scope == 1 ? 'station' : 'stations' }}{% endif -%}
+            </span></span>
+
+            <div class="lfilt stfilt">
+                {{ include('@Area/_partial/_filter.html.twig', {
+                    label: 'zone', all: 'all zones', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\StationQuery::ZONE'),
+                    chosen: query.zone, chosenLabel: register.zoneLabel(query.zone), options: register.zones, query: query,
+                }) }}
+                {{ include('@Area/_partial/_filter.html.twig', {
+                    label: 'posted', all: 'posted or not', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\StationQuery::POSTED'),
+                    chosen: query.posted, chosenLabel: query.posted == 'yes' ? 'somebody posted' : (query.posted == 'no' ? 'nobody posted' : null), options: register.posted, query: query,
+                }) }}
+                {{ include('@Area/_partial/_filter.html.twig', {
+                    label: 'order', all: 'a&ndash;z', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\StationQuery::SORT'),
+                    chosen: query.sort == 'name' ? null : query.sort,
+                    options: [
+                        {value: 'posted', label: 'most posted', count: 0, hue: null},
+                        {value: 'zone', label: 'by zone', count: 0, hue: null},
+                    ],
+                    query: query,
+                }) }}
+
+                <form class="lsearch" method="get" action="{{ here }}">
+                    {{ ux_icon('shell:search') }}
+                    <input class="fld" type="search" name="q" value="{{ query.search }}" placeholder="Name or code&hellip;"
+                           aria-label="Search the stations by name or code">
+                    {% for k, v in query.with('q', null) %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+                </form>
+            </div>
+
+            {% if register.isEmpty %}
+                <div class="zempty">
+                    <b class="zeh">No station matches</b>
+                    <p class="zeb">Nothing in this area answers these filters. Clear one, or search another name or code.</p>
+                    <span class="zea"><a class="btn sm" href="{{ here }}">Clear the filters</a></span>
+                </div>
+            {% else %}
+                <table class="tbl">
+                    <tr>
+                        <th>Station</th>
+                        <th>Code</th>
+                        <th>Zone</th>
+                        <th>Point</th>
+                        <th class="num">Posted</th>
+                        <th></th>
+                    </tr>
+                    {% for row in register.rows %}
+                        <tr>
+                            <td><b>{{ row.name }}</b>{% if not row.active %} <span class="chip stoff">closed</span>{% endif %}</td>
+                            <td class="mono d">{{ row.code ?? '&mdash;'|raw }}</td>
+                            <td>
+                                <span class="stzone{{ row.zoneName ? '' : ' none' }}">
+                                    <i{% if row.zoneHue %} style="background:{{ row.zoneHue }}"{% endif %}></i>{{ row.zoneName ?? 'unzoned' }}
+                                </span>
+                            </td>
+                            <td class="mono d">{{ row.point ? row.point.label : '&mdash;'|raw }}</td>
+                            <td class="num">{{ row.posted }}</td>
+                            <td class="act">
+                                <a class="open-btn" href="{{ path('area_station_show', {uuid: area.uuidString, station: row.uuid}) }}">Open {{ ux_icon('shell:arrow-right') }}</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </table>
+
+                {% if register.pages > 1 %}
+                    <div class="pgr">
+                        <span class="cnt">{{ register.from }}&ndash;{{ register.to }} of {{ register.total }} {{ register.total == 1 ? 'station' : 'stations' }}</span>
+                        <span class="sp"></span>
+                        <a class="{{ register.page == 1 ? 'off' : '' }}" href="{{ path('area_stations', {uuid: area.uuidString}|merge(query.with('page', max(1, register.page - 1) ~ ''))) }}">&larr; Newer</a>
+                        {% for number in register.pageNumbers %}
+                            {% if number == register.page %}
+                                <span class="pg-n on">{{ number }}</span>
+                            {% else %}
+                                <a href="{{ path('area_stations', {uuid: area.uuidString}|merge(query.with('page', number ~ ''))) }}">{{ number }}</a>
+                            {% endif %}
+                        {% endfor %}
+                        <a class="{{ register.page == register.pages ? 'off' : '' }}" href="{{ path('area_stations', {uuid: area.uuidString}|merge(query.with('page', min(register.pages, register.page + 1) ~ ''))) }}">Older &rarr;</a>
+                    </div>
+                {% endif %}
+            {% endif %}
+        </div>
+
+        {# THE PEOPLE POSTED, bounded by a page like the table above it. #}
+        <div class="c">
+            <span class="tab">Posted people<span class="src">&middot; {{ peopleTotal }} &middot; across {{ staffed }} {{ staffed == 1 ? 'station' : 'stations' }}</span></span>
+            {% if people is empty %}
+                <div class="use">Nobody is posted in this area yet. Somebody is posted to a <b>station</b>, in the Stations section &mdash; never to a zone.</div>
+            {% else %}
+                <div class="plist">
+                    {% for person in people %}
+                        <div class="pline">
+                            <span class="tav">{{ person.initials|slice(0, 1) }}</span>
+                            <b>{{ person.name }}</b>
+                            {% if person.role %}<em>{{ person.role }}</em>{% endif %}
+                            <span class="pat">{{ stationNames[person.stationUuid] ?? '' }}</span>
+                            {% if person.department %}<span class="pdept">{{ person.department }}</span>{% endif %}
+                            {% if person.leader %}<span class="chip acc stlead">Leads</span>{% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                {% if peoplePages > 1 %}
+                    <div class="pgr">
+                        <span class="cnt">{{ peopleTotal }} posted in the area</span>
+                        <span class="sp"></span>
+                        <a class="{{ peoplePage == 1 ? 'off' : '' }}" href="{{ here }}?ppage={{ max(1, peoplePage - 1) }}">&larr; Newer</a>
+                        {% for number in 1..peoplePages %}
+                            {% if number == peoplePage %}
+                                <span class="pg-n on">{{ number }}</span>
+                            {% else %}
+                                <a href="{{ here }}?ppage={{ number }}">{{ number }}</a>
+                            {% endif %}
+                        {% endfor %}
+                        <a class="{{ peoplePage == peoplePages ? 'off' : '' }}" href="{{ here }}?ppage={{ min(peoplePages, peoplePage + 1) }}">Older &rarr;</a>
+                    </div>
+                {% endif %}
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

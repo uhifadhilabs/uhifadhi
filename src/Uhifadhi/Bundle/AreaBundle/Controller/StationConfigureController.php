@@ -160,8 +160,12 @@ final readonly class StationConfigureController
      * AN UNKNOWN ANSWER FILTERS NOTHING and an unknown sort is the default: a
      * stale link should show the register, not an error about how it was
      * ordered.
+     *
+     * PUBLIC BECAUSE THE TAB READS THE SAME ADDRESS. The Stations tab filters
+     * the same register with the same words, and two readers of one query
+     * string would be two chances to disagree about what "active" means.
      */
-    private static function queryFrom(Request $request): StationQuery
+    public static function queryFrom(Request $request): StationQuery
     {
         $active = trim($request->query->getString(StationQuery::ACTIVE, StationQuery::YES));
         $sort = $request->query->getString(StationQuery::SORT, StationQuery::BY_NAME);

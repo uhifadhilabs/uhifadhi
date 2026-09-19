@@ -147,10 +147,56 @@ final readonly class AreaPlateService
     }
 
     /**
+     * EVERY POST OF THE AREA, HUED BY THE ZONE IT STANDS IN — the Stations
+     * tab's plate.
+     *
+     * HUE IS THE ZONE, HERE TOO. The same colour names the same ground on
+     * every plate in the product, so a reader who learnt the key on the zones
+     * tab has already learnt this one. A post on unzoned ground keeps the
+     * neutral swatch, which is the honest answer rather than a twelfth colour
+     * that means "none".
+     *
+     * @param list<ZoneRow>                                                                                                               $rows  the area's zones, hued as everywhere else
+     * @param list<array{uuid: string, name: string, point: string|null, posted: int, here: bool, zone?: string|null, hue?: string|null}> $posts
+     */
+    public function stationsPlate(AreaOfInterest $area, array $rows, array $posts): AtlasMap
+    {
+        $hues = [];
+        $counted = [];
+        foreach ($rows as $row) {
+            $hues[$row->name] = $row->hue;
+            $counted[$row->name] = 0;
+        }
+
+        foreach ($posts as $post) {
+            $zone = $post['zone'] ?? null;
+            if (null !== $zone && \array_key_exists($zone, $counted)) {
+                ++$counted[$zone];
+            }
+        }
+
+        $map = $this->withPosts($this->plate($area, $rows), $posts, false);
+
+        // THE KEY SAYS HOW MANY STAND IN EACH ZONE, because on this page that
+        // is what the colour is being counted for.
+        foreach ($counted as $name => $count) {
+            if ($count > 0) {
+                $map->addLegendItem(new LegendItem(
+                    label: \sprintf('%s · %d %s', $name, $count, 1 === $count ? 'station' : 'stations'),
+                    swatch: $hues[$name],
+                    group: self::STATIONS_GROUP,
+                ));
+            }
+        }
+
+        return $map;
+    }
+
+    /**
      * THE POSTS, AS ONE LAYER — one legend row, one thing to switch off.
      *
-     * @param list<array{uuid: string, name: string, point: string|null, posted: int, here: bool}> $posts
-     * @param bool                                                                                 $accentHere whether the post the page is about is drawn apart from the rest
+     * @param list<array{uuid: string, name: string, point: string|null, posted: int, here: bool, zone?: string|null, hue?: string|null}> $posts
+     * @param bool                                                                                                                        $accentHere whether the post the page is about is drawn apart from the rest
      */
     private function withPosts(AtlasMap $map, array $posts, bool $accentHere): AtlasMap
     {
@@ -170,6 +216,10 @@ final readonly class AreaPlateService
                     // by a property rather than by a second layer: one layer
                     // means one legend row and one thing to switch off.
                     'here' => $post['here'],
+                    // THE ZONE THE POINT FELL IN, so a plate that hues by zone
+                    // can, and one that does not simply ignores it.
+                    'zone' => $post['zone'] ?? null,
+                    'hue' => $post['hue'] ?? null,
                 ],
                 'geometry' => $point,
             ];
@@ -186,10 +236,34 @@ final readonly class AreaPlateService
             group: self::STATIONS_GROUP,
             rules: $accentHere
                 ? [StyleRule::when('here', true)->color(self::HERE_SWATCH)->fillColor(self::HERE_SWATCH)]
-                : [],
+                : self::huedByZone($pins),
         ));
 
         return $map;
+    }
+
+    /**
+     * ONE RULE PER ZONE THE PINS ACTUALLY FALL IN, so a post is drawn in the
+     * colour its own ground is drawn in. A post on unzoned ground matches no
+     * rule and keeps the layer's neutral swatch, which is the honest answer
+     * rather than a colour that means "none".
+     *
+     * @param list<array{type: string, properties: array<string, mixed>, geometry: mixed}> $pins
+     *
+     * @return list<StyleRule>
+     */
+    private static function huedByZone(array $pins): array
+    {
+        $rules = [];
+        foreach ($pins as $pin) {
+            $zone = $pin['properties']['zone'] ?? null;
+            $hue = $pin['properties']['hue'] ?? null;
+            if (\is_string($zone) && \is_string($hue) && !\array_key_exists($zone, $rules)) {
+                $rules[$zone] = StyleRule::when('zone', $zone)->color($hue)->fillColor($hue);
+            }
+        }
+
+        return array_values($rules);
     }
 
     /**

@@ -56,6 +56,9 @@ final class AreaShellSource implements AreaShellSourceInterface
      * zoning scheme is for anyone who can reach the area; the writes are gated
      * inside the page.
      *
+     * STATIONS FOLLOWS ZONES, and carries no gate either, for the same
+     * reason and in that order: the ground, then the places on it.
+     *
      * SETTINGS IS NOT HERE, AND THAT IS THE RULE RATHER THAN AN OMISSION. A tab
      * is a place where DATA lives; what an area is set up with is configuration,
      * and all of it — the dashboard's composition and the area's own record —
@@ -70,6 +73,7 @@ final class AreaShellSource implements AreaShellSourceInterface
         ['Overview', 'area_show', null],
         ['Modules', 'area_modules', 'module.view'],
         ['Zones', 'area_zones', null],
+        ['Stations', 'area_stations', null],
         ['Departments', 'area_departments', null],
     ];
 
@@ -197,7 +201,12 @@ final class AreaShellSource implements AreaShellSourceInterface
             return 'Modules';
         }
 
-        foreach (['Zones' => 'area_zones', 'Departments' => 'area_departments', 'Overview' => 'area_show'] as $label => $name) {
+        foreach ([
+            'Zones' => 'area_zones',
+            'Stations' => 'area_stations',
+            'Departments' => 'area_departments',
+            'Overview' => 'area_show',
+        ] as $label => $name) {
             if ($route === $name) {
                 return $label;
             }

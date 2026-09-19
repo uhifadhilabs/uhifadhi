@@ -33,7 +33,7 @@
 {% block shell_page_subtitle %}A station is added, moved, renamed and staffed here &mdash; its own page is where it is read.{% endblock %}
 
 {% block shell_page_actions %}
-    <a class="cta" href="{{ path('area_zones', {uuid: area.uuidString}) }}">Open Zones {{ ux_icon('shell:arrow-right') }}</a>
+    <a class="cta" href="{{ path('area_stations', {uuid: area.uuidString}) }}">Open the stations tab {{ ux_icon('shell:arrow-right') }}</a>
 {% endblock %}
 
 {% block shell_page %}
