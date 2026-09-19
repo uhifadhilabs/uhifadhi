@@ -1,0 +1,116 @@
+{# PERFORMANCE · OVERVIEW — the organisation's own page, wearing the area
+   idiom: one header, a tab strip of sibling screens, and a body.
+
+   PORTED from the canonical design DesignsProjects/uhifadhi-web/departments/
+   performance.html: the scope and period controls in the action row, the
+   Overview · Topics · Briefing strip, one card a topic with its headline
+   figure and where it moved, and the DP·01 matrix whose columns are the
+   topics.
+
+   THE PAGE WORKS OUT NOTHING. Every figure arrives printed from a topic
+   through the performance seam, and the one decision this page makes about
+   somebody else's figures — where a department stands — is the placing's.
+
+   WHAT THE DESIGN DRAWS THAT IS NOT HERE YET, and is named rather than
+   quietly dropped: the six-figure band above the cards, the two bounded
+   charts beside each other (the second is a geo card, which waits for the
+   geo seam), and the "Compare with" control — the page compares with the
+   period before, which is what every movement on it is measured against. #}
+{% extends '@Shell/page.html.twig' %}
+
+{% block title %}Performance{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {{ include('@Team/performance/_stylesheets.html.twig') }}
+{% endblock %}
+
+{% block shell_breadcrumbs %}
+    <a href="{{ path('team_index') }}">uhifadhi</a> /
+    <a href="{{ path('team_departments') }}">departments</a> / performance
+{% endblock %}
+
+{% block shell_page_title %}Performance{% endblock %}
+
+{% block shell_page_subtitle %}
+    {{ scope.label }} &middot; {{ period.label }}, against {{ previous.label }}.
+{% endblock %}
+
+{% block shell_page_actions %}
+    {# THE SCOPE IS A PLACE, so every option is a link and the control needs
+       no script of ours: the organisation's page and one area's page are two
+       addresses, and either can be sent to somebody. #}
+    <label class="ov-ctl">
+        <span class="k">Scope</span>
+        <details class="i-dd">
+            <summary class="mchip i-ddt">
+                <span class="i-ddval">{{ scope.label }}</span>
+                <span class="i-ddcaret">&#9662;</span>
+            </summary>
+            <div class="i-ddmenu">
+                <span class="i-ddhead">whose performance</span>
+                <a class="i-ddopt{{ scope.isOrganisation ? ' on' }}" href="{{ path('team_performance', {period: kind.value}) }}">
+                    <span class="i-ddopt-l">{{ organisation }}</span>
+                </a>
+                {% for area in areas %}
+                    <a class="i-ddopt{{ scope.areaUuid == area.uuidString ? ' on' }}"
+                       href="{{ path('team_performance', {period: kind.value, area: area.uuidString}) }}">
+                        <span class="i-ddopt-l">{{ area.name }}</span>
+                    </a>
+                {% endfor %}
+            </div>
+        </details>
+    </label>
+
+    {{ include('@Shell/_period_group.html.twig', {kinds: kinds, chosen: kind.value, urls: urls}, with_context = false) }}
+{% endblock %}
+
+{% block shell_page_tabs %}
+    {{ include('@Shell/_area_tabs.html.twig', {tabs: tabs}, with_context = false) }}
+{% endblock %}
+
+{% block shell_page %}
+    <div class="sphalf">
+        <span class="lb">Across the topics</span>
+        <span class="t">One figure a topic, and where it moved</span>
+        <span class="s">each card opens its topic; nothing here is a topic&rsquo;s own vocabulary</span>
+        <span class="sp"></span>
+        <span class="n">{{ cards|length }} {{ cards|length == 1 ? 'topic' : 'topics' }}</span>
+    </div>
+
+    <div class="tpk">
+        {% for card in cards %}
+            <a class="c kpi" href="{{ card.url }}">
+                <span class="tab">{{ card.title }}
+                    {%- if card.byModule %}<span class="pfq mod" title="Published by a module">module</span>{% endif %}
+                </span>
+                {% if card.isKnown %}
+                    <b class="disp">{{ card.figure }}{% if card.unit %}<em>{{ card.unit }}</em>{% endif %}</b>
+                {% else %}
+                    {# A FIGURE NOBODY PUBLISHED SAYS SO. A blank where a number
+                       goes reads as a nought, and a nought is a measurement. #}
+                    <b class="disp none">{{ card.word }}</b>
+                {% endif %}
+                <span class="sub">
+                    <span class="lb">{{ card.label }}</span>
+                    {%- if card.delta %}<span class="delta{{ card.deltaTone ? ' ' ~ card.deltaTone }}">{{ card.delta }}</span>{% endif %}
+                </span>
+                {% if card.spark %}
+                    <svg class="sk" width="100" height="26" viewBox="0 0 100 26" preserveAspectRatio="none" aria-hidden="true">
+                        {%- for points in card.spark %}<polyline class="{{ card.sparkTone }}" points="{{ points }}"/>{% endfor -%}
+                    </svg>
+                {% endif %}
+            </a>
+        {% else %}
+            <p class="perf-empty">No topic publishes a figure for this scope yet, which is not the same as every topic scoring nothing.</p>
+        {% endfor %}
+    </div>
+
+    {{ render_matrix(matrix, {
+        title: 'Departments across the topics',
+        caption: 'one cell a department in a topic — a cell is empty where the topic is not that department’s',
+        publisher: 'the host',
+        openLabel: 'Open',
+        id: 'tp-heat',
+    }) }}
+{% endblock %}

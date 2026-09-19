@@ -13,14 +13,15 @@
    Variables:
      kinds   value => label for the three segments
      chosen  which of them is on
-     urlFor  a closure turning a value into an address
+     urls    value => the address that segment goes to, one entry per value
+             above and per entry in `earlier`
      earlier value => label for the chip's menu, in the order they read #}
 <label class="ov-ctl sm pd">
     <span class="k">Period</span>
     <span class="pdrow">
         <span class="periodpick" role="group" aria-label="Period">
             {% for value, label in kinds %}
-                <a class="{{ value == chosen ? 'on' : '' }}" href="{{ urlFor(value) }}"
+                <a class="{{ value == chosen ? 'on' : '' }}" href="{{ urls[value] }}"
                    {{ value == chosen ? 'aria-current="true"' : '' }}>{{ label }}</a>
             {% endfor %}
         </span>
@@ -36,7 +37,7 @@
                 <div class="i-ddmenu">
                     <span class="i-ddhead">an earlier period</span>
                     {% for value, label in earlier %}
-                        <a class="i-ddopt{{ value == chosen ? ' on' : '' }}" href="{{ urlFor(value) }}">
+                        <a class="i-ddopt{{ value == chosen ? ' on' : '' }}" href="{{ urls[value] }}">
                             <span class="i-ddopt-l">{{ label }}</span>
                         </a>
                     {% endfor %}

@@ -28,6 +28,7 @@ use Uhifadhi\Bundle\TeamBundle\Controller\DepartmentController;
 use Uhifadhi\Bundle\TeamBundle\Controller\InviteController;
 use Uhifadhi\Bundle\TeamBundle\Controller\MemberController;
 use Uhifadhi\Bundle\TeamBundle\Controller\PasswordResetController;
+use Uhifadhi\Bundle\TeamBundle\Controller\PerformanceController;
 use Uhifadhi\Bundle\TeamBundle\Controller\PositionController;
 use Uhifadhi\Bundle\TeamBundle\Controller\PositionWidgetsController;
 use Uhifadhi\Bundle\TeamBundle\Controller\SecurityController;
@@ -38,11 +39,13 @@ use Uhifadhi\Bundle\TeamBundle\EventListener\ApiErrorListener;
 use Uhifadhi\Bundle\TeamBundle\EventListener\ModuleHistoryListener;
 use Uhifadhi\Bundle\TeamBundle\People\TeamPersonDirectory;
 use Uhifadhi\Bundle\TeamBundle\People\TeamPersonFacets;
+use Uhifadhi\Bundle\TeamBundle\Performance\AcrossTopicsMatrix;
 use Uhifadhi\Bundle\TeamBundle\Performance\AttentionTopic;
 use Uhifadhi\Bundle\TeamBundle\Performance\GoalsTopic;
 use Uhifadhi\Bundle\TeamBundle\Performance\MatrixPlacing;
 use Uhifadhi\Bundle\TeamBundle\Performance\MatrixViewBuilder;
 use Uhifadhi\Bundle\TeamBundle\Performance\StaffingTopic;
+use Uhifadhi\Bundle\TeamBundle\Performance\TopicCards;
 use Uhifadhi\Bundle\TeamBundle\Repository\ApiTokenRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentGoalRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentPeriodFigureRepository;
@@ -72,6 +75,7 @@ use Uhifadhi\Bundle\TeamBundle\Service\TeamOverview;
 use Uhifadhi\Bundle\TeamBundle\Service\UserService;
 use Uhifadhi\Bundle\TeamBundle\Shell\DepartmentAreaNavChildren;
 use Uhifadhi\Bundle\TeamBundle\Shell\DepartmentAreaSections;
+use Uhifadhi\Bundle\TeamBundle\Shell\PerformanceNavigation;
 use Uhifadhi\Bundle\TeamBundle\Shell\TeamNavigation;
 use Uhifadhi\Bundle\TeamBundle\Shell\UserBadgeSource;
 use Uhifadhi\Bundle\TeamBundle\Twig\AreaScopeExtension;
@@ -449,6 +453,19 @@ return static function (ContainerConfigurator $container): void {
     $services->set('team.performance.matrix_view', MatrixViewBuilder::class)
         ->args([service('team.performance.matrix_placing')]);
 
+    /*
+     * AND THE TWO THINGS THE ORGANISATION'S OWN PAGE IS MADE OF: one
+     * card a topic, and one matrix whose columns ARE the topics. Both
+     * are built from what the topics publish and never from a query of
+     * their own, which is why a module that publishes a topic reaches
+     * this page without the host writing a line for it.
+     */
+    $services->set('team.performance.topic_cards', TopicCards::class);
+    $services->alias(TopicCards::class, 'team.performance.topic_cards');
+
+    $services->set('team.performance.across_topics', AcrossTopicsMatrix::class);
+    $services->alias(AcrossTopicsMatrix::class, 'team.performance.across_topics');
+
     $services->set('team.twig.matrix', MatrixExtension::class)
         ->tag('twig.extension');
 
@@ -476,6 +493,23 @@ return static function (ContainerConfigurator $container): void {
      * installation that has no shell at all.
      */
     if (interface_exists(NavigationSourceInterface::class)) {
+        /*
+         * PERFORMANCE FILES UNDER OBSERVATORY, beside Areas — a way of
+         * LOOKING at the organisation rather than a corner of the org
+         * chart. Its own source, because a section label is a place in
+         * the sidebar and the shell merges two contributors to one
+         * heading; keeping it separate keeps the two trees out of each
+         * other's file.
+         */
+        $services->set('team.navigation.performance', PerformanceNavigation::class)
+            ->args([
+                service('router'),
+                service('security.token_storage'),
+                service('security.authorization_checker'),
+                service('request_stack'),
+            ])
+            ->tag('shell.nav_section');
+
         $services->set('team.navigation', TeamNavigation::class)
             ->args([
                 service('router'),
@@ -862,6 +896,26 @@ return static function (ContainerConfigurator $container): void {
         ])
         ->tag('controller.service_arguments');
     $services->alias(DepartmentController::class, 'team.controller.department')->public();
+
+    /*
+     * PERFORMANCE — the organisation's own surface, and the only page in
+     * the product whose every figure belongs to somebody else. It reads
+     * the topic collector, the department directory and nothing of its
+     * own; the one decision it makes about another party's figures —
+     * where a department stands — is the placing's, made once.
+     */
+    $services->set('team.controller.performance', PerformanceController::class)
+        ->args([
+            service('twig'),
+            service('team.performance_topics'),
+            service('team.department_directory'),
+            service('team.performance.across_topics'),
+            service('team.performance.topic_cards'),
+            service('router'),
+            service('doctrine.orm.entity_manager'),
+        ])
+        ->tag('controller.service_arguments');
+    $services->alias(PerformanceController::class, 'team.controller.performance')->public();
 
     /*
      * ONE AREA'S DEPARTMENTS — the tab and its configure section. Team's

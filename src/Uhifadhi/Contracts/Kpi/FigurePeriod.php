@@ -52,6 +52,32 @@ final readonly class FigurePeriod
     }
 
     /**
+     * THE CALENDAR QUARTER an instant falls in — the second of the three
+     * windows the performance page offers.
+     *
+     * A CALENDAR QUARTER AND NOT NINETY DAYS. A reader asking for "this
+     * quarter" is asking about the quarter the organisation reports in;
+     * a rolling window would answer a different question with a number
+     * that looks like the answer to this one.
+     */
+    public static function quarter(\DateTimeImmutable $now): self
+    {
+        $first = $now->modify('first day of this month')->setTime(0, 0);
+        $quarter = intdiv((int) $first->format('n') - 1, 3);
+        $from = $first->setDate((int) $first->format('Y'), $quarter * 3 + 1, 1);
+
+        return new self($from, $from->modify('+3 months'), \sprintf('Quarter %d %s', $quarter + 1, $from->format('Y')));
+    }
+
+    /** The calendar year an instant falls in — the widest of the three. */
+    public static function year(\DateTimeImmutable $now): self
+    {
+        $from = $now->setDate((int) $now->format('Y'), 1, 1)->setTime(0, 0);
+
+        return new self($from, $from->modify('+1 year'), $from->format('Y'));
+    }
+
+    /**
      * A ROLLING WINDOW OF SO MANY DAYS, ending now — what a card inside
      * something else asks for.
      *

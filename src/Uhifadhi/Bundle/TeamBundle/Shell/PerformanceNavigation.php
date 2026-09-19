@@ -1,0 +1,147 @@
+<?php
+
+declare(strict_types=1);
+
+/*
+ * This file is part of the Uhifadhi core.
+ *
+ * (c) Ezekiel Mjema <https://github.com/eemjema>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace Uhifadhi\Bundle\TeamBundle\Shell;
+
+use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\Routing\Exception\RouteNotFoundException;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use Uhifadhi\Bundle\ShellBundle\Contract\NavigationSourceInterface;
+use Uhifadhi\Bundle\ShellBundle\Model\NavItem;
+use Uhifadhi\Bundle\ShellBundle\Model\NavSection;
+use Uhifadhi\Bundle\TeamBundle\Controller\PerformanceController;
+use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
+
+/**
+ * PERFORMANCE IN THE SIDEBAR, with its three screens under it.
+ *
+ * IT FILES UNDER OBSERVATORY AND NOT UNDER THE ORG CHART. Performance
+ * reads every area and every department: it is a way of LOOKING at the
+ * organisation, which is what the Observatory heading is for, and it
+ * sits beside Areas because the two are the same kind of question asked
+ * from two ends.
+ *
+ * ITS OWN SOURCE, NOT A ROW BOLTED ONTO THE TEAM ONE. A section label
+ * is a place in the sidebar rather than something a source owns — the
+ * shell merges by label — so a second contributor to Observatory is the
+ * documented way to add a row there, and it keeps the org chart's rows
+ * and this one out of each other's file.
+ *
+ * THE CHILDREN ARE THE TABS. A reader who can see Briefing from the
+ * sidebar does not have to open Overview to learn it exists, and the
+ * strip and the tree cannot disagree because both are the same three
+ * screens.
+ *
+ * GATED, ROUTE-TOLERANT, BUILT PER CALL — the three rules every
+ * navigation source in this product keeps, and each for the reason
+ * {@see TeamNavigation} states.
+ */
+final readonly class PerformanceNavigation implements NavigationSourceInterface
+{
+    /** Beside Areas, under the heading both belong to. */
+    public const string SECTION = 'Observatory';
+
+    /** After the areas tree (10) and before the org chart's rows (20). */
+    public const int POSITION = 15;
+
+    public function __construct(
+        private UrlGeneratorInterface $urls,
+        private TokenStorageInterface $tokens,
+        private AuthorizationCheckerInterface $authorization,
+        private RequestStack $requests,
+    ) {
+    }
+
+    public function sections(): iterable
+    {
+        // NO TOKEN, NO QUESTION: a page can render outside any firewall,
+        // where asking the checker throws rather than answering false.
+        if (null === $this->tokens->getToken()) {
+            return;
+        }
+
+        if (!$this->authorization->isGranted(PermissionEnum::TeamManage->value)) {
+            return;
+        }
+
+        try {
+            $overview = $this->urls->generate(PerformanceController::ROUTE);
+        } catch (RouteNotFoundException) {
+            // An installation that unmounted the page loses the row, not
+            // every page in the product.
+            return;
+        }
+
+        $children = array_values(array_filter([
+            $this->child('Overview', PerformanceController::ROUTE),
+            $this->child('Topics', PerformanceController::TOPICS_ROUTE),
+            $this->child('Briefing', PerformanceController::BRIEFING_ROUTE),
+        ]));
+
+        yield new NavSection(self::SECTION, [new NavItem(
+            label: 'Performance',
+            url: $overview,
+            icon: 'shell:trending-up',
+            // The section IS its three screens, the way the areas row is
+            // the areas: it stays lit while none of its children is.
+            current: $this->here($overview) && !self::litAnywhere($children),
+            open: true,
+            children: $children,
+            // THE CHILDREN ARE SCREENS, NOT PLACES: there is no place
+            // between Performance and its three tabs, so they are drawn
+            // at the screen rung rather than as three places.
+            screens: true,
+        )], position: self::POSITION);
+    }
+
+    private function child(string $label, string $route): ?NavItem
+    {
+        try {
+            $url = $this->urls->generate($route);
+        } catch (RouteNotFoundException) {
+            return null;
+        }
+
+        return new NavItem(label: $label, url: $url, current: $this->here($url));
+    }
+
+    /** @param list<NavItem> $items */
+    private static function litAnywhere(array $items): bool
+    {
+        foreach ($items as $item) {
+            if ($item->current || self::litAnywhere($item->children)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * WHETHER THE VIEWER IS ON THIS SCREEN — compared as paths, because
+     * the addresses belong to the application, and exactly rather than
+     * by prefix, so Overview does not light while the reader is on
+     * Topics.
+     */
+    private function here(string $url): bool
+    {
+        $request = $this->requests->getCurrentRequest();
+        if (null === $request) {
+            return false;
+        }
+
+        return $request->getBaseUrl().$request->getPathInfo() === $url;
+    }
+}

@@ -66,6 +66,9 @@ final class NavItem
      * @param string|null $swatch   a row's own dot colour, as a hex value or as
      *                              the palette token the host resolved a category
      *                              into; null when it has none
+     * @param bool        $screens  whether the rows under this one are its own
+     *                              sibling SCREENS rather than places inside
+     *                              it — see the property's own note
      */
     public function __construct(
         public string $label,
@@ -77,6 +80,19 @@ final class NavItem
         public array $children = [],
         public ?string $tone = null,
         public ?string $swatch = null,
+        /**
+         * WHETHER THIS ROW'S CHILDREN ARE SCREENS OR PLACES, which is the
+         * one thing about a branch the shell cannot see for itself.
+         *
+         * The rung a row is drawn at is its DEPTH, and that is right
+         * wherever the tree is a tree of places: Areas → an area → its
+         * screens. A section whose children are its OWN screens — the same
+         * three the tab strip carries — has no place rung between the two,
+         * and drawing them as places would give a reader two kinds of row
+         * for one kind of thing. Saying so here keeps the depth-to-rung
+         * rule intact and names the exception.
+         */
+        public bool $screens = false,
     ) {
         /*
          * ONLY A COLOUR. The value is printed into a `style` attribute, so

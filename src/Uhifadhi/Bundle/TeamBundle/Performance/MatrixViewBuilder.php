@@ -38,10 +38,6 @@ use Uhifadhi\Contracts\Performance\TopicMatrix;
  */
 final readonly class MatrixViewBuilder
 {
-    /** The sparkline's box, as the design draws it. */
-    private const float SPARK_WIDTH = 70.0;
-    private const float SPARK_HEIGHT = 18.0;
-
     public function __construct(
         private MatrixPlacing $placing,
     ) {
@@ -72,9 +68,9 @@ final readonly class MatrixViewBuilder
             $column->label,
             $column->unit,
             $column->caption,
-            null === $column->total ? '' : self::figure($column->total),
-            self::delta($column->totalDelta),
-            self::tone($column->totalDelta, $column->polarity),
+            null === $column->total ? '' : Figures::figure($column->total),
+            Figures::delta($column->totalDelta),
+            Figures::tone($column->totalDelta, $column->polarity),
         );
     }
 
@@ -133,12 +129,12 @@ final readonly class MatrixViewBuilder
         return new MatrixViewCell(
             CellKind::Figure,
             tint: $tint,
-            figure: self::figure($cell->value),
+            figure: Figures::figure($cell->value),
             unit: $column->unit,
-            delta: self::delta($cell->delta),
-            deltaTone: self::tone($cell->delta, $column->polarity),
-            spark: self::spark($cell->history),
-            sparkTone: self::sparkTone($cell->delta, $column->polarity),
+            delta: Figures::delta($cell->delta),
+            deltaTone: Figures::tone($cell->delta, $column->polarity),
+            spark: Figures::spark($cell->history, Figures::CELL_WIDTH, Figures::CELL_HEIGHT),
+            sparkTone: Figures::sparkTone($cell->delta, $column->polarity),
             title: $column->caption,
             sort: $cell->value,
         );
@@ -155,107 +151,5 @@ final readonly class MatrixViewBuilder
             },
             $mark->title ?? '',
         );
-    }
-
-    /** As every plate prints one: thousands separated, a fraction kept to one place. */
-    private static function figure(float $value): string
-    {
-        $whole = round($value) === round($value, 1);
-
-        return number_format($value, $whole ? 0 : 1, '.', ',');
-    }
-
-    /** "+2", "−2" with a real minus sign, or the words for a figure that did not move. */
-    private static function delta(?float $delta): string
-    {
-        if (null === $delta) {
-            return '';
-        }
-        if (0.0 === $delta) {
-            return 'no change';
-        }
-
-        $magnitude = number_format(abs($delta), abs($delta) === round(abs($delta)) ? 0 : 1, '.', ',');
-
-        return ($delta < 0 ? "\u{2212}" : '+').$magnitude;
-    }
-
-    /** Which way a movement reads, according to the column and never to its sign. */
-    private static function tone(?float $delta, ColumnPolarity $polarity): string
-    {
-        if (null === $delta) {
-            return '';
-        }
-        if (0.0 === $delta) {
-            return 'flat';
-        }
-
-        return match ($polarity->isGood($delta)) {
-            true => 'good',
-            false => 'bad',
-            null => '',
-        };
-    }
-
-    private static function sparkTone(?float $delta, ColumnPolarity $polarity): string
-    {
-        return match (self::tone($delta, $polarity)) {
-            'good' => 'up',
-            'bad' => 'dn',
-            default => 'fl',
-        };
-    }
-
-    /**
-     * THE HISTORY AS A LINE, WITH ITS HOLES LEFT OPEN. A period nobody
-     * wrote down is not a nought on the line: the line stops there and
-     * starts again after it, so the gap is something a reader can see
-     * rather than a dip somebody measured.
-     *
-     * Every run is scaled against the WHOLE history, so two runs of the
-     * same series are on one scale and the break is the only thing the
-     * eye has to read.
-     *
-     * @param list<float|null> $history
-     *
-     * @return list<string> one polyline's points per unbroken run
-     */
-    private static function spark(array $history): array
-    {
-        $readings = array_values(array_filter($history, static fn (?float $point): bool => null !== $point));
-        $count = \count($history);
-        if (\count($readings) < 2 || $count < 2) {
-            return [];
-        }
-
-        $low = min($readings);
-        $high = max($readings);
-        $range = $high - $low;
-        $top = 3.0;
-        $bottom = self::SPARK_HEIGHT - 3.0;
-
-        $runs = [];
-        $run = [];
-        foreach ($history as $index => $reading) {
-            if (null === $reading) {
-                if (\count($run) > 1) {
-                    $runs[] = implode(' ', $run);
-                }
-                $run = [];
-
-                continue;
-            }
-
-            $x = self::SPARK_WIDTH * $index / ($count - 1);
-            // A flat series sits on the baseline rather than dividing by zero.
-            $y = 0.0 === $range ? $bottom : $bottom - ($reading - $low) / $range * ($bottom - $top);
-            $run[] = \sprintf('%.1f,%.1f', $x, $y);
-        }
-
-        if (\count($run) > 1) {
-            $runs[] = implode(' ', $run);
-        }
-
-        return $runs;
     }
 }

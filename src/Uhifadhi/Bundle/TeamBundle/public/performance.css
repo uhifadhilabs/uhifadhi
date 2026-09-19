@@ -243,3 +243,69 @@
     flex-basis: 100%; letter-spacing: .02em; text-transform: none; font-weight: 500; font-size: 10.5px;
     line-height: 1.5; color: rgb(var(--c-dim));
 }
+
+/* ── the strip that opens a half of the page ─────────────────────────────── */
+/* A LABEL, A SENTENCE AND A COUNT. It says what the rows under it are before
+   the reader has to work it out from the rows, which is the whole job of the
+   line above a group. */
+.sphalf { display: flex; align-items: center; gap: 11px; flex-wrap: wrap; margin: 0 0 11px; }
+.sphalf .lb {
+    font: 700 8.5px "JetBrains Mono", ui-monospace, monospace; letter-spacing: .16em;
+    text-transform: uppercase; color: rgb(var(--c-dim)); border: 1px solid var(--c-ln2);
+    border-radius: 6px; padding: 4px 9px 3px; flex: none;
+}
+.sphalf .t {
+    font-family: "Archivo", system-ui, sans-serif; font-size: 15px; font-weight: 700;
+    letter-spacing: -.02em; color: rgb(var(--c-tx));
+}
+.sphalf .s { font-size: 12px; color: rgb(var(--c-fog)); line-height: 1.55; }
+.sphalf .sp { flex: 1; }
+.sphalf .n {
+    font: 600 9.5px "JetBrains Mono", ui-monospace, monospace; letter-spacing: .1em;
+    text-transform: uppercase; color: rgb(var(--c-dim));
+}
+
+/* ── one card a topic ────────────────────────────────────────────────────── */
+/* FIVE ACROSS WHERE THERE IS ROOM, and never a row that reflows to two and
+   four: a reader reads the row in one movement of the eye or reads it twice.
+   The card itself is the shell's `.c.kpi` — this states the grid and the
+   three things a topic's card carries that a bare KPI does not. */
+.tpk { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; margin: 0 0 18px; }
+@media (max-width: 1080px) { .tpk { grid-template-columns: repeat(auto-fit, minmax(178px, 1fr)); } }
+.tpk .c.kpi { padding: 13px 14px 14px; text-decoration: none; }
+.tpk .c.kpi:hover { border-color: color-mix(in srgb, rgb(var(--c-acc)) 45%, var(--c-ln)); }
+.tpk .c.kpi > .tab { display: flex; align-items: center; gap: 7px; }
+/* WHO PUBLISHES THIS FIGURE, on the card as on the matrix — a figure a module
+   computed and one the host computed are different promises. */
+.tpk .c.kpi > .tab .pfq {
+    font: 700 7.5px "JetBrains Mono", ui-monospace, monospace; letter-spacing: .13em;
+    text-transform: uppercase; border-radius: 6px; padding: 3px 7px 2px;
+    border: 1px solid var(--c-ln2); color: rgb(var(--c-dim)); flex: none;
+}
+.tpk .c.kpi > .tab .pfq.mod {
+    border-style: dashed; color: rgb(var(--c-warn));
+    border-color: color-mix(in srgb, rgb(var(--c-warn)) 45%, transparent);
+}
+/* A CARD WITH NO FIGURE SAYS SO IN WORDS, at the size of a sentence rather
+   than at the size of a number it does not have. */
+.tpk .c.kpi b.disp.none { font-size: 14px; font-weight: 600; color: rgb(var(--c-dim)); letter-spacing: 0; }
+.tpk .c.kpi .sub { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-top: 5px; }
+.tpk .c.kpi .sub .lb { font-size: 11.5px; color: rgb(var(--c-fog)); }
+.tpk .c.kpi .sub .delta {
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10px; font-weight: 600;
+    color: rgb(var(--c-dim)); white-space: nowrap; flex: none; font-variant-numeric: tabular-nums;
+}
+.tpk .c.kpi .sub .delta.good { color: rgb(var(--c-ok)); }
+.tpk .c.kpi .sub .delta.bad { color: rgb(var(--c-fail)); }
+.tpk .c.kpi .sub .delta.flat { color: rgb(var(--c-dim)); }
+
+/* ── the card's own sparkline ────────────────────────────────────────────── */
+/* THE SAME LINE AT ITS OWN SIZE. A card is wider than a matrix cell and its
+   line is drawn over the same six periods with the same holes; only the box
+   differs, which is why the size is stated in both places and the rule that
+   breaks the line is stated in neither. */
+.sk { display: block; width: 100%; height: 26px; margin-top: 9px; overflow: visible; }
+.sk polyline { fill: none; stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.sk polyline.up { stroke: rgb(var(--c-ok)); }
+.sk polyline.dn { stroke: rgb(var(--c-fail)); }
+.sk polyline.fl { stroke: color-mix(in srgb, rgb(var(--c-fog)) 62%, transparent); }

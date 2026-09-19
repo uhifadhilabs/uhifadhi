@@ -8,6 +8,9 @@
 
 Not released yet.
 
+ * a nav row may say its children are its own SCREENS rather than places
+   (`NavItem::$screens`), so a section with three tabs under it draws them at
+   the screen rung instead of inventing a place between the two
  * the document, the page frame, the navigation contracts and the theme
  * the design-system stylesheet every module's own sheet is written against
  * the widget machinery under `Widget/`: the surface registry, the stored

@@ -226,6 +226,36 @@ final class NavigationContractTest extends ContractTestCase
     }
 
     /**
+     * A SECTION WHOSE CHILDREN ARE ITS OWN SCREENS SKIPS THE PLACE RUNG.
+     *
+     * The rung is the depth wherever the tree is a tree of places — Areas
+     * → an area → that area's screens. A section that simply HAS three
+     * screens has no place between it and them, and drawing them as
+     * places would give a reader two kinds of row for one kind of thing.
+     * The source says so; the shell keeps its one rule and draws the
+     * named exception.
+     */
+    public function testARowMaySayItsChildrenAreScreensRatherThanPlaces(): void
+    {
+        HostKernel::$navSources = [
+            'obs' => new NavSection('Observatory', [
+                new NavItem(label: 'Performance', url: '/performance', icon: 'shell:trending-up', screens: true, children: [
+                    new NavItem(label: 'Overview', url: '/performance'),
+                    new NavItem(label: 'Topics', url: '/performance/topics'),
+                ]),
+            ]),
+        ];
+
+        $crawler = $this->crawl('@fixtures/body_only_page.html.twig');
+
+        self::assertSame(
+            ['Overview', 'Topics'],
+            $crawler->filter('nav.nav .ntree a.ntt')->each(static fn ($node): string => trim($node->text())),
+        );
+        self::assertCount(0, $crawler->filter('nav.nav .ntree .nta'));
+    }
+
+    /**
      * A ROW'S DOT TAKES A CLASS OR A VALUE, and the shell draws both without
      * knowing what either means.
      *

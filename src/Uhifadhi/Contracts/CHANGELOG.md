@@ -28,6 +28,10 @@ Not released yet.
    would be right about seats and wrong about days-to-settle, where a sum of
    averages is a number nobody measured. A column that stays silent simply has
    no total in its header.
+ * `FigurePeriod::quarter()` and `::year()` — the other two windows the
+   performance page offers, CALENDAR quarters and years rather than ninety
+   and three hundred and sixty-five days: a reader asking for "this quarter"
+   is asking about the quarter the organisation reports in
  * `MatrixRow::$note` and `TopicMatrix::$bandNotes` — what a department and a
    band say about THEMSELVES, in the topic's own words: "3 positions ·
    org-wide" under a name and "each reads every area · 32 of 40 seats filled"

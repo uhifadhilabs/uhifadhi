@@ -8,6 +8,15 @@
 
 Not released yet.
 
+ * `/departments/performance` — the organisation's own surface, wearing the
+   AREA idiom: one header carrying the scope and the period, the Overview ·
+   Topics · Briefing strip, one card a topic with its headline figure, and
+   the matrix whose columns ARE the topics. Every figure on it is published
+   by a topic; the page computes none of them. Topics and Briefing are
+   routed and not yet drawn
+ * the segmented MONTH · QUARTER · YEAR group, and the scope, in the ADDRESS
+   rather than in a session — either page can be sent to somebody
+ * a row in the sidebar under Observatory, with its three screens under it
  * `render_matrix()` — the DP·01 grammar, and the only table a topic's
    departments are drawn in: the shades a placing takes, the three absences
    told apart in words, the movement toned by the column and never by its

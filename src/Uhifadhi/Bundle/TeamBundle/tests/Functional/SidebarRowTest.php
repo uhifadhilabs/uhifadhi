@@ -39,7 +39,13 @@ use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
  */
 final class SidebarRowTest extends WebTestCaseWithSchema
 {
-    public function testBothRowsAreInTheSidebarForSomebodyWhoMayAdministerTheTeam(): void
+    /**
+     * THREE ROWS AND TWO HEADINGS. Performance files under Observatory
+     * because it is a way of LOOKING at the organisation; the org chart's
+     * own two rows sit under Organization, in that order, and each row is
+     * gated on the same permission as the screen behind it.
+     */
+    public function testEveryRowThisBundleContributesIsThereForSomebodyWhoMayAdministerTheTeam(): void
     {
         $this->administrator();
 
@@ -47,19 +53,32 @@ final class SidebarRowTest extends WebTestCaseWithSchema
 
         self::assertResponseIsSuccessful();
         self::assertSame(
-            ['Organization'],
+            ['Observatory', 'Organization'],
             $crawler->filter('nav.nav .nav-hd')->each(static fn ($node): string => $node->text()),
         );
 
         $rows = $crawler->filter('nav.nav a.nav-item');
-        self::assertCount(2, $rows);
+        self::assertCount(3, $rows);
         self::assertSame(
-            ['/departments', '/team'],
+            ['/departments/performance', '/departments', '/team'],
             $rows->each(static fn ($node): string => (string) $node->attr('href')),
         );
         self::assertSame(
-            ['Departments', 'Team'],
+            ['Performance', 'Departments', 'Team'],
             $rows->each(static fn ($node): string => $node->filter('span')->text()),
+        );
+    }
+
+    /** And Performance carries its three screens under it, as the strip does. */
+    public function testThePerformanceRowCarriesItsThreeScreens(): void
+    {
+        $this->administrator();
+
+        $crawler = $this->client->request('GET', '/departments/performance');
+
+        self::assertSame(
+            ['/departments/performance', '/departments/performance/topics', '/departments/performance/briefing'],
+            $crawler->filter('nav.nav .ntree a.ntt')->each(static fn ($node): string => (string) $node->attr('href')),
         );
     }
 
@@ -74,7 +93,7 @@ final class SidebarRowTest extends WebTestCaseWithSchema
         $crawler = $this->client->request('GET', '/_elsewhere');
 
         self::assertSame(
-            ['nav-item', 'nav-item'],
+            ['nav-item', 'nav-item', 'nav-item'],
             $crawler->filter('nav.nav a.nav-item')->each(static fn ($node): string => (string) $node->attr('class')),
         );
     }
@@ -86,7 +105,7 @@ final class SidebarRowTest extends WebTestCaseWithSchema
         $crawler = $this->client->request('GET', '/team');
 
         self::assertResponseIsSuccessful();
-        self::assertSame(['nav-item', 'nav-item on'], $this->rowClasses($crawler));
+        self::assertSame(['nav-item', 'nav-item', 'nav-item on'], $this->rowClasses($crawler));
     }
 
     /**
@@ -101,7 +120,7 @@ final class SidebarRowTest extends WebTestCaseWithSchema
         $crawler = $this->client->request('GET', '/team/positions');
 
         self::assertResponseIsSuccessful();
-        self::assertSame(['nav-item', 'nav-item on'], $this->rowClasses($crawler));
+        self::assertSame(['nav-item', 'nav-item', 'nav-item on'], $this->rowClasses($crawler));
     }
 
     /**
@@ -117,7 +136,7 @@ final class SidebarRowTest extends WebTestCaseWithSchema
         $crawler = $this->client->request('GET', '/departments');
 
         self::assertResponseIsSuccessful();
-        self::assertSame(['nav-item on', 'nav-item'], $this->rowClasses($crawler));
+        self::assertSame(['nav-item', 'nav-item on', 'nav-item'], $this->rowClasses($crawler));
     }
 
     /**

@@ -53,7 +53,10 @@
 {%- if _kids %}
     <div class="{{ _group }}{{ item.open ? '' : ' closed' }}">
         {%- for child in item.children -%}
-            {{ include('@Shell/_nav_item.html.twig', {item: child, depth: depth + 1}, with_context: false) }}
+            {#- A ROW WHOSE CHILDREN ARE ITS OWN SCREENS skips the place rung:
+                there is no place between a section and its screens, and drawing
+                one would give a reader two kinds of row for one kind of thing. -#}
+            {{ include('@Shell/_nav_item.html.twig', {item: child, depth: depth + (item.screens ? 2 : 1)}, with_context: false) }}
         {%- endfor -%}
     </div>
 {% endif -%}
