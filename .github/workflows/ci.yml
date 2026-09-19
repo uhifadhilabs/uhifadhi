@@ -181,7 +181,8 @@ jobs:
         with:
           repository: uhifadhilabs/${{ matrix.module }}-module
           ref: main
-          token: ${{ secrets.BUNDLES_TOKEN }}
+          # Every fleet module is public, so the job's own token checks it out.
+          # A private module would need a Contents:read token added here.
           path: module
 
       - name: Setup PHP
@@ -218,8 +219,6 @@ jobs:
       # the path repository above and from nowhere else.
       - name: Install the module against it
         working-directory: module
-        env:
-          COMPOSER_AUTH: '{"github-oauth":{"github.com":"${{ secrets.BUNDLES_TOKEN }}"}}'
         run: composer update --no-interaction --no-progress --prefer-dist
 
       # SAID OUT LOUD, so a green run cannot be a run against the wrong core.
