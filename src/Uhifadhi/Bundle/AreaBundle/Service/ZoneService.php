@@ -34,7 +34,14 @@ use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
  * were meant to touch; {@see ZoneOverlapService} says which side of the area's
  * own tolerance that falls, and a real overlap names the zone and the size.
  *
- * EVERY WRITE HERE RE-DERIVES THE AREA'S STATIONS. A station's zone is its
+ * EVERY WRITE HERE LEAVES A LINE IN THE AREA'S ZONE LOG, and it is written
+ * HERE rather than by whoever called. A screen, a console importer and a
+ * fixture loader all rename and remove zones; a line written in a controller
+ * is a history that is complete on one path and empty on the others, which
+ * looks right on the page and is wrong in the record. The ACTOR is still the
+ * caller's to supply, because only the caller knows whether there is one.
+ *
+ * EVERY WRITE HERE ALSO RE-DERIVES THE AREA'S STATIONS. A station's zone is its
  * point's answer, cached; moving the zones under it changes that answer
  * without anybody touching the station, so the four writes below each end by
  * re-asking. It is done here rather than in a listener because a listener
@@ -59,6 +66,7 @@ class ZoneService
         private readonly ZoneOverlapService $overlaps,
         private readonly StationService $stations,
         private readonly StationRepository $stationRows,
+        private readonly ZoneEventService $events,
     ) {
     }
 
@@ -85,7 +93,7 @@ class ZoneService
      *
      * @throws ZoneOverlapException
      */
-    public function replaceGeometry(Zone $zone, string $geomJson): Zone
+    public function replaceGeometry(Zone $zone, string $geomJson, ?string $actor = null): Zone
     {
         $area = $zone->getArea();
         if (null === $area) {
@@ -95,7 +103,8 @@ class ZoneService
 
         $zone->setGeom($geomJson);
         $this->em->flush();
-        $this->stations->rederiveFor($area);
+        $this->events->ringReplaced($area, (string) $zone->getName(), $actor);
+        $this->stations->rederiveFor($area, 'a zone was redrawn');
 
         return $zone;
     }
@@ -112,7 +121,7 @@ class ZoneService
      *
      * @throws ZoneNameException when the name is blank, or already used in this area
      */
-    public function rename(Zone $zone, string $name): Zone
+    public function rename(Zone $zone, string $name, ?string $actor = null): Zone
     {
         $name = trim($name);
         if ('' === $name) {
@@ -124,13 +133,19 @@ class ZoneService
             throw new \LogicException('A zone always belongs to an area.');
         }
 
+        $was = (string) $zone->getName();
         $holder = $this->zones->findOneForName($area, $name);
         if (null !== $holder && $holder->getId() !== $zone->getId()) {
             throw ZoneNameException::alreadyUsed($name, $area->getName() ?? '');
         }
 
+        if ($holder?->getId() === $zone->getId() && $was === $name) {
+            return $zone;
+        }
+
         $zone->setName($name);
         $this->em->flush();
+        $this->events->renamed($area, $was, $name, $actor);
 
         return $zone;
     }
@@ -141,7 +156,7 @@ class ZoneService
      * zone" as a first-class answer. Nothing that referred to the ground is
      * deleted with it.
      */
-    public function remove(Zone $zone): void
+    public function remove(Zone $zone, ?string $actor = null): void
     {
         $area = $zone->getArea();
 
@@ -152,12 +167,25 @@ class ZoneService
          * line a reader most wants, "this post is now in no zone", would never
          * be written. So the caller that knows says so.
          */
-        $stood = self::idsOf($this->stationRows->findByZone($zone));
+        $name = (string) $zone->getName();
+        $standing = $this->stationRows->findByZone($zone);
+        $stood = self::idsOf($standing);
+
+        /*
+         * THE LINK IS CUT IN MEMORY AS WELL AS IN THE DATABASE. The foreign
+         * key sets `zone_id` to null as the row goes, but a station already
+         * loaded still points at the removed object, and the next flush —
+         * the log line's — would try to persist a zone that no longer exists.
+         */
+        foreach ($standing as $station) {
+            $station->setZone(null);
+        }
 
         $this->em->remove($zone);
         $this->em->flush();
 
         if (null !== $area) {
+            $this->events->removed($area, $name, $actor);
             $this->stations->rederiveFor($area, 'a zone was removed', $stood);
         }
     }
@@ -168,21 +196,32 @@ class ZoneService
      * the same number. A loop of single deletions would leave an area half
      * zoned if it stopped halfway, which is the one state nobody asked for.
      */
-    public function removeAll(AreaOfInterest $area): int
+    public function removeAll(AreaOfInterest $area, ?string $actor = null): int
     {
         $zones = $this->zones->zonesFor($area);
 
         // The same reasoning as removing one: the keys are cleared by the
         // database as the rows go, so the stations that stood in them are read
         // before the delete and named to the recompute.
-        $stood = self::idsOf($this->stationRows->findByArea($area));
+        $standing = $this->stationRows->findByArea($area);
+        $stood = self::idsOf($standing);
 
-        $this->em->wrapInTransaction(function () use ($zones): void {
+        $this->em->wrapInTransaction(function () use ($zones, $standing): void {
+            // The same reason as removing one: a station already loaded would
+            // otherwise still point at a zone the flush has just deleted.
+            foreach ($standing as $station) {
+                $station->setZone(null);
+            }
+
             foreach ($zones as $zone) {
                 $this->em->remove($zone);
             }
             $this->em->flush();
         });
+
+        if ([] !== $zones) {
+            $this->events->cleared($area, \count($zones), $actor);
+        }
 
         $this->stations->rederiveFor($area, 'every zone was removed', $stood);
 

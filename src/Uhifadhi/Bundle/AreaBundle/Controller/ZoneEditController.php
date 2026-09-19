@@ -31,7 +31,6 @@ use Uhifadhi\Bundle\AreaBundle\Entity\Zone;
 use Uhifadhi\Bundle\AreaBundle\Exception\ZoneImportException;
 use Uhifadhi\Bundle\AreaBundle\Exception\ZoneNameException;
 use Uhifadhi\Bundle\AreaBundle\Exception\ZoneOverlapException;
-use Uhifadhi\Bundle\AreaBundle\Service\ZoneEventService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportDraftStore;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneService;
@@ -60,7 +59,6 @@ final readonly class ZoneEditController
     public function __construct(
         private ZoneService $zones,
         private ZoneImportService $imports,
-        private ZoneEventService $events,
         private ZoneImportDraftStore $draft,
         private CsrfTokenManagerInterface $csrf,
         private UrlGeneratorInterface $urls,
@@ -82,15 +80,11 @@ final readonly class ZoneEditController
         $name = $request->request->get('name');
 
         try {
-            $this->zones->rename($zone, \is_string($name) ? $name : '');
+            $this->zones->rename($zone, \is_string($name) ? $name : '', $this->actor());
         } catch (ZoneNameException $e) {
             $this->draft->holdRefusal($area, $was, $e->getMessage());
 
             return $this->backToTheSection($area);
-        }
-
-        if ($was !== $zone->getName()) {
-            $this->events->renamed($area, $was, (string) $zone->getName(), $this->actor());
         }
 
         return $this->backToTheSection($area);
@@ -124,14 +118,12 @@ final readonly class ZoneEditController
         }
 
         try {
-            $this->zones->replaceGeometry($zone, $this->imports->ringFor($zone, $file, $file->getClientOriginalName()));
+            $this->zones->replaceGeometry($zone, $this->imports->ringFor($zone, $file, $file->getClientOriginalName()), $this->actor());
         } catch (ZoneImportException|ZoneOverlapException $e) {
             $this->draft->holdRefusal($area, $file->getClientOriginalName(), $e->getMessage());
 
             return $this->backToTheSection($area);
         }
-
-        $this->events->ringReplaced($area, $name, $this->actor());
 
         return $this->backToTheSection($area);
     }
@@ -150,9 +142,7 @@ final readonly class ZoneEditController
         $this->denyUnlessTokenValid($request, self::REMOVE_TOKEN);
         $this->denyUnlessTheZoneIsThisAreas($area, $zone);
 
-        $name = (string) $zone->getName();
-        $this->zones->remove($zone);
-        $this->events->removed($area, $name, $this->actor());
+        $this->zones->remove($zone, $this->actor());
 
         return $this->backToTheSection($area);
     }
@@ -165,10 +155,7 @@ final readonly class ZoneEditController
     ): Response {
         $this->denyUnlessTokenValid($request, self::CLEAR_TOKEN);
 
-        $removed = $this->zones->removeAll($area);
-        if ($removed > 0) {
-            $this->events->cleared($area, $removed, $this->actor());
-        }
+        $removed = $this->zones->removeAll($area, $this->actor());
 
         $this->draft->dropPlan($area);
         $this->draft->holdOutcome($area, \sprintf(

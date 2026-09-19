@@ -167,8 +167,6 @@ return static function (ContainerConfigurator $container): void {
         ->args([
             service('area.zone_import'),
             service('area.zone_import_draft'),
-            service('area.zone_events'),
-            service(ZoneRepository::class),
             service('security.csrf.token_manager'),
             service('router'),
             service('security.token_storage')->nullOnInvalid(),
@@ -180,7 +178,6 @@ return static function (ContainerConfigurator $container): void {
         ->args([
             service('area.zones'),
             service('area.zone_import'),
-            service('area.zone_events'),
             service('area.zone_import_draft'),
             service('security.csrf.token_manager'),
             service('router'),

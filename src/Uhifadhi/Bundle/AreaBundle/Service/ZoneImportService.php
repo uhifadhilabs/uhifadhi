@@ -109,6 +109,7 @@ final readonly class ZoneImportService
         private ZoneService $zones,
         private ZoneRepository $zoneRepository,
         private ZoneOverlapService $overlaps,
+        private ZoneEventService $events,
     ) {
     }
 
@@ -129,9 +130,21 @@ final readonly class ZoneImportService
      *
      * @throws ZoneImportException when the file cannot be read at all
      */
-    public function plan(AreaOfInterest $area, File $file, string $originalName, ?string $preferred = null): ZoneImportPlan
+    public function plan(AreaOfInterest $area, File $file, string $originalName, ?string $preferred = null, ?string $actor = null): ZoneImportPlan
     {
-        $features = $this->featuresOf($file, $originalName);
+        /*
+         * A REFUSED FILE IS AN EVENT, AND THE VERB IS WHAT KNOWS IT HAPPENED.
+         * Written here rather than by whoever called: a console importer and
+         * a screen both refuse files, and a line written on one path is a
+         * history with a hole in it on the other.
+         */
+        try {
+            $features = $this->featuresOf($file, $originalName);
+        } catch (ZoneImportException $e) {
+            $this->events->refused($area, $e->getMessage(), $actor);
+
+            throw $e;
+        }
 
         $skippedGeometries = [];
         $areal = [];
@@ -156,10 +169,19 @@ final readonly class ZoneImportService
         }
 
         if ([] === $areal) {
-            throw ZoneImportException::noFeatures();
+            $refusal = ZoneImportException::noFeatures();
+            $this->events->refused($area, $refusal->getMessage(), $actor);
+
+            throw $refusal;
         }
 
-        $nameProperty = $this->namePropertyOf($areal, $preferred);
+        try {
+            $nameProperty = $this->namePropertyOf($areal, $preferred);
+        } catch (ZoneImportException $e) {
+            $this->events->refused($area, $e->getMessage(), $actor);
+
+            throw $e;
+        }
 
         $planned = [];
         foreach ($areal as $feature) {
@@ -206,6 +228,7 @@ final readonly class ZoneImportService
 
         $added = [];
         $skipped = [];
+        $wasEmpty = 0 === $this->zoneRepository->countFor($area);
 
         if ([] !== $wanted) {
             $this->entityManager->wrapInTransaction(function () use ($area, $plan, $wanted, $importedBy, &$added, &$skipped): void {
@@ -244,13 +267,22 @@ final readonly class ZoneImportService
             });
         }
 
-        return new ZoneImportResult(
+        $result = new ZoneImportResult(
             $added,
             $skipped,
             $plan->nameProperty,
             $plan->ignoredProperties,
             $plan->fileName,
         );
+
+        /*
+         * THE LINE IS WRITTEN HERE, not by the screen. Every caller that can
+         * import — a screen, a console command, a fixture loader — leaves the
+         * same history, and none of them has to remember to.
+         */
+        $this->events->imported($area, $result, $importedBy, $wasEmpty);
+
+        return $result;
     }
 
     /**

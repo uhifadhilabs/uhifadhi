@@ -109,6 +109,15 @@ return static function (ContainerConfigurator $container): void {
      * zones at once.
      */
     /*
+     * THE ZONE LOG, WRITTEN IN ONE VOCABULARY. Every screen and command that
+     * changes a set hands its facts here and the sentence is composed once, so
+     * two callers cannot log the same event in two different words.
+     */
+    $services->set('area.zone_events', ZoneEventService::class)
+        ->args([service('doctrine.orm.entity_manager')]);
+    $services->alias(ZoneEventService::class, 'area.zone_events');
+
+    /*
      * WHEN SHARED GROUND IS A SLIVER. A stateless rule with no collaborators,
      * so the same sentence decides for an import, for a redrawn ring and for
      * anything that writes a zone later.
@@ -191,6 +200,7 @@ return static function (ContainerConfigurator $container): void {
             service('area.zone_overlaps'),
             service('area.stations'),
             service(StationRepository::class),
+            service('area.zone_events'),
         ]);
     $services->alias(ZoneService::class, 'area.zones');
 
@@ -207,6 +217,7 @@ return static function (ContainerConfigurator $container): void {
             service('area.zones'),
             service(ZoneRepository::class),
             service('area.zone_overlaps'),
+            service('area.zone_events'),
         ]);
     $services->alias(ZoneImportService::class, 'area.zone_import');
 
@@ -219,15 +230,6 @@ return static function (ContainerConfigurator $container): void {
     $services->set('area.zone_export', ZoneExportService::class)
         ->args([service(ZoneRepository::class)]);
     $services->alias(ZoneExportService::class, 'area.zone_export');
-
-    /*
-     * THE ZONE LOG, WRITTEN IN ONE VOCABULARY. Every screen and command that
-     * changes a set hands its facts here and the sentence is composed once, so
-     * two callers cannot log the same event in two different words.
-     */
-    $services->set('area.zone_events', ZoneEventService::class)
-        ->args([service('doctrine.orm.entity_manager')]);
-    $services->alias(ZoneEventService::class, 'area.zone_events');
 
     /*
      * WHAT THE CONFIGURE PAGE READS ABOUT A SET — the rows, the totals and the
@@ -390,5 +392,4 @@ return static function (ContainerConfigurator $container): void {
             service('router'),
         ]);
     $services->alias(AreaComposition::class, 'area.composition');
-
 };

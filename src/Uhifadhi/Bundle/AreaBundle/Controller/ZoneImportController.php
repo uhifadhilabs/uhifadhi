@@ -28,8 +28,6 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Exception\ZoneImportException;
-use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
-use Uhifadhi\Bundle\AreaBundle\Service\ZoneEventService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportDraftStore;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportService;
 
@@ -44,6 +42,11 @@ use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportService;
  * THE CONFIRM WRITES THE SUBSET IT IS NAMED, and it is additive: features that
  * no longer fit are reported, never forced, and nothing is overwritten to make
  * room for them.
+ *
+ * NEITHER WRITES THE LOG. The services do — a console importer and a fixture
+ * loader import files too, and a line written here would be a history with a
+ * hole in it on every path that is not this one. A controller authorises,
+ * calls a verb and responds.
  *
  * BOTH ANSWER WITH A REDIRECT. A confirm that rendered its own result would
  * import the file a second time the moment somebody refreshed.
@@ -61,8 +64,6 @@ final readonly class ZoneImportController
     public function __construct(
         private ZoneImportService $imports,
         private ZoneImportDraftStore $draft,
-        private ZoneEventService $events,
-        private ZoneRepository $zones,
         private CsrfTokenManagerInterface $csrf,
         private UrlGeneratorInterface $urls,
         private ?TokenStorageInterface $tokens = null,
@@ -104,10 +105,11 @@ final readonly class ZoneImportController
                 $file,
                 $name,
                 \is_string($preferred) && '' !== $preferred ? $preferred : null,
+                $this->actor(),
             ));
         } catch (ZoneImportException $e) {
+            // The service logged the refusal; the card shows it.
             $this->draft->holdRefusal($area, $name, $e->getMessage());
-            $this->events->refused($area, $e->getMessage(), $this->actor());
         }
 
         return $this->backToTheSection($area);
@@ -131,12 +133,10 @@ final readonly class ZoneImportController
         $chosen = $request->request->all(self::SUBSET_FIELD);
         $names = array_values(array_filter($chosen, \is_string(...)));
 
-        $wasEmpty = 0 === $this->zones->countFor($area);
         $result = $this->imports->apply($area, $plan, $names, $this->actor());
         $this->draft->dropPlan($area);
 
         $skipped = $plan->flagged();
-        $this->events->imported($area, $result, $this->actor(), $wasEmpty);
 
         $this->draft->holdOutcome($area, \sprintf(
             '%d zone%s added',

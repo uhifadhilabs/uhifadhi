@@ -22,6 +22,7 @@ use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 use Uhifadhi\Bundle\AreaBundle\AreaBundle;
 use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\StationEventRepository;
+use Uhifadhi\Bundle\AreaBundle\Repository\ZoneEventRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Fixtures\CollectedModules;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Fixtures\HostPerson;
@@ -131,6 +132,7 @@ class TestKernel extends Kernel
         $services->alias('test_public.area.zone_import', 'area.zone_import')->public();
         $services->alias('test_public.area.zone_export', 'area.zone_export')->public();
         $services->alias('test_public.area.zone_events', 'area.zone_events')->public();
+        $services->alias('test_public.area.zone_event_repository', ZoneEventRepository::class)->public();
         $services->alias('test_public.area.zone_repository', ZoneRepository::class)->public();
 
         // Stands in for the registry's catalogue. It is here to record an ABSENCE —

@@ -64,12 +64,18 @@ final readonly class StationService
         float $lat,
         ?string $code = null,
         ?string $actor = null,
+        ?int $elevationM = null,
+        ?string $locality = null,
+        ?\DateTimeImmutable $openedAt = null,
     ): Station {
         $station = new Station()
             ->setArea($area)
             ->setName(trim($name))
-            ->setCode(null === $code || '' === trim($code) ? null : trim($code))
-            ->setPoint(self::pointAt($lon, $lat));
+            ->setCode(self::orNull($code))
+            ->setPoint(self::pointAt($lon, $lat))
+            ->setElevationM($elevationM)
+            ->setLocality(self::orNull($locality))
+            ->setOpenedAt($openedAt);
 
         $this->entityManager->persist($station);
         $this->entityManager->flush();
@@ -106,6 +112,33 @@ final readonly class StationService
 
         $this->rederiveFor($area, 'the station moved');
         $this->entityManager->refresh($station);
+
+        return $station;
+    }
+
+    /**
+     * THE FACTS ABOUT THE PLACE THAT ARE NOT ITS POINT — what it is called on
+     * the radio, how high it stands, and where people say it is.
+     *
+     * A VERB, NOT A SETTER. Every one of these is a column, and a caller that
+     * wrote the column instead of calling this would skip the trimming, the
+     * empty-is-null rule and — the day one of them earns a log line — the log
+     * line. There is one writer for each fact and this is it.
+     */
+    public function describe(
+        Station $station,
+        ?string $code = null,
+        ?int $elevationM = null,
+        ?string $locality = null,
+        ?\DateTimeImmutable $openedAt = null,
+    ): Station {
+        $station
+            ->setCode(self::orNull($code))
+            ->setElevationM($elevationM)
+            ->setLocality(self::orNull($locality))
+            ->setOpenedAt($openedAt);
+
+        $this->entityManager->flush();
 
         return $station;
     }
@@ -185,6 +218,12 @@ final readonly class StationService
         }
 
         return \count($moved);
+    }
+
+    /** Blank is UNRECORDED, never the empty string: a dash on the page, not a gap. */
+    private static function orNull(?string $value): ?string
+    {
+        return null === $value || '' === trim($value) ? null : trim($value);
     }
 
     /** A point as the column's GeoJSON, longitude first. */
