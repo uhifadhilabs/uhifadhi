@@ -1,0 +1,113 @@
+{# TEAM · POSTINGS — who is posted to which station, across every area.
+
+   IT WRITES NOTHING. A posting is made on the station, in the area that owns
+   the ground; this reads it. The one control that leaves the page goes there.
+
+   THE HEADER IS THE SECTION'S, NOT THIS TAB'S. The title is "Team" on every
+   tab of the section and the strip says which one you are on; the subtitle is
+   this tab's one line. Both sockets belong to the shell's frame, and the strip
+   and the Configure action are written by it. #}
+{% extends '@Shell/page.html.twig' %}
+
+{% block title %}Team &mdash; Postings{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {{ include('@Team/_stylesheets.html.twig') }}
+{% endblock %}
+
+{% block shell_breadcrumbs %}
+    <a href="{{ path('team_index') }}">uhifadhi</a> / <a href="{{ path('team_index') }}">team</a> / postings
+{% endblock %}
+
+{% block shell_page_title %}Team{% endblock %}
+{% block shell_page_subtitle %}Who is posted to which station, across every area &mdash; read-only, made in the area.{% endblock %}
+
+{% block shell_page_actions %}
+    {% if stationsUrl %}<a class="tgl w-act" href="{{ stationsUrl }}">Stations on the area</a>{% endif %}
+{% endblock %}
+
+{% block shell_page %}
+    {# THE IDENTITY BAND — the facts this tab is, stated as fragments, and of
+       the whole installation rather than of the filtered view. #}
+    <div class="factband">
+        {% for fact in facts %}
+            <span class="f"><span class="k">{{ fact.label }}</span><span class="v">{{ fact.value }}{% if fact.qualifier %}<em>{{ fact.qualifier }}</em>{% endif %}</span></span>
+        {% endfor %}
+        <span class="sp"></span>
+        {% if stationsUrl %}<a class="more" href="{{ stationsUrl }}">Stations on the area &rarr;</a>{% endif %}
+    </div>
+
+    <div class="c">
+        <span class="tab">Who is posted where<span class="src">&middot; {{ postings }} &middot; read-only, made in the area</span></span>
+
+        {# THE HOUSE FILTER BAR: grouped dropdowns with live counts, then the
+           search. Every option is a link, so the address is the state. #}
+        <div class="lfilt">
+            {{ include('@Team/_partial/_filter.html.twig', {
+                key: constant('Uhifadhi\\Bundle\\TeamBundle\\Model\\PostingQuery::AREA'),
+                label: 'area', all: 'all areas', chosen: query.area, options: areaOptions, query: query,
+            }, with_context: false) }}
+            {{ include('@Team/_partial/_filter.html.twig', {
+                key: constant('Uhifadhi\\Bundle\\TeamBundle\\Model\\PostingQuery::ZONE'),
+                label: 'zone', all: 'all zones', chosen: query.zone, options: zoneOptions, query: query,
+            }, with_context: false) }}
+            {{ include('@Team/_partial/_filter.html.twig', {
+                key: constant('Uhifadhi\\Bundle\\TeamBundle\\Model\\PostingQuery::RANK'),
+                label: 'rank', all: 'any rank', chosen: query.rank, options: rankOptions, query: query,
+            }, with_context: false) }}
+            {{ include('@Team/_partial/_filter.html.twig', {
+                key: constant('Uhifadhi\\Bundle\\TeamBundle\\Model\\PostingQuery::POSTED'),
+                label: 'station', all: 'every station', chosen: query.posted, options: postedOptions, query: query,
+            }, with_context: false) }}
+            {# THE SEARCH IS A FORM, so pressing enter asks the question. The
+               other four answers ride with it as hidden fields, or typing a
+               name would silently clear them. #}
+            <form class="lsearch" method="get" action="{{ path('team_postings') }}">
+                {% for field, value in query.with(constant('Uhifadhi\\Bundle\\TeamBundle\\Model\\PostingQuery::SEARCH'), null) %}
+                    <input type="hidden" name="{{ field }}" value="{{ value }}">
+                {% endfor %}
+                {{ ux_icon('shell:search', {width: 14, height: 14}) }}
+                <input class="fld" type="search" name="{{ constant('Uhifadhi\\Bundle\\TeamBundle\\Model\\PostingQuery::SEARCH') }}"
+                       value="{{ query.search }}" placeholder="Find a person or a station&hellip;"
+                       aria-label="Find a person or a station">
+            </form>
+        </div>
+
+        <table class="tbl">
+            <thead><tr><th>Person</th><th>Rank</th><th>Department</th><th></th></tr></thead>
+            <tbody>
+            {% for station in stations %}
+                {# THE BAND A GROUPED TABLE BREAKS ON — the station, its code,
+                   its zone and how many stand here. #}
+                <tr class="sxgrp">
+                    <td colspan="4"><b>{{ station.name }}</b> <span class="mono d">&middot; {{ station.note() }}</span></td>
+                </tr>
+                {% for row in station.rows %}
+                    <tr>
+                        <td><b><a href="{{ path('team_member', {uuid: row.personUuid}) }}">{{ row.name }}</a></b>{% if row.leader %} <span class="chip ok">leads</span>{% endif %}</td>
+                        <td><span class="mono d">{{ row.rank ?? 'no position' }}</span></td>
+                        <td><span class="mono d">{{ row.department ?? 'no department' }}</span></td>
+                        <td style="text-align:right">{% if station.url %}<a class="open-btn" href="{{ station.url }}">The station</a>{% endif %}</td>
+                    </tr>
+                {% else %}
+                    {# NOBODY POSTED IS A NORMAL STATE, not an error, and it is
+                       drawn so the figure above can be read without opening
+                       the area. #}
+                    <tr><td colspan="4"><span class="mono d">Nobody is posted here &mdash; a normal state, not an error</span></td></tr>
+                {% endfor %}
+            {% else %}
+                <tr><td colspan="4"><span class="mono d">{{ query.isFiltered() ? 'No posting answers that.' : 'No station has been recorded on this installation yet.' }}</span></td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+        {# A PERSON'S ZONE IS READ FROM THE STATION'S POINT, so it follows the
+           boundary it falls inside. #}
+        <div class="sxfoot">
+            <span>Made on the station, in the area &mdash; Team reads it, never writes it.</span>
+            <span class="sp"></span>
+            {% if stationsUrl %}<a class="tgl" href="{{ stationsUrl }}">Post somebody</a>{% endif %}
+        </div>
+    </div>
+{% endblock %}

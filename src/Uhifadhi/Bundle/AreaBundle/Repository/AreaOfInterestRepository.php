@@ -74,6 +74,23 @@ class AreaOfInterestRepository extends SpatialEntityRepository
     }
 
     /**
+     * EVERY AREA, BY NAME — what a cross-area board offers as choices, and the
+     * order every list of areas in the product is read in.
+     *
+     * @return list<AreaOfInterest>
+     */
+    public function findAllOrdered(): array
+    {
+        /** @var list<AreaOfInterest> $areas */
+        $areas = $this->createQueryBuilder('a')
+            ->orderBy('a.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        return $areas;
+    }
+
+    /**
      * WHERE THE AREA ROUGHLY IS — the boundary's centroid, as a pair of
      * degrees.
      *

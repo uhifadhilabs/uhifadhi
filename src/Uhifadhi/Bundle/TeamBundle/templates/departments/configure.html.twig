@@ -1,0 +1,86 @@
+{# DEPARTMENTS · CONFIGURE — how this section behaves, who may change it, and
+   the vocabulary it writes with.
+
+   READ-ONLY, AND THAT IS THE DESIGN. Every line here is a fact about the model
+   or about who may do what: the two scopes, the unique-name rule, which
+   permission each act asks for. A control that let one of them be changed
+   would be a second place the rule lived. The one list that IS editable has
+   its own section, and this page hands over to it rather than inlining it.
+
+   THE STRIP ABOVE IS THIS SURFACE'S SECTIONS, written by the shell's frame
+   from the sections contract — the same one position a data tab's strip
+   occupies. #}
+{% extends '@Shell/page.html.twig' %}
+
+{% block title %}Departments{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {{ include('@Team/_stylesheets.html.twig') }}
+{% endblock %}
+
+{% block shell_breadcrumbs %}
+    <a href="{{ path('team_departments_overview') }}">uhifadhi</a> / departments / configure
+{% endblock %}
+
+{% block shell_page_title %}Departments{% endblock %}
+{% block shell_page_subtitle %}How this section behaves, who may change it, and the vocabulary it writes with.{% endblock %}
+
+{% block shell_page %}
+    <div data-dp>
+        <div class="grid g2">
+            <div class="c">
+                <span class="tab">The register<span class="src">&middot; how it reads</span></span>
+                <div class="rln"><span>Tab on open</span><span class="mono d">Overview</span></div>
+                <div class="rln"><span>Group order</span><span class="mono d">org-wide, then each area by name</span></div>
+                <div class="rln"><span>Row order inside a group</span><span class="mono d">by name</span></div>
+                <div class="rln"><span>A deactivated department</span><span class="mono d">stays in the register, greyed, with a Reactivate action</span></div>
+                <div class="rln"><span>Departments now</span><span class="mono d">{{ departments }} active</span></div>
+            </div>
+
+            <div class="c">
+                <span class="tab">Creating a department<span class="src">&middot; the rules</span></span>
+                <div class="rln"><span>Who may create one</span><span class="mono d"><span class="mono">team.manage</span></span></div>
+                <div class="rln"><span>Name</span><span class="mono d">unique inside its scope, not across the installation</span></div>
+                <div class="rln"><span>Scope chosen at creation</span><span class="mono d">yes &mdash; just an area, or org-wide</span></div>
+                <div class="rln"><span>Default scope in the form</span><span class="mono d">just an area, where the installation has one</span></div>
+                <div class="rln"><span>Changing scope later</span><span class="mono d">allowed &middot; a reason is required and recorded</span></div>
+                <div class="rln"><span>Deleting a department</span><span class="mono d">never &mdash; it is deactivated, and keeps its history</span></div>
+            </div>
+        </div>
+
+        <div class="grid g2">
+            <div class="c">
+                <span class="tab">Access<span class="src">&middot; permissions</span></span>
+                <div class="rln"><span>Who can see Departments</span><span class="mono d"><span class="mono">team.manage</span></span></div>
+                <div class="rln"><span>Who can create and rename</span><span class="mono d"><span class="mono">team.manage</span></span></div>
+                <div class="rln"><span>Who can change a scope</span><span class="mono d"><span class="mono">team.manage</span> &middot; a reason is stored with it</span></div>
+                <div class="rln"><span>Who can attach a module</span><span class="mono d"><span class="mono">team.manage</span></span></div>
+                <div class="rln"><span>Reach</span><span class="mono d">an area-level department confines its holders&rsquo; authority to that area</span></div>
+                <p class="use">Each tab is its own route, so access is enforced per page.</p>
+            </div>
+
+            <div class="c">
+                <span class="tab">Positions &amp; people<span class="src">&middot; Team</span></span>
+                <div class="sxlead">
+                    <span class="t">{{ ux_icon('shell:users', {width: 15, height: 15}) }}<span><b>Read-only here.</b> A department&rsquo;s positions and its people belong to Team; this section neither creates nor edits them.</span></span>
+                    <span class="a"><a class="cta" href="{{ path('team_positions') }}">Open Team</a></span>
+                </div>
+                <div class="rln"><span>Where positions are edited</span><span class="mono d">Team &middot; Positions</span></div>
+                <div class="rln"><span>Where people are assigned</span><span class="mono d">Team &middot; People</span></div>
+                <div class="rln"><span>What Departments holds</span><span class="mono d">the department itself, its scope, its kind and what it attaches</span></div>
+            </div>
+        </div>
+
+        <div class="c">
+            <span class="tab">Lists<span class="src">&middot; its own section</span></span>
+            <div class="sxlead">
+                <span class="t">{{ ux_icon('shell:settings', {width: 15, height: 15}) }}<span><b>The vocabulary this section writes with.</b> The two scopes are the model and are not a list; the kinds are, and an organisation wanting one more adds it there rather than in code.</span></span>
+                <span class="a"><a class="cta" href="{{ path('team_departments_configure_lists') }}">Open Lists</a></span>
+            </div>
+            <div class="rln"><span>Department kinds</span><span class="mono d">{{ kinds|length }} &middot; editable</span></div>
+            <div class="rln"><span>Scopes</span><span class="mono d">{{ scopes|map(s => s.value)|join(' &middot; ')|raw }} &mdash; fixed, two, not editable</span></div>
+            <div class="rln"><span>Goal kinds</span><span class="mono d">module-contributed &middot; they arrive with the module that can measure them</span></div>
+        </div>
+    </div>
+{% endblock %}

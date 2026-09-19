@@ -8,6 +8,30 @@
 
 Not released yet.
 
+ * a department's CARD wears its own hue, the same category its row in the
+   sidebar wears: the card carries the index and the mark reads it. The mark
+   was accent-tinted for every ACTIVE department before this, which said what
+   the module chips already say and left all nine identical.
+
+ * the positions register creates a position in the HOUSE CREATE CARD at the
+   top of its own page, always open, the department first — a name typed
+   before the department is a name unique against nothing. The header's
+   action jumps to it instead of holding a form of its own.
+
+ * an invitation nobody opened is CHASED FROM THE RECORD. It rotates the
+   token, so an old email in an inbox stops working, and it never touches the
+   password — the person still chooses their own, which is the whole
+   difference between an invitation and a handover. Offered and refused where
+   there is no transport, never hidden.
+
+ * the Team overview's KPI movements are READ FROM THE PERIOD HISTORY, which
+   `team:performance:snapshot` now writes for the installation as well as for
+   each department: three of the five figures belong to no department — an
+   account with no position is in none, a posting is the area's, and the
+   tiers are the installation's — so summing the department rows would drop
+   exactly the loose bucket the overview draws as its own line. A period
+   nobody wrote gets no pill.
+
  * `/departments/performance` — the organisation's own surface, wearing the
    AREA idiom: one header carrying the scope and the period, the Overview ·
    Topics · Briefing strip, one card a topic with its headline figure, and
@@ -28,6 +52,95 @@ Not released yet.
    and fewer than three figures in a band place nothing
  * a second sheet, `bundles/team/performance.css`, carrying the board's own
    vocabulary, and a sort that runs INSIDE each band and never across one
+ * the MEMBER RECORD is a split: the record in a main column, and what happened
+   to it and what may be done to it in a rail beside it. It gains a HISTORY —
+   derived from the stored facts that carry a date, because there is no audit
+   trail in this release — a POSTINGS card read through the person-postings
+   seam, and a password-reset link an administrator can send (it writes a token
+   and mails a link; it does not change the password). The position card is
+   stacked, its permission ledger in two balanced columns. It names no delete:
+   a screen does not name an action that does not exist.
+
+ * Team wears the AREA IDIOM. It is a section now, not two screens: the same
+   header on every tab (the section's name), a subline that is that tab's own,
+   one strip between the head and the body with exactly one tab lit, and the
+   one Configure action at the right-hand end of the action row on every one of
+   them. The tab set is Overview · People · Positions · Postings · Roles; the
+   configure screens are the widget library, Positions vocabulary and Team
+   settings. Both are declared through the contracts a MODULE's tabs and
+   configure sections already use, and the sidebar row opens into the same five
+   screens, because the tree and the strip are two readings of one list.
+
+ * the section's OVERVIEW: the identity band, the five KPI cards, people by
+   department and positions held and unheld as ranked bars, postings by area as
+   a plotted figure, and the bounded attention cards (stations with nobody
+   posted, people holding nothing, accounts that have never signed in). It
+   writes nothing and owns no figure on it.
+
+ * the section's CONFIGURE screens. Team settings states the rules the model
+   actually enforces and changes none of them — and names no action the product
+   does not have, so there is no "deleting an account" row; Positions
+   vocabulary edits the one list this section owns.
+
+ * `PositionTitle` — what a position may be CALLED, offered to every
+   department. A title grants nothing and is not a position: two departments
+   may spell the same job the same way and still mean two different jobs, which
+   is why a shared word is not a shared post.
+
+ * the ROLES tab: what authority exists on this installation and who holds it —
+   the three tiers with the people in them, and every permission there is,
+   banded by who declared it, with how many positions carry it and how many
+   people sit in those positions. A tier is not a role and the page says so:
+   administering the team is an ordinary permission. There is no Role entity,
+   none is proposed, and the tab assumes none; it writes nothing, because the
+   matrix is edited on Positions.
+
+ * a department in the sidebar wears ITS OWN HUE: the tree's dot carries the
+   department's category, resolved by the shell's `[data-cat]` mechanism, so
+   nine departments read as nine things rather than nine accents. The row hands
+   over an index and never a colour — a hex is right in one theme and wrong in
+   the other — and one service says which category a department is, so every
+   surface that marks one marks it the same.
+
+ * the POSTINGS tab: who is posted to which station, across every area, with
+   the house filter bar — area, zone, rank, whether the station has anybody —
+   and the search. It writes nothing: a posting is made on the station, in the
+   area that owns the ground, and a board that could post somebody would be a
+   second write path for a fact one screen already owns. A station nobody
+   stands at keeps its band and says so.
+
+ * Departments wears the AREA IDIOM. It is a section now, not a single screen:
+   the same header on every tab (the section's name), a subline that is that
+   tab's own, one strip between the head and the body with exactly one tab lit,
+   and the one Configure action at the right-hand end of the action row on
+   every one of them. The tab set is Overview · Departments · Modules; the
+   configure screens are Lists and Departments settings. Both are declared
+   through the contracts a MODULE's tabs and configure sections already use —
+   nothing here is a second implementation of a strip — and the sidebar row
+   opens into the same three screens, because the tree and the strip are two
+   readings of one list.
+
+ * the section's OVERVIEW: the identity band, the five indexed KPI cards,
+   positions filled per department and modules per department as ranked bars,
+   and the bounded attention cards (departments reading no module, positions
+   nobody holds, goals declared). It writes nothing and owns no figure on it:
+   every one belongs to the register, to Team or to Performance.
+
+ * the section's MODULES matrix: one row a department, one column an installed
+   module, with the row and column totals. Absence is DRAWN, not left blank.
+   The matrix reads and does not write — attaching is done on the department's
+   own card, and a grid of checkboxes would be a second write path for one fact.
+
+ * the section's CONFIGURE screens. Settings states the rules the model
+   actually enforces and changes none of them; Lists edits the one list this
+   section owns.
+
+ * `DepartmentKind` — Operational, Scientific, Support: a way of grouping
+   departments for READING. It grants nothing, confines nothing and changes no
+   figure, which is why it is a row and not a PHP enum. A department with no
+   kind is legal and reads as unkinded, and removing a kind leaves its
+   departments standing.
+
  * the Attention & output topic: it adds up what the other topics publish, found
    by ROLE and never by label, and folds the departments with no computing
    module into one line a scope band — stating their seats and goals, because a

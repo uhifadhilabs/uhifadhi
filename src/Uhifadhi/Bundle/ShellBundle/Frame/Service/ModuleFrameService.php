@@ -399,7 +399,17 @@ final readonly class ModuleFrameService
     {
         $area = $request->attributes->get($this->areaParameter);
         if (!\is_string($area) || '' === $area) {
-            return null;
+            // AN ORG-LEVEL SURFACE HAS NO AREA IN ITS ADDRESS. The shell's own
+            // configure page is area-shaped — it renders a section into an
+            // area's frame — so there is nothing here for the area surface to
+            // fall back to. A section like Departments or Team is org-level and
+            // carries its own configure screens, so its Configure action opens
+            // the screen it named first; a rendered section, which only the
+            // shell's area-shaped page can draw, has no address off an area and
+            // is left out of the strip rather than pointed somewhere wrong.
+            return ConfigurationSectionsInterface::AREA === $surface
+                ? null
+                : $this->ownConfigureScreenUrl($surface, $section);
         }
 
         $parameters = [$this->areaParameter => $area];
@@ -410,6 +420,27 @@ final readonly class ModuleFrameService
         return ConfigurationSectionsInterface::AREA === $surface
             ? $this->url($this->areaConfigureRoute, $parameters)
             : $this->url($this->moduleConfigureRoute, $parameters + ['slug' => $surface]);
+    }
+
+    /**
+     * The address of an org-level surface's OWN configure screen — the one it
+     * named first, or the one asked for by id.
+     */
+    private function ownConfigureScreenUrl(string $surface, ?string $section): ?string
+    {
+        foreach ($this->sections->sections($surface) as $candidate) {
+            if ($candidate->isRendered()) {
+                continue;
+            }
+
+            if (null !== $section && $candidate->id !== $section) {
+                continue;
+            }
+
+            return $this->url($candidate->routeName ?? '', $candidate->parameters);
+        }
+
+        return null;
     }
 
     /**

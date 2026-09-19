@@ -52,6 +52,21 @@ use Uhifadhi\Contracts\Entity\UserInterface as ModuleUserInterface;
  */
 final readonly class TeamController
 {
+    /**
+     * THE SURFACE MARKER — the route default that tells the shell this page is
+     * inside the Team section, so the frame draws the section's strip, its
+     * header and its one Configure action. It is a route DEFAULT and not a
+     * path segment, so no address changes to gain a frame.
+     *
+     * It names no module: nothing in the registry answers for "team", and the
+     * registry's gate only closes a declared route that ALSO names an area —
+     * which none of this section's do.
+     */
+    public const array SURFACE = ['_uhifadhi_module' => 'team'];
+
+    /** The section's second tab: everybody who can sign in here. */
+    public const string PEOPLE = 'team_index';
+
     public function __construct(
         private Environment $twig,
         private UserRepository $users,
@@ -63,7 +78,7 @@ final readonly class TeamController
     ) {
     }
 
-    #[Route('/team', name: 'team_index', methods: ['GET'])]
+    #[Route('/team', name: self::PEOPLE, defaults: self::SURFACE, methods: ['GET'])]
     #[IsGranted(PermissionEnum::TeamManage->value)]
     public function index(Request $request): Response
     {

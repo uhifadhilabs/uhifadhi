@@ -13,7 +13,7 @@
 {% set filled = people %}
 {% set expandable = expandable|default(false) %}
     <div class="dc-hd">
-        <span class="ov-mk{{ department.active ? ' on' : '' }}">{{ mark }}</span>
+        <span class="ov-mk">{{ mark }}</span>
         <div class="dc-bd">
             <span class="nmrow">
                 <a class="ov-nm" href="{{ path('team_department_show', {uuid: uuid}) }}">{{ department.name }}</a>

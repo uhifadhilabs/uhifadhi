@@ -32,13 +32,20 @@ use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
  */
 final class PositionMatrixTest extends WebTestCaseWithSchema
 {
+    /**
+     * THE HEADER IS THE SECTION'S, NOT THE SCREEN'S. A section wears the area
+     * idiom: every tab is headed "Team" and the strip says which one you are
+     * on, so the matrix is identified by its lit tab rather than by a title
+     * that changes under the reader.
+     */
     public function testTheMatrixPageRenders(): void
     {
         $this->administrator();
         $crawler = $this->client->request('GET', '/team/positions');
 
         self::assertResponseIsSuccessful();
-        self::assertStringContainsString('Positions &amp; permissions', $crawler->filter('h1.pg')->html());
+        self::assertSame('Team', $crawler->filter('h1.pg')->text());
+        self::assertSame('Positions', $crawler->filter('.atabs a.on')->text());
     }
 
     /** Gated on the permission it grants — a Staff member without it is refused. */

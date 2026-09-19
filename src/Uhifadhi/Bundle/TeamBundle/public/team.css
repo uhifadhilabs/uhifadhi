@@ -2661,35 +2661,17 @@ html.light [data-dp] select, html.light [data-dept] select {
     box-shadow: 0 0 0 3px var(--accGlow);
 }
 
-/* ── THE CREATE FLOW — the scope question makes it more than one field ─────── */
-.crcard {
-    border: 1px solid var(--c-ln2); border-radius: 14px; padding: 18px 18px 16px;
-    background: linear-gradient(180deg, rgb(var(--c-p1)), rgb(var(--c-p2))); box-shadow: var(--shadow);
-    box-sizing: border-box; margin-bottom: 22px;
-}
-.crgrid { display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end; }
-.crfield { display: flex; flex-direction: column; gap: 6px; min-width: 200px; }
-.crfield.grow { flex: 1; min-width: 230px; }
-.crlab {
-    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 8.5px; font-weight: 700;
-    letter-spacing: .13em; text-transform: uppercase; color: rgb(var(--c-dim));
-}
+/* ── THE CREATE FLOW — the house create card, and the two things this
+     surface adds to it ──────────────────────────────────────────────────
+   .dcadd/.crcard/.crgrid/.crfield/.crlab/.seg/.crhint/.crpick are the
+   SHELL's: a register creating the thing it lists at the top of the page
+   is a house idiom and three sheets had drifted copies of it. What stays
+   here is only what this surface adds — the register's own spacing below
+   the card, a field that must not stretch, and the disabled segment an
+   installation with no areas shows. */
+[data-dp] .crcard, [data-dept] .crcard { box-sizing: border-box; margin-bottom: 22px; }
 .crcard .fld { width: auto; }
-.seg { display: inline-flex; border: 1px solid var(--c-ln2); border-radius: 9px; overflow: hidden; height: 38px; }
-.seg button {
-    background: none; border: 0; border-right: 1px solid var(--c-ln); color: rgb(var(--c-fog)); cursor: pointer;
-    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10px; font-weight: 700;
-    letter-spacing: .06em; text-transform: uppercase; padding: 0 14px; display: inline-flex; align-items: center; gap: 7px;
-}
-.seg button:last-child { border-right: 0; }
-.seg button svg { width: 13px; height: 13px; }
-.seg button.on { background: rgb(var(--c-acc)); color: rgb(var(--c-accT)); }
 .seg button[disabled] { opacity: .4; cursor: not-allowed; }
-.crhint { display: flex; align-items: flex-start; gap: 9px; margin-top: 13px; font-size: 12px; line-height: 1.55; color: rgb(var(--c-fog)); }
-.crhint svg { flex: none; color: rgb(var(--c-acc)); margin-top: 1px; width: 15px; height: 15px; }
-.crhint b { color: rgb(var(--c-tx)); }
-/* the area picker, hidden until "just an area" is chosen */
-[data-scope="org"] .crpick { display: none; }
 
 /* ── THE LENS: the tabbed record ──────────────────────────────────────────
    The department's tab strip is the shell's .atabs; the shell styles it as <a>,
@@ -2908,15 +2890,27 @@ html.light [data-dp] select, html.light [data-dept] select {
 
 .ov-mk {
     display: grid; place-items: center; width: 28px; height: 28px; flex: none; border-radius: 8px;
-    font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: .04em;
+    font-family: var(--font-mono); font-size: 11.5px; font-weight: 700; letter-spacing: .04em;
     color: rgb(var(--c-fog)); border: 1px solid var(--c-ln2);
 }
-.ov-mk.on { color: rgb(var(--c-acc)); border-color: color-mix(in srgb, rgb(var(--c-acc)) 40%, transparent); }
+/* THE DEPARTMENT'S OWN HUE, read from the category the card carries. The mark
+   was accent-tinted for every ACTIVE department, which said the same thing the
+   module chips beside it already say and left all nine marks identical. Nine
+   departments, nine marks — and the index is resolved by the shell's palette,
+   so a module never writes a colour. */
+[data-cat] .ov-mk, .ov-mk[data-cat] {
+    color: var(--cat);
+    border-color: color-mix(in srgb, var(--cat) 45%, transparent);
+    background: color-mix(in srgb, var(--cat) 10%, transparent);
+}
 .dc-bd { min-width: 160px; flex: 1; }
 .ov-nm { font-size: 13.5px; font-weight: 700; color: rgb(var(--c-tx)); text-decoration: none; }
 a.ov-nm:hover { color: rgb(var(--c-acc)); }
 .ov-sc {
     font-family: var(--font-mono); font-size: 9px; font-weight: 600; letter-spacing: .1em;
+    /* The design writes this as a `font:` shorthand, which resets the leading;
+       inherited from the card it made the chip a line taller than its box. */
+    line-height: normal;
     text-transform: uppercase; color: rgb(var(--c-dim)); border: 1px solid var(--c-ln2);
     border-radius: 99px; padding: 3px 8px 2px;
 }
@@ -2941,6 +2935,7 @@ a.ov-nm:hover { color: rgb(var(--c-acc)); }
 .ovexp .xhd { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 11px; }
 .ovexp .xhd .k {
     font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: .14em;
+    line-height: normal;
     text-transform: uppercase; color: rgb(var(--c-dim));
 }
 .ovexp .xhd .n { font-size: 11.5px; color: rgb(var(--c-fog)); }
@@ -2959,19 +2954,19 @@ a.ov-nm:hover { color: rgb(var(--c-acc)); }
 .pospin {
     min-width: 20px; height: 20px; padding: 0 5px; flex: none; border-radius: 6px;
     display: grid; place-items: center;
-    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 800; line-height: 1;
     color: rgb(var(--c-acc)); background: color-mix(in srgb, rgb(var(--c-acc)) 12%, transparent);
     border: 1px solid color-mix(in srgb, rgb(var(--c-acc)) 40%, transparent);
 }
 .pospin.hollow { color: rgb(var(--c-dim)); background: none; border-style: dashed; border-color: var(--c-ln2); }
 .poscardppl { display: flex; align-items: center; gap: 9px; margin-top: 11px; }
-.poscardlead { font-family: var(--font-mono); font-size: 10.5px; color: rgb(var(--c-fog)); }
+.poscardlead { font-family: var(--font-mono); font-size: 10.5px; font-weight: 500; line-height: normal; color: rgb(var(--c-fog)); }
 .poscardppl.empty .poscardlead { color: rgb(var(--c-warn)); }
 .poscardfoot {
     display: flex; align-items: center; gap: 10px; margin-top: 11px; padding-top: 10px;
     border-top: 1px dashed var(--c-ln);
 }
-.poscardfoot .k { font-family: var(--font-mono); font-size: 9px; color: rgb(var(--c-dim)); }
+.poscardfoot .k { font-family: var(--font-mono); font-size: 10px; color: rgb(var(--c-dim)); }
 .poscardfoot .btn { margin-left: auto; }
 /* THE ADD TILE IS A CELL OF THE SAME GRID, in the house's dashed treatment. */
 .poscard.add {
@@ -3106,3 +3101,142 @@ form.dpf > .k { flex-basis: 100%; }
 /* DECLARED, AND NOT MEASURABLE YET — green and amber are reserved for
    marks a real figure supports. */
 .gdots i.nofig { background: none; border: 1px solid color-mix(in srgb, rgb(var(--c-fog)) 72%, transparent); }
+
+/* ============================================================================
+   THE CHART PRIMITIVES — ON LOAN, and they belong in the shell.
+   ----------------------------------------------------------------------------
+   A plotted figure is house vocabulary: the design workspace keeps `.ch` and
+   its parts in the vendor sheet every screen is written against, and two
+   surfaces already draw one. The platform's shell does not ship them yet, so
+   they are restated here the way `.kpi` once was — under a name that is
+   nobody's module, so the block hoists unchanged the day the shell collects
+   the loan.
+
+   EVERY RULE SPENDS A TOKEN AND NAMES NO COLOUR, which is what makes the same
+   chart correct under both palettes.
+   ========================================================================== */
+.ch { width: 100%; height: auto; display: block; }
+.ch text {
+    font-family: var(--font-mono); font-size: 7.5px; fill: var(--fog);
+}
+.ch line.grid { stroke: color-mix(in srgb, var(--fog) 22%, transparent); stroke-width: .6; }
+.ch line.ax { stroke: color-mix(in srgb, var(--fog) 55%, transparent); stroke-width: .8; }
+
+/* ============================================================================
+   THE MEMBER RECORD'S SPLIT — a main column and a rail.
+   ----------------------------------------------------------------------------
+   The incident sheet's rail, on a record page: an 18px gutter, a 340px rail
+   that sticks and keeps its own scroll region, and one column under 1160px.
+   It differs from the sheet in one thing and on purpose — the sheet is an
+   overlay with its own scroller, this page is the document's own scroll, so
+   the rail sticks under the topbar (26px of page offset + 56px of bar) rather
+   than at nought. The rail keeps 9px of padding-top, which is what holds the
+   first card's tab — it sits at top:-9px — clear of the bar.
+   ========================================================================== */
+.mb-wrap { display: flex; align-items: flex-start; gap: 18px; margin-top: 18px; }
+.mb-col { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 18px; }
+.mb-rail {
+    flex: 0 0 340px; max-width: 340px;
+    display: flex; flex-direction: column; gap: 20px;
+    position: sticky; top: 82px; padding: 9px 2px 2px 0;
+    max-height: calc(100vh - 82px); overflow-y: auto; overflow-x: hidden;
+    overscroll-behavior: contain;
+    scrollbar-width: thin; scrollbar-color: var(--c-ln2) transparent;
+}
+.mb-rail::-webkit-scrollbar { width: 8px; }
+.mb-rail::-webkit-scrollbar-thumb { background: var(--c-ln2); border-radius: 8px; }
+/* A rail card is the same card, told it has 340px. */
+.mb-rail > .c { padding: 22px 15px 13px; box-shadow: none; margin: 0; }
+.mb-rail .c .tab { max-width: calc(100% - 20px); }
+/* At 340px the log's time column drops under its line rather than squeezing
+   the line into three words, and an action row stacks its button under the
+   fact instead of beside it. */
+.mb-rail .mb-lrow { grid-template-columns: 9px 1fr; row-gap: 2px; }
+.mb-rail .mb-lwhen { grid-column: 2; }
+.mb-rail .mb-danger { margin-top: 2px; }
+.mb-rail .mb-drow { grid-template-columns: 1fr; gap: 9px; align-items: start; }
+.mb-rail .mb-drow .softbtn, .mb-rail .mb-drow .mb-absent { justify-self: start; }
+
+@media (max-width: 1159px) {
+    .mb-wrap { flex-direction: column; align-items: stretch; gap: 18px; }
+    .mb-rail {
+        flex: none; width: 100%; max-width: none; box-sizing: border-box; position: static;
+        max-height: none; overflow: visible; padding: 0;
+    }
+    .mb-rail > .c { padding: 22px 19px 15px; }
+    .mb-rail .mb-lrow { grid-template-columns: 9px 1fr auto; }
+    .mb-rail .mb-lwhen { grid-column: auto; }
+    .mb-rail .mb-drow { grid-template-columns: 1fr auto; align-items: center; }
+}
+
+/* THE HISTORY — what the installation can truthfully say happened, latest
+   first. A dot, the line, and when. */
+.mb-log { margin-top: 14px; display: flex; flex-direction: column; }
+.mb-lrow {
+    display: grid; grid-template-columns: 9px 1fr auto; gap: 11px; align-items: baseline;
+    padding: 9px 2px; border-bottom: 1px solid var(--c-ln);
+}
+.mb-lrow:last-child { border-bottom: 0; }
+.mb-ldot {
+    width: 7px; height: 7px; border-radius: 50%; align-self: center;
+    background: var(--c-ln2); border: 1px solid var(--c-ln2);
+}
+.mb-ldot.on { background: var(--acc); border-color: var(--acc); }
+.mb-lrow > span:nth-child(2) { display: flex; flex-wrap: wrap; gap: 4px 9px; align-items: baseline; }
+.mb-lrow b { font-size: 12.5px; font-weight: 600; color: rgb(var(--c-tx)); }
+.mb-lrow > span:nth-child(2) > span { font-size: 11.5px; color: rgb(var(--c-dim)); }
+.mb-lwhen {
+    font-family: var(--font-mono); font-size: 10.5px;
+    color: rgb(var(--c-dim)); white-space: nowrap;
+}
+
+/* AN EMPTY FACT, DRAWN ONCE rather than described: nullable is a real state. */
+.mb-empty {
+    display: flex; gap: 11px; align-items: center;
+    border: 1px dashed var(--c-ln2); border-radius: 12px; padding: 13px 15px;
+    font-size: 12.5px; color: rgb(var(--c-fog)); line-height: 1.5;
+}
+.mb-empty svg { flex: none; color: rgb(var(--c-dim)); }
+.mb-empty b { color: rgb(var(--c-tx)); }
+.mb-empty .softbtn { margin-left: auto; }
+
+/* ============================================================================
+   THE POSITION CARD, STACKED.
+   ----------------------------------------------------------------------------
+   The card was two columns — one control on the left, the whole permission
+   ledger on the right — and the left column held a field's worth of content
+   beside a list four times its height. There is no relationship between them
+   that a column split expresses, so the card is two full-width ROWS instead:
+   the control, then what it grants.
+   ========================================================================== */
+.mb-assign { margin-top: 14px; }
+.mb-assignrow { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 7px; }
+.mb-assignrow .sel { width: 340px; max-width: 100%; height: 34px; box-sizing: border-box; }
+/* The caption gives when the column narrows, so the reach chip stays on the
+   control's line instead of being pushed under it. */
+.mb-assignrow .hint { flex: 1 1 200px; min-width: 0; font-size: 11.5px; color: rgb(var(--c-dim)); line-height: 1.55; margin: 0; }
+.mb-assignrow .pm-reach { white-space: nowrap; margin: 0; }
+
+/* THE LEDGER, full width, in two balanced columns of the SAME row shape.
+   `grid-auto-flow: column` over six explicit row tracks fills DOWN column one
+   and then column two, so the last row is never ragged and the two columns
+   share their row tracks — which is what lines them up. */
+.mb-grants { margin-top: 20px; }
+.mb-eff2 {
+    display: grid; grid-auto-flow: column; grid-template-rows: repeat(6, auto);
+    column-gap: 30px; margin-top: 7px;
+}
+.mb-eff2 .pm-effrow { grid-template-columns: minmax(0, 1fr) 132px; column-gap: 12px; }
+.mb-eff2 .pm-effrow .lhs { flex-wrap: nowrap; gap: 9px; }
+.mb-eff2 .pm-effrow .lhs b { white-space: nowrap; }
+/* The foot of each column loses its rule, not just the foot of the list. */
+.mb-eff2 .pm-effrow:nth-child(6), .mb-eff2 .pm-effrow:last-child { border-bottom: 0; }
+
+@media (max-width: 1159px) {
+    /* One column again once the card is narrow: two half-width rows at this
+       width put the reason pill on top of the key. */
+    .mb-eff2 { grid-auto-flow: row; grid-template-rows: none; }
+    .mb-eff2 .pm-effrow { grid-template-columns: minmax(0, 1fr) 168px; column-gap: 16px; }
+    .mb-eff2 .pm-effrow:nth-child(6) { border-bottom: 1px dashed var(--c-ln); }
+    .mb-eff2 .pm-effrow:last-child { border-bottom: 0; }
+}

@@ -59,7 +59,13 @@ final class MemberRecordTest extends WebTestCaseWithSchema
      * composition that declares the 20px between two of them, and a card written
      * straight into the page body has to invent a spacing of its own.
      */
-    public function testEveryCardOnTheRecordSitsInARowOfThePageGrid(): void
+    /**
+     * THE RECORD IS A SPLIT, and every card is on one side of it: the record
+     * itself in the main column, and what happened to it and what may be done
+     * to it in the rail. A card loose in the page body belongs to neither and
+     * gets the gap of whatever happens to precede it.
+     */
+    public function testEveryCardOnTheRecordSitsInTheColumnOrTheRail(): void
     {
         $this->withSuccessor();
         $grace = $this->person('Grace', 'Ndosi');
@@ -68,26 +74,23 @@ final class MemberRecordTest extends WebTestCaseWithSchema
         $crawler = $this->client->request('GET', '/team/'.$grace->getUuidString());
 
         $cards = $crawler->filter('.pgbody .c');
-        self::assertGreaterThanOrEqual(5, $cards->count(), 'the record draws a card per section');
+        self::assertGreaterThanOrEqual(6, $cards->count(), 'the record draws a card per section');
 
         foreach ($cards as $card) {
             $node = new Crawler($card);
             $label = $node->filter('.tab')->text('?');
+            $parent = $card->parentNode instanceof \DOMElement ? $card->parentNode->getAttribute('class') : '';
 
-            self::assertNotNull(
-                $node->closest('.grid'),
-                \sprintf('the card "%s" is in no .grid row, so nothing declares the gap under it', $label),
-            );
-            self::assertStringContainsString(
-                'grid',
-                (string) ($card->parentNode instanceof \DOMElement ? $card->parentNode->getAttribute('class') : ''),
-                \sprintf('the card "%s" is a bare child of the page body rather than a cell of a grid row', $label),
+            self::assertMatchesRegularExpression(
+                '/\b(mb-col|mb-rail)\b/',
+                $parent,
+                \sprintf('the card "%s" is loose in the page body rather than in the column or the rail', $label),
             );
         }
     }
 
-    /** THERE IS NO DELETE, and the page says so where a delete would be. */
-    public function testDeleteIsDrawnAsDeliberatelyAbsent(): void
+    /** The rail carries the history and the account actions, and nothing else. */
+    public function testTheRailCarriesTheHistoryAndTheAccountActions(): void
     {
         $this->withSuccessor();
         $grace = $this->person('Grace', 'Ndosi');
@@ -95,8 +98,111 @@ final class MemberRecordTest extends WebTestCaseWithSchema
 
         $crawler = $this->client->request('GET', '/team/'.$grace->getUuidString());
 
-        self::assertStringContainsString('There is no such action, and there is no button for it', $crawler->html());
-        self::assertStringContainsString('deliberately absent', $crawler->filter('.mb-drow.absent')->text());
+        self::assertSame(
+            ['History', 'Account actions'],
+            $crawler->filter('.mb-rail .c .tab')->each(
+                static fn (Crawler $c): string => trim(str_replace($c->filter('.src')->text(''), '', $c->text())),
+            ),
+        );
+    }
+
+    /**
+     * THE HISTORY IS DERIVED FROM STORED FACTS, newest first — there is no
+     * audit trail in this release, so the card states what the model can date
+     * and nothing it cannot.
+     */
+    public function testTheHistoryStatesWhatTheModelCanDate(): void
+    {
+        $naomi = $this->withSuccessor();
+        $joseph = $this->person('Joseph', 'Mrema')->setVerified(false);
+        $joseph->markInvitedBy($naomi);
+        $this->em->flush();
+
+        $crawler = $this->client->request('GET', '/team/'.$joseph->getUuidString());
+        $lines = $crawler->filter('.mb-log .mb-lrow b')->each(static fn (Crawler $c): string => $c->text());
+
+        self::assertContains('Invited', $lines);
+        self::assertContains('Account created', $lines);
+    }
+
+    /**
+     * AN INVITATION NOBODY OPENED IS CHASED FROM THE RECORD, and the control
+     * is OFFERED AND REFUSED where there is no transport — visible, inert,
+     * with the reason on it. Hiding it would leave an administrator hunting
+     * for a feature the product has; swallowing the click would leave a
+     * colleague waiting for an email nobody sent.
+     */
+    public function testAnInvitationCanBeChasedFromTheRecordAndSaysWhenItCannotBeSent(): void
+    {
+        $naomi = $this->withSuccessor();
+        $joseph = $this->person('Joseph', 'Mrema')->setVerified(false);
+        $joseph->markInvitedBy($naomi);
+        $this->em->flush();
+
+        $crawler = $this->client->request('GET', '/team/'.$joseph->getUuidString());
+        $button = $crawler->filter('.mb-state button[type="submit"]')->first();
+
+        self::assertStringContainsString('Send the link again', $button->text());
+        // This kernel configures no mailer, which is the state a fresh
+        // installation is in until somebody sets MAILER_DSN.
+        self::assertNotNull($button->attr('disabled'));
+        self::assertStringContainsString('MAILER_DSN', (string) $button->attr('title'));
+    }
+
+    /** And with no transport the write refuses rather than discarding silently. */
+    public function testChasingAnInvitationWithNoMailerRefusesInsteadOfDiscarding(): void
+    {
+        $naomi = $this->withSuccessor();
+        $joseph = $this->person('Joseph', 'Mrema')->setVerified(false);
+        $joseph->markInvitedBy($naomi);
+        $this->em->flush();
+        $first = $joseph->getVerificationToken();
+
+        $this->client->request('POST', '/team/'.$joseph->getUuidString().'/invite-again', [
+            '_token' => $this->tokenFrom('/team/'.$joseph->getUuidString()),
+        ]);
+
+        self::assertResponseRedirects();
+        self::assertStringContainsString('No invitation was sent.', $this->client->followRedirect()->text());
+        $this->em->clear();
+        $again = $this->em->getRepository(User::class)->find($joseph->getId());
+        self::assertInstanceOf(User::class, $again);
+        self::assertSame($first, $again->getVerificationToken(), 'a refused resend rotated the token anyway');
+    }
+
+    /**
+     * NOT OFFERED ONCE THEY HAVE SIGNED IN: the token is spent, the account is
+     * theirs, and the way back in is a password reset.
+     */
+    public function testSomebodyWhoHasSignedInIsOfferedAResetAndNotAnInvitation(): void
+    {
+        $this->withSuccessor();
+        $grace = $this->person('Grace', 'Ndosi');
+        $this->em->flush();
+
+        $crawler = $this->client->request('GET', '/team/'.$grace->getUuidString());
+
+        self::assertStringNotContainsString('Send the link again', $crawler->filter('.pgbody')->text());
+        self::assertStringContainsString('Send a reset link', $crawler->filter('.mb-state')->text());
+    }
+
+    /**
+     * A SCREEN DOES NOT NAME AN ACTION THAT DOES NOT EXIST. The record once
+     * drew a "delete this person" row as deliberately absent; naming the
+     * absent action only teaches a reader to look for it. Accounts are
+     * deactivated, kept and listed, and that is the only thing the card says.
+     */
+    public function testTheRecordNamesNoDeleteAtAll(): void
+    {
+        $this->withSuccessor();
+        $grace = $this->person('Grace', 'Ndosi');
+        $this->em->flush();
+
+        $crawler = $this->client->request('GET', '/team/'.$grace->getUuidString());
+
+        self::assertCount(0, $crawler->filter('.mb-drow.absent'));
+        self::assertStringNotContainsString('Delete this person', $crawler->filter('.pgbody')->text());
+        self::assertStringNotContainsString('Recycle bin', $crawler->filter('.pgbody')->text());
     }
 
     public function testThereIsNoDeleteRouteEither(): void
@@ -160,8 +266,8 @@ final class MemberRecordTest extends WebTestCaseWithSchema
         $crawler = $this->client->request('GET', '/team/'.$naomi->getUuidString());
 
         self::assertCount(1, $crawler->filter('.mb-refuse'));
-        self::assertStringContainsString('it is refused, with the reason', $crawler->filter('.mb-refuse')->text());
-        self::assertStringContainsString('only active Super Admin', $crawler->filter('.mb-refuse')->text());
+        self::assertStringContainsString('Refused — last active Super Admin', $crawler->filter('.mb-refuse')->text());
+        self::assertStringContainsString('Naomi Kileo is the only one', $crawler->filter('.mb-refuse')->text());
         // And the deactivate control is replaced by the refusal, not disabled.
         self::assertStringContainsString('refused — the last active Super Admin', $crawler->html());
     }
@@ -249,7 +355,7 @@ final class MemberRecordTest extends WebTestCaseWithSchema
 
         $crawler = $this->client->request('GET', '/team/'.$joseph->getUuidString());
 
-        self::assertStringContainsString('invited by Naomi Kileo', $crawler->filter('.mb-state')->text());
+        self::assertStringContainsString('Invited by Naomi Kileo', $crawler->filter('.mb-state')->text());
     }
 
     public function testAnAccountCreatedDirectlySaysNobodyInvitedThem(): void
@@ -260,8 +366,8 @@ final class MemberRecordTest extends WebTestCaseWithSchema
 
         $crawler = $this->client->request('GET', '/team/'.$hawa->getUuidString());
 
-        self::assertStringContainsString('Nobody invited them', $crawler->filter('.mb-state')->text());
-        self::assertStringContainsString('nothing to resend', $crawler->filter('.mb-state')->text());
+        self::assertStringContainsString('Created with a password, handed over', $crawler->filter('.mb-state')->text());
+        self::assertStringContainsString('no invitation outstanding', $crawler->filter('.mb-state')->text());
     }
 
     public function testSomebodyWhoHasArrivedGetsNoInvitationLine(): void
@@ -292,8 +398,9 @@ final class MemberRecordTest extends WebTestCaseWithSchema
 
         self::assertStringContainsString('by position', $crawler->filter('.pm-eff')->text());
         self::assertStringContainsString('not held', $crawler->filter('.pm-eff')->text());
-        // And the sentence under each name is there too.
-        self::assertStringContainsString(PermissionEnum::AreaView->description(), $crawler->filter('.pm-eff')->html());
+        // BOTH NAMES ON EVERY ROW: the catalogue's label and the machine value
+        // the voter checks.
+        self::assertStringContainsString(PermissionEnum::AreaView->value, $crawler->filter('.pm-eff')->text());
     }
 
     public function testATierAboveTheMatrixReadsByTierOnEveryRow(): void
@@ -304,7 +411,7 @@ final class MemberRecordTest extends WebTestCaseWithSchema
 
         self::assertStringNotContainsString('by position', $crawler->filter('.pm-eff')->text());
         self::assertStringContainsString('by tier', $crawler->filter('.pm-eff')->text());
-        self::assertStringContainsString('Changing the position below changes nothing they can do', $crawler->html());
+        self::assertStringContainsString('the position changes nothing they may do', $crawler->filter('.pgbody')->text());
     }
 
     public function testAssigningAPositionWritesIt(): void

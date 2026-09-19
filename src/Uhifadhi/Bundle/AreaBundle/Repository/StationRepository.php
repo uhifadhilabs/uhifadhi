@@ -65,6 +65,33 @@ class StationRepository extends SpatialEntityRepository
     }
 
     /**
+     * EVERY STATION ON THE INSTALLATION, in the order a cross-area board reads
+     * them: by the area's name, then by the station's own code.
+     *
+     * THE AREA AND THE ZONE COME WITH IT. A board prints both on every row, and
+     * fetched lazily that is two queries a station — the shape that turns a
+     * twelve-post installation into twenty-five queries and a four-hundred-post
+     * one into a timeout.
+     *
+     * @return list<Station>
+     */
+    public function findAllOrdered(): array
+    {
+        /** @var list<Station> $stations */
+        $stations = $this->createQueryBuilder('s')
+            ->addSelect('a', 'z')
+            ->join('s.area', 'a')
+            ->leftJoin('s.zone', 'z')
+            ->orderBy('a.name', 'ASC')
+            ->addOrderBy('s.code', 'ASC')
+            ->addOrderBy('s.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        return $stations;
+    }
+
+    /**
      * @return list<Station>
      */
     public function findByZone(Zone $zone): array

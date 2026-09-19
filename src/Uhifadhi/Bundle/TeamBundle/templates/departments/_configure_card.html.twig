@@ -17,7 +17,8 @@
    makes the door the way back. #}
 {% set uuid = department.uuidString %}
 {% set area = department.area %}
-<article id="d-{{ uuid }}" class="dcard on{{ department.active ? '' : ' dcinactive' }}" data-department="{{ uuid }}">
+<article id="d-{{ uuid }}" class="dcard on{{ department.active ? '' : ' dcinactive' }}" data-department="{{ uuid }}"
+         {%- if cat is defined and cat %} data-cat="{{ cat }}"{% endif %}>
     {{ include('@Team/departments/_card_head.html.twig', {
         department: department, mark: mark, positions: positions, people: people,
         figures: figures, modules: modules, here: returnTo, open: true, expandable: false,

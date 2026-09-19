@@ -123,6 +123,7 @@ class TestKernel extends Kernel
         $services->alias('test_public.area.checkin_statuses', 'area.checkin_statuses')->public();
         $services->alias('test_public.area.presence', 'area.presence')->public();
         $services->alias('test_public.area.postings', 'area.postings')->public();
+        $services->alias('test_public.area.station_directory', 'area.station_directory')->public();
         $services->alias('test_public.area.zone_stations', 'area.zone_stations')->public();
         $services->alias('test_public.area.station_event_repository', StationEventRepository::class)->public();
 

@@ -8,6 +8,18 @@
 
 Not released yet.
 
+ * `Storage\FileSourceInterface` — a module saying that it stores files and
+   what it calls one. They are the only two facts the files hub cannot work
+   out for itself: an installed module with nothing stored yet and one that
+   will never store anything look identical on a register, and the hub has no
+   word of its own for somebody else's files.
+
+ * `Area\StationDirectoryInterface` and its values — every station on the
+   installation and who stands at each, across every area at once. It is the
+   station-shaped half of `People\PersonPosting`: that seam answers where one
+   person works, and a board assembled out of it loses every station nobody
+   stands at, which is the reading the board exists for.
+
  * the module provider contract, the permissions a module declares, the area and
    user entity contracts, the user badge and the devkit contracts
  * `Kpi\DepartmentKpiProviderInterface` and its value objects — how a module

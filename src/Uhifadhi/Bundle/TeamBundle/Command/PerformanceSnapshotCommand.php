@@ -23,6 +23,7 @@ use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPerformance;
 use Uhifadhi\Bundle\TeamBundle\Service\PerformanceHistory;
 use Uhifadhi\Bundle\TeamBundle\Service\StaffingFigures;
+use Uhifadhi\Bundle\TeamBundle\Service\TeamSectionOverview;
 
 /**
  * WRITE THE PERIOD DOWN BEFORE IT STOPS BEING TRUE.
@@ -60,6 +61,7 @@ final class PerformanceSnapshotCommand extends Command
         private readonly StaffingFigures $staffing,
         private readonly DepartmentPerformance $performance,
         private readonly PerformanceHistory $history,
+        private readonly TeamSectionOverview $overview,
     ) {
         parent::__construct();
     }
@@ -112,6 +114,17 @@ final class PerformanceSnapshotCommand extends Command
                 $this->history->record($department, $period, $kpi->moduleSlug.'.'.$kpi->key, $kpi->value);
                 ++$figures;
             }
+        }
+
+        /*
+         * AND THE INSTALLATION'S OWN FIVE, which belong to no department:
+         * an account with no position is in none, a posting is the area's,
+         * and the tiers are the installation's. The Team overview's
+         * movements are comparisons against these rows.
+         */
+        foreach ($this->overview->figures() as $key => $value) {
+            $this->history->recordForInstallation($period, $key, $value);
+            ++$figures;
         }
 
         $io->success(\sprintf(

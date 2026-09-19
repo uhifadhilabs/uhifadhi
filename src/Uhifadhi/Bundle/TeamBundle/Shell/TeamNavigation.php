@@ -19,11 +19,19 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Uhifadhi\Bundle\ShellBundle\Contract\NavigationSourceInterface;
+use Uhifadhi\Bundle\ShellBundle\Frame\Service\ModuleFrameService;
 use Uhifadhi\Bundle\ShellBundle\Model\NavItem;
 use Uhifadhi\Bundle\ShellBundle\Model\NavSection;
+use Uhifadhi\Bundle\TeamBundle\Controller\DepartmentSectionController;
+use Uhifadhi\Bundle\TeamBundle\Controller\PositionController;
+use Uhifadhi\Bundle\TeamBundle\Controller\TeamController;
+use Uhifadhi\Bundle\TeamBundle\Controller\TeamPostingsController;
+use Uhifadhi\Bundle\TeamBundle\Controller\TeamRolesController;
+use Uhifadhi\Bundle\TeamBundle\Controller\TeamSectionController;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Model\DepartmentQuery;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
+use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPalette;
 
 /**
  * THE ONE ROW THIS BUNDLE PUTS IN THE SIDEBAR.
@@ -89,6 +97,7 @@ final readonly class TeamNavigation implements NavigationSourceInterface
         private AuthorizationCheckerInterface $authorization,
         private RequestStack $requests,
         private DepartmentRepository $departments,
+        private DepartmentPalette $palette,
     ) {
     }
 
@@ -116,7 +125,7 @@ final readonly class TeamNavigation implements NavigationSourceInterface
          */
         $items = array_values(array_filter([
             $this->departmentsRow(),
-            $this->row('Team', self::ROUTE, 'shell:users'),
+            $this->teamRow(),
         ]));
 
         if ([] === $items) {
@@ -140,14 +149,32 @@ final readonly class TeamNavigation implements NavigationSourceInterface
      * product, folded away — the same rule the areas tree follows for its
      * modules.
      */
+    /**
+     * DEPARTMENTS IN THE SIDEBAR — the row, and the SECTION SUBTREE under it.
+     *
+     * A SECTION WEARS THE AREA IDIOM, and an area's row opens into its screens.
+     * So does this one: Overview, the register with its departments hanging off
+     * it, and Modules — the same three the tab strip carries, in the same
+     * order, because the tree and the strip are two readings of one list and a
+     * reader who learns one has learnt the other.
+     *
+     * IT OPENS FOR THE WHOLE SECTION, not just for the register. Standing on
+     * Modules and seeing the tree collapse would say the section had one
+     * screen; the row is expanded wherever you are inside it.
+     */
     private function departmentsRow(): ?NavItem
     {
-        $row = $this->row('Departments', self::DEPARTMENTS_ROUTE, 'shell:building-2');
-        if (null === $row || !$row->current) {
+        $row = $this->row('Departments', self::DEPARTMENTS_ROUTE, 'shell:building-2', $this->viewerIsInDepartments());
+        if (null === $row) {
+            return null;
+        }
+
+        if (!$this->viewerIsInTheSection()) {
             return $row;
         }
 
         $groups = [];
+        $categories = $this->palette->indexes();
         foreach ($this->departments->findAllActiveOrdered() as $department) {
             $area = $department->getArea();
             // KEYED BY THE AREA ITSELF. Doctrine hands back one object per row
@@ -162,10 +189,20 @@ final readonly class TeamNavigation implements NavigationSourceInterface
             $uuid = (string) $department->getUuidString();
             $url = $row->url.'?'.http_build_query([DepartmentQuery::FOCUS => $uuid]).'#d-'.$uuid;
 
+            /*
+             * THE DOT WEARS THE DEPARTMENT'S OWN HUE, and it is the same hue
+             * the department wears everywhere else: the row hands the shell a
+             * CATEGORY TOKEN rather than a colour, because the palette turns
+             * over with the theme and again on imagery. A department the
+             * palette does not know keeps the shell's default.
+             */
+            $category = $categories[$uuid] ?? null;
+
             $groups[$key]['rows'][] = new NavItem(
                 label: (string) $department->getName(),
                 url: $url,
                 current: $this->viewerIsFocusedOn($uuid),
+                swatch: null === $category ? null : DepartmentPalette::token($category),
             );
         }
 
@@ -185,16 +222,153 @@ final readonly class TeamNavigation implements NavigationSourceInterface
             );
         }
 
+        // THE SCREENS ARE LIT BY ROUTE, NOT BY ADDRESS. `/departments` is a
+        // PREFIX of `/departments/overview`, so the register's own row lit on
+        // every screen in the section and the tree answered "where am I" with
+        // two rows at once. A screen is the one whose route the request
+        // matched; nothing else is.
+        $onTheRegister = self::DEPARTMENTS_ROUTE === $this->routeHere();
+
+        $register = new NavItem(
+            label: 'Departments',
+            url: $row->url,
+            // The register IS all departments, the way the area row is the
+            // area: it stays lit while none of the cards under it is.
+            current: $onTheRegister && !self::litAnywhere($children),
+            open: true,
+            children: $children,
+        );
+
+        $screens = array_values(array_filter([
+            $this->screen('Overview', DepartmentSectionController::OVERVIEW),
+            $register,
+            $this->screen('Modules', DepartmentSectionController::MODULES),
+        ]));
+
         return new NavItem(
             label: $row->label,
             url: $row->url,
             icon: $row->icon,
-            // The register IS all departments, the way the area row is the
-            // area: it stays lit while none of its children is.
-            current: !self::litAnywhere($children),
+            // THE SECTION'S ROW IS LIT ANYWHERE INSIDE THE SECTION, and the
+            // child says which screen. Two marks on one path is not two
+            // answers to "where am I": it is the path. The invariant the shell
+            // enforces is one lit row among SIBLINGS, and that still holds —
+            // exactly one screen is lit, and exactly one card under it.
+            current: true,
             open: true,
-            children: $children,
+            children: $screens,
         );
+    }
+
+    /**
+     * TEAM IN THE SIDEBAR — the row, and the SECTION SUBTREE under it.
+     *
+     * A SECTION WEARS THE AREA IDIOM, and an area's row opens into its
+     * screens. So does this one: the five the tab strip carries, in the same
+     * order, because the tree and the strip are two readings of one list and a
+     * reader who learns one has learnt the other.
+     *
+     * IT OPENS FOR THE WHOLE SECTION, not just for the register. Standing on
+     * Roles and seeing the tree collapse would say the section had one screen.
+     */
+    private function teamRow(): ?NavItem
+    {
+        $row = $this->row('Team', self::ROUTE, 'shell:users');
+        if (null === $row) {
+            return null;
+        }
+
+        if (!$this->viewerIsInTeam()) {
+            return $row;
+        }
+
+        $screens = array_values(array_filter([
+            $this->screen('Overview', TeamSectionController::OVERVIEW),
+            $this->screen('People', TeamController::PEOPLE),
+            $this->screen('Positions', PositionController::REGISTER),
+            $this->screen('Postings', TeamPostingsController::POSTINGS),
+            $this->screen('Roles', TeamRolesController::ROLES),
+        ]));
+
+        if ([] === $screens) {
+            return $row;
+        }
+
+        return new NavItem(
+            label: $row->label,
+            url: $row->url,
+            icon: $row->icon,
+            // THE SECTION'S ROW IS LIT ANYWHERE INSIDE THE SECTION, and the
+            // child says which screen. Two marks on one path is not two
+            // answers to "where am I": it is the path.
+            current: true,
+            open: true,
+            children: $screens,
+        );
+    }
+
+    /**
+     * WHETHER THE VIEWER IS ANYWHERE IN THE TEAM SECTION — read off the
+     * surface marker the section's routes carry, which is the same reading the
+     * shell's frame makes to draw the tab strip. A person's own page and the
+     * screen that adds somebody carry no marker and are not screens of the
+     * section, so the tree stays folded there, exactly as the strip is absent.
+     */
+    private function viewerIsInTeam(): bool
+    {
+        return TeamSectionTabs::SURFACE === $this->requests->getCurrentRequest()?->attributes->get(ModuleFrameService::MODULE_ROUTE_ATTRIBUTE);
+    }
+
+    /** One screen of the section, or nothing where its address is not mounted. */
+    private function screen(string $label, string $route): ?NavItem
+    {
+        try {
+            $url = $this->urls->generate($route);
+        } catch (RouteNotFoundException) {
+            return null;
+        }
+
+        return new NavItem(label: $label, url: $url, current: $route === $this->routeHere());
+    }
+
+    /**
+     * WHETHER THE VIEWER IS ON A DEPARTMENTS SCREEN — and `/departments` is a
+     * PREFIX OF SOMEBODY ELSE'S ADDRESS, which is the whole reason this is not
+     * a path comparison.
+     *
+     * Performance lives at `/departments/performance` and is a place of its
+     * own with its own row; matched by prefix, the Departments row lit there
+     * too, and the sidebar answered "where am I" with two rows in one section.
+     * A screen belongs to this section when it carries the section's surface
+     * marker, or when the route the request matched is one of this bundle's
+     * own department addresses — which a department's RECORD page is, though
+     * it carries no marker and draws no strip.
+     */
+    private function viewerIsInDepartments(): bool
+    {
+        return $this->viewerIsInTheSection() || str_starts_with($this->routeHere(), 'team_department');
+    }
+
+    /** The route the request matched, or '' outside a request. */
+    private function routeHere(): string
+    {
+        $route = $this->requests->getCurrentRequest()?->attributes->get('_route');
+
+        return \is_string($route) ? $route : '';
+    }
+
+    /**
+     * WHETHER THE VIEWER IS ANYWHERE IN THE DEPARTMENTS SECTION — read off the
+     * surface marker the section's routes carry, which is the same reading the
+     * shell's frame makes to draw the tab strip. Reading the marker rather
+     * than listing route names means a screen added to the section opens the
+     * tree without this class being told about it.
+     */
+    private function viewerIsInTheSection(): bool
+    {
+        $declared = $this->requests->getCurrentRequest()?->attributes->get(ModuleFrameService::MODULE_ROUTE_ATTRIBUTE);
+
+        return DepartmentSectionTabs::SURFACE === $declared;
     }
 
     /** @param list<NavItem> $rows */
@@ -223,7 +397,7 @@ final readonly class TeamNavigation implements NavigationSourceInterface
      * page down because somebody unmounted a route would be the worst possible
      * way to learn it.
      */
-    private function row(string $label, string $route, string $icon): ?NavItem
+    private function row(string $label, string $route, string $icon, ?bool $current = null): ?NavItem
     {
         try {
             $url = $this->urls->generate($route);
@@ -235,7 +409,11 @@ final readonly class TeamNavigation implements NavigationSourceInterface
             label: $label,
             url: $url,
             icon: $icon,
-            current: $this->viewerIsHere($url),
+            // A ROW THAT KNOWS ITS OWN SCREENS SAYS SO ITSELF. The path
+            // comparison below is the default and is right for a row whose
+            // address nobody else nests under; a row whose prefix another
+            // place shares answers by route instead.
+            current: $current ?? $this->viewerIsHere($url),
         );
     }
 

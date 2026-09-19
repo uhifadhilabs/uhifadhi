@@ -2063,3 +2063,200 @@ table.tbl tr:hover .open-btn {
 /* The consequence is stated where the control is, never in a dialog the
    reader has to open to find out what the button does. */
 .sbn { flex-basis: 100%; font-size: 11.5px; line-height: 1.5; color: rgb(var(--c-dim)); }
+
+/* ============================================================================
+   THE HOUSE CREATE CARD — one idiom, said once.
+   ----------------------------------------------------------------------------
+   Always open: the thing a register creates is created at the top of the page,
+   never behind a summary and never in a second form. The heading (.dcadd /
+   .dcaddhd) names it and says what the first choice means; the card (.crcard)
+   is one row of labelled fields (.crgrid > .crfield > .crlab) ending in the
+   accent action, with one consequence line under a rule (.crhint). A field the
+   current choice makes meaningless hides itself (.crpick).
+
+   IT IS SHELL VOCABULARY, not a section's. Three sheets carried a copy of this
+   card — the departments register, the positions screen and the configure
+   sections — and the three had drifted apart by a border radius and a label
+   size. This is the one that stays.
+   ========================================================================== */
+.dcadd { margin: 0 0 20px; }
+.dcaddhd { display: flex; align-items: center; gap: 10px; margin: 0 0 9px; }
+.dcaddhd svg { color: var(--acc); flex: none; }
+.dcaddhd b { font-size: 13.5px; color: var(--tx); font-weight: 700; }
+.dcaddhd .hint { font-size: 11.5px; color: var(--dim); }
+.crcard {
+    border: 1px solid var(--ln2); border-radius: 14px; padding: 18px 18px 16px;
+    background: linear-gradient(180deg, var(--p1), var(--p2)); box-shadow: var(--shadow);
+}
+.crgrid { display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end; }
+.crfield { display: flex; flex-direction: column; gap: 6px; min-width: 200px; }
+.crfield.grow { flex: 1; min-width: 230px; }
+.crlab {
+    font-family: var(--font-mono); font-size: 8.5px; font-weight: 700; letter-spacing: .13em;
+    text-transform: uppercase; color: var(--dim);
+}
+.seg { display: inline-flex; border: 1px solid var(--ln2); border-radius: 9px; overflow: hidden; height: 38px; }
+.seg button {
+    background: none; border: 0; border-right: 1px solid var(--ln); color: var(--fog); cursor: pointer;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase; padding: 0 14px; display: inline-flex; align-items: center; gap: 7px;
+}
+.seg button:last-child { border-right: 0; }
+.seg button svg { width: 13px; height: 13px; }
+.seg button.on { background: var(--acc); color: var(--accT); }
+.crhint {
+    display: flex; align-items: flex-start; gap: 9px; margin-top: 13px; font-size: 12px;
+    line-height: 1.55; color: var(--fog);
+}
+.crhint svg { flex: none; color: var(--acc); margin-top: 1px; width: 15px; height: 15px; }
+.crhint b { color: var(--tx); }
+[data-scope="org"] .crpick { display: none; }
+
+/* ============================================================================
+   TOP-LEVEL SECTION MARKS — the vocabulary a section surface (Departments,
+   Team, Files) needs that the rest of the shell does not already own. A section
+   IS a house surface, so its marks belong in the house sheet and not in a sheet
+   only three pages load.
+   ========================================================================== */
+/* RANKED BARS — one row per thing, longest first, the value read off the end of
+   the bar rather than off an axis. The card that holds them is bounded by the
+   number of rows it draws, never by the data. */
+.sxbars { display: flex; flex-direction: column; gap: 7px; margin: 12px 0 2px; }
+.sxbar { display: grid; grid-template-columns: minmax(0, 162px) minmax(0, 1fr) auto; align-items: center; gap: 10px; }
+.sxbar .l { font-size: 12px; color: var(--tx); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sxbar .t {
+    position: relative; height: 14px; border-radius: 4px;
+    background: color-mix(in srgb, var(--fog) 12%, transparent); overflow: hidden; display: flex;
+}
+.sxbar .t i { display: block; height: 100%; }
+.sxbar .t i.f { background: var(--acc); }
+.sxbar .t i.v { background: color-mix(in srgb, var(--fail) 42%, transparent); }
+.sxbar .t i.b { background: color-mix(in srgb, var(--acc) 42%, transparent); }
+.sxbar .n {
+    font-family: var(--font-mono); font-size: 10.5px; color: var(--fog);
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.sxbar .n b { color: var(--tx); font-weight: 700; }
+.sxbar.q .l, .sxbar.q .n { color: var(--dim); }
+
+/* THE BOUND — the line a bounded card ends on: what it is not showing, and the
+   door to the register that shows it. Never a scrollbar inside the card. */
+.sxmore {
+    display: flex; align-items: center; gap: 10px; margin-top: 12px; padding-top: 10px;
+    border-top: 1px solid var(--ln); font-family: var(--font-mono); font-size: 10px; color: var(--dim);
+}
+.sxmore .sp { flex: 1; }
+/* The base rule already answers a link's colour and its underline; what a
+   bound's door adds is the weight and the tracking. */
+.sxmore a { font-weight: 700; letter-spacing: .06em; }
+.sxmore a:hover { text-decoration: underline; }
+
+/* THE MATRIX DOT — a cell in a departments x modules grid. Present, inherited
+   (an org-wide department reads it in every area) or absent; absence is drawn,
+   not left blank, so an empty row reads as an answer. */
+.sxmx td, .sxmx th { text-align: center; }
+.sxmx td:first-child, .sxmx th:first-child { text-align: left; }
+.sxdot { display: inline-block; width: 9px; height: 9px; border-radius: 3px; background: var(--acc); }
+.sxdot.inh { background: none; border: 1.5px solid color-mix(in srgb, var(--acc) 60%, transparent); }
+.sxdot.no { background: none; border: 1.5px dashed color-mix(in srgb, var(--fog) 34%, transparent); }
+.sxmxkey {
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin: 2px 0 12px;
+    font-family: var(--font-mono); font-size: 9.5px; color: var(--dim);
+}
+.sxmxkey span { display: inline-flex; align-items: center; gap: 6px; }
+
+/* THE DOORS — a row of onward surfaces at the foot of an overview. A door is a
+   destination, not a figure, so it carries a name, a line and an arrow. */
+.sxdoors { display: grid; grid-template-columns: repeat(auto-fit, minmax(232px, 1fr)); gap: 16px; margin-bottom: 20px; }
+.sxdoor {
+    display: flex; flex-direction: column; gap: 4px; padding: 15px 16px; border: 1px solid var(--ln);
+    border-radius: 13px; background: linear-gradient(180deg, var(--p1), var(--p2));
+    color: var(--tx);
+}
+.sxdoor:hover { border-color: color-mix(in srgb, var(--acc) 45%, transparent); }
+.sxdoor b { font-size: 13.5px; font-weight: 600; display: flex; align-items: center; gap: 7px; }
+.sxdoor b .ar { margin-left: auto; color: var(--acc); }
+.sxdoor span { font-size: 12px; color: var(--fog); line-height: 1.5; }
+
+/* A CARD'S FOOTER STRIP — the third region of a card, visually distinct from
+   the body, holding the operations that are not the card's reading. */
+.sxfoot {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 14px -16px -14px;
+    padding: 11px 16px; border-top: 1px solid var(--ln);
+    background: color-mix(in srgb, var(--fog) 4%, transparent);
+    border-radius: 0 0 13px 13px; font-size: 12px; color: var(--fog);
+}
+.sxfoot .sp { flex: 1; }
+
+/* A GROUP ROW inside a register table — the band a grouped list breaks on. The
+   departments register groups with .deptgroup above its cards; a TABLE groups
+   inside itself, so the row is the band. */
+.sxgrp td {
+    background: color-mix(in srgb, var(--fog) 6%, transparent);
+    border-bottom: 1px solid var(--ln2) !important;
+    padding-top: 11px !important; padding-bottom: 9px !important;
+}
+.sxgrp b { font-size: 12.5px; }
+.sxgrp .mono { font-size: 10.5px; }
+table.tbl tr.sxgrp { cursor: default; }
+table.tbl tr.sxgrp:hover td { background: color-mix(in srgb, var(--fog) 6%, transparent); }
+
+/* A CARD'S LEAD — one framing line and, where the card hands over to another
+   surface, the control that goes there. */
+.sxlead { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin: 2px 0 12px; }
+.sxlead .t {
+    flex: 1; min-width: 300px; display: flex; gap: 9px; align-items: flex-start;
+    font-size: 12.5px; color: var(--fog); line-height: 1.55;
+}
+.sxlead .t b { color: var(--tx); }
+.sxlead .t > svg { width: 15px; height: 15px; flex: none; margin-top: 2px; color: var(--acc); }
+.sxlead .a { display: flex; gap: 9px; align-items: center; margin-left: auto; }
+.sxlead .a .cta, .sxlead .a .tgl {
+    height: 32px; box-sizing: border-box; display: inline-flex; align-items: center; gap: 7px;
+    padding: 0 13px; border-radius: 9px; font-size: 12px; line-height: 1; white-space: nowrap;
+    text-decoration: none;
+}
+
+/* A CONFIGURE SECTION THAT IS NAMED BUT NOT DRAWN YET. It stays in the strip,
+   because dropping it hides that the section exists; it is not a link, because
+   a strip entry that 404s is worse than one that says so. */
+.atabs .soon {
+    font-size: 13.5px; font-weight: 600; color: var(--dim); padding: 9px 1px 12px;
+    border-bottom: 2px solid transparent; cursor: default; display: inline-flex;
+    align-items: center; gap: 7px;
+}
+.atabs .soon::after {
+    content: "not drawn"; font-family: var(--font-mono); font-size: 8px; font-weight: 600;
+    letter-spacing: .14em; text-transform: uppercase; color: var(--dim);
+    border: 1px solid var(--ln2); border-radius: 5px; padding: 1px 5px;
+}
+
+/* A QUIET ROW ACTION — the edit a vocabulary row carries. Quieter than the
+   register's primary row affordance, because renaming a word is not why you
+   opened the page. */
+.sxq {
+    display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-mono);
+    font-size: 10px; font-weight: 700; letter-spacing: .06em; color: var(--fog);
+    text-decoration: none; border: 1px solid var(--ln2); border-radius: 7px;
+    padding: 3px 9px; white-space: nowrap;
+}
+.sxq:hover { color: var(--tx); border-color: var(--fog); }
+
+/* THE DELTA PILL — a figure's movement against the previous period. It sits in
+   a .kpi's .sub row beside the qualifier, and it is COMPUTED from value +
+   previous, never typed. */
+.delta {
+    display: inline-flex; align-items: center; gap: 3px; font-family: var(--font-mono);
+    font-size: 10px; font-weight: 700; border: 1px solid var(--ln2); border-radius: 6px;
+    padding: 1px 6px; color: var(--dim); font-variant-numeric: tabular-nums; letter-spacing: 0;
+}
+.delta svg { width: 10px; height: 10px; flex: none; }
+.delta.good {
+    color: var(--ok); border-color: color-mix(in srgb, var(--ok) 34%, transparent);
+    background: color-mix(in srgb, var(--ok) 8%, transparent);
+}
+.delta.bad {
+    color: var(--fail); border-color: color-mix(in srgb, var(--fail) 34%, transparent);
+    background: color-mix(in srgb, var(--fail) 8%, transparent);
+}
+.delta.flat { color: var(--dim); border-color: var(--ln2); }

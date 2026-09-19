@@ -337,5 +337,36 @@ final class LayoutContract
         // the quiet controls first and the accent last. Not a footer strip,
         // which is the card's furniture and means something else.
         'staddrow',
+
+        // THE HOUSE CREATE CARD — the thing a register creates is created at
+        // the top of the page, in this card, and never in a second form. The
+        // heading names it (`dcadd`), the card holds one row of labelled
+        // fields (`crcard`) and the first choice, where there is one, is a
+        // segmented control (`seg`).
+        'dcadd',
+        'crcard',
+        'seg',
+
+        // TOP-LEVEL SECTION MARKS — the vocabulary a section surface
+        // (Departments, Team, Files) needs: ranked bars, the bound a bounded
+        // card ends on, the attachment matrix and its dot, the doors at the
+        // foot of an overview, a card's footer strip and its lead, a grouped
+        // table's band row, a vocabulary row's quiet edit, and the strip entry
+        // for a section that is named but not drawn yet.
+        'sxbars',
+        'sxmore',
+        'sxmx',
+        'sxdot',
+        'sxmxkey',
+        'sxdoors',
+        'sxdoor',
+        'sxfoot',
+        'sxgrp',
+        'sxlead',
+        'sxq',
+        'soon',
+
+        // a figure's movement against the previous period, in a KPI's sub row
+        'delta',
     ];
 }

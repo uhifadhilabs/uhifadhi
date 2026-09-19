@@ -130,6 +130,33 @@ final class ComponentContractTest extends ContractTestCase
 
             // a form's actions, as the last row of its own body
             'staddrow',
+
+            // THE HOUSE CREATE CARD — a register creates the thing it lists at
+            // the top of its own page, in this card, never in a second form.
+            // Three sheets carried a drifted copy of it before it was said here.
+            'dcadd',        // the heading that names what is being created
+            'crcard',       // the card itself: .crgrid > .crfield > .crlab
+            'seg',          // the segmented first choice, where there is one
+
+            // TOP-LEVEL SECTION MARKS — what a section surface (Departments,
+            // Team, Files) needs that the rest of the vocabulary does not
+            // already own. A section is a house surface, so these are house
+            // marks and not a sheet only three pages load.
+            'sxbars',       // ranked bars, longest first, value off the end
+            'sxmore',       // the bound: what is not shown, and the door to it
+            'sxmx',         // the attachment matrix
+            'sxdot',        // one cell of it: present / inherited / absent
+            'sxmxkey',      // and the key that reads it
+            'sxdoors',      // the onward surfaces at the foot of an overview
+            'sxdoor',
+            'sxfoot',       // a card's footer strip
+            'sxgrp',        // the band a grouped table breaks on
+            'sxlead',       // a card's framing line and its hand-over control
+            'sxq',          // a vocabulary row's quiet edit
+            'soon',         // a strip entry named but not drawn yet
+
+            // A FIGURE'S MOVEMENT against the previous period, in a KPI's sub.
+            'delta',
         ];
     }
 

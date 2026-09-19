@@ -1,0 +1,118 @@
+{# DEPARTMENTS · CONFIGURE · LISTS — the words this section writes with.
+
+   THREE LISTS, AND ONLY ONE OF THEM IS A LIST. The kinds are edited here and
+   nowhere else. The scopes are the MODEL — a third would be a third rule in
+   every query a module writes — and they are shown read-only so nobody goes
+   looking for the button. The goal kinds arrive with whichever module can
+   measure them and leave with it, so nothing here owns them. #}
+{% extends '@Shell/page.html.twig' %}
+
+{% block title %}Departments{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {{ include('@Team/_stylesheets.html.twig') }}
+{% endblock %}
+
+{% block shell_breadcrumbs %}
+    <a href="{{ path('team_departments_overview') }}">uhifadhi</a> / departments / configure / lists
+{% endblock %}
+
+{% block shell_page_title %}Departments{% endblock %}
+{% block shell_page_subtitle %}The words this section writes with &mdash; kinds, scopes and goal kinds.{% endblock %}
+
+{% block shell_page %}
+    <div data-dp>
+        <div class="sxlead">
+            <span class="t">{{ ux_icon('shell:settings', {width: 15, height: 15}) }}<span><b>A list is edited here and nowhere else.</b> A module-contributed list arrives with its module and leaves with it. The two scopes are the model, not a list, and are shown so nobody goes looking for the button.</span></span>
+        </div>
+
+        {# THE HOUSE CREATE CARD — always open, at the top of the page, never
+           behind a summary and never in a second form. #}
+        <div class="dcadd" id="add-kind">
+            <div class="dcaddhd">{{ ux_icon('shell:plus', {width: 16, height: 16}) }}<b>Add a department kind</b><span class="hint">A kind groups departments for reading; it grants nothing</span></div>
+            <form class="crcard" method="post" action="{{ path('team_department_kind_create') }}">
+                <input type="hidden" name="_token" value="{{ csrfToken }}">
+                <div class="crgrid">
+                    <div class="crfield grow">
+                        <span class="crlab">Name</span>
+                        <input class="fld" type="text" name="name" placeholder="Operational" aria-label="Kind name" required>
+                    </div>
+                    <div class="crfield grow">
+                        <span class="crlab">What it means</span>
+                        <input class="fld" type="text" name="meaning" placeholder="runs the ground" aria-label="What this kind means">
+                    </div>
+                    <button class="cta" type="submit">{{ ux_icon('shell:plus', {width: 15, height: 15}) }} Add</button>
+                </div>
+                <div class="crhint">{{ ux_icon('shell:info', {width: 15, height: 15}) }}<span>A kind is a <b>lens over the register</b>, never a permission and never a scope. Removing one leaves its departments unkinded, which is legal.</span></div>
+            </form>
+        </div>
+
+        <div class="c">
+            <span class="tab">Department kinds<span class="src">&middot; {{ kinds|length }} in use</span></span>
+            <table class="tbl">
+                <thead><tr><th>Kind</th><th>What it means</th><th class="num">Departments</th><th>Which</th><th></th></tr></thead>
+                <tbody>
+                {% for kind in kinds %}
+                    <tr>
+                        <td><b>{{ kind.name }}</b></td>
+                        <td><span class="mono d">{{ kind.meaning ?? '—' }}</span></td>
+                        <td class="num">{{ kind.departments|length }}</td>
+                        <td><span class="mono d">{{ kind.departments|length > 0 ? kind.departments|map(d => d.name)|join(', ') : '—' }}</span></td>
+                        <td>
+                            <form method="post" action="{{ path('team_department_kind_rename', {uuid: kind.uuidString}) }}" class="moveform">
+                                <input type="hidden" name="_token" value="{{ csrfToken }}">
+                                <input class="fld" type="text" name="name" value="{{ kind.name }}" aria-label="Rename {{ kind.name }}" required>
+                                <input class="fld" type="text" name="meaning" value="{{ kind.meaning }}" aria-label="What {{ kind.name }} means">
+                                <button class="sxq" type="submit">Rename</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="5"><span class="d">No kind yet. The register reads every department as unkinded, which is legal.</span></td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            <div class="sxfoot"><span>{{ unkinded }} of {{ departments }} departments carry no kind. A department with no kind is legal and reads as &ldquo;unkinded&rdquo;.</span></div>
+        </div>
+
+        <div class="c">
+            <span class="tab">Scopes<span class="src">&middot; the model &middot; fixed, two, not editable</span></span>
+            <div class="sxlead">
+                <span class="t">{{ ux_icon('shell:info', {width: 15, height: 15}) }}<span><b>Read-only, and deliberately.</b> A third scope would be a third rule in every query a module writes. Changing a department&rsquo;s scope is done on its own card.</span></span>
+            </div>
+            <table class="tbl">
+                <thead><tr><th>Scope</th><th>What it means</th><th class="num">Departments</th><th>Editable</th></tr></thead>
+                <tbody>
+                {% for scope in scopes %}
+                    <tr>
+                        <td><b>{{ scope.label }}</b></td>
+                        <td>{{ scope.value == 'org' ? 'every area reads it' : 'one area only' }}</td>
+                        <td class="num">{{ byScope[scope.value] }}</td>
+                        <td><span class="mono d">no &mdash; it is the model</span></td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="c">
+            <span class="tab">Goal kinds<span class="src">&middot; module-contributed &middot; {{ goalKinds|length }}</span></span>
+            <table class="tbl">
+                <thead><tr><th>Stored as</th><th>Unit</th><th class="num">Goals declared</th></tr></thead>
+                <tbody>
+                {% for kind in goalKinds %}
+                    <tr>
+                        <td><span class="mono d">{{ kind.ref }}</span></td>
+                        <td>{{ kind.unit }}</td>
+                        <td class="num">{{ kind.declared }}</td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="3"><span class="d">No goal names a figure yet, so no module has contributed a kind.</span></td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            <div class="sxfoot"><span>A goal kind arrives with the module that can measure it. Remove that module and the kind leaves the list; the goals that used it keep their statements and stop resolving.</span></div>
+        </div>
+    </div>
+{% endblock %}

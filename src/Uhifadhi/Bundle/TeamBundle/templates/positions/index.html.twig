@@ -10,49 +10,68 @@
     {{ include('@Team/_stylesheets.html.twig') }}
 {% endblock %}
 
-{% block shell_page_tabs %}{% endblock %}
-
 {% block shell_breadcrumbs %}
     <a href="{{ path('team_index') }}">uhifadhi</a> / <a href="{{ path('team_index') }}">team</a> / positions
 {% endblock %}
 
-{% block shell_page_title %}Positions &amp; permissions{% endblock %}
+{% block shell_page_title %}Team{% endblock %}
 
-{% block shell_page_subtitle %}
-    A <b>position</b> is a named bundle of permissions, and it is the only thing that grants a Staff member any
-    capability at all. <b>A position belongs to a department</b>, and its name is unique only inside it &mdash;
-    <span class="mono">Ecology / Analyst</span> and <span class="mono">Protection Service / Analyst</span> are two
-    different jobs that share a word, so nothing on this page ever writes a bare name. <b>Tier and permission are
-    different things</b>: tier decides who stands above this matrix, permissions decide what anybody may do
-    &mdash; and since the Manager tier was retired, <b>administering the team is itself one of the permissions on
-    this page</b>: <span class="mono">team.manage</span>, the seventh core case.
-{% endblock %}
+{# ONE LINE: what THIS tab is for. That a position belongs to a department and
+   that its name is unique only inside it are the model, stated on the
+   section's configure page rather than shouted at the top of every visit. #}
+{% block shell_page_subtitle %}What each position may do.{% endblock %}
 
 {% block shell_page_actions %}
-    {# CREATING ONE IS TWO FIELDS AND THE DEPARTMENT IS THE FIRST OF THEM. The
-       name is unique inside that department and nowhere else. #}
-    <form class="assign" method="post" action="{{ path('team_position_create') }}">
-        <input type="hidden" name="_token" value="{{ csrfToken }}">
-        <select name="department" class="sel" aria-label="Department">
-            {# §5.6(b): a bounded area admin files only into the area-level
-               departments they reach; the loose "no department" option has no
-               scope, so only an unbounded administrator is offered it. #}
-            {% if canFileLoose %}
-                <option value="">No department yet&hellip;</option>
-            {% endif %}
-            {% for department in creatable %}
-                <option value="{{ department.uuidString }}">{{ department.name }}</option>
-            {% endfor %}
-        </select>
-        <input type="text" name="name" class="fld" placeholder="Senior Ranger" aria-label="New position name" required>
-        <button class="cta" type="submit">{{ bits.icon_plus() }} New position</button>
-    </form>
-    <a class="tgl w-act" href="{{ path('team_index') }}">{{ bits.icon_back() }} Back to the team</a>
+    {# THE SECTION'S PRIMARY ACTION, the accent cta, first in the row. It does
+       not open a second form: it jumps to the create card that is already open
+       at the top of the page, the way a configure page states a setting. #}
+    <a class="cta" href="#add">{{ bits.icon_plus() }} Add a position</a>
     <a class="tgl w-act" href="{{ path('team_position_widgets') }}">{{ bits.icon_grid() }} Widget library</a>
 {% endblock %}
 
 {% block shell_page %}
     {{ include('@Team/team/_scope_banner.html.twig') }}
+
+    {# ALWAYS OPEN, THE HOUSE CREATE CARD. A position belongs to a department
+       and its name is unique only inside it, so the department is the FIRST
+       field — a name typed before the department is a name unique against
+       nothing. #}
+    <div class="dcadd" id="add">
+        <div class="dcaddhd">
+            {{ ux_icon('shell:plus', {width: 15, height: 15}) }}
+            <b>Add a position</b>
+            <span class="hint">Pick its department first &mdash; the name is unique only inside it</span>
+        </div>
+        <form class="crcard" method="post" action="{{ path('team_position_create') }}">
+            <input type="hidden" name="_token" value="{{ csrfToken }}">
+            <div class="crgrid">
+                <div class="crfield">
+                    <span class="crlab">Department</span>
+                    <select name="department" class="fld" aria-label="Department">
+                        {# A bounded area admin files only into the area-level
+                           departments they reach; the loose "no department"
+                           option has no scope, so only an unbounded
+                           administrator is offered it. #}
+                        {% if canFileLoose %}
+                            <option value="">No department yet&hellip;</option>
+                        {% endif %}
+                        {% for department in creatable %}
+                            <option value="{{ department.uuidString }}">{{ department.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="crfield grow">
+                    <span class="crlab">Name</span>
+                    <input type="text" name="name" class="fld" placeholder="Senior Ranger" aria-label="New position name" required>
+                </div>
+                <button class="cta" type="submit">{{ bits.icon_plus() }} Add position</button>
+            </div>
+            <div class="crhint">
+                {{ ux_icon('shell:info') }}
+                <span><b>Ecology / Analyst</b> and <b>Protection Service / Analyst</b> &mdash; two jobs, one word, so a bare name is never written.</span>
+            </div>
+        </form>
+    </div>
     {# See the team page: these are the shell's cell classes, and the
        span is `.w-span-N` because bare `w-N` is Tailwind's width scale. #}
     <div class="w-grid">

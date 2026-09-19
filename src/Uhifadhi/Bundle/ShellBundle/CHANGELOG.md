@@ -33,6 +33,26 @@ Not released yet.
  * a nav row may say its children are its own SCREENS rather than places
    (`NavItem::$screens`), so a section with three tabs under it draws them at
    the screen rung instead of inventing a place between the two
+ * AN ORG-LEVEL SECTION GETS ITS `Configure` ACTION. The shell's own configure
+   page renders a section into an AREA's frame, so a surface with no area in
+   its address got no action at all and read as a place you could not set up.
+   A surface that declares configure screens of its own now has its action
+   open the first of them — the same control, in the same place, opening the
+   same kind of screen as everywhere else.
+
+ * THE HOUSE CREATE CARD is shell vocabulary: `.dcadd` and `.crcard` with their
+   parts. Three sheets carried a copy of it and the three had drifted apart by
+   a border radius and a label size.
+
+ * TOP-LEVEL SECTION MARKS — the ranked bars, the bound a bounded card ends on,
+   the attachment matrix and its dot, the doors at the foot of an overview, a
+   card's footer strip and its lead, a grouped table's band row, a vocabulary
+   row's quiet edit, and the strip entry for a section that is named but not
+   drawn yet. A section is a house surface, so its marks are house marks.
+
+ * THE DELTA PILL: a figure's movement against the previous period, said once
+   here instead of in three sheets.
+
  * the document, the page frame, the navigation contracts and the theme
  * the design-system stylesheet every module's own sheet is written against
  * the widget machinery under `Widget/`: the surface registry, the stored

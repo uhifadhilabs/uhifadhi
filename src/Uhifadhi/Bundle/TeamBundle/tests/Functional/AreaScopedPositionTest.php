@@ -275,7 +275,9 @@ final class AreaScopedPositionTest extends WebTestCaseWithSchema
      */
     private function departmentOptions(Crawler $crawler): array
     {
-        return $crawler->filter('form.assign select[name="department"] option')
+        // THE CREATE CARD, at the top of the register's own page — the house
+        // idiom, and no longer a form squeezed into the header row.
+        return $crawler->filter('#add form.crcard select[name="department"] option')
             ->each(static fn (Crawler $c): string => trim($c->text()));
     }
 }

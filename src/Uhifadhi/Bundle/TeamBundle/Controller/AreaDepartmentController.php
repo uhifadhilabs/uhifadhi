@@ -30,6 +30,7 @@ use Uhifadhi\Bundle\TeamBundle\Model\DepartmentQuery;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
+use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPalette;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPerformance;
 use Uhifadhi\Contracts\Entity\AreaInterface;
 
@@ -70,6 +71,7 @@ final readonly class AreaDepartmentController
         private CsrfTokenManagerInterface $csrf,
         private RouterInterface $router,
         private ModuleCatalogue $catalogue,
+        private DepartmentPalette $palette,
     ) {
     }
 
@@ -184,6 +186,9 @@ final readonly class AreaDepartmentController
             'holders' => $holders,
             'figures' => $figures,
             'marks' => $marks,
+            // A DEPARTMENT NAMES A CATEGORY AND NEVER A COLOUR, and it is the
+            // same category on every surface that marks one.
+            'cats' => $this->palette->indexes(),
         ];
     }
 

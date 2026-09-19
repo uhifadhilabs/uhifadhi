@@ -24,7 +24,9 @@ use Uhifadhi\Bundle\TeamBundle\Command\CreateUserCommand;
 use Uhifadhi\Bundle\TeamBundle\Command\PerformanceSnapshotCommand;
 use Uhifadhi\Bundle\TeamBundle\Controller\ApiAuthController;
 use Uhifadhi\Bundle\TeamBundle\Controller\AreaDepartmentController;
+use Uhifadhi\Bundle\TeamBundle\Controller\DepartmentConfigureController;
 use Uhifadhi\Bundle\TeamBundle\Controller\DepartmentController;
+use Uhifadhi\Bundle\TeamBundle\Controller\DepartmentSectionController;
 use Uhifadhi\Bundle\TeamBundle\Controller\InviteController;
 use Uhifadhi\Bundle\TeamBundle\Controller\MemberController;
 use Uhifadhi\Bundle\TeamBundle\Controller\PasswordResetController;
@@ -32,7 +34,11 @@ use Uhifadhi\Bundle\TeamBundle\Controller\PerformanceController;
 use Uhifadhi\Bundle\TeamBundle\Controller\PositionController;
 use Uhifadhi\Bundle\TeamBundle\Controller\PositionWidgetsController;
 use Uhifadhi\Bundle\TeamBundle\Controller\SecurityController;
+use Uhifadhi\Bundle\TeamBundle\Controller\TeamConfigureController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamController;
+use Uhifadhi\Bundle\TeamBundle\Controller\TeamPostingsController;
+use Uhifadhi\Bundle\TeamBundle\Controller\TeamRolesController;
+use Uhifadhi\Bundle\TeamBundle\Controller\TeamSectionController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamWidgetsController;
 use Uhifadhi\Bundle\TeamBundle\Devkit\TeamContentProvider;
 use Uhifadhi\Bundle\TeamBundle\EventListener\ApiErrorListener;
@@ -48,10 +54,13 @@ use Uhifadhi\Bundle\TeamBundle\Performance\StaffingTopic;
 use Uhifadhi\Bundle\TeamBundle\Performance\TopicCards;
 use Uhifadhi\Bundle\TeamBundle\Repository\ApiTokenRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentGoalRepository;
+use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentKindRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentPeriodFigureRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentScopeChangeRepository;
+use Uhifadhi\Bundle\TeamBundle\Repository\InstallationPeriodFigureRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
+use Uhifadhi\Bundle\TeamBundle\Repository\PositionTitleRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Security\ActiveUserChecker;
 use Uhifadhi\Bundle\TeamBundle\Security\ApiTokenAuthenticator;
@@ -59,36 +68,53 @@ use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
 use Uhifadhi\Bundle\TeamBundle\Security\PermissionVoter;
 use Uhifadhi\Bundle\TeamBundle\Service\ApiTokenManager;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentDirectory;
+use Uhifadhi\Bundle\TeamBundle\Service\DepartmentKindService;
+use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPalette;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPerformance;
+use Uhifadhi\Bundle\TeamBundle\Service\DepartmentSectionOverview;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentService;
 use Uhifadhi\Bundle\TeamBundle\Service\FieldSignIn;
 use Uhifadhi\Bundle\TeamBundle\Service\Mail;
+use Uhifadhi\Bundle\TeamBundle\Service\MemberHistory;
 use Uhifadhi\Bundle\TeamBundle\Service\PasswordResetService;
 use Uhifadhi\Bundle\TeamBundle\Service\PerformanceHistory;
 use Uhifadhi\Bundle\TeamBundle\Service\PerformanceTopics;
 use Uhifadhi\Bundle\TeamBundle\Service\PermissionCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionService;
+use Uhifadhi\Bundle\TeamBundle\Service\PositionTitleService;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionVacancy;
+use Uhifadhi\Bundle\TeamBundle\Service\PositionVocabulary;
+use Uhifadhi\Bundle\TeamBundle\Service\PostingBoard;
+use Uhifadhi\Bundle\TeamBundle\Service\RolesBoard;
 use Uhifadhi\Bundle\TeamBundle\Service\StaffingFigures;
 use Uhifadhi\Bundle\TeamBundle\Service\SuperAdminInvariant;
 use Uhifadhi\Bundle\TeamBundle\Service\TeamOverview;
+use Uhifadhi\Bundle\TeamBundle\Service\TeamSectionOverview;
 use Uhifadhi\Bundle\TeamBundle\Service\UserService;
 use Uhifadhi\Bundle\TeamBundle\Shell\DepartmentAreaNavChildren;
 use Uhifadhi\Bundle\TeamBundle\Shell\DepartmentAreaSections;
+use Uhifadhi\Bundle\TeamBundle\Shell\DepartmentSectionConfiguration;
+use Uhifadhi\Bundle\TeamBundle\Shell\DepartmentSectionTabs;
 use Uhifadhi\Bundle\TeamBundle\Shell\PerformanceNavigation;
 use Uhifadhi\Bundle\TeamBundle\Shell\TeamNavigation;
+use Uhifadhi\Bundle\TeamBundle\Shell\TeamSectionConfiguration;
+use Uhifadhi\Bundle\TeamBundle\Shell\TeamSectionTabs;
 use Uhifadhi\Bundle\TeamBundle\Shell\UserBadgeSource;
 use Uhifadhi\Bundle\TeamBundle\Twig\AreaScopeExtension;
 use Uhifadhi\Bundle\TeamBundle\Twig\MatrixExtension;
 use Uhifadhi\Bundle\TeamBundle\Twig\MatrixRuntime;
 use Uhifadhi\Bundle\TeamBundle\Widget\PositionWidgets;
 use Uhifadhi\Bundle\TeamBundle\Widget\TeamWidgets;
+use Uhifadhi\Contracts\Area\StationDirectoryInterface;
 use Uhifadhi\Contracts\People\PersonDirectoryProviderInterface;
 use Uhifadhi\Contracts\People\PersonFacetProviderInterface;
+use Uhifadhi\Contracts\People\PersonPostingProviderInterface;
 use Uhifadhi\Contracts\Performance\DepartmentDirectoryInterface;
 use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
 use Uhifadhi\Contracts\Shell\AreaNavChildrenInterface;
 use Uhifadhi\Contracts\Shell\AreaSectionsInterface;
+use Uhifadhi\Contracts\Shell\ConfigurationSectionsInterface;
+use Uhifadhi\Contracts\Shell\ModuleTabsInterface;
 
 /*
  * The bundle's static service wiring.
@@ -193,6 +219,14 @@ return static function (ContainerConfigurator $container): void {
         ->args([service('doctrine')])
         ->tag('doctrine.repository_service');
 
+    $services->set(DepartmentKindRepository::class)
+        ->args([service('doctrine')])
+        ->tag('doctrine.repository_service');
+
+    $services->set(InstallationPeriodFigureRepository::class)
+        ->args([service('doctrine')])
+        ->tag('doctrine.repository_service');
+
     $services->set(DepartmentPeriodFigureRepository::class)
         ->args([service('doctrine')])
         ->tag('doctrine.repository_service');
@@ -253,6 +287,9 @@ return static function (ContainerConfigurator $container): void {
                 service('team.staffing_figures'),
                 service('team.department_performance'),
                 service('team.performance_history'),
+                // AND THE INSTALLATION'S OWN FIVE, computed by the page that
+                // draws them so the history and the page cannot disagree.
+                service('team.section_overview'),
             ])
             ->tag('console.command');
     }
@@ -510,17 +547,30 @@ return static function (ContainerConfigurator $container): void {
             ])
             ->tag('shell.nav_section');
 
+        /*
+         * WHICH CATEGORY EACH DEPARTMENT IS, said once. A department names a
+         * category and never a colour; the shell resolves the index to the hue,
+         * which is the only way the same department reads the same in both
+         * palettes and again on imagery.
+         */
+        $services->set('team.department_palette', DepartmentPalette::class)
+            ->args([service(DepartmentRepository::class)]);
+        $services->alias(DepartmentPalette::class, 'team.department_palette');
+
         $services->set('team.navigation', TeamNavigation::class)
-            ->args([
-                service('router'),
-                service('security.token_storage'),
-                service('security.authorization_checker'),
-                service('request_stack'),
-                // The register's own picker lives in the sidebar, so the tree
-                // reads the same list the page draws.
-                service(DepartmentRepository::class),
-            ])
-            ->tag('shell.nav_section');
+                ->args([
+                    service('router'),
+                    service('security.token_storage'),
+                    service('security.authorization_checker'),
+                    service('request_stack'),
+                    // The register's own picker lives in the sidebar, so the tree
+                    // reads the same list the page draws.
+                    service(DepartmentRepository::class),
+                    // And the same category each department wears everywhere else,
+                    // so the dot in the tree and the mark on the card agree.
+                    service('team.department_palette'),
+                ])
+                ->tag('shell.nav_section');
     }
 
     /*
@@ -639,6 +689,7 @@ return static function (ContainerConfigurator $container): void {
         ->args([
             service('doctrine.orm.entity_manager'),
             service(DepartmentPeriodFigureRepository::class),
+            service(InstallationPeriodFigureRepository::class),
         ]);
     $services->alias(PerformanceHistory::class, 'team.performance_history');
 
@@ -830,6 +881,15 @@ return static function (ContainerConfigurator $container): void {
      * ONE PERSON'S RECORD, and the writes that change it. There is no delete
      * route and there will not be one: accounts are deactivated, never removed.
      */
+    /*
+     * WHAT THIS INSTALLATION CAN TRUTHFULLY SAY HAPPENED TO ONE PERSON —
+     * derived from the stored facts that carry a date, because there is no
+     * audit trail in this release and a card that invented the rest would be
+     * a card nobody could act on.
+     */
+    $services->set('team.member_history', MemberHistory::class);
+    $services->alias(MemberHistory::class, 'team.member_history');
+
     $services->set('team.controller.member', MemberController::class)
         ->args([
             service('twig'),
@@ -842,6 +902,11 @@ return static function (ContainerConfigurator $container): void {
             service('router'),
             service('security.token_storage'),
             service('team.area_authority'),
+            service('team.member_history'),
+            service('team.password_reset'),
+            service('team.mail'),
+            // WHERE THIS PERSON WORKS, from whoever owns the ground.
+            tagged_iterator(PersonPostingProviderInterface::TAG),
         ])
         ->tag('controller.service_arguments');
     $services->alias(MemberController::class, 'team.controller.member')->public();
@@ -893,6 +958,7 @@ return static function (ContainerConfigurator $container): void {
             service('team.area_authority'),
             service('registry.catalogue'),
             service('team.department_performance'),
+            service('team.department_palette'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(DepartmentController::class, 'team.controller.department')->public();
@@ -918,6 +984,182 @@ return static function (ContainerConfigurator $container): void {
     $services->alias(PerformanceController::class, 'team.controller.performance')->public();
 
     /*
+     * THE DEPARTMENTS SECTION'S FRAME — its tab strip and its configure
+     * sections, declared through the SAME contracts a module's are. A section
+     * wears the area idiom, and the cheapest way to mean that is to reuse the
+     * contract rather than to grow a second one: the shell resolves the strip,
+     * the header and the one Configure action from the surface marker the
+     * section's routes carry.
+     *
+     * NEITHER IS GUARDED BY interface_exists. Both contracts live in the
+     * contracts package, which this bundle already carries; it is the SHELL
+     * that is optional, and an installation without one simply has nothing
+     * collecting these tags.
+     */
+    $services->set('team.department_section_tabs', DepartmentSectionTabs::class)
+        ->tag(ModuleTabsInterface::TAG);
+    $services->alias(DepartmentSectionTabs::class, 'team.department_section_tabs');
+
+    $services->set('team.department_section_configuration', DepartmentSectionConfiguration::class)
+        ->tag(ConfigurationSectionsInterface::TAG);
+    $services->alias(DepartmentSectionConfiguration::class, 'team.department_section_configuration');
+
+    /*
+     * WHAT THE SECTION'S OVERVIEW READS. It owns no figure on that page: every
+     * one of them is the register's, Team's or Performance's, which is what
+     * makes a reading screen safe to open first.
+     */
+    $services->set('team.department_section_overview', DepartmentSectionOverview::class)
+        ->args([
+            service(DepartmentRepository::class),
+            service(PositionRepository::class),
+            service(UserRepository::class),
+            service(DepartmentGoalRepository::class),
+            service('registry.catalogue'),
+        ]);
+    $services->alias(DepartmentSectionOverview::class, 'team.department_section_overview');
+
+    /*
+     * WHO IS POSTED WHERE, ACROSS EVERY AREA. The stations and the uuids
+     * standing at them come from whoever owns the ground, through the tag;
+     * this bundle says who those people are. An installation with no ground
+     * package yields no provider and the board says the installation has no
+     * station, which is true.
+     */
+    $services->set('team.posting_board', PostingBoard::class)
+        ->args([
+            tagged_iterator(StationDirectoryInterface::TAG),
+            service(UserRepository::class),
+            service('router'),
+        ]);
+    $services->alias(PostingBoard::class, 'team.posting_board');
+
+    $services->set('team.controller.postings', TeamPostingsController::class)
+        ->args([service('twig'), service('team.posting_board')])
+        ->tag('controller.service_arguments');
+    $services->alias(TeamPostingsController::class, 'team.controller.postings')->public();
+
+    /*
+     * WHAT AUTHORITY EXISTS AND WHO HOLDS IT — the tier and the permission,
+     * aggregated. There is no Role entity and this asks for none.
+     */
+    $services->set('team.roles_board', RolesBoard::class)
+        ->args([
+            service('team.permissions'),
+            service(PositionRepository::class),
+            service(UserRepository::class),
+        ]);
+    $services->alias(RolesBoard::class, 'team.roles_board');
+
+    $services->set('team.controller.roles', TeamRolesController::class)
+        ->args([service('twig'), service('team.roles_board')])
+        ->tag('controller.service_arguments');
+    $services->alias(TeamRolesController::class, 'team.controller.roles')->public();
+
+    /*
+     * WHAT THE SECTION'S OVERVIEW READS. It owns no figure on that page: every
+     * one of them is the register's, Positions' or the area's.
+     */
+    $services->set('team.section_overview', TeamSectionOverview::class)
+        ->args([
+            service(UserRepository::class),
+            service(PositionRepository::class),
+            service('team.posting_board'),
+            // THE ONLY THING IN THE CORE THAT REMEMBERS: a closed period
+            // cannot be recomputed, so a movement is read and never worked
+            // out again.
+            service('team.performance_history'),
+        ]);
+    $services->alias(TeamSectionOverview::class, 'team.section_overview');
+
+    $services->set('team.controller.section', TeamSectionController::class)
+        ->args([service('twig'), service('team.section_overview')])
+        ->tag('controller.service_arguments');
+    $services->alias(TeamSectionController::class, 'team.controller.section')->public();
+
+    /*
+     * THE ONE DOOR A POSITION TITLE IS WRITTEN THROUGH — trimmed, not empty,
+     * unique. Rules about a word live beside the word and not in the screen
+     * that happens to ask, so a second caller gets the same answer.
+     */
+    $services->set('team.position_titles', PositionTitleService::class)
+        ->args([service('doctrine.orm.entity_manager'), service(PositionTitleRepository::class)]);
+    $services->alias(PositionTitleService::class, 'team.position_titles');
+
+    $services->set(PositionTitleRepository::class)
+        ->args([service('doctrine')])
+        ->tag('doctrine.repository_service');
+
+    /*
+     * THE WORDS THIS INSTALLATION WRITES ITS POSITIONS WITH, read per
+     * department — one pass over the positions rather than a query per
+     * department, and the shared words named rather than merged.
+     */
+    $services->set('team.position_vocabulary', PositionVocabulary::class)
+        ->args([service(DepartmentRepository::class), service(PositionRepository::class)]);
+    $services->alias(PositionVocabulary::class, 'team.position_vocabulary');
+
+    $services->set('team.controller.configure', TeamConfigureController::class)
+        ->args([
+            service('twig'),
+            service(UserRepository::class),
+            service(DepartmentRepository::class),
+            service(PositionTitleRepository::class),
+            service('team.position_titles'),
+            service('team.position_vocabulary'),
+            service('security.csrf.token_manager'),
+            service('router'),
+        ])
+        ->tag('controller.service_arguments');
+    $services->alias(TeamConfigureController::class, 'team.controller.configure')->public();
+
+    /*
+     * TEAM WEARS THE AREA IDIOM: the strip, the header and the one Configure
+     * action come from the same two contracts a module's tabs use, so nothing
+     * here is a second implementation of a strip.
+     */
+    $services->set('team.section_tabs', TeamSectionTabs::class)
+        ->tag(ModuleTabsInterface::TAG);
+    $services->set('team.section_configuration', TeamSectionConfiguration::class)
+        ->tag(ConfigurationSectionsInterface::TAG);
+
+    $services->set('team.controller.department_section', DepartmentSectionController::class)
+        ->args([
+            service('twig'),
+            service('team.department_section_overview'),
+            service(DepartmentRepository::class),
+            service('registry.catalogue'),
+        ])
+        ->tag('controller.service_arguments');
+    $services->alias(DepartmentSectionController::class, 'team.controller.department_section')->public();
+
+    /*
+     * THE ONE DOOR A KIND IS WRITTEN THROUGH — trimmed, not empty, unique.
+     * Rules about a word live beside the word and not in the screen that
+     * happens to ask, so a second caller gets the same answer.
+     */
+    $services->set('team.department_kind_service', DepartmentKindService::class)
+        ->args([
+            service('doctrine.orm.entity_manager'),
+            service(DepartmentKindRepository::class),
+        ]);
+    $services->alias(DepartmentKindService::class, 'team.department_kind_service');
+
+    $services->set('team.controller.department_configure', DepartmentConfigureController::class)
+        ->args([
+            service('twig'),
+            service(DepartmentRepository::class),
+            service(DepartmentKindRepository::class),
+            service(DepartmentGoalRepository::class),
+            service('team.department_kind_service'),
+            service('security.csrf.token_manager'),
+            service('router'),
+            service('request_stack'),
+        ])
+        ->tag('controller.service_arguments');
+    $services->alias(DepartmentConfigureController::class, 'team.controller.department_configure')->public();
+
+    /*
      * ONE AREA'S DEPARTMENTS — the tab and its configure section. Team's
      * routes, because a department already knows which area it belongs to;
      * the area's tab strip picks them up by name, tolerantly.
@@ -933,6 +1175,7 @@ return static function (ContainerConfigurator $container): void {
             service('security.csrf.token_manager'),
             service('router'),
             service('registry.catalogue'),
+            service('team.department_palette'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(AreaDepartmentController::class, 'team.controller.area_department')->public();
