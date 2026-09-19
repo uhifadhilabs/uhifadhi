@@ -19,6 +19,9 @@ use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\CheckInRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\PersonPositionRepository;
 use Uhifadhi\Contracts\Area\DayState;
+use Uhifadhi\Contracts\Area\LivePosition;
+use Uhifadhi\Contracts\Area\LivePositionsInterface;
+use Uhifadhi\Contracts\Area\LivePresence;
 use Uhifadhi\Contracts\Area\PersonDay;
 use Uhifadhi\Contracts\Area\PersonWatch;
 use Uhifadhi\Contracts\Area\PresenceProviderInterface;
@@ -52,7 +55,7 @@ use Uhifadhi\Contracts\Roster\WatchProviderInterface;
  * own reading is where they ended, and the morning is still on the
  * record for anybody who asks for 06:30.
  */
-final readonly class PresenceService implements PresenceProviderInterface
+final readonly class PresenceService implements PresenceProviderInterface, LivePositionsInterface
 {
     public function __construct(
         private AreaOfInterestRepository $areas,
@@ -102,6 +105,88 @@ final readonly class PresenceService implements PresenceProviderInterface
         }
 
         return $read;
+    }
+
+    /**
+     * WHERE EVERYBODY ON AN OPEN WATCH IS, at the moment asked.
+     *
+     * ONE DERIVATION, READ TWICE. The state on every marker comes from
+     * {@see watch()} — the same code the day board reads — so a ranger
+     * cannot be "at post, verified" on the map and unverified on the
+     * board. What the map adds is the LATEST fix rather than the
+     * nearest one: the board asks whether the claim was ever borne out,
+     * and the map asks where the phone is now.
+     *
+     * A WATCH WITH NO FIX IS NOT A MARKER. They may well be at their
+     * post; what is absent is a POSITION, and drawing one at the post's
+     * own point would turn a claim into proof.
+     */
+    public function liveIn(string $areaUuid, \DateTimeImmutable $asOf): LivePresence
+    {
+        $area = $this->areas->findOneBy(['uuid' => $areaUuid]);
+        if (null === $area) {
+            return new LivePresence([], DutyRosterService::DEFAULT_PING_INTERVAL_MINUTES, $asOf);
+        }
+
+        $interval = $area->getPingIntervalMinutes();
+        $interval = null === $interval || $interval < 1 ? DutyRosterService::DEFAULT_PING_INTERVAL_MINUTES : $interval;
+
+        $positions = [];
+        foreach ($this->checkIns->findOpenIn($area) as $checkIn) {
+            $person = $checkIn->getPerson();
+            $uuid = $person?->getUuidString();
+            $fix = $this->positions->latestFor($checkIn);
+            if (null === $uuid || null === $fix) {
+                continue;
+            }
+
+            // THE DAY THE WATCH BELONGS TO, in the ranger's own words —
+            // what `watch()` needs to ask the roster whether the watch
+            // should already have closed.
+            $localDate = $checkIn->getLocalDate()?->format('Y-m-d') ?? $asOf->format('Y-m-d');
+            $watch = $this->watch($checkIn, $areaUuid, $localDate);
+
+            // A WATCH THE ROSTER HAS ALREADY ENDED IS NOT LIVE. Nobody
+            // checked out, but the rostered end passed — its last ping is
+            // where somebody was when they stopped, and a live map would
+            // stand a marker at a post nobody is at.
+            if ($watch->notCheckedOut) {
+                continue;
+            }
+
+            $station = $checkIn->stateAt($asOf)['station'];
+            $point = $station?->getPoint();
+            $catchment = $station?->getCatchmentM();
+            $distance = null === $point ? null : $this->positions->metresBetween($fix['lat'], $fix['lon'], $point);
+
+            $positions[] = new LivePosition(
+                personUuid: $uuid,
+                personName: $person->getFullName(),
+                clientRef: $checkIn->getClientRef(),
+                state: $watch->state,
+                latitude: $fix['lat'],
+                longitude: $fix['lon'],
+                recordedAt: $fix['at'],
+                accuracyM: $fix['accuracy'] ?? 0.0,
+                stationUuid: $station?->getUuidString(),
+                stationName: $station?->getName(),
+                // NULL WHERE THERE IS NO INSIDE TO BE IN — no post, no
+                // ring, or no distance to measure. Not false, which would
+                // read as "outside".
+                insideCatchment: null === $distance || null === $catchment ? null : $distance <= $catchment,
+                distanceM: $distance,
+                batteryPct: $fix['battery'],
+            );
+        }
+
+        // THE FRESHEST FIRST, because a rail beside a map is read from
+        // the top and the top is where the news is.
+        usort(
+            $positions,
+            static fn (LivePosition $a, LivePosition $b): int => $b->recordedAt <=> $a->recordedAt,
+        );
+
+        return new LivePresence($positions, $interval, $asOf);
     }
 
     /**

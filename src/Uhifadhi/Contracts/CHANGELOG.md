@@ -28,6 +28,16 @@ Not released yet.
    would be right about seats and wrong about days-to-settle, where a sum of
    averages is a number nobody measured. A column that stays silent simply has
    no total in its header.
+ * `Area\LivePositionsInterface`, `Area\LivePresence` and `Area\LivePosition` —
+   where everybody on an OPEN watch is, at one instant: person, post, the fix
+   and when it was taken, the accuracy, the derived presence state and whether
+   it fell inside the post's catchment. A second interface rather than a method
+   on `PresenceProviderInterface`, because that one answers about a DAY and is
+   settled once the day is over while this is never settled; the area answers
+   both with one service, so a ranger cannot read "at post, verified" on a map
+   and unverified on the board. The area's PING INTERVAL travels with the
+   answer — twenty minutes of silence is four missed pings at five and none at
+   thirty — and `isStale()` calls a fix old after two intervals rather than one
  * `FigurePeriod::quarter()` and `::year()` — the other two windows the
    performance page offers, CALENDAR quarters and years rather than ninety
    and three hundred and sixty-five days: a reader asking for "this quarter"

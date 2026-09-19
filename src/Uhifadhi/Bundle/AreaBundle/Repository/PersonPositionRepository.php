@@ -120,6 +120,74 @@ class PersonPositionRepository extends ServiceEntityRepository
     }
 
     /**
+     * THE LAST FIX A WATCH SENT — what a live map draws, and the only
+     * ping of a watch that answers "where is this person now".
+     *
+     * THE CHECK-IN'S OWN POSITION COUNTS AS ONE. A ranger who tapped at
+     * the gate and whose phone then lost signal did report a position,
+     * and it is the last thing anybody knows about where they are; the
+     * day read already treats it as a fix and so must this, or somebody
+     * who checked in two minutes ago would be missing from the map.
+     *
+     * @return array{lat: float, lon: float, at: \DateTimeImmutable, accuracy: float|null, battery: int|null}|null
+     */
+    public function latestFor(CheckIn $checkIn): ?array
+    {
+        $row = $this->getEntityManager()->getConnection()->fetchAssociative(
+            <<<'SQL'
+                SELECT ST_Y(p.position::geometry) AS lat, ST_X(p.position::geometry) AS lon,
+                       p.recorded_at AS at, p.accuracy_m AS accuracy, p.battery_pct AS battery
+                FROM (
+                    SELECT position, recorded_at, accuracy_m, battery_pct
+                    FROM duty_position WHERE checkin_id = :checkin
+                    UNION ALL
+                    SELECT position, COALESCE(position_at, occurred_at), accuracy_m, NULL
+                    FROM duty_checkin WHERE id = :checkin AND position IS NOT NULL
+                ) p
+                ORDER BY p.recorded_at DESC
+                LIMIT 1
+                SQL,
+            ['checkin' => $checkIn->getId()],
+        );
+
+        if (false === $row || !is_numeric($row['lat'] ?? null) || !is_numeric($row['lon'] ?? null)) {
+            return null;
+        }
+
+        /** @var array{lat: numeric-string|float, lon: numeric-string|float, at: string, accuracy: numeric-string|float|null, battery: int|numeric-string|null} $row */
+        return [
+            'lat' => (float) $row['lat'],
+            'lon' => (float) $row['lon'],
+            'at' => new \DateTimeImmutable($row['at']),
+            'accuracy' => null === $row['accuracy'] ? null : (float) $row['accuracy'],
+            'battery' => null === $row['battery'] ? null : (int) $row['battery'],
+        ];
+    }
+
+    /**
+     * HOW FAR ONE FIX FELL FROM A POST, in metres.
+     *
+     * THE DATABASE ANSWERS IT, for the reason {@see nearestTo()} states:
+     * a distance computed in PHP from degrees is wrong by a factor that
+     * grows with latitude, and a ring two hundred metres across is
+     * exactly the scale where that decides an answer.
+     */
+    public function metresBetween(float $lat, float $lon, string $stationPoint): ?float
+    {
+        $row = $this->getEntityManager()->getConnection()->fetchAssociative(
+            <<<'SQL'
+                SELECT ST_Distance(
+                    ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)::geography,
+                    ST_GeomFromGeoJSON(:station)::geography
+                ) AS metres
+                SQL,
+            ['lat' => $lat, 'lon' => $lon, 'station' => $stationPoint],
+        );
+
+        return false !== $row && is_numeric($row['metres'] ?? null) ? (float) $row['metres'] : null;
+    }
+
+    /**
      * WHAT A WATCH REPORTED: how many pings, and when the last one
      * arrived.
      *

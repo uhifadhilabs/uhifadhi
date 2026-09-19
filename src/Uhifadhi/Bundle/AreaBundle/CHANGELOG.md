@@ -8,6 +8,11 @@
 
 Not released yet.
 
+ * the area answers `LivePositionsInterface`: the latest fix of everybody on an
+   open watch, with the distance to the post measured by PostGIS rather than
+   from degrees in PHP — a module draws "where everybody is" without reading
+   `duty_position` across a package boundary or deriving a second answer to
+   "at post, verified"
  * the station and zone captions keep the leading their design shorthands set
    (`.fldlab`, `.stcardlead`, `.stcode`, `.stghm`, `.stnone`, `.stpin`)
  * the areas row wears the house MAP mark, as the design draws it, and the

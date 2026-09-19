@@ -66,6 +66,7 @@ use Uhifadhi\Bundle\AreaBundle\Widget\AreaOverviewWidgets;
 use Uhifadhi\Bundle\AtlasBundle\Map\MapBuilderInterface;
 use Uhifadhi\Bundle\RegistryBundle\Repository\AreaModuleRepository;
 use Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceInterface;
+use Uhifadhi\Contracts\Area\LivePositionsInterface;
 use Uhifadhi\Contracts\Area\PresenceProviderInterface;
 use Uhifadhi\Contracts\Area\StationSectionsInterface;
 use Uhifadhi\Contracts\Kpi\StationFigureProviderInterface;
@@ -420,6 +421,14 @@ return static function (ContainerConfigurator $container): void {
     $services->alias(PresenceService::class, 'area.presence');
     /* A module type-hints the contract, never this class. */
     $services->alias(PresenceProviderInterface::class, 'area.presence');
+    /*
+     * AND WHERE EVERYBODY IS NOW — the same service, because the state
+     * on a live marker must be the state on the day board and one
+     * derivation is how that stays true. A second contract rather than
+     * a second method, because a day is settled once it is over and an
+     * instant never is.
+     */
+    $services->alias(LivePositionsInterface::class, 'area.presence');
 
     $services->set('area.permissions', AreaPermissions::class)
         ->tag(PermissionDeclarationInterface::TAG);
