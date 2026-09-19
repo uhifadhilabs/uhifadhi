@@ -237,6 +237,12 @@ final class LayoutContract
         // the identity band a detail screen opens with
         'factband',
 
+        // THE ONE LEFT MARK A CARD MAY CARRY, and it means FOCUS: this is
+        // the card the reader is on. Never open, never selected-and-showing,
+        // never a category — a category is a chip or a hue dot and a state is
+        // a chip or a stamp. Paint only, so nothing moves when focus arrives.
+        'focusline',
+
         // the quiet forward link — at the end of a band, at the end of a
         // card's own row, and, as a DIRECT CHILD of `.c`, the card's one
         // quiet door pinned to its top edge (a card with two doors is two

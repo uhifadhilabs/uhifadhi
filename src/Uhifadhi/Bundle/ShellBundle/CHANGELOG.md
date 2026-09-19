@@ -12,6 +12,9 @@ Not released yet.
  * the design-system stylesheet every module's own sheet is written against
  * the widget machinery under `Widget/`: the surface registry, the stored
    layouts and the library component every dashboard is arranged through
+ * `.focusline`, the one left mark a card may carry — it means focus, it is
+   paint rather than box, and the conformance suite now fails a module sheet
+   that draws a left rail on a card of its own
  * `.btn` and `.cta` render identically on `<a>`, `<button>` and
    `<input type="submit">` — appearance, font and line box neutralised, so a
    Discard beside a Save is not the browser's grey button (`.cta` named no

@@ -285,7 +285,7 @@ export function initWidgetLibrary(root = document.querySelector(ROOT_SELECTOR)) 
 
         return '<div class="w-preset'
             + (opts.active ? ' w-preset-active' : '')
-            + (opts.selected ? ' w-preset-on' : '')
+            + (opts.selected ? ' w-preset-on focusline' : '')
             + (opts.extraClass || '') + '"'
             + ' data-preset-kind="' + opts.kind + '" data-preset-id="' + escapeHtml(opts.id || '') + '"'
             + ' role="button" tabindex="0" aria-pressed="' + (opts.selected || opts.active ? 'true' : 'false') + '">'

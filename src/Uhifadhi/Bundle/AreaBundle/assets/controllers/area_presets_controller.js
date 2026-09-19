@@ -101,6 +101,8 @@ export default class extends Controller {
 
             card.classList.toggle('w-preset-active', isActive);
             card.classList.toggle('w-preset-on', isSelected);
+            // The house focus line — the one left mark a card may carry.
+            card.classList.toggle('focusline', isSelected);
             card.setAttribute('aria-pressed', isActive || isSelected ? 'true' : 'false');
 
             const top = card.querySelector('.w-presettop');

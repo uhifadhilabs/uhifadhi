@@ -343,11 +343,14 @@
     box-shadow: inset 3px 0 0 rgb(var(--c-acc)), 0 1px 2px rgb(0 0 0 / .06);
 }
 .w-preset-active .w-presetgo { color: rgb(var(--c-acc)); }
-/* SELECTED but not active — you are looking at it, the dashboard is not. */
+/* SELECTED but not active — you are looking at it, the dashboard is not.
+   THE LEFT MARK IS THE HOUSE FOCUS LINE and is not drawn here: the card
+   wears `focusline` and this rule keeps only what is its own, the border
+   tint and the lift. One class draws every focus mark in the product, so a
+   preset card and a register card cannot come out two different widths. */
 .w-preset-on {
     border-color: rgb(var(--c-acc));
-    box-shadow: inset 3px 0 0 color-mix(in srgb, rgb(var(--c-acc)) 55%, transparent),
-                0 4px 14px rgb(0 0 0 / .10);
+    box-shadow: 0 4px 14px rgb(0 0 0 / .10);
 }
 /* The empty canvas: same card, dashed. */
 .w-presetnew { border-style: dashed; }

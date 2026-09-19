@@ -142,7 +142,7 @@
                 <div class="zcstack">
                     {% for row in register.rows %}
                         {% set isOpen = openUuid == row.uuid %}
-                        <article class="zcard{{ isOpen ? ' on' : '' }}{{ row.active ? '' : ' stinactive' }}">
+                        <article class="zcard{{ isOpen ? ' on focusline' : '' }}{{ row.active ? '' : ' stinactive' }}">
                             <div class="zc-hd">
                                 <a class="ovx" href="{{ isOpen ? section : section ~ '?open=' ~ row.uuid }}"
                                    aria-expanded="{{ isOpen ? 'true' : 'false' }}"

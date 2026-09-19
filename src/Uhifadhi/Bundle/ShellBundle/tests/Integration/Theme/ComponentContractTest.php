@@ -94,6 +94,9 @@ final class ComponentContractTest extends ContractTestCase
             // THE IDENTITY BAND a detail screen opens with.
             'factband',     // .f the fact, .k/.v its halves, .sp and .more the tail
 
+            // The one left mark a card may carry, and it means focus.
+            'focusline',
+
             // THE QUIET FORWARD LINK AND THE MODULE DOT — both were defined
             // only inside one parent (`.factband .more`, `.ntree .ntm .mdot`)
             // and both are written elsewhere throughout the core: a `.more`
@@ -438,6 +441,86 @@ final class ComponentContractTest extends ContractTestCase
                 yield $selector.' — '.$property => [$selector, $property, $value];
             }
         }
+    }
+
+    /**
+     * THE FOCUS LINE IS THE ONE LEFT MARK A CARD MAY CARRY.
+     *
+     * RULED 2026-09-21. It means FOCUS — this is the card the reader is on.
+     * Not open, not selected-and-showing, and never a CATEGORY: a category is
+     * a chip or an 8px hue dot, a state is a chip or a stamp. One class draws
+     * every focus mark in the product, so a preset card and a register card
+     * cannot come out two different widths.
+     *
+     * PAINT ONLY, AND THAT IS WHY IT IS A PSEUDO-ELEMENT. A border would add
+     * to the box and shove everything below the card down the moment focus
+     * arrived; `::after` over the card's own border line changes nothing.
+     *
+     * INSET BY THE RADIUS. 13px top and bottom is the card's corner radius,
+     * so the line starts where the top corner ends and stops where the bottom
+     * corner begins rather than crossing them.
+     *
+     * The values are the design's, read value for value.
+     *
+     * @see /Users/eemjema/Programming/DesignsProjects/uhifadhi-web/uhifadhi.css lines 323-325
+     */
+    #[DataProvider('focusLineDeclarations')]
+    public function testTheFocusLineIsTheOneLeftMarkACardMayCarry(string $selector, string $property, string $value): void
+    {
+        self::assertMatchesRegularExpression(
+            '/(?:^|;)\s*'.preg_quote($property, '/').'\s*:\s*'.preg_quote($value, '/').'\s*(?:;|$)/',
+            $this->rule($selector),
+            \sprintf('%s must state `%s: %s` — the design\'s own value.', $selector, $property, $value),
+        );
+    }
+
+    /**
+     * @return \Generator<string, array{string, string, string}>
+     */
+    public static function focusLineDeclarations(): \Generator
+    {
+        $declarations = [
+            // The card is the containing block, or the line lands on the page.
+            '.focusline' => ['position' => 'relative'],
+            '.focusline::after' => [
+                'content' => '""',
+                'position' => 'absolute',
+                // On the card's own border line, not beside it.
+                'left' => '-1px',
+                // Inset by the card's 13px radius, top and bottom.
+                'top' => '13px',
+                'bottom' => '13px',
+                'width' => '2px',
+                'border-radius' => '2px',
+                // Never a hue: focus is the accent, and a category is not focus.
+                'background' => 'rgb(var(--c-acc))',
+                'z-index' => '2',
+                // It is a mark, not a target.
+                'pointer-events' => 'none',
+            ],
+        ];
+
+        foreach ($declarations as $selector => $properties) {
+            foreach ($properties as $property => $value) {
+                yield $selector.' — '.$property => [$selector, $property, $value];
+            }
+        }
+    }
+
+    /**
+     * AND IT IS PAINT, NOT BOX. A border on `.focusline` itself would move
+     * every card below it the moment focus arrived, which is the whole reason
+     * the mark is a pseudo-element.
+     */
+    public function testTheFocusLineAddsNothingToTheBox(): void
+    {
+        $rule = $this->rule('.focusline');
+
+        self::assertDoesNotMatchRegularExpression(
+            '/(?:^|;)\s*(?:border|padding|margin|width)\s*:/',
+            $rule,
+            'the focus line is paint: a box change would shove the page down when focus arrives.',
+        );
     }
 
     /**

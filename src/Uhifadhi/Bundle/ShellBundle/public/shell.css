@@ -907,6 +907,31 @@ h2.zone::after { content: ""; flex: 1; height: 1px; background: var(--c-ln2); }
 }
 .more:hover { color: rgb(var(--c-acc)); }
 
+/* ---- THE FOCUS LINE, THE ONE LEFT MARK A CARD MAY CARRY ----------------
+   RULED 2026-09-21. A card may wear exactly ONE vertical mark on its left
+   edge and it means FOCUS: this is the card the reader is on. It never means
+   open, never means selected-and-showing, never means a category — a category
+   is a chip or a hue dot, a state is a chip or a stamp.
+
+   The reference is the departments register, which drew it first: 2px laid on
+   the card's own border (left: -1px), inset top and bottom by the 13px card
+   radius so it starts where the top corner ends and stops where the bottom
+   corner begins. PAINT ONLY — the box never changes size, so nothing below it
+   moves when focus arrives, which is the whole reason it is a pseudo-element
+   and not a border.
+
+   A card wears `focusline`; its own focus rules — the border tint, a lifted
+   band — stay with the card's sheet. Anything else drawing a left bar on a
+   card is a bug, and the conformance suite fails a module that ships one.
+
+   The values are the design's, read value for value. */
+.focusline { position: relative; }
+.focusline::after {
+    content: ""; position: absolute; left: -1px; top: 13px; bottom: 13px;
+    width: 2px; border-radius: 2px; background: rgb(var(--c-acc));
+    z-index: 2; pointer-events: none;
+}
+
 /* THE CARD'S ONE QUIET DOOR, pinned to the card's top edge — the same gesture
    as the identity band's `.more`, in the same type and colour, drawn where a
    card carries its way out. A card may have AT MOST ONE: page actions belong

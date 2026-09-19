@@ -1238,7 +1238,9 @@ a.zc-nm:hover { color: rgb(var(--c-acc)); }
    here: the page draws the card the query names, so the state survives a write
    and a reload the way every other page state on this screen does. */
 
-.zcard.on { border-color: color-mix(in srgb, rgb(var(--c-acc)) 42%, transparent); box-shadow: inset 3px 0 0 rgb(var(--c-acc)); }
+/* THE LEFT MARK IS THE SHELL'S `focusline`, worn by the card and not drawn
+   here: this rule keeps the border tint, which is its own. */
+.zcard.on { border-color: color-mix(in srgb, rgb(var(--c-acc)) 42%, transparent); }
 
 .zc-rule { border: 0; border-top: 1px solid var(--c-ln); margin: 11px 0; }
 

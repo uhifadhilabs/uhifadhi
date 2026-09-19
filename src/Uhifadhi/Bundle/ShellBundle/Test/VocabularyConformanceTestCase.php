@@ -254,6 +254,92 @@ abstract class VocabularyConformanceTestCase extends TestCase
     }
 
     /**
+     * NO LEFT RAIL ON A CARD BUT THE HOUSE FOCUS LINE.
+     *
+     * RULED 2026-09-21: a card may wear exactly ONE vertical mark on its left
+     * edge and it means FOCUS — `.focusline`, which the shell ships. It never
+     * means open, never means selected-and-showing, and never means a
+     * CATEGORY: a category is a chip or an 8px hue dot, a state is a chip or
+     * a stamp. A module that draws its own rail gets a bar a different width
+     * from every other bar in the product, and a reader who has learnt that a
+     * left mark means "you are here" reads it as that wherever it appears.
+     *
+     * WHAT COUNTS AS A RAIL: a left border heavier than the sides beside it,
+     * and an inset box-shadow offset only on x — the two ways one is drawn.
+     * A uniform border is not a rail, and neither is a rule on something that
+     * is not a card: this looks at the declaration, so a module drawing an
+     * indent guide on a table row or a hairline on a banner passes.
+     */
+    public function testNoOwnSheetDrawsALeftRailOnACard(): void
+    {
+        $rails = [];
+
+        foreach (self::cardRules(self::ownCss()) as $selector => $body) {
+            // A left border heavier than the shorthand beside it.
+            if (1 === preg_match('/border-left\s*:\s*(\d+)px/', $body, $left)
+                && (int) $left[1] > self::hairline($body)) {
+                $rails[] = $selector.' — border-left: '.$left[1].'px';
+            }
+
+            if (1 === preg_match('/border-left-width\s*:\s*(\d+)px/', $body, $width)
+                && (int) $width[1] > self::hairline($body)) {
+                $rails[] = $selector.' — border-left-width: '.$width[1].'px';
+            }
+
+            // An inset shadow offset on x only: a rail drawn as paint.
+            if (1 === preg_match('/box-shadow\s*:[^;]*inset\s+\d*[1-9]\d*px\s+0\s+0/', $body)) {
+                $rails[] = $selector.' — inset box-shadow rail';
+            }
+        }
+
+        sort($rails);
+
+        self::assertSame([], $rails, \sprintf(
+            "This bundle draws its own left rail on a card [%s].\n".
+            'The one left mark a card may carry is the shell\'s `focusline`, and it means focus; '.
+            'a category is a chip or a hue dot and a state is a chip or a stamp.',
+            implode(', ', $rails),
+        ));
+    }
+
+    /**
+     * The rules in a sheet whose selector names a CARD — the house card, or
+     * a module's own `-card`/`card`-suffixed class. Anything else is a row, a
+     * banner, a tile or a tree, and none of them is what the ruling is about.
+     *
+     * @return array<string, string> selector to the declarations inside it
+     */
+    private static function cardRules(string $css): array
+    {
+        $rules = [];
+
+        // Comments first: a rule quoted in prose is not a rule the browser reads.
+        $css = (string) preg_replace('#/\*.*?\*/#s', '', $css);
+
+        preg_match_all('/([^{}]+)\{([^{}]*)\}/', $css, $matches, \PREG_SET_ORDER);
+        foreach ($matches as [, $selector, $body]) {
+            $selector = trim(preg_replace('/\s+/', ' ', $selector) ?? '');
+
+            foreach (explode(',', $selector) as $one) {
+                $one = trim($one);
+                if (1 === preg_match('/(?:^|[\s>+~])\.(?:c|[a-z0-9-]*card)(?:[.:\[]|$)/', $one)) {
+                    $rules[$selector] = $body;
+
+                    break;
+                }
+            }
+        }
+
+        return $rules;
+    }
+
+    /** The width of the sides beside a left border, or 1 where none is stated. */
+    private static function hairline(string $body): int
+    {
+        return 1 === preg_match('/(?:^|;)\s*border\s*:\s*(\d+)px/', $body, $all) ? (int) $all[1] : 1;
+    }
+
+    /**
      * Every icon name this bundle asks for, mapped to one place it is asked
      * from — templates first, where a name is written literally, then the PHP
      * and JavaScript, where navigation rows and rendered markup carry one as
