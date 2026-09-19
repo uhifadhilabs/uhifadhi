@@ -36,6 +36,7 @@ use Uhifadhi\Bundle\TeamBundle\Controller\PositionWidgetsController;
 use Uhifadhi\Bundle\TeamBundle\Controller\SecurityController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamPostingsController;
+use Uhifadhi\Bundle\TeamBundle\Controller\TeamRolesController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamWidgetsController;
 use Uhifadhi\Bundle\TeamBundle\Devkit\TeamContentProvider;
 use Uhifadhi\Bundle\TeamBundle\EventListener\ApiErrorListener;
@@ -77,6 +78,7 @@ use Uhifadhi\Bundle\TeamBundle\Service\PermissionCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionService;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionVacancy;
 use Uhifadhi\Bundle\TeamBundle\Service\PostingBoard;
+use Uhifadhi\Bundle\TeamBundle\Service\RolesBoard;
 use Uhifadhi\Bundle\TeamBundle\Service\StaffingFigures;
 use Uhifadhi\Bundle\TeamBundle\Service\SuperAdminInvariant;
 use Uhifadhi\Bundle\TeamBundle\Service\TeamOverview;
@@ -1002,6 +1004,23 @@ return static function (ContainerConfigurator $container): void {
         ->args([service('twig'), service('team.posting_board')])
         ->tag('controller.service_arguments');
     $services->alias(TeamPostingsController::class, 'team.controller.postings')->public();
+
+    /*
+     * WHAT AUTHORITY EXISTS AND WHO HOLDS IT — the tier and the permission,
+     * aggregated. There is no Role entity and this asks for none.
+     */
+    $services->set('team.roles_board', RolesBoard::class)
+        ->args([
+            service('team.permissions'),
+            service(PositionRepository::class),
+            service(UserRepository::class),
+        ]);
+    $services->alias(RolesBoard::class, 'team.roles_board');
+
+    $services->set('team.controller.roles', TeamRolesController::class)
+        ->args([service('twig'), service('team.roles_board')])
+        ->tag('controller.service_arguments');
+    $services->alias(TeamRolesController::class, 'team.controller.roles')->public();
 
     $services->set('team.controller.department_section', DepartmentSectionController::class)
         ->args([

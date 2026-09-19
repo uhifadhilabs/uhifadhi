@@ -28,6 +28,14 @@ Not released yet.
    and fewer than three figures in a band place nothing
  * a second sheet, `bundles/team/performance.css`, carrying the board's own
    vocabulary, and a sort that runs INSIDE each band and never across one
+ * the ROLES tab: what authority exists on this installation and who holds it —
+   the three tiers with the people in them, and every permission there is,
+   banded by who declared it, with how many positions carry it and how many
+   people sit in those positions. A tier is not a role and the page says so:
+   administering the team is an ordinary permission. There is no Role entity,
+   none is proposed, and the tab assumes none; it writes nothing, because the
+   matrix is edited on Positions.
+
  * a department in the sidebar wears ITS OWN HUE: the tree's dot carries the
    department's category, resolved by the shell's `[data-cat]` mechanism, so
    nine departments read as nine things rather than nine accents. The row hands
