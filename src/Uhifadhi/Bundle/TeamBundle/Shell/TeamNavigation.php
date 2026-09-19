@@ -26,6 +26,7 @@ use Uhifadhi\Bundle\TeamBundle\Controller\DepartmentSectionController;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Model\DepartmentQuery;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
+use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPalette;
 
 /**
  * THE ONE ROW THIS BUNDLE PUTS IN THE SIDEBAR.
@@ -91,6 +92,7 @@ final readonly class TeamNavigation implements NavigationSourceInterface
         private AuthorizationCheckerInterface $authorization,
         private RequestStack $requests,
         private DepartmentRepository $departments,
+        private DepartmentPalette $palette,
     ) {
     }
 
@@ -167,6 +169,7 @@ final readonly class TeamNavigation implements NavigationSourceInterface
         }
 
         $groups = [];
+        $categories = $this->palette->indexes();
         foreach ($this->departments->findAllActiveOrdered() as $department) {
             $area = $department->getArea();
             // KEYED BY THE AREA ITSELF. Doctrine hands back one object per row
@@ -181,10 +184,20 @@ final readonly class TeamNavigation implements NavigationSourceInterface
             $uuid = (string) $department->getUuidString();
             $url = $row->url.'?'.http_build_query([DepartmentQuery::FOCUS => $uuid]).'#d-'.$uuid;
 
+            /*
+             * THE DOT WEARS THE DEPARTMENT'S OWN HUE, and it is the same hue
+             * the department wears everywhere else: the row hands the shell a
+             * CATEGORY TOKEN rather than a colour, because the palette turns
+             * over with the theme and again on imagery. A department the
+             * palette does not know keeps the shell's default.
+             */
+            $category = $categories[$uuid] ?? null;
+
             $groups[$key]['rows'][] = new NavItem(
                 label: (string) $department->getName(),
                 url: $url,
                 current: $this->viewerIsFocusedOn($uuid),
+                swatch: null === $category ? null : DepartmentPalette::token($category),
             );
         }
 

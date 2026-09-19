@@ -64,6 +64,7 @@ use Uhifadhi\Bundle\TeamBundle\Security\PermissionVoter;
 use Uhifadhi\Bundle\TeamBundle\Service\ApiTokenManager;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentDirectory;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentKindService;
+use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPalette;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPerformance;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentSectionOverview;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentService;
@@ -82,9 +83,9 @@ use Uhifadhi\Bundle\TeamBundle\Service\TeamOverview;
 use Uhifadhi\Bundle\TeamBundle\Service\UserService;
 use Uhifadhi\Bundle\TeamBundle\Shell\DepartmentAreaNavChildren;
 use Uhifadhi\Bundle\TeamBundle\Shell\DepartmentAreaSections;
-use Uhifadhi\Bundle\TeamBundle\Shell\PerformanceNavigation;
 use Uhifadhi\Bundle\TeamBundle\Shell\DepartmentSectionConfiguration;
 use Uhifadhi\Bundle\TeamBundle\Shell\DepartmentSectionTabs;
+use Uhifadhi\Bundle\TeamBundle\Shell\PerformanceNavigation;
 use Uhifadhi\Bundle\TeamBundle\Shell\TeamNavigation;
 use Uhifadhi\Bundle\TeamBundle\Shell\UserBadgeSource;
 use Uhifadhi\Bundle\TeamBundle\Twig\AreaScopeExtension;
@@ -526,17 +527,30 @@ return static function (ContainerConfigurator $container): void {
             ])
             ->tag('shell.nav_section');
 
+        /*
+         * WHICH CATEGORY EACH DEPARTMENT IS, said once. A department names a
+         * category and never a colour; the shell resolves the index to the hue,
+         * which is the only way the same department reads the same in both
+         * palettes and again on imagery.
+         */
+        $services->set('team.department_palette', DepartmentPalette::class)
+            ->args([service(DepartmentRepository::class)]);
+        $services->alias(DepartmentPalette::class, 'team.department_palette');
+
         $services->set('team.navigation', TeamNavigation::class)
-            ->args([
-                service('router'),
-                service('security.token_storage'),
-                service('security.authorization_checker'),
-                service('request_stack'),
-                // The register's own picker lives in the sidebar, so the tree
-                // reads the same list the page draws.
-                service(DepartmentRepository::class),
-            ])
-            ->tag('shell.nav_section');
+                ->args([
+                    service('router'),
+                    service('security.token_storage'),
+                    service('security.authorization_checker'),
+                    service('request_stack'),
+                    // The register's own picker lives in the sidebar, so the tree
+                    // reads the same list the page draws.
+                    service(DepartmentRepository::class),
+                    // And the same category each department wears everywhere else,
+                    // so the dot in the tree and the mark on the card agree.
+                    service('team.department_palette'),
+                ])
+                ->tag('shell.nav_section');
     }
 
     /*

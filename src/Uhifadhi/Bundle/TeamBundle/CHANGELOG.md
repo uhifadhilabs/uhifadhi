@@ -28,6 +28,13 @@ Not released yet.
    and fewer than three figures in a band place nothing
  * a second sheet, `bundles/team/performance.css`, carrying the board's own
    vocabulary, and a sort that runs INSIDE each band and never across one
+ * a department in the sidebar wears ITS OWN HUE: the tree's dot carries the
+   department's category, resolved by the shell's `[data-cat]` mechanism, so
+   nine departments read as nine things rather than nine accents. The row hands
+   over an index and never a colour — a hex is right in one theme and wrong in
+   the other — and one service says which category a department is, so every
+   surface that marks one marks it the same.
+
  * the POSTINGS tab: who is posted to which station, across every area, with
    the house filter bar — area, zone, rank, whether the station has anybody —
    and the search. It writes nothing: a posting is made on the station, in the

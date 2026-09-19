@@ -29,6 +29,7 @@ use Uhifadhi\Bundle\ShellBundle\Model\NavSection;
 use Uhifadhi\Bundle\TeamBundle\Controller\DepartmentSectionController;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
+use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPalette;
 use Uhifadhi\Bundle\TeamBundle\Shell\DepartmentSectionTabs;
 use Uhifadhi\Bundle\TeamBundle\Shell\TeamNavigation;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\Area\HostArea;
@@ -62,6 +63,7 @@ final class TeamNavigationTest extends TestCase
             $this->checkerAnswering(true),
             new RequestStack(),
             $this->departmentsNamed([]),
+            $this->paletteOver([]),
         );
 
         self::assertSame([], iterator_to_array($navigation->sections()));
@@ -89,6 +91,7 @@ final class TeamNavigationTest extends TestCase
             $this->checkerAnswering(true),
             new RequestStack(),
             $this->departmentsNamed([]),
+            $this->paletteOver([]),
         );
 
         $sections = iterator_to_array($navigation->sections());
@@ -112,6 +115,7 @@ final class TeamNavigationTest extends TestCase
             $this->checkerThatRefusesToBeAsked(),
             new RequestStack(),
             $this->departmentsNamed([]),
+            $this->paletteOver([]),
         );
 
         self::assertSame([], iterator_to_array($navigation->sections()));
@@ -138,6 +142,7 @@ final class TeamNavigationTest extends TestCase
             $this->checkerAnswering(true),
             $requests,
             $this->departmentsNamed([]),
+            $this->paletteOver([]),
         );
 
         $sections = iterator_to_array($navigation->sections());
@@ -178,6 +183,7 @@ final class TeamNavigationTest extends TestCase
             $this->checkerAnswering(true),
             $requests,
             $this->departmentsNamed([]),
+            $this->paletteOver([]),
         );
 
         $sections = iterator_to_array($navigation->sections());
@@ -206,6 +212,7 @@ final class TeamNavigationTest extends TestCase
             $this->checkerAnswering(true),
             $requests,
             $this->departmentsNamed(['Ecology' => null, 'Wetland Management' => 'Northern Reserve']),
+            $this->paletteOver(['Ecology' => null, 'Wetland Management' => 'Northern Reserve']),
         );
 
         $sections = iterator_to_array($navigation->sections());
@@ -242,6 +249,7 @@ final class TeamNavigationTest extends TestCase
             $this->checkerAnswering(true),
             $requests,
             $this->departmentsThatMustNotBeAsked(),
+            $this->paletteOver([]),
         );
 
         $sections = iterator_to_array($navigation->sections());
@@ -258,15 +266,63 @@ final class TeamNavigationTest extends TestCase
      */
     private function departmentsNamed(array $named): DepartmentRepository
     {
-        $departments = [];
-        foreach ($named as $name => $area) {
-            $departments[] = self::aDepartment($name, $area);
-        }
+        $departments = $this->cast($named);
 
         $repository = $this->createStub(DepartmentRepository::class);
         $repository->method('findAllActiveOrdered')->willReturn($departments);
 
         return $repository;
+    }
+
+    /**
+     * A DEPARTMENT IN THE TREE WEARS ITS OWN HUE, and it is the same hue it
+     * wears everywhere else.
+     *
+     * THE ROW HANDS OVER A CATEGORY AND NEVER A COLOUR. The shell resolves the
+     * index against the palette, which is the only way one department reads
+     * the same in both themes; a hex here would be right in one of them.
+     */
+    public function testEachDepartmentsDotCarriesItsOwnCategoryAndNotTheAccent(): void
+    {
+        $named = ['Ecology' => null, 'Wetland Management' => 'Northern Reserve'];
+        $requests = new RequestStack();
+        $requests->push(self::inTheSection('/departments', TeamNavigation::DEPARTMENTS_ROUTE));
+
+        $navigation = new TeamNavigation(
+            $this->urlsAnsweringByRoute(),
+            $this->tokenStorageWithAToken(),
+            $this->checkerAnswering(true),
+            $requests,
+            $this->departmentsNamed($named),
+            $this->paletteOver($named),
+        );
+
+        $sections = iterator_to_array($navigation->sections());
+        $register = $sections[0]->items[0]->children[1];
+        $rows = [];
+        foreach ($register->children as $group) {
+            foreach ($group->children as $row) {
+                $rows[$row->label] = $row->swatch;
+            }
+        }
+
+        self::assertSame(['Ecology' => 'var(--cat-1)', 'Wetland Management' => 'var(--cat-2)'], $rows);
+    }
+
+    /**
+     * THE PALETTE OVER THE SAME LIST — a department's hue is its position in
+     * the register's own order, so the stub answers the order the tree reads.
+     *
+     * @param array<string, string|null> $named
+     */
+    private function paletteOver(array $named): DepartmentPalette
+    {
+        $departments = $this->cast($named);
+
+        $repository = $this->createStub(DepartmentRepository::class);
+        $repository->method('findAllOrdered')->willReturn($departments);
+
+        return new DepartmentPalette($repository);
     }
 
     /** A repository the navigation must not reach for at all. */
@@ -278,9 +334,31 @@ final class TeamNavigationTest extends TestCase
         return $repository;
     }
 
+    /**
+     * ONE CAST FOR ONE TEST, whichever helper asks for it. The tree and the
+     * palette read the same departments in an installation, and two stub lists
+     * of look-alikes would agree about everything except their identity — which
+     * is the one thing the hue is keyed on.
+     *
+     * @param array<string, string|null> $named
+     *
+     * @return list<Department>
+     */
+    private function cast(array $named): array
+    {
+        $key = implode('|', array_map(static fn (string $n, ?string $a): string => $n.':'.$a, array_keys($named), $named));
+        $this->casts[$key] ??= array_map(self::aDepartment(...), array_keys($named), array_values($named));
+
+        return $this->casts[$key];
+    }
+
+    /** @var array<string, list<Department>> */
+    private array $casts = [];
+
     private static function aDepartment(string $name, ?string $area): Department
     {
         $department = new Department()->setName($name);
+        $department->generateUuid();
         if (null !== $area) {
             $department->setArea(new HostArea()->setName($area));
         }
