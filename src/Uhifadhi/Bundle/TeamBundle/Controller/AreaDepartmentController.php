@@ -82,6 +82,7 @@ final readonly class AreaDepartmentController
 
         $own = $query->matching($this->departments->findForArea($area));
         $inherited = $query->matching($this->departments->findOrgLevelOrdered());
+        $reading = $this->reading([...$own, ...$inherited]);
 
         return new Response($this->twig->render('@Team/departments/area_tab.html.twig', [
             'area' => $area,
@@ -106,7 +107,12 @@ final readonly class AreaDepartmentController
             'openDepartment' => '' === trim($request->query->getString('open')) ? null : trim($request->query->getString('open')),
             'ownCount' => \count($this->departments->findForArea($area)),
             'orgCount' => \count($this->departments->findOrgLevelOrdered()),
-            ...$this->reading([...$own, ...$inherited]),
+            ...$reading,
+            // THE BAND'S SECOND FACT IS ABOUT THIS AREA'S OWN DEPARTMENTS.
+            // An org-wide department's positions belong to the
+            // organisation, and counting them here would make every area
+            // report the same number as its own.
+            ...self::staffing($own, $reading['owned'], $reading['holders']),
         ]));
     }
 
@@ -144,7 +150,7 @@ final readonly class AreaDepartmentController
      *
      * @param list<Department> $departments
      *
-     * @return array{owned: array<string, list<\Uhifadhi\Bundle\TeamBundle\Entity\Position>>, headcount: array<string, int>, holders: array<string, int>, figures: array<string, list<\Uhifadhi\Contracts\Kpi\DepartmentKpi>>, positionCount: int, filled: int, marks: array<string, string>}
+     * @return array{owned: array<string, list<\Uhifadhi\Bundle\TeamBundle\Entity\Position>>, headcount: array<string, int>, holders: array<string, int>, figures: array<string, list<\Uhifadhi\Contracts\Kpi\DepartmentKpi>>, marks: array<string, string>}
      */
     private function reading(array $departments): array
     {
@@ -164,16 +170,12 @@ final readonly class AreaDepartmentController
         $headcount = [];
         $figures = [];
         $marks = [];
-        $positions = 0;
-        $filled = 0;
         foreach ($departments as $department) {
             $key = $department->getUuidString() ?? '';
             $mine = $owned[$key] ?? [];
             $headcount[$key] = $this->users->countActiveHoldingAnyPosition($mine);
             $figures[$key] = $this->performance->kpisFor($department);
             $marks[$key] = self::mark((string) $department->getName());
-            $positions += \count($mine);
-            $filled += $headcount[$key];
         }
 
         return [
@@ -182,9 +184,38 @@ final readonly class AreaDepartmentController
             'holders' => $holders,
             'figures' => $figures,
             'marks' => $marks,
-            'positionCount' => $positions,
-            'filled' => $filled,
         ];
+    }
+
+    /**
+     * HOW MANY POSITIONS THESE DEPARTMENTS OWN, AND HOW MANY ARE FILLED.
+     *
+     * BOTH HALVES COUNT POSITIONS, which is the only way "M of N filled" can
+     * be read. Summing each department's HEADCOUNT against a count of
+     * positions compared two different things and printed "6 of 5 filled" —
+     * a person may hold positions in two departments, and a position may be
+     * held by several people. A position is filled when somebody holds it.
+     *
+     * @param list<Department>                                                 $departments
+     * @param array<string, int>                                               $holders     position uuid to how many hold it
+     * @param array<string, list<\Uhifadhi\Bundle\TeamBundle\Entity\Position>> $owned
+     *
+     * @return array{positionCount: int, filled: int}
+     */
+    private static function staffing(array $departments, array $owned, array $holders): array
+    {
+        $positions = 0;
+        $filled = 0;
+        foreach ($departments as $department) {
+            foreach ($owned[$department->getUuidString() ?? ''] ?? [] as $position) {
+                ++$positions;
+                if (($holders[$position->getUuidString() ?? ''] ?? 0) > 0) {
+                    ++$filled;
+                }
+            }
+        }
+
+        return ['positionCount' => $positions, 'filled' => $filled];
     }
 
     /**

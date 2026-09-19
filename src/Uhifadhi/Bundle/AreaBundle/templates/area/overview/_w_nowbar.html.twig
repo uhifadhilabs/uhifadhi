@@ -22,17 +22,21 @@
         <b class="disp">{{ attention|length }}</b>
         {# THE COUNT, BROKEN DOWN: the urgent ones first, then one figure per
            module in the module's own word for its items. Six with no
-           breakdown reads as six of something; this says which. #}
-        <span class="sub">
-            {%- if attention is empty -%}
-                a good day
-            {%- else -%}
-                {%- if attentionSummary.urgent -%}<span class="r">{{ attentionSummary.urgent }} urgent</span>{%- endif -%}
-                {%- for label, count in attentionSummary.byModule -%}
-                    {{ not loop.first or attentionSummary.urgent ? ' &middot; ' : '' }}{{ count }} {{ label|lower }}
-                {%- endfor -%}
-            {%- endif -%}
-        </span>
+           breakdown reads as six of something; this says which.
+
+           THE PIECES ARE JOINED, NOT SEPARATED. Writing the dot before each
+           piece means working out which piece is first, and the first
+           attempt got it wrong the one way that shows: nought urgent, and
+           the caption opened with a dot. A count of nought is not a piece
+           at all — nobody writes "0 urgent". #}
+        {%- set pieces = [] -%}
+        {%- if attentionSummary.urgent -%}
+            {%- set pieces = pieces|merge(['<span class="r">' ~ attentionSummary.urgent ~ ' urgent</span>']) -%}
+        {%- endif -%}
+        {%- for label, count in attentionSummary.byModule -%}
+            {%- set pieces = pieces|merge([count ~ ' ' ~ label|lower|e]) -%}
+        {%- endfor -%}
+        <span class="sub">{{ attention is empty ? 'a good day' : pieces|join(' &middot; ')|raw }}</span>
     </div>
     {% if tiles|length < 4 %}
         {% for _ in 1..(4 - tiles|length) %}

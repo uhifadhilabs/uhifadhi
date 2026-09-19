@@ -14,8 +14,8 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web;
 
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\AreaBundle\Overview\ContributesStylesheetInterface;
 use Uhifadhi\Bundle\AreaBundle\Overview\OverviewContributorInterface;
-use Uhifadhi\Bundle\AreaBundle\Overview\OverviewStylesheetsInterface;
 use Uhifadhi\Bundle\ShellBundle\Widget\Model\Widget;
 use Uhifadhi\Bundle\ShellBundle\Widget\Model\WidgetGroup;
 
@@ -32,7 +32,7 @@ use Uhifadhi\Bundle\ShellBundle\Widget\Model\WidgetGroup;
  * modules switched on. So the stand-in reads the contract's shape, and the
  * suite renders an area that runs it.
  */
-final readonly class FakeOverviewWidgets implements OverviewContributorInterface, OverviewStylesheetsInterface
+final readonly class FakeOverviewWidgets implements OverviewContributorInterface, ContributesStylesheetInterface
 {
     public function __construct(private string $slug)
     {
@@ -64,9 +64,9 @@ final readonly class FakeOverviewWidgets implements OverviewContributorInterface
      * its own bundle's served path; the stand-in names one that exists, so
      * the suite can see the link the surface writes.
      */
-    public function stylesheets(): array
+    public function stylesheet(): string
     {
-        return ['bundles/'.$this->slug.'/'.$this->slug.'.css'];
+        return 'bundles/'.$this->slug.'/'.$this->slug.'.css';
     }
 
     public function context(AreaOfInterest $area, \DateTimeImmutable $now): array

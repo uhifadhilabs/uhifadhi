@@ -80,6 +80,42 @@ final class AreaDepartmentsTest extends WebTestCaseWithSchema
     }
 
     /**
+     * OWN POSITIONS COUNTS POSITIONS, BOTH HALVES OF IT.
+     *
+     * The cell read "5 · 6 of 5 filled", which cannot be true of anything:
+     * one half counted the positions of every department that reads the
+     * area and the other summed each department's HEADCOUNT — a person may
+     * hold a position in two departments, and a position may be held by
+     * several people. The fact is about THIS AREA'S OWN departments, and a
+     * position is filled when somebody holds it.
+     */
+    public function testOwnPositionsCountsThisAreasOwnPositionsAndHowManyAreHeld(): void
+    {
+        $this->administrator();
+        $north = $this->area('Northern Reserve');
+
+        $wetlands = $this->areaDepartment('Wetland Management', $north);
+        $ecology = $this->department('Ecology');
+
+        $warden = $this->position('Wetland Warden', $wetlands);
+        $this->position('Wetland Surveyor', $wetlands);
+        $orgWide = $this->position('Ecologist', $ecology);
+
+        // TWO PEOPLE IN ONE POSITION is one position filled, not two; and a
+        // person filed under an org-wide department is not this area's.
+        $this->person('Asha', 'Mollel')->setPosition($warden);
+        $this->person('Juma', 'Ngowi')->setPosition($warden);
+        $this->person('Lena', 'Sultani')->setPosition($orgWide);
+        $this->em->flush();
+
+        $band = $this->client->request('GET', '/areas/'.$north->getUuidString().'/departments')
+            ->filter('.factband')->text();
+
+        self::assertStringContainsString('Own positions', $band);
+        self::assertStringContainsString('1 of 2 filled', $band);
+    }
+
+    /**
      * THE TAB WRITES NOTHING. Every control that changes a department is on
      * the configure section or the organisation's register, and the tab
      * points at both: the header's way out to the whole register, and the

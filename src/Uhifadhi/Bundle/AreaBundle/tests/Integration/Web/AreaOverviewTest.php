@@ -339,9 +339,11 @@ final class AreaOverviewTest extends WebTestCase
      * Measured on a rendered page: the incident cell's flow bar came out as
      * blue underlined links, because those rules live in the incident
      * module's stylesheet and the overview's chain was shell, atlas, widget,
-     * area and nothing else. Copying the rules into the core would put every
-     * module's vocabulary in the core and let the copy drift; publishing the
-     * sheet at the seam does not.
+     * area and nothing else. The module had been publishing its sheet
+     * through `ContributesStylesheetInterface` the whole time; nothing
+     * collected it. Copying the rules into the core would put every module's
+     * vocabulary in the core and let the copy drift; collecting what the
+     * module already publishes does not.
      */
     public function testEachContributingModulesStylesheetIsLinkedOnceAfterTheAreasOwn(): void
     {

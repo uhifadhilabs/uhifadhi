@@ -14,8 +14,8 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\AreaBundle\Service;
 
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\AreaBundle\Overview\ContributesStylesheetInterface;
 use Uhifadhi\Bundle\AreaBundle\Overview\OverviewContributorInterface;
-use Uhifadhi\Bundle\AreaBundle\Overview\OverviewStylesheetsInterface;
 use Uhifadhi\Bundle\AreaBundle\Widget\AreaOverviewWidgets;
 use Uhifadhi\Bundle\ShellBundle\Widget\Model\Widget;
 use Uhifadhi\Bundle\ShellBundle\Widget\Model\WidgetCatalog;
@@ -177,8 +177,14 @@ final readonly class AreaOverviewCatalogue
      *
      * A module's cell is drawn on the area's page, and the page links the
      * sheets it knows about — its own, the shell's, the atlas's. Anything a
-     * module's own cells wear comes from the module's own sheet, so the
-     * module publishes it and the surface links it after its own.
+     * module's own cells wear comes from the module's own sheet, which the
+     * module has been publishing through
+     * {@see ContributesStylesheetInterface} all along; nothing collected it,
+     * so an incident cell's flow bar rendered as blue underlined links.
+     *
+     * ONLY WHAT THIS AREA RUNS. A sheet linked for a module the area has not
+     * switched on is a sheet whose rules are on a page none of its markup
+     * reached.
      *
      * @return list<string>
      */
@@ -186,14 +192,13 @@ final readonly class AreaOverviewCatalogue
     {
         $sheets = [];
         foreach ($this->contributorsFor($area) as $contributor) {
-            if (!$contributor instanceof OverviewStylesheetsInterface) {
+            if (!$contributor instanceof ContributesStylesheetInterface) {
                 continue;
             }
 
-            foreach ($contributor->stylesheets() as $sheet) {
-                if ('' !== $sheet && !\in_array($sheet, $sheets, true)) {
-                    $sheets[] = $sheet;
-                }
+            $sheet = $contributor->stylesheet();
+            if ('' !== $sheet && !\in_array($sheet, $sheets, true)) {
+                $sheets[] = $sheet;
             }
         }
 

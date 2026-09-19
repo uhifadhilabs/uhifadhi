@@ -94,6 +94,15 @@ final class ComponentContractTest extends ContractTestCase
             // THE IDENTITY BAND a detail screen opens with.
             'factband',     // .f the fact, .k/.v its halves, .sp and .more the tail
 
+            // THE QUIET FORWARD LINK AND THE MODULE DOT — both were defined
+            // only inside one parent (`.factband .more`, `.ntree .ntm .mdot`)
+            // and both are written elsewhere throughout the core: a `.more`
+            // at the end of a card's row came out blue and underlined, and a
+            // dot in a table of modules came out as nothing at all. The
+            // contract describes what the core actually writes.
+            'more',
+            'mdot',
+
             // THE KPI PLATE, and the strip it sits in.
             'kpi',
             'kstrip',

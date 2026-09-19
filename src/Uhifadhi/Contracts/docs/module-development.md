@@ -1375,7 +1375,7 @@ valid.
 | Interface | Tag | Contributes |
 |---|---|---|
 | `OverviewContributorInterface` | `uhifadhi.overview.widget_provider` | widgets and their render context |
-| `OverviewStylesheetsInterface` | (no tag of its own) | the stylesheet(s) your cells are written against |
+| `Overview\ContributesStylesheetInterface` | (no tag of its own) | the stylesheet your cells are written against |
 | `NowTileProviderInterface` | `uhifadhi.overview.now_tile` | "right now" tiles in the strip |
 | `AttentionProviderInterface` | `uhifadhi.overview.attention` | items in the attention list |
 | `MapLayerProviderInterface` | `uhifadhi.map.layer` | layers on the area map |
@@ -1408,25 +1408,27 @@ Read nothing else. A cell that reaches for a variable the page happens to have i
 breaks when the page is composed differently, and two modules publishing `total` into one flat
 context would silently overwrite each other.
 
-**Your cell wears your stylesheet, and you publish it.** The overview links the shell's sheet, the
-atlas's, the widget grid's and the area's — not yours, which is why a module built against its own
-sheet rendered its cell with every class undefined. Implement `OverviewStylesheetsInterface`
-beside the contributor and the surface links each sheet once, after its own:
+**Your cell wears your stylesheet, and you publish it through the seam that already exists.** The
+overview links the shell's sheet, the atlas's, the widget grid's and the area's — not yours, which
+is why a module built against its own sheet rendered its cell with every class undefined.
+`Overview\ContributesStylesheetInterface` is the seam (the same one described under *the host's
+stylesheet is loaded on your pages too*, above); implement it beside the contributor and the
+surface links your sheet once, after its own, for every area that runs your module:
 
 ```php
-final readonly class PatrolOverviewContributor implements OverviewContributorInterface, OverviewStylesheetsInterface
+final readonly class PatrolOverviewContributor implements OverviewContributorInterface, ContributesStylesheetInterface
 {
-    public function stylesheets(): array
+    public function stylesheet(): string
     {
-        return [PatrolBundle::STYLESHEET];
+        return 'bundles/uhifadhipatrol/patrols.css';
     }
 }
 ```
 
-It is a separate interface so that a module written before it existed goes on working; implement
-both when your cells need styling. Your sheet is linked last, which means you may tune what you
-own — and only what you own: restating a shell or area selector wins by load order and drifts
-every other surface, which the sheet tests catch.
+It is a separate interface because the area's own contributor has no stylesheet to name, and a
+contract that makes it answer a question it has no answer to has started guessing. Your sheet is
+linked last, which means you may tune what you own — and only what you own: restating a shell or
+area selector wins by load order and drifts every other surface, which the sheet tests catch.
 
 **The zone seam is asked once for the whole set.** A zone has no numbers of its own — the area
 module owns the ground, the name and the ring, and every count over that ground is whichever
