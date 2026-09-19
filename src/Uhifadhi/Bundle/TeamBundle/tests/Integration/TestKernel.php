@@ -336,6 +336,10 @@ final class TestKernel extends Kernel
             \Uhifadhi\Bundle\TeamBundle\Service\PerformanceHistory::class => 'team.performance_history',
             \Uhifadhi\Bundle\TeamBundle\Service\PerformanceTopics::class => 'team.performance_topics',
             \Uhifadhi\Bundle\TeamBundle\Service\PositionVacancy::class => 'team.position_vacancy',
+            \Uhifadhi\Bundle\TeamBundle\Service\DepartmentDirectory::class => 'team.department_directory',
+            // The registry's own write path, for the suites that ask what a
+            // department can be asked about.
+            'registry.area_modules' => 'registry.area_modules',
         ] as $class => $serviceId) {
             $container->services()->alias('test_public.'.$class, $serviceId)->public();
         }

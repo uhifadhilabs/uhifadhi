@@ -144,4 +144,34 @@ class AreaModuleRepository extends ServiceEntityRepository
 
         return $result;
     }
+
+    /**
+     * WHEN EACH AREA SWITCHED EACH MODULE ON, for every active assignment
+     * in the installation — the one read a performance topic needs to
+     * date its holes and to know which departments it may be asked about.
+     *
+     * A ROW WITH NO DATE is one written before the day was recorded; it
+     * comes back as null, and every surface reads that as "running, since
+     * nobody knows when" rather than dating it at the upgrade.
+     *
+     * @return array<string, array<string, \DateTimeImmutable|null>> area uuid to slug to when it was switched on
+     */
+    public function runningSince(): array
+    {
+        /** @var list<array{area: Uuid|string, slug: string, installedAt: \DateTimeImmutable|null}> $rows */
+        $rows = $this->createQueryBuilder('am')
+            ->select('a.uuid AS area, m.slug AS slug, am.installedAt AS installedAt')
+            ->join('am.module', 'm')
+            ->join('am.area', 'a')
+            ->andWhere('am.active = true')
+            ->getQuery()
+            ->getArrayResult();
+
+        $running = [];
+        foreach ($rows as $row) {
+            $running[(string) $row['area']][(string) $row['slug']] = $row['installedAt'];
+        }
+
+        return $running;
+    }
 }

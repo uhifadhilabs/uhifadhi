@@ -1377,6 +1377,7 @@ valid.
 | `OverviewContributorInterface` | `uhifadhi.overview.widget_provider` | widgets and their render context |
 | `Overview\ContributesStylesheetInterface` | (no tag of its own) | the stylesheet your cells are written against |
 | `Performance\PerformanceTopicProviderInterface` | `uhifadhi.performance_topic` | a whole topic on the performance page: five figures, its charts and its matrix |
+| `Performance\DepartmentDirectoryInterface` | (ask for it by name) | who the departments are, what they attach, and since when you could have been asked |
 | `NowTileProviderInterface` | `uhifadhi.overview.now_tile` | "right now" tiles in the strip |
 | `AttentionProviderInterface` | `uhifadhi.overview.attention` | items in the attention list |
 | `MapLayerProviderInterface` | `uhifadhi.map.layer` | layers on the area map |
@@ -1458,6 +1459,26 @@ Staffing, Goals, Attention — are producers of exactly this shape and are
 rendered first; module topics follow **in the order the organisation arranged
 its modules**, never alphabetically.
 
+**Your rows come from the directory, not from a query.** Enumerating departments
+means reading the team bundle's entities and the registry's area × module
+ledger, across two packages you do not depend on. Ask
+`Performance\DepartmentDirectoryInterface::forScope()` instead: one read
+answers who they are, what each is placed among (`band`), what each attaches,
+and — the part that is easy to miss — **since when each of those modules has
+been running somewhere that department can see it**.
+
+```php
+foreach ($this->directory->forScope($scope)->answeringFor('patrols') as $entry) {
+    // $entry->uuid, ->name, ->band, ->mark, ->runningSince['patrols']
+}
+```
+
+`answeringFor()` is your matrix's rows: the departments that attach you **and**
+can be asked. A department that attaches your module in an area nobody runs it
+in is `MatrixCell::notMine()` — not an empty figure and never a nought, because
+nobody asked it. Periods before its `runningSince` are holes in the history for
+the same reason.
+
 Four rules the host will hold you to, and they are the same four the rest of
 this platform states:
 
@@ -1474,6 +1495,17 @@ this platform states:
   tinted and its movement is never coloured.
 - **Scope and period are asked, not assumed.** Answer for the scope you are
   handed, or you will draw the organisation's figures on one area's page.
+
+**How long a history is, and what a delta means.** Six periods for the
+sparkline in a `TopicKpi` and in a `MatrixCell` — that is what the cell draws —
+and twelve for a chart's series, which is what the design plots. Oldest first,
+holes kept as nulls in both.
+
+A **delta is absolute and in the figure's own unit**: the difference between
+this period and the compared one, nothing else. The host formats it — a count's
+movement reads as a percentage, a share's as points — so a module that
+pre-formatted its own would be the one row on the page that disagreed with
+every other. Give the number; the page writes the sentence.
 
 Say what your chart IS — a run over time, a comparison, parts of a whole, a
 movement either side of nought — and the atlas draws it. A module handing over

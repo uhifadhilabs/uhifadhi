@@ -15,6 +15,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
 use Symfony\Component\Console\Application;
 use Uhifadhi\Bundle\RegistryBundle\Event\ModuleInstalledEvent;
+use Uhifadhi\Bundle\RegistryBundle\Repository\AreaModuleRepository;
 use Uhifadhi\Bundle\ShellBundle\Contract\NavigationSourceInterface;
 use Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceInterface;
 use Uhifadhi\Bundle\TeamBundle\Api\State\MeProvider;
@@ -50,6 +51,7 @@ use Uhifadhi\Bundle\TeamBundle\Security\ApiTokenAuthenticator;
 use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
 use Uhifadhi\Bundle\TeamBundle\Security\PermissionVoter;
 use Uhifadhi\Bundle\TeamBundle\Service\ApiTokenManager;
+use Uhifadhi\Bundle\TeamBundle\Service\DepartmentDirectory;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPerformance;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentService;
 use Uhifadhi\Bundle\TeamBundle\Service\FieldSignIn;
@@ -73,6 +75,7 @@ use Uhifadhi\Bundle\TeamBundle\Widget\PositionWidgets;
 use Uhifadhi\Bundle\TeamBundle\Widget\TeamWidgets;
 use Uhifadhi\Contracts\People\PersonDirectoryProviderInterface;
 use Uhifadhi\Contracts\People\PersonFacetProviderInterface;
+use Uhifadhi\Contracts\Performance\DepartmentDirectoryInterface;
 use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
 use Uhifadhi\Contracts\Shell\AreaNavChildrenInterface;
 use Uhifadhi\Contracts\Shell\AreaSectionsInterface;
@@ -489,6 +492,20 @@ return static function (ContainerConfigurator $container): void {
      * publishes one through — so one renderer draws both, and the host's
      * cannot quietly acquire an ability a module's lacks.
      */
+    /*
+     * WHO THE DEPARTMENTS ARE, FOR A TOPIC — the one read that joins this
+     * bundle's departments to the registry's area × module ledger, so a
+     * module publishing a topic reaches across no boundary at all.
+     */
+    $services->set('team.department_directory', DepartmentDirectory::class)
+        ->args([
+            service(DepartmentRepository::class),
+            service(AreaModuleRepository::class),
+        ]);
+    $services->alias(DepartmentDirectory::class, 'team.department_directory');
+    /* A MODULE TYPE-HINTS THE CONTRACT, never this class. */
+    $services->alias(DepartmentDirectoryInterface::class, 'team.department_directory');
+
     $services->set('team.performance.staffing_topic', StaffingTopic::class)
         ->args([
             service(DepartmentRepository::class),
