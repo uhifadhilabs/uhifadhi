@@ -1390,6 +1390,7 @@ valid.
 | `People\PersonFacetProviderInterface` | `uhifadhi.person_facets` | a person's position and department, for a list somewhere else |
 | `People\PersonPostingProviderInterface` | `uhifadhi.person_postings` | where a person works, for their own page |
 | `Area\StationDirectoryInterface` | `uhifadhi.station_directory` | every station and who stands at each, across every area |
+| `Storage\FileSourceInterface` | `uhifadhi.file_source` | that this module stores files, and its word for one |
 
 Every one of them starts with `moduleSlug()`, and it must return the same slug your
 `ModuleProviderInterface` does: that is how a contribution disappears when an area switches your

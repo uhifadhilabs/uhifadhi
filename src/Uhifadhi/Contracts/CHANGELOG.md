@@ -8,6 +8,12 @@
 
 Not released yet.
 
+ * `Storage\FileSourceInterface` — a module saying that it stores files and
+   what it calls one. They are the only two facts the files hub cannot work
+   out for itself: an installed module with nothing stored yet and one that
+   will never store anything look identical on a register, and the hub has no
+   word of its own for somebody else's files.
+
  * `Area\StationDirectoryInterface` and its values — every station on the
    installation and who stands at each, across every area at once. It is the
    station-shaped half of `People\PersonPosting`: that seam answers where one
