@@ -176,6 +176,10 @@ export default class extends Controller {
         // would go on invalidating a map nobody is looking at.
         this.frameWatch?.disconnect();
         this.frameWatch = null;
+        if (this.onMapResize) {
+            this.map?.off('resize', this.onMapResize);
+            this.onMapResize = null;
+        }
         this.layers.clear();
         this.specs.clear();
         this.byFeatureId.clear();
@@ -759,13 +763,26 @@ export default class extends Controller {
         // A SUBJECT WITH NO EXTENT — one point — cannot be fitted to: fitting
         // a degenerate box goes to the map's maximum zoom, which is a street
         // corner. The surface says how close to come.
+        /*
+         * NEVER ANIMATED. A fit that eases into place is a fit that is still
+         * moving when the next one is asked for, and Leaflet answers the
+         * second from where the first was going rather than from the frame
+         * as it now is: the zone record settled at the size its card had
+         * BEFORE the page finished, and its subject overflowed the plate by
+         * the difference. A plate arriving at its subject is not an
+         * animation anybody asked for.
+         */
         if (!bounds.getNorthEast().equals(bounds.getSouthWest())) {
-            this.map?.fitBounds(bounds, { padding: FIT_PADDING, maxZoom: subject?.zoom ?? undefined });
+            this.map?.fitBounds(bounds, {
+                padding: FIT_PADDING,
+                maxZoom: subject?.zoom ?? undefined,
+                animate: false,
+            });
 
             return;
         }
 
-        this.map?.setView(bounds.getCenter(), subject?.zoom ?? POINT_ZOOM);
+        this.map?.setView(bounds.getCenter(), subject?.zoom ?? POINT_ZOOM, { animate: false });
     }
 
     /**
@@ -798,9 +815,19 @@ export default class extends Controller {
         const frame = this.frame();
 
         this.settle = () => {
-            this.map?.invalidateSize({ animate: false });
+            this.map?.invalidateSize({ animate: false, pan: false });
             this.refit();
         };
+
+        /*
+         * AND THE MAP'S OWN ANSWER IS THE LAST WORD. `invalidateSize` tells
+         * Leaflet to measure again and it fires `resize` once it has — after
+         * which the frame is whatever it really is, so the fit taken there
+         * is taken against the final size rather than against the size the
+         * card had while it was still being laid out.
+         */
+        this.onMapResize = () => this.refit();
+        this.map?.on('resize', this.onMapResize);
 
         requestAnimationFrame(this.settle);
 

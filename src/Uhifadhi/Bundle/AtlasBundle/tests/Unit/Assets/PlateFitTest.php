@@ -31,8 +31,14 @@ use PHPUnit\Framework\TestCase;
  * a quarter is two different ideas of a zoom.
  *
  * A TEXT CHECK OVER THE SHIPPED ASSET, and that is its limit: it catches the
- * options being dropped or the two falling out of step. Whether the fitted
- * plate LOOKS right is a rendered check.
+ * options being dropped, the two falling out of step, or the settle path
+ * being unpicked. WHAT IT CANNOT SAY is whether a given page's plate ends up
+ * inset by the padding — that is a measurement of a rendered card, and the
+ * two defects it would have caught were both of that kind: a boundary
+ * overflowing its plate on the zones tab, and a zone clipped at the bottom
+ * of its record. Both came from a fit taken against a frame the card had not
+ * finished laying out, so what is asserted here is that the plate takes the
+ * fit AGAIN when the frame is final, and never with an animation in flight.
  */
 #[CoversNothing]
 final class PlateFitTest extends TestCase
@@ -78,6 +84,30 @@ final class PlateFitTest extends TestCase
         self::assertStringContainsString('requestAnimationFrame(this.settle)', $controller);
         self::assertStringContainsString('new ResizeObserver(', $controller);
         self::assertStringContainsString('this.frameWatch?.disconnect();', $controller);
+
+        // AND LEAFLET'S OWN ANSWER IS THE LAST WORD: it fires `resize` once
+        // it has measured again, and the fit taken there is taken against
+        // the size the frame really ended up at.
+        self::assertStringContainsString("this.map?.on('resize', this.onMapResize);", $controller);
+        self::assertStringContainsString("this.map?.off('resize', this.onMapResize);", $controller);
+    }
+
+    /**
+     * NO FIT IS ANIMATED. An eased fit is still moving when the next one is
+     * asked for, and Leaflet answers the second from where the first was
+     * going rather than from the frame as it now is — which is how a zone's
+     * record came to be framed for the size its card had before the page
+     * finished, and its subject to hang seventeen pixels below the plate.
+     */
+    public function testNoFitIsAnimated(): void
+    {
+        $controller = self::controller();
+
+        self::assertSame(
+            2,
+            preg_match_all('/animate: false,?\n?\s*\}\)/', $controller),
+            'Both ways of arriving at a subject — fitting an extent and centring on a point — arrive at once.',
+        );
     }
 
     private static function controller(): string
