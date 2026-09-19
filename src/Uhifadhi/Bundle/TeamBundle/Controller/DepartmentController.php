@@ -35,6 +35,7 @@ use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Exception\MissingScopeChangeReasonException;
 use Uhifadhi\Bundle\TeamBundle\Exception\NameNotUniqueException;
+use Uhifadhi\Bundle\TeamBundle\Model\DepartmentQuery;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
@@ -129,7 +130,7 @@ final readonly class DepartmentController
      */
     #[Route('/departments', name: 'team_departments', methods: ['GET'])]
     #[IsGranted(PermissionEnum::TeamManage->value)]
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $departments = $this->departments->findAllOrdered();
 
@@ -154,28 +155,125 @@ final readonly class DepartmentController
         // directly, and a count that pretended otherwise would be the first place
         // this page lied about the model.
         $headcount = [];
+        $figures = [];
         foreach ($departments as $department) {
             $key = $department->getUuidString() ?? '';
             $headcount[$key] = $this->users->countActiveHoldingAnyPosition($owned[$key] ?? []);
+            // WHAT A DEPARTMENT IS WORTH READING IS ITS ATTACHED MODULES', asked
+            // through the seam. A department that attaches nothing shows nothing
+            // and the card says so, rather than drawing a row of noughts.
+            $figures[$key] = $this->performance->kpisFor($department);
         }
 
+        $query = DepartmentQuery::from($request);
+        $areas = $this->areas();
+
         return new Response($this->twig->render('@Team/departments/index.html.twig', [
+            // ORG-WIDE FIRST, THEN AREA-LEVEL: the register is read from the
+            // organisation inwards, and an org-wide department is one every
+            // area inherits — the thing a reader has to know before the rest
+            // of the list means anything.
+            'groups' => $this->register($query, $areas),
+            'query' => $query,
+            'counts' => self::scopeCounts($departments),
+            'areas' => $areas,
             'areaGroups' => $this->areaGroups(),
             'orgDepartments' => $this->departments->findOrgLevelOrdered(),
             'departments' => $departments,
-            'areas' => $this->areas(),
             // The move control and the confine picker file INTO a department, so
             // they offer only the active ones; the register above draws the
             // inactive rows greyed from the all-inclusive groups.
             'fileTargets' => $this->departments->findAllActiveOrdered(),
             'owned' => $owned,
             'headcount' => $headcount,
+            'figures' => $figures,
             'holders' => $this->holders(),
             'loose' => $loose,
             'looseHeadcount' => $this->users->countActiveHoldingAnyPosition($loose),
             'marks' => $this->marks($departments),
+            'openDepartment' => self::openOf($request),
+            'positionCount' => array_sum(array_map(\count(...), $owned)),
             'csrfToken' => $this->csrf->getToken(self::CSRF_ID)->getValue(),
         ]));
+    }
+
+    /** Which card is open is a place, so it is a query a link can carry. */
+    private static function openOf(Request $request): ?string
+    {
+        $open = trim($request->query->getString('open'));
+
+        return '' === $open ? null : $open;
+    }
+
+    /**
+     * THE REGISTER AS IT IS DRAWN — org-wide first, then one group per area,
+     * with the reader's filter and search already applied.
+     *
+     * THE GROUPS ARE KEPT WHEN THEY EMPTY OUT UNDER A FILTER and dropped when
+     * they are empty in the data: a heading that says "Ngorongoro · 0" while
+     * you are filtering by another area is noise, and a heading missing
+     * because you searched is a list that looks shorter than it is. So the
+     * filter removes groups and the search only empties them.
+     *
+     * @param list<AreaInterface> $areas
+     *
+     * @return list<array{key: string, label: string, note: string, departments: list<Department>}>
+     */
+    private function register(DepartmentQuery $query, array $areas): array
+    {
+        $groups = [];
+
+        if (DepartmentQuery::AREA !== $query->scope) {
+            $groups[] = [
+                'key' => 'org',
+                'label' => 'Org-wide',
+                'note' => 'Belong to the organisation · each reads every area',
+                'departments' => $query->matching($this->departments->findOrgLevelOrdered()),
+            ];
+        }
+
+        if (DepartmentQuery::ORG === $query->scope) {
+            return $groups;
+        }
+
+        foreach ($this->areaGroups() as $group) {
+            $area = $group['area'];
+            $uuid = (string) $area->getUuidString();
+
+            if (null !== $query->area && $uuid !== $query->area) {
+                continue;
+            }
+
+            $groups[] = [
+                'key' => $uuid,
+                'label' => (string) $area->getName(),
+                'note' => 'Belong to this one area · the other areas do not see them',
+                'departments' => $query->matching($group['departments']),
+            ];
+        }
+
+        return $groups;
+    }
+
+    /**
+     * WHAT EACH PILL WOULD LEAVE, counted against the whole register rather
+     * than against what is already filtered — a count that moved as you
+     * filtered could not tell you what picking it would do.
+     *
+     * @param list<Department> $departments
+     *
+     * @return array{all: int, org: int, area: int}
+     */
+    private static function scopeCounts(array $departments): array
+    {
+        $org = 0;
+        foreach ($departments as $department) {
+            if (null === $department->getArea()) {
+                ++$org;
+            }
+        }
+
+        return ['all' => \count($departments), 'org' => $org, 'area' => \count($departments) - $org];
     }
 
     /**

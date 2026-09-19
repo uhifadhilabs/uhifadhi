@@ -2842,3 +2842,178 @@ html.light [data-dp] select, html.light [data-dept] select {
    alone: the design sets it in the quiet mono the rest of the row's metadata
    uses, and `.fog`/`.mono` carry the colour and the family already. */
 .setrow .fog.mono { font-size: 11px; }
+
+/* ══ THE DEPARTMENT REGISTER ══════════════════════════════════════════════
+   Org-wide first, then one foldable group per area. Every department is a
+   banded card: a header that names it and states what it reads, a body that
+   opens to the positions filed under it, and a footer where the operations
+   that change it live. What this borrows — the card ground, the identity
+   band, the filter row, the group heading — is the shell's and is not
+   restated here. */
+
+/* THE GROUPS FOLD AT THEIR HEADING, as a `<details>`, so a register of nine
+   groups folds with no script of ours. */
+.nvsec { margin-bottom: 18px; }
+.nvsec > summary { list-style: none; cursor: pointer; }
+.nvsec > summary::-webkit-details-marker { display: none; }
+.nvfold { display: inline-flex; color: rgb(var(--c-fog)); }
+.nvfold svg { transition: transform .15s ease; display: block; }
+.nvsec[open] .nvfold svg { transform: rotate(90deg); }
+
+/* FIND AND FILTER — the house row, with the pills reading the create
+   chooser's own two words in the same order. */
+.dcfind { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 4px 0 14px; }
+.dcfil { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; flex: 1; }
+.dcpill {
+    display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 12px;
+    border: 1px solid var(--c-ln2); border-radius: 99px; text-decoration: none;
+    font-family: var(--font-mono); font-size: 11px; color: rgb(var(--c-fog)); line-height: 28px;
+}
+.dcpill:hover { border-color: rgb(var(--c-fog)); color: rgb(var(--c-tx)); }
+.dcpill.on { color: rgb(var(--c-accT)); background: rgb(var(--c-acc)); border-color: rgb(var(--c-acc)); }
+.dcpill .n { font-variant-numeric: tabular-nums; opacity: .8; }
+.dcarea { display: inline-flex; align-items: center; gap: 7px; font-size: 11.5px; color: rgb(var(--c-fog)); }
+.dcarea .k {
+    font-family: var(--font-mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase;
+    color: rgb(var(--c-dim));
+}
+.dcfind .cnt { font-family: var(--font-mono); font-size: 10.5px; color: rgb(var(--c-dim)); }
+
+/* ── the register's card: three banded regions ─────────────────────────── */
+.dcstack.dcreg { display: flex; flex-direction: column; gap: 9px; }
+/* A card that opens must never sit in a grid, or opening it moves its
+   neighbours sideways. */
+.dcstack.dcreg .dcard { position: relative; padding: 0; overflow: visible; }
+.dcstack.dcreg .dcard > .dc-hd {
+    display: flex; align-items: center; gap: 11px; flex-wrap: wrap;
+    padding: 12px 15px 11px; border-bottom: 1px solid var(--c-ln);
+    background: rgb(var(--c-raised)); border-radius: 12px 12px 0 0;
+}
+.dcstack.dcreg .dcard > .dc-hd > .dcrun { flex: 1 1 100%; margin-top: 9px; }
+.dcstack.dcreg .dcard > .dc-body { padding: 13px 15px 14px; background: transparent; }
+.dcstack.dcreg .dcard > .dc-foot {
+    display: flex; flex-direction: column; gap: 7px;
+    padding: 9px 15px 10px; border-top: 1px solid var(--c-ln);
+    background: rgb(var(--c-raised)); border-radius: 0 0 12px 12px;
+}
+/* AN OPEN CARD CARRIES NO BAR. It is told by its open body and its turned
+   chevron, and by nothing else — a second mark down the left edge made
+   several cards look picked at once. */
+
+/* THE FOCUSED DEPARTMENT is the one the sidebar's lit entry points at, which
+   is NOT the same as an open one. It wears a quiet 2px accent line down its
+   left border, inset by the card's radius at both ends, and a neutral lift on
+   its three regions — the accent is the mark, never the ground. The box does
+   not change size, so nothing below it moves when focus arrives. */
+.dcard.dcfocus { border-color: color-mix(in srgb, rgb(var(--c-acc)) 55%, transparent); box-shadow: var(--shadow); }
+.dcard.dcfocus::after {
+    content: ""; position: absolute; left: -1px; top: 13px; bottom: 13px; width: 2px;
+    border-radius: 2px; background: rgb(var(--c-acc)); z-index: 2; pointer-events: none;
+}
+.dcstack.dcreg .dcard.dcfocus > .dc-hd,
+.dcstack.dcreg .dcard.dcfocus > .dc-foot { background: color-mix(in srgb, rgb(var(--c-fog)) 13%, rgb(var(--c-raised))); }
+.dcstack.dcreg .dcard.dcfocus > .dc-body { background: color-mix(in srgb, rgb(var(--c-fog)) 7%, transparent); }
+/* THE CARD THE SIDEBAR POINTED AT COMES TO THE MIDDLE OF THE VIEW, which the
+   browser does itself once the anchor has room above it. */
+.dcstack.dcreg .dcard { scroll-margin-top: 38vh; }
+/* A DEACTIVATED DEPARTMENT READS AS ONE and keeps everything filed under it. */
+.dcard.dcinactive { opacity: .72; }
+
+.ov-mk {
+    display: grid; place-items: center; width: 28px; height: 28px; flex: none; border-radius: 8px;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: .04em;
+    color: rgb(var(--c-fog)); border: 1px solid var(--c-ln2);
+}
+.ov-mk.on { color: rgb(var(--c-acc)); border-color: color-mix(in srgb, rgb(var(--c-acc)) 40%, transparent); }
+.dc-bd { min-width: 160px; flex: 1; }
+.ov-nm { font-size: 13.5px; font-weight: 700; color: rgb(var(--c-tx)); text-decoration: none; }
+a.ov-nm:hover { color: rgb(var(--c-acc)); }
+.ov-sc {
+    font-family: var(--font-mono); font-size: 9px; font-weight: 600; letter-spacing: .1em;
+    text-transform: uppercase; color: rgb(var(--c-dim)); border: 1px solid var(--c-ln2);
+    border-radius: 99px; padding: 3px 8px 2px;
+}
+.dc-sub { font-size: 11.5px; color: rgb(var(--c-fog)); margin-top: 3px; }
+.dc-sub b { color: rgb(var(--c-tx)); font-weight: 600; }
+.dc-act { display: flex; align-items: center; gap: 7px; margin-left: auto; }
+.ov-open {
+    display: inline-flex; align-items: center; gap: 6px; text-decoration: none;
+    font-family: var(--font-mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase;
+    color: rgb(var(--c-fog)); border: 1px solid var(--c-ln2); border-radius: 8px; padding: 5px 9px;
+}
+.ov-open:hover { color: rgb(var(--c-acc)); border-color: color-mix(in srgb, rgb(var(--c-acc)) 45%, transparent); }
+.dcrun {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 5px 14px;
+    font-size: 11.5px; color: rgb(var(--c-fog));
+}
+.dcrun .f { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.dcrun .f b { font-size: 13.5px; font-weight: 700; color: rgb(var(--c-tx)); line-height: 1; font-variant-numeric: tabular-nums; }
+/* A FIGURE NOBODY PUBLISHES IS A SENTENCE, not a dash in a column. */
+.dcrun .f.q { font-family: var(--font-mono); font-size: 10.5px; color: rgb(var(--c-dim)); }
+.dcrun .gl { margin-left: auto; display: inline-flex; align-items: center; gap: 7px; }
+.dcrun .gn { font-family: var(--font-mono); font-size: 10px; color: rgb(var(--c-dim)); }
+
+/* ── the open body: the positions filed under the department ───────────── */
+.ovexp .xhd { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 11px; }
+.ovexp .xhd .k {
+    font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: .14em;
+    text-transform: uppercase; color: rgb(var(--c-dim));
+}
+.ovexp .xhd .n { font-size: 11.5px; color: rgb(var(--c-fog)); }
+.ovexp .xhd .n b { color: rgb(var(--c-tx)); }
+.ovexp .xhd .sp { flex: 1; }
+/* POSITIONS ARE CARDS AND THEY DO NOT OPEN, so they may sit in a grid. */
+.poscards { display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: 12px; }
+.poscard {
+    display: block; text-decoration: none; color: inherit;
+    border: 1px solid var(--c-ln); border-radius: 12px; padding: 12px 13px;
+    background: color-mix(in srgb, rgb(var(--c-raised)) 50%, transparent);
+}
+.poscard:hover { border-color: color-mix(in srgb, rgb(var(--c-acc)) 45%, transparent); }
+.poscardhd { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+.poscardhd b { font-size: 13px; font-weight: 600; flex: 1; min-width: 0; color: rgb(var(--c-tx)); }
+.pospin {
+    min-width: 20px; height: 20px; padding: 0 5px; flex: none; border-radius: 6px;
+    display: grid; place-items: center;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    color: rgb(var(--c-acc)); background: color-mix(in srgb, rgb(var(--c-acc)) 12%, transparent);
+    border: 1px solid color-mix(in srgb, rgb(var(--c-acc)) 40%, transparent);
+}
+.pospin.hollow { color: rgb(var(--c-dim)); background: none; border-style: dashed; border-color: var(--c-ln2); }
+.poscardppl { display: flex; align-items: center; gap: 9px; margin-top: 11px; }
+.poscardlead { font-family: var(--font-mono); font-size: 10.5px; color: rgb(var(--c-fog)); }
+.poscardppl.empty .poscardlead { color: rgb(var(--c-warn)); }
+.poscardfoot {
+    display: flex; align-items: center; gap: 10px; margin-top: 11px; padding-top: 10px;
+    border-top: 1px dashed var(--c-ln);
+}
+.poscardfoot .k { font-family: var(--font-mono); font-size: 9px; color: rgb(var(--c-dim)); }
+.poscardfoot .btn { margin-left: auto; }
+/* THE ADD TILE IS A CELL OF THE SAME GRID, in the house's dashed treatment. */
+.poscard.add {
+    border-style: dashed; background: none; display: flex; flex-direction: column;
+    justify-content: center; gap: 4px; text-align: center; color: rgb(var(--c-fog));
+}
+.poscard.add .t { display: inline-flex; align-items: center; justify-content: center; gap: 7px; font-size: 12.5px; font-weight: 600; color: rgb(var(--c-acc)); }
+.poscard.add .d { font-family: var(--font-mono); font-size: 9.5px; color: rgb(var(--c-dim)); }
+
+/* ── the footer: the operations, each on its own line ──────────────────── */
+.dc-line { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; color: rgb(var(--c-fog)); }
+.dc-line .sp { flex: 1; }
+.dc-line b { color: rgb(var(--c-tx)); }
+.dc-line .k {
+    font-family: var(--font-mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase;
+    color: rgb(var(--c-dim));
+}
+.dc-scopeform, .dc-renameform { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.dc-scopeform .fld, .dc-renameform .fld { min-width: 180px; flex: 1 1 180px; font-size: 12px; }
+/* THE CONSEQUENCE IS STATED WHERE THE CONTROL IS, never in a dialog the
+   reader has to open to find out what the button does. */
+.sbn { flex-basis: 100%; font-size: 11.5px; line-height: 1.5; color: rgb(var(--c-dim)); }
+
+/* The group heading inside a foldable section, and the find row that holds
+   the search beside the pills. */
+.nvgrp { display: flex; align-items: center; gap: 10px; margin: 16px 0 11px; }
+.ov-find { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+/* The scope line reads as a sentence with its control at the end of it. */
+.dc-scopeline { align-items: flex-start; }

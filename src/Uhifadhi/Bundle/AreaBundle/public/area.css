@@ -1221,17 +1221,9 @@ a.zc-nm:hover { color: rgb(var(--c-acc)); }
 /* THE EXPANDER. A link and not a button, because opening a card is an address
    here: the page draws the card the query names, so the state survives a write
    and a reload the way every other page state on this screen does. */
-.ovx {
-    border: 1px solid var(--c-ln2); background: none; color: rgb(var(--c-fog));
-    border-radius: 6px; width: 20px; height: 20px; flex: none; padding: 0;
-    display: grid; place-items: center; text-decoration: none;
-}
-.ovx:hover { color: rgb(var(--c-tx)); border-color: rgb(var(--c-fog)); }
-.ovx svg { width: 11px; height: 11px; display: block; transition: transform .15s ease; }
-.ovx[aria-expanded="true"] { color: rgb(var(--c-acc)); border-color: color-mix(in srgb, rgb(var(--c-acc)) 45%, transparent); }
-.ovx[aria-expanded="true"] svg { transform: rotate(90deg); }
+
 .zcard.on { border-color: color-mix(in srgb, rgb(var(--c-acc)) 42%, transparent); box-shadow: inset 3px 0 0 rgb(var(--c-acc)); }
-.nmrow { display: flex; align-items: center; gap: 8px; }
+
 .zc-rule { border: 0; border-top: 1px solid var(--c-ln); margin: 11px 0; }
 
 /* A FORM AROUND ONE CONTROL IS NOT A ROW OF ITS OWN. Each destructive control
@@ -1423,7 +1415,7 @@ a.zc-nm:hover { color: rgb(var(--c-acc)); }
 /* A CLOSED POST READS AS ONE, and is only here when it is asked for. */
 .zcard.stinactive { opacity: .72; }
 .zcard.stinactive .zc-nm { color: rgb(var(--c-fog)); }
-.chip.stoff { margin-left: 2px; }
+
 
 /* "DERIVED, NEVER CHOSEN" — the annotation the zone fact always carries. */
 .stflagx {
@@ -1514,19 +1506,10 @@ a.zc-nm:hover { color: rgb(var(--c-acc)); }
 .zn-in { display: inline-flex; align-items: center; gap: 9px; min-width: 0; }
 .zn-in b { font-weight: 600; }
 /* THE ABSENCES, said in words and set apart from the facts beside them. */
-.pnone { font-style: normal; font-size: 11.5px; color: rgb(var(--c-dim)); }
+
 .tav.hollow, .stpin.hollow { color: rgb(var(--c-dim)); background: none; border-style: dashed; border-color: var(--c-ln2); }
 
-/* AN EMPTY CARD SAYS WHICH KIND OF EMPTY IT IS — nothing here, or nothing
-   that matches — and never draws an empty table to say it. */
-.zdnone {
-    display: flex; align-items: center; gap: 11px; flex-wrap: wrap;
-    padding: 18px 2px; font-size: 12.5px; color: rgb(var(--c-fog));
-}
-.zdnone b { font-weight: 600; color: rgb(var(--c-tx)); }
-.zdnone span:last-child {
-    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10.5px; color: rgb(var(--c-dim));
-}
+
 
 /* The one sentence the stations card carries about how a zone is decided. */
 .zpicknote {

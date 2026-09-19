@@ -41,44 +41,133 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
     // ---- the register lists both scope groups, area-first -----------------
 
     /**
-     * THE TWO SCOPES ARE DRAWN APART. Area-level departments come first, under a
-     * heading that names their AREA (read off the contract); org-level after,
-     * under its own heading.
+     * THE TWO SCOPES ARE DRAWN APART, ORG-WIDE FIRST. The register is read
+     * from the organisation inwards: an org-wide department is one every area
+     * inherits, which is the thing a reader has to know before the rest of
+     * the list means anything. Each area's own follow, under its name.
      */
-    public function testTheRegisterGroupsAreaLevelUnderTheirAreaThenOrgLevel(): void
+    public function testTheRegisterGroupsOrgWideFirstThenEachAreasOwn(): void
     {
         $crawler = $this->screen();
 
         $headings = $crawler->filter('[data-dp] .deptgroup .gh')->each(static fn (Crawler $c): string => $c->text());
 
-        self::assertContains('Area-level · Northern Reserve', $headings);
-        self::assertContains('Org-level', $headings);
+        self::assertContains('Org-wide', $headings);
+        self::assertContains('Northern Reserve', $headings);
 
-        // Area-level precedes org-level.
         self::assertLessThan(
-            array_search('Org-level', $headings, true),
-            array_search('Area-level · Northern Reserve', $headings, true),
+            array_search('Northern Reserve', $headings, true),
+            array_search('Org-wide', $headings, true),
         );
     }
 
     /**
-     * EVERY ROW STATES ITS SCOPE in an explicit aligned column: the area's name
-     * for an area-level department, "Org-level" for an org-wide one.
+     * EVERY CARD STATES ITS SCOPE beside its name: the area's name for an
+     * area-level department, "Org-wide" for one the organisation owns.
      */
-    public function testEachRowCarriesItsScopeColumn(): void
+    public function testEachCardCarriesItsScope(): void
     {
         $crawler = $this->screen();
 
-        self::assertSame('Northern Reserve', $this->row($crawler, 'Wetland Management')->filter('.dr-scope .sc-v')->text());
-        self::assertSame('Org-level', $this->row($crawler, 'Ecology')->filter('.dr-scope .sc-v')->text());
+        self::assertSame('Northern Reserve', $this->row($crawler, 'Wetland Management')->filter('.ov-sc')->text());
+        self::assertSame('Org-wide', $this->row($crawler, 'Ecology')->filter('.ov-sc')->text());
     }
 
-    /** The area-level scope column wears the area accent; the org one does not. */
-    public function testTheAreaScopeColumnIsMarkedAsArea(): void
+    /**
+     * AN AREA-LEVEL DEPARTMENT SITS UNDER ITS AREA'S HEADING, which is where
+     * its scope is read from — the card states it too, and the two cannot
+     * disagree because both are the same association.
+     */
+    public function testAnAreaLevelDepartmentSitsUnderItsAreasHeading(): void
     {
         $crawler = $this->screen();
 
-        self::assertStringContainsString('area', (string) $this->row($crawler, 'Wetland Management')->filter('.dr-scope')->attr('class'));
+        $section = $crawler->filter('[data-dp] details.nvsec')
+            ->reduce(static fn (Crawler $c): bool => 'Northern Reserve' === $c->filter('.gh')->text())
+            ->first();
+
+        self::assertSame(
+            ['Wetland Management'],
+            $section->filter('.dcard .ov-nm')->each(static fn (Crawler $c): string => $c->text()),
+        );
+    }
+
+    /**
+     * THE PILLS ARE THE CREATE CHOOSER'S OWN WORDS, in the same order, and
+     * every one of them is a link: the address is the state, so a filtered
+     * register can be sent to somebody.
+     */
+    public function testTheScopePillsFilterTheRegisterOffTheAddress(): void
+    {
+        $this->screen();
+
+        self::assertSame(
+            ['Ecology', 'Protection Service'],
+            $this->named($this->client->request('GET', '/departments?scope=org')),
+        );
+        self::assertSame(
+            ['Wetland Management'],
+            $this->named($this->client->request('GET', '/departments?scope=area')),
+        );
+    }
+
+    /** And the search reads the name, which is what somebody types. */
+    public function testTheSearchReadsTheName(): void
+    {
+        $this->screen();
+
+        self::assertSame(['Wetland Management'], $this->named($this->client->request('GET', '/departments?q=wetland')));
+    }
+
+    /**
+     * A GROUP THE SEARCH EMPTIES STAYS, because a heading that vanished would
+     * make the register look shorter than it is; a group the FILTER excludes
+     * goes, because a heading counting nothing is noise.
+     */
+    public function testASearchEmptiesAGroupAndAFilterRemovesIt(): void
+    {
+        $this->screen();
+
+        $searched = $this->client->request('GET', '/departments?q=wetland');
+        self::assertCount(2, $searched->filter('[data-dp] details.nvsec'));
+
+        $filtered = $this->client->request('GET', '/departments?scope=org');
+        self::assertCount(1, $filtered->filter('[data-dp] details.nvsec'));
+    }
+
+    /**
+     * THE FOCUSED CARD IS THE ONE THE SIDEBAR POINTS AT, and it is marked
+     * apart from the open one: focus is a line down the edge, open is a body.
+     */
+    public function testTheFocusedDepartmentIsMarkedAndIsNotTheOpenOne(): void
+    {
+        $this->screen();
+        $crawler = $this->client->request('GET', '/departments?focus='.$this->uuidOf('Ecology'));
+
+        $card = $this->row($crawler, 'Ecology');
+        self::assertStringContainsString('dcfocus', (string) $card->attr('class'));
+        self::assertStringNotContainsString('dcard on', (string) $card->attr('class'));
+    }
+
+    /** An open card draws the positions filed under it, and the way to add one. */
+    public function testAnOpenCardDrawsThePositionsFiledUnderIt(): void
+    {
+        $this->screen();
+        $crawler = $this->client->request('GET', '/departments?open='.$this->uuidOf('Ecology'));
+
+        $card = $this->row($crawler, 'Ecology');
+        self::assertStringContainsString('Positions in Ecology', $card->text());
+        self::assertStringContainsString('Add position', $card->text());
+    }
+
+    /**
+     * The names in the register, in the order it draws them.
+     *
+     * @return list<string>
+     */
+    private function named(Crawler $crawler): array
+    {
+        return $crawler->filter('[data-dp] .dcard .ov-nm')->each(static fn (Crawler $c): string => $c->text());
     }
 
     // ---- every department opens to its lens -------------------------------
@@ -95,8 +184,8 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
             $row = $this->row($crawler, $name);
             $show = '/departments/'.$this->uuidOf($name);
 
-            self::assertSame($show, $row->filter('.dr-nm')->attr('href'), $name.' name links to its lens');
-            self::assertSame($show, $row->filter('.dr-act a.acc')->attr('href'), $name.' Lens action links to its lens');
+            self::assertSame($show, $row->filter('.ov-nm')->attr('href'), $name.' name links to its lens');
+            self::assertSame($show, $row->filter('.dc-act .ov-open')->attr('href'), $name.' Open action links to its lens');
         }
     }
 
@@ -450,7 +539,7 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
         self::assertInstanceOf(Position::class, $analyst);
 
         // Greyed in the register.
-        self::assertStringContainsString('inactive', (string) $this->row($crawler, 'Ecology')->attr('class'));
+        self::assertStringContainsString('dcinactive', (string) $this->row($crawler, 'Ecology')->attr('class'));
     }
 
     /** A DEACTIVATED department is dropped from the position move control. */
@@ -715,8 +804,8 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
 
     private function row(Crawler $crawler, string $name): Crawler
     {
-        return $crawler->filter('[data-dp] .deptwrap')
-            ->reduce(static fn (Crawler $c): bool => $name === $c->filter('.dr-nm')->text())
+        return $crawler->filter('[data-dp] .dcard')
+            ->reduce(static fn (Crawler $c): bool => $name === $c->filter('.ov-nm')->text())
             ->first();
     }
 

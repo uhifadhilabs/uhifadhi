@@ -1,0 +1,173 @@
+{# ONE DEPARTMENT, AS A CARD ON THE REGISTER.
+
+   Design: departments/index.html.
+
+   THREE LEGIBLE REGIONS, and the house's own split: a banded HEADER with the
+   mark, the name, the scope and what it reads; a BODY that opens to the
+   positions filed under it; and a banded FOOTER where the operations that
+   change the department live — separate work, visibly separate.
+
+   OPEN AND FOCUSED ARE TWO DIFFERENT THINGS. Open is told by the body being
+   there and the chevron having turned. FOCUSED is the card the sidebar's lit
+   entry points at, and it is marked by a 2px accent line down the left edge
+   inset by the card's radius — the accent is the mark, never the ground, and
+   the box does not change size, so nothing below it moves when focus arrives.
+
+   IT ONLY OFFERS WHAT THIS BUNDLE CAN DO. Seats per position and goals are
+   not modelled, so the card states what it knows — who holds a position, and
+   what the attached modules publish — and says the rest in words. #}
+{% set uuid = department.uuidString %}
+{% set area = department.area %}
+{% set filled = people %}
+<article id="d-{{ uuid }}" class="dcard{{ open ? ' on' : '' }}{{ focused ? ' dcfocus' : '' }}{{ department.active ? '' : ' dcinactive' }}"
+         data-department="{{ uuid }}">
+    <div class="dc-hd">
+        <a class="ovx" href="{{ open ? here : here ~ ('?' in here ? '&' : '?') ~ 'open=' ~ uuid ~ '#d-' ~ uuid }}"
+           aria-expanded="{{ open ? 'true' : 'false' }}"
+           aria-label="{{ open ? 'Collapse' : 'Expand' }} {{ department.name }}">{{ ux_icon('shell:chevron-right') }}</a>
+        <span class="ov-mk{{ department.active ? ' on' : '' }}">{{ mark }}</span>
+        <div class="dc-bd">
+            <span class="nmrow">
+                <a class="ov-nm" href="{{ path('team_department_show', {uuid: uuid}) }}">{{ department.name }}</a>
+                <span class="ov-sc">{{ area ? area.name : 'Org-wide' }}</span>
+                {% if not department.active %}<span class="chip stoff">inactive</span>{% endif %}
+            </span>
+            <div class="dc-sub">
+                {%- if modules is not empty -%}
+                    Reads <b>{{ modules|map(m => m.name)|join('</b>, <b>')|raw }}</b>
+                    {{- area ? ' in ' ~ area.name : ' across every area' }}
+                {%- else -%}
+                    Attaches no module yet &mdash; it shapes emphasis and holds positions
+                {%- endif -%}
+                &middot; {{ positions|length }} position{{ positions|length == 1 ? '' : 's' }}
+                &middot; <b>{{ filled }}</b> {{ filled == 1 ? 'person' : 'people' }}
+            </div>
+        </div>
+        <div class="dc-act">
+            <a class="ov-open" href="{{ path('team_department_show', {uuid: uuid}) }}" title="Open {{ department.name }}">Open {{ ux_icon('shell:arrow-right') }}</a>
+        </div>
+        {# WHAT THE ATTACHED MODULES PUBLISH. A department that attaches one
+           which publishes nothing for the period says that, in the module's
+           name, rather than leaving the run empty. #}
+        <div class="dcrun">
+            {% for figure in figures %}
+                <span class="f"><b>{{ figure.display }}</b>{{ figure.unit }} {{ figure.label|lower }}</span>
+            {% else %}
+                <span class="f q">{{ modules is empty ? 'No module attached — no figure' : 'The attached modules publish no figure for this period' }}</span>
+            {% endfor %}
+            {# GOALS ARE DEFERRED, and the card says so in the house's words
+               rather than drawing an empty dot rail. #}
+            <span class="gl"><span class="gn">Goals not kept yet</span></span>
+        </div>
+    </div>
+
+    {% if open %}
+        <div class="dc-body">
+            <div class="ovexp">
+                <div class="xhd">
+                    <span class="k">Positions in {{ department.name }}</span>
+                    <span class="n"><b>{{ positions|length }}</b> position{{ positions|length == 1 ? '' : 's' }} &middot; <b>{{ filled }}</b> {{ filled == 1 ? 'person' : 'people' }}</span>
+                    <span class="sp"></span>
+                    <a class="softbtn" href="{{ path('team_positions') }}">Open the positions page</a>
+                </div>
+
+                {# THE POSITIONS AS CARDS, three to a row, with the dashed add
+                   tile in the same grid — the house's add treatment.
+
+                   SEATS ARE NOT MODELLED, so a card states who holds the
+                   position and nothing about how many could. "3 of 4 filled"
+                   arrives with a seat count on the position itself. #}
+                <div class="poscards">
+                    {% for position in positions %}
+                        {% set held = holders[position.uuidString]|default(0) %}
+                        <a class="poscard" href="{{ path('team_positions', {position: position.uuidString}) }}">
+                            <div class="poscardhd">
+                                <span class="pospin{{ held ? '' : ' hollow' }}">{{ held ?: '' }}</span>
+                                <b>{{ position.name }}</b>
+                            </div>
+                            <div class="poscardppl{{ held ? '' : ' empty' }}">
+                                <span class="poscardlead">
+                                    {{- held ? held ~ ' ' ~ (held == 1 ? 'person holds it' : 'people hold it') : 'nobody holds it yet' -}}
+                                </span>
+                            </div>
+                            <div class="poscardfoot">
+                                <span class="k">{{ area ? area.name|lower : 'org-wide' }}</span>
+                                <span class="btn sm">Manage position &rarr;</span>
+                            </div>
+                        </a>
+                    {% else %}
+                        <div class="zdnone">
+                            <span class="pospin hollow"></span>
+                            <b>No position filed under {{ department.name }}</b>
+                            <span>a department holds nobody directly &mdash; it holds the positions people fill</span>
+                        </div>
+                    {% endfor %}
+                    <a class="poscard add" href="{{ path('team_positions') }}">
+                        <span class="t">{{ ux_icon('shell:plus') }} Add position</span>
+                        <span class="d">in {{ department.name }} &middot; inherits its scope</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="dc-foot">
+        {# THE SCOPE, AND THE ONE CONTROL THAT CHANGES IT. Both consequences
+           are stated; the control drawn is the one this department can take. #}
+        <div class="dc-line dc-scopeline">
+            <span><b>Scope</b> &middot; <b>{{ area ? area.name : 'org-wide' }}</b> &mdash; {{ area ? 'the other areas do not see it' : 'every area reads it' }}</span>
+            <span class="sp"></span>
+            <form class="dc-scopeform" method="post" action="{{ path('team_department_scope', {uuid: uuid}) }}">
+                <input type="hidden" name="_token" value="{{ csrfToken }}">
+                {% if area %}
+                    <input type="hidden" name="scope" value="org">
+                    <input class="fld" type="text" name="reason" placeholder="Why promote {{ department.name }}?" aria-label="Reason for promoting {{ department.name }}" required>
+                    <button class="softbtn" type="submit">Promote to org-wide</button>
+                    <span class="sbn">Its {{ positions|length }} position{{ positions|length == 1 ? '' : 's' }} and the {{ filled }} {{ filled == 1 ? 'person' : 'people' }} in them widen to <b>every area</b>, which grants what they hold everywhere.</span>
+                {% else %}
+                    <input type="hidden" name="scope" value="area">
+                    <select name="area" aria-label="Confine {{ department.name }} to area">
+                        {% for option in areas %}<option value="{{ option.uuidString }}">{{ option.name }}</option>{% endfor %}
+                    </select>
+                    <input class="fld" type="text" name="reason" placeholder="Why confine {{ department.name }}?" aria-label="Reason for confining {{ department.name }}" required>
+                    <button class="softbtn danger" type="submit">Confine to area</button>
+                    <span class="sbn">Its {{ positions|length }} position{{ positions|length == 1 ? '' : 's' }}, the {{ filled }} {{ filled == 1 ? 'person' : 'people' }} in them and its figures narrow to that area; the other areas stop inheriting it.</span>
+                {% endif %}
+            </form>
+        </div>
+        {# THE NAME, AND THE TWO OPERATIONS THAT ARE NOT THE SCOPE. Written
+           openly in the footer rather than folded behind a kebab: a menu that
+           needs a script to open is a menu a page without one cannot offer,
+           and these are the operations an administrator came here for. #}
+        <div class="dc-line">
+            <form class="dc-renameform" method="post" action="{{ path('team_department_rename', {uuid: uuid}) }}">
+                <input type="hidden" name="_token" value="{{ csrfToken }}">
+                <span class="k">Name</span>
+                <input class="fld" type="text" name="name" value="{{ department.name }}" maxlength="120" aria-label="Rename {{ department.name }}" required>
+                <button class="softbtn" type="submit">Rename</button>
+            </form>
+            <span class="sp"></span>
+            {% if department.active %}
+                {# DEACTIVATE, NEVER DELETE, and the footprint informs rather
+                   than guards: the shared confirm modal states what stays
+                   filed, and the administrator proceeds. #}
+                <form method="post" action="{{ path('team_department_deactivate', {uuid: uuid}) }}" data-deactivate>
+                    <input type="hidden" name="_token" value="{{ csrfToken }}">
+                    <button class="softbtn danger" type="submit"
+                            {{ stimulus_controller('confirm-modal') }}
+                            data-action="click->confirm-modal#ask"
+                            data-confirm-modal-title-value="Deactivate “{{ department.name }}”?"
+                            data-confirm-modal-message-value="{% if positions|length %}{{ positions|length }} position{{ positions|length == 1 ? '' : 's' }} ({{ filled }} {{ filled == 1 ? 'person' : 'people' }}) stay filed under it and keep what they grant.{% else %}Nothing is filed under it — an empty footprint.{% endif %} It is hidden from the pickers and greyed in the register; nothing is deleted, and it is one click from coming back."
+                            data-confirm-modal-confirm-label-value="Deactivate anyway"
+                            data-confirm-modal-danger-value="true">Deactivate anyway</button>
+                </form>
+            {% else %}
+                <form method="post" action="{{ path('team_department_reactivate', {uuid: uuid}) }}">
+                    <input type="hidden" name="_token" value="{{ csrfToken }}">
+                    <button class="softbtn" type="submit">Reactivate</button>
+                </form>
+            {% endif %}
+        </div>
+
+    </div>
+</article>
