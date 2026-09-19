@@ -9,7 +9,7 @@
    on this strip the page may state itself: it is the length of a list
    the page already draws. #}
 {% set tiles = nowTiles|slice(0, 4) %}
-<div class="grid kstrip">
+<div class="grid kstrip ao-kstrip">
     {% for tile in tiles %}
         <div class="c kpi{{ tile.tone == 'hot' ? ' hot' : '' }}{{ tile.tone == 'bad' ? ' bad' : '' }}">
             <span class="tab">{{ tile.label }}{% if tile.live %}<span class="src">&middot; <span class="ao-live"><i></i></span></span>{% endif %}</span>

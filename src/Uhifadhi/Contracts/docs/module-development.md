@@ -1430,6 +1430,31 @@ contract that makes it answer a question it has no answer to has started guessin
 linked last, which means you may tune what you own — and only what you own: restating a shell or
 area selector wins by load order and drifts every other surface, which the sheet tests catch.
 
+### The classes the overview lends you
+
+Some of what a contributed cell wears is the surface's, not yours — the contributor tag every card
+carries, the live dot, the attention row, the flow bar, the honest not-installed slot. They are the
+surface's because the surface is what decides that every module's cell reads the same way: a module
+shipping its own flow bar is two flows that drift, and one shipping none renders its segments as
+blue underlined links. Write these and the area's stylesheet dresses them:
+
+<!-- overview-vocabulary -->
+| Class | What it is |
+|---|---|
+| `.ao-by` | the contributor tag every card on this surface wears (`.host`, `.next`, or your slug) |
+| `.ao-live` | the live dot — only on a cell that actually polls |
+| `.ao-att` | one needs-attention row: the surface's row, your content |
+| `.ao-flow` | records by where they have got to; `a.s1`–`a.s5` are the states, `.n` `.s` `.b` the parts, `a.late` the overdue one |
+| `.ao-slot` | the honest not-installed-here affordance |
+| `.ao-slotrow` | one row inside it — `.nm` the name, `.wd` what it would hold, `.st` its state |
+<!-- /overview-vocabulary -->
+
+The list is published as `Overview\OverviewVocabulary::HOST_CLASSES`, so a module's vocabulary test
+can assert that every class its cells write is either its own or one of these. The shell's
+components — `.c`, `.tab`, `.use`, `.kpi`, `.tbl`, `.rln`, `.chip`, `.more`, `.mono`, `.fog`, `.r`
+and the rest — are a layer below and are frozen in `LayoutContract::COMPONENTS`; they are yours to
+write on any surface in the product.
+
 **The zone seam is asked once for the whole set.** A zone has no numbers of its own — the area
 module owns the ground, the name and the ring, and every count over that ground is whichever
 module recorded it — so `ZoneFigureProviderInterface` is the only way a figure reaches a zone

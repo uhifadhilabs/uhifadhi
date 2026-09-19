@@ -63,6 +63,61 @@
 .ao-by.next { border-style: dashed; }
 .ao-by.next i { background: none; border: 1px solid rgb(var(--c-dim)); }
 
+/* ── THE RIGHT-NOW STRIP ───────────────────────────────────────────────────
+   THE CAPTION IS ONE LINE OF TEXT HERE, and that is this surface's own
+   answer rather than a fix: the shell lays a figure card's qualifier out as
+   a flex row, which is right where the qualifier is a run and a chip, and
+   wrong where it is a sentence with one word coloured — "23 urgent · 11
+   patrols · 24 incidents" came out with the red run on a line of its own,
+   because a span inside a flex row is a flex item and not an inline run.
+   The design states the override on the strip, so it is stated here. */
+.ao-kstrip .kpi .sub { display: block; line-height: 1.55; }
+
+/* ── THE FIVE-STATE FLOW BAR ───────────────────────────────────────────────
+   Open records by where they have got to: one bar, one segment per state,
+   the rail under each segment fading as the state gets further along.
+
+   HOST VOCABULARY, LIKE `.ao-by`. The bar is drawn by a MODULE'S cell — the
+   incidents module's, today — and the rules are the surface's, because the
+   surface is what decides that every module's flow reads the same way. A
+   module that shipped its own copy would have two flows that drift, and one
+   that shipped none rendered its segments as blue underlined links, which is
+   what happened. The published list of classes a contributed cell may use is
+   in module-development.md §7. */
+.ao-flow { display: flex; gap: 5px; margin: 8px 0 4px; }
+.ao-flow a {
+    flex: 1; text-decoration: none; display: flex; flex-direction: column; gap: 6px;
+    padding: 11px 10px 10px; border-radius: 10px; border: 1px solid var(--c-ln);
+    background: rgb(var(--c-raised)); min-width: 0;
+}
+.ao-flow a:hover { border-color: rgb(var(--c-acc)); text-decoration: none; }
+.ao-flow a .n {
+    font-family: var(--font-display); font-size: 22px; font-weight: 700;
+    letter-spacing: -.03em; color: rgb(var(--c-tx)); line-height: 1; font-variant-numeric: tabular-nums;
+}
+.ao-flow a .s {
+    font-family: var(--font-mono); font-size: 8.5px; font-weight: 600;
+    letter-spacing: .1em; text-transform: uppercase; color: rgb(var(--c-fog));
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+/* THE RAIL FADES ALONG THE FLOW, so the order of the states is legible
+   without reading a word of them. */
+.ao-flow a .b { height: 3px; border-radius: 2px; background: rgb(var(--c-acc)); opacity: .75; }
+.ao-flow a.s1 .b { opacity: .95; }
+.ao-flow a.s2 .b { opacity: .78; }
+.ao-flow a.s3 .b { opacity: .6; }
+.ao-flow a.s4 .b { opacity: .42; }
+.ao-flow a.s5 .b { opacity: .26; }
+/* A STATE THAT IS OVERDUE IS THE ONE COLOURED THING on the bar. */
+.ao-flow a.late { border-color: color-mix(in srgb, rgb(var(--c-fail)) 48%, transparent); }
+.ao-flow a.late .n { color: rgb(var(--c-fail)); }
+.ao-flow a.late .b { background: rgb(var(--c-fail)); }
+
+@media (max-width: 900px) {
+    .ao-flow { flex-wrap: wrap; }
+    .ao-flow a { flex: 1 1 30%; }
+}
+
 /* ── Tables ───────────────────────────────────────────────────────────────── */
 .tbl { width: 100%; border-collapse: collapse; font-size: 13.5px; }
 

@@ -97,7 +97,9 @@ final class AreaOverviewTest extends WebTestCase
         $this->boot();
         $this->signIn();
 
-        self::assertStringContainsString('class="grid kstrip"', $this->body($this->anArea()));
+        // AND THE SURFACE'S OWN MODIFIER BESIDE IT, which is where this
+        // strip says its qualifier is a line of text rather than a row.
+        self::assertStringContainsString('class="grid kstrip ao-kstrip"', $this->body($this->anArea()));
     }
 
     /**
