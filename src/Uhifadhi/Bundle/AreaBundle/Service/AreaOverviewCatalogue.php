@@ -15,6 +15,7 @@ namespace Uhifadhi\Bundle\AreaBundle\Service;
 
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Overview\OverviewContributorInterface;
+use Uhifadhi\Bundle\AreaBundle\Overview\OverviewStylesheetsInterface;
 use Uhifadhi\Bundle\AreaBundle\Widget\AreaOverviewWidgets;
 use Uhifadhi\Bundle\ShellBundle\Widget\Model\Widget;
 use Uhifadhi\Bundle\ShellBundle\Widget\Model\WidgetCatalog;
@@ -147,6 +148,59 @@ final readonly class AreaOverviewCatalogue
     }
 
     /**
+     * HOW MANY CELLS EACH MODULE PUTS ON THIS AREA'S PAGE, by slug.
+     *
+     * The area's own cards are not a contribution to anybody, so the area's
+     * own contributor is left out: this answers "what does installing this
+     * module actually add here", which is the question the modules card is
+     * about.
+     *
+     * @return array<string, int>
+     */
+    public function widgetCountsFor(AreaOfInterest $area): array
+    {
+        $counts = [];
+        foreach ($this->contributorsFor($area) as $contributor) {
+            $slug = $contributor->moduleSlug();
+            if (AreaOverviewWidgets::SLUG === $slug) {
+                continue;
+            }
+
+            $counts[$slug] = \count($contributor->widgets());
+        }
+
+        return $counts;
+    }
+
+    /**
+     * THE STYLESHEETS THIS AREA'S CELLS NEED, in order and each one once.
+     *
+     * A module's cell is drawn on the area's page, and the page links the
+     * sheets it knows about — its own, the shell's, the atlas's. Anything a
+     * module's own cells wear comes from the module's own sheet, so the
+     * module publishes it and the surface links it after its own.
+     *
+     * @return list<string>
+     */
+    public function stylesheetsFor(AreaOfInterest $area): array
+    {
+        $sheets = [];
+        foreach ($this->contributorsFor($area) as $contributor) {
+            if (!$contributor instanceof OverviewStylesheetsInterface) {
+                continue;
+            }
+
+            foreach ($contributor->stylesheets() as $sheet) {
+                if ('' !== $sheet && !\in_array($sheet, $sheets, true)) {
+                    $sheets[] = $sheet;
+                }
+            }
+        }
+
+        return $sheets;
+    }
+
+    /**
      * THE CONTRIBUTORS THIS AREA ACTUALLY HAS — its own, and one per module
      * it runs. A module the area has not switched on is not asked, which is
      * what makes its cells disappear from the library rather than go blank.
@@ -166,7 +220,7 @@ final readonly class AreaOverviewCatalogue
          * the page in one installation and the last in another.
          */
         $own = null;
-        $modules = [];
+        $bySlug = [];
         foreach ($this->contributors as $contributor) {
             $slug = $contributor->moduleSlug();
             if (AreaOverviewWidgets::SLUG === $slug) {
@@ -175,8 +229,20 @@ final readonly class AreaOverviewCatalogue
                 continue;
             }
 
-            if (\in_array($slug, $running, true)) {
-                $modules[] = $contributor;
+            $bySlug[$slug] = $contributor;
+        }
+
+        /*
+         * AND THE MODULES COME IN THE AREA'S OWN ORDER — the order its
+         * Modules tab lists them in, which is the order somebody arranged.
+         * Tag order is the order the container happened to build services
+         * in: it put incidents left of patrols on one page and the other way
+         * about on another, and nobody could say why.
+         */
+        $modules = [];
+        foreach ($running as $slug) {
+            if (isset($bySlug[$slug])) {
+                $modules[] = $bySlug[$slug];
             }
         }
 

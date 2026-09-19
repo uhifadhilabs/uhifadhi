@@ -1,59 +1,71 @@
-{# MODULES IN THIS AREA — which are switched on here, and the way into each.
+{# MODULES IN THIS AREA — what each one contributes to this page, and since
+   when.
+
+   Design: areas/<area>/overview.widgets.js (the `modules` widget).
 
    THE REGISTRY'S OWN CELL, and the only one on this page that is about the
    composition rather than about the ground. It states what the area runs
    against what the installation HAS, because "three modules" means nothing
    without "of nine": an area is deliberately narrower than the catalogue.
 
-   EVERY ROW IS A MODULE'S ENTRY ROUTE, resolved live from its provider, so
-   uninstalling one takes its row with it rather than leaving a dead link. #}
-<div class="c">
+   A NAME AND A LINK SAID NOTHING. The question a reader has is whether a
+   module is earning its place here, so the row counts what it actually puts
+   on this page — its cells, its tiles, its attention items, its layers —
+   from the seams it registered with. A module that contributes nothing says
+   so; one that is not installed here says that instead.
+
+   SINCE IS THE MONTH THE AREA TOOK IT ON. A row written before the date was
+   recorded has none, and says so — a date nobody wrote down cannot be
+   recovered. #}
+<div class="c" data-w="modules">
     <span class="tab">Modules in this area<span class="src">&middot; {{ moduleCards|length }} installed &middot; {{ catalogueCount }} in the catalogue</span></span>
     <span class="ao-by next"><i></i>the registry</span>
 
-    {% if moduleCards is empty %}
-        {# NOT INSTALLED HERE — the honest-absent state, and it names the
-           three contributions this page is waiting for rather than drawing
-           them empty. Nothing here is invented, because there is nothing. #}
-        <div class="use" style="margin:0 2px 12px"><b>Not installed in this area.</b>
-            Nothing here is drawn with invented data, because there is none.
-            An area with no modules is new, not broken: this page is the frame every module's
-            contribution lands in, and it is empty until one is switched on.</div>
-        <div class="ao-slot">
-            <div class="ao-slotrow">
-                <span class="nm">Right now</span>
-                <span class="wd">A tile per module with something happening this minute, in that module&rsquo;s own words.</span>
-                <span class="st">awaiting a module</span>
-            </div>
-            <div class="ao-slotrow">
-                <span class="nm">Needs attention</span>
-                <span class="wd">A row per thing a module says somebody has to act on, sorted by urgency across all of them.</span>
-                <span class="st">awaiting a module</span>
-            </div>
-            <div class="ao-slotrow">
-                <span class="nm">Map layers</span>
-                <span class="wd">The plate already draws the area&rsquo;s boundary and zones; each module adds the data it owns as its own layer.</span>
-                <span class="st">awaiting a module</span>
-            </div>
-        </div>
-        {% if is_granted('module.view') %}
-            <div class="rln" style="margin-top:12px">
-                <span class="fog">Switch one on</span>
-                <span class="mono acc" style="font-size:11px"><a href="{{ path('area_modules', {uuid: area.uuidString}) }}">the Modules tab &rarr;</a></span>
-            </div>
-        {% endif %}
+    {% if moduleTable is empty %}
+        <div class="use" style="margin:0 2px 8px"><b>Nothing in the catalogue.</b> This installation carries no module yet.</div>
     {% else %}
-        <div class="ao-slot">
-            {% for module in moduleCards %}
-                <div class="ao-slotrow">
-                    <span class="nm">{{ module.title }}</span>
-                    <span class="wd">{{ module.source ?? 'reads what it records in this area' }}</span>
-                    <span class="st">
-                        {%- if module.url %}<a class="more" href="{{ module.url }}">Open &rarr;</a>
-                        {%- else %}{{ module.status }}{% endif -%}
-                    </span>
-                </div>
-            {% endfor %}
-        </div>
+        <table class="tbl">
+            <thead>
+                <tr><th>module</th><th>contributes here</th><th class="num">since</th></tr>
+            </thead>
+            <tbody>
+                {% for row in moduleTable %}
+                    <tr>
+                        <td{{ row.installed ? '' : ' class="d"' }}>
+                            <i class="mdot{{ row.installed ? '' : ' off' }}"{% if row.swatch %} style="background:{{ row.swatch }}"{% endif %}></i>
+                            {%- if row.installed and row.url -%}
+                                <a href="{{ row.url }}">{{ row.name }}</a>
+                            {%- else -%}
+                                {{ row.name }}
+                            {%- endif -%}
+                        </td>
+                        <td class="{{ row.installed ? 'fog' : 'd' }}">
+                            {%- if not row.installed -%}
+                                nothing &mdash; not installed in this area
+                            {%- elseif row.parts is empty -%}
+                                installed &mdash; nothing on this page yet
+                            {%- else -%}
+                                {{ row.parts|join(' &middot; ')|raw }}
+                            {%- endif -%}
+                        </td>
+                        <td class="num mono{{ row.since ? '' : ' d' }}">
+                            {%- if row.since -%}
+                                <time datetime="{{ row.since|date('c') }}" data-localtime-format="day">{{ row.since|date('M Y')|lower }}</time>
+                            {%- else -%}
+                                &mdash;
+                            {%- endif -%}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    <div class="use">A module is installed <b>per area</b>. Everything it contributes appears the moment it is, and leaves
+        the moment it is not &mdash; including its tiles inside this page&rsquo;s own strip and its items inside its
+        attention list.</div>
+
+    {% if is_granted('module.view') %}
+        <a class="open-btn" href="{{ path('area_modules', {uuid: area.uuidString}) }}" style="margin-top:8px">Add a module to this area &rarr;</a>
     {% endif %}
 </div>

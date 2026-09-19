@@ -66,6 +66,27 @@ final class BaseTypeTest extends TestCase
     }
 
     /**
+     * A STRIP NESTED IN A CELL IS SPACED ONCE, not twice.
+     *
+     * Measured on the area overview: the figure strip inside a widget cell
+     * read forty pixels from the card under it where every other pair reads
+     * twenty, because the strip's own bottom margin stacked with the grid's
+     * gap. The nesting rule knew about `.grid` and not about `.w-cell`, which
+     * is the same nesting — so both containers are named in the one rule,
+     * and the arithmetic is not written a third time in a per-cell override.
+     */
+    public function testAStripNestedInAWidgetCellGivesItsMarginBack(): void
+    {
+        $shell = self::shell();
+
+        self::assertMatchesRegularExpression(
+            '/\.grid\s*>\s*\.grid,\s*\.w-cell\s*>\s*\.grid\s*\{[^}]*margin-bottom:\s*0/',
+            $shell,
+            'A nested strip is spaced by its container, in one rule, for both containers.',
+        );
+    }
+
+    /**
      * NO LAYERED SHEET RESTATES THE CARD LABEL. It is the shell's, at the
      * design's 9.5px, and a second copy of it is how one screen ends up
      * wearing a different size from the rest of the product.

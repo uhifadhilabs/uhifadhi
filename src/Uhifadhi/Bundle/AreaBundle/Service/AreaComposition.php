@@ -123,6 +123,29 @@ final readonly class AreaComposition
     }
 
     /**
+     * WHEN THIS AREA TOOK EACH MODULE ON, by slug.
+     *
+     * A row written before the date was recorded has none, and says so on
+     * the page: a date nobody wrote down cannot be recovered, and an
+     * invented one would be read as a fact.
+     *
+     * @return array<string, \DateTimeImmutable>
+     */
+    public function installedAtBySlug(AreaOfInterest $area): array
+    {
+        $dates = [];
+        foreach ($this->areaModules->activeFor($area) as $assignment) {
+            $slug = $assignment->getModule()?->getSlug();
+            $at = $assignment->getInstalledAt();
+            if (\is_string($slug) && null !== $at) {
+                $dates[$slug] = $at;
+            }
+        }
+
+        return $dates;
+    }
+
+    /**
      * WHAT THIS AREA HAS SWITCHED ON *AND* STILL HAS INSTALLED, in the area's own
      * order.
      *

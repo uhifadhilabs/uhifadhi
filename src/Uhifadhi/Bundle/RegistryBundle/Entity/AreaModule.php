@@ -63,6 +63,16 @@ class AreaModule
     #[ORM\Column(name: 'position')]
     private int $position = 0;
 
+    /**
+     * WHEN THIS AREA SWITCHED IT ON — the "since" an area's own page states
+     * beside what the module contributes here.
+     *
+     * NULLABLE, because rows written before this was recorded cannot be
+     * dated and a made-up date is worse than none: those say so instead.
+     */
+    #[ORM\Column(name: 'installed_at', type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $installedAt = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -100,6 +110,18 @@ class AreaModule
     public function setActive(bool $active): static
     {
         $this->active = $active;
+
+        return $this;
+    }
+
+    public function getInstalledAt(): ?\DateTimeImmutable
+    {
+        return $this->installedAt;
+    }
+
+    public function setInstalledAt(?\DateTimeImmutable $installedAt): static
+    {
+        $this->installedAt = $installedAt;
 
         return $this;
     }

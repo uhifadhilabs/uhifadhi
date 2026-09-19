@@ -455,6 +455,17 @@ body::before {
    shell names no module (BoundaryTest), so it ships no per-module hue of its own. */
 .ntree .ntm .mdot { width: 6px; height: 6px; border-radius: 2px; background: rgb(var(--c-acc)); flex: none; }
 
+/* THE SAME DOT AWAY FROM THE SIDEBAR — in a table that names modules, for
+   one. Scoping the only definition to the tree left every other use of the
+   mark as a nothing-sized transparent span; the component is the component
+   wherever it is written, and the sidebar's own sizing stays above. */
+.mdot {
+    display: inline-block; width: 7px; height: 7px; border-radius: 2px;
+    background: rgb(var(--c-acc)); margin-right: 7px; flex: none;
+}
+/* A MODULE THIS AREA HAS NOT TAKEN ON is drawn as the outline of one. */
+.mdot.off { background: none; border: 1px dashed rgb(var(--c-dim)); }
+
 /* THE SIDEBAR'S FOURTH LEVEL — a module's own screens under its module row.
    nav.css stops at .ntm (level three: the installed modules). A screen list
    under one module needs a fourth rung, and it continues the same system:
@@ -565,8 +576,15 @@ h2.zone::after { content: ""; flex: 1; height: 1px; background: var(--c-ln2); }
    spaces it from what follows, and the two together read as forty pixels
    where every other pair of cards is twenty. A strip that is the first band
    of a page keeps its own margin, which is how it is spaced from the card
-   under it. */
-.grid > .grid { margin-bottom: 0; }
+   under it.
+
+   A WIDGET CELL IS A GRID CELL TOO. A composed surface puts each widget in a
+   `.w-cell` of the widget grid, so a strip inside one is nested exactly as a
+   strip inside a `.grid` is — and the same gap would stack the same forty
+   pixels. One rule, both containers; a per-cell override would be the third
+   place this arithmetic is written. */
+.grid > .grid,
+.w-cell > .grid { margin-bottom: 0; }
 .g2 { grid-template-columns: 1fr 1fr; }
 .g3 { grid-template-columns: 1fr 1fr 1fr; }
 .g4 { grid-template-columns: repeat(4, 1fr); }
@@ -776,12 +794,17 @@ h2.zone::after { content: ""; flex: 1; height: 1px; background: var(--c-ln2); }
 .factband .f .v { font-size: 13px; font-weight: 600; color: rgb(var(--c-tx)); font-variant-numeric: tabular-nums; }
 .factband .f .v em { font-style: normal; font-size: 10.5px; color: rgb(var(--c-fog)); margin-left: 3px; }
 .factband .sp { flex: 1; }
-.factband .more {
+/* THE QUIET FORWARD LINK — the one at the end of a band, and the one at the
+   end of a card's row. Scoping it to `.factband` left every other `.more` in
+   the product as a browser default: blue and underlined inside a card, which
+   is how the modules cell's "Open →" came to be the loudest thing on the
+   area overview. The component is the component wherever it is written. */
+.more {
     font-family: var(--font-mono); font-size: 9.5px; font-weight: 600;
     letter-spacing: .1em; text-transform: uppercase; color: rgb(var(--c-fog)); text-decoration: none;
     padding: 9px 15px; background: none; border: 0; cursor: pointer;
 }
-.factband .more:hover { color: rgb(var(--c-acc)); }
+.more:hover { color: rgb(var(--c-acc)); }
 @media (max-width: 900px) { .factband .f + .f::before { display: none; } }
 
 /* ---- THE KPI PLATE — a label on the tab, one number, one sub-line --------

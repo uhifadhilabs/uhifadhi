@@ -1,0 +1,9 @@
+{# A CONTRIBUTED CARD, written the way the contract documents one: rendered
+   with `with_context: false`, everything in ONE map, this module's own
+   figures under `by.incidents`. It reads nothing else, which is what makes it
+   a test of the host rather than of itself. #}
+<div class="c" data-w="incidents_now">
+    <span class="tab">Out right now<span class="src">&middot; {{ by.incidents.out }} open</span></span>
+    <span class="ao-by incidents"><i></i>incidents</span>
+    <div class="use">{{ by.incidents.walked }} km walked today.</div>
+</div>

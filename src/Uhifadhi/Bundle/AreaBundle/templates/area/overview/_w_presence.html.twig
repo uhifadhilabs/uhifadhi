@@ -1,24 +1,20 @@
 {# STATIONS & WHO IS ON — the slot the roster's card will fill.
 
+   Design: areas/<area>/overview.widgets.js (RO·C1, the roster's own list).
+
    THE SLOT IS HELD OPEN ON PURPOSE. The design's composition has a roster
    card here; this installation's roster does not publish one yet. Dropping
-   the cell would leave the row half empty and say nothing about why, so the
-   slot says which module owes it — and the moment roster contributes its own
-   widget, that cell takes this one's place and this one goes.
+   the cell would leave the row half empty and say nothing about why — and
+   the moment roster contributes its own widget, that cell takes this one's
+   place and this one goes.
 
-   IT INVENTS NOTHING. There is no count here, because nobody published one. #}
+   AN ABSENCE IS ONE LINE. It was three sentences and a nested box, which is
+   an essay about a card that has nothing in it. #}
 <div class="c">
     <span class="tab">Stations &amp; who is on<span class="src">&middot; awaiting the roster</span></span>
     <span class="ao-by next"><i></i>the roster module</span>
-    <div class="use" style="margin:0 2px 4px">Who is on the ground right now &mdash; the shift, the stations manned and
-        the people on them &mdash; is the <b>roster</b>'s to publish, and it does not publish it yet. The area keeps the
-        slot so the page stays the shape it is designed in, and states the absence rather than filling it with
-        something it measured itself.</div>
-    <div class="ao-slot">
-        <div class="ao-slotrow">
-            <span class="nm">Who is on</span>
-            <span class="wd">Contributed through <b>the overview widget contribution</b>, the same seam every other cell on this page arrives by.</span>
-            <span class="st">awaiting the module</span>
-        </div>
-    </div>
+    <div class="use" style="margin:0 2px">Nothing to show until the roster module is installed.</div>
+    {% if is_granted('module.view') %}
+        <a class="more" href="{{ path('area_modules', {uuid: area.uuidString}) }}">The Modules tab &rarr;</a>
+    {% endif %}
 </div>

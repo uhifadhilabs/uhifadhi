@@ -30,6 +30,16 @@
        it, so there is one Leaflet and one copy of its styles. #}
     <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Bundle\\AtlasBundle\\AtlasBundle::STYLESHEET')) }}">
     {{ include('@Area/_stylesheets.html.twig') }}
+    {# AND EACH CONTRIBUTING MODULE'S OWN SHEET, once and last. A module's
+       cell is drawn here and its rules live in its own package; without this
+       the cell renders with every class it wrote undefined, which is how an
+       incident cell's flow bar came out as blue underlined links. Last, so a
+       module may tune what it owns — and only what it owns: the page's own
+       vocabulary is the area's and restating it is caught by the sheet
+       tests, here as everywhere. #}
+    {% for sheet in moduleStylesheets %}
+        <link rel="stylesheet" href="{{ asset(sheet) }}">
+    {% endfor %}
 {% endblock %}
 
 {% block shell_breadcrumbs %}

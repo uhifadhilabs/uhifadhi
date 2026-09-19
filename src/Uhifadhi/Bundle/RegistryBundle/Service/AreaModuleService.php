@@ -109,6 +109,10 @@ final readonly class AreaModuleService
             ->setArea($area)
             ->setModule($module)
             ->setActive(true)
+            // THE DAY THIS AREA TOOK IT ON, recorded once and never again:
+            // switching a module off and on is not a new install, so the
+            // branch above leaves the date it already has alone.
+            ->setInstalledAt(new \DateTimeImmutable())
             ->setPosition($this->nextPosition($area));
 
         $this->em->persist($assignment);

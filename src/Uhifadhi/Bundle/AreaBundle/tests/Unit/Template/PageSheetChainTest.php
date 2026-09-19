@@ -200,6 +200,22 @@ final class PageSheetChainTest extends TestCase
             foreach ($matches[1] as $included) {
                 $queue[] = 'templates/'.$included;
             }
+
+            /*
+             * A COMPOSED SURFACE INCLUDES BY VARIABLE, and a partial nothing
+             * names statically is a partial this check cannot see — which is
+             * how three cells of the area overview came to be rendered with
+             * classes no linked sheet defines. The area's own cells are
+             * reachable by the pattern their contributor publishes, so the
+             * pattern is followed here too.
+             */
+            if (str_contains($templates[$path], 'partials[cell.id]')) {
+                foreach (array_keys($templates) as $candidate) {
+                    if (str_starts_with($candidate, 'templates/area/overview/_w_')) {
+                        $queue[] = $candidate;
+                    }
+                }
+            }
         }
 
         return $sources;

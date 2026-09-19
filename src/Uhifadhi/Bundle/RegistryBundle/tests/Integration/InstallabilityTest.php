@@ -109,7 +109,7 @@ final class InstallabilityTest extends RegistryKernelTestCase
         );
 
         self::assertSame(
-            ['Version20260101000200.php'],
+            ['Version20260101000200.php', 'Version20260919000100.php'],
             array_map(basename(...), glob(\dirname(__DIR__, 2).'/migrations/*.php') ?: []),
             'and the registry ships the version that creates its own two tables',
         );

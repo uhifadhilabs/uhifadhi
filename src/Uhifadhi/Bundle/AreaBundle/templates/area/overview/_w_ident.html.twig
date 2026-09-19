@@ -14,9 +14,6 @@
     </span></span>
     {% if area.iucnCategory %}<span class="f"><span class="k">IUCN</span><span class="v">{{ area.iucnCategory }}</span></span>{% endif %}
     {% if area.establishedYear %}<span class="f"><span class="k">Established</span><span class="v">{{ area.establishedYear }}</span></span>{% endif %}
-    <span class="f"><span class="k">Boundary</span><span class="v">
-        {%- if area.hasBoundary -%}on file{%- else -%}&mdash;<em>not set</em>{%- endif -%}
-    </span></span>
     {# WHERE THE AREA IS, from the database's own centroid — in
        hemispheres, because a minus sign is a fact about a coordinate
        system and south is a fact about the place. #}

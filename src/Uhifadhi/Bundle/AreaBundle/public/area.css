@@ -158,6 +158,7 @@
    to the shell with the rest: one card, one sheet. */
 
 /* ONLY A WIDGET THAT ACTUALLY POLLS MAY WEAR THIS. */
+.ao-live { display: inline-flex; align-items: center; gap: 5px; color: rgb(var(--c-acc)); font-weight: 700; }
 .ao-live i {
     display: inline-block;
     width: 6px;

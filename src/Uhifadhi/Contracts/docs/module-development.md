@@ -1375,6 +1375,7 @@ valid.
 | Interface | Tag | Contributes |
 |---|---|---|
 | `OverviewContributorInterface` | `uhifadhi.overview.widget_provider` | widgets and their render context |
+| `OverviewStylesheetsInterface` | (no tag of its own) | the stylesheet(s) your cells are written against |
 | `NowTileProviderInterface` | `uhifadhi.overview.now_tile` | "right now" tiles in the strip |
 | `AttentionProviderInterface` | `uhifadhi.overview.attention` | items in the attention list |
 | `MapLayerProviderInterface` | `uhifadhi.map.layer` | layers on the area map |
@@ -1389,6 +1390,43 @@ valid.
 Every one of them starts with `moduleSlug()`, and it must return the same slug your
 `ModuleProviderInterface` does: that is how a contribution disappears when an area switches your
 module off.
+
+### What your cell is handed, and what dresses it
+
+A contributed cell is rendered with `with_context: false` and **one** map. Half of it is shared —
+`area`, `now`, `tiles`, `attention`, `layers`, `legend` — and your own figures are under your own
+slug, in `by.<slug>`, exactly what your `context()` returned:
+
+```twig
+{# @Patrol/overview/_w_pl_now.html.twig — patrols' own cell #}
+<div class="c" data-w="pl_now">
+    <span class="tab">Out right now<span class="src">&middot; {{ by.patrols.out }} open</span></span>
+</div>
+```
+
+Read nothing else. A cell that reaches for a variable the page happens to have is a cell that
+breaks when the page is composed differently, and two modules publishing `total` into one flat
+context would silently overwrite each other.
+
+**Your cell wears your stylesheet, and you publish it.** The overview links the shell's sheet, the
+atlas's, the widget grid's and the area's — not yours, which is why a module built against its own
+sheet rendered its cell with every class undefined. Implement `OverviewStylesheetsInterface`
+beside the contributor and the surface links each sheet once, after its own:
+
+```php
+final readonly class PatrolOverviewContributor implements OverviewContributorInterface, OverviewStylesheetsInterface
+{
+    public function stylesheets(): array
+    {
+        return [PatrolBundle::STYLESHEET];
+    }
+}
+```
+
+It is a separate interface so that a module written before it existed goes on working; implement
+both when your cells need styling. Your sheet is linked last, which means you may tune what you
+own — and only what you own: restating a shell or area selector wins by load order and drifts
+every other surface, which the sheet tests catch.
 
 **The zone seam is asked once for the whole set.** A zone has no numbers of its own — the area
 module owns the ground, the name and the ring, and every count over that ground is whichever

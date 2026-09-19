@@ -23,6 +23,10 @@ use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInt
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Environment;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\AreaBundle\Overview\AttentionItem;
+use Uhifadhi\Bundle\AreaBundle\Overview\AttentionSeverity;
+use Uhifadhi\Bundle\AreaBundle\Overview\MapLayer;
+use Uhifadhi\Bundle\AreaBundle\Overview\NowTile;
 use Uhifadhi\Bundle\AreaBundle\Repository\StationRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaComposition;
@@ -176,8 +180,16 @@ final readonly class AreaController
             'map' => $plate,
             'nowTiles' => $tiles,
             'attention' => $attention,
+            // WHAT THE ATTENTION COUNT IS MADE OF — how many are urgent, and
+            // how many each module raised. A count with no breakdown says
+            // "six things somewhere"; the caption is the only place a reader
+            // learns whether it is six of one module's or one each.
+            'attentionSummary' => self::summarise($attention),
             'installedSlugs' => $this->overview->installedSlugs($area),
             'moduleCards' => $this->composition->moduleLinksFor($area),
+            // WHAT EACH MODULE ACTUALLY CONTRIBUTES HERE, and since when —
+            // the modules card is a table of that, not a list of names.
+            'moduleTable' => $this->contributions($area, $tiles, $attention, $mapLayers),
             'catalogueCount' => $this->modules->count(),
             // HOW MANY OF A BOUNDED LIST A CARD DRAWS.
             'latest' => self::ATTENTION_SHOWN,
@@ -188,7 +200,135 @@ final readonly class AreaController
             'cells' => $cells,
             'cellContext' => $cellContext,
             'partials' => $this->catalogue->partialsFor($area),
+            // WHAT THE CONTRIBUTED CELLS ARE DRESSED IN — each contributing
+            // module's own sheet, linked after this bundle's.
+            'moduleStylesheets' => $this->catalogue->stylesheetsFor($area),
         ]));
+    }
+
+    /**
+     * WHAT EVERY MODULE OF THE CATALOGUE CONTRIBUTES TO THIS AREA'S PAGE.
+     *
+     * A NAME AND A LINK SAID NOTHING. "Patrols · Open →" is true of a module
+     * an area switched on this morning and of one that has published nothing
+     * for a year; what a reader is deciding is whether the module is earning
+     * its place here, so the row states what it puts on this page — its
+     * cells, its tiles, its attention items, its layers — and since when.
+     *
+     * THE WHOLE CATALOGUE IS LISTED, the area's own first. "Three modules"
+     * means nothing without "of nine", and a module that is not installed
+     * here is a row that says so rather than a row that is missing.
+     *
+     * @param list<NowTile>       $tiles
+     * @param list<AttentionItem> $attention
+     * @param list<MapLayer>      $layers
+     *
+     * @return list<array{slug: string, name: string, installed: bool, swatch: ?string, parts: list<string>, since: ?\DateTimeImmutable, url: ?string}>
+     */
+    private function contributions(AreaOfInterest $area, array $tiles, array $attention, array $layers): array
+    {
+        $widgets = $this->catalogue->widgetCountsFor($area);
+        $installedOrder = $this->overview->installedSlugs($area);
+
+        $swatches = [];
+        foreach ($layers as $layer) {
+            $swatches[$layer->moduleSlug] ??= $layer->swatch;
+        }
+
+        $since = [];
+        foreach ($this->composition->installedAtBySlug($area) as $slug => $at) {
+            $since[$slug] = $at;
+        }
+
+        $urls = [];
+        foreach ($this->composition->moduleLinksFor($area) as $card) {
+            $urls[$card->slug] = $card->url;
+        }
+
+        $rows = [];
+        foreach ($this->modules->all() as $module) {
+            $slug = (string) $module->getSlug();
+            $installed = \in_array($slug, $installedOrder, true);
+
+            $parts = [];
+            if ($installed) {
+                foreach ([
+                    'widget' => $widgets[$slug] ?? 0,
+                    'now-tile' => self::published($tiles, $slug),
+                    'attention item' => self::published($attention, $slug),
+                    'map layer' => self::published($layers, $slug),
+                ] as $noun => $count) {
+                    if ($count > 0) {
+                        $parts[] = \sprintf('%d %s%s', $count, $noun, 1 === $count ? '' : 's');
+                    }
+                }
+            }
+
+            $rows[] = [
+                'slug' => $slug,
+                'name' => (string) $module->getName(),
+                'installed' => $installed,
+                'swatch' => $swatches[$slug] ?? null,
+                'parts' => $parts,
+                'since' => $since[$slug] ?? null,
+                'url' => $urls[$slug] ?? null,
+            ];
+        }
+
+        // THE AREA'S OWN FIRST, in the order the area runs them, then the rest
+        // of the catalogue in the catalogue's own order.
+        usort($rows, static function (array $a, array $b) use ($installedOrder): int {
+            $rank = static fn (array $row): int => $row['installed']
+                ? (int) array_search($row['slug'], $installedOrder, true)
+                : \PHP_INT_MAX;
+
+            return $rank($a) <=> $rank($b);
+        });
+
+        return $rows;
+    }
+
+    /**
+     * HOW MANY OF ONE MODULE'S THINGS ARE IN A LIST. Every contributed value
+     * object names the module that published it, which is the one property
+     * all three of these lists share.
+     *
+     * @param list<NowTile|AttentionItem|MapLayer> $items
+     */
+    private static function published(array $items, string $slug): int
+    {
+        $n = 0;
+        foreach ($items as $item) {
+            if ($item->moduleSlug === $slug) {
+                ++$n;
+            }
+        }
+
+        return $n;
+    }
+
+    /**
+     * THE ATTENTION COUNT, BROKEN DOWN — the urgent ones, then one count per
+     * module, in the module's own word for its items.
+     *
+     * @param list<AttentionItem> $attention
+     *
+     * @return array{urgent: int, byModule: array<string, int>}
+     */
+    private static function summarise(array $attention): array
+    {
+        $urgent = 0;
+        $byModule = [];
+        foreach ($attention as $item) {
+            if (AttentionSeverity::Now === $item->severity) {
+                ++$urgent;
+            }
+
+            $label = $item->moduleLabel;
+            $byModule[$label] = ($byModule[$label] ?? 0) + 1;
+        }
+
+        return ['urgent' => $urgent, 'byModule' => $byModule];
     }
 
     /**

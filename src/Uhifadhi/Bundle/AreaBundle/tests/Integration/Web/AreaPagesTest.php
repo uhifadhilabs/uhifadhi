@@ -244,24 +244,41 @@ final class AreaPagesTest extends WebTestCase
     }
 
     /**
-     * THE BOUNDARY FACT REFLECTS THE GEOMETRY, NOT THE PROVENANCE. An area
-     * imported through the upload screen carries source "upload" while its geom
-     * column holds a full MultiPolygon; the overview once printed that word as the
-     * Boundary value, so a gazetted area read "Boundary: upload" — a prompt to do
-     * the thing already done. The fact now answers from the geometry.
+     * THE BAND STATES WHAT THE PLACE IS, AND THE PLATE STATES THE BOUNDARY.
+     *
+     * The band is Area · Zones · Stations · IUCN · Established · Centroid: a
+     * "Boundary · on file" cell says of a map that is drawn immediately
+     * beneath it that there is a map, which is a cell spent on nothing.
+     *
+     * THE PROVENANCE TOKEN IS NOT A FACT ABOUT THE PLACE either. An area
+     * imported through the upload screen carries source "upload" while its
+     * geom column holds a full MultiPolygon; the overview once printed that
+     * word as the Boundary value, so a gazetted area read "Boundary: upload"
+     * — a prompt to do the thing already done. Neither the word nor the cell
+     * is on the page now.
      */
-    public function testAnUploadedAreasOverviewReportsItsBoundaryRatherThanAskingForOne(): void
+    public function testTheBandCarriesNoBoundaryCellAndNeverTheProvenanceToken(): void
     {
         $this->boot();
         $area = $this->anArea('Northern Conservation Reserve', 'upload');
 
-        $body = $this->body('/areas/'.$area->getUuidString());
+        $band = $this->band($this->body('/areas/'.$area->getUuidString()));
 
-        // The band states the boundary is present...
-        self::assertStringContainsString('Boundary', $body);
-        self::assertStringContainsString('on file', $body);
-        // ...and never renders the raw provenance token as the boundary value.
-        self::assertStringNotContainsString('>upload<', $body);
+        self::assertStringNotContainsString('Boundary', $band);
+        self::assertStringNotContainsString('upload', $band);
+        foreach (['Area', 'Zones', 'Stations', 'Centroid'] as $fact) {
+            self::assertStringContainsString($fact, $band);
+        }
+    }
+
+    /** The identity band, whatever is currently in it. */
+    private function band(string $body): string
+    {
+        $band = preg_split('#<div class="factband">#', $body, 2);
+        self::assertIsArray($band);
+        self::assertCount(2, $band, 'the overview renders an identity band');
+
+        return (string) strstr($band[1], '</div>', true);
     }
 
     /**
@@ -337,8 +354,9 @@ final class AreaPagesTest extends WebTestCase
 
         $body = $this->body('/areas/'.$area->getUuidString());
 
-        self::assertStringContainsString('Not installed in this area', $body);
-        self::assertStringContainsString('drawn with invented data', $body);
+        // The modules table is the honest one: this installation carries no
+        // module at all, so it says that rather than listing nothing.
+        self::assertStringContainsString('Nothing in the catalogue', $body);
         self::assertStringContainsString('Nothing is asking for attention', $body);
         /*
          * ABSENT IS NOT ZERO, and the strip says which. The row is five cards

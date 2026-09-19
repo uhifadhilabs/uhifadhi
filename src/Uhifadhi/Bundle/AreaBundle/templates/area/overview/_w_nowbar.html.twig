@@ -20,7 +20,19 @@
     <div class="c kpi{{ attention is not empty ? ' bad' : '' }}">
         <span class="tab">Needs attention</span>
         <b class="disp">{{ attention|length }}</b>
-        <span class="sub">{{ attention is empty ? 'a good day' : 'across every installed module' }}</span>
+        {# THE COUNT, BROKEN DOWN: the urgent ones first, then one figure per
+           module in the module's own word for its items. Six with no
+           breakdown reads as six of something; this says which. #}
+        <span class="sub">
+            {%- if attention is empty -%}
+                a good day
+            {%- else -%}
+                {%- if attentionSummary.urgent -%}<span class="r">{{ attentionSummary.urgent }} urgent</span>{%- endif -%}
+                {%- for label, count in attentionSummary.byModule -%}
+                    {{ not loop.first or attentionSummary.urgent ? ' &middot; ' : '' }}{{ count }} {{ label|lower }}
+                {%- endfor -%}
+            {%- endif -%}
+        </span>
     </div>
     {% if tiles|length < 4 %}
         {% for _ in 1..(4 - tiles|length) %}

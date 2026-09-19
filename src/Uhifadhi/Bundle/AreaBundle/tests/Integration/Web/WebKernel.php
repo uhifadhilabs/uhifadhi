@@ -272,6 +272,14 @@ final class WebKernel extends Kernel
             ->tag(OverviewContributorInterface::TAG);
 
         /*
+         * A SECOND MODULE CONTRIBUTING A CELL, so the suite can say which
+         * order two contributions come in — tag order is not it.
+         */
+        $services->set('fake.overview_widgets.incidents', FakeOverviewWidgets::class)
+            ->args(['incidents'])
+            ->tag(OverviewContributorInterface::TAG);
+
+        /*
          * A BUNDLE CONTRIBUTING A SECTION TO THE AREA'S CONFIGURE STRIP,
          * tagged as the team bundle tags Departments.
          */

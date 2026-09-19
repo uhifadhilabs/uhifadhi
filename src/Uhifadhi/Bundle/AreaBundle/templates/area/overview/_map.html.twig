@@ -18,7 +18,11 @@
    none it says there is nothing to draw yet, rather than a grey empty box. #}
 {% if area.hasBoundary %}
     <div class="c" data-w="map">
-        <span class="tab">Where<span class="src">&middot; the area &amp; its zones</span></span>
+        {# THE CAPTION SAYS THE PLATE IS LIVE AND WHEN IT LAST READ — a map
+           with no time on it is a map somebody trusts an hour after it went
+           stale. The instant is the viewer's, through the shell's own
+           element. #}
+        <span class="tab">Where<span class="src">&middot; <span class="ao-live"><i></i>live</span> &middot; <time datetime="{{ now|date('c') }}" data-localtime-format="stamp">{{ now|date('j M') }} &middot; {{ now|date('H:i') }}</time></span></span>
         <span class="ao-by"><i></i>the area plate &middot; module layers</span>
 
         {# THE HEIGHT IS THE PAGE'S, as it is on every plate in the product —
@@ -34,7 +38,11 @@
 {% else %}
     {# NO BOUNDARY IS A STATE, NOT A BROKEN MAP. #}
     <div class="c" data-w="map">
-        <span class="tab">Where<span class="src">&middot; the area &amp; its zones</span></span>
+        {# THE CAPTION SAYS THE PLATE IS LIVE AND WHEN IT LAST READ — a map
+           with no time on it is a map somebody trusts an hour after it went
+           stale. The instant is the viewer's, through the shell's own
+           element. #}
+        <span class="tab">Where<span class="src">&middot; <span class="ao-live"><i></i>live</span> &middot; <time datetime="{{ now|date('c') }}" data-localtime-format="stamp">{{ now|date('j M') }} &middot; {{ now|date('H:i') }}</time></span></span>
         <span class="ao-by"><i></i>the area plate &middot; module layers</span>
         <div class="ao-slot" style="margin-top:8px">
             <div class="ao-slotrow">
