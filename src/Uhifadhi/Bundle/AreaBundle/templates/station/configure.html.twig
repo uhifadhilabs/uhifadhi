@@ -40,7 +40,10 @@
 {% set section = path('area_stations_configure', {uuid: area.uuidString}) %}
 {% set openUuid = open ? open.uuidString : null %}
 
-<div class="recgrid">
+{# THE PLATE IS ANSWERABLE. Everything the picker touches — the plate, the
+   caption and both point-bearing forms — is inside one controller, because a
+   click on the ground has to reach the form that asked for a point. #}
+<div class="recgrid" data-controller="uhifadhi--area-bundle--station-point">
     <div class="col">
         {# WHAT THE LAST WRITE LEFT TO READ — one sentence, and it does not
            survive a second request. #}
@@ -65,17 +68,27 @@
            point needs a pick mode on the plate controller, which
            AtlasBundle does not have yet; until it does the point is typed,
            and the plate is how you see where you are typing. #}
-        <div class="c">
-            <span class="tab">The point picker<span class="src">&middot; the ground, the zones and every post on it</span></span>
+        <div class="c" data-uhifadhi--area-bundle--station-point-target="plate">
+            <span class="tab">The point picker<span class="src">&middot; click the ground to place a point</span></span>
             {{ render_map(map, {
                 '--map-plate-height': '420px',
-                'role': 'img',
                 'aria-label': 'The area, its zones and its stations',
             }) }}
+            {# ONE CAPTION, THREE STATES, and only the one that is true is
+               shown: at rest the plate invites a pick, while adding it names
+               what is being added, while moving it names what is being
+               moved. The readout and the commit appear once there is a point
+               to read — before that they would be two controls about
+               nothing. #}
             <div class="pickcap">
-                <b>Read the point off the plate</b>
+                <span data-uhifadhi--area-bundle--station-point-target="capRest"><b>Pick the point</b> &middot; click the ground</span>
+                <span data-uhifadhi--area-bundle--station-point-target="capAdd" hidden><b>Adding <span data-station-name></span></b> &middot; click the ground</span>
+                <span data-uhifadhi--area-bundle--station-point-target="capMove" hidden><b>Move <span data-station-name></span></b> &middot; drag the pin</span>
                 <span class="sp"></span>
-                <span class="zfrag">picking by clicking arrives with the atlas&rsquo;s pick mode</span>
+                <span class="mono d" data-uhifadhi--area-bundle--station-point-target="capPoint" hidden></span>
+                <button type="button" class="btn sm" hidden
+                        data-uhifadhi--area-bundle--station-point-target="capUse"
+                        data-action="uhifadhi--area-bundle--station-point#use">Use this point</button>
             </div>
         </div>
 
@@ -169,7 +182,7 @@
                                     <span class="zfnote">issued once, never changes</span>
                                 </div>
 
-                                <form class="zfrow" method="post" action="{{ path('area_station_move', {uuid: area.uuidString, station: row.uuid}) }}">
+                                <form class="zfrow" id="move-{{ row.uuid }}" method="post" action="{{ path('area_station_move', {uuid: area.uuidString, station: row.uuid}) }}">
                                     <input type="hidden" name="_token" value="{{ editToken }}">
                                     <label class="fldlab" for="lat-{{ row.uuid }}">Point</label>
                                     <span class="stpt">
@@ -177,6 +190,13 @@
                                         <span class="sep">,</span>
                                         <input class="fld" name="lon" value="{{ row.point ? row.point.longitude : '' }}" aria-label="Longitude" inputmode="decimal">
                                     </span>
+                                    {# THE PLATE, ARMED FOR THIS POST. The typed pair is still the
+                                       one that submits; this only says where to put the pin. #}
+                                    <button type="button" class="btn sm"
+                                            data-action="uhifadhi--area-bundle--station-point#arm"
+                                            data-uhifadhi--area-bundle--station-point-mode-param="move"
+                                            data-uhifadhi--area-bundle--station-point-form-param="move-{{ row.uuid }}"
+                                            data-uhifadhi--area-bundle--station-point-name-param="{{ row.name }}">{{ ux_icon('shell:map-pin') }} Move on the map</button>
                                     <button type="submit" class="btn sm">{{ ux_icon('shell:map-pin') }} Move the point</button>
                                 </form>
 
@@ -297,7 +317,7 @@
     <div class="col">
         <div class="c" id="add">
             <span class="tab">Add a station<span class="src">&middot; a name and a point</span></span>
-            <form method="post" action="{{ path('area_station_add', {uuid: area.uuidString}) }}">
+            <form id="station-add" method="post" action="{{ path('area_station_add', {uuid: area.uuidString}) }}">
                 <input type="hidden" name="_token" value="{{ addToken }}">
                 {% if register.isEmpty and not query.isFiltered %}
                     <div class="zlead">
@@ -347,9 +367,21 @@
                     <span class="zfnote">derived once there is a point</span>
                 </div>
                 <div class="zcmore">
-                    <span class="zfrag">latitude, then longitude</span>
+                    <button type="button" class="btn sm"
+                            data-action="uhifadhi--area-bundle--station-point#arm"
+                            data-uhifadhi--area-bundle--station-point-mode-param="add"
+                            data-uhifadhi--area-bundle--station-point-form-param="station-add"
+                            data-uhifadhi--area-bundle--station-point-name-param="the new station">{{ ux_icon('shell:map-pin') }} Pick on the map</button>
                     <span class="sp"></span>
                     <button type="submit" class="cta">Add the station</button>
+                </div>
+                {# WHAT THE FIELD HOLDS, in one line: the plate says what it is
+                   armed for, and this says what came of it. #}
+                <div class="stpick">
+                    {{ ux_icon('shell:map-pin') }}
+                    <span>The point is <b data-uhifadhi--area-bundle--station-point-target="note">typed, or picked on the plate</b></span>
+                    <span class="sp"></span>
+                    <span class="zfrag">latitude, then longitude</span>
                 </div>
             </form>
         </div>

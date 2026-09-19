@@ -155,6 +155,63 @@ final class StationConfigureTest extends WebTestCase
         self::assertNull($station->getZone());
     }
 
+    /**
+     * WHAT THE PICKER WRITES IS WHAT THE FORMS TAKE.
+     *
+     * The plate writes a point as five decimal places into the very inputs a
+     * person could have typed, so these are the same two writes as above with
+     * the picker's own spelling — if the parsing ever narrowed, clicking the
+     * ground would silently stop adding stations while typing went on
+     * working.
+     */
+    public function testAPointPickedOnThePlateIsWhatTheAddAndMoveFormsAccept(): void
+    {
+        $this->boot();
+        $this->signIn();
+        [$area, $station] = $this->aStaffedPost();
+        $uuid = (string) $station->getUuidString();
+
+        $this->submit($area, '/stations/add', [
+            'name' => 'Nasera Rock Post',
+            'lat' => '-3.26140',
+            'lon' => '-29.41883',
+        ]);
+        $this->submit($area, '/stations/'.$uuid.'/point', ['lat' => '-3.19684', 'lon' => '-29.47122'], $uuid);
+
+        $this->em->clear();
+        $added = $this->stationsRepository()->findOneBy(['name' => 'Nasera Rock Post']);
+        self::assertInstanceOf(Station::class, $added);
+        self::assertStringContainsString('-3.2614', (string) $added->getPoint());
+        self::assertStringContainsString('-29.41883', (string) $added->getPoint());
+
+        $moved = $this->stationsRepository()->findOneBy(['uuid' => $uuid]);
+        self::assertInstanceOf(Station::class, $moved);
+        self::assertStringContainsString('-3.19684', (string) $moved->getPoint());
+    }
+
+    /**
+     * THE PLATE IS ARMED BY A CONTROL THAT NAMES ITS FORM, and both forms the
+     * picker writes into carry the id it names. A button that arms a form
+     * that is not on the page is a click that does nothing at all.
+     */
+    public function testEachFormThePickerWritesIntoIsOnThePageUnderTheIdTheButtonNames(): void
+    {
+        $this->boot();
+        $this->signIn();
+        [$area, $station] = $this->aStaffedPost();
+        $uuid = (string) $station->getUuidString();
+
+        $body = $this->body($this->section($area).'?open='.$uuid);
+
+        self::assertStringContainsString('id="station-add"', $body);
+        self::assertStringContainsString('-form-param="station-add"', $body);
+        self::assertStringContainsString('id="move-'.$uuid.'"', $body);
+        self::assertStringContainsString('-form-param="move-'.$uuid.'"', $body);
+        // The typed pair is the fallback, so it stays in both forms.
+        self::assertStringContainsString('name="lat"', $body);
+        self::assertStringContainsString('name="lon"', $body);
+    }
+
     /** THE ADDRESS IS THE STATE: each filter is a link, and it filters. */
     public function testTheRegisterIsFilteredByTheAddress(): void
     {

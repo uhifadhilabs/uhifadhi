@@ -75,6 +75,12 @@
                 "name": "uhifadhi--area-bundle--module-order",
                 "fetch": "eager",
                 "enabled": true
+            },
+            "station-point": {
+                "main": "../src/Uhifadhi/Bundle/AreaBundle/assets/controllers/station_point_controller.js",
+                "name": "uhifadhi--area-bundle--station-point",
+                "fetch": "eager",
+                "enabled": true
             }
         },
         "importmap": {
