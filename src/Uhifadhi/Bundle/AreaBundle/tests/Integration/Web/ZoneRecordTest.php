@@ -69,14 +69,21 @@ final class ZoneRecordTest extends WebTestCase
         );
     }
 
-    /** No module publishes about this ground, and the band says so rather than printing a nought. */
+    /**
+     * NO MODULE PUBLISHES ABOUT THIS GROUND, and the band says so in two
+     * words rather than a sentence: a qualifier long enough to wrap turns a
+     * one-line band into two, and six of them turned it into three.
+     */
     public function testTheModuleFactsSayNobodyPublishesThem(): void
     {
         $this->boot();
         $this->signIn();
         [$area, $zone] = $this->aWorkedZone();
 
-        self::assertStringContainsString('no module publishes this', $this->body($this->record($area, $zone)));
+        $body = $this->body($this->record($area, $zone));
+
+        self::assertStringContainsString('<em>no module</em>', $body);
+        self::assertStringNotContainsString('no module publishes this', $body);
     }
 
     /** A zone with no post on it is an ordinary state and says which. */

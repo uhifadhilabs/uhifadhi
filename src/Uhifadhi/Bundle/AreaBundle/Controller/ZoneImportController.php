@@ -28,6 +28,7 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Exception\ZoneImportException;
+use Uhifadhi\Bundle\AreaBundle\Model\Actor;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportDraftStore;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportService;
 
@@ -174,8 +175,6 @@ final readonly class ZoneImportController
      */
     private function actor(): ?string
     {
-        $user = $this->tokens?->getToken()?->getUser();
-
-        return null === $user ? null : $user->getUserIdentifier();
+        return Actor::of($this->tokens?->getToken()?->getUser());
     }
 }

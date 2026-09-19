@@ -1550,3 +1550,37 @@ table.tbl tr:hover .open-btn {
 .zdnone span:last-child {
     font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10.5px; color: rgb(var(--c-dim));
 }
+
+/* ---- A DISCLOSURE THAT HOLDS A SMALL FORM -------------------------------
+   Two surfaces wanted the same control: the department register's footer,
+   where the scope change and the rest of the operations live, and the zones
+   section's card, where a zone is renamed. Both had the same problem — a
+   form drawn open in a row of cards makes every card in the list taller —
+   and both solve it the same way, so the control is the shell's.
+
+   IT IS A `<details>`, so it opens with no script of ours, and its panel
+   HANGS OVER what follows rather than pushing it down: a control that moved
+   the next four cards while you read it is a control that loses your place. */
+.dc-more { position: relative; flex: none; }
+.dc-more > summary { list-style: none; cursor: pointer; white-space: nowrap; }
+.dc-more > summary::-webkit-details-marker { display: none; }
+.dc-panel {
+    position: absolute; z-index: 30; right: 0; top: calc(100% + 6px); width: 340px; max-width: 78vw;
+    display: flex; flex-direction: column; gap: 9px;
+    padding: 13px 14px 14px; border: 1px solid var(--c-ln2); border-radius: 12px;
+    background: rgb(var(--c-p1)); box-shadow: var(--shadow); text-align: left;
+}
+.dc-panel .sbt { font-size: 12.5px; font-weight: 600; color: rgb(var(--c-tx)); }
+.dc-panel .sbf { display: flex; flex-direction: column; gap: 4px; }
+/* A FIELD THAT TAKES THE REST OF THE ROW. Written on the field rather than
+   guessed from its type, because which one grows is a fact about the form. */
+.sbf.grow { flex: 1; min-width: 0; }
+.dc-panel .sbf .k {
+    font-family: var(--font-mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase;
+    color: rgb(var(--c-dim));
+}
+.dc-panel .fld, .dc-panel select { width: 100%; font-size: 12px; }
+.dc-panel form { display: flex; flex-direction: column; gap: 9px; }
+/* The consequence is stated where the control is, never in a dialog the
+   reader has to open to find out what the button does. */
+.sbn { flex-basis: 100%; font-size: 11.5px; line-height: 1.5; color: rgb(var(--c-dim)); }

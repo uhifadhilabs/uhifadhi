@@ -30,6 +30,7 @@ use Uhifadhi\Bundle\AreaBundle\Entity\Posting;
 use Uhifadhi\Bundle\AreaBundle\Entity\Station;
 use Uhifadhi\Bundle\AreaBundle\Enum\PostingSource;
 use Uhifadhi\Bundle\AreaBundle\Exception\PostingException;
+use Uhifadhi\Bundle\AreaBundle\Model\Actor;
 use Uhifadhi\Bundle\AreaBundle\Model\StationPoint;
 use Uhifadhi\Bundle\AreaBundle\Service\PersonDirectoryService;
 use Uhifadhi\Bundle\AreaBundle\Service\PostingService;
@@ -93,7 +94,18 @@ final readonly class StationEditController
             return $this->refuse($area, $name, 'it needs a point: a latitude and a longitude, in degrees');
         }
 
-        $station = $this->stations->add($area, $name, $point->lon, $point->lat, actor: $this->actor());
+        $elevation = trim($request->request->getString('elevation'));
+
+        $station = $this->stations->add(
+            $area,
+            $name,
+            $point->lon,
+            $point->lat,
+            actor: $this->actor(),
+            elevationM: '' === $elevation ? null : (int) $elevation,
+            locality: $request->request->getString('locality'),
+            openedAt: self::dayOf($request->request->getString('opened')),
+        );
         $zone = $station->getZone();
         $this->notices->holdOutcome($area, \sprintf(
             '%s recorded as %s · %s',
@@ -371,8 +383,6 @@ final readonly class StationEditController
 
     private function actor(): ?string
     {
-        $user = $this->tokens?->getToken()?->getUser();
-
-        return null === $user ? null : $user->getUserIdentifier();
+        return Actor::of($this->tokens?->getToken()?->getUser());
     }
 }

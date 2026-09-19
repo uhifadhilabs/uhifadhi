@@ -131,13 +131,23 @@
                                     <span class="f">{% if posts %}<b>{{ posts }}</b> st{% else %}no station{% endif %}</span>
                                     <span class="f">{% if people %}<b>{{ people }}</b> posted{% else %}nobody posted{% endif %}</span>
                                 </span>
-                                {# RENAME IS INLINE AND COMMITS ON ITS OWN: it touches no geometry,
-                                   so it needs neither the map nor a file. #}
-                                <form class="zc-act" method="post" action="{{ path('area_zone_rename', {uuid: area.uuidString, zone: row.uuid}) }}">
-                                    <input type="hidden" name="_token" value="{{ renameToken }}">
-                                    <input class="fld zc-nmfld" type="text" name="name" value="{{ row.name }}" maxlength="128" aria-label="Rename {{ row.name }}">
-                                    <button type="submit" class="btn sm">{{ ux_icon('shell:square-pen') }} Rename</button>
-                                </form>
+                                {# RENAME COMMITS ON ITS OWN — it touches no geometry, so it needs
+                                   neither the map nor a file — and it sits behind a disclosure.
+                                   A field and a button in every collapsed card's header made the
+                                   header twice the height the design draws and turned a list of
+                                   eleven zones into a column of forms. #}
+                                <details class="zc-act dc-more">
+                                    <summary class="btn sm">{{ ux_icon('shell:square-pen') }} Rename &#9662;</summary>
+                                    <div class="dc-panel">
+                                        <form method="post" action="{{ path('area_zone_rename', {uuid: area.uuidString, zone: row.uuid}) }}">
+                                            <input type="hidden" name="_token" value="{{ renameToken }}">
+                                            <label class="sbf grow"><span class="k">Name</span>
+                                                <input class="fld" type="text" name="name" value="{{ row.name }}" maxlength="128" aria-label="Rename {{ row.name }}">
+                                            </label>
+                                            <button type="submit" class="btn sm">Save the name</button>
+                                        </form>
+                                    </div>
+                                </details>
                             </div>
 
                             {% if isOpen %}

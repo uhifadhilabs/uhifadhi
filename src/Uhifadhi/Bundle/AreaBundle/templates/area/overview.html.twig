@@ -38,7 +38,9 @@
 
 {% block shell_page_title %}{{ area.name }}{% endblock %}
 
-{% block shell_page_subtitle %}What is happening in this area right now &mdash; composed from every module installed here. Each module&rsquo;s own dashboard is a click away on the Modules tab.{% endblock %}
+{# ONE LINE: what THIS tab is for. The strip says which tab you are on, and
+   a subline that wrapped pushed the whole page down by a line's height. #}
+{% block shell_page_subtitle %}What is happening in this area right now, composed from every module installed here.{% endblock %}
 
 {% block shell_page %}
     {# THE PAGE IS COMPOSED, NOT AUTHORED.

@@ -161,6 +161,45 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
     }
 
     /**
+     * A CARD IS OPENED BY A LABELLED BUTTON, not by a caret in the corner.
+     *
+     * RULED 2026-09-20. A bare chevron top-left says nothing about what it
+     * does and nothing about the state it is in; the control now sits in the
+     * header's action cluster beside Open, reads EXPAND when the card is
+     * shut and COLLAPSE when it is open, and carries the state in
+     * `aria-expanded` as well as in the word. It is a STATE VERB and never a
+     * count: "3 positions" on a button tells you what is inside, not what
+     * pressing it does, and it changes under you when somebody files a
+     * position.
+     */
+    public function testACardIsOpenedByALabelledButtonBesideOpen(): void
+    {
+        $crawler = $this->screen();
+        $uuid = $this->uuidOf('Ecology');
+
+        $shut = $this->row($crawler, 'Ecology')->filter('.dc-act .ovx.xdisc');
+        // The word is written once and SHOUTED by the sheet, as every mono
+        // label in the product is — the markup carries the sentence case.
+        self::assertSame('Expand', trim($shut->filter('.t')->text()));
+        self::assertSame('false', $shut->attr('aria-expanded'));
+        self::assertStringContainsString('Ecology', (string) $shut->attr('aria-label'));
+
+        $open = $this->row($this->client->request('GET', '/departments?open='.$uuid), 'Ecology')
+            ->filter('.dc-act .ovx.xdisc');
+        self::assertSame('Collapse', trim($open->filter('.t')->text()));
+        self::assertSame('true', $open->attr('aria-expanded'));
+    }
+
+    /** And the old caret is gone from the header's left. */
+    public function testTheBareCaretIsGoneFromTheCardsCorner(): void
+    {
+        $card = $this->row($this->screen(), 'Ecology');
+
+        self::assertCount(0, $card->filter('.dc-hd > .ovx'));
+        self::assertCount(1, $card->filter('.dc-act .ovx.xdisc'));
+    }
+
+    /**
      * THE FOOTER IS ONE LINE UNTIL IT IS ASKED FOR MORE.
      *
      * A COLLAPSED CARD IS A ROW IN A LIST, and a register of nine of them is

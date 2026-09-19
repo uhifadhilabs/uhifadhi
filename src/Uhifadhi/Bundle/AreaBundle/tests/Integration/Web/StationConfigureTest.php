@@ -90,6 +90,35 @@ final class StationConfigureTest extends WebTestCase
         self::assertStringContainsString('open='.$station->getUuidString(), (string) $this->browser()->getResponse()->headers->get('Location'));
     }
 
+    /**
+     * THE ADD CARD STATES EVERY FACT THE RECORD WILL HOLD, and takes the
+     * ones a person can know at the time: the name, the point, how high it
+     * is, what a radio call would call the place, and the day it opened. The
+     * code is issued and the zone is derived, so both are stated and
+     * neither is asked for.
+     */
+    public function testAPostIsRecordedWithEverythingTheFormOffers(): void
+    {
+        $this->boot();
+        $this->signIn();
+        $area = $this->anArea();
+
+        $this->submit($area, '/stations/add', [
+            'name' => 'Seneto Gate Post',
+            'lat' => '-3.2',
+            'lon' => '-29.75',
+            'elevation' => '2286',
+            'locality' => 'crater rim road',
+            'opened' => '2024-01-14',
+        ]);
+
+        $station = $this->stationsRepository()->findOneBy(['name' => 'Seneto Gate Post']);
+        self::assertInstanceOf(Station::class, $station);
+        self::assertSame(2286, $station->getElevationM());
+        self::assertSame('crater rim road', $station->getLocality());
+        self::assertSame('2024-01-14', $station->getOpenedAt()?->format('Y-m-d'));
+    }
+
     /** A name with no point is not a post, and the refusal says which. */
     public function testAPostWithNoPointIsRefusedAndNothingIsWritten(): void
     {

@@ -55,7 +55,7 @@
     <span class="f"><span class="k">Extent</span><span class="v">{{ row ? row.km2|number_format : '&mdash;'|raw }}<em>km&sup2;</em></span></span>
     <span class="f"><span class="k">Covered</span><span class="v">
         {%- if covered %}{{ covered.display }}<em>{{ covered.unit ?: '%' }}</em>
-        {%- else %}&mdash;<em>no module publishes this</em>{% endif -%}
+        {%- else %}&mdash;<em>no module</em>{% endif -%}
     </span></span>
     <span class="f"><span class="k">Stations</span><span class="v">
         {{- stationCount ?: '&mdash;'|raw }}<em>
@@ -65,7 +65,7 @@
     {% for fact in figures %}
         <span class="f"><span class="k">{{ fact.figure.label }}</span><span class="v">{{ fact.figure.display }}<em>{{ fact.figure.caption ?: fact.figure.moduleName|lower }}</em></span></span>
     {% else %}
-        <span class="f"><span class="k">From the modules</span><span class="v">&mdash;<em>no module publishes this</em></span></span>
+        <span class="f"><span class="k">From the modules</span><span class="v">&mdash;<em>no module</em></span></span>
     {% endfor %}
     <span class="sp"></span>
     <a class="more" href="{{ path('area_zones', {uuid: area.uuidString}) }}">{{ area.name }}&rsquo;s zones &rarr;</a>
@@ -166,7 +166,7 @@
             {% if events is empty %}
                 <div class="use">Nothing has happened to {{ zone.name }} yet. Every import, rename and ring writes one line here.</div>
             {% else %}
-                <div class="zhist">
+                <div class="zhist zhistcap">
                     {% for event in events %}
                         <div class="zhrow">
                             <span class="zhdot{{ loop.first ? ' on' : '' }}"></span>

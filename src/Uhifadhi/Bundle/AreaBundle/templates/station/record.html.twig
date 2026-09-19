@@ -192,7 +192,7 @@
             {% if events is empty %}
                 <div class="use">Nothing has happened at this post yet. Every move, posting and closure writes one line here.</div>
             {% else %}
-                <div class="zhist stlog">
+                <div class="zhist stlog zhistcap">
                     {% for event in events %}
                         <div class="zhrow">
                             <span class="zhdot{{ event.kind.isClosure ? ' bad' : (loop.first ? ' on' : '') }}"></span>

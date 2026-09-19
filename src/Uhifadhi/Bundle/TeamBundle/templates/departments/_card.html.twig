@@ -22,9 +22,6 @@
 <article id="d-{{ uuid }}" class="dcard{{ open ? ' on' : '' }}{{ focused ? ' dcfocus' : '' }}{{ department.active ? '' : ' dcinactive' }}"
          data-department="{{ uuid }}">
     <div class="dc-hd">
-        <a class="ovx" href="{{ open ? here : here ~ ('?' in here ? '&' : '?') ~ 'open=' ~ uuid ~ '#d-' ~ uuid }}"
-           aria-expanded="{{ open ? 'true' : 'false' }}"
-           aria-label="{{ open ? 'Collapse' : 'Expand' }} {{ department.name }}">{{ ux_icon('shell:chevron-right') }}</a>
         <span class="ov-mk{{ department.active ? ' on' : '' }}">{{ mark }}</span>
         <div class="dc-bd">
             <span class="nmrow">
@@ -44,6 +41,23 @@
             </div>
         </div>
         <div class="dc-act">
+            {# THE DISCLOSURE IS LABELLED AND IT NAMES ITS STATE. A bare
+               chevron in the corner said neither what it did nor which way
+               it was; this reads EXPAND shut and COLLAPSE open, in the
+               action cluster beside Open and at Open's own height.
+
+               A STATE VERB, NEVER A COUNT. "3 positions" on a button says
+               what is inside rather than what pressing it does, and it
+               changes under the reader when somebody files a position.
+
+               IT IS A LINK, so which card is open stays in the address and
+               the label is the server's answer — there is no state in the
+               browser to keep in step. #}
+            <a class="ovx xdisc" href="{{ open ? here : here ~ ('?' in here ? '&' : '?') ~ 'open=' ~ uuid ~ '#d-' ~ uuid }}"
+               aria-expanded="{{ open ? 'true' : 'false' }}"
+               aria-label="{{ open ? 'Collapse' : 'Expand' }} {{ department.name }}">
+                <span class="t">{{ open ? 'Collapse' : 'Expand' }}</span>{{ ux_icon('shell:chevron-down') }}
+            </a>
             <a class="ov-open" href="{{ path('team_department_show', {uuid: uuid}) }}" title="Open {{ department.name }}">Open {{ ux_icon('shell:arrow-right') }}</a>
         </div>
         {# WHAT THE ATTACHED MODULES PUBLISH. A department that attaches one

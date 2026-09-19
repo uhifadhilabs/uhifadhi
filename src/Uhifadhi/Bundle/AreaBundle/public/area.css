@@ -1441,3 +1441,11 @@ a.zc-nm:hover { color: rgb(var(--c-acc)); }
 }
 .ao-more .mono { font-family: var(--font-mono); font-size: 10.5px; color: rgb(var(--c-dim)); }
 .ao-more .sp { flex: 1; }
+
+/* THE LOG IS THE ONE CARD ALLOWED TO SCROLL, and it is fixed rather than
+   content-sized. Everywhere else a card is bounded by a page size and says
+   what it is showing out of; a log is read by running down it, and paging a
+   history one screenful at a time is how you lose the thread. So it is the
+   design's height and scrolls inside itself, which is also what keeps the
+   column beside it the height the design draws. */
+.zhistcap { max-height: 432px; overflow-y: auto; scrollbar-width: thin; }

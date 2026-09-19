@@ -31,6 +31,7 @@ use Uhifadhi\Bundle\AreaBundle\Entity\Zone;
 use Uhifadhi\Bundle\AreaBundle\Exception\ZoneImportException;
 use Uhifadhi\Bundle\AreaBundle\Exception\ZoneNameException;
 use Uhifadhi\Bundle\AreaBundle\Exception\ZoneOverlapException;
+use Uhifadhi\Bundle\AreaBundle\Model\Actor;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportDraftStore;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneService;
@@ -197,8 +198,6 @@ final readonly class ZoneEditController
 
     private function actor(): ?string
     {
-        $user = $this->tokens?->getToken()?->getUser();
-
-        return null === $user ? null : $user->getUserIdentifier();
+        return Actor::of($this->tokens?->getToken()?->getUser());
     }
 }

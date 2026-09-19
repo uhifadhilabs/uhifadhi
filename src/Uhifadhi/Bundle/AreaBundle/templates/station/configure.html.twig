@@ -323,6 +323,25 @@
                     </span>
                 </div>
                 <div class="zfrow">
+                    <label class="fldlab" for="add-elevation">Elevation</label>
+                    <input class="fld zfld-sm" id="add-elevation" name="elevation" inputmode="numeric"
+                           placeholder="2,286" aria-label="Elevation in metres">
+                    <span class="zfnote">metres, if it is known</span>
+                </div>
+                <div class="zfrow">
+                    <label class="fldlab" for="add-locality">Locality</label>
+                    <input class="fld" id="add-locality" name="locality" maxlength="120" placeholder="crater rim road">
+                    <span class="zfnote">what a radio call would say</span>
+                </div>
+                <div class="zfrow">
+                    <label class="fldlab" for="add-opened">Opened</label>
+                    <input class="fld zfld-sm" id="add-opened" name="opened" type="date" aria-label="The day it opened">
+                    <span class="zfnote">the day it started taking patrols</span>
+                </div>
+                {# THE ZONE IS READ, NEVER CHOSEN — the field is here so the
+                   form states every fact the record will hold, and it states
+                   this one as the derivation it is. #}
+                <div class="zfrow">
                     <span class="fldlab">Zone</span>
                     <span class="mono d">&mdash;</span>
                     <span class="zfnote">derived once there is a point</span>
