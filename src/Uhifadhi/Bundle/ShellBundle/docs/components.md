@@ -11,6 +11,7 @@ just as much.
 - [The list](#the-list)
 - [Two ways to colour a sidebar dot](#two-ways-to-colour-a-sidebar-dot)
 - [Two rules the tests enforce](#two-rules-the-tests-enforce)
+- [The `font:` shorthand carries a line-height](#the-font-shorthand-carries-a-line-height)
 - [What is furniture, and not yours to write](#what-is-furniture-and-not-yours-to-write)
 - [What you get without asking](#what-you-get-without-asking)
 - [Adding to it](#adding-to-it)
@@ -140,6 +141,26 @@ page, so a test refuses one.
 shell's and may override anything here; what it must never have to do is opt in.
 A vocabulary scoped to a shell wrapper would be a vocabulary only the shell's
 own pages could speak, which is the opposite of the point.
+
+## The `font:` shorthand carries a line-height
+
+The designs write most small captions with the shorthand:
+
+```css
+.ov-ctl .k{font:600 8.5px "JetBrains Mono",ui-monospace,monospace;letter-spacing:.15em}
+```
+
+**`font:` RESETS `line-height` to `normal`.** Ported as longhands — which is
+this sheet's house style, because a shorthand hides what it overwrites — the
+rule inherits the body's `1.5` instead, and the caption silently grows two or
+three pixels. One caption is nothing; a column of them moved the action row
+from the design's 46px to 49px, which is the kind of drift nobody can name by
+looking at it.
+
+So: **every rule ported from a design's `font:` shorthand states its
+line-height** — `normal`, or the explicit value where the design wrote one
+(`font:800 10px/1 …` becomes `line-height: 1`). Port the shorthand's whole
+meaning or none of it.
 
 ## What is furniture, and not yours to write
 

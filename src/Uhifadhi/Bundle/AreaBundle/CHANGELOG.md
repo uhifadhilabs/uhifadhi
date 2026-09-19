@@ -8,6 +8,8 @@
 
 Not released yet.
 
+ * the station and zone captions keep the leading their design shorthands set
+   (`.fldlab`, `.stcardlead`, `.stcode`, `.stghm`, `.stnone`, `.stpin`)
  * the areas row wears the house MAP mark, as the design draws it, and the
    areas under it wear none: a glyph repeated down a branch reads as a second
    kind of thing rather than the same thing twice

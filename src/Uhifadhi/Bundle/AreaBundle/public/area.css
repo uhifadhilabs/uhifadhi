@@ -418,7 +418,7 @@
 .fldlab {
     display: block;
     font-family: "JetBrains Mono", ui-monospace, monospace;
-    font-size: 8.5px;
+    line-height: normal; font-size: 8.5px;
     font-weight: 600;
     letter-spacing: .13em;
     text-transform: uppercase;
@@ -1287,7 +1287,7 @@ a.zc-nm:hover { color: rgb(var(--c-acc)); }
 .stgh { display: flex; align-items: center; gap: 10px; margin-bottom: 11px; flex-wrap: wrap; }
 .stgh b { font-size: 14px; font-family: "Archivo", system-ui, sans-serif; }
 .stghm {
-    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10.5px; font-weight: 500;
+    font-family: "JetBrains Mono", ui-monospace, monospace; line-height: normal; font-size: 10.5px; font-weight: 500;
     color: rgb(var(--c-dim));
 }
 .stcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(282px, 1fr)); gap: 12px; }
@@ -1304,22 +1304,22 @@ a.zc-nm:hover { color: rgb(var(--c-acc)); }
 .stpin {
     min-width: 20px; height: 20px; padding: 0 5px; flex: none; border-radius: 6px;
     display: grid; place-items: center;
-    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10px; font-weight: 700;
+    font-family: "JetBrains Mono", ui-monospace, monospace; line-height: 1; font-size: 10px; font-weight: 700;
     color: rgb(var(--c-acc)); background: color-mix(in srgb, rgb(var(--c-acc)) 12%, transparent);
     border: 1px solid color-mix(in srgb, rgb(var(--c-acc)) 40%, transparent);
 }
 .stpin.hollow { color: rgb(var(--c-dim)); background: none; border-style: dashed; border-color: var(--c-ln2); }
 .stcode {
-    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 9px; font-weight: 600;
+    font-family: "JetBrains Mono", ui-monospace, monospace; line-height: normal; font-size: 9px; font-weight: 600;
     letter-spacing: .09em; color: rgb(var(--c-dim));
 }
 .stnone {
-    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10.5px; font-weight: 600;
+    font-family: "JetBrains Mono", ui-monospace, monospace; line-height: normal; font-size: 10.5px; font-weight: 600;
     color: rgb(var(--c-dim));
 }
 .stcardppl { display: flex; align-items: center; gap: 9px; margin-top: 11px; }
 .stcardlead {
-    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10.5px; font-weight: 500;
+    font-family: "JetBrains Mono", ui-monospace, monospace; line-height: normal; font-size: 10.5px; font-weight: 500;
     color: rgb(var(--c-fog));
 }
 .stcardppl.empty .stcardlead { color: rgb(var(--c-warn)); }

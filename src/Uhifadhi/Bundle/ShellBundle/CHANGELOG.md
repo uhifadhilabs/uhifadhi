@@ -8,6 +8,9 @@
 
 Not released yet.
 
+ * every caption ported from a design `font:` shorthand states its leading:
+   the shorthand resets line-height to normal and the longhand port inherited
+   1.5, which is where the action row's three pixels came from
  * the vocabulary conformance base also answers for `shell:` icon names: a
    mark nobody shipped was an empty box on a deployment with fetching off and
    green in every suite
