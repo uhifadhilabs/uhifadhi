@@ -1,0 +1,38 @@
+{# A LABELLED CONTROL IN THE PAGE-ACTION ROW — "Scope", "Compare with".
+
+   THE CAPTION IS A LINE ABOVE THE BOX and never a placeholder inside it: a
+   select whose first option names the question has no question left to show
+   once somebody has answered it.
+
+   IT IS A GET FORM PER CONTROL, submitted on change where there is a script
+   and by the button beside it where there is none — the address is the
+   state, so a scope somebody picked is a link they can send. Every other
+   answer on the page travels as a hidden field, or picking a period would
+   clear the scope.
+
+   Variables:
+     label   what the caption reads
+     name    the query key this control owns
+     chosen  the value it currently holds
+     options value => label, in the order they read
+     here    where the form submits
+     carry   the other answers, as key => value
+     small   the narrower box the design uses for the second and third #}
+<label class="ov-ctl{{ small|default(false) ? ' sm' : '' }}">
+    <span class="k">{{ label }}</span>
+    <form method="get" action="{{ here }}">
+        <span class="fsel">
+            <select class="fld" name="{{ name }}" aria-label="{{ label }}" onchange="this.form.requestSubmit()">
+                {% for value, option in options %}
+                    <option value="{{ value }}"{{ value == chosen ? ' selected' : '' }}>{{ option }}</option>
+                {% endfor %}
+            </select>
+        </span>
+        {% for key, value in carry|default({}) %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endfor %}
+        {# WITHOUT A SCRIPT THE ANSWER STILL TRAVELS. The button is the
+           form's own submit, hidden from a pointer and reachable by a
+           keyboard, so a page whose scripts never loaded is a page whose
+           controls still work. #}
+        <button class="visually-hidden" type="submit">Apply {{ label|lower }}</button>
+    </form>
+</label>

@@ -249,6 +249,51 @@ final class ComponentContractTest extends ContractTestCase
     }
 
     /**
+     * EVERY CONTROL IN THE ROW SHARES ONE BASELINE, and this is the test
+     * that says so in numbers.
+     *
+     * A page head may hold a bare button, a labelled select and a
+     * segmented group at once. They are three different kinds of thing
+     * and they must read as one row: the same 32px box, bottom-aligned,
+     * with any caption in a line above rather than inside. The rule
+     * lives in the frame — `page.html.twig` writes the wrapper and a
+     * module cannot add a class to it — so a module that needs a
+     * labelled control gets the alignment without asking.
+     */
+    #[DataProvider('oneBaselineDeclarations')]
+    public function testEveryControlInThePageActionRowSharesOneBaseline(string $selector, string $property, string $value): void
+    {
+        self::assertMatchesRegularExpression(
+            '/(?:^|;)\s*'.preg_quote($property, '/').'\s*:\s*'.preg_quote($value, '/').'\s*(?:;|$)/',
+            $this->rule($selector),
+            \sprintf('%s must state `%s: %s`, or the row reads as three heights on one line.', $selector, $property, $value),
+        );
+    }
+
+    /**
+     * @return \Generator<string, array{string, string, string}>
+     */
+    public static function oneBaselineDeclarations(): \Generator
+    {
+        $declarations = [
+            // A LABELLED CONTROL IS A COLUMN: caption above, box below.
+            '.pgact .ov-ctl' => ['display' => 'flex', 'flex-direction' => 'column', 'gap' => '4px'],
+            // AND THE SEGMENTED GROUP AND THE CHIP BESIDE IT are the row's
+            // own height, like everything else in it.
+            '.pgact .periodpick' => ['height' => '32px', 'box-sizing' => 'border-box'],
+            '.pgact .mchip' => ['height' => '32px', 'box-sizing' => 'border-box'],
+            // The buttons inside the group fill it without growing it.
+            '.pgact .periodpick button' => ['height' => '30px', 'border-radius' => '0'],
+        ];
+
+        foreach ($declarations as $selector => $properties) {
+            foreach ($properties as $property => $value) {
+                yield \sprintf('%s { %s }', $selector, $property) => [$selector, $property, $value];
+            }
+        }
+    }
+
+    /**
      * @return \Generator<string, array{string, string, string}>
      */
     public static function pageActionRowDeclarations(): \Generator
@@ -258,7 +303,13 @@ final class ComponentContractTest extends ContractTestCase
             // its content beside a title that may run long.
             '.pgact' => [
                 'display' => 'flex',
-                'align-items' => 'center',
+                // THE ROW ALIGNS ON ITS BOTTOM EDGE. A labelled control — a
+                // caption above a field — is taller than a bare button, so a
+                // row centred on its middle put Configure half a caption
+                // higher than the selects beside it, which is the
+                // misalignment the owner caught on the performance header.
+                // Every box is 32px, so aligning bottoms aligns tops.
+                'align-items' => 'flex-end',
                 'flex-wrap' => 'wrap',
                 'gap' => '9px',
                 'flex-shrink' => '0',

@@ -1,0 +1,47 @@
+{# THE PERIOD, AS A SEGMENTED GROUP.
+
+   RULED: a reader who wants this quarter should not have to open a menu to
+   get it. The three that matter are buttons; everything earlier is behind
+   the chip beside them. The period a page currently means is named in its
+   subline and nowhere else — a group that also printed it would say the
+   same thing twice and disagree the first time one of them was wrong.
+
+   LINKS, NOT BUTTONS IN A FORM. Each segment is an address, so the period
+   is in the URL and a browser can go back to it, and the whole control
+   works with no script of ours.
+
+   Variables:
+     kinds   value => label for the three segments
+     chosen  which of them is on
+     urlFor  a closure turning a value into an address
+     earlier value => label for the chip's menu, in the order they read #}
+<label class="ov-ctl sm pd">
+    <span class="k">Period</span>
+    <span class="pdrow">
+        <span class="periodpick" role="group" aria-label="Period">
+            {% for value, label in kinds %}
+                <a class="{{ value == chosen ? 'on' : '' }}" href="{{ urlFor(value) }}"
+                   {{ value == chosen ? 'aria-current="true"' : '' }}>{{ label }}</a>
+            {% endfor %}
+        </span>
+
+        {% if earlier|default([]) is not empty %}
+            {# AN EARLIER PERIOD IS A PLACE, so the chip is the house's own
+               grouped dropdown: every option a link, no script of ours. #}
+            <details class="i-dd">
+                <summary class="mchip i-ddt{{ custom|default(false) ? ' on' : '' }}">
+                    <span class="i-ddval">{{ custom|default(false) ? customLabel : 'custom&hellip;'|raw }}</span>
+                    <span class="i-ddcaret">&#9662;</span>
+                </summary>
+                <div class="i-ddmenu">
+                    <span class="i-ddhead">an earlier period</span>
+                    {% for value, label in earlier %}
+                        <a class="i-ddopt{{ value == chosen ? ' on' : '' }}" href="{{ urlFor(value) }}">
+                            <span class="i-ddopt-l">{{ label }}</span>
+                        </a>
+                    {% endfor %}
+                </div>
+            </details>
+        {% endif %}
+    </span>
+</label>
