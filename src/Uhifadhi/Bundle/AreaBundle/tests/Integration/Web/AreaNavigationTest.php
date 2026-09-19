@@ -80,6 +80,25 @@ final class AreaNavigationTest extends WebTestCase
         self::assertSame('Areas', $sections[0]->items[0]->label);
     }
 
+    /**
+     * THE MARK IS THE DESIGN'S, AND IT IS LUCIDE'S. The section row wears
+     * the house map mark — the same glyph the register and every plate are
+     * read under — and the areas under it wear NONE: the design gives a
+     * place its name in the place rung's own weight, and a glyph repeated
+     * down a branch reads as a second kind of thing rather than the same
+     * thing twice.
+     */
+    public function testTheSectionRowWearsTheMapMarkAndThePlacesUnderItWearNone(): void
+    {
+        $this->boot();
+        $area = $this->anArea('Northern Conservation Reserve');
+
+        $row = $this->sections($this->navAt('/areas/'.$area->getUuidString()))[0]->items[0];
+
+        self::assertSame('shell:map', $row->icon);
+        self::assertSame([null], array_map(static fn (NavItem $i): ?string => $i->icon, $row->children));
+    }
+
     /** A declared position, not a hope about container compilation order. */
     public function testItDeclaresWhereItSitsAmongTheOtherSections(): void
     {

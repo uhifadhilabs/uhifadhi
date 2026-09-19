@@ -8,6 +8,9 @@
 
 Not released yet.
 
+ * the areas row wears the house MAP mark, as the design draws it, and the
+   areas under it wear none: a glyph repeated down a branch reads as a second
+   kind of thing rather than the same thing twice
  * **BREAKING for an installation** — the spatial base and the geometry types
    now come from `utafitilabs/postgis-bundle` instead of
    `fundistadi/postgis-bundle`. An installation replaces the bundle class in

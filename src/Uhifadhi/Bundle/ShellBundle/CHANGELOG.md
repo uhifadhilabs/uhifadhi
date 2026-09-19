@@ -8,6 +8,11 @@
 
 Not released yet.
 
+ * the vocabulary conformance base also answers for `shell:` icon names: a
+   mark nobody shipped was an empty box on a deployment with fetching off and
+   green in every suite
+ * the action row's captions keep the design's own leading (`line-height:
+   normal`), which is the three pixels the control row had grown
  * a nav row may say its children are its own SCREENS rather than places
    (`NavItem::$screens`), so a section with three tabs under it draws them at
    the screen rung instead of inventing a place between the two

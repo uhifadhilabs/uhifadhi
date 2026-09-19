@@ -166,7 +166,12 @@ final readonly class AreaNavigation implements NavigationSourceInterface
             $rows[] = new NavItem(
                 label: (string) $area->getName(),
                 url: $url,
-                icon: 'shell:map',
+                /*
+                 * NO ICON ON A PLACE ROW. The design gives the section row
+                 * the mark and gives an area its NAME, in the place rung's
+                 * own weight; a glyph repeated down the branch reads as a
+                 * second kind of thing rather than as the same thing twice.
+                 */
                 /*
                  * THE PLACE THE VIEWER IS IN, MARKED WHATEVER IS LIT BELOW IT.
                  * The place rung is drawn quieter than the accent, so it says
@@ -185,7 +190,10 @@ final readonly class AreaNavigation implements NavigationSourceInterface
             new NavItem(
                 label: 'Areas',
                 url: $register,
-                icon: 'shell:layers',
+                // THE HOUSE'S MAP MARK, as the design draws it — lucide
+                // `map`, the same glyph the areas register and every map
+                // plate are read under.
+                icon: 'shell:map',
                 current: $this->viewerIsExactly($register),
                 children: $rows,
             ),

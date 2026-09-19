@@ -631,6 +631,12 @@ h1.pg { font-family: var(--font-display); font-size: 27px; font-weight: 700; let
 .pgact .ov-ctl { display: flex; flex-direction: column; gap: 4px; }
 .pgact .ov-ctl .k {
     font-family: var(--font-mono); font-size: 8.5px; font-weight: 600;
+    /* THE CAPTION'S OWN LEADING, and the reason the control row is 46px rather
+       than 49px: the design writes this rule with the `font:` shorthand, which
+       RESETS line-height to normal. Ported as longhands it inherits the body's
+       1.5 instead, and every caption in the action row grows three pixels that
+       nothing on the page accounts for. */
+    line-height: normal;
     letter-spacing: .15em; text-transform: uppercase; color: rgb(var(--c-dim));
 }
 .pgact .ov-ctl .fsel > select.fld { min-width: 200px; }

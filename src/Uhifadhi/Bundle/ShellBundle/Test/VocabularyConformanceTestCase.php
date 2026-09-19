@@ -188,6 +188,43 @@ abstract class VocabularyConformanceTestCase extends TestCase
         ));
     }
 
+    /**
+     * AND EVERY `shell:` NAME RESOLVES TO A GLYPH THE SHELL ACTUALLY
+     * SHIPS.
+     *
+     * The check above answers for a bundle's OWN prefix and said nothing
+     * about the shell's, which is the prefix every bundle draws most of
+     * its marks under — so a nav row asking for a mark nobody added was
+     * an empty box on a deployment with fetching off, and green here.
+     * The shell's set is read from the shell's own package, wherever it
+     * is installed from, so this holds for a module as it holds for the
+     * core.
+     */
+    public function testEveryShellIconTheBundleDrawsIsOneTheShellShips(): void
+    {
+        $directory = \dirname(new \ReflectionClass(ShellBundle::class)->getFileName() ?: '').'/assets/icons/shell';
+
+        $missing = [];
+        foreach (self::iconReferences() as $name => $where) {
+            if (!str_starts_with($name, 'shell:')) {
+                continue;
+            }
+
+            if (!is_file($directory.'/'.substr($name, 6).'.svg')) {
+                $missing[] = $name.' ('.$where.')';
+            }
+        }
+
+        sort($missing);
+
+        self::assertSame([], $missing, \sprintf(
+            'No file in %s answers to [%s]. Each of those draws an empty box on a deployment with fetching disabled. '
+            .'Add the glyph to the shell\'s set from lucide, verbatim.',
+            $directory,
+            implode(', ', $missing),
+        ));
+    }
+
     public function testEveryClassTheTemplatesWriteIsShippedBySomebody(): void
     {
         $written = self::classesUsedInTemplates();
