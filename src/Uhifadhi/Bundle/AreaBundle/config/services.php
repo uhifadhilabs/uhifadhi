@@ -36,6 +36,7 @@ use Uhifadhi\Bundle\AreaBundle\Service\BoundaryImport;
 use Uhifadhi\Bundle\AreaBundle\Service\PersonFacetService;
 use Uhifadhi\Bundle\AreaBundle\Service\PostingService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationEventService;
+use Uhifadhi\Bundle\AreaBundle\Service\StationFigureService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneEventService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneExportService;
@@ -49,6 +50,7 @@ use Uhifadhi\Bundle\AreaBundle\Widget\AreaIndexWidgets;
 use Uhifadhi\Bundle\AtlasBundle\Map\MapBuilderInterface;
 use Uhifadhi\Bundle\RegistryBundle\Repository\AreaModuleRepository;
 use Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceInterface;
+use Uhifadhi\Contracts\Kpi\StationFigureProviderInterface;
 use Uhifadhi\Contracts\Kpi\ZoneFigureProviderInterface;
 use Uhifadhi\Contracts\People\PersonFacetProviderInterface;
 use Uhifadhi\Contracts\People\PersonPostingProviderInterface;
@@ -195,6 +197,16 @@ return static function (ContainerConfigurator $container): void {
     $services->set('area.zone_figures', ZoneFigureService::class)
         ->args([tagged_iterator(ZoneFigureProviderInterface::TAG)]);
     $services->alias(ZoneFigureService::class, 'area.zone_figures');
+
+    /*
+     * AND WHAT THE MODULES SAY ABOUT A POST — the same shape one rung down:
+     * every tagged provider, asked once for the whole set, and only where the
+     * area runs that module. The dock on a station record is four rows from
+     * four modules, and no module is named here either.
+     */
+    $services->set('area.station_figures', StationFigureService::class)
+        ->args([tagged_iterator(StationFigureProviderInterface::TAG)]);
+    $services->alias(StationFigureService::class, 'area.station_figures');
 
     $services->set('area.zones', ZoneService::class)
         ->args([

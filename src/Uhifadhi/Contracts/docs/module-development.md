@@ -1382,6 +1382,9 @@ valid.
 | `OverviewCopyProviderInterface` | `uhifadhi.overview.copy` | copy fragments for a named slot |
 | `Kpi\DepartmentKpiProviderInterface` | `uhifadhi.department_kpi` | a department's KPI figures |
 | `Kpi\ZoneFigureProviderInterface` | `uhifadhi.zone_kpi` | a zone's figures, for every zone of an area at once |
+| `Kpi\StationFigureProviderInterface` | `uhifadhi.station_kpi` | a station's headline figure, for every station of an area at once |
+| `People\PersonFacetProviderInterface` | `uhifadhi.person_facets` | a person's position and department, for a list somewhere else |
+| `People\PersonPostingProviderInterface` | `uhifadhi.person_postings` | where a person works, for their own page |
 
 Every one of them starts with `moduleSlug()`, and it must return the same slug your
 `ModuleProviderInterface` does: that is how a contribution disappears when an area switches your
@@ -1411,6 +1414,23 @@ differently would leave all three blank with nothing on the page to point at.
 Answering with nothing is legitimate (`ZoneFigures::none()`), and a zone left out of the answer is
 a zone your module has nothing to say about. Neither is a zero: until a module publishes, the zone
 surfaces say so in the product's own words rather than drawing naughts.
+
+**The station seam is the same shape one rung down.** `StationFigureProviderInterface` takes a
+`StationFigureRequest` of `StationRef`s and answers `StationFigures` keyed by station uuid, with
+the same `DepartmentKpi` values and the same period rule. It differs in one respect: a station's
+dock draws **one row per module**, so the key is `StationFigureProviderInterface::HEADLINE` and a
+module with more to say says it in the `caption` — "out of here · 412 km", "within 12 km · 1 open"
+— rather than in a second key. What "about this post" means is yours: patrols are the ones that
+started there, incidents are the ones within some distance of it, and the core prints your
+qualifier without interpreting it. **Do not put a URL in a figure**: the core already knows your
+module's entry route from the registry and resolves the dock's `Open →` from your slug.
+
+**Two more seams point at people**, and both exist because the ground and the people live in
+different bundles and neither may depend on the other. `PersonFacetProviderInterface` is answered
+by whoever owns people — a position title and a department name for a set of user uuids, so a
+postings board elsewhere can filter by role and department. `PersonPostingProviderInterface` is
+answered by whoever owns stations — where each of a set of people works today, so a person's own
+page can say so. Both take the whole set in one call, for the reason every seam here does.
 
 Three rules that keep these contribution points honest:
 
