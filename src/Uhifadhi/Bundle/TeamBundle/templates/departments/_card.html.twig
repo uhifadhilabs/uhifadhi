@@ -111,63 +111,88 @@
         </div>
     {% endif %}
 
+    {# THE FOOTER IS ONE LINE UNTIL IT IS ASKED FOR MORE.
+
+       A COLLAPSED CARD IS A ROW IN A LIST, and a register is read by running
+       down the names. A footer that drew the confine form, the rename field
+       and the deactivate button open would make every collapsed card a
+       hundred pixels taller and turn the list into a stack of forms — so the
+       strip states the scope, and the work sits behind two disclosures.
+
+       BOTH ARE `<details>`, which open with no script of ours; the second
+       stands in for the design's kebab, which a page with no script could
+       not open at all. #}
     <div class="dc-foot">
-        {# THE SCOPE, AND THE ONE CONTROL THAT CHANGES IT. Both consequences
-           are stated; the control drawn is the one this department can take. #}
         <div class="dc-line dc-scopeline">
             <span><b>Scope</b> &middot; <b>{{ area ? area.name : 'org-wide' }}</b> &mdash; {{ area ? 'the other areas do not see it' : 'every area reads it' }}</span>
             <span class="sp"></span>
-            <form class="dc-scopeform" method="post" action="{{ path('team_department_scope', {uuid: uuid}) }}">
-                <input type="hidden" name="_token" value="{{ csrfToken }}">
-                {% if area %}
-                    <input type="hidden" name="scope" value="org">
-                    <input class="fld" type="text" name="reason" placeholder="Why promote {{ department.name }}?" aria-label="Reason for promoting {{ department.name }}" required>
-                    <button class="softbtn" type="submit">Promote to org-wide</button>
-                    <span class="sbn">Its {{ positions|length }} position{{ positions|length == 1 ? '' : 's' }} and the {{ filled }} {{ filled == 1 ? 'person' : 'people' }} in them widen to <b>every area</b>, which grants what they hold everywhere.</span>
-                {% else %}
-                    <input type="hidden" name="scope" value="area">
-                    <select name="area" aria-label="Confine {{ department.name }} to area">
-                        {% for option in areas %}<option value="{{ option.uuidString }}">{{ option.name }}</option>{% endfor %}
-                    </select>
-                    <input class="fld" type="text" name="reason" placeholder="Why confine {{ department.name }}?" aria-label="Reason for confining {{ department.name }}" required>
-                    <button class="softbtn danger" type="submit">Confine to area</button>
-                    <span class="sbn">Its {{ positions|length }} position{{ positions|length == 1 ? '' : 's' }}, the {{ filled }} {{ filled == 1 ? 'person' : 'people' }} in them and its figures narrow to that area; the other areas stop inheriting it.</span>
-                {% endif %}
-            </form>
-        </div>
-        {# THE NAME, AND THE TWO OPERATIONS THAT ARE NOT THE SCOPE. Written
-           openly in the footer rather than folded behind a kebab: a menu that
-           needs a script to open is a menu a page without one cannot offer,
-           and these are the operations an administrator came here for. #}
-        <div class="dc-line">
-            <form class="dc-renameform" method="post" action="{{ path('team_department_rename', {uuid: uuid}) }}">
-                <input type="hidden" name="_token" value="{{ csrfToken }}">
-                <span class="k">Name</span>
-                <input class="fld" type="text" name="name" value="{{ department.name }}" maxlength="120" aria-label="Rename {{ department.name }}" required>
-                <button class="softbtn" type="submit">Rename</button>
-            </form>
-            <span class="sp"></span>
-            {% if department.active %}
-                {# DEACTIVATE, NEVER DELETE, and the footprint informs rather
-                   than guards: the shared confirm modal states what stays
-                   filed, and the administrator proceeds. #}
-                <form method="post" action="{{ path('team_department_deactivate', {uuid: uuid}) }}" data-deactivate>
-                    <input type="hidden" name="_token" value="{{ csrfToken }}">
-                    <button class="softbtn danger" type="submit"
-                            {{ stimulus_controller('confirm-modal') }}
-                            data-action="click->confirm-modal#ask"
-                            data-confirm-modal-title-value="Deactivate “{{ department.name }}”?"
-                            data-confirm-modal-message-value="{% if positions|length %}{{ positions|length }} position{{ positions|length == 1 ? '' : 's' }} ({{ filled }} {{ filled == 1 ? 'person' : 'people' }}) stay filed under it and keep what they grant.{% else %}Nothing is filed under it — an empty footprint.{% endif %} It is hidden from the pickers and greyed in the register; nothing is deleted, and it is one click from coming back."
-                            data-confirm-modal-confirm-label-value="Deactivate anyway"
-                            data-confirm-modal-danger-value="true">Deactivate anyway</button>
-                </form>
-            {% else %}
-                <form method="post" action="{{ path('team_department_reactivate', {uuid: uuid}) }}">
-                    <input type="hidden" name="_token" value="{{ csrfToken }}">
-                    <button class="softbtn" type="submit">Reactivate</button>
-                </form>
-            {% endif %}
-        </div>
 
+            <details class="dc-more">
+                <summary class="softbtn">{{ area ? 'Promote' : 'Change scope' }} &#9662;</summary>
+                <div class="dc-panel">
+                    <form class="dc-scopeform" method="post" action="{{ path('team_department_scope', {uuid: uuid}) }}">
+                        <input type="hidden" name="_token" value="{{ csrfToken }}">
+                        {% if area %}
+                            <input type="hidden" name="scope" value="org">
+                            <b class="sbt">Promote {{ department.name }} to org-wide</b>
+                            <label class="sbf grow"><span class="k">Reason &middot; required</span>
+                                <input class="fld" type="text" name="reason" placeholder="Why promote {{ department.name }}?" aria-label="Reason for promoting {{ department.name }}" required>
+                            </label>
+                            <button class="softbtn" type="submit">Promote to org-wide</button>
+                            <span class="sbn">Its {{ positions|length }} position{{ positions|length == 1 ? '' : 's' }} and the {{ filled }} {{ filled == 1 ? 'person' : 'people' }} in them widen to <b>every area</b>, which grants what they hold everywhere.</span>
+                        {% else %}
+                            <input type="hidden" name="scope" value="area">
+                            <b class="sbt">Confine {{ department.name }} to one area</b>
+                            <label class="sbf"><span class="k">To</span>
+                                <select name="area" aria-label="Confine {{ department.name }} to area">
+                                    {% for option in areas %}<option value="{{ option.uuidString }}">{{ option.name }}</option>{% endfor %}
+                                </select>
+                            </label>
+                            <label class="sbf grow"><span class="k">Reason &middot; required</span>
+                                <input class="fld" type="text" name="reason" placeholder="Why confine {{ department.name }}?" aria-label="Reason for confining {{ department.name }}" required>
+                            </label>
+                            <button class="softbtn danger" type="submit">Confine to area</button>
+                            <span class="sbn">Its {{ positions|length }} position{{ positions|length == 1 ? '' : 's' }}, the {{ filled }} {{ filled == 1 ? 'person' : 'people' }} in them and its figures narrow to that area; the other areas stop inheriting it.</span>
+                        {% endif %}
+                    </form>
+                </div>
+            </details>
+
+            {# THE REST OF THE OPERATIONS, in the design's kebab position and
+               written as a disclosure rather than a menu: the same two things,
+               reachable without a script. #}
+            <details class="dc-more">
+                <summary class="softbtn">More &#9662;</summary>
+                <div class="dc-panel">
+                    <form class="dc-renameform" method="post" action="{{ path('team_department_rename', {uuid: uuid}) }}">
+                        <input type="hidden" name="_token" value="{{ csrfToken }}">
+                        <label class="sbf grow"><span class="k">Name</span>
+                            <input class="fld" type="text" name="name" value="{{ department.name }}" maxlength="120" aria-label="Rename {{ department.name }}" required>
+                        </label>
+                        <button class="softbtn" type="submit">Rename</button>
+                    </form>
+                    {% if department.active %}
+                        {# DEACTIVATE, NEVER DELETE, and the footprint informs
+                           rather than guards: the shared confirm modal states
+                           what stays filed, and the administrator proceeds. #}
+                        <form method="post" action="{{ path('team_department_deactivate', {uuid: uuid}) }}" data-deactivate>
+                            <input type="hidden" name="_token" value="{{ csrfToken }}">
+                            <button class="softbtn danger" type="submit"
+                                    {{ stimulus_controller('confirm-modal') }}
+                                    data-action="click->confirm-modal#ask"
+                                    data-confirm-modal-title-value="Deactivate “{{ department.name }}”?"
+                                    data-confirm-modal-message-value="{% if positions|length %}{{ positions|length }} position{{ positions|length == 1 ? '' : 's' }} ({{ filled }} {{ filled == 1 ? 'person' : 'people' }}) stay filed under it and keep what they grant.{% else %}Nothing is filed under it — an empty footprint.{% endif %} It is hidden from the pickers and greyed in the register; nothing is deleted, and it is one click from coming back."
+                                    data-confirm-modal-confirm-label-value="Deactivate anyway"
+                                    data-confirm-modal-danger-value="true">Deactivate anyway</button>
+                        </form>
+                    {% else %}
+                        <form method="post" action="{{ path('team_department_reactivate', {uuid: uuid}) }}">
+                            <input type="hidden" name="_token" value="{{ csrfToken }}">
+                            <button class="softbtn" type="submit">Reactivate</button>
+                        </form>
+                    {% endif %}
+                </div>
+            </details>
+        </div>
     </div>
 </article>

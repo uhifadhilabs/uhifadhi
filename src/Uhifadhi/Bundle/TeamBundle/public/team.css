@@ -3015,5 +3015,32 @@ a.ov-nm:hover { color: rgb(var(--c-acc)); }
    the search beside the pills. */
 .nvgrp { display: flex; align-items: center; gap: 10px; margin: 16px 0 11px; }
 .ov-find { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-/* The scope line reads as a sentence with its control at the end of it. */
-.dc-scopeline { align-items: flex-start; }
+/* THE FOOTER STRIP IS ONE LINE, and the work sits behind two disclosures at
+   its right end — the second standing where the design draws its kebab. A
+   panel that opened by default would make every collapsed card in the
+   register a hundred pixels taller than the design's. */
+.dc-scopeline { align-items: center; flex-wrap: nowrap; }
+.dc-scopeline > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dc-more { position: relative; flex: none; }
+.dc-more > summary { list-style: none; cursor: pointer; white-space: nowrap; }
+.dc-more > summary::-webkit-details-marker { display: none; }
+/* THE PANEL HANGS OVER WHAT FOLLOWS IT rather than pushing it down: a control
+   that moved the next four cards while you read it is a control that loses
+   your place. */
+.dc-panel {
+    position: absolute; z-index: 30; right: 0; top: calc(100% + 6px); width: 340px; max-width: 78vw;
+    display: flex; flex-direction: column; gap: 9px;
+    padding: 13px 14px 14px; border: 1px solid var(--c-ln2); border-radius: 12px;
+    background: rgb(var(--c-p1)); box-shadow: var(--shadow);
+}
+.dc-panel .sbt { font-size: 12.5px; font-weight: 600; color: rgb(var(--c-tx)); }
+.dc-panel .sbf { display: flex; flex-direction: column; gap: 4px; }
+.dc-panel .sbf .k {
+    font-family: var(--font-mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase;
+    color: rgb(var(--c-dim));
+}
+.dc-panel .fld, .dc-panel select { width: 100%; font-size: 12px; }
+.dc-panel form { display: flex; flex-direction: column; gap: 9px; }
+/* A CARD WITH AN OPEN PANEL SITS ABOVE THE CARDS AFTER IT, so the panel is
+   not painted over by the next one. */
+.dcstack.dcreg .dcard:has(.dc-more[open]) { z-index: 5; }

@@ -161,6 +161,65 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
     }
 
     /**
+     * THE FOOTER IS ONE LINE UNTIL IT IS ASKED FOR MORE.
+     *
+     * A COLLAPSED CARD IS A ROW IN A LIST, and a register of nine of them is
+     * read by running down the names. A footer that drew the confine form,
+     * the rename field and the deactivate button open made every collapsed
+     * card a hundred pixels taller than the design's and turned the list into
+     * a stack of forms. So the strip states the scope and offers two
+     * disclosures; both are `<details>`, so they open with no script of ours.
+     */
+    public function testTheFooterIsOneLineWithItsFormsBehindDisclosures(): void
+    {
+        $crawler = $this->screen();
+        $card = $this->row($crawler, 'Ecology');
+
+        // One line in the strip, and the two ways to more.
+        self::assertCount(1, $card->filter('.dc-foot > .dc-line'));
+        self::assertCount(2, $card->filter('.dc-foot details'));
+
+        // Both closed on arrival: nothing in the footer is open by default.
+        self::assertSame(
+            [null, null],
+            $card->filter('.dc-foot details')->each(static fn (Crawler $c): ?string => $c->attr('open')),
+            'A footer disclosure is open before anybody asked.',
+        );
+
+        // And the strip says what the scope IS without being opened.
+        self::assertStringContainsString('every area reads it', $card->filter('.dc-foot > .dc-line')->text());
+    }
+
+    /** The forms are still there, and still post where they posted. */
+    public function testTheDisclosuresHoldTheSameThreeOperations(): void
+    {
+        $crawler = $this->screen();
+        $card = $this->row($crawler, 'Ecology');
+
+        self::assertCount(1, $card->filter('.dc-foot details form[action$="/scope"]'));
+        self::assertCount(1, $card->filter('.dc-foot details form[action$="/rename"]'));
+        self::assertCount(1, $card->filter('.dc-foot details form[action$="/deactivate"]'));
+    }
+
+    /**
+     * THE BODY OPENS WITH NO SCRIPT EITHER: the chevron is a link and which
+     * card is open is in the address, so an opened card is a link somebody
+     * can send.
+     */
+    public function testTheBodyOpensByTheAddressAndNotByAScript(): void
+    {
+        $crawler = $this->screen();
+        $uuid = $this->uuidOf('Ecology');
+
+        $chevron = $this->row($crawler, 'Ecology')->filter('.dc-hd a.ovx');
+        self::assertStringContainsString('open='.$uuid, (string) $chevron->attr('href'));
+        self::assertSame('false', $chevron->attr('aria-expanded'));
+
+        $opened = $this->client->request('GET', '/departments?open='.$uuid);
+        self::assertSame('true', $this->row($opened, 'Ecology')->filter('.dc-hd a.ovx')->attr('aria-expanded'));
+    }
+
+    /**
      * The names in the register, in the order it draws them.
      *
      * @return list<string>
