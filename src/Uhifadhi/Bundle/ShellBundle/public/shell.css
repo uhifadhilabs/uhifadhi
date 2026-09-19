@@ -136,10 +136,17 @@ html { scrollbar-gutter: stable; scrollbar-width: thin; scrollbar-color: color-m
 ::-webkit-scrollbar-thumb { background: color-mix(in srgb, rgb(var(--c-fog)) 40%, transparent); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
 ::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, rgb(var(--c-fog)) 65%, transparent); }
 
+/* THE BASE TYPE IS THE DESIGN'S, AND IT IS STATED ONCE. 14px on a 1.5 line,
+   which is what every unsized run on every page inherits: a band cell, a table
+   cell, a paragraph. Left to the browser it is 16px on about 1.2, and the
+   difference is not one page's — it is every stacked pair of lines in the
+   product being several pixels short of the design at once. */
 body {
     background: rgb(var(--c-cv));
     color: rgb(var(--c-tx));
     font-family: var(--font-body);
+    font-size: 14px;
+    line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     position: relative;
     margin: 0;

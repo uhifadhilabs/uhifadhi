@@ -65,9 +65,17 @@
     {% if station.elevationM %}
         <span class="f"><span class="k">Elevation</span><span class="v">{{ station.elevationM|number_format }} m{% if station.locality %}<em>{{ station.locality }}</em>{% endif %}</span></span>
     {% endif %}
-    {% if station.openedAt %}
-        <span class="f"><span class="k">Opened</span><span class="v"><time datetime="{{ station.openedAt|date('c') }}" data-localtime-format="day">{{ station.openedAt|date('j M Y') }}</time><em>{{ station.active ? 'active' : 'closed' }}</em></span></span>
-    {% endif %}
+    {# OPEN OR CLOSED IS ALWAYS A FACT, whether or not anybody wrote down the
+       day it started: a cell that vanished with the date would take the state
+       of the post with it. #}
+    <span class="f"><span class="k">Opened</span><span class="v">
+        {%- if station.openedAt -%}
+            <time datetime="{{ station.openedAt|date('c') }}" data-localtime-format="day">{{ station.openedAt|date('j M Y') }}</time>
+        {%- else -%}
+            &mdash;
+        {%- endif -%}
+        <em>{{ station.active ? 'active' : 'closed' }}</em>
+    </span></span>
     <span class="sp"></span>
     {% if zone %}<a class="more" href="{{ path('area_stations', {uuid: area.uuidString}) }}?zone={{ zone.uuidString }}">{{ zone.name }} zone &rarr;</a>{% endif %}
 </div>
@@ -79,7 +87,13 @@
                 {%- if station.code %}&middot; {{ station.code }} {% endif -%}
                 {%- if station.elevationM %}&middot; {{ station.elevationM|number_format }} m{% endif -%}
             </span></span>
-            {{ render_map(map, {'role': 'img', 'aria-label': station.name ~ ' and the ground around it'}) }}
+            {# Fixed at the height the design draws it: a record's plate that changed
+               height with the window would be a different page on every screen. #}
+            {{ render_map(map, {
+                '--map-plate-height': '400px',
+                'role': 'img',
+                'aria-label': station.name ~ ' and the ground around it',
+            }) }}
         </div>
 
         <div class="c stpostings">

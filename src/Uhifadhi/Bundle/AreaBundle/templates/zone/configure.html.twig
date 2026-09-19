@@ -70,6 +70,7 @@
                 <span class="tab">Preview<span class="src">&middot; the zones on the ground</span></span>
             {% endif %}
             {{ render_map(map, {
+                '--map-plate-height': '420px',
                 'role': 'img',
                 'aria-label': plan
                     ? 'The zones ' ~ plan.fileName ~ ' would add, drawn on ' ~ area.name

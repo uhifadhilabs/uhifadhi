@@ -61,6 +61,7 @@ final readonly class StationRegisterService
         }
 
         $counts = $this->postings->countStandingPerStation($area);
+        $led = $this->postings->ledStationUuids($area);
 
         $all = [];
         foreach ($this->stations->findByArea($area) as $station) {
@@ -68,7 +69,12 @@ final readonly class StationRegisterService
             $zone = $station->getZone();
             $zoneUuid = null === $zone ? null : (string) $zone->getUuidString();
 
-            $all[] = StationRow::of($station, $counts[$uuid] ?? 0, null === $zoneUuid ? null : ($hues[$zoneUuid] ?? null));
+            $all[] = StationRow::of(
+                $station,
+                $counts[$uuid] ?? 0,
+                isset($led[$uuid]),
+                null === $zoneUuid ? null : ($hues[$zoneUuid] ?? null),
+            );
         }
 
         $matching = array_values(array_filter($all, static fn (StationRow $row): bool => self::answers($row, $query, null)));
@@ -87,6 +93,7 @@ final readonly class StationRegisterService
             zones: self::zoneOptions($all, $query, $hues, $zoneNames),
             activity: self::activityOptions($all, $query),
             posted: self::postedOptions($all, $query),
+            lead: self::leadOptions($all, $query),
             page: $page,
             pages: $pages,
         );
@@ -119,6 +126,11 @@ final readonly class StationRegisterService
 
         if (StationQuery::POSTED !== $lifted && null !== $query->posted
             && (StationQuery::YES === $query->posted) !== ($row->posted > 0)) {
+            return false;
+        }
+
+        if (StationQuery::LEAD !== $lifted && null !== $query->lead
+            && (StationQuery::YES === $query->lead) !== $row->led) {
             return false;
         }
 
@@ -200,6 +212,29 @@ final readonly class StationRegisterService
         return [
             new FilterOption(StationQuery::YES, 'Somebody posted', $staffed),
             new FilterOption(StationQuery::NO, 'Nobody posted', $empty),
+        ];
+    }
+
+    /**
+     * @param list<StationRow> $all
+     *
+     * @return list<FilterOption>
+     */
+    private static function leadOptions(array $all, StationQuery $query): array
+    {
+        $led = 0;
+        $unled = 0;
+        foreach ($all as $row) {
+            if (!self::answers($row, $query, StationQuery::LEAD)) {
+                continue;
+            }
+
+            $row->led ? ++$led : ++$unled;
+        }
+
+        return [
+            new FilterOption(StationQuery::YES, 'Lead appointed', $led),
+            new FilterOption(StationQuery::NO, 'No lead', $unled),
         ];
     }
 

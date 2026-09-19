@@ -87,6 +87,38 @@ final class StationsTabTest extends WebTestCase
         self::assertStringContainsString('no module publishes figures for these posts', $body);
     }
 
+    /**
+     * THE PLATE IS A FIXED HEIGHT ON A TAB, stated by the page rather than
+     * left to the atlas's default: a card in a stack that sized itself to the
+     * viewport would be a different card on every screen, and the design
+     * draws this one at 420 with its key below it.
+     */
+    public function testThePlateIsDrawnAtTheHeightTheDesignFixes(): void
+    {
+        $this->boot();
+        $this->signIn();
+        [$area] = $this->aStaffedPost();
+
+        self::assertStringContainsString('--map-plate-height:420px', $this->body($this->tab($area)));
+    }
+
+    /** WHO LEADS IS A FILTER TOO: a post with no lead appointed is a thing to look for. */
+    public function testTheTableIsFilteredByWhetherALeadIsAppointed(): void
+    {
+        $this->boot();
+        $this->signIn();
+        [$area] = $this->aStaffedPost();
+        $unled = $this->stations()->add($area, 'Eastern Outpost', -29.25, -3.2);
+        $this->postings()->post($unled, $this->aPerson('B.', 'Mwita'), PostingSource::WrittenHere);
+
+        self::assertSame(['Seneto Gate Post'], $this->listed($this->tab($area).'?lead=yes'));
+        self::assertSame(['Eastern Outpost'], $this->listed($this->tab($area).'?lead=no'));
+        // And the chip is on the bar, offering both answers.
+        $bar = $this->body($this->tab($area));
+        self::assertStringContainsString('Lead appointed', $bar);
+        self::assertStringContainsString('No lead', $bar);
+    }
+
     public function testTheTableIsFilteredByTheAddress(): void
     {
         $this->boot();

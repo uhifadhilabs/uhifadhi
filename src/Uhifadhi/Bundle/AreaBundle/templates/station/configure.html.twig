@@ -67,7 +67,11 @@
            and the plate is how you see where you are typing. #}
         <div class="c">
             <span class="tab">The point picker<span class="src">&middot; the ground, the zones and every post on it</span></span>
-            {{ render_map(map, {'role': 'img', 'aria-label': 'The area, its zones and its stations'}) }}
+            {{ render_map(map, {
+                '--map-plate-height': '420px',
+                'role': 'img',
+                'aria-label': 'The area, its zones and its stations',
+            }) }}
             <div class="pickcap">
                 <b>Read the point off the plate</b>
                 <span class="sp"></span>

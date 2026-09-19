@@ -170,6 +170,7 @@ final readonly class StationConfigureController
         $active = trim($request->query->getString(StationQuery::ACTIVE, StationQuery::YES));
         $sort = $request->query->getString(StationQuery::SORT, StationQuery::BY_NAME);
         $posted = trim($request->query->getString(StationQuery::POSTED));
+        $lead = trim($request->query->getString(StationQuery::LEAD));
         $zone = trim($request->query->getString(StationQuery::ZONE));
 
         return new StationQuery(
@@ -178,6 +179,7 @@ final readonly class StationConfigureController
             // know is the resting state rather than an empty register.
             active: \in_array($active, StationQuery::ANSWERS, true) ? $active : ('all' === $active ? null : StationQuery::YES),
             posted: \in_array($posted, StationQuery::ANSWERS, true) ? $posted : null,
+            lead: \in_array($lead, StationQuery::ANSWERS, true) ? $lead : null,
             search: trim($request->query->getString(StationQuery::SEARCH)),
             sort: \in_array($sort, StationQuery::SORTS, true) ? $sort : StationQuery::BY_NAME,
             page: max(1, $request->query->getInt(StationQuery::PAGE, 1)),

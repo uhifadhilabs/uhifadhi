@@ -105,7 +105,15 @@
            Hue is the zone the point falls in, exactly as on the zones pages. #}
         <div class="c">
             <span class="tab">All stations on the ground<span class="src">&middot; the whole area &middot; {{ stationCount }} {{ stationCount == 1 ? 'station' : 'stations' }}</span></span>
-            {{ render_map(map, {'role': 'img', 'aria-label': 'Every station of ' ~ area.name ~ ', hued by the zone it stands in'}) }}
+            {# THE HEIGHT IS THE PAGE'S, NOT THE VIEWPORT'S. The atlas defaults a plate
+               to a share of the window, which is right for a page that is only a map
+               and wrong for a card in a stack: this one is the height the design
+               draws it, with its key below. #}
+            {{ render_map(map, {
+                '--map-plate-height': '420px',
+                'role': 'img',
+                'aria-label': 'Every station of ' ~ area.name ~ ', hued by the zone it stands in',
+            }) }}
         </div>
 
         <div class="c">
@@ -122,6 +130,12 @@
                 {{ include('@Area/_partial/_filter.html.twig', {
                     label: 'posted', all: 'posted or not', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\StationQuery::POSTED'),
                     chosen: query.posted, chosenLabel: query.posted == 'yes' ? 'somebody posted' : (query.posted == 'no' ? 'nobody posted' : null), options: register.posted, query: query,
+                }) }}
+                {# WHO LEADS — the gap a roster is fixed from, so it is an answer
+                   the bar offers rather than something counted by eye. #}
+                {{ include('@Area/_partial/_filter.html.twig', {
+                    label: 'lead', all: 'led or not', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\StationQuery::LEAD'),
+                    chosen: query.lead, chosenLabel: query.lead == 'yes' ? 'lead appointed' : (query.lead == 'no' ? 'no lead' : null), options: register.lead, query: query,
                 }) }}
                 {{ include('@Area/_partial/_filter.html.twig', {
                     label: 'order', all: 'a&ndash;z', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\StationQuery::SORT'),

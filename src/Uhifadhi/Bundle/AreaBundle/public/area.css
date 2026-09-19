@@ -26,30 +26,12 @@
  */
 
 /* ── The plate's tab ─────────────────────────────────────────────────────────
-   The little label riding the top-left border of a .c plate. The design file
-   prints a widget index inside it (AO·04); that is the workspace's referencing
-   system and is deliberately absent here. */
-.c .tab {
-    position: absolute;
-    top: -9px;
-    left: 13px;
-    background: rgb(var(--c-cv));
-    border: 1px solid var(--c-ln2);
-    border-radius: 7px;
-    padding: 3px 9px;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-family: var(--font-mono);
-    font-size: 8.5px;
-    font-weight: 600;
-    letter-spacing: .13em;
-    text-transform: uppercase;
-    color: rgb(var(--c-dim));
-    white-space: nowrap;
-}
-
-.c .tab .src { color: rgb(var(--c-fog)); font-weight: 500; }
+   NOT RESTATED HERE, and that is the fix rather than an omission. The shell
+   ships `.c > .tab` at the design's 9.5px/600/.18em; this sheet used to write
+   the same selector at 8.5px/.13em, and because it is linked second it won
+   everywhere — so every card on every area screen wore a label a point
+   smaller than the rest of the product, and the KPI strip was a centimetre
+   short of the design. One rule, in the shell, for every surface. */
 
 /* WHO DREW THIS PLATE. The mirror of the tab, top-right: on a surface whose
    whole argument is that the area page owns the frame and modules own the content,

@@ -34,6 +34,7 @@ final readonly class StationQuery
     public const string ZONE = 'zone';
     public const string ACTIVE = 'active';
     public const string POSTED = 'posted';
+    public const string LEAD = 'lead';
     public const string SEARCH = 'q';
     public const string SORT = 'sort';
     public const string PAGE = 'page';
@@ -54,6 +55,7 @@ final readonly class StationQuery
         public ?string $zone = null,
         public ?string $active = self::YES,
         public ?string $posted = null,
+        public ?string $lead = null,
         public string $search = '',
         public string $sort = self::BY_NAME,
         public int $page = 1,
@@ -66,6 +68,7 @@ final readonly class StationQuery
         return null !== $this->zone
             || self::YES !== $this->active
             || null !== $this->posted
+            || null !== $this->lead
             || '' !== $this->search;
     }
 
@@ -83,6 +86,7 @@ final readonly class StationQuery
             // clean link; asking for all of them is what the parameter says.
             self::ACTIVE => self::YES === $this->active ? null : ($this->active ?? 'all'),
             self::POSTED => $this->posted,
+            self::LEAD => $this->lead,
             self::SEARCH => '' === $this->search ? null : $this->search,
             self::SORT => self::BY_NAME === $this->sort ? null : $this->sort,
             // CHANGING A FILTER GOES BACK TO PAGE ONE: the page is never

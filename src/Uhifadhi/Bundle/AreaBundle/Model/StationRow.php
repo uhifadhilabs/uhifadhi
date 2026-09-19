@@ -23,6 +23,10 @@ use Uhifadhi\Bundle\AreaBundle\Entity\Station;
  * register is a configuration surface, and a row that carried them would be a
  * second, worse version of a page that already exists.
  *
+ * WHETHER SOMEBODY LEADS IS A YES OR A NO HERE, not a name: the register
+ * filters on it and the record page states who. A staffed post with no lead
+ * is an ordinary state and a thing worth finding.
+ *
  * THE ZONE IS DERIVED, NEVER CHOSEN, and the row says so wherever it prints
  * it. A post standing on ground no zone covers has no zone, which is legal
  * and common, and the register offers it as something to look for.
@@ -37,6 +41,7 @@ final readonly class StationRow
         public ?string $zoneName,
         public ?string $zoneHue,
         public int $posted,
+        public bool $led,
         public bool $active,
         public ?StationPoint $point,
         public ?int $elevationM,
@@ -61,7 +66,7 @@ final readonly class StationRow
             || str_contains(mb_strtolower((string) $this->code), $term);
     }
 
-    public static function of(Station $station, int $posted, ?string $zoneHue): self
+    public static function of(Station $station, int $posted, bool $led, ?string $zoneHue): self
     {
         $zone = $station->getZone();
 
@@ -73,6 +78,7 @@ final readonly class StationRow
             zoneName: $zone?->getName(),
             zoneHue: $zoneHue,
             posted: $posted,
+            led: $led,
             active: $station->isActive(),
             point: StationPoint::of($station->getPoint()),
             elevationM: $station->getElevationM(),

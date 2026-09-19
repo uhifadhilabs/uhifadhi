@@ -70,6 +70,60 @@ final class StationRecordTest extends WebTestCase
         self::assertStringContainsString('Leads', $body);
     }
 
+    /**
+     * THE PLATE IS FIXED AT THE HEIGHT THE DESIGN DRAWS IT, stated by the
+     * page: the atlas's default is a share of the viewport, and a record's
+     * plate that changed height with the window would be a different page on
+     * every screen.
+     */
+    public function testThePlateIsDrawnAtTheHeightTheDesignFixes(): void
+    {
+        $this->boot();
+        $this->signIn();
+        [$area, $station] = $this->aStaffedPost();
+
+        self::assertStringContainsString('--map-plate-height:400px', $this->body($this->record($area, $station)));
+    }
+
+    /**
+     * A RECORD PAGE CARRIES NO CONFIGURE ACTION. Configure belongs to the
+     * area's TABS — it is how you leave the data for the settings — and a
+     * record inside an area is not one of the ways of looking at the area.
+     * The way to edit this post is the one action the page does carry.
+     */
+    public function testARecordCarriesNoConfigureActionOnlyTheWayToEditThePost(): void
+    {
+        $this->boot();
+        $this->signIn();
+        [$area, $station] = $this->aStaffedPost();
+
+        $body = $this->body($this->record($area, $station));
+
+        self::assertStringContainsString('Edit the station</a>', $body);
+        self::assertStringNotContainsString('Configure</a>', $body);
+        // The tab it belongs to still carries it, which is what makes the
+        // record's omission a rule rather than a missing action.
+        $this->browser()->request('GET', '/areas/'.$area->getUuidString().'/stations');
+        self::assertStringContainsString('Configure</a>', (string) $this->browser()->getResponse()->getContent());
+    }
+
+    /**
+     * THE BAND STATES WHETHER THE POST IS OPEN, always — a post nobody wrote
+     * an opening date for is still open or closed, and a cell that vanished
+     * with the date would take that fact with it.
+     */
+    public function testTheBandStatesWhetherThePostIsOpenEvenWithNoDate(): void
+    {
+        $this->boot();
+        $this->signIn();
+        [$area, $station] = $this->aStaffedPost();
+
+        $body = $this->body($this->record($area, $station));
+
+        self::assertStringContainsString('Opened', $body);
+        self::assertStringContainsString('active', $body);
+    }
+
     /** A post on unzoned ground says so; unzoned is legal, not an error. */
     public function testAPostOnUnzonedGroundSaysSo(): void
     {

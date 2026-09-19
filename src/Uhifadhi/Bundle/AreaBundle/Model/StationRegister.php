@@ -37,6 +37,7 @@ final readonly class StationRegister
      * @param list<FilterOption> $zones    every zone of the area, and the unzoned ground
      * @param list<FilterOption> $activity active, inactive, and both
      * @param list<FilterOption> $posted   staffed and unstaffed
+     * @param list<FilterOption> $lead     a lead appointed, or none
      */
     public function __construct(
         public array $rows,
@@ -46,6 +47,7 @@ final readonly class StationRegister
         public array $zones,
         public array $activity,
         public array $posted,
+        public array $lead,
         public int $page,
         public int $pages,
     ) {

@@ -135,9 +135,9 @@ final readonly class ModuleFrameService
     }
 
     /**
-     * THE `Configure` ACTION, or null for a page whose surface has nothing to
-     * configure — a module that declared no sections, and every page outside an
-     * area.
+     * THE `Configure` ACTION, or null for a page that is not one of a
+     * surface's places: a module that declared no sections, every page outside
+     * an area, and every record or form inside one.
      */
     public function configure(): ?ConfigureAction
     {
@@ -153,6 +153,20 @@ final readonly class ModuleFrameService
             return null === $back
                 ? null
                 : new ConfigureAction($back, current: true, hint: 'Back to the dashboard');
+        }
+
+        /*
+         * CONFIGURE BELONGS TO THE PLACES, NOT TO EVERY PAGE IN THEM. It is
+         * how you step off the DATA of a surface and into how that surface is
+         * set up, so it rides the tab strip's pages — the same pages the strip
+         * itself is drawn on. A record inside a place is not one of the places:
+         * it is a thing in one, its strip says nothing ({@see tabs()}), and a
+         * Configure there would offer to configure the surface from a page
+         * that is not about the surface. Whatever a record lets you edit, it
+         * offers itself, in its own words.
+         */
+        if ([] === $this->tabs()) {
+            return null;
         }
 
         $url = $this->configureUrl($request, $surface);

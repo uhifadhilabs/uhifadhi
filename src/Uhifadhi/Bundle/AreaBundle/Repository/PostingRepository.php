@@ -207,6 +207,38 @@ class PostingRepository extends ServiceEntityRepository
     }
 
     /**
+     * WHICH OF THE AREA'S POSTS HAVE A LEAD STANDING AT THEM, in one
+     * statement — a register draws the answer on every row, and asking per
+     * post would be a query per row.
+     *
+     * @return array<string, true> station uuid to nothing but its presence
+     */
+    public function ledStationUuids(AreaOfInterest $area): array
+    {
+        /** @var list<array{station: mixed}> $rows */
+        $rows = $this->createQueryBuilder('p')
+            ->select('s.uuid AS station')
+            ->join('p.station', 's')
+            ->where('p.endedAt IS NULL')
+            ->andWhere('p.leader = true')
+            ->andWhere('s.area = :area')
+            ->setParameter('area', $area)
+            ->groupBy('s.uuid')
+            ->getQuery()
+            ->getResult();
+
+        $led = [];
+        foreach ($rows as $row) {
+            $station = $row['station'];
+            if (\is_string($station) || $station instanceof \Stringable) {
+                $led[(string) $station] = true;
+            }
+        }
+
+        return $led;
+    }
+
+    /**
      * HOW MANY PEOPLE WORK OUT OF EACH ZONE'S POSTS, in one statement, for the
      * same reason the station count is one: a card per zone must not be a
      * query per zone.
