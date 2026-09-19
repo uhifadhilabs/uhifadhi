@@ -74,6 +74,26 @@ class PostingRepository extends ServiceEntityRepository
     }
 
     /**
+     * EVERY STANDING POSTING ON THE INSTALLATION, for the cross-area board.
+     *
+     * The person comes with it: the board is keyed by person uuid and reading
+     * it off a proxy is a query a row.
+     *
+     * @return list<Posting>
+     */
+    public function findAllStanding(): array
+    {
+        /** @var list<Posting> $postings */
+        $postings = $this->standing()
+            ->addSelect('person')
+            ->join('p.person', 'person')
+            ->getQuery()
+            ->getResult();
+
+        return $postings;
+    }
+
+    /**
      * Everybody working out of a station inside this zone. A zone has no
      * people of its own; it has the ground its stations stand on.
      *

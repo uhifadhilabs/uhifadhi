@@ -35,6 +35,7 @@ use Uhifadhi\Bundle\TeamBundle\Controller\PositionController;
 use Uhifadhi\Bundle\TeamBundle\Controller\PositionWidgetsController;
 use Uhifadhi\Bundle\TeamBundle\Controller\SecurityController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamController;
+use Uhifadhi\Bundle\TeamBundle\Controller\TeamPostingsController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamWidgetsController;
 use Uhifadhi\Bundle\TeamBundle\Devkit\TeamContentProvider;
 use Uhifadhi\Bundle\TeamBundle\EventListener\ApiErrorListener;
@@ -74,6 +75,7 @@ use Uhifadhi\Bundle\TeamBundle\Service\PerformanceTopics;
 use Uhifadhi\Bundle\TeamBundle\Service\PermissionCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionService;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionVacancy;
+use Uhifadhi\Bundle\TeamBundle\Service\PostingBoard;
 use Uhifadhi\Bundle\TeamBundle\Service\StaffingFigures;
 use Uhifadhi\Bundle\TeamBundle\Service\SuperAdminInvariant;
 use Uhifadhi\Bundle\TeamBundle\Service\TeamOverview;
@@ -90,6 +92,7 @@ use Uhifadhi\Bundle\TeamBundle\Twig\MatrixExtension;
 use Uhifadhi\Bundle\TeamBundle\Twig\MatrixRuntime;
 use Uhifadhi\Bundle\TeamBundle\Widget\PositionWidgets;
 use Uhifadhi\Bundle\TeamBundle\Widget\TeamWidgets;
+use Uhifadhi\Contracts\Area\StationDirectoryInterface;
 use Uhifadhi\Contracts\People\PersonDirectoryProviderInterface;
 use Uhifadhi\Contracts\People\PersonFacetProviderInterface;
 use Uhifadhi\Contracts\Performance\DepartmentDirectoryInterface;
@@ -965,6 +968,26 @@ return static function (ContainerConfigurator $container): void {
             service('registry.catalogue'),
         ]);
     $services->alias(DepartmentSectionOverview::class, 'team.department_section_overview');
+
+    /*
+     * WHO IS POSTED WHERE, ACROSS EVERY AREA. The stations and the uuids
+     * standing at them come from whoever owns the ground, through the tag;
+     * this bundle says who those people are. An installation with no ground
+     * package yields no provider and the board says the installation has no
+     * station, which is true.
+     */
+    $services->set('team.posting_board', PostingBoard::class)
+        ->args([
+            tagged_iterator(StationDirectoryInterface::TAG),
+            service(UserRepository::class),
+            service('router'),
+        ]);
+    $services->alias(PostingBoard::class, 'team.posting_board');
+
+    $services->set('team.controller.postings', TeamPostingsController::class)
+        ->args([service('twig'), service('team.posting_board')])
+        ->tag('controller.service_arguments');
+    $services->alias(TeamPostingsController::class, 'team.controller.postings')->public();
 
     $services->set('team.controller.department_section', DepartmentSectionController::class)
         ->args([

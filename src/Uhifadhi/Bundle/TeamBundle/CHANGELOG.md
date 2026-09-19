@@ -28,6 +28,13 @@ Not released yet.
    and fewer than three figures in a band place nothing
  * a second sheet, `bundles/team/performance.css`, carrying the board's own
    vocabulary, and a sort that runs INSIDE each band and never across one
+ * the POSTINGS tab: who is posted to which station, across every area, with
+   the house filter bar — area, zone, rank, whether the station has anybody —
+   and the search. It writes nothing: a posting is made on the station, in the
+   area that owns the ground, and a board that could post somebody would be a
+   second write path for a fact one screen already owns. A station nobody
+   stands at keeps its band and says so.
+
  * Departments wears the AREA IDIOM. It is a section now, not a single screen:
    the same header on every tab (the section's name), a subline that is that
    tab's own, one strip between the head and the body with exactly one tab lit,

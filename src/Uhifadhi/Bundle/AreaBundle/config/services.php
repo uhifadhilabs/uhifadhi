@@ -19,6 +19,7 @@ use Uhifadhi\Bundle\AreaBundle\Devkit\StationContentProvider;
 use Uhifadhi\Bundle\AreaBundle\Devkit\ZoneContentProvider;
 use Uhifadhi\Bundle\AreaBundle\Overview\OverviewContributorInterface;
 use Uhifadhi\Bundle\AreaBundle\People\AreaPersonPostings;
+use Uhifadhi\Bundle\AreaBundle\People\AreaStationDirectory;
 use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\CheckInCorrectionRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\CheckInRepository;
@@ -68,6 +69,7 @@ use Uhifadhi\Bundle\RegistryBundle\Repository\AreaModuleRepository;
 use Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceInterface;
 use Uhifadhi\Contracts\Area\LivePositionsInterface;
 use Uhifadhi\Contracts\Area\PresenceProviderInterface;
+use Uhifadhi\Contracts\Area\StationDirectoryInterface;
 use Uhifadhi\Contracts\Area\StationSectionsInterface;
 use Uhifadhi\Contracts\Kpi\StationFigureProviderInterface;
 use Uhifadhi\Contracts\Kpi\ZoneFigureProviderInterface;
@@ -229,6 +231,15 @@ return static function (ContainerConfigurator $container): void {
     $services->set('area.person_postings', AreaPersonPostings::class)
         ->args([service(PostingRepository::class)])
         ->tag(PersonPostingProviderInterface::TAG);
+
+    /*
+     * AND THE STATION-SHAPED HALF OF IT: every station and who stands at each,
+     * across every area at once, which is what a cross-area postings board
+     * reads and what no per-area read can answer.
+     */
+    $services->set('area.station_directory', AreaStationDirectory::class)
+        ->args([service(StationRepository::class), service(PostingRepository::class), service(AreaOfInterestRepository::class)])
+        ->tag(StationDirectoryInterface::TAG);
 
     /*
      * AND THE OTHER DIRECTION: what a postings board knows about the people on

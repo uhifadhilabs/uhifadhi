@@ -8,6 +8,12 @@
 
 Not released yet.
 
+ * `Area\StationDirectoryInterface` and its values — every station on the
+   installation and who stands at each, across every area at once. It is the
+   station-shaped half of `People\PersonPosting`: that seam answers where one
+   person works, and a board assembled out of it loses every station nobody
+   stands at, which is the reading the board exists for.
+
  * the module provider contract, the permissions a module declares, the area and
    user entity contracts, the user badge and the devkit contracts
  * `Kpi\DepartmentKpiProviderInterface` and its value objects — how a module

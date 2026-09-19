@@ -33,12 +33,14 @@ use Uhifadhi\Bundle\TeamBundle\TeamBundle;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\DeclaringModuleProvider;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\DevkitContentCollector;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\FakeModuleProvider;
+use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\FakeStationDirectory;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\FakeTopicProvider;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\GuardedController;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\RosterKpiProvider;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\ShellPageController;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\SilentModuleProvider;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\SurveyKpiProvider;
+use Uhifadhi\Contracts\Area\StationDirectoryInterface;
 use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
 
 /**
@@ -286,6 +288,16 @@ final class TestKernel extends Kernel
             ->set('fake.topic.incidents', FakeTopicProvider::class)
             ->args(['incidents'])
             ->tag(PerformanceTopicProviderInterface::TAG);
+
+        /*
+         * AND WHOEVER OWNS THE GROUND, so the postings board has a station to
+         * read. This kernel installs no area package on purpose — Team must
+         * hold a person without one — so the seam is answered by a fixture,
+         * exactly as an installation answers it with its own.
+         */
+        $container->services()
+            ->set('fake.station_directory', FakeStationDirectory::class)
+            ->tag(StationDirectoryInterface::TAG);
 
         // The thing behind the firewall (see configureRoutes).
         $container->services()->set(GuardedController::class)->public();

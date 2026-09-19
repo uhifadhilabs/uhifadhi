@@ -18,6 +18,11 @@ Not released yet.
  * the areas row wears the house MAP mark, as the design draws it, and the
    areas under it wear none: a glyph repeated down a branch reads as a second
    kind of thing rather than the same thing twice
+ * the area answers `Area\StationDirectoryInterface`: every station and who
+   stands at each, across every area at once, in two queries. Every per-area
+   read it already published is scoped to one area, and a reader who has to
+   open four areas to count the postings cannot count them at all.
+
  * **BREAKING for an installation** — the spatial base and the geometry types
    now come from `utafitilabs/postgis-bundle` instead of
    `fundistadi/postgis-bundle`. An installation replaces the bundle class in

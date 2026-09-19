@@ -1,0 +1,39 @@
+{# ONE GROUPED DROPDOWN OF THE HOUSE FILTER BAR.
+
+   A CLOSED CHIP THAT OPENS A PANEL OF OPTIONS WITH LIVE COUNTS — the
+   incidents pattern, which is the standing rule for every filter bar in the
+   product.
+
+   IT IS A `<details>`, AND EVERY OPTION IS A LINK. The address is the state,
+   so a filtered list is a link somebody can send and a page a browser can go
+   back to; and the whole control opens, chooses and clears with no script of
+   ours, which is what keeps a filter bar working on a page that has none.
+
+   THE COUNTS ARE OF THE WHOLE SET, not of what is already filtered: a count
+   that moved as you filtered could not tell you what picking an option would
+   do, which is the one thing it is for. A NOUGHT IS DRAWN — an option that
+   vanished when it emptied could not be told from one that never existed. #}
+{# THE CLOSED CHIP READS THE CHOSEN OPTION'S LABEL, not its value: an area is
+   picked by identifier and read as a name. #}
+{% set chosenOption = chosen is null ? null : options|filter(option => option.value == chosen)|first %}
+<details class="i-dd">
+    <summary class="mchip i-ddt{{ chosen is not null ? ' on' }}">
+        <span class="i-ddval">{{ chosenOption ? chosenOption.label : all }}</span>
+        <span class="i-ddcaret">&#9662;</span>
+    </summary>
+    <div class="i-ddmenu">
+        <span class="i-ddhead">{{ label }}</span>
+        <a class="i-ddopt{{ chosen is null ? ' on' }}"
+           href="{{ path(app.request.attributes.get('_route'), query.with(key, null)) }}">
+            <span class="i-ddopt-l">{{ all }}</span>
+        </a>
+        <span class="i-ddsep"></span>
+        {% for option in options %}
+            <a class="i-ddopt{{ chosen == option.value ? ' on' }}"
+               href="{{ path(app.request.attributes.get('_route'), query.with(key, option.value)) }}">
+                <span class="i-ddopt-l">{{ option.label }}</span>
+                <span class="i-ddopt-n">{{ option.count }}</span>
+            </a>
+        {% endfor %}
+    </div>
+</details>
