@@ -26,6 +26,7 @@ use Uhifadhi\Bundle\AreaBundle\Controller\ZoneConfigureController;
 use Uhifadhi\Bundle\AreaBundle\Controller\ZoneController;
 use Uhifadhi\Bundle\AreaBundle\Controller\ZoneEditController;
 use Uhifadhi\Bundle\AreaBundle\Controller\ZoneImportController;
+use Uhifadhi\Bundle\AreaBundle\Controller\ZoneRecordController;
 use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\PostingRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\StationEventRepository;
@@ -153,6 +154,26 @@ return static function (ContainerConfigurator $container): void {
         ])
         ->tag('controller.service_arguments');
     $services->alias(ZoneController::class, 'area.controller.zone')->public();
+
+    /*
+     * ONE ZONE, READ — the same surface one step in. It reads only; the ring,
+     * the name and the removal are the configure section's.
+     */
+    $services->set('area.controller.zone_record', ZoneRecordController::class)
+        ->args([
+            service('twig'),
+            service('area.zone_set'),
+            service(StationRepository::class),
+            service(PostingRepository::class),
+            service('area.posting_board'),
+            service(ZoneEventRepository::class),
+            service('area.zone_plate'),
+            service('area.zone_figures'),
+            service('registry.area_modules'),
+            service('registry.entry_routes'),
+        ])
+        ->tag('controller.service_arguments');
+    $services->alias(ZoneRecordController::class, 'area.controller.zone_record')->public();
 
     /*
      * THE ZONES SECTION OF THE AREA'S CONFIGURE PAGE — a screen with an address

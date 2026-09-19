@@ -1,0 +1,191 @@
+{# ONE ZONE, READ.
+
+   Design: areas/<area>/zones/index.html, the picked state.
+
+   A RECORD, NOT A TAB: the zone's bare name as the h1, its context in the
+   quiet subline, the crumb one step longer, its own identity band, and no
+   tab strip — a zone is a thing inside the area rather than one of the ways
+   of looking at the area.
+
+   ITS FIGURES ARE IN ITS BAND. A record states them the way the station page
+   does; the row of cards belongs to the set, not to one of its members.
+
+   IT ONLY READS. The ring, the name and the removal are the configure
+   section's, and nothing here writes. #}
+{% extends '@Shell/page.html.twig' %}
+
+{% block title %}{{ zone.name }} &middot; {{ area.name }}{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Bundle\\AtlasBundle\\AtlasBundle::STYLESHEET')) }}">
+    {{ include('@Area/_stylesheets.html.twig') }}
+{% endblock %}
+
+{% block shell_breadcrumbs %}
+    <a href="{{ path('area_index') }}">uhifadhi</a> /
+    <a href="{{ path('area_show', {uuid: area.uuidString}) }}">{{ area.name }}</a> /
+    <a href="{{ path('area_zones', {uuid: area.uuidString}) }}">zones</a> /
+    {{ zone.name|lower }}
+{% endblock %}
+
+{% block shell_page_title %}{{ zone.name }}{% endblock %}
+
+{% block shell_page_subtitle %}
+    Zone &middot; {{ area.name }}
+    {%- if lastImport and lastImport.importedAt %} &middot; imported
+        <time datetime="{{ lastImport.importedAt|date('c') }}" data-localtime-format="day">{{ lastImport.importedAt|date('j M Y') }}</time>
+    {%- endif -%}
+{% endblock %}
+
+{% block shell_page_actions %}
+    {# WHAT ELSE READS THIS GROUND — whatever modules report by zone, through
+       their own entry routes. The core names none of them. #}
+    {% for fact in figures|filter(fact => fact.route) %}
+        <a class="tgl w-act" href="{{ path(fact.route, {uuid: area.uuidString}) }}">See {{ fact.figure.moduleName|lower }} {{ ux_icon('shell:arrow-right') }}</a>
+    {% endfor %}
+{% endblock %}
+
+{% block shell_page %}
+{% set here = path('area_zone_show', {uuid: area.uuidString, zone: zone.uuidString}) %}
+
+{# THE RECORD'S OWN BAND — the figures a zone has, and the ones no module
+   publishes said in words rather than drawn as noughts. #}
+<div class="factband">
+    <span class="f"><span class="k">Extent</span><span class="v">{{ row ? row.km2|number_format : '&mdash;'|raw }}<em>km&sup2;</em></span></span>
+    <span class="f"><span class="k">Covered</span><span class="v">
+        {%- if covered %}{{ covered.display }}<em>{{ covered.unit ?: '%' }}</em>
+        {%- else %}&mdash;<em>no module publishes this</em>{% endif -%}
+    </span></span>
+    <span class="f"><span class="k">Stations</span><span class="v">
+        {{- stationCount ?: '&mdash;'|raw }}<em>
+        {%- if stationCount == 0 %}none{% elseif stationCount == 1 %}one post{% else %}posts{% endif -%}
+        </em></span></span>
+    <span class="f"><span class="k">People</span><span class="v">{{ peopleTotal ?: '&mdash;'|raw }}<em>posted</em></span></span>
+    {% for fact in figures %}
+        <span class="f"><span class="k">{{ fact.figure.label }}</span><span class="v">{{ fact.figure.display }}<em>{{ fact.figure.caption ?: fact.figure.moduleName|lower }}</em></span></span>
+    {% else %}
+        <span class="f"><span class="k">From the modules</span><span class="v">&mdash;<em>no module publishes this</em></span></span>
+    {% endfor %}
+    <span class="sp"></span>
+    <a class="more" href="{{ path('area_zones', {uuid: area.uuidString}) }}">{{ area.name }}&rsquo;s zones &rarr;</a>
+</div>
+
+<div class="recgrid">
+    <div class="col">
+        {# THE GROUND, with this zone lit among its siblings: a zone is read
+           against the area it divides, never on a plate of its own. #}
+        <div class="c">
+            <span class="tab">{{ zone.name }} on the ground<span class="src">&middot; the whole area, its zones and its stations &middot; {{ zone.name }} lit</span></span>
+            {{ render_map(map, {
+                '--map-plate-height': '400px',
+                'role': 'img',
+                'aria-label': zone.name ~ ' among the zones of ' ~ area.name,
+            }) }}
+        </div>
+
+        <div class="c">
+            <span class="tab">Stations in {{ zone.name }}<span class="src">&middot; {{ stationCount }} &middot; {{ peopleTotal }} {{ peopleTotal == 1 ? 'person' : 'people' }}</span></span>
+
+            {% if stationCount %}
+                <div class="lfilt">
+                    <form class="lsearch" method="get" action="{{ here }}">
+                        {{ ux_icon('shell:search') }}
+                        <input class="fld" type="search" name="q" value="{{ query.search }}" placeholder="Name or code&hellip;"
+                               aria-label="Search stations by name or code">
+                    </form>
+                </div>
+            {% endif %}
+
+            {% if stations is empty %}
+                <div class="zdnone">
+                    <span class="stpin hollow"></span>
+                    <b>{{ stationCount ? 'No station matches' : 'No station in ' ~ zone.name }}</b>
+                    <span>{{ stationCount ? 'clear the search' : 'zones are presence-driven — ground nobody works may hold no post' }}</span>
+                </div>
+            {% else %}
+                {# NO ZONE COLUMN: every row of one zone would answer it the same. #}
+                {{ include('@Area/zone/_stations.html.twig', {rows: stations, area: area, withZone: false}) }}
+                {{ include('@Area/_partial/_pager.html.twig', {
+                    query: query, page: stationsPage, pages: stationsPages,
+                    from: (stationsPage - 1) * perPage + 1, to: min(stationsPage * perPage, stationsMatching),
+                    total: stationsMatching, scope: stationCount, noun: 'stations',
+                }) }}
+            {% endif %}
+
+            <p class="zpicknote">A station&rsquo;s zone is read from its point &middot; it follows the boundary it falls inside</p>
+        </div>
+    </div>
+
+    <div class="col">
+        <div class="c">
+            <span class="tab">People working out of {{ zone.name }}<span class="src">&middot; {{ peopleMatching }} of {{ peopleTotal }}</span></span>
+
+            {% if peopleTotal %}
+                <div class="lfilt">
+                    <form class="lsearch" method="get" action="{{ here }}">
+                        {{ ux_icon('shell:search') }}
+                        <input class="fld" type="search" name="person" value="{{ peopleSearch }}" placeholder="Search by name&hellip;"
+                               aria-label="Search the people by name">
+                    </form>
+                </div>
+            {% endif %}
+
+            {% if people is empty %}
+                <div class="zdnone">
+                    <span class="tav hollow"></span>
+                    <b>{{ peopleTotal ? 'Nobody matches' : 'Nobody works out of ' ~ zone.name }}</b>
+                    <span>{{ peopleTotal ? 'clear the search' : (stationCount ? 'a post with nobody at it is a normal state' : 'no station to be posted to') }}</span>
+                </div>
+            {% else %}
+                <div class="plist">
+                    {% for person in people %}
+                        <div class="pline">
+                            <span class="tav">{{ person.initials|slice(0, 1) }}</span>
+                            <b>{{ person.name }}</b>
+                            {% if person.role %}<em>{{ person.role }}</em>{% endif %}
+                            <span class="pat">{{ stationNames[person.stationUuid] ?? '' }}</span>
+                            {% if person.leader %}<span class="chip acc stlead">Leads</span>{% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                {% if peoplePages > 1 %}
+                    <div class="pgr">
+                        <span class="cnt">{{ peopleMatching }} of {{ peopleTotal }} people</span>
+                        <span class="sp"></span>
+                        <a class="{{ peoplePage == 1 ? 'off' : '' }}" href="{{ here }}?ppage={{ max(1, peoplePage - 1) }}{{ peopleSearch ? '&person=' ~ peopleSearch : '' }}">&larr; Previous</a>
+                        {% for number in 1..peoplePages %}
+                            {% if number == peoplePage %}
+                                <span class="pg-n on">{{ number }}</span>
+                            {% else %}
+                                <a href="{{ here }}?ppage={{ number }}{{ peopleSearch ? '&person=' ~ peopleSearch : '' }}">{{ number }}</a>
+                            {% endif %}
+                        {% endfor %}
+                        <a class="{{ peoplePage == peoplePages ? 'off' : '' }}" href="{{ here }}?ppage={{ min(peoplePages, peoplePage + 1) }}{{ peopleSearch ? '&person=' ~ peopleSearch : '' }}">Next &rarr;</a>
+                    </div>
+                {% endif %}
+            {% endif %}
+        </div>
+
+        {# WHAT HAPPENED HERE — the area's zone history mentioning this zone.
+           The sentence is the record, so that is what it is found by. #}
+        <div class="c">
+            <span class="tab">What happened here<span class="src">&middot; newest first</span></span>
+            {% if events is empty %}
+                <div class="use">Nothing has happened to {{ zone.name }} yet. Every import, rename and ring writes one line here.</div>
+            {% else %}
+                <div class="zhist">
+                    {% for event in events %}
+                        <div class="zhrow">
+                            <span class="zhdot{{ loop.first ? ' on' : '' }}"></span>
+                            <div><b>{{ event.headline }}{% if event.detail %} <span>&middot; {{ event.detail }}</span>{% endif %}</b></div>
+                            <time class="zhwhen" datetime="{{ event.occurredAt|date('c') }}" data-localtime-format="day">{{ event.occurredAt|date('j M') }}</time>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

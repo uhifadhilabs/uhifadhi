@@ -39,6 +39,39 @@ class ZoneEventRepository extends ServiceEntityRepository
     }
 
     /**
+     * THE LINES ABOUT ONE ZONE, found by its name in the sentence.
+     *
+     * THAT IS NOT A SHORTCUT, IT IS THE MODEL. An entry stores the sentence
+     * rather than a foreign key, because the subject may not survive the line
+     * — "Removed 'Oldiani'" has to still say Oldiani after the zone is gone,
+     * and a row pointing at the zone would have nothing to point at. So a
+     * zone's history is the area's history mentioning it, which is also why a
+     * rename shows on both names: the line that renamed it carries the two.
+     *
+     * @return list<ZoneEvent>
+     */
+    public function findMentioning(AreaOfInterest $area, string $name, int $limit = self::RECENT): array
+    {
+        if ('' === trim($name)) {
+            return [];
+        }
+
+        /** @var list<ZoneEvent> $entries */
+        $entries = $this->createQueryBuilder('e')
+            ->where('e.area = :area')
+            ->andWhere('e.headline LIKE :name OR e.detail LIKE :name')
+            ->setParameter('area', $area)
+            ->setParameter('name', '%'.addcslashes($name, '%_').'%')
+            ->orderBy('e.occurredAt', 'DESC')
+            ->addOrderBy('e.id', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+
+        return $entries;
+    }
+
+    /**
      * @return list<ZoneEvent>
      */
     public function findByArea(AreaOfInterest $area, int $limit = self::RECENT): array
