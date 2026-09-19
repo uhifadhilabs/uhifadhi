@@ -32,11 +32,14 @@ use Uhifadhi\Bundle\TeamBundle\Security\ApiTokenAuthenticator;
 use Uhifadhi\Bundle\TeamBundle\TeamBundle;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\DeclaringModuleProvider;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\DevkitContentCollector;
+use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\FakeModuleProvider;
+use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\FakeTopicProvider;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\GuardedController;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\RosterKpiProvider;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\ShellPageController;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\SilentModuleProvider;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\SurveyKpiProvider;
+use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
 
 /**
  * The smallest host this bundle can live in: framework + twig + doctrine +
@@ -260,6 +263,30 @@ final class TestKernel extends Kernel
             ->set(RosterKpiProvider::class)
             ->tag('uhifadhi.department_kpi');
 
+        /*
+         * TWO MODULES PUBLISHING A TOPIC, which is the module side of the
+         * performance seam. Registered always; the collector drops the one
+         * whose module this installation does not carry, which is the
+         * behaviour under test.
+         */
+        $container->services()
+            ->set('fake.module.patrols', FakeModuleProvider::class)
+            ->args(['patrols'])
+            ->tag('uhifadhi.module');
+        $container->services()
+            ->set('fake.module.incidents', FakeModuleProvider::class)
+            ->args(['incidents'])
+            ->tag('uhifadhi.module');
+
+        $container->services()
+            ->set('fake.topic.patrols', FakeTopicProvider::class)
+            ->args(['patrols'])
+            ->tag(PerformanceTopicProviderInterface::TAG);
+        $container->services()
+            ->set('fake.topic.incidents', FakeTopicProvider::class)
+            ->args(['incidents'])
+            ->tag(PerformanceTopicProviderInterface::TAG);
+
         // The thing behind the firewall (see configureRoutes).
         $container->services()->set(GuardedController::class)->public();
 
@@ -307,6 +334,7 @@ final class TestKernel extends Kernel
             \Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceRegistry::class => 'shell.widget.surfaces',
             \Uhifadhi\Bundle\TeamBundle\Shell\DepartmentAreaNavChildren::class => 'team.area_nav_children',
             \Uhifadhi\Bundle\TeamBundle\Service\PerformanceHistory::class => 'team.performance_history',
+            \Uhifadhi\Bundle\TeamBundle\Service\PerformanceTopics::class => 'team.performance_topics',
         ] as $class => $serviceId) {
             $container->services()->alias('test_public.'.$class, $serviceId)->public();
         }

@@ -35,6 +35,7 @@ use Uhifadhi\Bundle\TeamBundle\Devkit\TeamContentProvider;
 use Uhifadhi\Bundle\TeamBundle\EventListener\ApiErrorListener;
 use Uhifadhi\Bundle\TeamBundle\People\TeamPersonDirectory;
 use Uhifadhi\Bundle\TeamBundle\People\TeamPersonFacets;
+use Uhifadhi\Bundle\TeamBundle\Performance\StaffingTopic;
 use Uhifadhi\Bundle\TeamBundle\Repository\ApiTokenRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentGoalRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentPeriodFigureRepository;
@@ -53,6 +54,7 @@ use Uhifadhi\Bundle\TeamBundle\Service\FieldSignIn;
 use Uhifadhi\Bundle\TeamBundle\Service\Mail;
 use Uhifadhi\Bundle\TeamBundle\Service\PasswordResetService;
 use Uhifadhi\Bundle\TeamBundle\Service\PerformanceHistory;
+use Uhifadhi\Bundle\TeamBundle\Service\PerformanceTopics;
 use Uhifadhi\Bundle\TeamBundle\Service\PermissionCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionService;
 use Uhifadhi\Bundle\TeamBundle\Service\StaffingFigures;
@@ -68,6 +70,7 @@ use Uhifadhi\Bundle\TeamBundle\Widget\PositionWidgets;
 use Uhifadhi\Bundle\TeamBundle\Widget\TeamWidgets;
 use Uhifadhi\Contracts\People\PersonDirectoryProviderInterface;
 use Uhifadhi\Contracts\People\PersonFacetProviderInterface;
+use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
 use Uhifadhi\Contracts\Shell\AreaNavChildrenInterface;
 use Uhifadhi\Contracts\Shell\AreaSectionsInterface;
 
@@ -450,6 +453,31 @@ return static function (ContainerConfigurator $container): void {
             service(UserRepository::class),
         ]);
     $services->alias(StaffingFigures::class, 'team.staffing_figures');
+
+    /*
+     * THE HOST'S OWN FIRST TOPIC, published through the very seam a module
+     * publishes one through — so one renderer draws both, and the host's
+     * cannot quietly acquire an ability a module's lacks.
+     */
+    $services->set('team.performance.staffing_topic', StaffingTopic::class)
+        ->args([
+            service(DepartmentRepository::class),
+            service('team.staffing_figures'),
+            service('team.performance_history'),
+        ])
+        ->tag(PerformanceTopicProviderInterface::TAG);
+    $services->alias(StaffingTopic::class, 'team.performance.staffing_topic');
+
+    /*
+     * AND WHAT COLLECTS THEM: the host's topics first, then a module's in
+     * the order the organisation arranged its modules.
+     */
+    $services->set('team.performance_topics', PerformanceTopics::class)
+        ->args([
+            tagged_iterator(PerformanceTopicProviderInterface::TAG),
+            service('registry.catalogue'),
+        ]);
+    $services->alias(PerformanceTopics::class, 'team.performance_topics');
 
     $services->set('team.performance_history', PerformanceHistory::class)
         ->args([

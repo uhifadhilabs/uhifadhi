@@ -1376,6 +1376,7 @@ valid.
 |---|---|---|
 | `OverviewContributorInterface` | `uhifadhi.overview.widget_provider` | widgets and their render context |
 | `Overview\ContributesStylesheetInterface` | (no tag of its own) | the stylesheet your cells are written against |
+| `Performance\PerformanceTopicProviderInterface` | `uhifadhi.performance_topic` | a whole topic on the performance page: five figures, its charts and its matrix |
 | `NowTileProviderInterface` | `uhifadhi.overview.now_tile` | "right now" tiles in the strip |
 | `AttentionProviderInterface` | `uhifadhi.overview.attention` | items in the attention list |
 | `MapLayerProviderInterface` | `uhifadhi.map.layer` | layers on the area map |
@@ -1429,6 +1430,55 @@ It is a separate interface because the area's own contributor has no stylesheet 
 contract that makes it answer a question it has no answer to has started guessing. Your sheet is
 linked last, which means you may tune what you own — and only what you own: restating a shell or
 area selector wins by load order and drifts every other surface, which the sheet tests catch.
+
+### Publishing a topic on the performance page
+
+The organisation's performance page is not a table of your columns against
+everybody's departments — that board lied about half its cells, because a
+department that never attached your module is not a row of empty ones. Your
+module publishes **a topic**: five headline figures, two or three charts, and a
+matrix of only the departments that read you.
+
+```php
+final readonly class PatrolPerformanceTopic implements PerformanceTopicProviderInterface
+{
+    public function moduleSlug(): string { return 'patrols'; }   // the same slug as everywhere
+    public function key(): string        { return 'patrols'; }   // its own address in the URL
+    public function title(): string      { return 'Patrols'; }
+
+    public function kpis(PerformanceScope $scope, FigurePeriod $period): array { /* exactly five */ }
+    public function charts(PerformanceScope $scope, FigurePeriod $period): array { /* two or three */ }
+    public function matrix(PerformanceScope $scope, FigurePeriod $period): TopicMatrix { /* your rows */ }
+}
+```
+
+Adding a module adds a topic and touches nothing else: no host column changes,
+no department row changes, no shared list to edit. The host's own topics —
+Staffing, Goals, Attention — are producers of exactly this shape and are
+rendered first; module topics follow **in the order the organisation arranged
+its modules**, never alphabetically.
+
+Four rules the host will hold you to, and they are the same four the rest of
+this platform states:
+
+- **Exactly five KPIs.** A row of three where the design has five is a
+  different design, and a reader cannot tell a short row from a quiet month. A
+  figure you cannot compute yet is a `TopicKpi` with a null value and a caption
+  saying so.
+- **Null is never nought.** A value nobody published, a period nobody wrote
+  down (a hole in `history`) and a column that is not a department's to answer
+  (`MatrixCell::notMine()`) are three different absences, drawn three different
+  ways.
+- **Every column states its polarity.** More patrols is better, more incidents
+  is worse, and more positions is neither — `ColumnPolarity::None` is never
+  tinted and its movement is never coloured.
+- **Scope and period are asked, not assumed.** Answer for the scope you are
+  handed, or you will draw the organisation's figures on one area's page.
+
+Say what your chart IS — a run over time, a comparison, parts of a whole, a
+movement either side of nought — and the atlas draws it. A module handing over
+chart options would be a module deciding what the platform's charts look like,
+and the second module would decide differently.
 
 ### The classes the overview lends you
 
