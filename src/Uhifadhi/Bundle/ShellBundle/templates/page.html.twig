@@ -21,6 +21,13 @@
     {%- set _subtitle %}{% block shell_page_subtitle %}{% endblock %}{% endset -%}
     {%- set _actions %}
         {%- set _configure = shell_configure() -%}
+        {#- THE PAGE'S OWN ACTIONS FIRST, AND CONFIGURE LAST — always, on every
+            surface. The configure entry anchors the right-hand end of the row
+            so that it is in the same place on every page in the product, and a
+            page that adds an action pushes it nowhere: it grows leftwards from
+            a fixed edge. A module writing its actions therefore never has to
+            know the frame writes one too. -#}
+        {%- block shell_page_actions %}{% endblock -%}
         {#- THE ONE CONFIGURATION ENTRY, WRITTEN BY THE FRAME. A module never
             types it, which is the only way "exactly one entry per surface" stays
             true across modules nobody has written yet: no Settings button, no
@@ -29,7 +36,6 @@
             and takes you back. -#}
         {%- if _configure is not null %}<a class="tgl{{ _configure.current ? ' on' }}" href="{{ _configure.url }}"
             {%- if _configure.hint is not empty %} title="{{ _configure.hint }}"{% endif %}>{{ ux_icon('shell:settings') }} Configure</a>{% endif -%}
-        {%- block shell_page_actions %}{% endblock -%}
     {% endset -%}
     {%- set _tabs %}
         {%- block shell_page_tabs -%}

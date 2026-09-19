@@ -90,19 +90,19 @@
                is the state, so a filtered register can be sent to somebody. #}
             <div class="lfilt stfilt">
                 {{ include('@Area/_partial/_filter.html.twig', {
-                    label: 'zone', all: 'all zones', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\StationQuery::ZONE'),
+                    label: 'zone', all: 'zone', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\StationQuery::ZONE'),
                     chosen: query.zone, chosenLabel: register.zoneLabel(query.zone), options: register.zones, query: query,
                 }) }}
                 {{ include('@Area/_partial/_filter.html.twig', {
-                    label: 'active', all: 'active &amp; inactive', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\StationQuery::ACTIVE'),
+                    label: 'active', all: 'active', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\StationQuery::ACTIVE'),
                     chosen: query.active, chosenLabel: query.active == 'yes' ? 'active' : 'inactive', options: register.activity, query: query,
                 }) }}
                 {{ include('@Area/_partial/_filter.html.twig', {
-                    label: 'posted', all: 'posted or not', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\StationQuery::POSTED'),
+                    label: 'posted', all: 'posted', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\StationQuery::POSTED'),
                     chosen: query.posted, chosenLabel: query.posted == 'yes' ? 'somebody posted' : (query.posted == 'no' ? 'nobody posted' : null), options: register.posted, query: query,
                 }) }}
                 {{ include('@Area/_partial/_filter.html.twig', {
-                    label: 'order', all: 'a&ndash;z', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\StationQuery::SORT'),
+                    label: 'order', all: 'order', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\StationQuery::SORT'),
                     chosen: query.sort == 'name' ? null : query.sort,
                     options: [
                         {value: 'posted', label: 'most posted', count: 0, hue: null},

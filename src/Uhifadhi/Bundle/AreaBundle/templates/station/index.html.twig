@@ -48,7 +48,7 @@
 {# FIVE FIGURES OR NONE. Three are the area's own; two come from whatever
    modules publish about a station. A card whose module is not installed says
    so rather than being dropped, or the row would be three. #}
-<div class="grid kstrip dp-kstrip">
+<div class="grid kstrip">
     <div class="c kpi">
         <span class="tab">Stations</span>
         <b class="disp">{{ stationCount }}</b>
@@ -113,21 +113,21 @@
 
             <div class="lfilt stfilt">
                 {{ include('@Area/_partial/_filter.html.twig', {
-                    label: 'zone', all: 'all zones', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\StationQuery::ZONE'),
+                    label: 'zone', all: 'zone', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\StationQuery::ZONE'),
                     chosen: query.zone, chosenLabel: register.zoneLabel(query.zone), options: register.zones, query: query,
                 }) }}
                 {{ include('@Area/_partial/_filter.html.twig', {
-                    label: 'posted', all: 'posted or not', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\StationQuery::POSTED'),
+                    label: 'posted', all: 'posted', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\StationQuery::POSTED'),
                     chosen: query.posted, chosenLabel: query.posted == 'yes' ? 'somebody posted' : (query.posted == 'no' ? 'nobody posted' : null), options: register.posted, query: query,
                 }) }}
                 {# WHO LEADS — the gap a roster is fixed from, so it is an answer
                    the bar offers rather than something counted by eye. #}
                 {{ include('@Area/_partial/_filter.html.twig', {
-                    label: 'lead', all: 'led or not', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\StationQuery::LEAD'),
+                    label: 'lead', all: 'lead', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\StationQuery::LEAD'),
                     chosen: query.lead, chosenLabel: query.lead == 'yes' ? 'lead appointed' : (query.lead == 'no' ? 'no lead' : null), options: register.lead, query: query,
                 }) }}
                 {{ include('@Area/_partial/_filter.html.twig', {
-                    label: 'order', all: 'a&ndash;z', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\StationQuery::SORT'),
+                    label: 'order', all: 'order', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\StationQuery::SORT'),
                     chosen: query.sort == 'name' ? null : query.sort,
                     options: [
                         {value: 'posted', label: 'most posted', count: 0, hue: null},
@@ -151,32 +151,7 @@
                     <span class="zea"><a class="btn sm" href="{{ here }}">Clear the filters</a></span>
                 </div>
             {% else %}
-                <table class="tbl">
-                    <tr>
-                        <th>Station</th>
-                        <th>Code</th>
-                        <th>Zone</th>
-                        <th>Point</th>
-                        <th class="num">Posted</th>
-                        <th></th>
-                    </tr>
-                    {% for row in register.rows %}
-                        <tr>
-                            <td><b>{{ row.name }}</b>{% if not row.active %} <span class="chip stoff">closed</span>{% endif %}</td>
-                            <td class="mono d">{{ row.code ?? '&mdash;'|raw }}</td>
-                            <td>
-                                <span class="stzone{{ row.zoneName ? '' : ' none' }}">
-                                    <i{% if row.zoneHue %} style="background:{{ row.zoneHue }}"{% endif %}></i>{{ row.zoneName ?? 'unzoned' }}
-                                </span>
-                            </td>
-                            <td class="mono d">{{ row.point ? row.point.label : '&mdash;'|raw }}</td>
-                            <td class="num">{{ row.posted }}</td>
-                            <td class="act">
-                                <a class="open-btn" href="{{ path('area_station_show', {uuid: area.uuidString, station: row.uuid}) }}">Open {{ ux_icon('shell:arrow-right') }}</a>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </table>
+                {{ include('@Area/zone/_stations.html.twig', {rows: register.rows, area: area, withZone: true}) }}
 
                 {{ include('@Area/_partial/_pager.html.twig', {
                     query: query, page: register.page, pages: register.pages,

@@ -270,7 +270,11 @@ final class PageSheetChainTest extends TestCase
 
         $names = [];
         foreach (preg_split('/\s+/', $plain.' '.$literals) ?: [] as $name) {
-            if (1 === preg_match('/^[a-z][a-z0-9-]*$/i', $name)) {
+            // A NAME ENDING IN A HYPHEN is the literal half of one an
+            // interpolation completes (`w-span-{{ n }}`), and no shipped
+            // class ends in one — reading it whole would fail this on
+            // correct markup. The sibling union test says the same.
+            if (1 === preg_match('/^[a-z][a-z0-9-]*[a-z0-9]$/i', $name)) {
                 $names[] = $name;
             }
         }

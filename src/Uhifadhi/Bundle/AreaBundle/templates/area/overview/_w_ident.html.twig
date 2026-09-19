@@ -1,0 +1,28 @@
+{# THE AREA ITSELF — what is true of the place rather than of a day.
+
+   THE BAND IS THE AREA'S OWN, which is why it is the one cell on this page
+   the area bundle draws from facts it measured: a size, a division, what
+   stands on the ground and where the ground is. Every other cell here is
+   somebody's contribution. #}
+<div class="factband">
+    <span class="f"><span class="k">Area</span><span class="v">{{ areaKm2|number_format }}<em>km&sup2;</em></span></span>
+    <span class="f"><span class="k">Zones</span><span class="v">
+        {%- if zoneCount > 0 -%}{{ zoneCount }}<em>presence-driven</em>{%- else -%}&mdash;<em>none yet</em>{%- endif -%}
+    </span></span>
+    <span class="f"><span class="k">Stations</span><span class="v">
+        {%- if stationCount > 0 -%}{{ stationCount }}{%- else -%}&mdash;<em>none yet</em>{%- endif -%}
+    </span></span>
+    {% if area.iucnCategory %}<span class="f"><span class="k">IUCN</span><span class="v">{{ area.iucnCategory }}</span></span>{% endif %}
+    {% if area.establishedYear %}<span class="f"><span class="k">Established</span><span class="v">{{ area.establishedYear }}</span></span>{% endif %}
+    <span class="f"><span class="k">Boundary</span><span class="v">
+        {%- if area.hasBoundary -%}on file{%- else -%}&mdash;<em>not set</em>{%- endif -%}
+    </span></span>
+    {# WHERE THE AREA IS, from the database's own centroid — in
+       hemispheres, because a minus sign is a fact about a coordinate
+       system and south is a fact about the place. #}
+    <span class="f"><span class="k">Centroid</span><span class="v">
+        {%- if centroid -%}{{ centroid }}{%- else -%}&mdash;<em>not set</em>{%- endif -%}
+    </span></span>
+    <span class="sp"></span>
+    <a class="more" href="{{ path('area_settings', {uuid: area.uuidString}) }}">Area settings &rarr;</a>
+</div>

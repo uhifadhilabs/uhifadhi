@@ -353,7 +353,13 @@
 /* The one stable place actions live. One horizontal row: a quiet status line,
    then the house pairing — one primary .cta with quiet .tgl secondaries, all at
    the same control scale. Never a stacked or stretched button. */
+/* THE BAR FOLLOWS THE CANVAS. It names the layout you are previewing and
+   carries the way to apply it; scrolled past, it takes both with it, and a
+   person composing a long dashboard has to scroll back to find out what they
+   are looking at. Sticky on every surface that previews — it was one
+   surface's local override until the two sheets were reconciled. */
 .w-previewbar {
+    position: sticky; top: 8px; z-index: 20; backdrop-filter: blur(6px);
     display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
     border: 1px solid color-mix(in srgb, rgb(var(--c-acc)) 45%, transparent);
     background: color-mix(in srgb, rgb(var(--c-acc)) 8%, transparent);

@@ -16,6 +16,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 use Uhifadhi\Bundle\AreaBundle\Devkit\AreaContentProvider;
 use Uhifadhi\Bundle\AreaBundle\Devkit\StationContentProvider;
 use Uhifadhi\Bundle\AreaBundle\Devkit\ZoneContentProvider;
+use Uhifadhi\Bundle\AreaBundle\Overview\OverviewContributorInterface;
 use Uhifadhi\Bundle\AreaBundle\People\AreaPersonPostings;
 use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\PostingRepository;
@@ -29,6 +30,7 @@ use Uhifadhi\Bundle\AreaBundle\Service\AreaIdentity;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaMapPayload;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaMapService;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaOverview;
+use Uhifadhi\Bundle\AreaBundle\Service\AreaOverviewCatalogue;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaPlateService;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaPresetLibrary;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaRegister;
@@ -51,6 +53,7 @@ use Uhifadhi\Bundle\AreaBundle\Service\ZoneService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneSetService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneStationService;
 use Uhifadhi\Bundle\AreaBundle\Widget\AreaIndexWidgets;
+use Uhifadhi\Bundle\AreaBundle\Widget\AreaOverviewWidgets;
 use Uhifadhi\Bundle\AtlasBundle\Map\MapBuilderInterface;
 use Uhifadhi\Bundle\RegistryBundle\Repository\AreaModuleRepository;
 use Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceInterface;
@@ -215,6 +218,26 @@ return static function (ContainerConfigurator $container): void {
             service('area.zone_set'),
         ]);
     $services->alias(StationRegisterService::class, 'area.station_register');
+
+    /*
+     * THE AREA OVERVIEW'S CATALOGUE, ASSEMBLED PER AREA — the one surface in
+     * the product whose widgets are not written by whoever owns the page.
+     * The tag is read here and no module is named: a module that puts a card
+     * on an area's overview tags a contributor in its own extension.
+     */
+    $services->set('area.overview_catalogue', AreaOverviewCatalogue::class)
+        ->args([
+            tagged_iterator(OverviewContributorInterface::TAG),
+            service('area.overview'),
+        ]);
+    $services->alias(AreaOverviewCatalogue::class, 'area.overview_catalogue');
+
+    /*
+     * AND THE AREA'S OWN CELLS, contributed the same way a module's are: the
+     * page has one way of putting a card on its grid, not two.
+     */
+    $services->set('area.overview_widgets', AreaOverviewWidgets::class)
+        ->tag(OverviewContributorInterface::TAG);
 
     /*
      * WHAT A ZONE KNOWS ABOUT THE POSTS ON ITS GROUND — the two numbers a shut

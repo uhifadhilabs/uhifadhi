@@ -69,14 +69,33 @@ final class LegendPlacementTest extends TestCase
      * THE DESIGN'S OWN VALUES — `uhifadhi.css`'s `.maplegend{display:flex;
      * gap:22px;flex-wrap:wrap;margin-top:12px}`, in the atlas's token names.
      */
+    /**
+     * ONE WRAPPING ROW OF ITEMS, and never a set of stacked columns.
+     *
+     * A KEY IS READ ACROSS. The design draws it as a line of "swatch · name ·
+     * figure" that wraps when it runs out of width; drawn as one column per
+     * group it became a block two hundred pixels tall under every plate in
+     * the product, and the card it sits in grew by that much whether the
+     * groups had two items or ten.
+     */
     public function testTheLegendIsTheDesignsRowUnderThePlate(): void
     {
         $rule = self::rule('.map-legend');
 
         self::assertStringContainsString('display: flex', $rule);
-        self::assertStringContainsString('gap: 22px', $rule);
+        self::assertStringContainsString('gap: 6px 16px', $rule);
         self::assertStringContainsString('flex-wrap: wrap', $rule);
-        self::assertStringContainsString('margin-top: 12px', $rule);
+        self::assertStringContainsString('margin-top: 14px', $rule);
+    }
+
+    /**
+     * A GROUP IS A LABEL IN THE ROW, not a column of its own: `display:
+     * contents` puts its label and its items into the one row the reader
+     * scans, so a plate with three groups still has one key.
+     */
+    public function testAGroupJoinsTheRowRatherThanStackingBesideIt(): void
+    {
+        self::assertStringContainsString('display: contents', self::rule('.map-legend .grp'));
     }
 
     /**

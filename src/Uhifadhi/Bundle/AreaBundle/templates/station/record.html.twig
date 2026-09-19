@@ -112,20 +112,20 @@
             <div class="lfilt stfilt">
                 {% if facets.knowsRoles %}
                     {{ include('@Area/_partial/_filter.html.twig', {
-                        label: 'role', all: 'all roles', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\PostingQuery::ROLE'),
+                        label: 'role', all: 'role', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\PostingQuery::ROLE'),
                         chosen: query.role, options: facets.roleOptions, query: query, here: here,
                     }) }}
                     {{ include('@Area/_partial/_filter.html.twig', {
-                        label: 'dept', all: 'all departments', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\PostingQuery::DEPARTMENT'),
+                        label: 'dept', all: 'dept', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\PostingQuery::DEPARTMENT'),
                         chosen: query.department, options: facets.departmentOptions, query: query, here: here,
                     }) }}
                 {% endif %}
                 {{ include('@Area/_partial/_filter.html.twig', {
-                    label: 'source', all: 'either door', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\PostingQuery::SOURCE'),
+                    label: 'source', all: 'source', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\PostingQuery::SOURCE'),
                     chosen: query.source, options: facets.sourceOptions, query: query, here: here,
                 }) }}
                 {{ include('@Area/_partial/_filter.html.twig', {
-                    label: 'a&ndash;z', all: 'a&ndash;z', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\PostingQuery::SORT'),
+                    label: 'a&ndash;z', all: 'order', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\PostingQuery::SORT'),
                     chosen: query.sort == 'az' ? null : query.sort,
                     options: [{value: 'since', label: 'by how long', count: 0, hue: null}], query: query, here: here,
                 }) }}

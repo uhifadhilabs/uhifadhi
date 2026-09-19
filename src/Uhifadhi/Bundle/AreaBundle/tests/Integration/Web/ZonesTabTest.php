@@ -77,7 +77,7 @@ final class ZonesTabTest extends WebTestCase
         // The plate's own heading still says it — "All zones on the ground" is
         // what the card is about, and the row that went was the selection.
         self::assertStringNotContainsString('<h2', $body);
-        self::assertMatchesRegularExpression('#</div>\s*<div class="grid kstrip dp-kstrip">#', $body);
+        self::assertMatchesRegularExpression('#</div>\s*<div class="grid kstrip">#', $body);
     }
 
     /**

@@ -41,129 +41,23 @@
 {% block shell_page_subtitle %}What is happening in this area right now &mdash; composed from every module installed here. Each module&rsquo;s own dashboard is a click away on the Modules tab.{% endblock %}
 
 {% block shell_page %}
-    {# THE IDENTITY BAND — the area itself, and the only thing on this page the
-       the area page measured. `.factband` is the platform's, so a module page wears the
-       same band. #}
-    <div class="factband">
-        <span class="f"><span class="k">Area</span><span class="v">{{ areaKm2|number_format }}<em>km&sup2;</em></span></span>
-        <span class="f"><span class="k">Zones</span><span class="v">
-            {%- if zoneCount > 0 -%}{{ zoneCount }}<em>presence-driven</em>{%- else -%}&mdash;<em>none yet</em>{%- endif -%}
-        </span></span>
-        <span class="f"><span class="k">Stations</span><span class="v">
-            {%- if stationCount > 0 -%}{{ stationCount }}{%- else -%}&mdash;<em>none yet</em>{%- endif -%}
-        </span></span>
-        {% if area.iucnCategory %}<span class="f"><span class="k">IUCN</span><span class="v">{{ area.iucnCategory }}</span></span>{% endif %}
-        {% if area.establishedYear %}<span class="f"><span class="k">Established</span><span class="v">{{ area.establishedYear }}</span></span>{% endif %}
-        <span class="f"><span class="k">Boundary</span><span class="v">
-            {%- if area.hasBoundary -%}on file{%- else -%}&mdash;<em>not set</em>{%- endif -%}
-        </span></span>
-        {# WHERE THE AREA IS, from the database's own centroid — in
-           hemispheres, because a minus sign is a fact about a coordinate
-           system and south is a fact about the place. #}
-        <span class="f"><span class="k">Centroid</span><span class="v">
-            {%- if centroid -%}{{ centroid }}{%- else -%}&mdash;<em>not set</em>{%- endif -%}
-        </span></span>
-        <span class="sp"></span>
-        <a class="more" href="{{ path('area_settings', {uuid: area.uuidString}) }}">Area settings &rarr;</a>
-    </div>
+    {# THE PAGE IS COMPOSED, NOT AUTHORED.
 
-    <div class="grid">
-        {# THE RIGHT-NOW STRIP — FIVE TILES OR NONE, like every figure row in
-           the product. Every filled tile is a module's: the area page lays
-           them out, orders them and counts nothing itself. Where a module has
-           not published one, the card keeps its slot and says so — a row of
-           two where the design has five is a different design, and a reader
-           cannot tell a short row from a quiet morning.
+       Everything below is resolved from the person's active preset over the
+       catalogue this area assembled: the area's own cells, and one cell from
+       every module switched on here. This template names no module, knows no
+       module's numbers and contains no widget markup — uninstalling a module
+       removes its cell from the grid and its widget from the library, and a
+       saved preset that named it degrades rather than breaking.
 
-           THE AREA'S OWN TILE IS THE ATTENTION COUNT, which is the one figure
-           on this strip the page may state itself: it is the length of a list
-           the page already draws. #}
-        {% set tiles = nowTiles|slice(0, 4) %}
-        <div class="grid kstrip dp-kstrip">
-            {% for tile in tiles %}
-                <div class="c kpi{{ tile.tone == 'hot' ? ' hot' : '' }}{{ tile.tone == 'bad' ? ' bad' : '' }}">
-                    <span class="tab">{{ tile.label }}{% if tile.live %}<span class="src">&middot; <span class="ao-live"><i></i></span></span>{% endif %}</span>
-                    <b class="disp">{{ tile.value }}{% if tile.unit %}<em>{{ tile.unit }}</em>{% endif %}</b>
-                    {% if tile.subline %}<span class="sub">{{ tile.subline }}{% if tile.alarm %} &middot; <span class="r">{{ tile.alarm }}</span>{% endif %}</span>{% endif %}
-                </div>
-            {% endfor %}
-            <div class="c kpi{{ attention is not empty ? ' bad' : '' }}">
-                <span class="tab">Needs attention</span>
-                <b class="disp">{{ attention|length }}</b>
-                <span class="sub">{{ attention is empty ? 'a good day' : 'across every installed module' }}</span>
+       THE SPAN IS THE CELL'S OWN, from the catalogue: twelve for the things
+       that are about the whole area, six for the pair of cards that read
+       side by side. #}
+    <div class="w-grid">
+        {% for cell in cells %}
+            <div class="w-cell w-span-{{ cell.cols }}">
+                {{ include(partials[cell.id], {'latest': 6}, with_context: true) }}
             </div>
-            {% if tiles|length < 4 %}
-                {% for _ in 1..(4 - tiles|length) %}
-                    <div class="c kpi">
-                        <span class="tab">From the modules</span>
-                        <b class="disp">&mdash;</b>
-                        <span class="sub">no module publishes this</span>
-                    </div>
-                {% endfor %}
-            {% endif %}
-        </div>
-
-        {# NEEDS ATTENTION — sorted by urgency, never by module. #}
-        <div class="c">
-            <span class="tab">Needs attention<span class="src">&middot; {{ attention|length }} item{{ attention|length == 1 ? '' : 's' }} &middot; every installed module</span></span>
-            <span class="ao-by"><i></i>the area &middot; module items</span>
-            <div class="use" style="margin:0 2px 8px">Sorted by urgency, not by module. An item leaves this list when
-                the thing that raised it is dealt with &mdash; nobody dismisses one by hand, because the area page did not raise it.</div>
-
-            {% for item in attention %}
-                <a class="ao-att {{ item.severity.cssClass }}" href="{{ item.url }}">
-                    <span class="sev"></span>
-                    <span class="bd">
-                        <span class="t"><b>{{ item.headline }}</b>{% if item.detail %} {{ item.detail }}{% endif %}</span>
-                        <span class="m"><i></i>{{ item.moduleLabel }} &middot; {{ item.kind }}
-                            {%- for fact in item.meta %}<span>{{ fact }}</span>{% endfor -%}
-                        </span>
-                    </span>
-                    <span class="age">{{ item.ageLabel }}</span>
-                </a>
-            {% else %}
-                {# A GOOD DAY IS ALLOWED TO LOOK LIKE ONE. #}
-                <p class="zeb">Nothing is asking for attention in this area.
-                    {% if installedSlugs is empty %}No module is switched on here yet, so nothing is watching.{% endif %}</p>
-            {% endfor %}
-        </div>
-
-        {# THE OPERATIONAL MAP — the area's own plate: the boundary, always
-           drawn, and the area's zones. Module layers arrive over it through the
-           map-layer contribution. Infrastructure, so it is here whichever modules are on. #}
-        {{ include('@Area/area/overview/_map.html.twig') }}
-
-        {# NOT INSTALLED HERE — the honest-absent card. Nothing below is drawn
-           with invented data, because there is none. #}
-        {% if installedSlugs is empty %}
-            <div class="c">
-                <span class="tab">Not installed in this area<span class="src">&middot; nothing switched on yet</span></span>
-                <span class="ao-by next"><i></i>the registry</span>
-                <div class="use" style="margin:0 2px 12px">Nothing here is drawn with invented data, because there is none.
-                    An area with no modules is new, not broken: this page is the frame every module's contribution lands in,
-                    and it is empty until one is switched on.</div>
-                <div class="ao-slot">
-                    <div class="ao-slotrow">
-                        <span class="nm">Right now</span>
-                        <span class="wd">A tile per module with something happening this minute, in that module&rsquo;s own words. Contributed through <b>the now-tile contribution</b>.</span>
-                        <span class="st">awaiting a module</span>
-                    </div>
-                    <div class="ao-slotrow">
-                        <span class="nm">Needs attention</span>
-                        <span class="wd">A row per thing a module says somebody has to act on, sorted by urgency across all of them. Contributed through <b>the attention contribution</b>.</span>
-                        <span class="st">awaiting a module</span>
-                    </div>
-                    <div class="ao-slotrow">
-                        <span class="nm">Map layers</span>
-                        <span class="wd">The plate above already draws the area&rsquo;s own boundary and zones. One plate, many owners: each module adds the data it owns as its own layer, with its own legend entry. Contributed through <b>the map-layer contribution</b>.</span>
-                        <span class="st">awaiting a module</span>
-                    </div>
-                </div>
-                <div class="rln" style="margin-top:12px">
-                    <span class="fog">What installing one changes in this bundle</span>
-                    <span class="mono acc" style="font-size:11px">nothing &mdash; new tagged provider classes only</span>
-                </div>
-            </div>
-        {% endif %}
+        {% endfor %}
     </div>
 {% endblock %}

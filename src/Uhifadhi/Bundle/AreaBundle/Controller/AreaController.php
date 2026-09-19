@@ -25,12 +25,15 @@ use Twig\Environment;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Repository\StationRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
+use Uhifadhi\Bundle\AreaBundle\Service\AreaComposition;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaMapPayload;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaMapService;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaOverview;
+use Uhifadhi\Bundle\AreaBundle\Service\AreaOverviewCatalogue;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaPresetLibrary;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaRegister;
 use Uhifadhi\Bundle\AreaBundle\Widget\AreaIndexWidgets;
+use Uhifadhi\Bundle\RegistryBundle\Service\ModuleCatalogue;
 use Uhifadhi\Bundle\ShellBundle\Frame\Controller\ConfigureController;
 use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService;
 use Uhifadhi\Contracts\Entity\UserInterface as ModuleUserInterface;
@@ -64,6 +67,9 @@ final readonly class AreaController
         private AreaMapService $areaMap,
         private UrlGeneratorInterface $urls,
         private AreaPresetLibrary $library,
+        private AreaOverviewCatalogue $catalogue,
+        private AreaComposition $composition,
+        private ModuleCatalogue $modules,
         private WidgetService $widgets,
         private TokenStorageInterface $tokens,
     ) {
@@ -114,8 +120,23 @@ final readonly class AreaController
         $now = new \DateTimeImmutable();
         $mapLayers = $this->overview->mapLayersFor($area, $now);
 
+        /*
+         * THE SURFACE IS COMPOSED, and this is where the composing happens:
+         * the catalogue this AREA has — its own cells plus one contributor
+         * per module switched on here — resolved against whatever layout the
+         * person adopted. The template names no module and renders no widget
+         * markup; each cell is drawn from its own contributor's partial.
+         */
+        $catalog = $this->catalogue->for($area);
+        $cells = array_values(array_filter(
+            $this->widgets->resolve($catalog, $this->signedIn(), $area->getUuid()),
+            static fn (array $cell): bool => $cell['on'],
+        ));
+
         return new Response($this->twig->render('@Area/area/overview.html.twig', [
             'area' => $area,
+            'cells' => $cells,
+            'partials' => $this->catalogue->partialsFor($area),
             'areaKm2' => $this->register->areaKm2($area),
             'zoneCount' => $this->zones->countFor($area),
             // WHAT STANDS ON THE GROUND AND WHERE THE GROUND IS — the area's
@@ -126,6 +147,10 @@ final readonly class AreaController
             'nowTiles' => $this->overview->nowTilesFor($area, $now),
             'attention' => $this->overview->attentionFor($area, $now),
             'installedSlugs' => $this->overview->installedSlugs($area),
+            'moduleCards' => $this->composition->moduleLinksFor($area),
+            'catalogueCount' => $this->modules->count(),
+            // AND WHAT EVERY CONTRIBUTED CELL READS, asked once per module.
+            ...$this->catalogue->contextFor($area, $now),
         ]));
     }
 

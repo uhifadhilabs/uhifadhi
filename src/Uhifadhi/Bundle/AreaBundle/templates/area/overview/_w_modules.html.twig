@@ -1,0 +1,59 @@
+{# MODULES IN THIS AREA — which are switched on here, and the way into each.
+
+   THE REGISTRY'S OWN CELL, and the only one on this page that is about the
+   composition rather than about the ground. It states what the area runs
+   against what the installation HAS, because "three modules" means nothing
+   without "of nine": an area is deliberately narrower than the catalogue.
+
+   EVERY ROW IS A MODULE'S ENTRY ROUTE, resolved live from its provider, so
+   uninstalling one takes its row with it rather than leaving a dead link. #}
+<div class="c">
+    <span class="tab">Modules in this area<span class="src">&middot; {{ moduleCards|length }} installed &middot; {{ catalogueCount }} in the catalogue</span></span>
+    <span class="ao-by next"><i></i>the registry</span>
+
+    {% if moduleCards is empty %}
+        {# NOT INSTALLED HERE — the honest-absent state, and it names the
+           three contributions this page is waiting for rather than drawing
+           them empty. Nothing here is invented, because there is nothing. #}
+        <div class="use" style="margin:0 2px 12px"><b>Not installed in this area.</b>
+            Nothing here is drawn with invented data, because there is none.
+            An area with no modules is new, not broken: this page is the frame every module's
+            contribution lands in, and it is empty until one is switched on.</div>
+        <div class="ao-slot">
+            <div class="ao-slotrow">
+                <span class="nm">Right now</span>
+                <span class="wd">A tile per module with something happening this minute, in that module&rsquo;s own words.</span>
+                <span class="st">awaiting a module</span>
+            </div>
+            <div class="ao-slotrow">
+                <span class="nm">Needs attention</span>
+                <span class="wd">A row per thing a module says somebody has to act on, sorted by urgency across all of them.</span>
+                <span class="st">awaiting a module</span>
+            </div>
+            <div class="ao-slotrow">
+                <span class="nm">Map layers</span>
+                <span class="wd">The plate already draws the area&rsquo;s boundary and zones; each module adds the data it owns as its own layer.</span>
+                <span class="st">awaiting a module</span>
+            </div>
+        </div>
+        {% if is_granted('module.view') %}
+            <div class="rln" style="margin-top:12px">
+                <span class="fog">Switch one on</span>
+                <span class="mono acc" style="font-size:11px"><a href="{{ path('area_modules', {uuid: area.uuidString}) }}">the Modules tab &rarr;</a></span>
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="ao-slot">
+            {% for module in moduleCards %}
+                <div class="ao-slotrow">
+                    <span class="nm">{{ module.title }}</span>
+                    <span class="wd">{{ module.source ?? 'reads what it records in this area' }}</span>
+                    <span class="st">
+                        {%- if module.url %}<a class="more" href="{{ module.url }}">Open &rarr;</a>
+                        {%- else %}{{ module.status }}{% endif -%}
+                    </span>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>

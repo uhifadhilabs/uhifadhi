@@ -169,28 +169,46 @@
 
    It is INSIDE the plate all the same, because fullscreen expands the plate and
    the legend has to come along; there, and only there, it floats (below). */
-.map-legend { display: flex; gap: 22px; flex-wrap: wrap; margin-top: 12px; }
-.map-legend .grp { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+/* ONE WRAPPING ROW, AND NEVER A SET OF COLUMNS. A key is read across: the
+   design draws it as a line of "swatch · name · figure" that wraps when it
+   runs out of width. Stacked one column per group it became a block two
+   hundred pixels tall under every plate in the product, and the card grew by
+   that much whether a group held two items or ten. */
+.map-legend { display: flex; gap: 6px 16px; flex-wrap: wrap; margin-top: 14px; align-items: center; }
+/* A GROUP IS A LABEL IN THE ROW, not a column beside it: `display: contents`
+   puts its label and its items into the one row the reader scans. */
+.map-legend .grp { display: contents; }
 .map-legend .grp > b {
     font: 700 8.5px var(--font-mono); letter-spacing: .14em; text-transform: uppercase;
-    color: rgb(var(--c-dim)); display: flex; align-items: center; gap: 6px;
+    color: rgb(var(--c-dim)); display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
 }
 .map-legend .grp > b i { width: 6px; height: 6px; border-radius: 2px; font-style: normal; }
 .map-legend .lay {
-    display: flex; align-items: center; gap: 7px; text-align: left;
-    font: 400 9.5px var(--font-mono); color: rgb(var(--c-fog));
+    display: inline-flex; align-items: center; gap: 7px; text-align: left; white-space: nowrap;
+    font: 600 9.5px var(--font-mono); letter-spacing: .06em; color: rgb(var(--c-fog));
     background: none; border: 0; padding: 0; cursor: pointer;
 }
 .map-legend span.lay { cursor: default; }
 .map-legend button.lay:hover { color: rgb(var(--c-tx)); }
-.map-legend .lay .sw { width: 16px; height: 8px; border-radius: 2px; flex: none; }
-.map-legend .lay .sw.ln { height: 0; border-top: 2.2px solid currentColor; }
+/* THE SWATCH IS THE THING'S OWN COLOUR, at the size the design draws it. */
+.map-legend .lay .sw {
+    width: 11px; height: 11px; border-radius: 3px; flex: none;
+    border: 1px solid color-mix(in srgb, rgb(var(--c-tx)) 18%, transparent);
+}
+.map-legend .lay .sw.ln { height: 0; border: 0; border-top: 2.2px solid currentColor; border-radius: 0; }
+/* THE FIGURE IS QUIETER THAN THE NAME: the name is what the colour means and
+   the figure is how much of it there is. */
+.map-legend .lay em { font-style: normal; font-weight: 500; color: rgb(var(--c-dim)); }
 .map-legend .lay.off { color: rgb(var(--c-dim)); }
 .map-legend .lay.off .sw { opacity: .35; }
+/* THE SWITCH IS A SMALL CHIP ON THE ITEM, because a layer that can be turned
+   off has to say so somewhere — the design's key is static and has nowhere to
+   put it. Small enough that the row still reads as a key and not as a row of
+   buttons. */
 .map-legend .lay .tog {
-    font-size: 8px; letter-spacing: .1em; color: rgb(var(--c-dim));
+    font-size: 7.5px; letter-spacing: .1em; color: rgb(var(--c-dim));
     border: 1px solid var(--c-ln2);
-    border-radius: 4px; padding: 1px 5px;
+    border-radius: 4px; padding: 0 4px;
 }
 .map-legend .lay.off .tog { border-style: dashed; }
 .map-legend .lay:focus-visible { outline: 2px solid rgb(var(--c-acc)); outline-offset: 2px; }

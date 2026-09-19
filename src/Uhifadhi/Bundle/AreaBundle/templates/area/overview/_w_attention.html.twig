@@ -1,0 +1,45 @@
+{# NEEDS ATTENTION — sorted by urgency, never by module.
+
+   BOUNDED, LIKE EVERY LIST IN A CARD. The list is as long as the modules'
+   day: thirty-four items made this card two thousand pixels tall and pushed
+   the ground off the screen. So the card draws the most urgent few and says
+   what it is drawing them out of, with the way to all of them — the overflow
+   ruling, which every card on every surface keeps. #}
+{% set latest = latest|default(6) %}
+{# NEEDS ATTENTION — sorted by urgency, never by module. #}
+<div class="c">
+    <span class="tab">Needs attention<span class="src">&middot; {{ attention|length }} item{{ attention|length == 1 ? '' : 's' }} &middot; every installed module</span></span>
+    <span class="ao-by"><i></i>the area &middot; module items</span>
+    <div class="use" style="margin:0 2px 8px">Sorted by urgency, not by module. An item leaves this list when
+        the thing that raised it is dealt with &mdash; nobody dismisses one by hand, because the area page did not raise it.</div>
+
+    {% for item in attention|slice(0, latest) %}
+        <a class="ao-att {{ item.severity.cssClass }}" href="{{ item.url }}">
+            <span class="sev"></span>
+            <span class="bd">
+                <span class="t"><b>{{ item.headline }}</b>{% if item.detail %} {{ item.detail }}{% endif %}</span>
+                <span class="m"><i></i>{{ item.moduleLabel }} &middot; {{ item.kind }}
+                    {%- for fact in item.meta %}<span>{{ fact }}</span>{% endfor -%}
+                </span>
+            </span>
+            <span class="age">{{ item.ageLabel }}</span>
+        </a>
+    {% else %}
+        {# A GOOD DAY IS ALLOWED TO LOOK LIKE ONE. #}
+        <p class="zeb">Nothing is asking for attention in this area.
+            {% if installedSlugs is empty %}No module is switched on here yet, so nothing is watching.{% endif %}</p>
+    {% endfor %}
+
+    {# WHAT THE CARD IS SHOWING, OUT OF WHAT. A bounded list that did not say
+       so would read as the whole list on a bad morning. #}
+    {% if attention|length > latest %}
+        {# THE COUNT, AND NO LINK: there is no page of every item, because an
+           item belongs to the module that raised it. Saying "view all" to a
+           place that does not exist is worse than saying where they are. #}
+        <div class="ao-more">
+            <span class="mono">{{ latest }} of {{ attention|length }}</span>
+            <span class="sp"></span>
+            <span class="mono">the rest are in the modules that raised them</span>
+        </div>
+    {% endif %}
+</div>

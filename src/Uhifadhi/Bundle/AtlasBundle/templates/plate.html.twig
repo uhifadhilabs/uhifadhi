@@ -65,11 +65,11 @@
                                     data-action="{{ controller }}#toggleLayer"
                                     data-{{ controller }}-layer-param="{{ item.layerId }}"
                                     aria-pressed="{{ item.visible ? 'true' : 'false' }}">
-                                {{- swatch -}}{{ item.label }}{% if item.count is not null %} &middot; {{ item.count }}{% endif %}
+                                {{- swatch -}}{{ item.label }}{% if item.count is not null %}<em>{{ item.count }}</em>{% endif %}
                                 <span class="tog">{{ item.visible ? 'on' : 'off' }}</span>
                             </button>
                         {% else %}
-                            <span class="lay">{{- swatch -}}{{ item.label }}{% if item.count is not null %} &middot; {{ item.count }}{% endif %}</span>
+                            <span class="lay">{{- swatch -}}{{ item.label }}{% if item.count is not null %}<em>{{ item.count }}</em>{% endif %}</span>
                         {% endif %}
                     {% endfor %}
                 </div>

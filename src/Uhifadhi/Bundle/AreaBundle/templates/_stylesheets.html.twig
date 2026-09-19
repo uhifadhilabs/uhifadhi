@@ -9,4 +9,13 @@
    Named through the bundle's constant rather than typed out, because anyone
    theming these screens has to be able to name the file and a path spelled
    twice is a path that goes stale once. #}
+{# AND THE WIDGET SHEET, because an area's overview is a COMPOSED surface:
+   its grid, its cells and their spans are the shell's widget vocabulary, the
+   same one the team's screens and the library draw. A page that laid its
+   cells out with `.w-grid` and did not link the sheet that defines it would
+   be twelve cards in one column.
+
+   Ordered widget → area, weakest to strongest: this bundle's sheet is the
+   one allowed to override, and it is last. #}
+<link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Bundle\\ShellBundle\\ShellBundle::WIDGET_STYLESHEET')) }}">
 <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Bundle\\AreaBundle\\AreaBundle::STYLESHEET')) }}">

@@ -31,7 +31,11 @@ use Uhifadhi\Bundle\AreaBundle\Overview\AttentionSeverity;
  */
 final readonly class FakeAttention implements AttentionProviderInterface
 {
-    public function __construct(private string $slug)
+    /**
+     * @param int $items how many it raises — two by default, and as many as a
+     *                   test needs to prove a card is bounded
+     */
+    public function __construct(private string $slug, private int $items = 2)
     {
     }
 
@@ -42,27 +46,20 @@ final readonly class FakeAttention implements AttentionProviderInterface
 
     public function attentionFor(AreaOfInterest $area, \DateTimeImmutable $now): array
     {
-        return [
-            new AttentionItem(
-                severity: AttentionSeverity::Now,
+        $raised = [];
+        for ($i = 0; $i < $this->items; ++$i) {
+            $raised[] = new AttentionItem(
+                severity: 0 === $i % 2 ? AttentionSeverity::Now : AttentionSeverity::Soon,
                 moduleSlug: $this->slug,
                 moduleLabel: 'Patrols',
-                headline: 'A patrol has stopped pinging',
-                kind: 'live position',
+                headline: 0 === $i % 2 ? 'A patrol has stopped pinging' : 'A track was never filed',
+                kind: 0 === $i % 2 ? 'live position' : 'unfiled',
                 ageLabel: '2 h 10',
-                ageSeconds: 7800,
-                url: '/x',
-            ),
-            new AttentionItem(
-                severity: AttentionSeverity::Soon,
-                moduleSlug: $this->slug,
-                moduleLabel: 'Patrols',
-                headline: 'A track was never filed',
-                kind: 'unfiled',
-                ageLabel: '1 d',
-                ageSeconds: 86400,
-                url: '/y',
-            ),
-        ];
+                ageSeconds: 7800 + $i,
+                url: '/x/'.$i,
+            );
+        }
+
+        return $raised;
     }
 }

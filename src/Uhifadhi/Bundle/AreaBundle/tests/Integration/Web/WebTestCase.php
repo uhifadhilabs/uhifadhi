@@ -42,10 +42,14 @@ abstract class WebTestCase extends KernelTestCase
     protected const array ALL_AREA_PERMISSIONS = ['area.view', 'area.create', 'area.edit', 'area.delete'];
 
     /** @param list<string> $grants */
-    protected function boot(array $grants = self::ALL_AREA_PERMISSIONS): void
+    /**
+     * @param list<string> $grants
+     * @param int          $attention how many items the stand-in module raises
+     */
+    protected function boot(array $grants = self::ALL_AREA_PERMISSIONS, int $attention = 2): void
     {
         self::ensureKernelShutdown();
-        $kernel = new WebKernel($grants);
+        $kernel = new WebKernel($grants, $attention);
         $kernel->boot();
         self::$kernel = $kernel;
         self::$booted = true;

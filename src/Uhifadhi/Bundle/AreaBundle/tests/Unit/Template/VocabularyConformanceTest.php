@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\AreaBundle\Tests\Unit\Template;
 
 use Uhifadhi\Bundle\AtlasBundle\AtlasBundle;
+use Uhifadhi\Bundle\ShellBundle\ShellBundle;
 use Uhifadhi\Bundle\ShellBundle\Test\VocabularyConformanceTestCase;
 
 /**
@@ -48,6 +49,9 @@ final class VocabularyConformanceTest extends VocabularyConformanceTestCase
         return [
             ...parent::linkedStylesheets(),
             \dirname(new \ReflectionClass(AtlasBundle::class)->getFileName() ?: '').'/public/map.css',
+            // The overview is a COMPOSED surface: its grid and its cells are
+            // the shell's widget vocabulary, linked by `_stylesheets`.
+            \dirname(new \ReflectionClass(ShellBundle::class)->getFileName() ?: '').'/public/widget.css',
         ];
     }
 }

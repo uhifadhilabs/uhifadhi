@@ -89,7 +89,7 @@ final class StationsTabTest extends WebTestCase
         // The plate's own heading still says it — "All stations on the ground" is
         // what the card is about, and the row that went was the selection.
         self::assertStringNotContainsString('<h2', $body);
-        self::assertMatchesRegularExpression('#</div>\s*<div class="grid kstrip dp-kstrip">#', $body);
+        self::assertMatchesRegularExpression('#</div>\s*<div class="grid kstrip">#', $body);
     }
 
     /**
@@ -210,7 +210,7 @@ final class StationsTabTest extends WebTestCase
      */
     private function listed(string $url): array
     {
-        preg_match_all('#<td><b>([^<]+)</b>#', $this->body($url), $found);
+        preg_match_all('#<td class="zname">.*?<b>([^<]+)</b>#s', $this->body($url), $found);
 
         return array_map(trim(...), $found[1]);
     }

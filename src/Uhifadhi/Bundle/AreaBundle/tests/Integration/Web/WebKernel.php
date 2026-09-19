@@ -72,12 +72,19 @@ final class WebKernel extends Kernel
     public array $grants = [];
 
     /** @param list<string> $grants */
-    public function __construct(array $grants = [])
+    /**
+     * @param list<string> $grants    what the viewer holds
+     * @param int          $attention how many items the stand-in module
+     *                                raises — two by default, and as many as
+     *                                a test proving a card is BOUNDED needs
+     */
+    public function __construct(array $grants = [], private int $attention = 2)
     {
         $this->grants = $grants;
-        // The cache is keyed by what the viewer holds: two kernels with
-        // different grants must not share a compiled container.
-        parent::__construct('test'.md5(implode(',', $grants)), true);
+        // The cache is keyed by what the viewer holds AND by what the
+        // stand-in contributes: two kernels with different grants or
+        // different fixtures must not share a compiled container.
+        parent::__construct('test'.md5(implode(',', $grants).'|'.$attention), true);
     }
 
     public function registerBundles(): iterable
@@ -234,7 +241,7 @@ final class WebKernel extends Kernel
             ->args(['patrols'])
             ->tag('uhifadhi.overview.now_tile');
         $services->set('test.attention.patrols', FakeAttention::class)
-            ->args(['patrols'])
+            ->args(['patrols', $this->attention])
             ->tag('uhifadhi.overview.attention');
         $services->set('test.pulse.patrols', FakePulse::class)
             ->args(['patrols'])

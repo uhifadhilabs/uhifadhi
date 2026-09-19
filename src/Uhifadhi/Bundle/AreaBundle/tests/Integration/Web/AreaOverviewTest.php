@@ -17,6 +17,10 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use Uhifadhi\Bundle\AreaBundle\Controller\AreaController;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Service\StationService;
+use Uhifadhi\Bundle\RegistryBundle\Entity\Module;
+use Uhifadhi\Bundle\RegistryBundle\Enum\ModuleCategory;
+use Uhifadhi\Bundle\RegistryBundle\Enum\ModuleStatus;
+use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleService;
 
 /**
  * THE AREA OVERVIEW — what is happening in this area right now.
@@ -83,16 +87,17 @@ final class AreaOverviewTest extends WebTestCase
     }
 
     /**
-     * THE STRIP IS THE SHELL'S, AT THE SHELL'S WIDTH. This bundle used to
-     * restate the track at 168px, which squeezed five cards where the design
-     * fits them at 196.
+     * THE STRIP IS THE SHELL'S, WHOLE — its track and its spacing. This
+     * bundle used to restate the track at 168px, which squeezed five cards
+     * where the design fits them at 196, and then zeroed the strip's bottom
+     * margin, which closed the twenty pixels between it and the card below.
      */
     public function testTheStripTakesTheShellsOwnTrack(): void
     {
         $this->boot();
         $this->signIn();
 
-        self::assertStringContainsString('class="grid kstrip dp-kstrip"', $this->body($this->anArea()));
+        self::assertStringContainsString('class="grid kstrip"', $this->body($this->anArea()));
     }
 
     /**
@@ -112,6 +117,108 @@ final class AreaOverviewTest extends WebTestCase
         $this->signIn();
 
         self::assertStringContainsString('--map-plate-height:min(58vh, 560px)', $this->body($this->anArea()));
+    }
+
+    /**
+     * THE PAGE IS COMPOSED, NOT AUTHORED — and this is the test that says so.
+     *
+     * The grid is the shell's, every cell is a contributor's, and the order
+     * and the spans are the assembled default preset's: the area's own four
+     * full-width cells, then the pair that read side by side. A module
+     * switched on here adds its own cell to the same grid without this
+     * bundle naming it.
+     */
+    public function testThePageIsAGridOfContributedCellsInTheDesignsOrder(): void
+    {
+        $this->boot();
+        $this->signIn();
+
+        $body = $this->body($this->anArea());
+
+        self::assertStringContainsString('class="w-grid"', $body);
+        self::assertSame(
+            ['w-span-12', 'w-span-12', 'w-span-12', 'w-span-12', 'w-span-6', 'w-span-6'],
+            self::spansOf($body),
+        );
+    }
+
+    /**
+     * THE ROSTER'S SLOT IS HELD OPEN, not dropped. The design's composition
+     * has a roster card in that half-row; until roster publishes one the
+     * cell says which module owes it, so the row keeps its shape and the
+     * absence is legible rather than silent.
+     */
+    public function testTheRostersCellStatesItsAbsenceRatherThanVanishing(): void
+    {
+        $this->boot();
+        $this->signIn();
+
+        $body = $this->body($this->anArea());
+
+        self::assertStringContainsString('Stations &amp; who is on', $body);
+        self::assertStringContainsString('awaiting the roster', $body);
+    }
+
+    /** The registry's own cell says what is on here, out of what there is. */
+    public function testTheModulesCellStatesWhatIsOnAgainstTheCatalogue(): void
+    {
+        $this->boot();
+        $this->signIn();
+
+        $body = $this->body($this->anArea());
+
+        self::assertStringContainsString('Modules in this area', $body);
+        self::assertStringContainsString('in the catalogue', $body);
+    }
+
+    /**
+     * THE ATTENTION CARD IS BOUNDED. A list as long as the modules' day made
+     * the card two thousand pixels tall and pushed the ground off the
+     * screen; it draws the most urgent few and says what out of.
+     */
+    public function testTheAttentionCardIsBoundedAndSaysWhatOutOf(): void
+    {
+        $this->boot(attention: 9);
+        $this->signIn();
+        $area = $this->anArea();
+        $this->aModuleInstalledIn($area);
+
+        $body = $this->body($area);
+
+        self::assertSame(6, substr_count($body, 'class="ao-att'));
+        self::assertStringContainsString('6 of 9', $body);
+        // AND NO LINK TO A PAGE THAT DOES NOT EXIST: an item belongs to the
+        // module that raised it, so that is where the card sends you.
+        self::assertStringContainsString('the rest are in the modules that raised them', $body);
+    }
+
+    /**
+     * A MODULE SWITCHED ON HERE, so the stand-in's contributions reach the
+     * page: nothing a module contributes is drawn for an area that does not
+     * run it.
+     */
+    private function aModuleInstalledIn(AreaOfInterest $area): void
+    {
+        $this->em->persist(new Module()
+            ->setSlug('patrols')
+            ->setName('Patrols')
+            ->setCategory(ModuleCategory::Pressure)
+            ->setStatus(ModuleStatus::Live)
+            ->setDataSource('GPS field tracks')
+            ->setPosition(0));
+        $this->em->flush();
+
+        /** @var AreaModuleService $modules */
+        $modules = static::getContainer()->get('test_public.registry.area_modules');
+        $modules->install($area, 'patrols');
+    }
+
+    /** @return list<string> */
+    private static function spansOf(string $body): array
+    {
+        preg_match_all('#<div class="w-cell (w-span-\d+)"#', $body, $found);
+
+        return $found[1];
     }
 
     private function body(AreaOfInterest $area): string
