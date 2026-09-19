@@ -2295,6 +2295,34 @@ constraints actually allow, and the lock file is not committed. Test the **whole
 range. If your suite needs a database, add a Postgres (or PostGIS) service and point your test env
 var at it.
 
+### Green here is green against **a** core, not against **the** core
+
+Your CI resolves `uhifadhi/uhifadhi` from the published package. The core moves; your suite does
+not notice until somebody pushes it. That gap is not hypothetical — it is how a module's own
+stylesheet came to restate the shell's `.i-dd*` family and stay green for weeks: the vocabulary
+test was measuring a snapshot of the shell that no longer existed.
+
+Two halves close it, and you only own the first.
+
+**Locally, `composer check` runs against the LINKED core working copy — never a vendored
+snapshot.** `fundi bundle:link` (or the symlink it writes) puts your checkout of the core into
+`vendor/uhifadhi/uhifadhi`, so the shell you are tested against is the shell as it is this
+minute. If `vendor/uhifadhi/uhifadhi` is a downloaded directory rather than a link, your green is
+about a core that no longer exists; relink before you believe a result, and certainly before you
+report one.
+
+```console
+$ ls -l vendor/uhifadhi/uhifadhi
+lrwxr-xr-x  ...  vendor/uhifadhi/uhifadhi -> ../../../uhifadhi      # a link: good
+drwxr-xr-x  ...  vendor/uhifadhi/uhifadhi                           # a copy: relink
+```
+
+**And the core checks the fleet.** Every push to the core runs each module's own `composer check`
+against that exact commit, in a `fleet-conformance` job that fails the core's build. So a change
+to the shell that breaks your module is caught in the core's CI, at the moment it is introduced,
+and not by you a week later. You do nothing to take part in it beyond keeping `composer check`
+meaning what it says.
+
 ---
 
 ## 12. Flex recipe and activation

@@ -90,3 +90,143 @@ jobs:
 
       - name: Tests (PHPUnit)
         run: composer test
+
+  # ── THE FLEET, AGAINST THIS COMMIT ──────────────────────────────────────
+  # A module is green in its own CI against the core it happens to have
+  # resolved, and red here against the core as it actually is. That gap is
+  # how a shell selector a module restated stayed invisible until somebody
+  # pushed the core: the module's suite was measuring a snapshot.
+  #
+  # So every module the fleet ships is checked out at main, POINTED AT THIS
+  # CORE COMMIT, and put through its own `composer check`. A module that
+  # breaks against the core the core is about to become fails the core's
+  # push, which is where the breakage was introduced and where it is cheap.
+  #
+  # ONE PHP VERSION, DELIBERATELY. The matrix above already says the core
+  # works on both; what this job asks is a different question — does the
+  # fleet still work against it — and asking it twice would double the
+  # slowest part of the build to learn nothing. 8.4 is the floor every
+  # package declares, which is where a language-level break shows first.
+  fleet-conformance:
+    name: Fleet · ${{ matrix.module }}-module
+    runs-on: ubuntu-latest
+    needs: check
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Each module's own database, image and extensions, copied from its
+          # own workflow rather than flattened into one: a module tested with
+          # something other than what it asks for is not the module's suite.
+          - module: patrol
+            image: ghcr.io/fundistadi/postgis:17
+            database: patrol_bundle_test
+            extensions: ctype, iconv, pdo_pgsql
+          - module: incident
+            image: ghcr.io/fundistadi/postgis:17
+            database: incidents_bundle_test
+            extensions: ctype, iconv, pdo_pgsql
+          - module: storage
+            image: postgres:17
+            database: storage_bundle_test
+            # gd for the thumbnails, and imagick deliberately absent — the
+            # module's own CI exercises the GD-only path on purpose.
+            extensions: ctype, iconv, gd, fileinfo, pdo_pgsql
+          - module: devkit
+            image: ghcr.io/fundistadi/postgis:17
+            database: uhifadhi_devkit_test
+            extensions: ctype, iconv
+          - module: roster
+            image: ghcr.io/fundistadi/postgis:17
+            database: roster_bundle_test
+            extensions: ctype, iconv, pdo_pgsql
+
+    services:
+      postgres:
+        image: ${{ matrix.image }}
+        env:
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: app
+          POSTGRES_DB: ${{ matrix.database }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U app"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      # EVERY NAME, ONE DATABASE. Each module's suite reads a variable of its
+      # own naming, and an expression is NOT evaluated in an env KEY — only in
+      # its value — so a single `${{ matrix.url_env }}:` would set a variable
+      # literally called that and leave every suite unconfigured. All five are
+      # named here instead, all pointing at the one database this job started;
+      # the four a module does not read cost it nothing.
+      PATROL_TEST_DATABASE_URL: "postgresql://app:app@127.0.0.1:5432/${{ matrix.database }}?serverVersion=17&charset=utf8"
+      INCIDENTS_TEST_DATABASE_URL: "postgresql://app:app@127.0.0.1:5432/${{ matrix.database }}?serverVersion=17&charset=utf8"
+      STORAGE_TEST_DATABASE_URL: "postgresql://app:app@127.0.0.1:5432/${{ matrix.database }}?serverVersion=17&charset=utf8"
+      UHIFADHI_TEST_DATABASE_URL: "postgresql://app:app@127.0.0.1:5432/${{ matrix.database }}?serverVersion=17&charset=utf8"
+      ROSTER_TEST_DATABASE_URL: "postgresql://app:app@127.0.0.1:5432/${{ matrix.database }}?serverVersion=17&charset=utf8"
+
+    steps:
+      - name: Check out this core
+        uses: actions/checkout@v4
+        with:
+          path: core
+
+      - name: Check out the module at main
+        uses: actions/checkout@v4
+        with:
+          repository: uhifadhilabs/${{ matrix.module }}-module
+          ref: main
+          token: ${{ secrets.BUNDLES_TOKEN }}
+          path: module
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: ${{ matrix.extensions }}
+          coverage: none
+          tools: composer:v2
+
+      # PREPENDED, NOT APPENDED, and that is the whole point of the step. A
+      # module already carries a VCS repository for the core, Composer takes
+      # the FIRST repository that provides a package, and a path repository
+      # added after it would resolve the PUBLISHED core — which is exactly
+      # the stale snapshot this job exists to catch.
+      #
+      # The version is stated rather than guessed: `actions/checkout` leaves
+      # a detached HEAD, and Composer's guesser would name the commit rather
+      # than the branch, which no `^1.0@dev` constraint accepts.
+      - name: Point the module at this core commit
+        working-directory: module
+        run: |
+          tmp="$(mktemp)"
+          jq '.repositories = ([{
+                type: "path",
+                url: "../core",
+                options: { versions: { "uhifadhi/uhifadhi": "1.0.x-dev" } }
+              }] + (.repositories // []))' composer.json > "$tmp"
+          mv "$tmp" composer.json
+          composer validate --no-check-all --no-check-publish
+
+      # `update`, not `install`: no module commits a lock, so there is nothing
+      # to preserve and everything resolves fresh — with the core coming from
+      # the path repository above and from nowhere else.
+      - name: Install the module against it
+        working-directory: module
+        env:
+          COMPOSER_AUTH: '{"github-oauth":{"github.com":"${{ secrets.BUNDLES_TOKEN }}"}}'
+        run: composer update --no-interaction --no-progress --prefer-dist
+
+      # SAID OUT LOUD, so a green run cannot be a run against the wrong core.
+      - name: Say which core it resolved
+        working-directory: module
+        run: composer show uhifadhi/uhifadhi | head -20
+
+      - name: The module's own standard
+        working-directory: module
+        run: composer check
