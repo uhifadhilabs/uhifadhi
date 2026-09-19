@@ -159,6 +159,15 @@
                 </div>
             {% endif %}
         </div>
+
+        {# WHAT THE MODULES PUT ON THIS POST. The station is the area's and
+           the watch is the roster's, so a band like "Watch and presence" is
+           CONTRIBUTED and arrives after the area's own cards. With no such
+           module installed the column simply ends here — the area draws no
+           placeholder for a section nobody offered. #}
+        {% for band in bands %}
+            {{ include('@Area/_partial/_station_band.html.twig', {band: band}, with_context = false) }}
+        {% endfor %}
     </div>
 
     <div class="col">

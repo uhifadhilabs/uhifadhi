@@ -214,6 +214,7 @@ return static function (ContainerConfigurator $container): void {
             service('area.zone_set'),
             service('area.zone_plate'),
             service('area.station_figures'),
+            service('area.station_sections'),
             service('registry.area_modules'),
         ])
         ->tag('controller.service_arguments');
@@ -258,6 +259,8 @@ return static function (ContainerConfigurator $container): void {
             service('area.zone_set'),
             service('area.zone_plate'),
             service('area.station_notices'),
+            service('area.station_sections'),
+            service('registry.area_modules'),
             service('security.csrf.token_manager'),
         ])
         ->tag('controller.service_arguments');

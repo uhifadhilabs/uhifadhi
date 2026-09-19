@@ -208,6 +208,68 @@ final class StationRecordTest extends WebTestCase
         self::assertStringContainsString('No module publishes figures for this post yet.', $body);
     }
 
+    /**
+     * WHAT A MODULE PUTS ON THE POST ITSELF: a banded card, after the area's
+     * own, wearing the tag of the module that contributed it.
+     *
+     * THE AREA DRAWS THE BAND AND THE MODULE FILLS IT. The heading, the
+     * summary line, the action and the provenance tag are all written by the
+     * page; the contributor supplied words and a template of rows. That is
+     * what keeps two modules' bands from coming out as two products.
+     */
+    public function testAModuleContributesABandAfterTheAreasOwnCards(): void
+    {
+        $this->boot();
+        $this->signIn();
+        [$area, $station] = $this->aStaffedPostOfALiveArea();
+
+        $body = $this->body($this->record($area, $station));
+
+        self::assertStringContainsString('class="c rband" id="watch"', $body);
+        self::assertStringContainsString('Watch and presence', $body);
+        // ESCAPED, AND THAT IS THE POINT: a contributor supplies words, not
+        // markup, so the ampersand it sent comes out as an ampersand.
+        self::assertStringContainsString('day &amp; night · 2 rostered now', $body);
+        self::assertStringContainsString('The rotation', $body);
+        // The rows the module wrote, inside the band the area drew.
+        self::assertStringContainsString('day 06-18 and night 18-06', $body);
+        // And the tag, so a band that disappears reads as the system working.
+        self::assertStringContainsString('ao-by patrols', $body);
+    }
+
+    /** The band stands after the postings board, never before it. */
+    public function testTheContributedBandComesAfterTheAreasOwnColumn(): void
+    {
+        $this->boot();
+        $this->signIn();
+        [$area, $station] = $this->aStaffedPostOfALiveArea();
+
+        $body = $this->body($this->record($area, $station));
+
+        self::assertLessThan(
+            strpos($body, 'id="watch"'),
+            strpos($body, 'Who is posted here'),
+            'the area draws its own cards first and the contributed bands after them',
+        );
+    }
+
+    /**
+     * WITH NO CONTRIBUTOR THERE IS NO BAND — no heading, no empty card, no
+     * placeholder. An installation without the module reads a shorter page,
+     * and nothing is missing that is not also absent.
+     */
+    public function testAPostOfAnAreaRunningNoSuchModuleDrawsNoBand(): void
+    {
+        $this->boot();
+        $this->signIn();
+        [$area, $station] = $this->aStaffedPost();
+
+        $body = $this->body($this->record($area, $station));
+
+        self::assertStringNotContainsString('rband', $body);
+        self::assertStringNotContainsString('Watch and presence', $body);
+    }
+
     /** A station of another area is not this page's subject. */
     public function testAStationOfAnotherAreaIsRefused(): void
     {
@@ -262,7 +324,24 @@ final class StationRecordTest extends WebTestCase
     /** @return array{0: AreaOfInterest, 1: Station} */
     private function aStaffedPost(): array
     {
-        $area = $this->anArea();
+        return $this->aStaffedPostIn($this->anArea());
+    }
+
+    /**
+     * THE SAME POST, IN AN AREA THAT RUNS A MODULE. The ledger is what
+     * decides whether a contributor is asked at all, so a suite about
+     * contributed bands has to switch one on.
+     *
+     * @return array{0: AreaOfInterest, 1: Station}
+     */
+    private function aStaffedPostOfALiveArea(): array
+    {
+        return $this->aStaffedPostIn($this->aLiveArea());
+    }
+
+    /** @return array{0: AreaOfInterest, 1: Station} */
+    private function aStaffedPostIn(AreaOfInterest $area): array
+    {
         $this->aZone($area, 'West', self::A_WEST_HALF);
         $station = $this->stations()->add($area, 'Seneto Gate Post', -29.75, -3.2, 'ST-01');
 

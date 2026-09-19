@@ -50,6 +50,7 @@ use Uhifadhi\Bundle\AreaBundle\Service\PresenceService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationEventService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationFigureService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationRegisterService;
+use Uhifadhi\Bundle\AreaBundle\Service\StationSectionService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneEventService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneExportService;
@@ -66,6 +67,7 @@ use Uhifadhi\Bundle\AtlasBundle\Map\MapBuilderInterface;
 use Uhifadhi\Bundle\RegistryBundle\Repository\AreaModuleRepository;
 use Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceInterface;
 use Uhifadhi\Contracts\Area\PresenceProviderInterface;
+use Uhifadhi\Contracts\Area\StationSectionsInterface;
 use Uhifadhi\Contracts\Kpi\StationFigureProviderInterface;
 use Uhifadhi\Contracts\Kpi\ZoneFigureProviderInterface;
 use Uhifadhi\Contracts\People\PersonDirectoryProviderInterface;
@@ -329,6 +331,17 @@ return static function (ContainerConfigurator $container): void {
     $services->set('area.station_figures', StationFigureService::class)
         ->args([tagged_iterator(StationFigureProviderInterface::TAG)]);
     $services->alias(StationFigureService::class, 'area.station_figures');
+
+    /*
+     * AND WHAT THE MODULES PUT ON A POST AS A SECTION rather than as a
+     * figure: the roster's watch band on the record, its block on the
+     * configure card. Read off the tag, in registration order, and asked
+     * only where the area runs the module — the same rule the figures
+     * follow, for the same reason.
+     */
+    $services->set('area.station_sections', StationSectionService::class)
+        ->args([tagged_iterator(StationSectionsInterface::TAG)]);
+    $services->alias(StationSectionService::class, 'area.station_sections');
 
     $services->set('area.zones', ZoneService::class)
         ->args([

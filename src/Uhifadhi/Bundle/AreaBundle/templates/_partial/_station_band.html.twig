@@ -1,0 +1,26 @@
+{# A CONTRIBUTED SECTION ON A STATION'S RECORD, drawn as one banded card.
+
+   THE AREA DRAWS THE BAND AND THE MODULE FILLS IT. The card, the heading
+   row, the contributor tag and the summary line are written HERE, once, so
+   that a roster band and a permits band cannot come out looking like two
+   different products — and so that no module has to restate a selector this
+   sheet already owns.
+
+   THE TAG SURVIVES A SCREENSHOT. When the module is parked the band is
+   simply gone, and a person has to be able to read that as the system
+   working rather than as a page that broke.
+
+   THE ANCHOR IS THE SECTION'S OWN ID, so a module can link somebody straight
+   to its part of a page it does not own. #}
+<div class="c rband" id="{{ band.section.id }}">
+    <div class="rb-hd">
+        <span class="tab"><span class="ao-by {{ band.moduleSlug }}"><i></i>{{ band.moduleSlug }}</span>{{ band.section.label }}</span>
+        {% if band.section.summary %}<span class="rb-ttl">{{ band.section.summary }}</span>{% endif %}
+        {% if band.section.actions is not empty %}
+            <span class="rb-act">
+                {% for action in band.section.actions %}<a class="btn sm" href="{{ action.url }}">{{ action.label }}</a>{% endfor %}
+            </span>
+        {% endif %}
+    </div>
+    <div class="rb-body">{{ include(band.section.template, band.section.variables, with_context = false) }}</div>
+</div>

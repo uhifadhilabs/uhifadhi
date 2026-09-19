@@ -30,8 +30,10 @@ use Uhifadhi\Bundle\AreaBundle\Repository\StationRepository;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaPlateService;
 use Uhifadhi\Bundle\AreaBundle\Service\PostingBoardService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationFigureService;
+use Uhifadhi\Bundle\AreaBundle\Service\StationSectionService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneSetService;
 use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleService;
+use Uhifadhi\Contracts\Area\StationSurface;
 use Uhifadhi\Contracts\Kpi\FigurePeriod;
 use Uhifadhi\Contracts\Kpi\StationRef;
 
@@ -65,6 +67,7 @@ final readonly class StationRecordController
         private ZoneSetService $set,
         private AreaPlateService $plates,
         private StationFigureService $figures,
+        private StationSectionService $sections,
         private AreaModuleService $areaModules,
     ) {
     }
@@ -109,6 +112,17 @@ final readonly class StationRecordController
             fn (string $slug): bool => $this->runs($area, $slug),
         );
 
+        /*
+         * AND WHAT THE MODULES PUT ON THE POST ITSELF. The same ledger
+         * decides, for the same reason: a module parked in this area says
+         * nothing here, and its band leaves the page rather than emptying.
+         */
+        $bands = $this->sections->forOne(
+            new StationRef((string) $station->getUuidString(), (string) $area->getUuidString(), (string) $station->getName()),
+            StationSurface::Record,
+            fn (string $slug): bool => $this->runs($area, $slug),
+        );
+
         return new Response($this->twig->render('@Area/station/record.html.twig', [
             'area' => $area,
             'station' => $station,
@@ -120,6 +134,7 @@ final readonly class StationRecordController
             'query' => $query,
             'events' => $this->events->findByStation($station),
             'eventCount' => $this->events->countByStation($station),
+            'bands' => $bands,
             'dock' => $dock->dockFor((string) $station->getUuidString()),
             'dockPeriod' => $dock->period,
             'coordinates' => self::coordinatesOf($station),

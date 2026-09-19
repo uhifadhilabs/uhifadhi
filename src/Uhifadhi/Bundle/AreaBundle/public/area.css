@@ -1342,6 +1342,28 @@ a.zc-nm:hover { color: rgb(var(--c-acc)); }
 .stband { margin-bottom: 18px; }
 /* The postings card is an ordinary `.c`; this is only its board's rhythm. */
 .stpostings .plist { margin-top: 2px; }
+
+/* ── A CONTRIBUTED BAND ────────────────────────────────────────────────────
+   A section a MODULE put on this post — the roster's watch, and whatever
+   comes after it. THE AREA DRAWS THIS AND THE MODULE FILLS IT: the card, the
+   heading row, the contributor tag and the summary line are written here,
+   once, so that two modules' bands cannot come out looking like two
+   different products and no module has to restate a selector this sheet
+   already owns.
+
+   THE HEAD IS A THREE-PART ROW that collapses to a stack when the summary
+   runs out of room, because the summary is a sentence and the actions are
+   buttons and neither may push the other off the card. */
+.rband { margin-top: 16px; }
+.rb-hd {
+    display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+    padding-bottom: 9px; border-bottom: 1px dashed var(--c-ln);
+}
+.rb-hd .tab { flex: none; }
+.rb-ttl { flex: 1 1 200px; min-width: 0; font-size: 11.5px; color: rgb(var(--c-fog)); }
+.rb-ttl b { color: rgb(var(--c-tx)); font-weight: 600; }
+.rb-act { display: flex; align-items: center; gap: 7px; flex: none; margin-left: auto; }
+.rb-body { padding-top: 10px; }
 .stfilt { margin-bottom: 12px; }
 
 /* THE BOARD — one line per person, the lead first. */

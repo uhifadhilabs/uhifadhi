@@ -36,8 +36,12 @@ use Uhifadhi\Bundle\AreaBundle\Service\PersonDirectoryService;
 use Uhifadhi\Bundle\AreaBundle\Service\PostingBoardService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationNoticeStore;
 use Uhifadhi\Bundle\AreaBundle\Service\StationRegisterService;
+use Uhifadhi\Bundle\AreaBundle\Service\StationSectionService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneSetService;
+use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleService;
+use Uhifadhi\Contracts\Area\StationSurface;
+use Uhifadhi\Contracts\Kpi\StationRef;
 
 /**
  * THE STATIONS SECTION OF AN AREA'S CONFIGURE PAGE — where a post is added,
@@ -80,6 +84,8 @@ final readonly class StationConfigureController
         private ZoneSetService $set,
         private AreaPlateService $plates,
         private StationNoticeStore $notices,
+        private StationSectionService $sections,
+        private AreaModuleService $areaModules,
         private CsrfTokenManagerInterface $csrf,
     ) {
     }
@@ -108,6 +114,24 @@ final readonly class StationConfigureController
             ];
         }
 
+        /*
+         * WHAT THE MODULES ADD TO THE OPEN CARD. Only one card's body is
+         * rendered at a time on this page, so only that post is asked
+         * about — a contributor is never made to answer for eleven cards
+         * nobody is looking at. The answer is keyed by post all the same,
+         * because the page reads it per row and a list would tie the two
+         * to each other's order.
+         *
+         * A module parked in this area is not asked at all.
+         */
+        $blocks = null === $open ? [] : [
+            (string) $open->getUuidString() => $this->sections->forOne(
+                new StationRef((string) $open->getUuidString(), (string) $area->getUuidString(), (string) $open->getName()),
+                StationSurface::Configure,
+                fn (string $slug): bool => $this->areaModules->isActive($area, $slug),
+            ),
+        ];
+
         return new Response($this->twig->render('@Area/station/configure.html.twig', [
             'area' => $area,
             'register' => $register,
@@ -115,6 +139,7 @@ final readonly class StationConfigureController
             'open' => $open,
             'openRow' => null === $open ? null : self::rowOf($register, (string) $open->getUuidString()),
             'board' => $board,
+            'blocks' => $blocks,
             'people' => $this->directory->people(),
             'nextCode' => $this->stationService->nextCode($area),
             'events' => $this->events->findByArea($area),

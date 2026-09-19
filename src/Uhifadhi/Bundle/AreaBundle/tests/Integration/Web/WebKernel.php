@@ -37,6 +37,7 @@ use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web\Fixtures\SignedInPerson;
 use Uhifadhi\Bundle\AtlasBundle\AtlasBundle;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
 use Uhifadhi\Bundle\ShellBundle\ShellBundle;
+use Uhifadhi\Contracts\Area\StationSectionsInterface;
 use Uhifadhi\Contracts\Entity\UserInterface;
 use Uhifadhi\Contracts\People\PersonDirectoryProviderInterface;
 use Uhifadhi\Contracts\Shell\AreaNavChildrenInterface;
@@ -286,6 +287,14 @@ final class WebKernel extends Kernel
          */
         $services->set(FakeAreaSections::class)
             ->tag(AreaSectionsInterface::TAG);
+
+        /*
+         * A MODULE PUTTING A BAND ON A POST — the seam the roster's watch
+         * arrives through. Its slug is the module this harness installs, so
+         * the ledger decides whether it is asked at all.
+         */
+        $services->set(FakeStationSections::class)
+            ->tag(StationSectionsInterface::TAG);
 
         /*
          * A BUNDLE UNFOLDING ONE OF THE AREA'S SCREENS IN THE TREE, tagged

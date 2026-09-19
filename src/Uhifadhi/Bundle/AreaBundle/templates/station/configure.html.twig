@@ -275,6 +275,15 @@
                                     {% endif %}
                                 </form>
 
+                                {# WHAT THE MODULES ASK ABOUT THIS POST. The watch a
+                                   station is expected to keep is the roster's, not the
+                                   area's, so those rows are CONTRIBUTED into the card
+                                   after the postings board. A parked module adds
+                                   nothing and the card simply ends sooner. #}
+                                {% for block in blocks[row.uuid]|default([]) %}
+                                    {{ include('@Area/_partial/_station_block.html.twig', {band: block}, with_context = false) }}
+                                {% endfor %}
+
                                 <div class="zcmore">
                                     <span class="sp"></span>
                                     {% if row.active %}

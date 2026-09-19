@@ -18,6 +18,11 @@ Not released yet.
  * the provenance of an imported scheme — the file's name, the moment, the
    person, the count and the property the names came out of — stored beside the
    geometry, while the uploaded file itself is read and let go
+ * the day a ranger reports: the check-in a handset claims, the words an area
+   lets them claim it with, the corrections appended to it and the duty pings —
+   with `verified` and `unverified` derived on every read and never stored
+ * the duty endpoints a handset writes through, and the station sections a
+   module contributes to a post's record and its configure card
  * the answer to the platform's area contract, so nothing has to be written by
    hand to point a module's record at an area
  * the area overview, composed from what the modules an area runs contribute:

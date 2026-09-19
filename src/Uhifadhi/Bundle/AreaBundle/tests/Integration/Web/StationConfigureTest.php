@@ -355,6 +355,48 @@ final class StationConfigureTest extends WebTestCase
         self::assertSame(Response::HTTP_FORBIDDEN, $this->browser()->getResponse()->getStatusCode());
     }
 
+    /**
+     * WHAT A MODULE ASKS ABOUT A POST, inside the post's own card: the
+     * watch a station is expected to keep is the roster's and not the
+     * area's, so those rows are contributed after the postings board.
+     *
+     * THE HEADING IS THE PAGE'S, wearing the contributing module's tag —
+     * the same rule as the record's band, so the two read as one product.
+     */
+    public function testAModuleContributesABlockInsideEachStationsCard(): void
+    {
+        $this->boot();
+        $this->signIn();
+        $area = $this->aLiveArea();
+        $station = $this->stations()->add($area, 'Seneto Gate Post', -29.75, -3.2, 'ST-01');
+
+        // ONE CARD IS OPEN AT A TIME on this page, and a card's fields —
+        // the area's and the modules' alike — exist only while it is.
+        $body = $this->body($this->section($area).'?open='.$station->getUuidString());
+
+        self::assertStringContainsString('Watch and presence', $body);
+        self::assertStringContainsString('ao-by patrols', $body);
+        self::assertStringContainsString('day 06-18 and night 18-06', $body);
+        // Inside the card, not as a card of its own.
+        self::assertStringNotContainsString('rband', $body);
+    }
+
+    /**
+     * WITH NO SUCH MODULE THE CARD SIMPLY ENDS SOONER — no heading, no rows
+     * and no placeholder for a block nobody offered.
+     */
+    public function testAnAreaRunningNoSuchModuleGetsNoBlock(): void
+    {
+        $this->boot();
+        $this->signIn();
+        $area = $this->anArea();
+        $station = $this->stations()->add($area, 'Seneto Gate Post', -29.75, -3.2, 'ST-01');
+
+        $body = $this->body($this->section($area).'?open='.$station->getUuidString());
+
+        self::assertStringNotContainsString('Watch and presence', $body);
+    }
+
     // ---------------------------------------------------------------- fixtures
 
     private function section(AreaOfInterest $area): string

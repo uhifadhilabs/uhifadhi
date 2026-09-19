@@ -1,0 +1,12 @@
+{# A CONTRIBUTED SECTION ON A STATION'S CONFIGURE CARD — the same seam as the
+   record band, drawn as this page's own heading plus the module's rows.
+
+   NOT A CARD. The station's card already exists and this goes INSIDE it,
+   under the postings board, so it wears `.stbhd` like the headings around it
+   rather than opening a second frame inside an open row. #}
+<div class="stbhd">
+    <span class="ao-by {{ band.moduleSlug }}"><i></i>{{ band.moduleSlug }}</span>&nbsp;{{ band.section.label }}
+    {% if band.section.summary %}<span>{{ band.section.summary }}</span>{% endif %}
+    {% for action in band.section.actions %}<span><a href="{{ action.url }}">{{ action.label }}</a></span>{% endfor %}
+</div>
+{{ include(band.section.template, band.section.variables, with_context = false) }}
