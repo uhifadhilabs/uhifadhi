@@ -34,7 +34,7 @@
         {% for option in options %}
             <a class="i-ddopt{{ chosen == option.value ? ' on' : '' }}"
                href="{{ path(app.request.attributes.get('_route'), app.request.attributes.get('_route_params')|merge(query.with(key, option.value))) }}">
-                {% if option.hue %}<span class="i-dot" style="background:{{ option.hue }}"></span>{% endif %}
+                {% if option.cat %}<span class="i-dot" data-cat="{{ option.cat }}"></span>{% endif %}
                 <span class="i-ddopt-l">{{ option.label }}</span>
                 {% if option.count > 0 %}<span class="i-ddopt-n">{{ option.count }}</span>{% endif %}
             </a>

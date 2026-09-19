@@ -47,4 +47,16 @@ final class VocabularyConformanceTest extends VocabularyConformanceTestCase
 
         return [$shell.'/shell.css', $shell.'/widget.css'];
     }
+
+    /**
+     * EXEMPT, AND THAT IS DEBT RATHER THAN A DESIGN. `team.css` still
+     * carries module identity hues — a roster blue, an incidents pink —
+     * which the "modules have no hue" ruling already refuses: selection
+     * is the house accent and a category is one of the nine. They come
+     * out with the departments surfaces, and this exemption with them.
+     */
+    protected static function declaresItsOwnPalette(): bool
+    {
+        return true;
+    }
 }

@@ -16,6 +16,7 @@ namespace Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Overview\PulseEvent;
 use Uhifadhi\Bundle\AreaBundle\Overview\PulseProviderInterface;
+use Uhifadhi\Contracts\Atlas\PlatePalette;
 
 /**
  * A MODULE'S PULSE CONTRIBUTION, STOOD IN FOR.
@@ -51,7 +52,7 @@ final readonly class FakePulse implements PulseProviderInterface
                 move: 'patrol opened',
                 summary: 'A patrol opened in the northern sector',
                 url: '/x',
-                swatch: '#3ED9A8',
+                swatch: PlatePalette::ACCENT,
             ),
         ];
     }

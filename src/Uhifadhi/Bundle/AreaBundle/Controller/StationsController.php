@@ -90,9 +90,9 @@ final readonly class StationsController
         $register = $this->register->register($area, $query);
         $view = $this->set->view($area);
 
-        $hues = [];
+        $cats = [];
         foreach ($view->rows as $zone) {
-            $hues[$zone->name] = $zone->hue;
+            $cats[$zone->name] = $zone->cat;
         }
 
         $posts = [];
@@ -110,7 +110,7 @@ final readonly class StationsController
                 'posted' => $posted,
                 'here' => false,
                 'zone' => $zone,
-                'hue' => null === $zone ? null : ($hues[$zone] ?? null),
+                'cat' => null === $zone ? null : ($cats[$zone] ?? null),
             ];
             $refs[] = new StationRef((string) $post->getUuidString(), (string) $area->getUuidString(), (string) $post->getName());
 

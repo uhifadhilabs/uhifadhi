@@ -25,6 +25,7 @@ use Uhifadhi\Bundle\AtlasBundle\Model\GeoJsonLayer;
 use Uhifadhi\Bundle\AtlasBundle\Model\LayerShape;
 use Uhifadhi\Bundle\AtlasBundle\Model\LegendItem;
 use Uhifadhi\Bundle\AtlasBundle\Model\StyleRule;
+use Uhifadhi\Contracts\Atlas\PlatePalette;
 
 /**
  * THE AREA'S GROUND, DRAWN — every plate the area's own pages read their
@@ -76,7 +77,7 @@ final readonly class AreaPlateService
     private const string HUE_PROPERTY = 'zone';
 
     /** The post the page is about, in the platform's own accent. */
-    private const string HERE_SWATCH = '#49E6B4';
+    private const string HERE_SWATCH = PlatePalette::ACCENT;
 
     public function __construct(
         private ZoneRepository $zones,
@@ -98,7 +99,7 @@ final readonly class AreaPlateService
 
         $features = [];
         foreach ($rows as $row) {
-            $features[] = [$row->name, $named[$row->name] ?? null, $row->hue, $row->km2];
+            $features[] = [$row->name, $named[$row->name] ?? null, PlatePalette::category($row->cat), $row->km2];
         }
 
         return $this->draw($area, $features, self::ZONES_GROUP);
@@ -115,7 +116,7 @@ final readonly class AreaPlateService
     {
         $features = [];
         foreach ($arriving as $position => $feature) {
-            $features[] = [$feature->name, $feature->geom, ZonePalette::hueFor($position), $feature->km2 ?? 0];
+            $features[] = [$feature->name, $feature->geom, PlatePalette::category(ZonePalette::catFor($position)), $feature->km2 ?? 0];
         }
 
         return $this->draw($area, $features, self::ARRIVING_GROUP);
@@ -166,15 +167,15 @@ final readonly class AreaPlateService
      * neutral swatch, which is the honest answer rather than a twelfth colour
      * that means "none".
      *
-     * @param list<ZoneRow>                                                                                                               $rows  the area's zones, hued as everywhere else
-     * @param list<array{uuid: string, name: string, point: string|null, posted: int, here: bool, zone?: string|null, hue?: string|null}> $posts
+     * @param list<ZoneRow>                                                                                                            $rows  the area's zones, categorised as everywhere else
+     * @param list<array{uuid: string, name: string, point: string|null, posted: int, here: bool, zone?: string|null, cat?: int|null}> $posts
      */
     public function stationsPlate(AreaOfInterest $area, array $rows, array $posts): AtlasMap
     {
-        $hues = [];
+        $swatches = [];
         $counted = [];
         foreach ($rows as $row) {
-            $hues[$row->name] = $row->hue;
+            $swatches[$row->name] = PlatePalette::category($row->cat);
             $counted[$row->name] = 0;
         }
 
@@ -193,7 +194,7 @@ final readonly class AreaPlateService
             if ($count > 0) {
                 $map->addLegendItem(new LegendItem(
                     label: \sprintf('%s · %d %s', $name, $count, 1 === $count ? 'station' : 'stations'),
-                    swatch: $hues[$name],
+                    swatch: $swatches[$name],
                     group: self::STATIONS_GROUP,
                 ));
             }

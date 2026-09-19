@@ -24,6 +24,7 @@ use Uhifadhi\Bundle\AtlasBundle\Model\Boundary;
 use Uhifadhi\Bundle\AtlasBundle\Model\GeoJsonLayer;
 use Uhifadhi\Bundle\AtlasBundle\Model\LayerShape;
 use Uhifadhi\Bundle\AtlasBundle\Model\LegendItem;
+use Uhifadhi\Contracts\Atlas\PlatePalette;
 
 /**
  * THE AREA'S TWO PLATES, STATED IN PHP.
@@ -55,10 +56,10 @@ final readonly class AreaMapService
     public const string LIVE_LAYER = 'area.live';
     public const string SETUP_LAYER = 'area.setup';
 
-    private const string LIVE_SWATCH = '#3ED9A8';
-    private const string QUIET_SWATCH = '#B9C8BD';
+    private const string LIVE_SWATCH = PlatePalette::OK;
+    private const string QUIET_SWATCH = PlatePalette::DIM;
     /** Public: a second plate of the same ground draws the same edge in the same colour. */
-    public const string BOUNDARY_SWATCH = '#49E6B4';
+    public const string BOUNDARY_SWATCH = PlatePalette::ACCENT;
 
     public function __construct(
         private MapBuilderInterface $maps,

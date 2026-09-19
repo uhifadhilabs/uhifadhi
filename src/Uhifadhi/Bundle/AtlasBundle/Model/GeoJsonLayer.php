@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\AtlasBundle\Model;
 
 use Uhifadhi\Bundle\AtlasBundle\Exception\LayerException;
+use Uhifadhi\Contracts\Atlas\PlatePalette;
 
 /**
  * A body of GeoJSON drawn on a plate, and the legend row that switches it.
@@ -40,14 +41,15 @@ use Uhifadhi\Bundle\AtlasBundle\Exception\LayerException;
 final readonly class GeoJsonLayer
 {
     /** The atlas's own line colour, so a layer that states no colour is still legible. */
-    public const string DEFAULT_SWATCH = '#49E6B4';
+    public const string DEFAULT_SWATCH = PlatePalette::ACCENT;
 
     /**
      * @param string                    $id        the id the legend row and the drawn layer share; a
      *                                             module namespaces it with its own word ("patrol.tracks")
      * @param array<string, mixed>|null $features  a decoded GeoJSON FeatureCollection
      * @param string|null               $url       an endpoint answering with one, fetched by the plate
-     * @param string                    $swatch    the layer's colour, in the legend and on the map; a
+     * @param string                    $swatch    the layer's colour, in the legend and on the map, as a
+     *                                             TOKEN NAME and never a value ({@see PlatePalette}); a
      *                                             feature may override it with its own `color` property
      * @param bool                      $visible   whether the layer starts drawn — an invisible layer is
      *                                             still built, so its first switch costs no round trip
@@ -83,6 +85,16 @@ final readonly class GeoJsonLayer
 
         if (null !== $features && null !== $url) {
             throw new LayerException(\sprintf('The layer "%s" names two sources: give it either "features" or "url", not both.', $id));
+        }
+
+        /*
+         * A TOKEN AND NEVER A VALUE. A plate's palette is picked to survive
+         * satellite ground and turns over with the theme, so a colour
+         * published here would be right on one basemap and wrong on the
+         * next with nothing on the page to say so.
+         */
+        if (!PlatePalette::isToken($swatch)) {
+            throw new LayerException(\sprintf('The layer "%s" is coloured "%s". A layer names a TOKEN — PlatePalette::OK, or PlatePalette::category($position) for one of a set — and the plate resolves it where it draws.', $id, $swatch));
         }
     }
 

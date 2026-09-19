@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\AreaBundle\Overview;
 
+use Uhifadhi\Contracts\Atlas\PlatePalette;
+
 /**
  * ONE LAYER OF THE OPERATIONAL PLATE, WITH ITS LEGEND.
  *
@@ -52,8 +54,9 @@ final readonly class MapLayer
 
     /**
      * @param string               $id       unique across the plate; `<module>.<layer>` by convention
-     * @param string               $swatch   the legend's colour, as CSS — A LAYER'S COLOUR IS DATA, so it
-     *                                       is the same in light and dark and the module states it once
+     * @param string               $swatch   the legend's colour, as a TOKEN NAME and never a value
+     *                                       ({@see PlatePalette}): the host resolves it where it draws, so
+     *                                       one name is right in light, in dark and on imagery
      * @param int|null             $count    what the legend prints after the label ("Open · 31"); null prints nothing
      * @param bool                 $on       whether the layer is drawn before anybody touches the legend
      * @param bool                 $live     whether the surface's one polling endpoint refreshes it
@@ -73,6 +76,15 @@ final readonly class MapLayer
     ) {
         if ('' === $id || '' === $label || '' === $groupLabel) {
             throw new \InvalidArgumentException('A map layer needs an id, a label and the group its legend sits under.');
+        }
+        /*
+         * A TOKEN AND NEVER A VALUE. A module does not know what green is
+         * here — the palette turns over with the theme and again on
+         * imagery — so it names a meaning, or a category's position, and
+         * the host resolves it.
+         */
+        if (!PlatePalette::isToken($swatch)) {
+            throw new \InvalidArgumentException(\sprintf('Map layer "%s" is coloured "%s". A layer names a TOKEN — PlatePalette::OK, or PlatePalette::category($position) for one of a set — never a colour it chose.', $id, $swatch));
         }
         if (!\in_array($style, [self::STYLE_LINE, self::STYLE_FILL, self::STYLE_BOUNDARY], true)) {
             throw new \InvalidArgumentException(\sprintf('Map layer "%s" asks for the swatch style "%s", which the legend does not draw.', $id, $style));

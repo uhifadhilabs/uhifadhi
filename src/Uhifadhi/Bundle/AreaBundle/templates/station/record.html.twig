@@ -127,7 +127,7 @@
                 {{ include('@Area/_partial/_filter.html.twig', {
                     label: 'a&ndash;z', all: 'order', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\PostingQuery::SORT'),
                     chosen: query.sort == 'az' ? null : query.sort,
-                    options: [{value: 'since', label: 'by how long', count: 0, hue: null}], query: query, here: here,
+                    options: [{value: 'since', label: 'by how long', count: 0, cat: null}], query: query, here: here,
                 }) }}
 
                 <form class="lsearch" method="get" action="{{ here }}">

@@ -52,11 +52,11 @@ final readonly class StationRegisterService
 
     public function register(AreaOfInterest $area, StationQuery $query, int $perPage = StationRegister::PER_PAGE): StationRegister
     {
-        $hues = [];
+        $cats = [];
         $zoneNames = [];
         foreach ($this->set->view($area)->rows as $zone) {
             /** @var ZoneRow $zone */
-            $hues[$zone->uuid] = $zone->hue;
+            $cats[$zone->uuid] = $zone->cat;
             $zoneNames[$zone->uuid] = $zone->name;
         }
 
@@ -73,7 +73,7 @@ final readonly class StationRegisterService
                 $station,
                 $counts[$uuid] ?? 0,
                 isset($led[$uuid]),
-                null === $zoneUuid ? null : ($hues[$zoneUuid] ?? null),
+                null === $zoneUuid ? null : ($cats[$zoneUuid] ?? null),
             );
         }
 
@@ -90,7 +90,7 @@ final readonly class StationRegisterService
             // twelve the register is currently about.
             scope: \count(array_filter($all, static fn (StationRow $row): bool => self::withinScope($row, $query))),
             inactive: \count(array_filter($all, static fn (StationRow $row): bool => !$row->active)),
-            zones: self::zoneOptions($all, $query, $hues, $zoneNames),
+            zones: self::zoneOptions($all, $query, $cats, $zoneNames),
             activity: self::activityOptions($all, $query),
             posted: self::postedOptions($all, $query),
             lead: self::leadOptions($all, $query),
@@ -144,12 +144,12 @@ final readonly class StationRegisterService
      * to find out that a zone is empty.
      *
      * @param list<StationRow>     $all
-     * @param array<string,string> $hues
+     * @param array<string, int>   $cats
      * @param array<string,string> $names
      *
      * @return list<FilterOption>
      */
-    private static function zoneOptions(array $all, StationQuery $query, array $hues, array $names): array
+    private static function zoneOptions(array $all, StationQuery $query, array $cats, array $names): array
     {
         $counts = [];
         foreach ($all as $row) {
@@ -160,7 +160,7 @@ final readonly class StationRegisterService
 
         $options = [];
         foreach ($names as $uuid => $name) {
-            $options[] = new FilterOption($uuid, $name, $counts[$uuid] ?? 0, $hues[$uuid] ?? null);
+            $options[] = new FilterOption($uuid, $name, $counts[$uuid] ?? 0, $cats[$uuid] ?? null);
         }
 
         // UNZONED IS LAST, because it is the ground left over rather than one

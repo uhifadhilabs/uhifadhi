@@ -135,6 +135,21 @@ abstract class VocabularyConformanceTestCase extends TestCase
     }
 
     /**
+     * WHETHER THIS BUNDLE DECLARES A PALETTE OF ITS OWN, and may
+     * therefore write colour values.
+     *
+     * Almost nothing may. The shell declares the product's palette and
+     * the atlas declares the ground its imagery is read against; every
+     * other sheet SPENDS those and names no colour, which is the whole
+     * of why a module is correct after dark without a single dark-mode
+     * rule of its own.
+     */
+    protected static function declaresItsOwnPalette(): bool
+    {
+        return false;
+    }
+
+    /**
      * WHETHER THIS BUNDLE IS THE ONE THAT OWNS THE MONTH GRID. Exactly
      * one package answers true — the atlas, which ships the component —
      * and every other package leaves it alone.
@@ -297,6 +312,36 @@ abstract class VocabularyConformanceTestCase extends TestCase
         self::assertSame([], $offenders, \sprintf(
             'This bundle restates [%s]; a rule written twice renders differently depending on which sheet loaded last.',
             implode(', ', $offenders),
+        ));
+    }
+
+    /**
+     * A SHEET SPENDS TOKENS AND NAMES NO HUE.
+     *
+     * The first `#3457B5` in a module's stylesheet is the first thing on
+     * that module's pages that will be wrong after dark, wrong on
+     * imagery, and wrong again the day the palette moves — and nothing
+     * will report it, because a colour that renders is a colour that
+     * looks like it worked.
+     *
+     * A HEX IS THE TEST, and a translucent black or white is not one: a
+     * shadow and a veil are the same in both palettes, which is exactly
+     * why the shell writes its own elevation that way. What is refused
+     * is a HUE — a colour somebody picked instead of naming what they
+     * meant.
+     */
+    public function testNoOwnSheetNamesAColourOfItsOwn(): void
+    {
+        // The bundle that DECLARES the palette writes its values; the rule
+        // is about everybody who spends it.
+        preg_match_all('/#[0-9a-fA-F]{3,8}\b/', static::declaresItsOwnPalette() ? '' : self::ownCss(), $found);
+        $hues = array_values(array_unique($found[0]));
+        sort($hues);
+
+        self::assertSame([], $hues, \sprintf(
+            'This bundle names the colour(s) [%s]. Spend a token instead — a state token for a meaning, '
+            .'or a category for one of a set — or the rule is wrong in one of the two palettes and on imagery.',
+            implode(', ', $hues),
         ));
     }
 

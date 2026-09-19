@@ -49,4 +49,14 @@ final class VocabularyConformanceTest extends VocabularyConformanceTestCase
     {
         return true;
     }
+
+    /**
+     * THE MAP'S SHEET DECLARES THE GROUND ITS IMAGERY IS READ AGAINST —
+     * the `--z-*` tokens no other sheet can know, because they are about
+     * satellite ground rather than about the theme.
+     */
+    protected static function declaresItsOwnPalette(): bool
+    {
+        return true;
+    }
 }

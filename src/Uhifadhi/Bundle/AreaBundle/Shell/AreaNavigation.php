@@ -298,7 +298,10 @@ final readonly class AreaNavigation implements NavigationSourceInterface
                 label: $row->name,
                 url: $url,
                 current: $this->viewerIsExactly($url),
-                swatch: $row->hue,
+                // THE ZONE'S CATEGORY, as the shell's own dot takes one — a
+                // position the register's order gave it, resolved by the
+                // palette, never a colour this bundle picked.
+                swatch: \sprintf('var(--cat-%d)', $row->cat),
             );
         }
 

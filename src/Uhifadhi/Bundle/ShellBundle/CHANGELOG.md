@@ -8,6 +8,10 @@
 
 Not released yet.
 
+ * a sheet that does not declare the palette may name no colour of its own —
+   the fleet rule, with the shell and the atlas's ground exempt because they
+   declare one
+ * `--lift`, the shadow an overlay casts, beside `--scrim`
  * `--c-crit`/`--crit` and `--scrim` — the fourth state (a thing that is still
    going wrong, not a louder `fail`) and an overlay's ground, dark in both
    themes. Both were in the design's palette and in no sheet here, so modules

@@ -26,17 +26,28 @@ use Uhifadhi\Contracts\Kpi\DepartmentKpi;
 final readonly class ZoneListRow
 {
     /**
+     * @deprecated since 1.0, read {@see $cat} instead — removed in the next
+     *             release. It resolves from the category, so a module reading
+     *             it gets the token the palette would have given it. TWO
+     *             releases rather than one: a shipped module reading a
+     *             property that vanished is a 500 on somebody else's page.
+     */
+    public string $hue;
+
+    /**
      * @param array<string, DepartmentKpi|null> $figures one per module the area runs, keyed by slug
      */
     public function __construct(
         public string $uuid,
         public string $name,
-        public string $hue,
+        /** The category the register's order gave it, 1 to 9 — never a colour. */
+        public int $cat,
         public int $km2,
         public ?DepartmentKpi $covered,
         public int $stations,
         public int $people,
         public array $figures = [],
     ) {
+        $this->hue = \sprintf('var(--cat-%d)', $cat);
     }
 }

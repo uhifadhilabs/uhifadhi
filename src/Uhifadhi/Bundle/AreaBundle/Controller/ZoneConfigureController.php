@@ -119,12 +119,12 @@ final readonly class ZoneConfigureController
         $view = $this->set->view($area);
         $plan = $this->draft->plan($area);
 
-        // THE HUES ARE DECIDED ONCE AND SPENT THREE TIMES — the swatch on a
+        // THE CATEGORIES ARE DECIDED ONCE AND SPENT THREE TIMES — the swatch on a
         // preview row, the ring on the plate and the row in the key — so the
         // page cannot show one feature in two colours.
-        $hues = [];
+        $cats = [];
         foreach ($plan?->arriving() ?? [] as $position => $feature) {
-            $hues[$feature->name] = ZonePalette::hueFor($position);
+            $cats[$feature->name] = ZonePalette::catFor($position);
         }
 
         $openZone = self::uuidQuery($request, self::OPEN_QUERY);
@@ -161,7 +161,7 @@ final readonly class ZoneConfigureController
             'map' => null === $plan
                 ? $this->plates->plate($area, $view->rows)
                 : $this->plates->previewPlate($area, $plan->arriving()),
-            'hues' => $hues,
+            'cats' => $cats,
             'nameProperties' => ZoneImportService::NAME_PROPERTIES,
             'importToken' => $this->csrf->getToken(ZoneImportController::TOKEN)->getValue(),
             'renameToken' => $this->csrf->getToken(ZoneEditController::RENAME_TOKEN)->getValue(),

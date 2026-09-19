@@ -114,7 +114,7 @@
                                 <a class="ovx" href="{{ isOpen ? section : section ~ '?open=' ~ row.uuid }}"
                                    aria-expanded="{{ isOpen ? 'true' : 'false' }}"
                                    aria-label="{{ isOpen ? 'Collapse' : 'Expand' }} {{ row.name }}">{{ ux_icon('shell:chevron-right') }}</a>
-                                <span class="zsw" style="background:{{ row.hue }}"></span>
+                                <span class="zsw" data-cat="{{ row.cat }}"></span>
                                 <div class="zc-bd">
                                     <span class="nmrow"><a class="zc-nm" href="{{ path('area_zones', {uuid: area.uuidString}) }}">{{ row.name }}</a></span>
                                 </div>
@@ -173,7 +173,7 @@
                                    the post's own record, which is the surface that edits postings. #}
                                 <div class="stgroup">
                                     <div class="stgh">
-                                        <span class="zsw" style="background:{{ row.hue }}"></span>
+                                        <span class="zsw" data-cat="{{ row.cat }}"></span>
                                         <b>{{ row.name }}</b>
                                         <span class="stghm">
                                             {{- row.km2|number_format }} km&sup2;
@@ -335,7 +335,7 @@
                             <label class="zfeat{{ feature.isArriving ? '' : ' bad' }}">
                                 {% if feature.isArriving %}
                                     <input type="checkbox" name="arriving[]" value="{{ feature.name }}" checked>
-                                    <span class="zsw" style="background:{{ hues[feature.name]|default('') }}"></span>
+                                    <span class="zsw"{% if cats[feature.name] is defined %} data-cat="{{ cats[feature.name] }}"{% endif %}></span>
                                 {% else %}
                                     <span class="zsw hollow"></span>
                                 {% endif %}

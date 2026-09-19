@@ -16,6 +16,7 @@ namespace Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Overview\MapLayer;
 use Uhifadhi\Bundle\AreaBundle\Overview\MapLayerProviderInterface;
+use Uhifadhi\Contracts\Atlas\PlatePalette;
 
 /**
  * A MODULE'S MAP-LAYER CONTRIBUTION, STOOD IN FOR.
@@ -51,7 +52,7 @@ final readonly class FakeMapLayers implements MapLayerProviderInterface
                 moduleSlug: $this->slug,
                 groupLabel: $this->group,
                 label: 'Out right now',
-                swatch: '#3ED9A8',
+                swatch: PlatePalette::ACCENT,
                 features: [
                     'type' => 'FeatureCollection',
                     'features' => [[
@@ -69,7 +70,7 @@ final readonly class FakeMapLayers implements MapLayerProviderInterface
                 moduleSlug: $this->slug,
                 groupLabel: $this->group,
                 label: '2 km coverage buffer',
-                swatch: '#3ED9A8',
+                swatch: PlatePalette::OK,
                 features: ['type' => 'FeatureCollection', 'features' => []],
                 style: MapLayer::STYLE_FILL,
                 on: false,

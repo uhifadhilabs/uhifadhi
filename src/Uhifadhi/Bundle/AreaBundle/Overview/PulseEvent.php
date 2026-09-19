@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\AreaBundle\Overview;
 
+use Uhifadhi\Contracts\Atlas\PlatePalette;
+
 /**
  * ONE MOVE IN THE AREA PULSE.
  *
@@ -34,7 +36,8 @@ final readonly class PulseEvent
      *                                row wears the module's own status chip for it
      * @param string       $summary   one line a person can read without opening the record
      * @param list<string> $meta      short facts: the place, who did it
-     * @param string       $swatch    the colour the module gives this kind of move, as CSS
+     * @param string       $swatch    the colour the module gives this kind of move, as a TOKEN NAME and
+     *                                never a value ({@see PlatePalette}) — the host resolves it
      */
     public function __construct(
         public \DateTimeImmutable $at,
@@ -51,6 +54,10 @@ final readonly class PulseEvent
     ) {
         if ('' === $moduleSlug || '' === $recordRef || '' === $move) {
             throw new \InvalidArgumentException('A pulse event needs a module, a record and a move.');
+        }
+        /* A token, for the reason every other swatch in the product is one. */
+        if (!PlatePalette::isToken($swatch)) {
+            throw new \InvalidArgumentException(\sprintf('The pulse event "%s" is coloured "%s". A move names a TOKEN — PlatePalette::WARN, or PlatePalette::category($position) — and the host resolves it.', $recordRef, $swatch));
         }
     }
 }

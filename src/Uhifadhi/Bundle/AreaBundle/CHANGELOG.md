@@ -8,6 +8,19 @@
 
 Not released yet.
 
+ * every colour is gone from this bundle: `ZonePalette` publishes a CATEGORY
+   (its position in the register's order, wrapping at nine) instead of eleven
+   hexes of its own, the zone dots and station rows carry `data-cat`, and the
+   plate names `PlatePalette::category()`. A zone is one of a set, and the set
+   is the product's nine
+ * **DEPRECATED, removed next release** — `ZoneRow::$hue`, `ZoneListRow::$hue`,
+   `StationRow::$zoneHue` and `FilterOption::$hue`. Each resolves from the
+   category and returns the token the palette would have given it; read `$cat`
+   / `$zoneCat` instead. Two releases rather than one, because a shipped module
+   reading a property that vanished is a 500 on somebody else's page
+ * the station and zone captions take the design's own sizes as well as its
+   leading (`.pnone`, `.zhwhen`, `.rb-ttl`, `.tav`, `.stsrc`, `.stwhen`,
+   `.stsep`) — `.stsrc` had lost the mono voice and the uppercase entirely
  * the area answers `LivePositionsInterface`: the latest fix of everybody on an
    open watch, with the distance to the post measured by PostGIS rather than
    from degrees in PHP — a module draws "where everybody is" without reading

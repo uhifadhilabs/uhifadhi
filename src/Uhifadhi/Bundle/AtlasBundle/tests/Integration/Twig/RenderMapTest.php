@@ -26,6 +26,7 @@ use Uhifadhi\Bundle\AtlasBundle\Model\LegendItem;
 use Uhifadhi\Bundle\AtlasBundle\Model\StyleRule;
 use Uhifadhi\Bundle\AtlasBundle\Tests\Integration\TestKernel;
 use Uhifadhi\Bundle\AtlasBundle\Twig\MapPlateRuntime;
+use Uhifadhi\Contracts\Atlas\PlatePalette;
 
 /**
  * `render_map()` THROUGH THE REAL RENDERER. Not a string built in a unit test:
@@ -96,7 +97,7 @@ final class RenderMapTest extends TestCase
     public function testAStatedLegendRowIsNotAToggle(): void
     {
         $html = self::render(static function (AtlasMap $map): void {
-            $map->addLegendItem(new LegendItem(label: 'Boundary only', swatch: '#B9C8BD'));
+            $map->addLegendItem(new LegendItem(label: 'Boundary only', swatch: PlatePalette::ACCENT));
         });
 
         self::assertStringContainsString('Boundary only', $html);

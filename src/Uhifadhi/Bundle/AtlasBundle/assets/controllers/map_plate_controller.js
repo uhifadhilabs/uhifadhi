@@ -136,6 +136,27 @@ export default class extends Controller {
         // Whether the plate has been refiltered in place, and the page behind it
         // is therefore answering a query that is no longer the one in the bar.
         this.stale = false;
+        /*
+         * WHAT A TOKEN NAME RESOLVES TO, cached for this paint.
+         *
+         * A module publishes `var(--plate-ok)` and never a colour, because
+         * a plate's palette is picked to survive satellite ground and turns
+         * over with the theme. Leaflet takes a real colour and nothing else:
+         * a `var(...)` string handed to it paints NOTHING, which is how a
+         * legend could read right while the map drew empty. So the name is
+         * resolved here, against the plate itself, at the moment of drawing.
+         */
+        this.swatches = new Map();
+
+        /*
+         * AND AGAIN WHEN THE LIGHTS CHANGE. The theme is a class on <html>,
+         * flipped without a reload, so every resolved colour on the map is
+         * wrong from that moment until something redraws it.
+         */
+        this.onThemeFlip = () => this.repaint();
+        this.themeWatch = new MutationObserver(this.onThemeFlip);
+        this.themeWatch.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
         this.onPreConnect = (event) => this.beforeMap(event);
         this.onConnect = (event) => this.afterMap(event);
         this.onFullscreenChange = () => this.catchUp();
@@ -176,6 +197,8 @@ export default class extends Controller {
         // would go on invalidating a map nobody is looking at.
         this.frameWatch?.disconnect();
         this.frameWatch = null;
+        this.themeWatch?.disconnect();
+        this.themeWatch = null;
         if (this.onMapResize) {
             this.map?.off('resize', this.onMapResize);
             this.onMapResize = null;
@@ -183,6 +206,7 @@ export default class extends Controller {
         this.layers.clear();
         this.specs.clear();
         this.byFeatureId.clear();
+        this.swatches.clear();
         this.map = null;
     }
 
@@ -379,11 +403,23 @@ export default class extends Controller {
     styleFor(layer, feature) {
         const properties = feature?.properties ?? {};
         const paint = STYLES[layer.shape] ?? STYLES.fill;
-        let style = { ...paint(properties.color ?? layer.swatch), ...(layer.style ?? {}) };
+        let style = { ...paint(this.colour(properties.color ?? layer.swatch)), ...(layer.style ?? {}) };
 
         for (const rule of layer.rules ?? []) {
             if ((rule.values ?? []).includes(properties[rule.property])) {
                 style = { ...style, ...(rule.style ?? {}) };
+            }
+        }
+
+        /*
+         * EVERY COLOUR IN THE MERGED STYLE, RESOLVED — not only the layer's
+         * own swatch. A per-feature rule ("this zone is category three") and
+         * a module's `style` block carry token names through the same door,
+         * and one of them left unresolved is one feature drawn as nothing.
+         */
+        for (const key of ['color', 'fillColor', 'fill', 'stroke']) {
+            if (undefined !== style[key]) {
+                style[key] = this.colour(style[key]);
             }
         }
 
@@ -392,6 +428,61 @@ export default class extends Controller {
         const { zIndex, ...options } = style;
 
         return undefined === zIndex ? options : { ...options, pane: this.pane(zIndex) };
+    }
+
+    /**
+     * A COLOUR LEAFLET CAN PAINT WITH, out of what a module published.
+     *
+     * A TOKEN NAME IS RESOLVED AND ANYTHING ELSE IS PASSED THROUGH. The
+     * platform's own layers publish `var(--plate-ok)`; a feature may still
+     * carry a literal in its own `color` property, and an installation's
+     * own data is not this controller's to refuse.
+     *
+     * RESOLVED AGAINST THE PLATE, not the document, so a token an
+     * installation redefined for one surface resolves to what that
+     * surface actually paints.
+     */
+    colour(value) {
+        if ('string' !== typeof value || !value.startsWith('var(')) {
+            return value;
+        }
+
+        if (this.swatches.has(value)) {
+            return this.swatches.get(value);
+        }
+
+        const name = value.slice(4, -1).trim().split(',')[0].trim();
+        const resolved = getComputedStyle(this.element).getPropertyValue(name).trim();
+        // A NAME NOBODY DECLARED PAINTS NOTHING, and nothing is what
+        // Leaflet would have drawn anyway — but the name is kept out of
+        // the cache so a sheet that arrives late still gets a chance.
+        if ('' === resolved) {
+            return value;
+        }
+
+        this.swatches.set(value, resolved);
+
+        return resolved;
+    }
+
+    /**
+     * EVERY DRAWN LAYER, RE-STYLED — what a theme flip needs, because
+     * the colours on the map were resolved under the other palette.
+     */
+    repaint() {
+        this.swatches.clear();
+        if (!this.map) {
+            return;
+        }
+
+        for (const [id, drawn] of this.layers) {
+            const spec = this.specs.get(id);
+            if (!spec || 'function' !== typeof drawn.setStyle) {
+                continue;
+            }
+
+            drawn.setStyle((feature) => this.styleFor(spec, feature));
+        }
     }
 
     /** The pane for a stated z-index, built the first time one is asked for. */

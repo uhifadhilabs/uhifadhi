@@ -412,7 +412,7 @@ final class AreaNavigationTest extends WebTestCase
      * the plate and the key draw it in — a colour that comes from the set's
      * own order, so there is no class for a stylesheet to declare.
      */
-    public function testTheZonesOfTheAreaBeingViewedHangUnderTheZonesRowWithTheirHues(): void
+    public function testTheZonesOfTheAreaBeingViewedHangUnderTheZonesRowWithTheirCategories(): void
     {
         $this->boot();
         $area = $this->anArea('Northern Conservation Reserve');
@@ -422,7 +422,9 @@ final class AreaNavigationTest extends WebTestCase
         $zones = $this->zonesBranch($this->navAt('/areas/'.$uuid.'/zones'));
 
         self::assertSame(['Western Sector'], array_map(static fn (NavItem $i): string => $i->label, $zones));
-        self::assertMatchesRegularExpression('/^#[0-9A-Fa-f]{6}$/', (string) $zones[0]->swatch);
+        // A CATEGORY AND NEVER A COLOUR: the register's order gave this zone
+        // its place in the product's nine, and the shell resolves the token.
+        self::assertMatchesRegularExpression('/^var\(--cat-[1-9]\)$/', (string) $zones[0]->swatch);
         self::assertStringContainsString('/zones/', (string) $zones[0]->url);
     }
 

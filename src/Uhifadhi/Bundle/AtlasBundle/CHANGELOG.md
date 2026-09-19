@@ -8,6 +8,9 @@
 
 Not released yet.
 
+ * the plate RESOLVES a token swatch where it draws — `var(--plate-ok)` handed
+   to Leaflet painted nothing at all, so a legend read right while the map drew
+   empty — and resolves it again when the theme flips
  * `atlas_calendar()` takes the surface's own control, drawn at the trailing
    end of the stepper row: a month is ONE line of chrome, and a component with
    nowhere to put a ranger picker made every caller draw a second toolbar

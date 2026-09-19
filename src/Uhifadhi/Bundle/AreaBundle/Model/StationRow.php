@@ -33,13 +33,23 @@ use Uhifadhi\Bundle\AreaBundle\Entity\Station;
  */
 final readonly class StationRow
 {
+    /**
+     * @deprecated since 1.0, read {@see $zoneCat} instead — removed in the next
+     *             release. It resolves from the category, so a module reading
+     *             it gets the token the palette would have given it. TWO
+     *             releases rather than one: a shipped module reading a
+     *             property that vanished is a 500 on somebody else's page.
+     */
+    public ?string $zoneHue;
+
     public function __construct(
         public string $uuid,
         public string $name,
         public ?string $code,
         public ?string $zoneUuid,
         public ?string $zoneName,
-        public ?string $zoneHue,
+        /** The category of the zone this post stands in, 1 to 9; null where it stands in none. */
+        public ?int $zoneCat,
         public int $posted,
         public bool $led,
         public bool $active,
@@ -48,6 +58,7 @@ final readonly class StationRow
         public ?string $locality,
         public ?\DateTimeImmutable $openedAt,
     ) {
+        $this->zoneHue = null === $zoneCat ? null : \sprintf('var(--cat-%d)', $zoneCat);
     }
 
     /** The zone as a filter value: its identifier, or the word for having none. */
@@ -66,7 +77,7 @@ final readonly class StationRow
             || str_contains(mb_strtolower((string) $this->code), $term);
     }
 
-    public static function of(Station $station, int $posted, bool $led, ?string $zoneHue): self
+    public static function of(Station $station, int $posted, bool $led, ?int $zoneCat): self
     {
         $zone = $station->getZone();
 
@@ -76,7 +87,7 @@ final readonly class StationRow
             code: $station->getCode(),
             zoneUuid: null === $zone ? null : (string) $zone->getUuidString(),
             zoneName: $zone?->getName(),
-            zoneHue: $zoneHue,
+            zoneCat: $zoneCat,
             posted: $posted,
             led: $led,
             active: $station->isActive(),

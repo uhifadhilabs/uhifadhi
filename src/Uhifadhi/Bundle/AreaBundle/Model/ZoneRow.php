@@ -27,12 +27,25 @@ namespace Uhifadhi\Bundle\AreaBundle\Model;
  */
 final readonly class ZoneRow
 {
+    /**
+     * @deprecated since 1.0, read {@see $cat} instead — removed in the next
+     *             release. A colour string was the old shape; it resolves from
+     *             the category now, so a module reading it gets the token the
+     *             palette would have given it and nothing paints differently.
+     *             REMOVED IN TWO RELEASES rather than one, because a shipped
+     *             module reading a property that vanished is a 500 on somebody
+     *             else's page.
+     */
+    public string $hue;
+
     public function __construct(
         public string $uuid,
         public string $name,
-        public string $hue,
+        /** The category the register's order gave it, 1 to 9 — never a colour. */
+        public int $cat,
         public int $km2,
         public ?float $shareOfArea,
     ) {
+        $this->hue = \sprintf('var(--cat-%d)', $cat);
     }
 }

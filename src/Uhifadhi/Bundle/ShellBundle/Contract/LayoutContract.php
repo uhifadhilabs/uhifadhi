@@ -148,6 +148,7 @@ final class LayoutContract
         '--glass',
         '--shadow',
         '--scrim',
+        '--lift',
         '--accGlow',
 
         // derived semantic aliases — the design's own token names, mapped ONCE

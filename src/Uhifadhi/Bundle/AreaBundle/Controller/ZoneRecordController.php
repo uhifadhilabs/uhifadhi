@@ -118,7 +118,7 @@ final readonly class ZoneRecordController
                 $station,
                 $posted,
                 null !== $this->postings->findLeaderAt($station),
-                $row?->hue,
+                $row?->cat,
             );
             $posts[] = [
                 'uuid' => (string) $station->getUuidString(),

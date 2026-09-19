@@ -18,6 +18,7 @@ use Uhifadhi\Bundle\AreaBundle\Overview\AttentionItem;
 use Uhifadhi\Bundle\AreaBundle\Overview\AttentionSeverity;
 use Uhifadhi\Bundle\AreaBundle\Overview\MapLayer;
 use Uhifadhi\Bundle\AreaBundle\Overview\NowTile;
+use Uhifadhi\Contracts\Atlas\PlatePalette;
 
 /**
  * WHAT A CONTRIBUTION REFUSES TO BE. These are the rules that decide whether a
@@ -112,7 +113,7 @@ final class ContributionValueTest extends TestCase
             moduleSlug: 'patrols',
             groupLabel: 'Patrols',
             label: "Today's tracks",
-            swatch: '#1f9d55',
+            swatch: PlatePalette::ACCENT,
             features: ['type' => 'FeatureCollection', 'features' => []],
             style: MapLayer::STYLE_LINE,
         );
@@ -129,7 +130,7 @@ final class ContributionValueTest extends TestCase
             moduleSlug: 'patrols',
             groupLabel: 'Patrols',
             label: "Today's tracks",
-            swatch: '#1f9d55',
+            swatch: PlatePalette::OK,
             features: ['type' => 'Feature'],
         );
     }
@@ -143,7 +144,7 @@ final class ContributionValueTest extends TestCase
             moduleSlug: 'patrols',
             groupLabel: 'Patrols',
             label: "Today's tracks",
-            swatch: '#1f9d55',
+            swatch: PlatePalette::WARN,
             features: ['type' => 'FeatureCollection'],
         );
     }
@@ -156,7 +157,7 @@ final class ContributionValueTest extends TestCase
             moduleSlug: 'patrols',
             groupLabel: 'Patrols',
             label: "Today's tracks",
-            swatch: '#1f9d55',
+            swatch: PlatePalette::FAIL,
             features: ['type' => 'FeatureCollection', 'features' => []],
             style: 'dotted',
         );

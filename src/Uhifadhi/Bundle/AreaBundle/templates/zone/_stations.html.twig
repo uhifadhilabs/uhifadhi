@@ -33,7 +33,7 @@
                 {% if withZone %}
                     <td>
                         {%- if row.zoneName -%}
-                            <span class="stzone"><i{% if row.zoneHue %} style="background:{{ row.zoneHue }}"{% endif %}></i>{{ row.zoneName }}</span>
+                            <span class="stzone"{% if row.zoneCat %} data-cat="{{ row.zoneCat }}"{% endif %}><i class="zsw"></i>{{ row.zoneName }}</span>
                         {%- else -%}
                             <em class="pnone">unzoned</em>
                         {%- endif -%}

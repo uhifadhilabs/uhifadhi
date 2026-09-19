@@ -19,6 +19,7 @@ use Uhifadhi\Bundle\AreaBundle\Service\AreaMapService;
 use Uhifadhi\Bundle\AtlasBundle\Map\MapBuilder;
 use Uhifadhi\Bundle\AtlasBundle\Model\AtlasMap;
 use Uhifadhi\Bundle\AtlasBundle\Model\LegendItem;
+use Uhifadhi\Contracts\Atlas\PlatePalette;
 
 /**
  * THE AREA'S PLATES, BUILT IN PHP. What used to be two Stimulus controllers is
@@ -121,7 +122,7 @@ final class AreaMapServiceTest extends TestCase
                 moduleSlug: 'sightings',
                 groupLabel: 'Sightings',
                 label: 'This week',
-                swatch: '#E5C15A',
+                swatch: PlatePalette::ACCENT,
                 features: ['type' => 'FeatureCollection', 'features' => []],
                 style: MapLayer::STYLE_LINE,
                 count: 7,
@@ -132,7 +133,7 @@ final class AreaMapServiceTest extends TestCase
         $layer = $map->toArray()['layers'][1];
         self::assertSame('sightings.recent', $layer['id']);
         self::assertSame('line', $layer['shape']);
-        self::assertSame('#E5C15A', $layer['swatch']);
+        self::assertSame(PlatePalette::ACCENT, $layer['swatch']);
         self::assertFalse($layer['visible']);
 
         $row = self::legendRow($map, 'This week');

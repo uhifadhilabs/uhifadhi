@@ -53,7 +53,7 @@ final readonly class ZoneSetService
             $rows[] = new ZoneRow(
                 (string) $zone->getUuidString(),
                 (string) $zone->getName(),
-                ZonePalette::hueFor($position),
+                ZonePalette::catFor($position),
                 $km2,
                 null,
             );
@@ -78,7 +78,7 @@ final readonly class ZoneSetService
                 static fn (ZoneRow $row): ZoneRow => new ZoneRow(
                     $row->uuid,
                     $row->name,
-                    $row->hue,
+                    $row->cat,
                     $row->km2,
                     round($row->km2 / $groundKm2 * 100, 1),
                 ),

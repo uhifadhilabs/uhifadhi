@@ -23,6 +23,7 @@ use Uhifadhi\Bundle\AtlasBundle\Model\Boundary;
 use Uhifadhi\Bundle\AtlasBundle\Model\GeoJsonLayer;
 use Uhifadhi\Bundle\AtlasBundle\Model\LayerShape;
 use Uhifadhi\Bundle\AtlasBundle\Model\LegendItem;
+use Uhifadhi\Contracts\Atlas\PlatePalette;
 
 /**
  * THE SERIALISATION IS THE CONTRACT. Everything the plate controller knows
@@ -147,7 +148,7 @@ final class AtlasMapTest extends TestCase
     {
         $legend = new AtlasMap(self::uxMap())
             ->addLayer(new GeoJsonLayer(id: 'tracks', label: 'Tracks', url: '/t.geojson', group: 'Patrol', shape: LayerShape::Line))
-            ->addLegendItem(new LegendItem(label: 'Live', swatch: '#3ED9A8', group: 'Areas'))
+            ->addLegendItem(new LegendItem(label: 'Live', swatch: PlatePalette::ACCENT, group: 'Areas'))
             ->legend();
 
         self::assertSame(['Tracks', 'Live'], array_map(static fn (LegendItem $i) => $i->label, $legend));

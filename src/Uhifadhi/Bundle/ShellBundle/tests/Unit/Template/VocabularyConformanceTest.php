@@ -115,4 +115,14 @@ final class VocabularyConformanceTest extends VocabularyConformanceTestCase
 
         return $unscoped;
     }
+
+    /**
+     * THIS IS THE SHEET THE PALETTE LIVES IN. Every value in the product
+     * is declared here once; the component section below it is held to
+     * the same no-colour rule by the theme contract's own test.
+     */
+    protected static function declaresItsOwnPalette(): bool
+    {
+        return true;
+    }
 }

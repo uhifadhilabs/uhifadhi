@@ -1123,8 +1123,12 @@ table.tbl.ax-reg em { font-style: normal; }
    of a ring so a pale hue still has an edge on a pale card. It had drifted
    here to a rounded square with a dashed red hollow, which made the same
    zone read as two different things on two pages. */
+/* THE ZONE'S OWN MARK. Its colour is the CATEGORY the register's order gave
+   it — `data-cat` on the element, resolved by the shell — never a hex this
+   bundle picked: a zone is one of a set, and the set is the product's nine. */
 .zsw {
     width: 11px; height: 11px; flex: none; border-radius: 50%; display: inline-block;
+    background: var(--cat, rgb(var(--c-fog)));
     box-shadow: 0 0 0 1px color-mix(in srgb, rgb(var(--c-tx)) 22%, transparent) inset;
 }
 /* AND THE HOLLOW ONE IS AN ABSENCE, not a refusal: no zone, or none yet. */
@@ -1222,7 +1226,8 @@ a.zc-nm:hover { color: rgb(var(--c-acc)); }
 .zhdot.on { background: rgb(var(--c-acc)); }
 .zhdot.bad { background: rgb(var(--c-fail)); }
 .zhwhen {
-    flex: none; font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10.5px;
+    flex: none; font-family: "JetBrains Mono", ui-monospace, monospace; line-height: normal;
+    font-size: 9.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
     color: rgb(var(--c-dim)); font-variant-numeric: tabular-nums;
 }
 
@@ -1362,7 +1367,11 @@ a.zc-nm:hover { color: rgb(var(--c-acc)); }
     padding-bottom: 9px; border-bottom: 1px dashed var(--c-ln);
 }
 .rb-hd .tab { flex: none; }
-.rb-ttl { flex: 1 1 200px; min-width: 0; font-size: 11.5px; color: rgb(var(--c-fog)); }
+.rb-ttl {
+    flex: 1 1 200px; min-width: 0; font-family: "JetBrains Mono", ui-monospace, monospace;
+    line-height: normal; font-size: 11px; font-weight: 600; letter-spacing: .02em;
+    color: rgb(var(--c-fog));
+}
 .rb-ttl b { color: rgb(var(--c-tx)); font-weight: 600; }
 .rb-act { display: flex; align-items: center; gap: 7px; flex: none; margin-left: auto; }
 .rb-body { padding-top: 10px; }
@@ -1378,8 +1387,9 @@ a.zc-nm:hover { color: rgb(var(--c-acc)); }
 .pline b { font-weight: 600; color: rgb(var(--c-tx)); }
 .pline em { font-style: normal; font-size: 11.5px; color: rgb(var(--c-fog)); }
 .tav {
-    width: 26px; height: 26px; flex: none; border-radius: 50%; display: grid; place-items: center;
-    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10px; font-weight: 700;
+    width: 22px; height: 22px; flex: none; border-radius: 50%; display: grid; place-items: center;
+    font-family: "JetBrains Mono", ui-monospace, monospace; line-height: normal;
+    font-size: 9.5px; font-weight: 800;
     color: rgb(var(--c-tx)); background: rgb(var(--c-raised)); border: 1px solid var(--c-ln2);
 }
 .tav.leads { border-color: color-mix(in srgb, rgb(var(--c-acc)) 55%, transparent); color: rgb(var(--c-acc)); }
@@ -1387,13 +1397,16 @@ a.zc-nm:hover { color: rgb(var(--c-acc)); }
 /* WHICH DOOR THE POSTING CAME IN BY — a fact about the row, shown beside it. */
 .stsrc {
     display: inline-flex; align-items: center; gap: 5px; margin-left: auto; flex: none;
-    font-size: 11px; color: rgb(var(--c-dim));
+    font-family: "JetBrains Mono", ui-monospace, monospace; line-height: normal;
+    font-size: 9px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+    white-space: nowrap; color: rgb(var(--c-dim));
 }
 .stsrc i { width: 6px; height: 6px; border-radius: 50%; background: var(--c-ln2); }
 .stsrc.here i { background: rgb(var(--c-fog)); }
 .stsrc.person i { background: color-mix(in srgb, rgb(var(--c-acc)) 70%, transparent); }
 .stwhen {
-    flex: none; font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10.5px;
+    flex: none; font-family: "JetBrains Mono", ui-monospace, monospace; line-height: normal;
+    font-size: 10px; font-weight: 600;
     color: rgb(var(--c-dim)); font-variant-numeric: tabular-nums;
 }
 .stpplnone { margin-top: 10px; }
@@ -1404,8 +1417,9 @@ a.zc-nm:hover { color: rgb(var(--c-acc)); }
 .stsep {
     display: flex; align-items: baseline; gap: 8px; margin: 16px 0 9px; padding-top: 12px;
     border-top: 1px solid var(--c-ln);
-    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 9.5px; font-weight: 700;
-    letter-spacing: .12em; text-transform: uppercase; color: rgb(var(--c-dim));
+    font-family: "JetBrains Mono", ui-monospace, monospace; line-height: normal;
+    font-size: 9px; font-weight: 600;
+    letter-spacing: .14em; text-transform: uppercase; color: rgb(var(--c-dim));
 }
 .stsep span { margin-left: auto; letter-spacing: .04em; text-transform: none; font-weight: 500; }
 .stdock { display: flex; flex-direction: column; gap: 7px; }

@@ -28,6 +28,11 @@ Not released yet.
    would be right about seats and wrong about days-to-settle, where a sum of
    averages is a number nobody measured. A column that stays silent simply has
    no total in its header.
+ * `Atlas\PlatePalette` — the token NAMES a module may colour a map layer with,
+   and never values: the five semantic ones, and `category($position)` for one
+   of a set, which resolves to the PLATE's reading of the nine. **BREAKING for
+   a module** that published a colour: the three layer/event value objects
+   refuse a hex now
  * `Area\LivePositionsInterface`, `Area\LivePresence` and `Area\LivePosition` —
    where everybody on an OPEN watch is, at one instant: person, post, the fix
    and when it was taken, the accuracy, the derived presence state and whether

@@ -118,8 +118,8 @@
                     label: 'order', all: 'order', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\StationQuery::SORT'),
                     chosen: query.sort == 'name' ? null : query.sort,
                     options: [
-                        {value: 'posted', label: 'most posted', count: 0, hue: null},
-                        {value: 'zone', label: 'by zone', count: 0, hue: null},
+                        {value: 'posted', label: 'most posted', count: 0, cat: null},
+                        {value: 'zone', label: 'by zone', count: 0, cat: null},
                     ],
                     query: query,
                 }) }}
@@ -160,7 +160,7 @@
                                    version of a page that already exists. #}
                                 <span class="zcrun">
                                     <span class="stzone{{ row.zoneName ? '' : ' none' }}">
-                                        <i{% if row.zoneHue %} style="background:{{ row.zoneHue }}"{% endif %}></i>{{ row.zoneName ?? 'unzoned' }}
+                                        <i class="zsw"{% if row.zoneCat %} data-cat="{{ row.zoneCat }}"{% endif %}></i>{{ row.zoneName ?? 'unzoned' }}
                                     </span>
                                     <span class="stcount">{{ row.posted }} posted</span>
                                 </span>

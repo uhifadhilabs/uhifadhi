@@ -82,6 +82,7 @@ final class ThemeContractTest extends ContractTestCase
             '--glass',      // the translucent ground under sticky chrome
             '--shadow',     // the one elevation
             '--scrim',      // an overlay's ground — dark in both themes
+            '--lift',       // and the shadow what it lifts casts
             '--accGlow',    // the accent's halo
 
             // DERIVED SEMANTIC ALIASES — the design's own token names (--tx/--fail

@@ -20,6 +20,7 @@ use Uhifadhi\Bundle\AtlasBundle\Model\GeoJsonLayer;
 use Uhifadhi\Bundle\AtlasBundle\Model\LayerShape;
 use Uhifadhi\Bundle\AtlasBundle\Model\LayerStyle;
 use Uhifadhi\Bundle\AtlasBundle\Model\StyleRule;
+use Uhifadhi\Contracts\Atlas\PlatePalette;
 
 /**
  * A layer is either features the server already has or a url the browser
@@ -55,7 +56,7 @@ final class GeoJsonLayerTest extends TestCase
             id: 'sightings.all',
             label: 'Every sighting',
             url: '/sightings/features.geojson',
-            swatch: '#B9C8BD',
+            swatch: PlatePalette::ACCENT,
             shape: LayerShape::Point,
             visible: false,
         );
@@ -64,7 +65,7 @@ final class GeoJsonLayerTest extends TestCase
             'id' => 'sightings.all',
             'features' => null,
             'url' => '/sightings/features.geojson',
-            'swatch' => '#B9C8BD',
+            'swatch' => PlatePalette::ACCENT,
             'shape' => 'point',
             'visible' => false,
             'style' => [],

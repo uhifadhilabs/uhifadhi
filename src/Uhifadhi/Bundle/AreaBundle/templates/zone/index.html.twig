@@ -119,9 +119,9 @@
                     label: 'order', all: 'order', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\ZoneListQuery::ORDER'),
                     chosen: zoneQuery.order == 'name' ? null : zoneQuery.order,
                     options: [
-                        {value: 'extent', label: 'extent', count: 0, hue: null},
-                        {value: 'covered', label: 'covered', count: 0, hue: null},
-                        {value: 'stations', label: 'stations', count: 0, hue: null},
+                        {value: 'extent', label: 'extent', count: 0, cat: null},
+                        {value: 'covered', label: 'covered', count: 0, cat: null},
+                        {value: 'stations', label: 'stations', count: 0, cat: null},
                     ],
                     query: zoneQuery,
                 }) }}
@@ -189,8 +189,8 @@
                 label: 'order', all: 'order', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\StationQuery::SORT'),
                 chosen: query.sort == 'name' ? null : query.sort,
                 options: [
-                    {value: 'posted', label: 'most posted', count: 0, hue: null},
-                    {value: 'zone', label: 'by zone', count: 0, hue: null},
+                    {value: 'posted', label: 'most posted', count: 0, cat: null},
+                    {value: 'zone', label: 'by zone', count: 0, cat: null},
                 ],
                 query: query,
             }) }}

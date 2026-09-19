@@ -92,7 +92,7 @@ final readonly class ZoneListService
             $rows[] = new ZoneListRow(
                 uuid: $zone->uuid,
                 name: $zone->name,
-                hue: $zone->hue,
+                cat: $zone->cat,
                 km2: $zone->km2,
                 covered: $figures->covered($zone->uuid),
                 stations: $stations[$zone->uuid] ?? 0,

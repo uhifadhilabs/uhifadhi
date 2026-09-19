@@ -84,6 +84,10 @@
        here so no sheet writes its own rgba and no two overlays disagree about
        how far back the page goes. */
     --scrim: rgba(4, 8, 6, 0.52);
+    /* AND WHAT AN OVERLAY CASTS. Deeper than --shadow because the thing it
+       lifts is in front of a scrim rather than on a page: one elevation for
+       furniture, one for what covers it. */
+    --lift: 0 22px 60px rgba(23, 38, 30, 0.22);
     --accGlow: rgba(15, 138, 104, 0.13);
     --logo-tile: rgb(var(--c-acc));
     --logo-child: rgb(var(--c-cv));
@@ -173,6 +177,7 @@ html.dark {
     --shadow: 0 8px 26px rgba(0, 0, 0, 0.34);
     /* Deeper after dark, because there is more page to put behind. */
     --scrim: rgba(4, 8, 6, 0.62);
+    --lift: 0 22px 60px rgba(0, 0, 0, 0.45);
     --accGlow: rgba(62, 217, 168, 0.18);
 
     /* THE NINE AS THEY READ ON THE NIGHT CANVAS — which is also how they
@@ -960,6 +965,24 @@ h2.zone::after { content: ""; flex: 1; height: 1px; background: var(--c-ln2); }
 .viewer [stroke="var(--cat-8)"] { stroke: var(--cat-p-8); }
 .viewer [fill="var(--cat-9)"] { fill: var(--cat-p-9); }
 .viewer [stroke="var(--cat-9)"] { stroke: var(--cat-p-9); }
+
+/* AND THE SEMANTIC FIVE, WRITTEN THE SAME WAY. A marker that says
+   `fill="var(--plate-ok)"` is a module naming a MEANING rather than a colour
+   (PlatePalette::OK); the attribute itself is not a place a custom property
+   resolves, so the paint is given here. The value is the same token — there
+   is no light/plate swap to do, because a plate token is already the plate's
+   reading — and the rule exists only because a presentation attribute cannot
+   hold a `var()`. */
+.viewer [fill="var(--plate-acc)"] { fill: var(--plate-acc); }
+.viewer [stroke="var(--plate-acc)"] { stroke: var(--plate-acc); }
+.viewer [fill="var(--plate-ok)"] { fill: var(--plate-ok); }
+.viewer [stroke="var(--plate-ok)"] { stroke: var(--plate-ok); }
+.viewer [fill="var(--plate-warn)"] { fill: var(--plate-warn); }
+.viewer [stroke="var(--plate-warn)"] { stroke: var(--plate-warn); }
+.viewer [fill="var(--plate-fail)"] { fill: var(--plate-fail); }
+.viewer [stroke="var(--plate-fail)"] { stroke: var(--plate-fail); }
+.viewer [fill="var(--plate-dim)"] { fill: var(--plate-dim); }
+.viewer [stroke="var(--plate-dim)"] { stroke: var(--plate-dim); }
 
 /* THE READ-ONLY SWATCH. A category's colour is SHOWN, never picked: this is
    the one mark that says "this is the hue this thing wears". It is a square,
@@ -1882,7 +1905,9 @@ table.tbl tr:hover .open-btn {
    plate drew it in, so a filter and a map cannot disagree about which zone is
    which. The base is colourless, which keeps the column aligned on the rows
    that name no coloured thing. */
-.i-dot { width: 8px; height: 8px; border-radius: 2px; flex: none; background: transparent; }
+/* An option's dot takes the category the row wears, where it wears one —
+   `data-cat` resolves `--cat`, and a row with none stays transparent. */
+.i-dot { width: 8px; height: 8px; border-radius: 2px; flex: none; background: var(--cat, transparent); }
 .i-ddopt-l { flex: 1; white-space: nowrap; }
 .i-ddopt-n {
     flex: none; font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10.5px;
@@ -1951,7 +1976,10 @@ table.tbl tr:hover .open-btn {
 
 /* AN ABSENCE INSIDE A ROW — "no lead", "unzoned" — set apart from the facts
    beside it rather than printed as a dash. */
-.pnone { font-style: normal; font-size: 11.5px; color: rgb(var(--c-dim)); }
+.pnone {
+    font-style: normal; font-family: var(--font-mono); line-height: normal;
+    font-size: 10.5px; font-weight: 600; color: rgb(var(--c-dim));
+}
 
 /* AN EMPTY LIST SAYS WHICH KIND OF EMPTY IT IS — nothing here, or nothing
    that matches — and never draws an empty table to say it. */
