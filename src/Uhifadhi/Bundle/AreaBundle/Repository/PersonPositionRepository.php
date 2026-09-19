@@ -75,4 +75,71 @@ class PersonPositionRepository extends ServiceEntityRepository
 
         return $rows;
     }
+
+    /**
+     * HOW CLOSE THE WATCH CAME TO THE POST — the nearest of a watch's
+     * pings, in metres, and when that one arrived.
+     *
+     * THE DATABASE ANSWERS IT. A distance computed in PHP from degrees
+     * is wrong by a factor that grows with latitude, and a ring two
+     * hundred metres across is exactly the scale where that decides an
+     * answer. `ST_Distance` on geography is right everywhere.
+     *
+     * The CHECK-IN'S OWN POSITION IS INCLUDED, because a ranger who
+     * tapped at the gate and whose phone then lost signal did report a
+     * position — and it is the one that bears the claim out.
+     *
+     * @return array{metres: float, at: \DateTimeImmutable}|null null where the watch reported nothing
+     */
+    public function nearestTo(CheckIn $checkIn, string $stationPoint): ?array
+    {
+        $row = $this->getEntityManager()->getConnection()->fetchAssociative(
+            <<<'SQL'
+                SELECT ST_Distance(p.position::geography, s.point::geography) AS metres, p.recorded_at AS at
+                FROM (
+                    SELECT position, recorded_at FROM duty_position WHERE checkin_id = :checkin
+                    UNION ALL
+                    SELECT position, COALESCE(position_at, occurred_at) FROM duty_checkin
+                    WHERE id = :checkin AND position IS NOT NULL
+                ) p, (SELECT ST_GeomFromGeoJSON(:station) AS point) s
+                ORDER BY metres ASC
+                LIMIT 1
+                SQL,
+            ['checkin' => $checkIn->getId(), 'station' => $stationPoint],
+        );
+
+        if (false === $row || !is_numeric($row['metres'] ?? null)) {
+            return null;
+        }
+
+        /** @var array{metres: numeric-string|float, at: string} $row */
+        return [
+            'metres' => (float) $row['metres'],
+            'at' => new \DateTimeImmutable($row['at']),
+        ];
+    }
+
+    /**
+     * WHAT A WATCH REPORTED: how many pings, and when the last one
+     * arrived.
+     *
+     * @return array{pings: int, last: \DateTimeImmutable|null}
+     */
+    public function tallyFor(CheckIn $checkIn): array
+    {
+        $row = $this->getEntityManager()->getConnection()->fetchAssociative(
+            'SELECT COUNT(*) AS pings, MAX(recorded_at) AS last FROM duty_position WHERE checkin_id = :checkin',
+            ['checkin' => $checkIn->getId()],
+        );
+
+        if (false === $row) {
+            return ['pings' => 0, 'last' => null];
+        }
+
+        /** @var array{pings: numeric-string|int, last: string|null} $row */
+        return [
+            'pings' => (int) $row['pings'],
+            'last' => null === $row['last'] ? null : new \DateTimeImmutable($row['last']),
+        ];
+    }
 }

@@ -46,6 +46,7 @@ use Uhifadhi\Bundle\AreaBundle\Service\PersonDirectoryService;
 use Uhifadhi\Bundle\AreaBundle\Service\PersonFacetService;
 use Uhifadhi\Bundle\AreaBundle\Service\PostingBoardService;
 use Uhifadhi\Bundle\AreaBundle\Service\PostingService;
+use Uhifadhi\Bundle\AreaBundle\Service\PresenceService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationEventService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationFigureService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationRegisterService;
@@ -64,12 +65,14 @@ use Uhifadhi\Bundle\AreaBundle\Widget\AreaOverviewWidgets;
 use Uhifadhi\Bundle\AtlasBundle\Map\MapBuilderInterface;
 use Uhifadhi\Bundle\RegistryBundle\Repository\AreaModuleRepository;
 use Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceInterface;
+use Uhifadhi\Contracts\Area\PresenceProviderInterface;
 use Uhifadhi\Contracts\Kpi\StationFigureProviderInterface;
 use Uhifadhi\Contracts\Kpi\ZoneFigureProviderInterface;
 use Uhifadhi\Contracts\People\PersonDirectoryProviderInterface;
 use Uhifadhi\Contracts\People\PersonFacetProviderInterface;
 use Uhifadhi\Contracts\People\PersonPostingProviderInterface;
 use Uhifadhi\Contracts\PermissionDeclarationInterface;
+use Uhifadhi\Contracts\Roster\WatchProviderInterface;
 
 /*
  * The bundle's static service wiring.
@@ -386,6 +389,25 @@ return static function (ContainerConfigurator $container): void {
      * AND WHAT THE AREA ENFORCES that the host's own enum does not name.
      * Whoever enforces a permission is who declares it.
      */
+    /*
+     * HOW A DAY READS — the one derivation, published so the roster
+     * module, the overview and a department's page cannot each compute
+     * "at post, verified" differently.
+     */
+    $services->set('area.presence', PresenceService::class)
+        ->args([
+            service(AreaOfInterestRepository::class),
+            service(CheckInRepository::class),
+            service(PersonPositionRepository::class),
+            // WHO IS ROSTERED WHEN is the roster's, a module this platform
+            // has not written yet; an installation without one answers
+            // nothing, and a day with no watch is a rest day.
+            tagged_iterator(WatchProviderInterface::TAG),
+        ]);
+    $services->alias(PresenceService::class, 'area.presence');
+    /* A module type-hints the contract, never this class. */
+    $services->alias(PresenceProviderInterface::class, 'area.presence');
+
     $services->set('area.permissions', AreaPermissions::class)
         ->tag(PermissionDeclarationInterface::TAG);
     $services->alias(AreaPermissions::class, 'area.permissions');
