@@ -2661,35 +2661,17 @@ html.light [data-dp] select, html.light [data-dept] select {
     box-shadow: 0 0 0 3px var(--accGlow);
 }
 
-/* ── THE CREATE FLOW — the scope question makes it more than one field ─────── */
-.crcard {
-    border: 1px solid var(--c-ln2); border-radius: 14px; padding: 18px 18px 16px;
-    background: linear-gradient(180deg, rgb(var(--c-p1)), rgb(var(--c-p2))); box-shadow: var(--shadow);
-    box-sizing: border-box; margin-bottom: 22px;
-}
-.crgrid { display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end; }
-.crfield { display: flex; flex-direction: column; gap: 6px; min-width: 200px; }
-.crfield.grow { flex: 1; min-width: 230px; }
-.crlab {
-    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 8.5px; font-weight: 700;
-    letter-spacing: .13em; text-transform: uppercase; color: rgb(var(--c-dim));
-}
+/* ── THE CREATE FLOW — the house create card, and the two things this
+     surface adds to it ──────────────────────────────────────────────────
+   .dcadd/.crcard/.crgrid/.crfield/.crlab/.seg/.crhint/.crpick are the
+   SHELL's: a register creating the thing it lists at the top of the page
+   is a house idiom and three sheets had drifted copies of it. What stays
+   here is only what this surface adds — the register's own spacing below
+   the card, a field that must not stretch, and the disabled segment an
+   installation with no areas shows. */
+[data-dp] .crcard, [data-dept] .crcard { box-sizing: border-box; margin-bottom: 22px; }
 .crcard .fld { width: auto; }
-.seg { display: inline-flex; border: 1px solid var(--c-ln2); border-radius: 9px; overflow: hidden; height: 38px; }
-.seg button {
-    background: none; border: 0; border-right: 1px solid var(--c-ln); color: rgb(var(--c-fog)); cursor: pointer;
-    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10px; font-weight: 700;
-    letter-spacing: .06em; text-transform: uppercase; padding: 0 14px; display: inline-flex; align-items: center; gap: 7px;
-}
-.seg button:last-child { border-right: 0; }
-.seg button svg { width: 13px; height: 13px; }
-.seg button.on { background: rgb(var(--c-acc)); color: rgb(var(--c-accT)); }
 .seg button[disabled] { opacity: .4; cursor: not-allowed; }
-.crhint { display: flex; align-items: flex-start; gap: 9px; margin-top: 13px; font-size: 12px; line-height: 1.55; color: rgb(var(--c-fog)); }
-.crhint svg { flex: none; color: rgb(var(--c-acc)); margin-top: 1px; width: 15px; height: 15px; }
-.crhint b { color: rgb(var(--c-tx)); }
-/* the area picker, hidden until "just an area" is chosen */
-[data-scope="org"] .crpick { display: none; }
 
 /* ── THE LENS: the tabbed record ──────────────────────────────────────────
    The department's tab strip is the shell's .atabs; the shell styles it as <a>,
