@@ -157,6 +157,35 @@ final class CalendarContractTest extends TestCase
         );
     }
 
+    /**
+     * A MONTH IS ONE ROW OF CHROME. The stepper is the component's and
+     * the picker is the surface's, and the design puts them on the same
+     * line — so the component takes the second rather than leaving every
+     * caller to draw a toolbar of its own underneath.
+     */
+    public function testTheSurfacesOwnControlSharesTheSteppersRow(): void
+    {
+        $html = $this->render($this->feed([]), '2026-09', controls: '<button class="mchip i-ddt">t. ndosi</button>');
+
+        $nav = (string) preg_replace('/^.*<div class="cal-nav">|<\/div>.*$/s', '', $html);
+
+        self::assertStringContainsString('t. ndosi', $nav, 'the control is inside the stepper row');
+        self::assertStringContainsString('<span class="sp"></span>', $nav, 'pushed to the trailing end');
+        self::assertLessThan(
+            strpos($nav, 't. ndosi') ?: 0,
+            strpos($nav, 'september 2026') ?: 0,
+            'the stepper leads and the surface\'s control follows it',
+        );
+    }
+
+    /** A surface with no control of its own gets no spacer and no empty slot. */
+    public function testAMonthWithNoControlDrawsNoSlotAtAll(): void
+    {
+        $html = $this->render($this->feed([]), '2026-09');
+
+        self::assertStringNotContainsString('<span class="sp"></span>', $html);
+    }
+
     /** And a caller may state one, through that door and no other. */
     public function testACallerSizesTheCellThroughThatSameProperty(): void
     {
@@ -168,7 +197,7 @@ final class CalendarContractTest extends TestCase
     // ---------------------------------------------------------------- fixtures
 
     /** @param array<string, bool|string> $attributes */
-    private function render(CalendarFeedInterface $feed, string $month, ?string $nextUrl = null, array $attributes = []): string
+    private function render(CalendarFeedInterface $feed, string $month, ?string $nextUrl = null, array $attributes = [], string $controls = ''): string
     {
         // THE NAMESPACE THE BUNDLE PREPENDS, given to a bare environment: the
         // template names itself `@Atlas/...` because that is how a module
@@ -187,6 +216,7 @@ final class CalendarContractTest extends TestCase
             today: new \DateTimeImmutable('2026-09-19'),
             nextUrl: $nextUrl,
             attributes: $attributes,
+            controls: $controls,
         );
     }
 

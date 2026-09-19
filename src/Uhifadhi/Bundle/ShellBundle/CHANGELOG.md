@@ -8,6 +8,8 @@
 
 Not released yet.
 
+ * `.cal-nav .sp` — the stepper row's spacer, so a surface's own picker sits at
+   the trailing end of the month's one line of chrome
  * `Contract\StylesheetSourceInterface` — a package whose COMPONENTS are drawn
    inside other people's pages publishes the sheets they need and the head
    links them, because a stylesheet link outside the head is not conforming

@@ -66,6 +66,12 @@ final readonly class CalendarRuntime implements RuntimeExtensionInterface
      * @param array<string, bool|string> $attributes attributes for the grid — an aria-label, a
      *                                               module's own data attribute; a key written as a
      *                                               custom property (`--cal-cell-height`) sizes it
+     * @param string                     $controls   the surface's OWN control, drawn at the
+     *                                               trailing end of the stepper row: the ranger
+     *                                               picker on a roster month, the type filter on a
+     *                                               patrol one. Already-rendered markup, printed
+     *                                               UNESCAPED — render it with Twig and never build
+     *                                               it out of anything somebody typed
      */
     public function renderCalendar(
         CalendarFeedInterface|CalendarMonth|AtlasCalendar $source,
@@ -77,6 +83,7 @@ final readonly class CalendarRuntime implements RuntimeExtensionInterface
         ?string $previousUrl = null,
         ?string $nextUrl = null,
         array $attributes = [],
+        string $controls = '',
     ): string {
         $calendar = $this->calendarOf($source, $month, $scope, $today, $previousUrl, $nextUrl);
 
@@ -97,6 +104,7 @@ final readonly class CalendarRuntime implements RuntimeExtensionInterface
             'empty' => $calendar->isEmpty(),
             'gridStyle' => self::style($gridStyle),
             'attributes' => $attributes,
+            'controls' => $controls,
         ]);
     }
 

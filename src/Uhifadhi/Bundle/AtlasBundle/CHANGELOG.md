@@ -8,6 +8,9 @@
 
 Not released yet.
 
+ * `atlas_calendar()` takes the surface's own control, drawn at the trailing
+   end of the stepper row: a month is ONE line of chrome, and a component with
+   nowhere to put a ranger picker made every caller draw a second toolbar
  * the month and the chart get sheets of their own, `bundles/atlas/calendar.css`
    and `bundles/atlas/chart.css`, published to the shell so they reach every
    head: both are drawn INSIDE somebody else's page, which cannot link a sheet

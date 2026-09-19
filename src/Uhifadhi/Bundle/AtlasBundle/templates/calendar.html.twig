@@ -13,6 +13,11 @@
    Filled means open, hollow means finished — the same reading the map plate
    uses, so a mark means one thing across the product.
 
+   THE ONE SLOT: `controls`, drawn at the trailing end of the stepper row for
+   the surface's own picker. It is the surface's OWN markup and is printed
+   unescaped, so a caller renders it with Twig and never builds it out of
+   anything somebody typed.
+
    Rendered by Twig\CalendarRuntime, never included by hand — a surface writes
    {{ atlas_calendar(feed, '2026-09') }}. #}
 <div class="cal-plate">
@@ -27,6 +32,12 @@
         <span class="mchip on">{{ calendar.month.label|lower }}</span>
         {% if calendar.nextUrl %}<a class="mchip ghost" href="{{ calendar.nextUrl }}" aria-label="The month after {{ calendar.month.label }}">&rsaquo;</a>
         {% else %}<span class="mchip ghost" aria-hidden="true">&rsaquo;</span>{% endif %}
+
+        {# AND WHAT THE SURFACE IS FILTERING BY, on the same line. A month is
+           one row of chrome — the stepper, then the surface's own control
+           pushed to the right of it — and a component that took no control
+           left every caller to draw a second toolbar under the first. #}
+        {% if controls %}<span class="sp"></span>{{ controls|raw }}{% endif %}
     </div>
 
     <div class="cal"{% if gridStyle %} style="{{ gridStyle }}"{% endif %}

@@ -1666,6 +1666,12 @@ table.tbl tr:hover .open-btn {
 .cal-more:hover { color: var(--acc); }
 /* The month stepper, above the grid — the same three controls on every month. */
 .cal-nav { display: flex; gap: 8px; align-items: center; margin-top: 2px; }
+/* THE SURFACE'S OWN CONTROL SHARES THE STEPPER'S ROW. A month is one line of
+   chrome: the stepper on the left, and whatever the surface is filtering by —
+   a ranger, a patrol type — pushed to the right of it. On a second row the two
+   read as two toolbars, and the month starts further down the page than the
+   design puts it. */
+.cal-nav .sp { flex: 1; }
 
 /* ---- A RECORD PAGE IS ONE GRID. ----------------------------------------
    Every row on a record page shares the same two columns, so a card is exactly
