@@ -27,7 +27,9 @@ use Uhifadhi\Bundle\AtlasBundle\Model\LegendItem;
 use Uhifadhi\Bundle\AtlasBundle\Model\StyleRule;
 
 /**
- * THE ZONE SET, DRAWN — the plate the configure page reads its geography off.
+ * THE AREA'S GROUND, DRAWN — every plate the area's own pages read their
+ * geography off: the zone set, a file being previewed, and the ground around
+ * one post.
  *
  * THE PLATE IS THE ATLAS'S, wearing the house contract: the boundary with its
  * scrim, one layer of rings, the controls where every other map in the product
@@ -43,7 +45,7 @@ use Uhifadhi\Bundle\AtlasBundle\Model\StyleRule;
  * one needs a map builder, and an installation that carries the area model and
  * mounts no page has the first without the second.
  */
-final readonly class ZonePlateService
+final readonly class AreaPlateService
 {
     /** The key's heading — the zones are the whole of it on this page. */
     public const string ZONES_GROUP = 'The zones';
@@ -53,8 +55,18 @@ final readonly class ZonePlateService
 
     public const string ZONES_LAYER = 'area.zones.set';
 
+    /** The posts, as one layer: this one accented, the rest quiet. */
+    public const string STATIONS_LAYER = 'area.stations';
+    public const string STATIONS_GROUP = 'The posts';
+
+    /** What the design draws around a post, so distance is read and not guessed. */
+    public const array RINGS_KM = [5, 10];
+
     /** The property every feature carries so a style rule can colour it by zone. */
     private const string HUE_PROPERTY = 'zone';
+
+    /** The post the page is about, in the platform's own accent. */
+    private const string HERE_SWATCH = '#49E6B4';
 
     public function __construct(
         private ZoneRepository $zones,
@@ -97,6 +109,69 @@ final readonly class ZonePlateService
         }
 
         return $this->draw($area, $features, self::ARRIVING_GROUP);
+    }
+
+    /**
+     * THE GROUND AROUND ONE POST: the area's zones behind it, every station in
+     * the area, this one accented, and the two rings the design draws so a
+     * distance is read rather than guessed.
+     *
+     * THE ZONES ARE STILL THE ZONES. A station's plate is not a different map
+     * — same hues, same key, same contract — with the post's own surroundings
+     * added. The same ground rendered two ways on two pages is the defect this
+     * avoids by having one service draw both.
+     *
+     * @param list<ZoneRow>                                                                        $rows  the area's zones, hued as everywhere else
+     * @param list<array{uuid: string, name: string, point: string|null, posted: int, here: bool}> $posts every station in the area
+     */
+    public function aroundStation(AreaOfInterest $area, array $rows, array $posts): AtlasMap
+    {
+        $named = [];
+        foreach ($this->zones->zonesFor($area) as $zone) {
+            $named[(string) $zone->getName()] = (string) $zone->getGeom();
+        }
+
+        $features = [];
+        foreach ($rows as $row) {
+            $features[] = [$row->name, $named[$row->name] ?? null, $row->hue, $row->km2];
+        }
+
+        $map = $this->draw($area, $features, self::ZONES_GROUP);
+
+        $pins = [];
+        foreach ($posts as $post) {
+            $point = self::decode($post['point']);
+            if (null === $point) {
+                continue;
+            }
+
+            $pins[] = [
+                'type' => 'Feature',
+                'properties' => [
+                    'label' => $post['name'],
+                    'posted' => $post['posted'],
+                    // The one the page is about is drawn apart from the rest,
+                    // by a property rather than by a second layer: one layer
+                    // means one legend row and one thing to switch off.
+                    'here' => $post['here'],
+                ],
+                'geometry' => $point,
+            ];
+        }
+
+        $map->addLayer(new GeoJsonLayer(
+            id: self::STATIONS_LAYER,
+            label: 'Stations',
+            features: ['type' => 'FeatureCollection', 'features' => $pins],
+            swatch: self::HERE_SWATCH,
+            shape: LayerShape::Fill,
+            visible: [] !== $pins,
+            count: \count($pins),
+            group: self::STATIONS_GROUP,
+            rules: [StyleRule::when('here', true)->color(self::HERE_SWATCH)->fillColor(self::HERE_SWATCH)],
+        ));
+
+        return $map;
     }
 
     /**

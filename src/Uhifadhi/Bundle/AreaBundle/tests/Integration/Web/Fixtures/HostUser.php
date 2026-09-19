@@ -63,6 +63,23 @@ class HostUser implements UserInterface, SecurityUserInterface
     public function __construct()
     {
         $this->uuid = bin2hex(random_bytes(16));
+        // UNIQUE PER INSTANCE. A suite that puts two people on one board needs
+        // two accounts, and the column an installation's own class would make
+        // unique is unique here too.
+        $this->email = $this->uuid.'@example.org';
+    }
+
+    /**
+     * A NAME, for a suite about a page that prints one. The stand-in answers
+     * the contract; this is the one affordance a test needs to tell two of
+     * them apart on a board.
+     */
+    public function named(string $first, string $last): static
+    {
+        $this->firstName = $first;
+        $this->lastName = $last;
+
+        return $this;
     }
 
     public function getId(): ?int

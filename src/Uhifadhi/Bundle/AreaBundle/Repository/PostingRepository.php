@@ -158,10 +158,17 @@ class PostingRepository extends ServiceEntityRepository
         return $posting;
     }
 
+    /**
+     * A COUNT DOES NOT BORROW THE ORDERING. The standing builder sorts by the
+     * lead and the date so a board reads right; PostgreSQL refuses an ORDER BY
+     * on columns a COUNT does not group, and it is correct to — the order of
+     * a number is nothing.
+     */
     public function countStandingByStation(Station $station): int
     {
-        return (int) $this->standing()
+        return (int) $this->createQueryBuilder('p')
             ->select('COUNT(p.id)')
+            ->where('p.endedAt IS NULL')
             ->andWhere('p.station = :station')
             ->setParameter('station', $station)
             ->getQuery()

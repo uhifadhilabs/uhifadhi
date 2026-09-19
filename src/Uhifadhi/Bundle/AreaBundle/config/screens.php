@@ -18,11 +18,15 @@ use Uhifadhi\Bundle\AreaBundle\Controller\AreaCreateController;
 use Uhifadhi\Bundle\AreaBundle\Controller\AreaEditController;
 use Uhifadhi\Bundle\AreaBundle\Controller\AreaModulesController;
 use Uhifadhi\Bundle\AreaBundle\Controller\AreaWidgetsController;
+use Uhifadhi\Bundle\AreaBundle\Controller\StationRecordController;
 use Uhifadhi\Bundle\AreaBundle\Controller\ZoneConfigureController;
 use Uhifadhi\Bundle\AreaBundle\Controller\ZoneController;
 use Uhifadhi\Bundle\AreaBundle\Controller\ZoneEditController;
 use Uhifadhi\Bundle\AreaBundle\Controller\ZoneImportController;
 use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
+use Uhifadhi\Bundle\AreaBundle\Repository\PostingRepository;
+use Uhifadhi\Bundle\AreaBundle\Repository\StationEventRepository;
+use Uhifadhi\Bundle\AreaBundle\Repository\StationRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneEventRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportDraftStore;
@@ -149,6 +153,25 @@ return static function (ContainerConfigurator $container): void {
     $services->set('area.zone_import_draft', ZoneImportDraftStore::class)
         ->args([service('request_stack')]);
     $services->alias(ZoneImportDraftStore::class, 'area.zone_import_draft');
+
+    /*
+     * ONE POST, READ. It only reads: the record is edited in the area's
+     * configure page, so this controller has no write route at all.
+     */
+    $services->set('area.controller.station_record', StationRecordController::class)
+        ->args([
+            service('twig'),
+            service(StationRepository::class),
+            service(PostingRepository::class),
+            service(StationEventRepository::class),
+            service('area.posting_board'),
+            service('area.zone_set'),
+            service('area.zone_plate'),
+            service('area.station_figures'),
+            service('registry.area_modules'),
+        ])
+        ->tag('controller.service_arguments');
+    $services->alias(StationRecordController::class, 'area.controller.station_record')->public();
 
     $services->set('area.controller.zone_configure', ZoneConfigureController::class)
         ->args([

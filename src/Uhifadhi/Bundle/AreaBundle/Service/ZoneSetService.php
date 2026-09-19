@@ -25,7 +25,7 @@ use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
  * WHAT THE CONFIGURE PAGE READS ABOUT A ZONE SET — the rows and the totals.
  *
  * ONE WALK OVER ONE LIST decides each zone's hue from its position in the set,
- * and {@see ZonePlateService} draws from these same rows rather than deciding
+ * and {@see AreaPlateService} draws from these same rows rather than deciding
  * again — so a zone cannot be teal on its card and pink on the plate.
  *
  * NO MAP HERE, DELIBERATELY. An installation that carries the area model and

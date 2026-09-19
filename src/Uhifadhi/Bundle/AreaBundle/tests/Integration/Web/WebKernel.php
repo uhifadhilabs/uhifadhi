@@ -257,6 +257,8 @@ final class WebKernel extends Kernel
             ->public();
 
         $services->alias('test_public.area.shell_source', 'area.shell_source')->public();
+        $services->alias('test_public.area.stations', 'area.stations')->public();
+        $services->alias('test_public.area.postings', 'area.postings')->public();
         // The ledger's writer, so a test can arrange an area's composition the
         // same way the screen does rather than inserting rows behind it.
         $services->alias('test_public.registry.area_modules', 'registry.area_modules')->public();

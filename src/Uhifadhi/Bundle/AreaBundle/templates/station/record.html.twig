@@ -1,0 +1,194 @@
+{# ONE POST, READ.
+
+   Design: areas/<area>/stations/detail.html.
+
+   A RECORD PAGE, NOT AN AREA TAB: the crumb and the header, no tab strip —
+   the shape the incident detail page wears, because a station is a thing
+   inside the area rather than one of the ways of looking at it.
+
+   IT ONLY READS. Every control that would change something points at the
+   area's configure page, where the Stations section edits the record.
+
+   THE PLATE IS THE ATLAS'S, and it is the same plate the zones pages draw:
+   same hues, same key, same contract, with the posts and the rings added.
+   The same ground rendered two ways on two pages is the defect one plate
+   service avoids. #}
+{% extends '@Shell/page.html.twig' %}
+
+{% block title %}{{ station.name }} &middot; {{ area.name }}{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {# The platform's one map stylesheet, before this bundle's own, exactly as
+       every page that draws a plate links it. #}
+    <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Bundle\\AtlasBundle\\AtlasBundle::STYLESHEET')) }}">
+    {{ include('@Area/_stylesheets.html.twig') }}
+{% endblock %}
+
+{% block shell_breadcrumbs %}
+    <a href="{{ path('area_index') }}">uhifadhi</a> /
+    <a href="{{ path('area_show', {uuid: area.uuidString}) }}">{{ area.name }}</a> /
+    {# THE STATIONS STEP IS THE AREA'S STATIONS TAB, the list this record
+       belongs to. Until that tab exists the step is the zones tab, which is
+       where stations are read today. #}
+    <a href="{{ path('area_zones', {uuid: area.uuidString}) }}">stations</a> /
+    {{ station.name|lower }}
+{% endblock %}
+
+{% block shell_page_title %}{{ station.name }}{% endblock %}
+
+{% block shell_page_subtitle %}
+    {%- if station.code %}{{ station.code }} &middot; {% endif -%}
+    {{ zone ? zone.name : 'no zone' }} &middot; {{ posted }} posted
+    {%- if not station.active %} &middot; closed{% endif -%}
+{% endblock %}
+
+{% block shell_page_actions %}
+    {# THE RECORD IS EDITED ON THE AREA'S CONFIGURE PAGE, in the Stations
+       section beside Zones. This page only reads, so the control is a link
+       out and not a form. #}
+    <a class="tgl w-act" href="{{ path('area_zones_configure', {uuid: area.uuidString}) }}">{{ ux_icon('shell:square-pen') }} Edit the station</a>
+{% endblock %}
+
+{% block shell_page %}
+{% set here = path('area_station_show', {uuid: area.uuidString, station: station.uuidString}) %}
+
+{# THE IDENTITY BAND, the same .factband every area tab wears.
+
+   ON DUTY IS THE ROSTER'S and no module publishes it yet, so the Posted fact
+   states the number it knows and says nothing it does not. The qualifier
+   arrives through PostingDutyProviderInterface when the roster rework lands. #}
+<div class="factband stband">
+    <span class="f"><span class="k">Zone</span><span class="v">{{ zone ? zone.name : '&mdash;'|raw }}<em>{{ zone ? 'derived' : 'unzoned' }}</em></span></span>
+    {% if station.code %}<span class="f"><span class="k">Code</span><span class="v">{{ station.code }}</span></span>{% endif %}
+    <span class="f"><span class="k">Posted</span><span class="v">{{ posted }}</span></span>
+    <span class="f"><span class="k">Lead</span><span class="v">{{ leader ? leader.name : '&mdash;'|raw }}</span></span>
+    {% if station.elevationM %}
+        <span class="f"><span class="k">Elevation</span><span class="v">{{ station.elevationM|number_format }} m{% if station.locality %}<em>{{ station.locality }}</em>{% endif %}</span></span>
+    {% endif %}
+    {% if station.openedAt %}
+        <span class="f"><span class="k">Opened</span><span class="v"><time datetime="{{ station.openedAt|date('c') }}" data-localtime-format="day">{{ station.openedAt|date('j M Y') }}</time><em>{{ station.active ? 'active' : 'closed' }}</em></span></span>
+    {% endif %}
+    <span class="sp"></span>
+    {% if zone %}<a class="more" href="{{ path('area_zones', {uuid: area.uuidString}) }}">{{ zone.name }} zone &rarr;</a>{% endif %}
+</div>
+
+<div class="recgrid">
+    <div class="col">
+        <div class="c">
+            <span class="tab">The ground around the post<span class="src">
+                {%- if station.code %}&middot; {{ station.code }} {% endif -%}
+                {%- if station.elevationM %}&middot; {{ station.elevationM|number_format }} m{% endif -%}
+            </span></span>
+            {{ render_map(map, {'role': 'img', 'aria-label': station.name ~ ' and the ground around it'}) }}
+        </div>
+
+        <div class="c stpostings">
+            <span class="tab">Who is posted here<span class="src">&middot; {{ posted }} {{ posted == 1 ? 'person' : 'people' }}
+                {%- if leader %} &middot; led by {{ leader.name }}{% endif -%}
+            </span></span>
+
+            {# THE FILTER BAR IS GROUPED DROPDOWNS, the house pattern, and every
+               option is a LINK: the address is the state, so a filtered board
+               can be sent to somebody and a browser can go back to it. The
+               panel is a <details>, which opens with no script of ours.
+
+               DUTY IS NOT HERE. Who is on duty today is the roster's, and no
+               module publishes it yet; the chip and its ?duty= arrive with
+               PostingDutyProviderInterface in the roster rework. #}
+            <div class="lfilt stfilt">
+                {% if facets.knowsRoles %}
+                    {{ include('@Area/station/_filter.html.twig', {
+                        label: 'role', all: 'all roles', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\PostingQuery::ROLE'),
+                        chosen: query.role, counts: facets.roles, query: query, here: here,
+                    }) }}
+                    {{ include('@Area/station/_filter.html.twig', {
+                        label: 'dept', all: 'all departments', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\PostingQuery::DEPARTMENT'),
+                        chosen: query.department, counts: facets.departments, query: query, here: here,
+                    }) }}
+                {% endif %}
+                {{ include('@Area/station/_filter.html.twig', {
+                    label: 'source', all: 'either door', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\PostingQuery::SOURCE'),
+                    chosen: query.source, counts: facets.sources, query: query, here: here,
+                }) }}
+                {{ include('@Area/station/_filter.html.twig', {
+                    label: 'a&ndash;z', all: 'a&ndash;z', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\PostingQuery::SORT'),
+                    chosen: query.sort == 'az' ? null : query.sort, counts: {'since': 0}, query: query, here: here,
+                }) }}
+
+                <form class="lsearch" method="get" action="{{ here }}">
+                    {{ ux_icon('shell:search') }}
+                    <input class="fld" type="search" name="q" value="{{ query.search }}" placeholder="Search&hellip;"
+                           aria-label="Search the people posted here">
+                    {% for k, v in query.with('q', null) %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+                </form>
+            </div>
+
+            {% if rows is empty %}
+                <div class="zempty stpplnone">
+                    <b class="zeh">{{ query.isFiltered ? 'Nobody matches' : 'Nobody is posted here' }}</b>
+                    <p class="zeb">{% if query.isFiltered %}No posting here answers these filters. Clear one, or search another name.{% else %}A post with nobody at it is a normal state, not an error &mdash; somebody is posted from the area&rsquo;s configure page.{% endif %}</p>
+                    {% if query.isFiltered %}<span class="zea"><a class="btn sm" href="{{ here }}">Clear the filters</a></span>{% endif %}
+                </div>
+            {% else %}
+                <div class="plist">
+                    {% for row in rows %}
+                        <div class="pline">
+                            <span class="tav{{ row.leader ? ' leads' : '' }}">{{ row.initials }}</span>
+                            <b>{{ row.name }}</b>
+                            {% if row.leader %}<span class="chip acc stlead">Leads</span>{% endif %}
+                            {% if row.role %}<em>{{ row.role }}</em>{% endif %}
+                            <span class="stsrc {{ row.source.value }}"><i></i>{{ row.source.value == 'here' ? 'written here' : 'from their page' }}</span>
+                            <time class="stwhen" datetime="{{ row.since|date('c') }}" data-localtime-format="day">{{ row.since|date('j M Y') }}</time>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col">
+        <div class="c">
+            <span class="tab">The point</span>
+            <div class="rln"><span class="fog">Coordinates</span><span class="mono">{{ coordinates ?? '&mdash;'|raw }}</span></div>
+            {% if station.locality %}<div class="rln"><span class="fog">Where</span><span class="mono">{{ station.locality }}</span></div>{% endif %}
+
+            {# WHAT THE MODULES PUBLISH — one row per module, through the
+               station seam. The Open link is the module's own entry route,
+               which the core resolves; no figure carries a URL. #}
+            <div class="stsep">What the modules publish<span>{{ dockPeriod.label }}</span></div>
+            {% if dock is empty %}
+                <div class="use">No module publishes figures for this post yet.</div>
+            {% else %}
+                <div class="stdock">
+                    {% for figure in dock %}
+                        <div class="stdockrow">
+                            <i></i>
+                            <span class="stdn">{{ figure.label }}</span>
+                            <span class="stdf">{{ figure.value is null ? '&mdash;'|raw : figure.display }}</span>
+                            <span class="stdw">{{ figure.caption }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="c stlogcard">
+            <span class="tab">What happened here<span class="src">&middot; {{ eventCount }} {{ eventCount == 1 ? 'line' : 'lines' }}</span></span>
+            {% if events is empty %}
+                <div class="use">Nothing has happened at this post yet. Every move, posting and closure writes one line here.</div>
+            {% else %}
+                <div class="zhist stlog">
+                    {% for event in events %}
+                        <div class="zhrow">
+                            <span class="zhdot{{ event.kind.isClosure ? ' bad' : (loop.first ? ' on' : '') }}"></span>
+                            <div><b>{{ event.headline }}{% if event.detail %} <span>&middot; {{ event.detail }}</span>{% endif %}</b></div>
+                            <time class="zhwhen" datetime="{{ event.occurredAt|date('c') }}" data-localtime-format="day">{{ event.occurredAt|date('j M') }}</time>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

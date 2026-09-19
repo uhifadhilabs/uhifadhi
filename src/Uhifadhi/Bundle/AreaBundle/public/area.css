@@ -1270,3 +1270,66 @@ a.zc-nm:hover { color: rgb(var(--c-acc)); }
 .zc-ring { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .zc-ringfld { max-width: 230px; padding: 4px 8px; font-size: 11.5px; }
 .zcmore .btn.dg { margin-left: auto; }
+
+/* ══ A STATION'S RECORD ═══════════════════════════════════════════════════
+   The band, the postings board and the two sidebar cards. What this borrows
+   — the card, the plate, the identity band, the filter chip, the run-line,
+   the log — is the shell's and the atlas's and is not restated. */
+.stband { margin-bottom: 18px; }
+/* The postings card is an ordinary `.c`; this is only its board's rhythm. */
+.stpostings .plist { margin-top: 2px; }
+.stfilt { margin-bottom: 12px; }
+
+/* THE BOARD — one line per person, the lead first. */
+.plist { display: flex; flex-direction: column; }
+.pline {
+    display: flex; align-items: center; gap: 10px; padding: 9px 2px;
+    border-bottom: 1px dashed var(--c-ln); font-size: 12.5px; flex-wrap: wrap;
+}
+.pline:last-child { border-bottom: 0; }
+.pline b { font-weight: 600; color: rgb(var(--c-tx)); }
+.pline em { font-style: normal; font-size: 11.5px; color: rgb(var(--c-fog)); }
+.tav {
+    width: 26px; height: 26px; flex: none; border-radius: 50%; display: grid; place-items: center;
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10px; font-weight: 700;
+    color: rgb(var(--c-tx)); background: rgb(var(--c-raised)); border: 1px solid var(--c-ln2);
+}
+.tav.leads { border-color: color-mix(in srgb, rgb(var(--c-acc)) 55%, transparent); color: rgb(var(--c-acc)); }
+.stlead { flex: none; }
+/* WHICH DOOR THE POSTING CAME IN BY — a fact about the row, shown beside it. */
+.stsrc {
+    display: inline-flex; align-items: center; gap: 5px; margin-left: auto; flex: none;
+    font-size: 11px; color: rgb(var(--c-dim));
+}
+.stsrc i { width: 6px; height: 6px; border-radius: 50%; background: var(--c-ln2); }
+.stsrc.here i { background: rgb(var(--c-fog)); }
+.stsrc.person i { background: color-mix(in srgb, rgb(var(--c-acc)) 70%, transparent); }
+.stwhen {
+    flex: none; font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10.5px;
+    color: rgb(var(--c-dim)); font-variant-numeric: tabular-nums;
+}
+.stpplnone { margin-top: 10px; }
+/* The one control an empty state offers, set apart from its sentence. */
+.zea { display: block; margin-top: 11px; }
+
+/* WHAT THE MODULES PUBLISH — one row per module, through the station seam. */
+.stsep {
+    display: flex; align-items: baseline; gap: 8px; margin: 16px 0 9px; padding-top: 12px;
+    border-top: 1px solid var(--c-ln);
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 9.5px; font-weight: 700;
+    letter-spacing: .12em; text-transform: uppercase; color: rgb(var(--c-dim));
+}
+.stsep span { margin-left: auto; letter-spacing: .04em; text-transform: none; font-weight: 500; }
+.stdock { display: flex; flex-direction: column; gap: 7px; }
+.stdockrow { display: flex; align-items: baseline; gap: 9px; font-size: 12.5px; }
+.stdockrow > i {
+    width: 7px; height: 7px; flex: none; border-radius: 50%; align-self: center;
+    background: rgb(var(--c-acc));
+}
+.stdn { flex: none; min-width: 84px; color: rgb(var(--c-tx)); font-weight: 600; }
+.stdf { flex: none; font-size: 14px; font-weight: 700; color: rgb(var(--c-tx)); font-variant-numeric: tabular-nums; }
+.stdw { flex: 1; min-width: 0; font-size: 11.5px; color: rgb(var(--c-fog)); }
+
+/* The log wears the zone log's rows; only the card's own spacing is here. */
+.stlogcard .zhist { margin-top: 4px; }
+.stlog .zhrow { padding: 8px 0; }

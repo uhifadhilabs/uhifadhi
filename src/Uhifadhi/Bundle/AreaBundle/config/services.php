@@ -29,11 +29,13 @@ use Uhifadhi\Bundle\AreaBundle\Service\AreaIdentity;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaMapPayload;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaMapService;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaOverview;
+use Uhifadhi\Bundle\AreaBundle\Service\AreaPlateService;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaPresetLibrary;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaRegister;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaThumbnailer;
 use Uhifadhi\Bundle\AreaBundle\Service\BoundaryImport;
 use Uhifadhi\Bundle\AreaBundle\Service\PersonFacetService;
+use Uhifadhi\Bundle\AreaBundle\Service\PostingBoardService;
 use Uhifadhi\Bundle\AreaBundle\Service\PostingService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationEventService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationFigureService;
@@ -43,7 +45,6 @@ use Uhifadhi\Bundle\AreaBundle\Service\ZoneExportService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneFigureService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneOverlapService;
-use Uhifadhi\Bundle\AreaBundle\Service\ZonePlateService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneSetService;
 use Uhifadhi\Bundle\AreaBundle\Widget\AreaIndexWidgets;
@@ -169,6 +170,18 @@ return static function (ContainerConfigurator $container): void {
     $services->alias(PostingService::class, 'area.postings');
 
     /*
+     * THE PEOPLE POSTED SOMEWHERE, AS A BOARD — the lines, what the filters
+     * offer and how many each would leave, out of one pass so the two cannot
+     * disagree about what "the board" is.
+     */
+    $services->set('area.posting_board', PostingBoardService::class)
+        ->args([
+            service(PostingRepository::class),
+            service('area.person_facets'),
+        ]);
+    $services->alias(PostingBoardService::class, 'area.posting_board');
+
+    /*
      * THE AREA'S ANSWER TO "WHERE DOES THIS PERSON WORK?" — tagged BY HAND,
      * because a reusable bundle is not autoconfigured and an attribute on the
      * interface would be silently dead. Whoever draws a person's page reads
@@ -264,12 +277,12 @@ return static function (ContainerConfigurator $container): void {
      * is a thing an installation may want and a twig engine is not what it
      * would need for it.
      */
-    $services->set('area.zone_plate', ZonePlateService::class)
+    $services->set('area.zone_plate', AreaPlateService::class)
         ->args([
             service(ZoneRepository::class),
             service(MapBuilderInterface::class),
         ]);
-    $services->alias(ZonePlateService::class, 'area.zone_plate');
+    $services->alias(AreaPlateService::class, 'area.zone_plate');
 
     /*
      * What the register knows about each area — the measurements PostGIS makes

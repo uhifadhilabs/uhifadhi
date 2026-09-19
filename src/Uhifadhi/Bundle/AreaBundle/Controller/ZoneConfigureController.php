@@ -26,10 +26,10 @@ use Twig\Environment;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Model\ZonePalette;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneEventRepository;
+use Uhifadhi\Bundle\AreaBundle\Service\AreaPlateService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneExportService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportDraftStore;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportService;
-use Uhifadhi\Bundle\AreaBundle\Service\ZonePlateService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneSetService;
 
 /**
@@ -77,7 +77,7 @@ final readonly class ZoneConfigureController
     public function __construct(
         private Environment $twig,
         private ZoneSetService $set,
-        private ZonePlateService $plates,
+        private AreaPlateService $plates,
         private ZoneEventRepository $events,
         private ZoneImportDraftStore $draft,
         private ZoneExportService $export,
