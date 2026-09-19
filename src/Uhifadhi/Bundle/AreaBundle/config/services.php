@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
+use Uhifadhi\Bundle\AreaBundle\Devkit\AreaContentProvider;
+use Uhifadhi\Bundle\AreaBundle\Devkit\StationContentProvider;
+use Uhifadhi\Bundle\AreaBundle\Devkit\ZoneContentProvider;
 use Uhifadhi\Bundle\AreaBundle\People\AreaPersonPostings;
 use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\PostingRepository;
@@ -392,4 +395,41 @@ return static function (ContainerConfigurator $container): void {
             service('router'),
         ]);
     $services->alias(AreaComposition::class, 'area.composition');
+
+    /*
+     * THE DEMO GROUND, OFFERED TO A TOOL THAT IS NOT INSTALLED HERE. Three
+     * slices — the areas, the scheme that subdivides each of them, the posts
+     * standing on it and who works out of them — each an ordinary tagged
+     * service nothing in this bundle ever asks anything of.
+     *
+     * THE TAG IS A LITERAL STRING because devkit ships through `require-dev`
+     * and naming a constant of its would load a class a production build does
+     * not have. The contract both ends agree on is
+     * {@see \Uhifadhi\Contracts\Devkit\ContentProviderInterface}, which names
+     * the tag.
+     */
+    $services->set('area.devkit.areas', AreaContentProvider::class)
+        ->args([
+            service('area.creator'),
+            service(AreaOfInterestRepository::class),
+        ])
+        ->tag('uhifadhi.devkit.content_provider');
+
+    $services->set('area.devkit.zones', ZoneContentProvider::class)
+        ->args([
+            service(AreaOfInterestRepository::class),
+            service(ZoneRepository::class),
+            service('area.zone_import'),
+        ])
+        ->tag('uhifadhi.devkit.content_provider');
+
+    $services->set('area.devkit.stations', StationContentProvider::class)
+        ->args([
+            service(AreaOfInterestRepository::class),
+            service(StationRepository::class),
+            service('area.stations'),
+            service('area.postings'),
+            service('doctrine.orm.entity_manager'),
+        ])
+        ->tag('uhifadhi.devkit.content_provider');
 };
