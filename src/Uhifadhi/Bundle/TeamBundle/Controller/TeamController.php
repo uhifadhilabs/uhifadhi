@@ -78,7 +78,7 @@ final readonly class TeamController
     ) {
     }
 
-    #[Route('/team', name: 'team_index', methods: ['GET'])]
+    #[Route('/team', name: self::PEOPLE, defaults: self::SURFACE, methods: ['GET'])]
     #[IsGranted(PermissionEnum::TeamManage->value)]
     public function index(Request $request): Response
     {

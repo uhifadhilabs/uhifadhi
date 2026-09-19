@@ -66,6 +66,9 @@ use Uhifadhi\Contracts\Entity\UserInterface as ModuleUserInterface;
  */
 final readonly class PositionController
 {
+    /** The section's third tab: the matrix a permission set is edited on. */
+    public const string REGISTER = 'team_positions';
+
     public const string CSRF_ID = 'team_position';
 
     public function __construct(
@@ -83,7 +86,7 @@ final readonly class PositionController
     ) {
     }
 
-    #[Route('/team/positions', name: 'team_positions', methods: ['GET'])]
+    #[Route('/team/positions', name: self::REGISTER, defaults: TeamController::SURFACE, methods: ['GET'])]
     #[IsGranted(PermissionEnum::TeamManage->value)]
     public function index(Request $request): Response
     {

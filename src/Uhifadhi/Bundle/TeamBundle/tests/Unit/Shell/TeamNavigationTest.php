@@ -167,15 +167,15 @@ final class TeamNavigationTest extends TestCase
 
     /**
      * THE TWO ROWS CANNOT LIGHT EACH OTHER. This is the reason departments is
-     * addressed at `/departments` rather than under the roster: "am I here" is
-     * decided by path prefix, so a `/team/departments` would have lit the Team
-     * row on the departments screen and the sidebar would have answered "where
-     * am I" with two places at once.
+     * addressed at `/departments` rather than under the roster: the roster's
+     * row answers "am I here" by path prefix, so a `/team/departments` would
+     * have lit the Team row on the departments screen and the sidebar would
+     * have answered "where am I" with two places at once.
      */
     public function testStandingOnDepartmentsLightsDepartmentsAndNotTheRoster(): void
     {
         $requests = new RequestStack();
-        $requests->push(Request::create('/departments'));
+        $requests->push(self::inTheSection('/departments', TeamNavigation::DEPARTMENTS_ROUTE));
 
         $navigation = new TeamNavigation(
             $this->urlsAnsweringByRoute(),
@@ -272,6 +272,57 @@ final class TeamNavigationTest extends TestCase
         $repository->method('findAllActiveOrdered')->willReturn($departments);
 
         return $repository;
+    }
+
+    /**
+     * `/departments` IS A PREFIX OF SOMEBODY ELSE'S ADDRESS, and the row does
+     * not claim what is under it.
+     *
+     * Performance is a place of its own at `/departments/performance` with its
+     * own row; matched by path prefix the Departments row lit there too, and a
+     * sidebar that answers "where am I" with two rows in one section answers
+     * it with neither. A screen is this section's when it carries the
+     * section's marker or matched one of this bundle's own addresses.
+     */
+    public function testTheDepartmentsRowDoesNotClaimAnotherPlaceUnderItsPrefix(): void
+    {
+        $requests = new RequestStack();
+        $requests->push(Request::create('/departments/performance'));
+
+        $navigation = new TeamNavigation(
+            $this->urlsAnsweringByRoute(),
+            $this->tokenStorageWithAToken(),
+            $this->checkerAnswering(true),
+            $requests,
+            $this->departmentsNamed([]),
+            $this->paletteOver([]),
+        );
+
+        $sections = iterator_to_array($navigation->sections());
+        $lit = array_values(array_filter($sections[0]->items, static fn (NavItem $i): bool => $i->current));
+
+        self::assertSame([], $lit, 'Neither of this bundle\'s rows is the place Performance is.');
+    }
+
+    /** And a department's own record page, which carries no marker, still lights it. */
+    public function testADepartmentsRecordPageLightsTheDepartmentsRow(): void
+    {
+        $requests = new RequestStack();
+        $request = Request::create('/departments/0198f0b6-0000-7000-8000-000000000000');
+        $request->attributes->set('_route', 'team_department_show');
+        $requests->push($request);
+
+        $navigation = new TeamNavigation(
+            $this->urlsAnsweringByRoute(),
+            $this->tokenStorageWithAToken(),
+            $this->checkerAnswering(true),
+            $requests,
+            $this->departmentsNamed([]),
+            $this->paletteOver([]),
+        );
+
+        $sections = iterator_to_array($navigation->sections());
+        self::assertTrue($sections[0]->items[0]->current);
     }
 
     /**

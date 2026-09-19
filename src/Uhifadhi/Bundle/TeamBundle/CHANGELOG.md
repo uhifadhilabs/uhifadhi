@@ -28,6 +28,32 @@ Not released yet.
    and fewer than three figures in a band place nothing
  * a second sheet, `bundles/team/performance.css`, carrying the board's own
    vocabulary, and a sort that runs INSIDE each band and never across one
+ * Team wears the AREA IDIOM. It is a section now, not two screens: the same
+   header on every tab (the section's name), a subline that is that tab's own,
+   one strip between the head and the body with exactly one tab lit, and the
+   one Configure action at the right-hand end of the action row on every one of
+   them. The tab set is Overview · People · Positions · Postings · Roles; the
+   configure screens are the widget library, Positions vocabulary and Team
+   settings. Both are declared through the contracts a MODULE's tabs and
+   configure sections already use, and the sidebar row opens into the same five
+   screens, because the tree and the strip are two readings of one list.
+
+ * the section's OVERVIEW: the identity band, the five KPI cards, people by
+   department and positions held and unheld as ranked bars, postings by area as
+   a plotted figure, and the bounded attention cards (stations with nobody
+   posted, people holding nothing, accounts that have never signed in). It
+   writes nothing and owns no figure on it.
+
+ * the section's CONFIGURE screens. Team settings states the rules the model
+   actually enforces and changes none of them — and names no action the product
+   does not have, so there is no "deleting an account" row; Positions
+   vocabulary edits the one list this section owns.
+
+ * `PositionTitle` — what a position may be CALLED, offered to every
+   department. A title grants nothing and is not a position: two departments
+   may spell the same job the same way and still mean two different jobs, which
+   is why a shared word is not a shared post.
+
  * the ROLES tab: what authority exists on this installation and who holds it —
    the three tiers with the people in them, and every permission there is,
    banded by who declared it, with how many positions carry it and how many

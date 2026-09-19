@@ -48,6 +48,9 @@ use Uhifadhi\Bundle\TeamBundle\Widget\TeamWidgets;
  */
 final readonly class TeamWidgetsController
 {
+    /** The section's first configure entry: how its dashboard is composed. */
+    public const string ROUTE = 'team_widgets';
+
     /** A structurally valid uuid that addresses nothing — see {@see urls()}. */
     private const string PLACEHOLDER_UUID = '00000000-0000-4000-8000-000000000000';
 
@@ -60,7 +63,7 @@ final readonly class TeamWidgetsController
     ) {
     }
 
-    #[Route('/team/widgets', name: 'team_widgets', methods: ['GET'])]
+    #[Route('/team/widgets', name: self::ROUTE, methods: ['GET'])]
     #[IsGranted(PermissionEnum::TeamManage->value)]
     public function library(Request $request): Response
     {

@@ -34,9 +34,11 @@ use Uhifadhi\Bundle\TeamBundle\Controller\PerformanceController;
 use Uhifadhi\Bundle\TeamBundle\Controller\PositionController;
 use Uhifadhi\Bundle\TeamBundle\Controller\PositionWidgetsController;
 use Uhifadhi\Bundle\TeamBundle\Controller\SecurityController;
+use Uhifadhi\Bundle\TeamBundle\Controller\TeamConfigureController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamPostingsController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamRolesController;
+use Uhifadhi\Bundle\TeamBundle\Controller\TeamSectionController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamWidgetsController;
 use Uhifadhi\Bundle\TeamBundle\Devkit\TeamContentProvider;
 use Uhifadhi\Bundle\TeamBundle\EventListener\ApiErrorListener;
@@ -57,6 +59,7 @@ use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentPeriodFigureRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentScopeChangeRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
+use Uhifadhi\Bundle\TeamBundle\Repository\PositionTitleRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Security\ActiveUserChecker;
 use Uhifadhi\Bundle\TeamBundle\Security\ApiTokenAuthenticator;
@@ -76,12 +79,15 @@ use Uhifadhi\Bundle\TeamBundle\Service\PerformanceHistory;
 use Uhifadhi\Bundle\TeamBundle\Service\PerformanceTopics;
 use Uhifadhi\Bundle\TeamBundle\Service\PermissionCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionService;
+use Uhifadhi\Bundle\TeamBundle\Service\PositionTitleService;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionVacancy;
+use Uhifadhi\Bundle\TeamBundle\Service\PositionVocabulary;
 use Uhifadhi\Bundle\TeamBundle\Service\PostingBoard;
 use Uhifadhi\Bundle\TeamBundle\Service\RolesBoard;
 use Uhifadhi\Bundle\TeamBundle\Service\StaffingFigures;
 use Uhifadhi\Bundle\TeamBundle\Service\SuperAdminInvariant;
 use Uhifadhi\Bundle\TeamBundle\Service\TeamOverview;
+use Uhifadhi\Bundle\TeamBundle\Service\TeamSectionOverview;
 use Uhifadhi\Bundle\TeamBundle\Service\UserService;
 use Uhifadhi\Bundle\TeamBundle\Shell\DepartmentAreaNavChildren;
 use Uhifadhi\Bundle\TeamBundle\Shell\DepartmentAreaSections;
@@ -89,6 +95,8 @@ use Uhifadhi\Bundle\TeamBundle\Shell\DepartmentSectionConfiguration;
 use Uhifadhi\Bundle\TeamBundle\Shell\DepartmentSectionTabs;
 use Uhifadhi\Bundle\TeamBundle\Shell\PerformanceNavigation;
 use Uhifadhi\Bundle\TeamBundle\Shell\TeamNavigation;
+use Uhifadhi\Bundle\TeamBundle\Shell\TeamSectionConfiguration;
+use Uhifadhi\Bundle\TeamBundle\Shell\TeamSectionTabs;
 use Uhifadhi\Bundle\TeamBundle\Shell\UserBadgeSource;
 use Uhifadhi\Bundle\TeamBundle\Twig\AreaScopeExtension;
 use Uhifadhi\Bundle\TeamBundle\Twig\MatrixExtension;
@@ -1021,6 +1029,69 @@ return static function (ContainerConfigurator $container): void {
         ->args([service('twig'), service('team.roles_board')])
         ->tag('controller.service_arguments');
     $services->alias(TeamRolesController::class, 'team.controller.roles')->public();
+
+    /*
+     * WHAT THE SECTION'S OVERVIEW READS. It owns no figure on that page: every
+     * one of them is the register's, Positions' or the area's.
+     */
+    $services->set('team.section_overview', TeamSectionOverview::class)
+        ->args([
+            service(UserRepository::class),
+            service(PositionRepository::class),
+            service('team.posting_board'),
+        ]);
+    $services->alias(TeamSectionOverview::class, 'team.section_overview');
+
+    $services->set('team.controller.section', TeamSectionController::class)
+        ->args([service('twig'), service('team.section_overview')])
+        ->tag('controller.service_arguments');
+    $services->alias(TeamSectionController::class, 'team.controller.section')->public();
+
+    /*
+     * THE ONE DOOR A POSITION TITLE IS WRITTEN THROUGH — trimmed, not empty,
+     * unique. Rules about a word live beside the word and not in the screen
+     * that happens to ask, so a second caller gets the same answer.
+     */
+    $services->set('team.position_titles', PositionTitleService::class)
+        ->args([service('doctrine.orm.entity_manager'), service(PositionTitleRepository::class)]);
+    $services->alias(PositionTitleService::class, 'team.position_titles');
+
+    $services->set(PositionTitleRepository::class)
+        ->args([service('doctrine')])
+        ->tag('doctrine.repository_service');
+
+    /*
+     * THE WORDS THIS INSTALLATION WRITES ITS POSITIONS WITH, read per
+     * department — one pass over the positions rather than a query per
+     * department, and the shared words named rather than merged.
+     */
+    $services->set('team.position_vocabulary', PositionVocabulary::class)
+        ->args([service(DepartmentRepository::class), service(PositionRepository::class)]);
+    $services->alias(PositionVocabulary::class, 'team.position_vocabulary');
+
+    $services->set('team.controller.configure', TeamConfigureController::class)
+        ->args([
+            service('twig'),
+            service(UserRepository::class),
+            service(DepartmentRepository::class),
+            service(PositionTitleRepository::class),
+            service('team.position_titles'),
+            service('team.position_vocabulary'),
+            service('security.csrf.token_manager'),
+            service('router'),
+        ])
+        ->tag('controller.service_arguments');
+    $services->alias(TeamConfigureController::class, 'team.controller.configure')->public();
+
+    /*
+     * TEAM WEARS THE AREA IDIOM: the strip, the header and the one Configure
+     * action come from the same two contracts a module's tabs use, so nothing
+     * here is a second implementation of a strip.
+     */
+    $services->set('team.section_tabs', TeamSectionTabs::class)
+        ->tag(ModuleTabsInterface::TAG);
+    $services->set('team.section_configuration', TeamSectionConfiguration::class)
+        ->tag(ConfigurationSectionsInterface::TAG);
 
     $services->set('team.controller.department_section', DepartmentSectionController::class)
         ->args([

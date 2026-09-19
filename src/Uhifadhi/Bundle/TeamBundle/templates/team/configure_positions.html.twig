@@ -1,0 +1,110 @@
+{# TEAM · CONFIGURE · POSITIONS VOCABULARY — what a position may be CALLED.
+
+   WHAT IT MAY DO IS THE MATRIX, on Positions. Nothing here grants anything.
+
+   A POSITION BELONGS TO A DEPARTMENT and its name is unique only inside it, so
+   the same word twice is legal — the case this vocabulary exists to allow. #}
+{% extends '@Shell/page.html.twig' %}
+
+{% block title %}Team &mdash; Positions vocabulary{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {{ include('@Team/_stylesheets.html.twig') }}
+{% endblock %}
+
+{% block shell_breadcrumbs %}
+    <a href="{{ path('team_overview') }}">uhifadhi</a> / team / configure / positions vocabulary
+{% endblock %}
+
+{% block shell_page_title %}Team{% endblock %}
+{% block shell_page_subtitle %}What a position may be called &mdash; titles and ranks.{% endblock %}
+
+{% block shell_page %}
+    <div class="sxlead">
+        <span class="t">{{ ux_icon('shell:file-text', {width: 15, height: 15}) }}<span><b>What a position may be CALLED.</b> What it may do is the matrix, on Positions.</span></span>
+    </div>
+
+    {# THE HOUSE CREATE CARD — the thing this screen creates is created at the
+       top of it, always open, and never behind a summary. #}
+    <div class="dcadd" id="add-title">
+        <div class="dcaddhd">
+            {{ ux_icon('shell:plus', {width: 15, height: 15}) }}
+            <b>Add a position title</b>
+            <span class="hint">It becomes available to every department</span>
+        </div>
+        <form class="crcard" method="post" action="{{ path('team_position_title_create') }}">
+            <input type="hidden" name="_token" value="{{ csrfToken }}">
+            <div class="crgrid">
+                <div class="crfield grow">
+                    <span class="crlab">Title</span>
+                    <input class="fld" type="text" name="name" placeholder="Armoury Officer" aria-label="Position title" required>
+                </div>
+                <div class="crfield">
+                    <span class="crlab">Leads a station</span>
+                    <select class="fld" name="leads" aria-label="Leads a station">
+                        <option value="0">no</option>
+                        <option value="1">yes</option>
+                    </select>
+                </div>
+                <button class="cta" type="submit">{{ ux_icon('shell:plus', {width: 14, height: 14}) }} Add</button>
+            </div>
+            <div class="crhint">
+                {{ ux_icon('shell:info') }}
+                <span>A title is only a word &mdash; it grants nothing until a position carries it.</span>
+            </div>
+        </form>
+    </div>
+
+    <div class="c" style="margin-bottom:20px">
+        <span class="tab">Titles offered<span class="src">&middot; {{ titles|length }} &middot; every department may use them</span></span>
+        <table class="tbl">
+            <thead><tr><th>Title</th><th>Leads a station</th><th></th></tr></thead>
+            <tbody>
+            {% for title in titles %}
+                <tr>
+                    <td><b>{{ title.name }}</b></td>
+                    <td><span class="mono d">{{ title.leadsStation() ? 'leads a station' : '—' }}</span></td>
+                    <td style="text-align:right">
+                        <form method="post" action="{{ path('team_position_title_rename', {uuid: title.uuidString}) }}" class="staddrow">
+                            <input type="hidden" name="_token" value="{{ csrfToken }}">
+                            <input class="fld" type="text" name="name" value="{{ title.name }}" aria-label="Rename {{ title.name }}" required>
+                            <select class="fld" name="leads" aria-label="Leads a station">
+                                <option value="0"{{ title.leadsStation() ? '' : ' selected' }}>no</option>
+                                <option value="1"{{ title.leadsStation() ? ' selected' : '' }}>yes</option>
+                            </select>
+                            <button class="sxq" type="submit">Rename</button>
+                        </form>
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="3"><span class="mono d">No title yet &mdash; a position is still written with any word.</span></td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="c" style="margin-bottom:20px">
+        <span class="tab">Position titles in use<span class="src">&middot; {{ positions }} positions &middot; {{ rows|length }} departments</span></span>
+        <table class="tbl">
+            <thead><tr><th>Department</th><th class="num">Positions</th><th>Titles</th><th></th></tr></thead>
+            <tbody>
+            {% for row in rows %}
+                <tr>
+                    <td><b>{{ row.name }}</b></td>
+                    <td class="num">{{ row.titles|length }}</td>
+                    <td><span class="fog">{{ row.titles is empty ? '—' : row.titles|join(', ') }}</span></td>
+                    <td><a class="sxq" href="{{ path('team_positions') }}">Open</a></td>
+                </tr>
+            {% else %}
+                <tr><td colspan="4"><span class="mono d">No department yet.</span></td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {# TWO DIFFERENT JOBS WITH DIFFERENT PERMISSIONS. Nothing here may merge
+           them. #}
+        {% if sharedWords is not empty %}
+            <div class="sxfoot"><span><b>{{ sharedWords|join(', ') }}</b> {{ sharedWords|length == 1 ? 'appears' : 'appear' }} in more than one department.</span></div>
+        {% endif %}
+    </div>
+{% endblock %}
