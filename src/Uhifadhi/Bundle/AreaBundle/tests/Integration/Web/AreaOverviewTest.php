@@ -95,6 +95,25 @@ final class AreaOverviewTest extends WebTestCase
         self::assertStringContainsString('class="grid kstrip dp-kstrip"', $this->body($this->anArea()));
     }
 
+    /**
+     * THE PLATE STATES ITS OWN HEIGHT, like every other plate in the product.
+     *
+     * IT IS THE DESIGN'S OWN EXPRESSION AND NOT A NUMBER: this card is the
+     * page's subject, so it takes a share of the screen — capped, so that a
+     * tall monitor gets a map and not a wall. The record and the tabs state
+     * fixed pixels because their plates sit inside a stack of cards; this one
+     * is the stack's reason. Either way the PAGE says it: a plate that
+     * inherited the atlas's default would change height the day that default
+     * did, on a page nobody was looking at.
+     */
+    public function testThePlateStatesTheHeightTheDesignDrawsItAt(): void
+    {
+        $this->boot();
+        $this->signIn();
+
+        self::assertStringContainsString('--map-plate-height:min(58vh, 560px)', $this->body($this->anArea()));
+    }
+
     private function body(AreaOfInterest $area): string
     {
         $this->browser()->request('GET', '/areas/'.$area->getUuidString());

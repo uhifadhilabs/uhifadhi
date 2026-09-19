@@ -21,7 +21,12 @@
         <span class="tab">Where<span class="src">&middot; the area &amp; its zones</span></span>
         <span class="ao-by"><i></i>the area plate &middot; module layers</span>
 
+        {# THE HEIGHT IS THE PAGE'S, as it is on every plate in the product —
+           here the design's own expression rather than a fixed number: this
+           card is the page's subject, so it takes a share of the screen,
+           capped so a tall monitor gets a map and not a wall. #}
         {{ render_map(map, {
+            '--map-plate-height': 'min(58vh, 560px)',
             'role': 'img',
             'aria-label': area.name ~ ' — boundary' ~ (zoneCount > 0 ? ' and zones' : ''),
         }) }}
