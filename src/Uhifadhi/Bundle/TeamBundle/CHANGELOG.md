@@ -28,6 +28,15 @@ Not released yet.
    and fewer than three figures in a band place nothing
  * a second sheet, `bundles/team/performance.css`, carrying the board's own
    vocabulary, and a sort that runs INSIDE each band and never across one
+ * the MEMBER RECORD is a split: the record in a main column, and what happened
+   to it and what may be done to it in a rail beside it. It gains a HISTORY —
+   derived from the stored facts that carry a date, because there is no audit
+   trail in this release — a POSTINGS card read through the person-postings
+   seam, and a password-reset link an administrator can send (it writes a token
+   and mails a link; it does not change the password). The position card is
+   stacked, its permission ledger in two balanced columns. It names no delete:
+   a screen does not name an action that does not exist.
+
  * Team wears the AREA IDIOM. It is a section now, not two screens: the same
    header on every tab (the section's name), a subline that is that tab's own,
    one strip between the head and the body with exactly one tab lit, and the

@@ -74,6 +74,7 @@ use Uhifadhi\Bundle\TeamBundle\Service\DepartmentSectionOverview;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentService;
 use Uhifadhi\Bundle\TeamBundle\Service\FieldSignIn;
 use Uhifadhi\Bundle\TeamBundle\Service\Mail;
+use Uhifadhi\Bundle\TeamBundle\Service\MemberHistory;
 use Uhifadhi\Bundle\TeamBundle\Service\PasswordResetService;
 use Uhifadhi\Bundle\TeamBundle\Service\PerformanceHistory;
 use Uhifadhi\Bundle\TeamBundle\Service\PerformanceTopics;
@@ -106,6 +107,7 @@ use Uhifadhi\Bundle\TeamBundle\Widget\TeamWidgets;
 use Uhifadhi\Contracts\Area\StationDirectoryInterface;
 use Uhifadhi\Contracts\People\PersonDirectoryProviderInterface;
 use Uhifadhi\Contracts\People\PersonFacetProviderInterface;
+use Uhifadhi\Contracts\People\PersonPostingProviderInterface;
 use Uhifadhi\Contracts\Performance\DepartmentDirectoryInterface;
 use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
 use Uhifadhi\Contracts\Shell\AreaNavChildrenInterface;
@@ -870,6 +872,15 @@ return static function (ContainerConfigurator $container): void {
      * ONE PERSON'S RECORD, and the writes that change it. There is no delete
      * route and there will not be one: accounts are deactivated, never removed.
      */
+    /*
+     * WHAT THIS INSTALLATION CAN TRUTHFULLY SAY HAPPENED TO ONE PERSON —
+     * derived from the stored facts that carry a date, because there is no
+     * audit trail in this release and a card that invented the rest would be
+     * a card nobody could act on.
+     */
+    $services->set('team.member_history', MemberHistory::class);
+    $services->alias(MemberHistory::class, 'team.member_history');
+
     $services->set('team.controller.member', MemberController::class)
         ->args([
             service('twig'),
@@ -882,6 +893,11 @@ return static function (ContainerConfigurator $container): void {
             service('router'),
             service('security.token_storage'),
             service('team.area_authority'),
+            service('team.member_history'),
+            service('team.password_reset'),
+            service('team.mail'),
+            // WHERE THIS PERSON WORKS, from whoever owns the ground.
+            tagged_iterator(PersonPostingProviderInterface::TAG),
         ])
         ->tag('controller.service_arguments');
     $services->alias(MemberController::class, 'team.controller.member')->public();

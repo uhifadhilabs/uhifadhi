@@ -36,9 +36,14 @@ use Uhifadhi\Bundle\TeamBundle\Exception\LastSuperAdminException;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
+use Uhifadhi\Bundle\TeamBundle\Service\Mail;
+use Uhifadhi\Bundle\TeamBundle\Service\MemberHistory;
+use Uhifadhi\Bundle\TeamBundle\Service\PasswordResetService;
 use Uhifadhi\Bundle\TeamBundle\Service\PermissionCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Service\SuperAdminInvariant;
 use Uhifadhi\Bundle\TeamBundle\Service\UserService;
+use Uhifadhi\Contracts\People\PersonPosting;
+use Uhifadhi\Contracts\People\PersonPostingProviderInterface;
 
 /**
  * ONE PERSON'S RECORD — the four fields the table has, the tier that decides
@@ -84,6 +89,15 @@ final readonly class MemberController
     /** One token id for the whole record, because it is one screen. */
     public const string CSRF_ID = 'team_member';
 
+    /** The way an administrator hands somebody back their own account. */
+    public const string RESET_LINK = 'team_member_reset_link';
+
+    /**
+     * How many lines the history card shows before it states the bound. A
+     * bounded card never grows to the data and never scrolls inside itself.
+     */
+    private const int HISTORY = 6;
+
     public function __construct(
         private Environment $twig,
         private UserRepository $users,
@@ -95,6 +109,17 @@ final readonly class MemberController
         private UrlGeneratorInterface $router,
         private TokenStorageInterface $tokens,
         private AreaAuthority $authority,
+        private MemberHistory $history,
+        private PasswordResetService $resets,
+        private Mail $mail,
+        /**
+         * WHERE THIS PERSON WORKS, from whoever owns the ground. An
+         * installation with no area package yields no provider and the record
+         * says they are posted nowhere, which is true.
+         *
+         * @var iterable<PersonPostingProviderInterface>
+         */
+        private iterable $postingProviders,
     ) {
     }
 
@@ -103,6 +128,8 @@ final readonly class MemberController
     public function show(string $uuid): Response
     {
         $member = $this->member($uuid);
+        $postings = $this->postingsFor($member);
+        $history = $this->history->of($member, $postings);
 
         return new Response($this->twig->render('@Team/team/member.html.twig', [
             'member' => $member,
@@ -123,8 +150,58 @@ final readonly class MemberController
             // the row is ABSENT rather than disabled.
             'mayImpersonate' => $this->signedIn()?->getTeamRole()->canSwitch() ?? false,
             'isSelf' => $this->signedIn()?->getId() === $member->getId(),
+            // WHERE THEY WORK, read through the seam and never written here: a
+            // posting is made on the station, in the area that owns the ground.
+            'postings' => $postings,
+            // HOW FAR THE POSITION REACHES — how many people sit in the one
+            // this person holds. A position is one post in this model, so the
+            // answer is one or none; it is counted rather than assumed,
+            // because the day a position holds seats it will still be right.
+            'reach' => null === $member->getPosition() ? 0 : $this->users->countActiveHoldingAnyPosition([$member->getPosition()]),
+            // AND WHAT THIS INSTALLATION CAN TRUTHFULLY SAY HAPPENED, derived
+            // from the stored facts that carry a date.
+            'history' => \array_slice($history, 0, self::HISTORY),
+            'historyTotal' => \count($history),
+            // A RESET LINK IS OFFERED ONLY WHERE IT CAN BE SENT. Without a
+            // transport the control is absent rather than a button that
+            // silently discards the request.
+            'mayResetByMail' => $this->mail->isConfigured() && $member->isActive(),
             'csrfToken' => $this->csrf->getToken(self::CSRF_ID)->getValue(),
         ]));
+    }
+
+    /**
+     * A PASSWORD-RESET LINK, SENT BY AN ADMINISTRATOR.
+     *
+     * IT DOES NOT CHANGE THE PASSWORD. It writes a token and mails a link, so
+     * the person still chooses their own — an administrator who could set
+     * somebody's password could sign in as them without the audit line that
+     * impersonation leaves.
+     *
+     * ASKING AGAIN REPLACES THE PREVIOUS LINK, so an old email in an inbox
+     * stops working the moment a new one is sent. A DEACTIVATED ACCOUNT GETS
+     * NONE: a reset that let somebody back through a door the firewall closes
+     * would be a reset that undoes a deactivation.
+     */
+    #[Route('/team/{uuid}/reset-link', name: self::RESET_LINK, requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]
+    #[IsGranted(PermissionEnum::TeamManage->value)]
+    public function sendResetLink(Request $request, string $uuid): RedirectResponse
+    {
+        $member = $this->member($uuid);
+        $this->assertCsrf($request);
+        $this->assertMayManage($member);
+
+        if (!$member->isActive() || !$this->mail->isConfigured()) {
+            return $this->back($request, $member, 'No reset link was sent.', 'error');
+        }
+
+        $this->mail->sendPasswordReset($member, $this->router->generate(
+            'team_reset',
+            ['token' => $this->resets->begin($member)],
+            UrlGeneratorInterface::ABSOLUTE_URL,
+        ));
+
+        return $this->back($request, $member, \sprintf('A reset link is on its way to %s.', $member->getEmail()));
     }
 
     #[Route('/team/{uuid}', name: 'team_member_update', requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]
@@ -356,6 +433,27 @@ final readonly class MemberController
         if (!$this->csrf->isTokenValid(new CsrfToken(self::CSRF_ID, (string) $request->request->get('_token')))) {
             throw new NotFoundHttpException('Invalid CSRF token.');
         }
+    }
+
+    /**
+     * WHERE THIS PERSON WORKS, from whoever owns the ground — one call, even
+     * for one person, because the seam is list-shaped and a second shape would
+     * be a second thing to keep true.
+     *
+     * @return list<PersonPosting>
+     */
+    private function postingsFor(User $member): array
+    {
+        $uuid = (string) $member->getUuidString();
+
+        $postings = [];
+        foreach ($this->postingProviders as $provider) {
+            foreach ($provider->postingsFor([$uuid])[$uuid] ?? [] as $posting) {
+                $postings[] = $posting;
+            }
+        }
+
+        return $postings;
     }
 
     /**
