@@ -15,9 +15,11 @@ namespace Uhifadhi\Bundle\AreaBundle\Service;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\AreaBundle\Entity\Station;
 use Uhifadhi\Bundle\AreaBundle\Entity\Zone;
 use Uhifadhi\Bundle\AreaBundle\Exception\ZoneNameException;
 use Uhifadhi\Bundle\AreaBundle\Exception\ZoneOverlapException;
+use Uhifadhi\Bundle\AreaBundle\Repository\StationRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
 
 /**
@@ -56,6 +58,7 @@ class ZoneService
         private readonly ZoneRepository $zones,
         private readonly ZoneOverlapService $overlaps,
         private readonly StationService $stations,
+        private readonly StationRepository $stationRows,
     ) {
     }
 
@@ -141,11 +144,21 @@ class ZoneService
     public function remove(Zone $zone): void
     {
         $area = $zone->getArea();
+
+        /*
+         * WHO STOOD IN IT, READ BEFORE IT GOES. The foreign key sets their
+         * `zone_id` to null as the row is deleted, so by the time the
+         * recompute runs there is nothing left for it to notice — and the one
+         * line a reader most wants, "this post is now in no zone", would never
+         * be written. So the caller that knows says so.
+         */
+        $stood = self::idsOf($this->stationRows->findByZone($zone));
+
         $this->em->remove($zone);
         $this->em->flush();
 
         if (null !== $area) {
-            $this->stations->rederiveFor($area);
+            $this->stations->rederiveFor($area, 'a zone was removed', $stood);
         }
     }
 
@@ -159,6 +172,11 @@ class ZoneService
     {
         $zones = $this->zones->zonesFor($area);
 
+        // The same reasoning as removing one: the keys are cleared by the
+        // database as the rows go, so the stations that stood in them are read
+        // before the delete and named to the recompute.
+        $stood = self::idsOf($this->stationRows->findByArea($area));
+
         $this->em->wrapInTransaction(function () use ($zones): void {
             foreach ($zones as $zone) {
                 $this->em->remove($zone);
@@ -166,9 +184,30 @@ class ZoneService
             $this->em->flush();
         });
 
-        $this->stations->rederiveFor($area);
+        $this->stations->rederiveFor($area, 'every zone was removed', $stood);
 
         return \count($zones);
+    }
+
+    /**
+     * The ids of stations that are about to lose their zone pointer to a
+     * foreign key, so the recompute can be told whom to write a line for.
+     *
+     * @param list<Station> $stations
+     *
+     * @return list<int>
+     */
+    private static function idsOf(array $stations): array
+    {
+        $ids = [];
+        foreach ($stations as $station) {
+            $id = $station->getId();
+            if (null !== $id) {
+                $ids[] = $id;
+            }
+        }
+
+        return $ids;
     }
 
     /**

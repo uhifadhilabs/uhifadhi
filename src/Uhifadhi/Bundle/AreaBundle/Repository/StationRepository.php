@@ -33,6 +33,13 @@ use Uhifadhi\Bundle\AreaBundle\Entity\Zone;
  */
 class StationRepository extends SpatialEntityRepository
 {
+    /**
+     * EIGHT WORDS FOR A BEARING, because "moved 340 m on a bearing of 271°" is
+     * a sentence for an instrument and "moved 340 m west" is one for a person
+     * deciding whether to go and look.
+     */
+    private const array COMPASS = ['north', 'north-east', 'east', 'south-east', 'south', 'south-west', 'west', 'north-west'];
+
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Station::class);
@@ -84,6 +91,40 @@ class StationRepository extends SpatialEntityRepository
     }
 
     /**
+     * HOW FAR A POINT MOVED AND WHICH WAY, on the spheroid — the two facts a
+     * log line about a move is worth reading for.
+     *
+     * THE DATABASE ANSWERS BOTH. A distance from degrees computed in PHP is
+     * wrong by a factor that grows with latitude, and a bearing from them is
+     * wrong twice over; `ST_Distance` on geography and `ST_Azimuth` are right
+     * everywhere and cost one round trip on a write that already made several.
+     *
+     * @return array{0: int, 1: string} metres, rounded, and the compass word
+     */
+    public function stDisplacement(string $fromGeoJson, string $toGeoJson): array
+    {
+        if ('' === $fromGeoJson || $fromGeoJson === $toGeoJson) {
+            return [0, 'north'];
+        }
+
+        $row = $this->getEntityManager()->getConnection()->fetchAssociative(
+            'SELECT ST_Distance(a::geography, b::geography) AS metres,'
+            .' degrees(ST_Azimuth(a, b)) AS bearing'
+            .' FROM (SELECT ST_GeomFromGeoJSON(:from) AS a, ST_GeomFromGeoJSON(:to) AS b) p',
+            ['from' => $fromGeoJson, 'to' => $toGeoJson],
+        );
+
+        if (false === $row || !is_numeric($row['metres'] ?? null)) {
+            return [0, 'north'];
+        }
+
+        $metres = (int) round((float) $row['metres']);
+        $bearing = is_numeric($row['bearing'] ?? null) ? (float) $row['bearing'] : 0.0;
+
+        return [$metres, self::COMPASS[(int) round(($bearing % 360) / 45) % 8]];
+    }
+
+    /**
      * EVERY STATION OF ONE AREA, RE-ASKED THE QUESTION — in one statement.
      *
      * THE TIE-BREAK IS THE ZONE RULE'S OWN. `ST_Covers` includes the boundary,
@@ -98,16 +139,19 @@ class StationRepository extends SpatialEntityRepository
      * subquery answers null where nothing covers the point, and that is the
      * honest new value after a set is cleared.
      *
-     * @return int the number of stations whose zone changed
+     * IT ANSWERS WHICH ONES MOVED, not how many. A station whose zone changed
+     * gets a line in its own log, and a count could not say whose.
+     *
+     * @return list<int> the ids of the stations whose zone changed
      */
-    public function updateDerivedZones(AreaOfInterest $area): int
+    public function updateDerivedZones(AreaOfInterest $area): array
     {
         $areaId = $area->getId();
         if (null === $areaId) {
-            return 0;
+            return [];
         }
 
-        return (int) $this->getEntityManager()->getConnection()->executeStatement(
+        $rows = $this->getEntityManager()->getConnection()->fetchFirstColumn(
             'UPDATE station s SET zone_id = ('
             .'   SELECT z.id FROM zone z'
             .'   WHERE z.area_id = s.area_id AND ST_Covers(z.geom, s.point)'
@@ -117,8 +161,17 @@ class StationRepository extends SpatialEntityRepository
             .'   SELECT z.id FROM zone z'
             .'   WHERE z.area_id = s.area_id AND ST_Covers(z.geom, s.point)'
             .'   ORDER BY z.name ASC, z.id ASC LIMIT 1'
-            .' )',
+            .' ) RETURNING s.id',
             ['area' => $areaId],
         );
+
+        $ids = [];
+        foreach ($rows as $row) {
+            if (is_numeric($row)) {
+                $ids[] = (int) $row;
+            }
+        }
+
+        return $ids;
     }
 }

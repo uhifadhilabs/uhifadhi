@@ -44,6 +44,7 @@ final readonly class PostingService
     public function __construct(
         private EntityManagerInterface $entityManager,
         private PostingRepository $postings,
+        private StationEventService $events,
     ) {
     }
 
@@ -57,6 +58,7 @@ final readonly class PostingService
         UserInterface $person,
         PostingSource $source,
         ?\DateTimeImmutable $since = null,
+        ?string $actor = null,
     ): Posting {
         if (null !== $this->postings->findStandingFor($station, $person)) {
             throw PostingException::alreadyPosted($person->getFullName(), (string) $station->getName());
@@ -70,6 +72,7 @@ final readonly class PostingService
 
         $this->entityManager->persist($posting);
         $this->entityManager->flush();
+        $this->events->posted($station, $person->getFullName(), $source, $actor);
 
         return $posting;
     }
@@ -80,7 +83,7 @@ final readonly class PostingService
      * standing set on its own — the lead is a property of a standing posting,
      * and this one is no longer standing.
      */
-    public function end(Posting $posting, ?\DateTimeImmutable $on = null): Posting
+    public function end(Posting $posting, ?\DateTimeImmutable $on = null, ?string $actor = null): Posting
     {
         if (!$posting->isStanding()) {
             return $posting;
@@ -89,13 +92,18 @@ final readonly class PostingService
         $posting->setEndedAt($on ?? new \DateTimeImmutable('today'));
         $this->entityManager->flush();
 
+        $station = $posting->getStation();
+        if (null !== $station) {
+            $this->events->postingEnded($station, $posting->getPerson()?->getFullName() ?? 'Somebody', $actor);
+        }
+
         return $posting;
     }
 
     /**
      * @throws PostingException when the posting has already ended
      */
-    public function appointLeader(Posting $posting): Posting
+    public function appointLeader(Posting $posting, ?string $actor = null): Posting
     {
         if (!$posting->isStanding()) {
             throw PostingException::alreadyEnded($posting->getPerson()?->getFullName() ?? 'That posting');
@@ -112,6 +120,8 @@ final readonly class PostingService
             }
             $this->entityManager->flush();
         });
+
+        $this->events->leaderAppointed($station, $posting->getPerson()?->getFullName() ?? 'Somebody', $actor);
 
         return $posting;
     }

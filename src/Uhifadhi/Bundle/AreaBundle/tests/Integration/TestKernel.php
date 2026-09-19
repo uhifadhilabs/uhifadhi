@@ -21,6 +21,7 @@ use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 use Uhifadhi\Bundle\AreaBundle\AreaBundle;
 use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
+use Uhifadhi\Bundle\AreaBundle\Repository\StationEventRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Fixtures\CollectedModules;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Fixtures\HostPerson;
@@ -117,6 +118,7 @@ class TestKernel extends Kernel
         $services->alias('test_public.area.zone_figures', 'area.zone_figures')->public();
         $services->alias('test_public.area.stations', 'area.stations')->public();
         $services->alias('test_public.area.postings', 'area.postings')->public();
+        $services->alias('test_public.area.station_event_repository', StationEventRepository::class)->public();
 
         /*
          * A MODULE'S ZONE-FIGURE PROVIDER, tagged BY HAND exactly as a real

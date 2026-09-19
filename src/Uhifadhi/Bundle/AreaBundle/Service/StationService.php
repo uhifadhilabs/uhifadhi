@@ -48,6 +48,7 @@ final readonly class StationService
     public function __construct(
         private EntityManagerInterface $entityManager,
         private StationRepository $stations,
+        private StationEventService $events,
     ) {
     }
 
@@ -62,6 +63,7 @@ final readonly class StationService
         float $lon,
         float $lat,
         ?string $code = null,
+        ?string $actor = null,
     ): Station {
         $station = new Station()
             ->setArea($area)
@@ -72,25 +74,77 @@ final readonly class StationService
         $this->entityManager->persist($station);
         $this->entityManager->flush();
 
-        $this->rederiveFor($area);
+        $this->events->recorded($station, $actor);
+        $this->rederiveFor($area, 'the station was recorded');
         $this->entityManager->refresh($station);
 
         return $station;
     }
 
-    /** The post moved. Its ground may have changed hands, so the answer is re-asked. */
-    public function moveTo(Station $station, float $lon, float $lat): Station
+    /**
+     * The post moved. Its ground may have changed hands, so the answer is
+     * re-asked — and the log says how far it went and which way, because "the
+     * point changed" is a fact nobody can check and "340 m west" is one
+     * somebody can walk to.
+     */
+    public function moveTo(Station $station, float $lon, float $lat, ?string $actor = null): Station
     {
         $area = $station->getArea();
         if (null === $area) {
             throw new \LogicException('A station always belongs to an area.');
         }
 
-        $station->setPoint(self::pointAt($lon, $lat));
+        $to = self::pointAt($lon, $lat);
+        [$metres, $heading] = $this->stations->stDisplacement((string) $station->getPoint(), $to);
+
+        $station->setPoint($to);
         $this->entityManager->flush();
 
-        $this->rederiveFor($area);
+        if ($metres > 0) {
+            $this->events->pointMoved($station, $metres, $heading, $actor);
+        }
+
+        $this->rederiveFor($area, 'the station moved');
         $this->entityManager->refresh($station);
+
+        return $station;
+    }
+
+    /** A rename touches nothing else: the post is where it was. */
+    public function rename(Station $station, string $name, ?string $actor = null): Station
+    {
+        $was = (string) $station->getName();
+        $name = trim($name);
+        if ('' === $name || $was === $name) {
+            return $station;
+        }
+
+        $station->setName($name);
+        $this->entityManager->flush();
+        $this->events->renamed($station, $was, $name, $actor);
+
+        return $station;
+    }
+
+    /** Closed, not deleted: every line, every posting and every patrol stays. */
+    public function deactivate(Station $station, ?string $actor = null): Station
+    {
+        if ($station->isActive()) {
+            $station->setActive(false);
+            $this->entityManager->flush();
+            $this->events->deactivated($station, $actor);
+        }
+
+        return $station;
+    }
+
+    public function reactivate(Station $station, ?string $actor = null): Station
+    {
+        if (!$station->isActive()) {
+            $station->setActive(true);
+            $this->entityManager->flush();
+            $this->events->reactivated($station, $actor);
+        }
 
         return $station;
     }
@@ -99,19 +153,38 @@ final readonly class StationService
      * EVERY STATION IN THE AREA, RE-ASKED. Called by whatever moved the zones
      * under them — an import, a replaced ring, a removal, a cleared set.
      *
-     * @return int how many stations changed zone, which is what a log line says
+     * EACH ONE THAT MOVED GETS A LINE IN ITS OWN LOG, and `$because` names
+     * what did it: an import, a replaced ring, a removal. A station whose zone
+     * did NOT change gets none — the alternative is a line on every post in
+     * the area every time anybody edits a zone.
+     *
+     * `$alsoNotify` NAMES THE STATIONS THE DATABASE ALREADY ANSWERED FOR. When
+     * a zone is deleted the foreign key sets `zone_id` to null before this
+     * runs, so the recompute finds nothing to change and would log nothing —
+     * for the one event a reader most wants to see. The caller that deleted
+     * the zone knows who stood in it, and says so here.
+     *
+     * @param list<int> $alsoNotify station ids to log even when the statement changed nothing
+     *
+     * @return int how many stations changed zone
      */
-    public function rederiveFor(AreaOfInterest $area): int
+    public function rederiveFor(AreaOfInterest $area, string $because = 'the zones changed', array $alsoNotify = []): int
     {
         $moved = $this->stations->updateDerivedZones($area);
 
-        /*
-         * THE STATEMENT WENT ROUND THE UNIT OF WORK, so anything already loaded
-         * still holds the old zone. Clearing only the station rows would be
-         * cheaper and is not available; a caller that holds one refreshes it,
-         * which is what the two writers above do.
-         */
-        return $moved;
+        foreach (array_unique([...$moved, ...$alsoNotify]) as $id) {
+            $station = $this->stations->find($id);
+            if (null === $station) {
+                continue;
+            }
+
+            // The statement went round the unit of work, so the loaded row
+            // still holds the zone it had before it.
+            $this->entityManager->refresh($station);
+            $this->events->zoneDerived($station, $station->getZone()?->getName(), $because);
+        }
+
+        return \count($moved);
     }
 
     /** A point as the column's GeoJSON, longitude first. */

@@ -16,6 +16,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 use Uhifadhi\Bundle\AreaBundle\People\AreaPersonPostings;
 use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\PostingRepository;
+use Uhifadhi\Bundle\AreaBundle\Repository\StationEventRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\StationRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneEventRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
@@ -31,6 +32,7 @@ use Uhifadhi\Bundle\AreaBundle\Service\AreaThumbnailer;
 use Uhifadhi\Bundle\AreaBundle\Service\BoundaryImport;
 use Uhifadhi\Bundle\AreaBundle\Service\PersonFacetService;
 use Uhifadhi\Bundle\AreaBundle\Service\PostingService;
+use Uhifadhi\Bundle\AreaBundle\Service\StationEventService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneEventService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneExportService;
@@ -95,6 +97,10 @@ return static function (ContainerConfigurator $container): void {
         ->args([service('doctrine')])
         ->tag('doctrine.repository_service');
 
+    $services->set(StationEventRepository::class)
+        ->args([service('doctrine')])
+        ->tag('doctrine.repository_service');
+
     /*
      * THE ONLY SUPPORTED WAY A ZONE GETS A GEOMETRY. The invariant sibling zones
      * are held to — never sharing interior — is not expressible as a column
@@ -117,10 +123,20 @@ return static function (ContainerConfigurator $container): void {
      * screens, because a fixture loader and a console importer place stations
      * too and neither has twig.
      */
+    /*
+     * A STATION'S LOG, WRITTEN IN ONE VOCABULARY — the station page and the
+     * configure section both change stations, and two screens wording one
+     * event differently is how a log stops being readable.
+     */
+    $services->set('area.station_events', StationEventService::class)
+        ->args([service('doctrine.orm.entity_manager')]);
+    $services->alias(StationEventService::class, 'area.station_events');
+
     $services->set('area.stations', StationService::class)
         ->args([
             service('doctrine.orm.entity_manager'),
             service(StationRepository::class),
+            service('area.station_events'),
         ]);
     $services->alias(StationService::class, 'area.stations');
 
@@ -134,6 +150,7 @@ return static function (ContainerConfigurator $container): void {
         ->args([
             service('doctrine.orm.entity_manager'),
             service(PostingRepository::class),
+            service('area.station_events'),
         ]);
     $services->alias(PostingService::class, 'area.postings');
 
@@ -173,6 +190,7 @@ return static function (ContainerConfigurator $container): void {
             service(ZoneRepository::class),
             service('area.zone_overlaps'),
             service('area.stations'),
+            service(StationRepository::class),
         ]);
     $services->alias(ZoneService::class, 'area.zones');
 
@@ -372,4 +390,5 @@ return static function (ContainerConfigurator $container): void {
             service('router'),
         ]);
     $services->alias(AreaComposition::class, 'area.composition');
+
 };

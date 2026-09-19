@@ -101,6 +101,7 @@ final class MigrationsRunInDependencyOrderTest extends MigrationsTestCase
                 'Uhifadhi\\Bundle\\AreaBundle\\Migrations\\Version20260101000120',
                 'Uhifadhi\\Bundle\\AreaBundle\\Migrations\\Version20260101000130',
                 'Uhifadhi\\Bundle\\AreaBundle\\Migrations\\Version20260101000140',
+                'Uhifadhi\\Bundle\\AreaBundle\\Migrations\\Version20260101000160',
                 'Uhifadhi\\Bundle\\RegistryBundle\\Migrations\\Version20260101000200',
                 'Uhifadhi\\Bundle\\TeamBundle\\Migrations\\Version20260101000300',
                 'Uhifadhi\\Bundle\\TeamBundle\\Migrations\\Version20260101000310',
