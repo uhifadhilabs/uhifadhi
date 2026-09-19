@@ -21,7 +21,14 @@ use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 /**
  * @extends ServiceEntityRepository<Department>
  */
-final class DepartmentRepository extends ServiceEntityRepository
+/*
+ * NOT FINAL, as every repository in the core's other bundles is not: this one
+ * is now a COLLABORATOR — the sidebar reads the register's own list through
+ * it — and a collaborator that cannot be doubled forces the unit that depends
+ * on it into a database it does not otherwise need. Nothing extends it; the
+ * modifier was a default rather than a decision.
+ */
+class DepartmentRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {

@@ -22,6 +22,8 @@ use Uhifadhi\Bundle\ShellBundle\Contract\NavigationSourceInterface;
 use Uhifadhi\Bundle\ShellBundle\Model\NavItem;
 use Uhifadhi\Bundle\ShellBundle\Model\NavSection;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
+use Uhifadhi\Bundle\TeamBundle\Model\DepartmentQuery;
+use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 
 /**
  * THE ONE ROW THIS BUNDLE PUTS IN THE SIDEBAR.
@@ -86,6 +88,7 @@ final readonly class TeamNavigation implements NavigationSourceInterface
         private TokenStorageInterface $tokens,
         private AuthorizationCheckerInterface $authorization,
         private RequestStack $requests,
+        private DepartmentRepository $departments,
     ) {
     }
 
@@ -112,7 +115,7 @@ final readonly class TeamNavigation implements NavigationSourceInterface
          * section, so an empty list yields nothing at all.
          */
         $items = array_values(array_filter([
-            $this->row('Departments', self::DEPARTMENTS_ROUTE, 'shell:building-2'),
+            $this->departmentsRow(),
             $this->row('Team', self::ROUTE, 'shell:users'),
         ]));
 
@@ -121,6 +124,95 @@ final readonly class TeamNavigation implements NavigationSourceInterface
         }
 
         yield new NavSection(self::SECTION, $items, position: self::POSITION);
+    }
+
+    /**
+     * DEPARTMENTS, WITH THE REGISTER'S OWN PICKER UNDER IT.
+     *
+     * THE REGISTER HAS NO PICKER COLUMN, so this is how a department is
+     * chosen: the organisation's own first, then each area's under its name,
+     * and an entry points at the register with that card FOCUSED — the same
+     * one value the page marks, so the lit row in the tree and the marked
+     * card on the page cannot disagree.
+     *
+     * DRILLED ONLY WHERE IT CAN BE SEEN. An installation with forty
+     * departments would otherwise pay for forty rows on every page in the
+     * product, folded away — the same rule the areas tree follows for its
+     * modules.
+     */
+    private function departmentsRow(): ?NavItem
+    {
+        $row = $this->row('Departments', self::DEPARTMENTS_ROUTE, 'shell:building-2');
+        if (null === $row || !$row->current) {
+            return $row;
+        }
+
+        $groups = [];
+        foreach ($this->departments->findAllActiveOrdered() as $department) {
+            $area = $department->getArea();
+            // KEYED BY THE AREA ITSELF. Doctrine hands back one object per row
+            // per request, so object identity groups correctly even before an
+            // area has been given its published identifier.
+            $key = null === $area ? '' : 'area:'.($area->getUuidString() ?? (string) spl_object_id($area));
+            $groups[$key] ??= [
+                'label' => null === $area ? 'Org-wide' : (string) $area->getName(),
+                'rows' => [],
+            ];
+
+            $uuid = (string) $department->getUuidString();
+            $url = $row->url.'?'.http_build_query([DepartmentQuery::FOCUS => $uuid]).'#d-'.$uuid;
+
+            $groups[$key]['rows'][] = new NavItem(
+                label: (string) $department->getName(),
+                url: $url,
+                current: $this->viewerIsFocusedOn($uuid),
+            );
+        }
+
+        // ORG-WIDE FIRST, then the areas by name — the register's own order,
+        // because the tree and the page are two readings of one list.
+        $org = $groups[''] ?? null;
+        unset($groups['']);
+        uasort($groups, static fn (array $a, array $b): int => strcasecmp($a['label'], $b['label']));
+
+        $children = [];
+        foreach (array_filter([$org, ...array_values($groups)]) as $group) {
+            $children[] = new NavItem(
+                label: $group['label'],
+                url: null,
+                open: true,
+                children: $group['rows'],
+            );
+        }
+
+        return new NavItem(
+            label: $row->label,
+            url: $row->url,
+            icon: $row->icon,
+            // The register IS all departments, the way the area row is the
+            // area: it stays lit while none of its children is.
+            current: !self::litAnywhere($children),
+            open: true,
+            children: $children,
+        );
+    }
+
+    /** @param list<NavItem> $rows */
+    private static function litAnywhere(array $rows): bool
+    {
+        foreach ($rows as $row) {
+            if ($row->current || self::litAnywhere($row->children)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** Whether the register is drawn with this department's card marked. */
+    private function viewerIsFocusedOn(string $uuid): bool
+    {
+        return $uuid === $this->requests->getCurrentRequest()?->query->get(DepartmentQuery::FOCUS);
     }
 
     /**

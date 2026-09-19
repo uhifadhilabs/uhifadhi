@@ -23,8 +23,12 @@ use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorage;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use Uhifadhi\Bundle\ShellBundle\Model\NavItem;
 use Uhifadhi\Bundle\ShellBundle\Model\NavSection;
+use Uhifadhi\Bundle\TeamBundle\Entity\Department;
+use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Shell\TeamNavigation;
+use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\Area\HostArea;
 
 /**
  * THE TWO ANSWERS THAT ARE HARD TO STAGE IN A BROWSER — an installation that
@@ -54,6 +58,7 @@ final class TeamNavigationTest extends TestCase
             $this->tokenStorageWithAToken(),
             $this->checkerAnswering(true),
             new RequestStack(),
+            $this->departmentsNamed([]),
         );
 
         self::assertSame([], iterator_to_array($navigation->sections()));
@@ -80,6 +85,7 @@ final class TeamNavigationTest extends TestCase
             $this->tokenStorageWithAToken(),
             $this->checkerAnswering(true),
             new RequestStack(),
+            $this->departmentsNamed([]),
         );
 
         $sections = iterator_to_array($navigation->sections());
@@ -102,6 +108,7 @@ final class TeamNavigationTest extends TestCase
             new TokenStorage(),
             $this->checkerThatRefusesToBeAsked(),
             new RequestStack(),
+            $this->departmentsNamed([]),
         );
 
         self::assertSame([], iterator_to_array($navigation->sections()));
@@ -127,6 +134,7 @@ final class TeamNavigationTest extends TestCase
             $this->tokenStorageWithAToken(),
             $this->checkerAnswering(true),
             $requests,
+            $this->departmentsNamed([]),
         );
 
         $sections = iterator_to_array($navigation->sections());
@@ -166,6 +174,7 @@ final class TeamNavigationTest extends TestCase
             $this->tokenStorageWithAToken(),
             $this->checkerAnswering(true),
             $requests,
+            $this->departmentsNamed([]),
         );
 
         $sections = iterator_to_array($navigation->sections());
@@ -174,6 +183,97 @@ final class TeamNavigationTest extends TestCase
 
         self::assertTrue($section->items[0]->current, 'Departments is not lit on the departments screen.');
         self::assertFalse($section->items[1]->current, 'The roster row is lit on a screen it does not lead to.');
+    }
+
+    /**
+     * THE REGISTER'S PICKER IS THE SIDEBAR. The departments page keeps no
+     * picker column of its own, so the subtree is how one is chosen: the
+     * organisation's own first, then each area's under its name, and the
+     * entry points at the register with that card focused.
+     */
+    public function testTheDepartmentsRowUnfoldsToTheRegisterItPointsAt(): void
+    {
+        $requests = new RequestStack();
+        $requests->push(Request::create('/departments'));
+
+        $navigation = new TeamNavigation(
+            $this->urlsAnsweringByRoute(),
+            $this->tokenStorageWithAToken(),
+            $this->checkerAnswering(true),
+            $requests,
+            $this->departmentsNamed(['Ecology' => null, 'Wetland Management' => 'Northern Reserve']),
+        );
+
+        $sections = iterator_to_array($navigation->sections());
+        $section = $sections[0];
+        self::assertInstanceOf(NavSection::class, $section);
+
+        $groups = $section->items[0]->children;
+        self::assertSame(['Org-wide', 'Northern Reserve'], array_map(static fn (NavItem $i): string => $i->label, $groups));
+        self::assertSame(['Ecology'], array_map(static fn (NavItem $i): string => $i->label, $groups[0]->children));
+        self::assertSame(['Wetland Management'], array_map(static fn (NavItem $i): string => $i->label, $groups[1]->children));
+
+        // The entry points at the register with that card focused and anchored.
+        self::assertStringContainsString('focus=', (string) $groups[0]->children[0]->url);
+        self::assertStringContainsString('#d-', (string) $groups[0]->children[0]->url);
+    }
+
+    /** A viewer who is not on the register does not pay for its subtree. */
+    public function testTheSubtreeIsBuiltOnlyWhereItCanBeSeen(): void
+    {
+        $requests = new RequestStack();
+        $requests->push(Request::create('/team'));
+
+        $navigation = new TeamNavigation(
+            $this->urlsAnsweringByRoute(),
+            $this->tokenStorageWithAToken(),
+            $this->checkerAnswering(true),
+            $requests,
+            $this->departmentsThatMustNotBeAsked(),
+        );
+
+        $sections = iterator_to_array($navigation->sections());
+        $section = $sections[0];
+        self::assertInstanceOf(NavSection::class, $section);
+        self::assertSame([], $section->items[0]->children);
+    }
+
+    /**
+     * A repository answering with departments, each named and either the
+     * organisation's or one area's.
+     *
+     * @param array<string, string|null> $named name to the area's name, or null for org-wide
+     */
+    private function departmentsNamed(array $named): DepartmentRepository
+    {
+        $departments = [];
+        foreach ($named as $name => $area) {
+            $departments[] = self::aDepartment($name, $area);
+        }
+
+        $repository = $this->createStub(DepartmentRepository::class);
+        $repository->method('findAllActiveOrdered')->willReturn($departments);
+
+        return $repository;
+    }
+
+    /** A repository the navigation must not reach for at all. */
+    private function departmentsThatMustNotBeAsked(): DepartmentRepository
+    {
+        $repository = $this->createMock(DepartmentRepository::class);
+        $repository->expects(self::never())->method('findAllActiveOrdered');
+
+        return $repository;
+    }
+
+    private static function aDepartment(string $name, ?string $area): Department
+    {
+        $department = new Department()->setName($name);
+        if (null !== $area) {
+            $department->setArea(new HostArea()->setName($area));
+        }
+
+        return $department;
     }
 
     private function urlsAnsweringByRoute(): UrlGeneratorInterface

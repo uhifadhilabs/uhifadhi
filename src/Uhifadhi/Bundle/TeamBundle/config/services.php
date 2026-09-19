@@ -389,6 +389,9 @@ return static function (ContainerConfigurator $container): void {
                 service('security.token_storage'),
                 service('security.authorization_checker'),
                 service('request_stack'),
+                // The register's own picker lives in the sidebar, so the tree
+                // reads the same list the page draws.
+                service(DepartmentRepository::class),
             ])
             ->tag('shell.nav_section');
     }
