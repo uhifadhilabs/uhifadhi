@@ -43,6 +43,7 @@ use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
+use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPalette;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPerformance;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentService;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionService;
@@ -143,6 +144,7 @@ final readonly class DepartmentController
         private AreaAuthority $authority,
         private ModuleCatalogue $catalogue,
         private DepartmentPerformance $performance,
+        private DepartmentPalette $palette,
     ) {
     }
 
@@ -214,6 +216,10 @@ final readonly class DepartmentController
             'loose' => $loose,
             'looseHeadcount' => $this->users->countActiveHoldingAnyPosition($loose),
             'marks' => $this->marks($departments),
+            // A DEPARTMENT NAMES A CATEGORY AND NEVER A COLOUR: the card
+            // carries the index and the shell resolves it to the hue, which
+            // is the only way one department reads the same in both palettes.
+            'cats' => $this->palette->indexes(),
             'openDepartment' => self::openOf($request),
             'positionCount' => array_sum(array_map(\count(...), $owned)),
             'csrfToken' => $this->csrf->getToken(self::CSRF_ID)->getValue(),

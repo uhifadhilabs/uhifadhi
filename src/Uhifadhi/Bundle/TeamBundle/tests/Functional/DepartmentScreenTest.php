@@ -46,6 +46,33 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
      * inherits, which is the thing a reader has to know before the rest of
      * the list means anything. Each area's own follow, under its name.
      */
+    /**
+     * A DEPARTMENT'S CARD WEARS ITS OWN HUE, and it is the same category the
+     * sidebar's dot reads.
+     *
+     * THE CARD CARRIES AN INDEX AND NEVER A COLOUR — the shell resolves it,
+     * which is the only way one department reads the same in both palettes
+     * and again on imagery. The mark was accent-tinted for every ACTIVE
+     * department before this, which left all nine identical.
+     */
+    public function testEachDepartmentsCardCarriesItsOwnCategory(): void
+    {
+        $this->administrator();
+        $this->department('Ecology');
+        $this->department('Tourism');
+        $this->em->flush();
+
+        $crawler = $this->client->request('GET', '/departments');
+        self::assertResponseIsSuccessful();
+
+        $cats = $crawler->filter('article.dcard')->each(
+            static fn (Crawler $c): ?string => $c->attr('data-cat'),
+        );
+
+        self::assertSame(['1', '2'], $cats);
+        self::assertCount(0, $crawler->filter('.ov-mk.on'), 'the mark is no longer accent-tinted for every active department');
+    }
+
     public function testTheRegisterGroupsOrgWideFirstThenEachAreasOwn(): void
     {
         $crawler = $this->screen();

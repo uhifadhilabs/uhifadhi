@@ -92,6 +92,9 @@ final readonly class MemberController
     /** The way an administrator hands somebody back their own account. */
     public const string RESET_LINK = 'team_member_reset_link';
 
+    /** And the way they chase an invitation nobody opened. */
+    public const string INVITE_AGAIN = 'team_member_invite_again';
+
     /**
      * How many lines the history card shows before it states the bound. A
      * bounded card never grows to the data and never scrolls inside itself.
@@ -162,10 +165,12 @@ final readonly class MemberController
             // from the stored facts that carry a date.
             'history' => \array_slice($history, 0, self::HISTORY),
             'historyTotal' => \count($history),
-            // A RESET LINK IS OFFERED ONLY WHERE IT CAN BE SENT. Without a
-            // transport the control is absent rather than a button that
-            // silently discards the request.
-            'mayResetByMail' => $this->mail->isConfigured() && $member->isActive(),
+            // A LETTER IS OFFERED AND REFUSED where there is no transport —
+            // the control visible, inert, the reason on it — exactly as the
+            // invite screen does it. Hiding it would leave an administrator
+            // hunting for a feature the product has, and swallowing the click
+            // would leave a colleague waiting for an email nobody sent.
+            'mailReady' => $this->mail->isConfigured(),
             'csrfToken' => $this->csrf->getToken(self::CSRF_ID)->getValue(),
         ]));
     }
@@ -202,6 +207,41 @@ final readonly class MemberController
         ));
 
         return $this->back($request, $member, \sprintf('A reset link is on its way to %s.', $member->getEmail()));
+    }
+
+    /**
+     * THE INVITATION, SENT AGAIN — for somebody who never opened the first
+     * one.
+     *
+     * IT ROTATES THE TOKEN AND TOUCHES NO PASSWORD: the person still chooses
+     * their own, which is the whole difference between an invitation and a
+     * handover. Asking again replaces the previous link, so an old email in
+     * an inbox stops working.
+     *
+     * NOT OFFERED ONCE THEY HAVE SIGNED IN. The token is spent, the account is
+     * theirs, and the way back in is a password reset.
+     */
+    #[Route('/team/{uuid}/invite-again', name: self::INVITE_AGAIN, requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]
+    #[IsGranted(PermissionEnum::TeamManage->value)]
+    public function resendInvitation(Request $request, string $uuid): RedirectResponse
+    {
+        $member = $this->member($uuid);
+        $this->assertCsrf($request);
+        $this->assertMayManage($member);
+
+        if ($member->isVerified() || !$member->isActive() || !$this->mail->isConfigured()) {
+            return $this->back($request, $member, 'No invitation was sent.', 'error');
+        }
+
+        $token = $this->accounts->reinvite($member, $this->signedIn());
+
+        $this->mail->sendInvitation($member, $this->router->generate(
+            'team_invite_accept',
+            ['token' => $token],
+            UrlGeneratorInterface::ABSOLUTE_URL,
+        ));
+
+        return $this->back($request, $member, \sprintf('The invitation is on its way to %s again. The previous link no longer works.', $member->getEmail()));
     }
 
     #[Route('/team/{uuid}', name: 'team_member_update', requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]

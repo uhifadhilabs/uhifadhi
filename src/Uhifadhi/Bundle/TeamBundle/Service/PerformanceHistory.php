@@ -16,7 +16,9 @@ namespace Uhifadhi\Bundle\TeamBundle\Service;
 use Doctrine\ORM\EntityManagerInterface;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Entity\DepartmentPeriodFigure;
+use Uhifadhi\Bundle\TeamBundle\Entity\InstallationPeriodFigure;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentPeriodFigureRepository;
+use Uhifadhi\Bundle\TeamBundle\Repository\InstallationPeriodFigureRepository;
 
 /**
  * WHAT THE FIGURES WERE, PERIOD BY PERIOD — the only thing in the core that
@@ -37,6 +39,7 @@ final readonly class PerformanceHistory
     public function __construct(
         private EntityManagerInterface $entityManager,
         private DepartmentPeriodFigureRepository $figures,
+        private InstallationPeriodFigureRepository $installation,
     ) {
     }
 
@@ -91,6 +94,38 @@ final readonly class PerformanceHistory
 
         $this->entityManager->persist($figure);
         $this->entityManager->flush();
+    }
+
+    /**
+     * THE SAME WRITING, ONE SCOPE UP — a figure that belongs to the whole
+     * installation rather than to a department.
+     *
+     * THREE OF THE TEAM OVERVIEW'S FIGURES HAVE NO DEPARTMENT TO BELONG TO:
+     * an account with no position is in none, a posting is the area's, and
+     * the tiers are the installation's. Summing the department rows would
+     * drop exactly the loose bucket the overview draws as its own line.
+     */
+    public function recordForInstallation(string $periodKey, string $figureKey, ?float $value): void
+    {
+        $figure = $this->installation->findOne($periodKey, $figureKey)
+            ?? new InstallationPeriodFigure()
+                ->setPeriodKey($periodKey)
+                ->setFigureKey($figureKey);
+
+        $figure->setValue($value)->setWrittenAt(new \DateTimeImmutable());
+
+        $this->entityManager->persist($figure);
+        $this->entityManager->flush();
+    }
+
+    /**
+     * WHAT THE INSTALLATION'S FIGURES WERE IN ONE CLOSED PERIOD, in one read.
+     *
+     * @return array<string, float|null> keyed by figure; a figure nobody wrote is absent
+     */
+    public function installationAt(string $periodKey): array
+    {
+        return $this->installation->of($periodKey);
     }
 
     /** What one figure was, or null where nobody wrote it down. */

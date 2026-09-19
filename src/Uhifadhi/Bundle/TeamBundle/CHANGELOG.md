@@ -8,6 +8,30 @@
 
 Not released yet.
 
+ * a department's CARD wears its own hue, the same category its row in the
+   sidebar wears: the card carries the index and the mark reads it. The mark
+   was accent-tinted for every ACTIVE department before this, which said what
+   the module chips already say and left all nine identical.
+
+ * the positions register creates a position in the HOUSE CREATE CARD at the
+   top of its own page, always open, the department first — a name typed
+   before the department is a name unique against nothing. The header's
+   action jumps to it instead of holding a form of its own.
+
+ * an invitation nobody opened is CHASED FROM THE RECORD. It rotates the
+   token, so an old email in an inbox stops working, and it never touches the
+   password — the person still chooses their own, which is the whole
+   difference between an invitation and a handover. Offered and refused where
+   there is no transport, never hidden.
+
+ * the Team overview's KPI movements are READ FROM THE PERIOD HISTORY, which
+   `team:performance:snapshot` now writes for the installation as well as for
+   each department: three of the five figures belong to no department — an
+   account with no position is in none, a posting is the area's, and the
+   tiers are the installation's — so summing the department rows would drop
+   exactly the loose bucket the overview draws as its own line. A period
+   nobody wrote gets no pill.
+
  * `/departments/performance` — the organisation's own surface, wearing the
    AREA idiom: one header carrying the scope and the period, the Overview ·
    Topics · Briefing strip, one card a topic with its headline figure, and

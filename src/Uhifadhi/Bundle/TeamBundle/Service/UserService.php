@@ -140,6 +140,48 @@ final readonly class UserService
         return $user;
     }
 
+    /**
+     * THE INVITATION, SENT AGAIN — a new link for somebody who never opened
+     * the first one.
+     *
+     * IT ROTATES THE TOKEN. Asking again replaces the previous link, so an old
+     * email sitting in an inbox stops working the moment a new one is sent;
+     * two live links to one account is one more way in than anybody
+     * authorised.
+     *
+     * IT NEVER TOUCHES THE PASSWORD. The point of an invitation is that the
+     * person chooses their own and nobody here ever knows it — a resend that
+     * set one would quietly turn the invitation into a handover.
+     *
+     * ONLY FOR SOMEBODY WHO HAS NEVER SIGNED IN. Once the token is spent the
+     * account is theirs, and the way back in is a password reset, which is a
+     * different letter with a different lifetime.
+     *
+     * @return string the new token, for the link the caller mails
+     *
+     * @throws \LogicException when the account has already been used
+     */
+    public function reinvite(User $user, ?User $invitedBy = null): string
+    {
+        if ($user->isVerified()) {
+            throw new \LogicException('That account has been signed in to; the way back in is a password reset.');
+        }
+
+        $token = bin2hex(random_bytes(32));
+        $user->setVerificationToken($token);
+
+        // WHO ASKED, AND WHEN, IS PART OF THE FACT. The roster prints "invited
+        // by N. Kileo, 3 days ago", and after a resend the honest answer is
+        // the resend rather than the first attempt nobody acted on.
+        if (null !== $invitedBy) {
+            $user->markInvitedBy($invitedBy);
+        }
+
+        $this->entityManager->flush();
+
+        return $token;
+    }
+
     /** The four fields the record page has. */
     public function updateRecord(User $user, string $firstName, string $lastName, string $email, ?string $rangerCode): void
     {

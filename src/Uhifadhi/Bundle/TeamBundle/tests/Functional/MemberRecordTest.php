@@ -126,6 +126,67 @@ final class MemberRecordTest extends WebTestCaseWithSchema
     }
 
     /**
+     * AN INVITATION NOBODY OPENED IS CHASED FROM THE RECORD, and the control
+     * is OFFERED AND REFUSED where there is no transport — visible, inert,
+     * with the reason on it. Hiding it would leave an administrator hunting
+     * for a feature the product has; swallowing the click would leave a
+     * colleague waiting for an email nobody sent.
+     */
+    public function testAnInvitationCanBeChasedFromTheRecordAndSaysWhenItCannotBeSent(): void
+    {
+        $naomi = $this->withSuccessor();
+        $joseph = $this->person('Joseph', 'Mrema')->setVerified(false);
+        $joseph->markInvitedBy($naomi);
+        $this->em->flush();
+
+        $crawler = $this->client->request('GET', '/team/'.$joseph->getUuidString());
+        $button = $crawler->filter('.mb-state button[type="submit"]')->first();
+
+        self::assertStringContainsString('Send the link again', $button->text());
+        // This kernel configures no mailer, which is the state a fresh
+        // installation is in until somebody sets MAILER_DSN.
+        self::assertNotNull($button->attr('disabled'));
+        self::assertStringContainsString('MAILER_DSN', (string) $button->attr('title'));
+    }
+
+    /** And with no transport the write refuses rather than discarding silently. */
+    public function testChasingAnInvitationWithNoMailerRefusesInsteadOfDiscarding(): void
+    {
+        $naomi = $this->withSuccessor();
+        $joseph = $this->person('Joseph', 'Mrema')->setVerified(false);
+        $joseph->markInvitedBy($naomi);
+        $this->em->flush();
+        $first = $joseph->getVerificationToken();
+
+        $this->client->request('POST', '/team/'.$joseph->getUuidString().'/invite-again', [
+            '_token' => $this->tokenFrom('/team/'.$joseph->getUuidString()),
+        ]);
+
+        self::assertResponseRedirects();
+        self::assertStringContainsString('No invitation was sent.', $this->client->followRedirect()->text());
+        $this->em->clear();
+        $again = $this->em->getRepository(User::class)->find($joseph->getId());
+        self::assertInstanceOf(User::class, $again);
+        self::assertSame($first, $again->getVerificationToken(), 'a refused resend rotated the token anyway');
+    }
+
+    /**
+     * NOT OFFERED ONCE THEY HAVE SIGNED IN: the token is spent, the account is
+     * theirs, and the way back in is a password reset.
+     */
+    public function testSomebodyWhoHasSignedInIsOfferedAResetAndNotAnInvitation(): void
+    {
+        $this->withSuccessor();
+        $grace = $this->person('Grace', 'Ndosi');
+        $this->em->flush();
+
+        $crawler = $this->client->request('GET', '/team/'.$grace->getUuidString());
+
+        self::assertStringNotContainsString('Send the link again', $crawler->filter('.pgbody')->text());
+        self::assertStringContainsString('Send a reset link', $crawler->filter('.mb-state')->text());
+    }
+
+    /**
      * A SCREEN DOES NOT NAME AN ACTION THAT DOES NOT EXIST. The record once
      * drew a "delete this person" row as deliberately absent; naming the
      * absent action only teaches a reader to look for it. Accounts are

@@ -17,6 +17,8 @@ use Symfony\Component\DomCrawler\Crawler;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionTitleRepository;
+use Uhifadhi\Bundle\TeamBundle\Service\PerformanceHistory;
+use Uhifadhi\Bundle\TeamBundle\Service\TeamFigures;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\FakeStationDirectory;
 
 /**
@@ -50,15 +52,49 @@ final class TeamSectionScreensTest extends WebTestCaseWithSchema
     }
 
     /**
-     * NO MOVEMENT IS CLAIMED. The drawn row carries a delta pill and this
-     * installation records no previous figure for any of these; a pill reading
-     * zero would be a claim it cannot make.
+     * A PERIOD NOBODY WROTE HAS NO PILL. An installation whose snapshot has
+     * never run has no previous figure, and a delta reading zero would say
+     * the figure held steady — a claim it cannot make.
      */
-    public function testNoKpiClaimsAMovementTheInstallationCannotMeasure(): void
+    public function testNoKpiClaimsAMovementTheInstallationNeverWroteDown(): void
     {
         $this->installation();
 
         self::assertCount(0, $this->visit('/team/overview')->filter('.kstrip .delta'));
+    }
+
+    /**
+     * AND A PERIOD THAT WAS WRITTEN IS COMPARED AGAINST — read from the
+     * history, never recomputed, because a closed period cannot be worked out
+     * again from tables that hold what is true now.
+     *
+     * THE MOVEMENT IS ABSOLUTE: two more people is "+2", not a percentage.
+     */
+    public function testAKpiComparesAgainstTheLastClosedPeriodTheSnapshotWroteDown(): void
+    {
+        $this->installation();
+
+        $history = $this->history();
+        $closed = PerformanceHistory::monthKey(new \DateTimeImmutable('first day of last month'));
+        $history->recordForInstallation($closed, TeamFigures::PEOPLE, 2.0);
+        // A figure nobody wrote stays without a pill even in a period that
+        // has some: the hole is per figure, not per period.
+        $history->recordForInstallation($closed, TeamFigures::POSTINGS, 0.0);
+
+        $cards = $this->visit('/team/overview')->filter('.kstrip .c.kpi');
+
+        self::assertStringContainsString('+2', $cards->eq(0)->filter('.delta')->text());
+        self::assertSame('delta good', $cards->eq(0)->filter('.delta')->attr('class'));
+        self::assertCount(0, $cards->eq(1)->filter('.delta'), 'Positions was never written down');
+        self::assertCount(1, $cards->eq(3)->filter('.delta'), 'Postings was written, and has not moved');
+    }
+
+    private function history(): PerformanceHistory
+    {
+        /** @var PerformanceHistory $history */
+        $history = static::getContainer()->get(PerformanceHistory::class);
+
+        return $history;
     }
 
     /** The identity band states the five facts, in the ruled order. */

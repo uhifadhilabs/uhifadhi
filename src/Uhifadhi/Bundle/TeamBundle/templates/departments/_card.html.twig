@@ -19,8 +19,12 @@
 {% set uuid = department.uuidString %}
 {% set area = department.area %}
 {% set filled = people %}
+{# THE CARD CARRIES ITS DEPARTMENT'S CATEGORY, and the mark inside it reads
+   the hue from there. Nine departments, nine marks: the mark used to be
+   accent-tinted for every active department, which said nothing and left all
+   nine identical. #}
 <article id="d-{{ uuid }}" class="dcard{{ open ? ' on' : '' }}{{ focused ? ' dcfocus' : '' }}{{ department.active ? '' : ' dcinactive' }}"
-         data-department="{{ uuid }}">
+         data-department="{{ uuid }}"{% if cat is defined and cat %} data-cat="{{ cat }}"{% endif %}>
     {{ include('@Team/departments/_card_head.html.twig', {
         department: department, mark: mark, positions: positions, people: people,
         figures: figures, modules: modules, here: here, open: open, expandable: true,

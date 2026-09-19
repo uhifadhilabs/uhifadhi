@@ -83,6 +83,7 @@
                     modules: department.modules,
                     attachable: attachable,
                     mark: marks[department.uuidString]|default('—'),
+                    cat: cats[department.uuidString]|default(null),
                     csrfToken: csrfToken,
                     returnTo: section,
                 }, with_context: false) }}
@@ -105,8 +106,8 @@
     {% else %}
         <div class="dprows">
             {% for department in inherited %}
-                <div class="dprow">
-                    <span class="ov-mk{{ department.active ? ' on' : '' }}">{{ marks[department.uuidString]|default('—') }}</span>
+                <div class="dprow"{% if cats[department.uuidString]|default(null) %} data-cat="{{ cats[department.uuidString] }}"{% endif %}>
+                    <span class="ov-mk">{{ marks[department.uuidString]|default('—') }}</span>
                     <div class="dprb">
                         <span class="dprn">{{ department.name }}</span>
                         <span class="dprs">Reads every area, {{ area.name }} included</span>

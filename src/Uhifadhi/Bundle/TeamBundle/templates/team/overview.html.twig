@@ -10,6 +10,7 @@
    line. Both sockets belong to the shell's frame, and the strip and the
    Configure action are written by it. #}
 {% extends '@Shell/page.html.twig' %}
+{% import '@Team/departments/_bits.html.twig' as di %}
 
 {% block title %}Team &mdash; Overview{% endblock %}
 
@@ -39,15 +40,15 @@
         <a class="more" href="{{ path('team_configure') }}">Team settings &rarr;</a>
     </div>
 
-    {# FIVE KPI CARDS, FIVE OR NONE. A card's movement is drawn only where a
-       previous period was recorded; this installation records none for these,
-       and a pill reading zero would be a claim it cannot make. #}
+    {# FIVE KPI CARDS, FIVE OR NONE. A card's movement is read from the period
+       history — the figure written down while the last closed period was
+       still true — and a period nobody wrote gets no pill at all. #}
     <div class="grid kstrip" data-kpi>
         {% for kpi in kpis %}
             <div class="c kpi{{ kpi.hot ? ' hot' }}">
                 <span class="tab">{{ kpi.label }}</span>
                 <b class="disp">{{ kpi.value }}{% if kpi.of %}<em>{{ kpi.of }}</em>{% endif %}</b>
-                <span class="sub">{{ kpi.qualifier }}</span>
+                <span class="sub">{{ kpi.qualifier }}{% if kpi.delta is not null %} {{ di.delta(kpi.delta, kpi.tone()) }}{% endif %}</span>
             </div>
         {% endfor %}
     </div>

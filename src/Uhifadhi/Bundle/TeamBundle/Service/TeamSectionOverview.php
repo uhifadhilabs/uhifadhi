@@ -59,7 +59,38 @@ final readonly class TeamSectionOverview
         private UserRepository $users,
         private PositionRepository $positions,
         private PostingBoard $board,
+        private PerformanceHistory $history,
     ) {
+    }
+
+    /**
+     * THE FIVE FIGURES THIS SECTION REMEMBERS, as they are right now — what
+     * the snapshot command writes down while the period is still true.
+     *
+     * IT IS THE SAME COMPUTATION THE PAGE DRAWS, deliberately: a history
+     * written by a second reckoning of the same words is a history the page
+     * would disagree with the moment either changed.
+     *
+     * @return array<string, float>
+     */
+    public function figures(): array
+    {
+        $people = $this->users->findAllByName();
+        $positions = $this->positions->findAllOrdered();
+        $held = self::heldPositionIds($people);
+
+        $postings = 0;
+        foreach ($this->board->board() as $station) {
+            $postings += \count($station->rows);
+        }
+
+        return [
+            TeamFigures::PEOPLE => (float) \count($people),
+            TeamFigures::POSITIONS => (float) \count($positions),
+            TeamFigures::FILLED => (float) \count($held),
+            TeamFigures::POSTINGS => (float) $postings,
+            TeamFigures::ADMINISTRATORS => (float) self::mayAdminister($people),
+        ];
     }
 
     /**
@@ -181,6 +212,15 @@ final readonly class TeamSectionOverview
      */
     private function kpis(array $people, array $positions, array $held, int $postings, array $stations): array
     {
+        /*
+         * THE PERIOD A MOVEMENT IS MEASURED AGAINST is the last CLOSED one —
+         * the month before this. The month in progress is still moving, and
+         * a card that compared today against a period half-written would
+         * report a fall every first of the month.
+         */
+        $before = $this->history->installationAt(
+            PerformanceHistory::monthKey(new \DateTimeImmutable('first day of last month')),
+        );
         $active = \count(array_filter($people, static fn (User $u): bool => $u->isActive()));
         $departments = \count(array_unique(array_filter(
             array_map(static fn (Position $p): ?string => $p->getDepartment()?->getUuidString(), $positions),
@@ -189,8 +229,18 @@ final readonly class TeamSectionOverview
         $holdsNothing = \count($this->users->findActiveWithoutPosition());
 
         return [
-            new SectionKpi('People', (string) \count($people), qualifier: \sprintf('%d active · %d deactivated', $active, \count($people) - $active)),
-            new SectionKpi('Positions', (string) \count($positions), qualifier: \sprintf('in %d departments · names unique inside one', $departments)),
+            new SectionKpi(
+                'People',
+                (string) \count($people),
+                qualifier: \sprintf('%d active · %d deactivated', $active, \count($people) - $active),
+                delta: self::movement(\count($people), $before, TeamFigures::PEOPLE),
+            ),
+            new SectionKpi(
+                'Positions',
+                (string) \count($positions),
+                qualifier: \sprintf('in %d departments · names unique inside one', $departments),
+                delta: self::movement(\count($positions), $before, TeamFigures::POSITIONS),
+            ),
             /*
              * A SEAT IS A POSITION, FOR NOW. The drawn card counts SEATS — a
              * position that can be held by more than one person — and the model
@@ -204,15 +254,46 @@ final readonly class TeamSectionOverview
                 (string) \count($held),
                 of: \sprintf('of %d', \count($positions)),
                 qualifier: \sprintf('%d vacant · %d hold none', \count($positions) - \count($held), $holdsNothing),
+                delta: self::movement(\count($held), $before, TeamFigures::FILLED),
             ),
-            new SectionKpi('Postings', (string) $postings, qualifier: \sprintf('%d stations · %d with nobody', \count($stations), $empty)),
+            new SectionKpi(
+                'Postings',
+                (string) $postings,
+                qualifier: \sprintf('%d stations · %d with nobody', \count($stations), $empty),
+                delta: self::movement($postings, $before, TeamFigures::POSTINGS),
+            ),
+            /*
+             * THE TIERS ARE THREE AND THEY DO NOT MOVE, so the card's
+             * movement is the figure under it that does: how many people may
+             * administer the team.
+             */
             new SectionKpi(
                 'Roles',
                 (string) \count(TeamRoleEnum::cases()),
                 qualifier: \sprintf('tiers · %d of %d may administer', self::mayAdminister($people), \count($people)),
+                delta: self::movement(self::mayAdminister($people), $before, TeamFigures::ADMINISTRATORS),
                 hot: true,
             ),
         ];
+    }
+
+    /**
+     * THE MOVEMENT AGAINST THE LAST CLOSED PERIOD, or NULL where nobody wrote
+     * that period down.
+     *
+     * A PERIOD NOBODY WROTE HAS NO PILL. An installation whose snapshot has
+     * never run, or one younger than a month, has no previous figure — and
+     * "0" there would say the figure held steady, which is a claim it cannot
+     * make. It is an absolute movement and never a percentage: four more
+     * people is four more people.
+     *
+     * @param array<string, float|null> $before
+     */
+    private static function movement(int $now, array $before, string $key): ?float
+    {
+        $was = $before[$key] ?? null;
+
+        return null === $was ? null : $now - $was;
     }
 
     /**

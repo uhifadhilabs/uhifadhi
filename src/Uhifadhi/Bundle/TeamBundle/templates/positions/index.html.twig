@@ -22,29 +22,56 @@
 {% block shell_page_subtitle %}What each position may do.{% endblock %}
 
 {% block shell_page_actions %}
-    {# CREATING ONE IS TWO FIELDS AND THE DEPARTMENT IS THE FIRST OF THEM. The
-       name is unique inside that department and nowhere else. #}
-    <form class="assign" method="post" action="{{ path('team_position_create') }}">
-        <input type="hidden" name="_token" value="{{ csrfToken }}">
-        <select name="department" class="sel" aria-label="Department">
-            {# §5.6(b): a bounded area admin files only into the area-level
-               departments they reach; the loose "no department" option has no
-               scope, so only an unbounded administrator is offered it. #}
-            {% if canFileLoose %}
-                <option value="">No department yet&hellip;</option>
-            {% endif %}
-            {% for department in creatable %}
-                <option value="{{ department.uuidString }}">{{ department.name }}</option>
-            {% endfor %}
-        </select>
-        <input type="text" name="name" class="fld" placeholder="Senior Ranger" aria-label="New position name" required>
-        <button class="cta" type="submit">{{ bits.icon_plus() }} New position</button>
-    </form>
+    {# THE SECTION'S PRIMARY ACTION, the accent cta, first in the row. It does
+       not open a second form: it jumps to the create card that is already open
+       at the top of the page, the way a configure page states a setting. #}
+    <a class="cta" href="#add">{{ bits.icon_plus() }} Add a position</a>
     <a class="tgl w-act" href="{{ path('team_position_widgets') }}">{{ bits.icon_grid() }} Widget library</a>
 {% endblock %}
 
 {% block shell_page %}
     {{ include('@Team/team/_scope_banner.html.twig') }}
+
+    {# ALWAYS OPEN, THE HOUSE CREATE CARD. A position belongs to a department
+       and its name is unique only inside it, so the department is the FIRST
+       field — a name typed before the department is a name unique against
+       nothing. #}
+    <div class="dcadd" id="add">
+        <div class="dcaddhd">
+            {{ ux_icon('shell:plus', {width: 15, height: 15}) }}
+            <b>Add a position</b>
+            <span class="hint">Pick its department first &mdash; the name is unique only inside it</span>
+        </div>
+        <form class="crcard" method="post" action="{{ path('team_position_create') }}">
+            <input type="hidden" name="_token" value="{{ csrfToken }}">
+            <div class="crgrid">
+                <div class="crfield">
+                    <span class="crlab">Department</span>
+                    <select name="department" class="fld" aria-label="Department">
+                        {# A bounded area admin files only into the area-level
+                           departments they reach; the loose "no department"
+                           option has no scope, so only an unbounded
+                           administrator is offered it. #}
+                        {% if canFileLoose %}
+                            <option value="">No department yet&hellip;</option>
+                        {% endif %}
+                        {% for department in creatable %}
+                            <option value="{{ department.uuidString }}">{{ department.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="crfield grow">
+                    <span class="crlab">Name</span>
+                    <input type="text" name="name" class="fld" placeholder="Senior Ranger" aria-label="New position name" required>
+                </div>
+                <button class="cta" type="submit">{{ bits.icon_plus() }} Add position</button>
+            </div>
+            <div class="crhint">
+                {{ ux_icon('shell:info') }}
+                <span><b>Ecology / Analyst</b> and <b>Protection Service / Analyst</b> &mdash; two jobs, one word, so a bare name is never written.</span>
+            </div>
+        </form>
+    </div>
     {# See the team page: these are the shell's cell classes, and the
        span is `.w-span-N` because bare `w-N` is Tailwind's width scale. #}
     <div class="w-grid">

@@ -85,14 +85,14 @@
             <div class="mb-state ok">
                 {{ bits.icon_check() }}
                 <span><b>Signed in and verified.</b> Nothing to resend.</span>
-                {% if mayResetByMail %}
-                    <span class="st-acts">
-                        <form method="post" action="{{ path('team_member_reset_link', {uuid: member.uuidString}) }}">
-                            <input type="hidden" name="_token" value="{{ csrfToken }}">
-                            <button class="softbtn" type="submit">{{ bits.icon_tag() }} Send a reset link</button>
-                        </form>
-                    </span>
-                {% endif %}
+                <span class="st-acts">
+                    {# OFFERED AND REFUSED where there is no transport, never
+                       hidden: the reason is on the control. #}
+                    <form method="post" action="{{ path('team_member_reset_link', {uuid: member.uuidString}) }}">
+                        <input type="hidden" name="_token" value="{{ csrfToken }}">
+                        <button class="softbtn" type="submit"{% if not mailReady %} disabled title="No mailer configured &mdash; MAILER_DSN is unset"{% endif %}>{{ bits.icon_tag() }} Send a reset link</button>
+                    </form>
+                </span>
             </div>
         {% else %}
             <div class="mb-state wait">
@@ -100,6 +100,14 @@
                 <span><b>Never signed in.</b>
                 {%- if member.wasInvited %} Invited by {{ member.invitedBy ? member.invitedBy.fullName : 'somebody since removed' }}, {{ bits.ago(member.invitedAt) }}.
                 {%- else %} Created with a password, handed over &middot; no invitation outstanding.{% endif %}</span>
+                {% if member.wasInvited %}
+                    <span class="st-acts">
+                        <form method="post" action="{{ path('team_member_invite_again', {uuid: member.uuidString}) }}">
+                            <input type="hidden" name="_token" value="{{ csrfToken }}">
+                            <button class="softbtn" type="submit"{% if not mailReady %} disabled title="No mailer configured &mdash; MAILER_DSN is unset"{% endif %}>{{ bits.icon_save() }} Send the link again</button>
+                        </form>
+                    </span>
+                {% endif %}
             </div>
         {% endif %}
     </div>
@@ -287,13 +295,13 @@
         <span class="tab">Account actions<span class="src">&middot; three</span></span>
 
         <div class="mb-danger">
-            {% if mayResetByMail %}
+            {% if member.isActive %}
                 <div class="mb-drow">
                     <div class="dt"><b>Send a password-reset link</b>
                     <em>Writes a token, mails a link &middot; does not change the password</em></div>
                     <form method="post" action="{{ path('team_member_reset_link', {uuid: member.uuidString}) }}">
                         <input type="hidden" name="_token" value="{{ csrfToken }}">
-                        <button class="softbtn" type="submit">{{ bits.icon_tag() }} Send</button>
+                        <button class="softbtn" type="submit"{% if not mailReady %} disabled title="No mailer configured &mdash; MAILER_DSN is unset"{% endif %}>{{ bits.icon_tag() }} Send</button>
                     </form>
                 </div>
             {% endif %}

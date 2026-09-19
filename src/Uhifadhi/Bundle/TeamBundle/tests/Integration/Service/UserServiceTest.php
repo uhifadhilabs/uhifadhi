@@ -169,6 +169,42 @@ final class UserServiceTest extends IntegrationTestCase
         self::assertSame(TeamRoleEnum::Staff, $this->users()->findOneByEmail('ada@example.test')?->getTeamRole());
     }
 
+    /**
+     * THE INVITATION SENT AGAIN ROTATES THE TOKEN, so an old email sitting in
+     * an inbox stops working: two live links to one account is one more way
+     * in than anybody authorised.
+     */
+    public function testSendingAnInvitationAgainRotatesTheTokenAndTouchesNoPassword(): void
+    {
+        $invited = $this->accounts()->invite('bea@example.test', null, null);
+        $first = $invited->getVerificationToken();
+        $password = $invited->getPassword();
+
+        $second = $this->accounts()->reinvite($invited);
+
+        $stored = $this->users()->findOneByEmail('bea@example.test');
+
+        self::assertNotSame($first, $second);
+        self::assertNotNull($stored);
+        self::assertSame($second, $stored->getVerificationToken());
+        self::assertSame($password, $stored->getPassword());
+        self::assertFalse($stored->isVerified());
+    }
+
+    /**
+     * ONCE THE TOKEN IS SPENT THE ACCOUNT IS THEIRS, and the way back in is a
+     * password reset — a different letter with a different lifetime. Asking
+     * for an invitation there is refused rather than quietly reissued.
+     */
+    public function testAnAccountThatHasSignedInCannotBeInvitedAgain(): void
+    {
+        $arrived = $this->accounts()->create('ada@example.test', 'Ada', 'Mwangi', 'a-long-enough-passphrase');
+
+        $this->expectException(\LogicException::class);
+
+        $this->accounts()->reinvite($arrived);
+    }
+
     private function accounts(): UserService
     {
         return $this->service(UserService::class);

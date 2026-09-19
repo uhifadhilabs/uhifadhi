@@ -173,6 +173,7 @@
                                     holders: holders,
                                     areas: areas,
                                     mark: marks[department.uuidString]|default('—'),
+                                    cat: cats[department.uuidString]|default(null),
                                     open: openDepartment == department.uuidString,
                                     focused: query.focus == department.uuidString,
                                     here: here,

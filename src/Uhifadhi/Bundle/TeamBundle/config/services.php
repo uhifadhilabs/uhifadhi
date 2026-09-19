@@ -58,6 +58,7 @@ use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentKindRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentPeriodFigureRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentScopeChangeRepository;
+use Uhifadhi\Bundle\TeamBundle\Repository\InstallationPeriodFigureRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionTitleRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
@@ -222,6 +223,10 @@ return static function (ContainerConfigurator $container): void {
         ->args([service('doctrine')])
         ->tag('doctrine.repository_service');
 
+    $services->set(InstallationPeriodFigureRepository::class)
+        ->args([service('doctrine')])
+        ->tag('doctrine.repository_service');
+
     $services->set(DepartmentPeriodFigureRepository::class)
         ->args([service('doctrine')])
         ->tag('doctrine.repository_service');
@@ -282,6 +287,9 @@ return static function (ContainerConfigurator $container): void {
                 service('team.staffing_figures'),
                 service('team.department_performance'),
                 service('team.performance_history'),
+                // AND THE INSTALLATION'S OWN FIVE, computed by the page that
+                // draws them so the history and the page cannot disagree.
+                service('team.section_overview'),
             ])
             ->tag('console.command');
     }
@@ -681,6 +689,7 @@ return static function (ContainerConfigurator $container): void {
         ->args([
             service('doctrine.orm.entity_manager'),
             service(DepartmentPeriodFigureRepository::class),
+            service(InstallationPeriodFigureRepository::class),
         ]);
     $services->alias(PerformanceHistory::class, 'team.performance_history');
 
@@ -949,6 +958,7 @@ return static function (ContainerConfigurator $container): void {
             service('team.area_authority'),
             service('registry.catalogue'),
             service('team.department_performance'),
+            service('team.department_palette'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(DepartmentController::class, 'team.controller.department')->public();
@@ -1055,6 +1065,10 @@ return static function (ContainerConfigurator $container): void {
             service(UserRepository::class),
             service(PositionRepository::class),
             service('team.posting_board'),
+            // THE ONLY THING IN THE CORE THAT REMEMBERS: a closed period
+            // cannot be recomputed, so a movement is read and never worked
+            // out again.
+            service('team.performance_history'),
         ]);
     $services->alias(TeamSectionOverview::class, 'team.section_overview');
 
@@ -1161,6 +1175,7 @@ return static function (ContainerConfigurator $container): void {
             service('security.csrf.token_manager'),
             service('router'),
             service('registry.catalogue'),
+            service('team.department_palette'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(AreaDepartmentController::class, 'team.controller.area_department')->public();
