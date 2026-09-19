@@ -46,6 +46,12 @@
                 "fetch": "lazy",
                 "enabled": true
             },
+            "matrix": {
+                "main": "../src/Uhifadhi/Bundle/TeamBundle/assets/controllers/matrix_controller.js",
+                "name": "uhifadhi--team-bundle--matrix",
+                "fetch": "lazy",
+                "enabled": true
+            },
             "map-plate": {
                 "main": "../src/Uhifadhi/Bundle/AtlasBundle/assets/controllers/map_plate_controller.js",
                 "name": "uhifadhi--atlas-bundle--map-plate",

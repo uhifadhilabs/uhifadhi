@@ -8,6 +8,17 @@
 
 Not released yet.
 
+ * `render_matrix()` — the DP·01 grammar, and the only table a topic's
+   departments are drawn in: the shades a placing takes, the three absences
+   told apart in words, the movement toned by the column and never by its
+   sign, a sparkline whose holes stay open, and a legend that says what a
+   shade is NOT. A cell that counts states draws chips through the same rule
+   the figures use, so the two can never become two grids
+ * where a department stands is the HOST's to work out, once: a column with no
+   polarity is never tinted, a band is the boundary a placing is made inside,
+   and fewer than three figures in a band place nothing
+ * a second sheet, `bundles/team/performance.css`, carrying the board's own
+   vocabulary, and a sort that runs INSIDE each band and never across one
  * the Attention & output topic: it adds up what the other topics publish, found
    by ROLE and never by label, and folds the departments with no computing
    module into one line a scope band — stating their seats and goals, because a

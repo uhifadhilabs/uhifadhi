@@ -38,7 +38,7 @@ final class VocabularyConformanceTest extends VocabularyConformanceTestCase
 
     protected static function ownStylesheets(): array
     {
-        return ['team.css'];
+        return ['team.css', 'performance.css'];
     }
 
     protected static function linkedStylesheets(): array

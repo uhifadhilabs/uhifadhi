@@ -56,6 +56,18 @@ final class TeamBundle extends AbstractBundle
     public const string STYLESHEET = 'bundles/team/team.css';
 
     /**
+     * THE PERFORMANCE BOARD'S OWN VOCABULARY, in its own sheet.
+     *
+     * Separate from {@see STYLESHEET} because it is the grammar of one
+     * surface rather than of the bundle: the heat cell, the band rule, the
+     * department stamp and the legend are needed by the pages that draw a
+     * topic's matrix and by nothing else, so a sign-in screen does not pay
+     * for them. A page that renders a matrix links this after the sheet
+     * above.
+     */
+    public const string PERFORMANCE_STYLESHEET = 'bundles/team/performance.css';
+
+    /**
      * The AssetMapper namespace this bundle's assets/ directory is mapped to.
      *
      * It is the npm-style form of the composer package name, and it has to be:

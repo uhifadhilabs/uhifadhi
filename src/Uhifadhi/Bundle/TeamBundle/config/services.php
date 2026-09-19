@@ -40,6 +40,8 @@ use Uhifadhi\Bundle\TeamBundle\People\TeamPersonDirectory;
 use Uhifadhi\Bundle\TeamBundle\People\TeamPersonFacets;
 use Uhifadhi\Bundle\TeamBundle\Performance\AttentionTopic;
 use Uhifadhi\Bundle\TeamBundle\Performance\GoalsTopic;
+use Uhifadhi\Bundle\TeamBundle\Performance\MatrixPlacing;
+use Uhifadhi\Bundle\TeamBundle\Performance\MatrixViewBuilder;
 use Uhifadhi\Bundle\TeamBundle\Performance\StaffingTopic;
 use Uhifadhi\Bundle\TeamBundle\Repository\ApiTokenRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentGoalRepository;
@@ -73,6 +75,8 @@ use Uhifadhi\Bundle\TeamBundle\Shell\DepartmentAreaSections;
 use Uhifadhi\Bundle\TeamBundle\Shell\TeamNavigation;
 use Uhifadhi\Bundle\TeamBundle\Shell\UserBadgeSource;
 use Uhifadhi\Bundle\TeamBundle\Twig\AreaScopeExtension;
+use Uhifadhi\Bundle\TeamBundle\Twig\MatrixExtension;
+use Uhifadhi\Bundle\TeamBundle\Twig\MatrixRuntime;
 use Uhifadhi\Bundle\TeamBundle\Widget\PositionWidgets;
 use Uhifadhi\Bundle\TeamBundle\Widget\TeamWidgets;
 use Uhifadhi\Contracts\People\PersonDirectoryProviderInterface;
@@ -430,6 +434,30 @@ return static function (ContainerConfigurator $container): void {
     $services->set('team.twig.area_scope', AreaScopeExtension::class)
         ->args([service('team.area_authority')])
         ->tag('twig.extension');
+
+    /*
+     * THE TOPIC MATRIX, AND THE ONE PLACE ITS SHADES ARE DECIDED.
+     *
+     * A provider publishes figures and says which way is good; where a
+     * department stands among the others is the page's to work out, so the
+     * placing is a service of the host's and never a module's. The renderer
+     * is a RUNTIME behind a function on the extension: a page with no matrix
+     * on it builds neither the builder nor the template.
+     */
+    $services->set('team.performance.matrix_placing', MatrixPlacing::class);
+
+    $services->set('team.performance.matrix_view', MatrixViewBuilder::class)
+        ->args([service('team.performance.matrix_placing')]);
+
+    $services->set('team.twig.matrix', MatrixExtension::class)
+        ->tag('twig.extension');
+
+    $services->set('team.twig.matrix_runtime', MatrixRuntime::class)
+        ->args([
+            service('twig'),
+            service('team.performance.matrix_view'),
+        ])
+        ->tag('twig.runtime');
 
     /*
      * THE ROW IN THE SIDEBAR — the half of "a module registers with the registry and

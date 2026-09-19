@@ -296,6 +296,11 @@ final class TestKernel extends Kernel
             ->args([new Reference('twig')])
             ->public();
 
+        // The matrix renders through the real Twig, with the bundle's own
+        // namespace prepended — a template test that stubbed either would
+        // prove nothing about what a page draws.
+        $container->services()->alias('test.twig', 'twig')->public();
+
         // WHERE THE LIMITERS COUNT. A suite that has to start with a full
         // budget needs the pool the limiters actually write to, not a copy.
         $container->services()->alias('test_public.rate_limiter_pool', 'cache.rate_limiter')->public();

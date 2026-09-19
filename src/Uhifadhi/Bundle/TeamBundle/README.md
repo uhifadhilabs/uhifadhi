@@ -397,6 +397,35 @@ them: the roster, one person's record, the permission matrix and the
 departments. There is no delete route and there will not be one — an account is
 deactivated, never removed, so everything it recorded keeps its author.
 
+### One matrix, one grammar
+
+Every topic on the performance page is drawn by one renderer, the host's own
+Staffing and a module's Patrols alike:
+
+```twig
+{{ include('@Team/performance/_stylesheets.html.twig') }}
+{{ render_matrix(topic.matrix(scope, period), {
+    title: topic.title,
+    publisher: 'the host',
+}) }}
+```
+
+A caller may name the card and say who published it, and nothing else — no
+class, no colour, no column — because a matrix that differed by who wrote the
+page would be a matrix a reader has to learn twice.
+
+**Where a department stands is the page's decision, not the topic's.** A
+provider publishes figures and states which way is good; the shade is worked
+out here, inside one column and one band, and is not drawn at all where fewer
+than three departments in the band have a figure. A column with no polarity is
+never tinted, an absence is dashed rather than pale, and the legend under every
+matrix says what a shade is *not*.
+
+The board's own vocabulary ships as a second sheet, `bundles/team/performance.css`
+(`TeamBundle::PERFORMANCE_STYLESHEET`), linked by the partial above; the sort in
+the headers runs inside each band and never across one, and the matrix is whole
+without it.
+
 ## The one scheduled task
 
 A closed period cannot be recomputed. "Positions filled in July" is not a query

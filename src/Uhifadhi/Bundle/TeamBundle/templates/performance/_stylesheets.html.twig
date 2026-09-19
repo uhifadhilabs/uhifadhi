@@ -1,0 +1,12 @@
+{# THE SHEETS A PERFORMANCE SURFACE NEEDS — the bundle's own two, in the one
+   order that works.
+
+   The board's sheet is LAST because it is the one decorating: it adds the
+   card, the heat cell and the legend on top of the frame's table and the
+   bundle's own screens, and it restates nothing either of them ships.
+
+   A page drawing a matrix includes this INSTEAD of the bundle's own
+   `_stylesheets.html.twig`, not as well as it: this one already carries
+   everything that one does. #}
+{{ include('@Team/_stylesheets.html.twig') }}
+<link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Bundle\\TeamBundle\\TeamBundle::PERFORMANCE_STYLESHEET')) }}">

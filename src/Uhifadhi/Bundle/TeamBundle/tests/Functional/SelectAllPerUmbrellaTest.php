@@ -194,10 +194,11 @@ final class SelectAllPerUmbrellaTest extends WebTestCaseWithSchema
         self::assertIsArray($symfony);
         $controllers = $symfony['controllers'] ?? null;
         self::assertIsArray($controllers);
-        // The matrix's select-all controller ships beside the department
-        // surfaces' controller (the register's scope toggle and the lens's tabs);
-        // both are lazy, host-mapped Stimulus controllers this package declares.
-        self::assertSame(['permission-group', 'department'], array_keys($controllers));
+        // The permission matrix's select-all ships beside the department
+        // surfaces' controller (the register's scope toggle and the lens's
+        // tabs) and the performance matrix's in-band sort; all three are lazy,
+        // host-mapped Stimulus controllers this package declares.
+        self::assertSame(['permission-group', 'department', 'matrix'], array_keys($controllers));
 
         $config = $controllers['permission-group'];
         self::assertIsArray($config);
