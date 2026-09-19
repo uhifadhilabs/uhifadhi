@@ -1502,6 +1502,45 @@ this platform states:
 - **Scope and period are asked, not assumed.** Answer for the scope you are
   handed, or you will draw the organisation's figures on one area's page.
 
+**The shades are not yours, and neither is the table.** You publish figures and
+say which way is good; where a department stands among the others is worked out
+once by the host, inside one column and one band, and is not drawn at all where
+fewer than three in the band have a figure. Your matrix is rendered by the same
+`render_matrix()` the host's own topics go through — there is no hook for a
+table of your own, on purpose: a second table would be almost this one, and
+"almost" is what a reader has to stop and work out.
+
+**A column may count STATES instead of measuring.** Four goals in four states
+have no average, and a figure a reader cannot get back to the goals from is
+worse than no column — so such a cell carries `CellMark`s and the renderer
+draws chips where it would draw a number. The word is yours and the tone is the
+platform's, the same bargain a calendar pill strikes.
+
+**A column total is published, never summed.** If a column has a meaningful
+total, put it on the column; the host will not add your cells up, because a sum
+of averages is a number nobody measured:
+
+```php
+new MatrixColumn('patrols.covered', 'Covered', unit: '%', polarity: ColumnPolarity::Up,
+    total: 61.0, totalDelta: 2.4)
+```
+
+A column that says nothing simply has no total line under its name.
+
+**A row and a band say what they are, and only you can say it.** Under a
+department's name goes one line in your own words — "org-wide · 4 areas ·
+Patrols" — and under a band's name goes what that boundary was measured over:
+
+```php
+new TopicMatrix($columns, $rows, 'one cell a department in a topic', [
+    'Org-wide' => 'each reads every area · 32 of 40 seats filled',
+]);
+```
+
+The host draws the boundary, because it made the placing inside it; what the
+boundary MEANS is a sentence about your figures. A row or a band that says
+nothing simply carries its name.
+
 **If one of your five is a count of records, say so.** The organisation's page
 adds up "records written, by department" across every topic that writes any,
 and it cannot tell which of your five that is — your label is your own word,

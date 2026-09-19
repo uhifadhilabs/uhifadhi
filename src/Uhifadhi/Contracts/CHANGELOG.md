@@ -23,6 +23,17 @@ Not released yet.
  * `Performance\CellMark`, and a `MatrixCell` that may count STATES rather than
    measure a figure — a department's goals pace is a chip a goal, and averaging
    four states would answer a question nobody asked
+ * `MatrixColumn::$total` and `::$totalDelta` — what a whole column comes to,
+   PUBLISHED and never summed by the page: a host that added the cells up
+   would be right about seats and wrong about days-to-settle, where a sum of
+   averages is a number nobody measured. A column that stays silent simply has
+   no total in its header.
+ * `MatrixRow::$note` and `TopicMatrix::$bandNotes` — what a department and a
+   band say about THEMSELVES, in the topic's own words: "3 positions ·
+   org-wide" under a name and "each reads every area · 32 of 40 seats filled"
+   under a boundary. The host draws the boundary because it made the placing
+   inside it; what the boundary means is a sentence about somebody else's
+   figures
  * `Atlas\CalendarFeedInterface` and its value objects — how a module has a
    month drawn: days, bounded pills, a hue role rather than a colour, and the
    surface naming the feed it wants as it names a plate's subject

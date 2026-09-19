@@ -31,13 +31,24 @@ namespace Uhifadhi\Contracts\Performance;
 final readonly class TopicMatrix
 {
     /**
-     * @param list<MatrixColumn> $columns
-     * @param list<MatrixRow>    $rows
+     * @param list<MatrixColumn>    $columns
+     * @param list<MatrixRow>       $rows
+     * @param array<string, string> $bandNotes what each band says about
+     *                                         itself, keyed by the band
+     *                                         name the rows carry
      */
     public function __construct(
         public array $columns,
         public array $rows,
         public string $caption = '',
+        /**
+         * WHAT A BAND SAYS ABOUT ITSELF — "each reads every area · 32 of
+         * 40 seats filled". The host draws the boundary because the
+         * placing was made inside it; what the boundary MEANS is a
+         * sentence about your figures, and a band nobody described is
+         * simply counted.
+         */
+        public array $bandNotes = [],
     ) {
     }
 

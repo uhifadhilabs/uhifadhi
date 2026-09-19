@@ -34,6 +34,16 @@ final readonly class MatrixColumn
          * topic's own and the host draws it without interpreting it.
          */
         public ?KpiRole $role = null,
+        /**
+         * WHAT THE WHOLE COLUMN COMES TO, published rather than summed.
+         * A host that added the cells up would be right about seats and
+         * wrong about days-to-settle, where a sum of averages is a
+         * number nobody measured — so the topic that knows says, and a
+         * column that stays silent simply has no total in its header.
+         */
+        public ?float $total = null,
+        /** The total's movement on the compared period; null where there is nothing to compare with. */
+        public ?float $totalDelta = null,
     ) {
     }
 }

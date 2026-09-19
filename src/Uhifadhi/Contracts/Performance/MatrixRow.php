@@ -36,6 +36,13 @@ final readonly class MatrixRow
         public string $mark = '',
         /** Where the row's Open → goes. */
         public ?string $url = null,
+        /**
+         * WHAT THIS DEPARTMENT IS, IN THE TOPIC'S OWN WORDS — "3
+         * positions · org-wide", "no module attached", "412 patrols".
+         * It is a sentence about YOUR figures, so only you can write
+         * it; a row that says nothing simply carries its name.
+         */
+        public string $note = '',
     ) {
     }
 }
