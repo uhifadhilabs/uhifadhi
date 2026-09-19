@@ -436,6 +436,76 @@ final class AreaNavigationTest extends WebTestCase
     }
 
     /**
+     * A SCREEN ANOTHER BUNDLE UNFOLDS. The area's Zones row unfolds to its
+     * zones and its Modules row to its modules, because this bundle owns
+     * both; its Departments row unfolds to departments, which it may not
+     * name — so the rungs are contributed, and the tree draws them the same
+     * way it draws its own.
+     */
+    public function testAScreenAnotherBundleUnfoldsCarriesTheRungsItContributes(): void
+    {
+        $this->boot();
+        $area = $this->anArea('Northern Conservation Reserve');
+
+        $branch = $this->contributedBranch($this->navAt('/areas/'.$area->getUuidString()));
+
+        self::assertSame(
+            ['Contributed one', 'Contributed two'],
+            array_map(static fn (NavItem $i): string => $i->label, $branch),
+        );
+    }
+
+    /**
+     * ONLY THE DEEPEST ROW CARRIES THE LIGHT, and the branch opens because
+     * something inside it is lit — the rule every other branch of this tree
+     * follows.
+     */
+    public function testTheScreenAboveALitRungIsOpenAndNotItselfLit(): void
+    {
+        $this->boot();
+        $area = $this->anArea('Northern Conservation Reserve');
+
+        $screen = $this->screenRow($this->navAt('/areas/'.$area->getUuidString().'/stations'), 'Stations');
+
+        self::assertNotNull($screen);
+        self::assertTrue($screen->open);
+        self::assertFalse($screen->current, 'the lit rung is the one below');
+        self::assertSame(['Contributed one'], self::litUnder($screen));
+    }
+
+    /** From outside the area nothing is drilled: a contribution costs a query. */
+    public function testAnAreaNobodyIsLookingAtDoesNotAskItsContributors(): void
+    {
+        $this->boot();
+        $this->anArea('Northern Conservation Reserve');
+
+        self::assertSame([], $this->contributedBranch($this->navAt('/areas')));
+    }
+
+    /**
+     * The contributed rows under the screen the stand-in names.
+     *
+     * @return list<NavItem>
+     */
+    private function contributedBranch(AreaNavigation $nav): array
+    {
+        $screen = $this->screenRow($nav, 'Stations');
+
+        return null === $screen ? [] : $screen->children;
+    }
+
+    private function screenRow(AreaNavigation $nav, string $label): ?NavItem
+    {
+        foreach ($this->areaRow($nav)->children as $screen) {
+            if ($label === $screen->label) {
+                return $screen;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * The zone rows under the area's Zones screen.
      *
      * @return list<NavItem>

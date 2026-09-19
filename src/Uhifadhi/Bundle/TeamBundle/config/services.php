@@ -54,6 +54,7 @@ use Uhifadhi\Bundle\TeamBundle\Service\PositionService;
 use Uhifadhi\Bundle\TeamBundle\Service\SuperAdminInvariant;
 use Uhifadhi\Bundle\TeamBundle\Service\TeamOverview;
 use Uhifadhi\Bundle\TeamBundle\Service\UserService;
+use Uhifadhi\Bundle\TeamBundle\Shell\DepartmentAreaNavChildren;
 use Uhifadhi\Bundle\TeamBundle\Shell\DepartmentAreaSections;
 use Uhifadhi\Bundle\TeamBundle\Shell\TeamNavigation;
 use Uhifadhi\Bundle\TeamBundle\Shell\UserBadgeSource;
@@ -62,6 +63,7 @@ use Uhifadhi\Bundle\TeamBundle\Widget\PositionWidgets;
 use Uhifadhi\Bundle\TeamBundle\Widget\TeamWidgets;
 use Uhifadhi\Contracts\People\PersonDirectoryProviderInterface;
 use Uhifadhi\Contracts\People\PersonFacetProviderInterface;
+use Uhifadhi\Contracts\Shell\AreaNavChildrenInterface;
 use Uhifadhi\Contracts\Shell\AreaSectionsInterface;
 
 /*
@@ -408,6 +410,20 @@ return static function (ContainerConfigurator $container): void {
     $services->set('team.area_sections', DepartmentAreaSections::class)
         ->tag(AreaSectionsInterface::TAG);
     $services->alias(DepartmentAreaSections::class, 'team.area_sections');
+
+    /*
+     * AND THE DEPARTMENTS UNDER AN AREA IN THE SIDEBAR — the picker the
+     * area's Departments tab does not carry, contributed for the same
+     * reason the configure section is.
+     */
+    $services->set('team.area_nav_children', DepartmentAreaNavChildren::class)
+        ->args([
+            service('router'),
+            service('request_stack'),
+            service(DepartmentRepository::class),
+        ])
+        ->tag(AreaNavChildrenInterface::TAG);
+    $services->alias(DepartmentAreaNavChildren::class, 'team.area_nav_children');
 
     /*
      * WHO THE TOP BAR NAMES — team's answer to the shell's user-badge contract.

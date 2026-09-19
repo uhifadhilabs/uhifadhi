@@ -414,6 +414,9 @@ return static function (ContainerConfigurator $container): void {
                 // And for the fifth: the area's zones, hued by the same walk
                 // over the same ordered set the plate and the key read.
                 service('area.zone_set'),
+                // And for a rung this bundle may not name: whatever another
+                // bundle hangs under one of the area's screens.
+                tagged_iterator('uhifadhi.area_nav_children'),
             ])
             ->tag('shell.nav_section');
         $services->alias(AreaNavigation::class, 'area.navigation');

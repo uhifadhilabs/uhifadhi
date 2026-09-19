@@ -15,7 +15,7 @@ namespace Uhifadhi\Bundle\AreaBundle\Shell;
 
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Uhifadhi\Bundle\AreaBundle\Controller\ZoneRecordController;
@@ -28,6 +28,7 @@ use Uhifadhi\Bundle\ShellBundle\Frame\Service\ModuleFrameService;
 use Uhifadhi\Bundle\ShellBundle\Model\AreaTab;
 use Uhifadhi\Bundle\ShellBundle\Model\NavItem;
 use Uhifadhi\Bundle\ShellBundle\Model\NavSection;
+use Uhifadhi\Contracts\Shell\AreaNavChildrenInterface;
 
 /**
  * THE AREAS SECTION OF THE SIDEBAR — the register, and under it every area with
@@ -64,7 +65,7 @@ final readonly class AreaNavigation implements NavigationSourceInterface
     public const string ROUTE = 'area_index';
 
     public function __construct(
-        private UrlGeneratorInterface $urls,
+        private RouterInterface $urls,
         private TokenStorageInterface $tokens,
         private AuthorizationCheckerInterface $authorization,
         private RequestStack $requests,
@@ -73,6 +74,14 @@ final readonly class AreaNavigation implements NavigationSourceInterface
         private AreaComposition $composition,
         private ModuleFrameService $frame,
         private ZoneSetService $set,
+        /**
+         * WHAT OTHER BUNDLES HANG UNDER THIS AREA'S SCREENS. Departments are
+         * the first: the area's Departments row unfolds to them, and this
+         * bundle may not name a department.
+         *
+         * @var iterable<AreaNavChildrenInterface>
+         */
+        private iterable $contributors = [],
     ) {
     }
 
@@ -136,9 +145,22 @@ final readonly class AreaNavigation implements NavigationSourceInterface
                  * the modules branch does: rows nobody can see cost a query
                  * per area on every render.
                  */
-                $children[] = $hereArea && self::isZonesScreen($tab)
-                    ? $this->zonesNode($area, $tab)
-                    : new NavItem(label: $tab->label, url: $tab->url, current: $tab->current);
+                if ($hereArea && self::isZonesScreen($tab)) {
+                    $children[] = $this->zonesNode($area, $tab);
+
+                    continue;
+                }
+
+                /*
+                 * AND A SCREEN ANOTHER BUNDLE UNFOLDS — Departments, whose
+                 * rungs are contributed because this bundle may not name
+                 * one. Only the area being viewed drills, for the reason
+                 * the two branches above do.
+                 */
+                $contributed = $hereArea ? $this->contributedUnder($area, $tab) : [];
+                $children[] = [] === $contributed
+                    ? new NavItem(label: $tab->label, url: $tab->url, current: $tab->current)
+                    : self::branch($tab, $contributed);
             }
 
             $rows[] = new NavItem(
@@ -280,6 +302,62 @@ final readonly class AreaNavigation implements NavigationSourceInterface
             current: $tab->current && !$litBelow,
             open: $tab->current || $litBelow,
             children: $zones,
+        );
+    }
+
+    /**
+     * THE RUNGS ANOTHER BUNDLE HANGS UNDER THIS SCREEN.
+     *
+     * Matched by URL rather than by route name, because that is what a tab
+     * carries — and generating the contributor's screen route is also how a
+     * contribution to a screen this installation does not serve lands
+     * nowhere instead of throwing.
+     *
+     * @return list<NavItem>
+     */
+    private function contributedUnder(AreaOfInterest $area, AreaTab $tab): array
+    {
+        $rows = [];
+        foreach ($this->contributors as $contributor) {
+            $screen = $contributor->screenRoute();
+            if (null === $this->urls->getRouteCollection()->get($screen)) {
+                continue;
+            }
+
+            if ($this->urls->generate($screen, ['uuid' => (string) $area->getUuidString()]) !== $tab->url) {
+                continue;
+            }
+
+            foreach ($contributor->childrenFor((string) $area->getUuidString(), (string) $area->getName()) as $child) {
+                $rows[] = new NavItem(
+                    label: $child->label,
+                    url: $child->url,
+                    current: $child->current,
+                    swatch: $child->swatch,
+                );
+            }
+        }
+
+        return $rows;
+    }
+
+    /**
+     * A SCREEN WITH RUNGS UNDER IT, lit the way every branch in this tree is:
+     * only the deepest row carries the light, and the branch opens when
+     * anything inside it is lit.
+     *
+     * @param list<NavItem> $children
+     */
+    private static function branch(AreaTab $tab, array $children): NavItem
+    {
+        $litBelow = self::litAnywhere($children);
+
+        return new NavItem(
+            label: $tab->label,
+            url: $tab->url,
+            current: $tab->current && !$litBelow,
+            open: $tab->current || $litBelow,
+            children: $children,
         );
     }
 

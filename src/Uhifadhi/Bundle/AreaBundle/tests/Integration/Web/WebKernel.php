@@ -39,6 +39,7 @@ use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
 use Uhifadhi\Bundle\ShellBundle\ShellBundle;
 use Uhifadhi\Contracts\Entity\UserInterface;
 use Uhifadhi\Contracts\People\PersonDirectoryProviderInterface;
+use Uhifadhi\Contracts\Shell\AreaNavChildrenInterface;
 use Uhifadhi\Contracts\Shell\AreaSectionsInterface;
 
 /**
@@ -285,6 +286,14 @@ final class WebKernel extends Kernel
          */
         $services->set(FakeAreaSections::class)
             ->tag(AreaSectionsInterface::TAG);
+
+        /*
+         * A BUNDLE UNFOLDING ONE OF THE AREA'S SCREENS IN THE TREE, tagged
+         * as the team bundle tags the departments under an area.
+         */
+        $services->set(FakeAreaNavChildren::class)
+            ->args([new Reference('request_stack')])
+            ->tag(AreaNavChildrenInterface::TAG);
 
         $services->set(HostDirectory::class)
             ->args([new Reference('doctrine.orm.entity_manager')])

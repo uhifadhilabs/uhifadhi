@@ -305,6 +305,7 @@ final class TestKernel extends Kernel
             \Uhifadhi\Bundle\TeamBundle\Service\DepartmentService::class => 'team.departments',
             \Uhifadhi\Bundle\TeamBundle\Service\PasswordResetService::class => 'team.password_reset',
             \Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceRegistry::class => 'shell.widget.surfaces',
+            \Uhifadhi\Bundle\TeamBundle\Shell\DepartmentAreaNavChildren::class => 'team.area_nav_children',
         ] as $class => $serviceId) {
             $container->services()->alias('test_public.'.$class, $serviceId)->public();
         }
