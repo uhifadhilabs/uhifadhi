@@ -1,7 +1,7 @@
 {
     "name": "uhifadhi/area-bundle",
     "type": "symfony-bundle",
-    "description": "The uhifadhi area: the named piece of ground an installation manages — its gazetted boundary as a PostGIS multipolygon, the zones inside it, the overview every module contributes to, and the answer to the platform's area contract.",
+    "description": "The uhifadhi area: the named piece of ground an installation manages \u2014 its gazetted boundary as a PostGIS multipolygon, the zones inside it, the overview every module contributes to, and the answer to the platform's area contract.",
     "keywords": [
         "boundary",
         "conservation",
@@ -24,6 +24,7 @@
         "php": ">=8.4",
         "ext-mbstring": "*",
         "api-platform/core": "^4.3",
+        "doctrine/collections": "^2.2",
         "doctrine/dbal": "^4.0",
         "doctrine/doctrine-bundle": "^3.0",
         "doctrine/migrations": "^3.9",

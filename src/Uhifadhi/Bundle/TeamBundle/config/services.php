@@ -380,7 +380,12 @@ return static function (ContainerConfigurator $container): void {
      * have made RegistryBundle a hard dependency of signing in.
      */
     $services->set('team.permissions', PermissionCatalogue::class)
-        ->args([tagged_iterator('uhifadhi.module')]);
+        ->args([
+            tagged_iterator('uhifadhi.module'),
+            // AND THE CORE BUNDLES THAT ENFORCE ONE WITHOUT BEING A MODULE
+            // — the area's own `duty.checkin`, and whatever follows it.
+            tagged_iterator('uhifadhi.permissions'),
+        ]);
 
     /*
      * The voter, tagged by hand. A reusable bundle is not autoconfigured, and a

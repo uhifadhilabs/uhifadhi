@@ -49,8 +49,13 @@ final readonly class PermissionCatalogue
      * @param iterable<ModuleProviderInterface> $moduleProviders every installed
      *                                                           module bundle, in registration order (the uhifadhi.module tag)
      */
+    /**
+     * @param iterable<ModuleProviderInterface>                            $moduleProviders every tagged module, in registration order
+     * @param iterable<\Uhifadhi\Contracts\PermissionDeclarationInterface> $declarers       the bundles that enforce a permission without being a module
+     */
     public function __construct(
         private iterable $moduleProviders = [],
+        private iterable $declarers = [],
     ) {
     }
 
@@ -80,6 +85,29 @@ final readonly class PermissionCatalogue
                     // heading, so uninstalling a bundle is a visible cause
                     // rather than a mystery about rows that vanished.
                     $provider->slug(),
+                );
+            }
+        }
+
+        /*
+         * AND WHAT THE REST OF THE CORE ENFORCES. Not everything that owns
+         * a capability is a module: the area bundle owns the ground, the
+         * posts and the day a ranger checks in on, and whoever enforces a
+         * permission is who declares it. Adding those words to the enum
+         * above would put a permission the AREA checks in the bundle that
+         * owns PEOPLE, and the next one would go there too.
+         *
+         * NO SOURCE IS PRINTED for these: they arrive with the core and
+         * they do not leave with a module, so naming a bundle beside them
+         * would answer a question nobody is asking.
+         */
+        foreach ($this->declarers as $declarer) {
+            foreach ($declarer->permissions() as $declared) {
+                $catalogue[$declared->value] ??= new Permission(
+                    $declared->value,
+                    $declared->umbrella,
+                    $declared->action,
+                    $declared->description,
                 );
             }
         }

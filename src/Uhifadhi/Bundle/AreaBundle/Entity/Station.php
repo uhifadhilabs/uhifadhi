@@ -104,6 +104,32 @@ class Station
     #[ORM\Column(type: 'date_immutable', nullable: true)]
     private ?\DateTimeImmutable $openedAt = null;
 
+    /**
+     * WHAT "INSIDE THIS POST" MEANS, in metres — the ring a check-in is
+     * judged against, and the dashed circle a ranger sees before they
+     * tap.
+     *
+     * NULL IS A REAL STATE, not a default waiting to be filled: a post
+     * with no ring has no inside, the handset says so rather than
+     * picking a radius of its own, and a day claimed there derives as
+     * unverified rather than as wrong. A number invented here would be a
+     * verdict the organisation never made.
+     */
+    #[ORM\Column(name: 'catchment_m', nullable: true)]
+    private ?int $catchmentM = null;
+
+    public function getCatchmentM(): ?int
+    {
+        return $this->catchmentM;
+    }
+
+    public function setCatchmentM(?int $catchmentM): static
+    {
+        $this->catchmentM = $catchmentM;
+
+        return $this;
+    }
+
     public function getId(): ?int
     {
         return $this->id;

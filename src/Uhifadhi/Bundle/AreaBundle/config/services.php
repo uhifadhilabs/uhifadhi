@@ -13,12 +13,17 @@ declare(strict_types=1);
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
+use Uhifadhi\Bundle\AreaBundle\Access\AreaPermissions;
 use Uhifadhi\Bundle\AreaBundle\Devkit\AreaContentProvider;
 use Uhifadhi\Bundle\AreaBundle\Devkit\StationContentProvider;
 use Uhifadhi\Bundle\AreaBundle\Devkit\ZoneContentProvider;
 use Uhifadhi\Bundle\AreaBundle\Overview\OverviewContributorInterface;
 use Uhifadhi\Bundle\AreaBundle\People\AreaPersonPostings;
 use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
+use Uhifadhi\Bundle\AreaBundle\Repository\CheckInCorrectionRepository;
+use Uhifadhi\Bundle\AreaBundle\Repository\CheckInRepository;
+use Uhifadhi\Bundle\AreaBundle\Repository\CheckInStatusRepository;
+use Uhifadhi\Bundle\AreaBundle\Repository\PersonPositionRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\PostingRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\StationEventRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\StationRepository;
@@ -36,6 +41,7 @@ use Uhifadhi\Bundle\AreaBundle\Service\AreaPresetLibrary;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaRegister;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaThumbnailer;
 use Uhifadhi\Bundle\AreaBundle\Service\BoundaryImport;
+use Uhifadhi\Bundle\AreaBundle\Service\CheckInStatusService;
 use Uhifadhi\Bundle\AreaBundle\Service\PersonDirectoryService;
 use Uhifadhi\Bundle\AreaBundle\Service\PersonFacetService;
 use Uhifadhi\Bundle\AreaBundle\Service\PostingBoardService;
@@ -63,6 +69,7 @@ use Uhifadhi\Contracts\Kpi\ZoneFigureProviderInterface;
 use Uhifadhi\Contracts\People\PersonDirectoryProviderInterface;
 use Uhifadhi\Contracts\People\PersonFacetProviderInterface;
 use Uhifadhi\Contracts\People\PersonPostingProviderInterface;
+use Uhifadhi\Contracts\PermissionDeclarationInterface;
 
 /*
  * The bundle's static service wiring.
@@ -112,6 +119,23 @@ return static function (ContainerConfigurator $container): void {
         ->tag('doctrine.repository_service');
 
     $services->set(StationEventRepository::class)
+        ->args([service('doctrine')])
+        ->tag('doctrine.repository_service');
+
+    /* The day, and the pings that prove it — API-CONTRACT.md §13. */
+    $services->set(CheckInRepository::class)
+        ->args([service('doctrine')])
+        ->tag('doctrine.repository_service');
+
+    $services->set(CheckInStatusRepository::class)
+        ->args([service('doctrine')])
+        ->tag('doctrine.repository_service');
+
+    $services->set(CheckInCorrectionRepository::class)
+        ->args([service('doctrine')])
+        ->tag('doctrine.repository_service');
+
+    $services->set(PersonPositionRepository::class)
         ->args([service('doctrine')])
         ->tag('doctrine.repository_service');
 
@@ -346,6 +370,26 @@ return static function (ContainerConfigurator $container): void {
      * plate, from one walk over one list, so the colour on a card, the colour
      * in the key and the colour of the ring are the same colour.
      */
+    /*
+     * THE DAY A RANGER REPORTS — API-CONTRACT.md §13. The words their area
+     * lets them report it in, seeded with the four the handset already
+     * speaks so an installation that has configured nothing still works.
+     */
+    $services->set('area.checkin_statuses', CheckInStatusService::class)
+        ->args([
+            service('doctrine.orm.entity_manager'),
+            service(CheckInStatusRepository::class),
+        ]);
+    $services->alias(CheckInStatusService::class, 'area.checkin_statuses');
+
+    /*
+     * AND WHAT THE AREA ENFORCES that the host's own enum does not name.
+     * Whoever enforces a permission is who declares it.
+     */
+    $services->set('area.permissions', AreaPermissions::class)
+        ->tag(PermissionDeclarationInterface::TAG);
+    $services->alias(AreaPermissions::class, 'area.permissions');
+
     $services->set('area.zone_set', ZoneSetService::class)
         ->args([
             service('doctrine.orm.entity_manager'),

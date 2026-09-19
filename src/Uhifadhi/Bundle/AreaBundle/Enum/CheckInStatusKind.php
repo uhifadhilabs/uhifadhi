@@ -1,0 +1,78 @@
+<?php
+
+declare(strict_types=1);
+
+/*
+ * This file is part of the Uhifadhi core.
+ *
+ * (c) Ezekiel Mjema <https://github.com/eemjema>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace Uhifadhi\Bundle\AreaBundle\Enum;
+
+/**
+ * WHAT A CHECK-IN STATUS *MEANS*, as against what it is called.
+ *
+ * THE WORDS ARE THE ORGANISATION'S AND THE MEANINGS ARE THE PLATFORM'S.
+ * An area writes its own statuses — "At post", "On escort", "Court
+ * appearance", "Sick" — and every one of them is one of these four
+ * kinds. The label is what a ranger taps; the kind is what the product
+ * can reason about: whether a station is required, and whether the
+ * person counts as on duty.
+ *
+ * FOUR, BECAUSE FOUR IS WHAT CHANGES AN ANSWER. Anything finer is a
+ * reason, and a reason is a note or a status of its own with the same
+ * kind: "on escort" and "at a hearing" are both working elsewhere, and
+ * nothing downstream treats them differently.
+ *
+ * A KIND IS NEVER SENT BY THE HANDSET. The phone sends the KEY of a
+ * status the area published; the kind travels the other way, in the
+ * roster read, so the app knows which status needs a post.
+ *
+ * @see API-CONTRACT.md §13A, §13D
+ */
+enum CheckInStatusKind: string
+{
+    /** At a named post — the only kind that takes a station. */
+    case AtPost = 'at_post';
+
+    /** On duty, away from a post: outside the park, escorting, in court. */
+    case WorkingElsewhere = 'working_elsewhere';
+
+    /** Not on duty: unfit, on leave, stood down. */
+    case NotWorking = 'not_working';
+
+    /** On duty inside the park, on an assignment that is not a post. */
+    case Special = 'special';
+
+    /** Whether a status of this kind names a post. */
+    public function takesStation(): bool
+    {
+        return self::AtPost === $this;
+    }
+
+    /**
+     * WHETHER SOMEBODY OF THIS KIND IS ON DUTY TODAY.
+     *
+     * Derived from the kind and never stored on the status: an area that
+     * could tick "counts as present" on "Sick" would have a roster that
+     * says one thing and a payroll that says another.
+     */
+    public function countsAsPresent(): bool
+    {
+        return self::NotWorking !== $this;
+    }
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::AtPost => 'at a post',
+            self::WorkingElsewhere => 'working elsewhere',
+            self::NotWorking => 'not working',
+            self::Special => 'special assignment',
+        };
+    }
+}
