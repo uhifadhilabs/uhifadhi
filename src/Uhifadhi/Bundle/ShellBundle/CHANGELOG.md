@@ -12,6 +12,8 @@ Not released yet.
  * the design-system stylesheet every module's own sheet is written against
  * the widget machinery under `Widget/`: the surface registry, the stored
    layouts and the library component every dashboard is arranged through
+ * `.c > .more`, the card's one quiet door pinned to its top edge, so a module
+   that draws a way out of a card does not pin it with a rule of its own
  * `.mchip.ghost`, the quiet chip a month stepper's arrows wear, and the mark's
    hue read from `--pill-hue` so a finished problem is a hollow red mark
  * no library door on a surface: `.w-addtile` is gone and the dashed add tile

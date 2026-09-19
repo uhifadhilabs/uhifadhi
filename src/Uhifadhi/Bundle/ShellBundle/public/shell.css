@@ -885,6 +885,41 @@ h2.zone::after { content: ""; flex: 1; height: 1px; background: var(--c-ln2); }
     padding: 9px 15px; background: none; border: 0; cursor: pointer;
 }
 .more:hover { color: rgb(var(--c-acc)); }
+
+/* THE CARD'S ONE QUIET DOOR, pinned to the card's top edge — the same gesture
+   as the identity band's `.more`, in the same type and colour, drawn where a
+   card carries its way out. A card may have AT MOST ONE: page actions belong
+   in the page header and row actions on the row, so a card with two doors is
+   two cards.
+
+   IT IS THE SHELL'S BECAUSE IT IS THE CARD'S. The roster's tabs and the house
+   cards all want it, and the first module to draw one without this would pin
+   it with a rule of its own — which is the drift the vocabulary test forbids
+   and the reason `.more` itself stopped being scoped to `.factband`.
+
+   `text-transform: none` IS STATED, and it is the one line that is not a
+   straight copy of the design. There `.more` is band-scoped, so the card's
+   door inherits nothing; here `.more` is unscoped — deliberately, so that a
+   `.more` outside a band is not a blue underlined browser default — and the
+   door would come out uppercase at a letter-spacing meant for lower case.
+   The design's card door is not uppercase, so the inheritance is turned off
+   rather than the base rule bent.
+
+   The values are the design's, read value for value. */
+.c > .more {
+    position: absolute; top: -8px; right: 13px; z-index: 2;
+    background: rgb(var(--c-cv));
+    font-family: var(--font-mono); font-size: 9.5px; font-weight: 600;
+    letter-spacing: .06em; text-transform: none;
+    color: rgb(var(--c-fog)); text-decoration: none;
+    padding: 3px 9px;
+    border: 1px solid var(--c-ln2); border-radius: 7px; white-space: nowrap;
+}
+.c > .more:hover {
+    color: rgb(var(--c-acc));
+    border-color: color-mix(in srgb, rgb(var(--c-acc)) 45%, transparent);
+    text-decoration: none;
+}
 @media (max-width: 900px) { .factband .f + .f::before { display: none; } }
 
 /* ---- THREE THINGS A FORM AND A TABLE NEED, ON EVERY SURFACE ------------

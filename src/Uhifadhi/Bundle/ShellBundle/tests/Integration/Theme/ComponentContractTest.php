@@ -378,6 +378,69 @@ final class ComponentContractTest extends ContractTestCase
     }
 
     /**
+     * A CARD CARRIES AT MOST ONE QUIET DOOR, AND IT IS PINNED TO THE EDGE.
+     *
+     * The same gesture as the identity band's `.more`, in the same type and
+     * colour, drawn where a card carries its way out. Page actions belong in
+     * the page header and row actions on the row, so a card with two doors is
+     * two cards.
+     *
+     * IT IS THE SHELL'S BECAUSE IT IS THE CARD'S. The roster's tabs and the
+     * house cards all want it; the first module to draw one without it here
+     * would pin it with a rule of its own, which is the drift the vocabulary
+     * test forbids and exactly why `.more` itself stopped being scoped to
+     * `.factband`.
+     *
+     * `text-transform: none` IS THE ONE LINE THAT IS NOT A COPY. In the design
+     * `.more` is band-scoped and the card's door inherits nothing; here `.more`
+     * is unscoped on purpose, so without this the door comes out uppercase at a
+     * letter-spacing meant for lower case. The inheritance is turned off rather
+     * than the base rule bent.
+     *
+     * The values are the design's, read value for value.
+     *
+     * @see /Users/eemjema/Programming/DesignsProjects/uhifadhi-web/uhifadhi.css lines 323-333
+     */
+    #[DataProvider('cardDoorDeclarations')]
+    public function testACardsQuietDoorIsPinnedToItsEdge(string $selector, string $property, string $value): void
+    {
+        self::assertMatchesRegularExpression(
+            '/(?:^|;)\s*'.preg_quote($property, '/').'\s*:\s*'.preg_quote($value, '/').'\s*(?:;|$)/',
+            $this->rule($selector),
+            \sprintf('%s must state `%s: %s` — the design\'s own value.', $selector, $property, $value),
+        );
+    }
+
+    /**
+     * @return \Generator<string, array{string, string, string}>
+     */
+    public static function cardDoorDeclarations(): \Generator
+    {
+        $declarations = [
+            '.c > .more' => [
+                'position' => 'absolute',
+                'top' => '-8px',
+                'right' => '13px',
+                'z-index' => '2',
+                'font-size' => '9.5px',
+                'letter-spacing' => '.06em',
+                // Not uppercase: the base rule is unscoped here and the design's
+                // card door is lower case.
+                'text-transform' => 'none',
+                'padding' => '3px 9px',
+                'border-radius' => '7px',
+                'white-space' => 'nowrap',
+            ],
+        ];
+
+        foreach ($declarations as $selector => $properties) {
+            foreach ($properties as $property => $value) {
+                yield $selector.' — '.$property => [$selector, $property, $value];
+            }
+        }
+    }
+
+    /**
      * A FILTER ROW IS ONE LINE, AND THE PANEL UNDER IT IS ONE PANEL.
      *
      * FOUR BUNDLES DRAW THIS ROW — the incidents register, patrol's list, the

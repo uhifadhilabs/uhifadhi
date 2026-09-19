@@ -66,6 +66,7 @@ you write on an element; the parts each one brings are in the table.
 | What the card is for | `.use` | `b` for the emphasis |
 | The way back | `.backbtn` | the chevron `svg`, sized by the rule; carries `margin-bottom: 16px` |
 | The identity band | `.factband` | `.f` a fact, `.k`/`.v` its halves (`em` the unit), `.sp` then `.more`; wraps below 900px |
+| The card's quiet door | `.more` (direct child of `.c`) | pinned to the card's top edge, lower case; **at most one per card** — page actions go in the page header, row actions on the row |
 | The KPI plate | `.kpi` | `b`/`.disp` the number, `em` the unit, `.sub` the sub-line, `.hot` for the one that matters |
 | The KPI strip | `.kstrip` | a modifier on `.grid`, never alone |
 | The register table | `table.tbl` | `th` `td` `.num`, and the row's hover |

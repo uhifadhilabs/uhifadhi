@@ -237,9 +237,11 @@ final class LayoutContract
         // the identity band a detail screen opens with
         'factband',
 
-        // the quiet forward link — at the end of a band, and at the end of a
-        // card's own row; and the module identity dot, in the sidebar's tree
-        // and in any table that names modules
+        // the quiet forward link — at the end of a band, at the end of a
+        // card's own row, and, as a DIRECT CHILD of `.c`, the card's one
+        // quiet door pinned to its top edge (a card with two doors is two
+        // cards); and the module identity dot, in the sidebar's tree and in
+        // any table that names modules
         'more',
         'mdot',
 
