@@ -24,6 +24,7 @@ use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Model\PostingQuery;
 use Uhifadhi\Bundle\AreaBundle\Model\PostingRow;
 use Uhifadhi\Bundle\AreaBundle\Model\ZoneFigureCard;
+use Uhifadhi\Bundle\AreaBundle\Model\ZoneListQuery;
 use Uhifadhi\Bundle\AreaBundle\Repository\PostingRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\StationRepository;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaPlateService;
@@ -31,6 +32,7 @@ use Uhifadhi\Bundle\AreaBundle\Service\AreaRegister;
 use Uhifadhi\Bundle\AreaBundle\Service\PostingBoardService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationRegisterService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneFigureService;
+use Uhifadhi\Bundle\AreaBundle\Service\ZoneListService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneSetService;
 use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleService;
 use Uhifadhi\Bundle\RegistryBundle\Service\ModuleEntryRouteResolver;
@@ -86,6 +88,7 @@ final readonly class ZoneController
         private AreaRegister $areas,
         private AreaPlateService $plates,
         private ZoneFigureService $figures,
+        private ZoneListService $zoneList,
         private AreaModuleService $areaModules,
         private ModuleEntryRouteResolver $entryRoutes,
     ) {
@@ -98,6 +101,7 @@ final readonly class ZoneController
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
     ): Response {
         $view = $this->set->view($area);
+        $zoneQuery = ZoneListQuery::from($request);
         $query = StationConfigureController::queryFrom($request);
         $register = $this->register->register($area, $query, self::STATIONS_PER_PAGE);
 
@@ -124,6 +128,10 @@ final readonly class ZoneController
             'area' => $area,
             'areaKm2' => $this->areas->areaKm2($area),
             'set' => $view,
+            // THE ZONES THEMSELVES, AS A TABLE — owner-ruled: the tab lists
+            // every zone the way it lists every station.
+            'zones' => $this->zoneList->register($area, $zoneQuery),
+            'zoneQuery' => $zoneQuery,
             'register' => $register,
             'query' => $query,
             'stationCount' => \count($posts),

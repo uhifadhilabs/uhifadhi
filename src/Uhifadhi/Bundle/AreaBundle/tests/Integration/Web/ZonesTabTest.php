@@ -168,7 +168,11 @@ final class ZonesTabTest extends WebTestCase
      */
     private function listed(string $url): array
     {
-        preg_match_all('#<td class="zname">.*?<b>([^<]+)</b>#s', $this->body($url), $found);
+        // THE ZONES TABLE IS THE STATIONS TABLE'S TWIN and writes the same
+        // row markup, so the question is asked of the stations table by
+        // name: the one that is not the zones list.
+        preg_match('#<table class="tbl zdtbl">(.*?)</table>#s', $this->body($url), $table);
+        preg_match_all('#<td class="zname">.*?<b>([^<]+)</b>#s', $table[1] ?? '', $found);
 
         return array_map(trim(...), $found[1]);
     }

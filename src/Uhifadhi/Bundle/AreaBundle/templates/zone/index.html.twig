@@ -107,6 +107,64 @@
         </div>
     {% endif %}
 
+    {# THE ZONES THEMSELVES, AS A REGISTER — owner-ruled 09-20: the tab lists
+       every zone the way it lists every station, so the table is the same
+       table and the picker in the sidebar is still the picker. #}
+    <div class="c">
+        <span class="tab">Zones in the area<span class="src">&middot; {{ zones.scope }} &middot; {{ zones.stationTotal }} {{ zones.stationTotal == 1 ? 'station' : 'stations' }} &middot; {{ zones.peopleTotal }} {{ zones.peopleTotal == 1 ? 'person' : 'people' }}</span></span>
+
+        {% if not zones.isEmpty %}
+            <div class="lfilt">
+                {{ include('@Area/_partial/_filter.html.twig', {
+                    label: 'order', all: 'order', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\ZoneListQuery::ORDER'),
+                    chosen: zoneQuery.order == 'name' ? null : zoneQuery.order,
+                    options: [
+                        {value: 'extent', label: 'extent', count: 0, hue: null},
+                        {value: 'covered', label: 'covered', count: 0, hue: null},
+                        {value: 'stations', label: 'stations', count: 0, hue: null},
+                    ],
+                    query: zoneQuery,
+                }) }}
+                {{ include('@Area/_partial/_filter.html.twig', {
+                    label: 'has stations', all: 'stations, any', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\ZoneListQuery::STATIONS'),
+                    chosen: zoneQuery.stations,
+                    chosenLabel: zoneQuery.stations == 'some' ? 'with stations' : (zoneQuery.stations == 'none' ? 'without' : null),
+                    options: zones.stations, query: zoneQuery,
+                }) }}
+
+                {# ITS OWN SEARCH KEY: three lists on one page, and two of them
+                   searching under `q` would mean typing in one filtered the
+                   other. #}
+                <form class="lsearch" method="get" action="{{ here }}">
+                    {{ ux_icon('shell:search') }}
+                    <input class="fld" type="search" name="{{ constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\ZoneListQuery::SEARCH') }}"
+                           value="{{ zoneQuery.search }}" placeholder="Zone name&hellip;" aria-label="Search zones by name">
+                    {% for k, v in zoneQuery.with(constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\ZoneListQuery::SEARCH'), null) %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+                </form>
+            </div>
+        {% endif %}
+
+        {% if zones.isEmpty or zones.rows is empty %}
+            <div class="zdnone">
+                <i class="zsw hollow"></i>
+                <b>{{ zones.isEmpty ? 'No zone imported yet' : 'No zone matches' }}</b>
+                <span>{{ zones.isEmpty
+                    ? 'import one GeoJSON of the area’s zones from Configure &middot; the stations below stay unzoned'|raw
+                    : 'clear the search, or widen a filter' }}</span>
+            </div>
+        {% else %}
+            {{ include('@Area/zone/_list.html.twig', {
+                rows: zones.rows, area: area, columns: zones.columns, period: zones.period,
+            }) }}
+            {{ include('@Area/_partial/_pager.html.twig', {
+                here: here, query: zoneQuery, page: zones.page, pages: zones.pages,
+                from: zones.from, to: zones.to, total: zones.total, scope: zones.scope, noun: 'zones',
+            }) }}
+        {% endif %}
+
+        <p class="zpicknote">A zone&rsquo;s stations are read from their points &middot; the row opens the zone</p>
+    </div>
+
     {# THE STATIONS IN THE SELECTION, found by filter rather than by zone: the
        zone is a column here and one of the answers the bar offers. #}
     <div class="c">

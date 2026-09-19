@@ -155,6 +155,7 @@ return static function (ContainerConfigurator $container): void {
             service('area.register'),
             service('area.zone_plate'),
             service('area.zone_figures'),
+            service('area.zone_list'),
             service('registry.area_modules'),
             service('registry.entry_routes'),
         ])

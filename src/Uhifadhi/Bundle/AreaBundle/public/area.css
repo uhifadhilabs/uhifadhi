@@ -1119,8 +1119,22 @@ table.tbl.ax-reg em { font-style: normal; }
    HUE IS THE ZONE. A swatch, a ring on the plate and a row in the key are the
    same colour because one service decides it; the swatch below carries no
    colour of its own for exactly that reason. */
-.zsw { width: 11px; height: 11px; flex: none; border-radius: 4px; display: inline-block; }
-.zsw.hollow { background: none; border: 1px dashed color-mix(in srgb, rgb(var(--c-fail)) 55%, transparent); }
+/* THE ZONE SWATCH IS ONE MARK, AT THE DESIGN'S VALUES — a disc with a hair
+   of a ring so a pale hue still has an edge on a pale card. It had drifted
+   here to a rounded square with a dashed red hollow, which made the same
+   zone read as two different things on two pages. */
+.zsw {
+    width: 11px; height: 11px; flex: none; border-radius: 50%; display: inline-block;
+    box-shadow: 0 0 0 1px color-mix(in srgb, rgb(var(--c-tx)) 22%, transparent) inset;
+}
+/* AND THE HOLLOW ONE IS AN ABSENCE, not a refusal: no zone, or none yet. */
+.zsw.hollow { background: transparent; box-shadow: 0 0 0 1.5px rgb(var(--c-dim)) inset; }
+
+/* ── THE ZONES TABLE ───────────────────────────────────────────────────────
+   The stations table's own idiom; only the row's fixed height and the small
+   type of an absent figure belong to it. */
+table.zltbl td { height: 44px; padding-top: 0; padding-bottom: 0; }
+table.zltbl td.num em.pnone { font-size: 9.5px; }
 
 /* THE SPINE — a flex stack and never a grid: a card that opens must not move
    its neighbours sideways. */

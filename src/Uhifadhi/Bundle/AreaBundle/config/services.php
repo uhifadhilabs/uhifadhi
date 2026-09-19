@@ -48,6 +48,7 @@ use Uhifadhi\Bundle\AreaBundle\Service\ZoneEventService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneExportService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneFigureService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportService;
+use Uhifadhi\Bundle\AreaBundle\Service\ZoneListService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneOverlapService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneSetService;
@@ -218,6 +219,22 @@ return static function (ContainerConfigurator $container): void {
             service('area.zone_set'),
         ]);
     $services->alias(StationRegisterService::class, 'area.station_register');
+
+    /*
+     * AND THE AREA'S ZONES AS THE SAME KIND OF LIST — the table the zones tab
+     * reads them in, which is the stations register's twin: same card, same
+     * dropdowns, same pager, filtered and paged on the server.
+     */
+    $services->set('area.zone_list', ZoneListService::class)
+        ->args([
+            service('area.zone_set'),
+            service(StationRepository::class),
+            service(PostingRepository::class),
+            service('area.zone_figures'),
+            service('registry.area_modules'),
+            service('registry.catalogue'),
+        ]);
+    $services->alias(ZoneListService::class, 'area.zone_list');
 
     /*
      * THE AREA OVERVIEW'S CATALOGUE, ASSEMBLED PER AREA — the one surface in
