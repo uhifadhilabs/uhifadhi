@@ -1377,6 +1377,7 @@ valid.
 | `OverviewContributorInterface` | `uhifadhi.overview.widget_provider` | widgets and their render context |
 | `Overview\ContributesStylesheetInterface` | (no tag of its own) | the stylesheet your cells are written against |
 | `Performance\PerformanceTopicProviderInterface` | `uhifadhi.performance_topic` | a whole topic on the performance page: five figures, its charts and its matrix |
+| `Performance\PerformanceGeoProviderInterface` | `uhifadhi.performance_geo` | your figures over the ground — one per area, or per zone of one area |
 | `Performance\DepartmentDirectoryInterface` | (ask for it by name) | who the departments are, what they attach, and since when you could have been asked |
 | `NowTileProviderInterface` | `uhifadhi.overview.now_tile` | "right now" tiles in the strip |
 | `AttentionProviderInterface` | `uhifadhi.overview.attention` | items in the attention list |
@@ -1495,6 +1496,49 @@ this platform states:
   tinted and its movement is never coloured.
 - **Scope and period are asked, not assumed.** Answer for the scope you are
   handed, or you will draw the organisation's figures on one area's page.
+
+**If one of your five is a count of records, say so.** The organisation's page
+adds up "records written, by department" across every topic that writes any,
+and it cannot tell which of your five that is — your label is your own word,
+and may be "cases", "sightings" or "patrols logged". Mark it:
+
+```php
+new TopicKpi(key: 'incidents.total', label: 'Cases filed', value: 561.0, role: KpiRole::Records)
+```
+
+A role is the exception, not the rule: every other figure is yours, drawn as
+you named it, with the host making no claim about what it means.
+
+**If you have figures about the GROUND, publish them beside your topic.** Most
+topics have nothing to say about where — staffing does not, goals do not — so
+this is a separate optional interface rather than a method on the topic
+contract that every module would have to answer with nothing:
+
+```php
+final readonly class PatrolGeo implements PerformanceGeoProviderInterface
+{
+    public function moduleSlug(): string { return 'patrols'; }
+
+    public function geo(PerformanceScope $scope, FigurePeriod $period): array
+    {
+        return [new GeoSeries(
+            key: 'patrols.coverage',
+            title: 'Patrol coverage, by area',
+            figures: [new GeoFigure($areaUuid, 'Ngorongoro', 58.0)],
+            over: GeoSeries::OVER_AREAS,
+            unit: '%',
+            polarity: ColumnPolarity::Up,
+        )];
+    }
+}
+```
+
+Name the ground by its identifier and never by its geometry — the area bundle
+owns the shapes and draws them on the atlas plate, with the same chrome and
+the same legend as every other map in the product. Say what the series is over
+(areas, or the zones of one area), and give it a polarity: a plate hues a
+placing, and hue without polarity is a plate claiming that more is better when
+the figure is incidents.
 
 **How long a history is, and what a delta means.** Six periods for the
 sparkline in a `TopicKpi` and in a `MatrixCell` — that is what the cell draws —

@@ -43,6 +43,13 @@ final readonly class TopicKpi
         public array $history = [],
         public string $caption = '',
         public ColumnPolarity $polarity = ColumnPolarity::None,
+        /**
+         * WHAT THE HOST MAY DO WITH THIS ONE, where it has to find a
+         * figure among somebody else's five — see {@see KpiRole}. Null is
+         * the normal case: the figure is the topic's own and the host
+         * draws it without making any claim about what it means.
+         */
+        public ?KpiRole $role = null,
     ) {
     }
 
