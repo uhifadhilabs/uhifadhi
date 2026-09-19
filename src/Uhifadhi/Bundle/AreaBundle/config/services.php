@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
+use Uhifadhi\Bundle\AreaBundle\People\AreaPersonPostings;
 use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
+use Uhifadhi\Bundle\AreaBundle\Repository\PostingRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\StationRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneEventRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
@@ -27,6 +29,8 @@ use Uhifadhi\Bundle\AreaBundle\Service\AreaPresetLibrary;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaRegister;
 use Uhifadhi\Bundle\AreaBundle\Service\AreaThumbnailer;
 use Uhifadhi\Bundle\AreaBundle\Service\BoundaryImport;
+use Uhifadhi\Bundle\AreaBundle\Service\PersonFacetService;
+use Uhifadhi\Bundle\AreaBundle\Service\PostingService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneEventService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneExportService;
@@ -41,6 +45,8 @@ use Uhifadhi\Bundle\AtlasBundle\Map\MapBuilderInterface;
 use Uhifadhi\Bundle\RegistryBundle\Repository\AreaModuleRepository;
 use Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceInterface;
 use Uhifadhi\Contracts\Kpi\ZoneFigureProviderInterface;
+use Uhifadhi\Contracts\People\PersonFacetProviderInterface;
+use Uhifadhi\Contracts\People\PersonPostingProviderInterface;
 
 /*
  * The bundle's static service wiring.
@@ -85,6 +91,10 @@ return static function (ContainerConfigurator $container): void {
         ->args([service('doctrine')])
         ->tag('doctrine.repository_service');
 
+    $services->set(PostingRepository::class)
+        ->args([service('doctrine')])
+        ->tag('doctrine.repository_service');
+
     /*
      * THE ONLY SUPPORTED WAY A ZONE GETS A GEOMETRY. The invariant sibling zones
      * are held to — never sharing interior — is not expressible as a column
@@ -113,6 +123,37 @@ return static function (ContainerConfigurator $container): void {
             service(StationRepository::class),
         ]);
     $services->alias(StationService::class, 'area.stations');
+
+    /*
+     * THE ONLY SUPPORTED WAY SOMEBODY IS POSTED, UNPOSTED OR PUT IN CHARGE.
+     * One leader per station is a transaction here rather than a database
+     * constraint, because the constraint that would express it is a partial
+     * unique index the ORM mapping cannot declare.
+     */
+    $services->set('area.postings', PostingService::class)
+        ->args([
+            service('doctrine.orm.entity_manager'),
+            service(PostingRepository::class),
+        ]);
+    $services->alias(PostingService::class, 'area.postings');
+
+    /*
+     * THE AREA'S ANSWER TO "WHERE DOES THIS PERSON WORK?" — tagged BY HAND,
+     * because a reusable bundle is not autoconfigured and an attribute on the
+     * interface would be silently dead. Whoever draws a person's page reads
+     * the tag; nothing in either bundle names a class in the other.
+     */
+    $services->set('area.person_postings', AreaPersonPostings::class)
+        ->args([service(PostingRepository::class)])
+        ->tag(PersonPostingProviderInterface::TAG);
+
+    /*
+     * AND THE OTHER DIRECTION: what a postings board knows about the people on
+     * it — a position and a department, which belong to whoever owns people.
+     */
+    $services->set('area.person_facets', PersonFacetService::class)
+        ->args([tagged_iterator(PersonFacetProviderInterface::TAG)]);
+    $services->alias(PersonFacetService::class, 'area.person_facets');
 
     /*
      * WHAT THE MODULES SAY ABOUT A ZONE — every tagged provider, asked once for

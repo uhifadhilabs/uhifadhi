@@ -31,6 +31,7 @@ use Uhifadhi\Bundle\TeamBundle\Controller\TeamController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamWidgetsController;
 use Uhifadhi\Bundle\TeamBundle\Devkit\TeamContentProvider;
 use Uhifadhi\Bundle\TeamBundle\EventListener\ApiErrorListener;
+use Uhifadhi\Bundle\TeamBundle\People\TeamPersonFacets;
 use Uhifadhi\Bundle\TeamBundle\Repository\ApiTokenRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentScopeChangeRepository;
@@ -56,6 +57,7 @@ use Uhifadhi\Bundle\TeamBundle\Shell\UserBadgeSource;
 use Uhifadhi\Bundle\TeamBundle\Twig\AreaScopeExtension;
 use Uhifadhi\Bundle\TeamBundle\Widget\PositionWidgets;
 use Uhifadhi\Bundle\TeamBundle\Widget\TeamWidgets;
+use Uhifadhi\Contracts\People\PersonFacetProviderInterface;
 
 /*
  * The bundle's static service wiring.
@@ -121,6 +123,16 @@ return static function (ContainerConfigurator $container): void {
      *
      * @see vendor/doctrine/doctrine-bundle/src/DependencyInjection/Compiler/ServiceRepositoryCompilerPass.php
      */
+    /*
+     * TEAM'S ANSWER TO "WHAT IS THIS PERSON, AND WHOSE?" — a position title
+     * and a department name, for a list of people somewhere else in the
+     * product. Tagged BY HAND: a reusable bundle is not autoconfigured, and an
+     * attribute on the contract's interface would be silently dead.
+     */
+    $services->set('team.person_facets', TeamPersonFacets::class)
+        ->args([service(UserRepository::class)])
+        ->tag(PersonFacetProviderInterface::TAG);
+
     $services->set(UserRepository::class)
         ->args([service('doctrine')])
         ->tag('doctrine.repository_service');

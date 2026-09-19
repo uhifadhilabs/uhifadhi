@@ -90,6 +90,7 @@ final class MigrationsCoverSchemaTest extends MigrationsTestCase
                 // PostGIS's own, brought by the extension migration zero
                 // creates — not the core's, and not something a diff will ever
                 // offer to drop: the schema filter hides it.
+                'posting',
                 'spatial_ref_sys',
                 'station',
                 'team_api_token',
@@ -155,6 +156,7 @@ final class MigrationsCoverSchemaTest extends MigrationsTestCase
                 'Uhifadhi\\Bundle\\TeamBundle\\Migrations\\Version20260101000300',
                 'Uhifadhi\\Bundle\\TeamBundle\\Migrations\\Version20260101000310',
                 'Uhifadhi\\Bundle\\ShellBundle\\Migrations\\Version20260101000400',
+                'Uhifadhi\\Bundle\\AreaBundle\\Migrations\\Version20260101000500',
             ],
             $this->plannedVersions(),
         );

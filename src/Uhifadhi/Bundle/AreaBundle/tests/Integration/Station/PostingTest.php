@@ -1,0 +1,229 @@
+<?php
+
+declare(strict_types=1);
+
+/*
+ * This file is part of the Uhifadhi core.
+ *
+ * (c) Ezekiel Mjema <https://github.com/eemjema>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace Uhifadhi\Bundle\AreaBundle\Tests\Integration\Station;
+
+use PHPUnit\Framework\Attributes\CoversClass;
+use Uhifadhi\Bundle\AreaBundle\Entity\Posting;
+use Uhifadhi\Bundle\AreaBundle\Entity\Station;
+use Uhifadhi\Bundle\AreaBundle\Enum\PostingSource;
+use Uhifadhi\Bundle\AreaBundle\Exception\PostingException;
+use Uhifadhi\Bundle\AreaBundle\Service\PostingService;
+use Uhifadhi\Bundle\AreaBundle\Service\StationService;
+use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Fixtures\HostPerson;
+use Uhifadhi\Bundle\AreaBundle\Tests\Integration\IntegrationTestCase;
+
+/**
+ * A PERSON WORKS OUT OF A STATION, AND THAT IS WHAT A POSTING IS.
+ *
+ * PEOPLE ARE NOT POSTED TO ZONES. A zone is ground; a station is a place with
+ * a door. The area can say who covers where only because a station sits inside
+ * a zone by geometry and a person is posted to the station — two joins, each
+ * of which is a fact somebody recorded, and neither of which anybody has to
+ * keep in step by hand.
+ *
+ * A POSTING ENDS, IT IS NOT DELETED. Who was posted where last year is how a
+ * patrol from last year has a crew, so the row stays and `endedAt` is what
+ * takes it out of the standing set. Deleting one would rewrite a past nobody
+ * asked to rewrite.
+ *
+ * ONE LEADER PER STATION, AMONG THE STANDING POSTINGS. Appointing a second is
+ * not a refusal — it is what somebody means when they say "she leads now" — so
+ * it stands the new one up and the old one down, in one transaction.
+ *
+ * WHERE THE ROW WAS WRITTEN IS PART OF IT. The station page and the person
+ * page both post somebody, and the design prints which — "written here" versus
+ * "from their page" — because two people looking at the same posting from two
+ * places should be able to tell how it got there.
+ */
+#[CoversClass(Posting::class)]
+#[CoversClass(PostingService::class)]
+final class PostingTest extends IntegrationTestCase
+{
+    public function testSomebodyIsPostedToAStationAndTheRowSaysHowItWasWritten(): void
+    {
+        $station = $this->aStation();
+        $person = $this->aPerson('J. Mollel');
+
+        $posting = $this->postings()->post($station, $person, PostingSource::WrittenHere);
+
+        self::assertSame($station->getId(), $posting->getStation()?->getId());
+        self::assertSame($person->getUuidString(), $posting->getPerson()?->getUuidString());
+        self::assertSame(PostingSource::WrittenHere, $posting->getSource());
+        self::assertNull($posting->getEndedAt());
+        self::assertFalse($posting->isLeader());
+    }
+
+    public function testAPostingFromThePersonsOwnPageSaysSo(): void
+    {
+        $posting = $this->postings()->post($this->aStation(), $this->aPerson('T. Ndosi'), PostingSource::FromTheirPage);
+
+        self::assertSame(PostingSource::FromTheirPage, $posting->getSource());
+    }
+
+    /** Ended, not deleted: last year's crew is how last year's patrol has one. */
+    public function testEndingAPostingKeepsTheRowAndTakesItOutOfTheStandingSet(): void
+    {
+        $station = $this->aStation();
+        $posting = $this->postings()->post($station, $this->aPerson('M. Kisanga'), PostingSource::WrittenHere);
+
+        $this->postings()->end($posting);
+
+        self::assertNotNull($posting->getEndedAt());
+        self::assertCount(1, $this->em->getRepository(Posting::class)->findAll());
+        self::assertSame([], $this->postings()->standingAt($station));
+    }
+
+    public function testTheStandingPostingsAreTheOnesThatHaveNotEnded(): void
+    {
+        $station = $this->aStation();
+        $this->postings()->post($station, $this->aPerson('J. Mollel'), PostingSource::WrittenHere);
+        $left = $this->postings()->post($station, $this->aPerson('M. Kisanga'), PostingSource::WrittenHere);
+        $this->postings()->end($left);
+
+        $standing = $this->postings()->standingAt($station);
+
+        self::assertCount(1, $standing);
+        self::assertSame('J. Mollel', $standing[0]->getPerson()?->getFullName());
+    }
+
+    /** The same person twice at one station is a mistake, not two postings. */
+    public function testSomebodyAlreadyPostedThereIsNotPostedTwice(): void
+    {
+        $station = $this->aStation();
+        $person = $this->aPerson('J. Mollel');
+        $this->postings()->post($station, $person, PostingSource::WrittenHere);
+
+        $this->expectException(PostingException::class);
+        $this->expectExceptionMessageMatches('/already posted/');
+
+        $this->postings()->post($station, $person, PostingSource::WrittenHere);
+    }
+
+    /** Somebody whose posting ended may be posted again — people come back. */
+    public function testSomebodyWhosePostingEndedMayBePostedAgain(): void
+    {
+        $station = $this->aStation();
+        $person = $this->aPerson('M. Kisanga');
+        $this->postings()->end($this->postings()->post($station, $person, PostingSource::WrittenHere));
+
+        $again = $this->postings()->post($station, $person, PostingSource::WrittenHere);
+
+        self::assertNull($again->getEndedAt());
+        self::assertCount(2, $this->em->getRepository(Posting::class)->findAll());
+    }
+
+    // ------------------------------------------------------- one leader
+
+    public function testAppointingALeaderMarksThatPosting(): void
+    {
+        $station = $this->aStation();
+        $posting = $this->postings()->post($station, $this->aPerson('J. Mollel'), PostingSource::WrittenHere);
+
+        $this->postings()->appointLeader($posting);
+
+        self::assertTrue($posting->isLeader());
+        self::assertSame('J. Mollel', $this->postings()->leaderAt($station)?->getPerson()?->getFullName());
+    }
+
+    /** "She leads now" stands one up and the other down, in one act. */
+    public function testAppointingASecondLeaderStandsTheFirstDown(): void
+    {
+        $station = $this->aStation();
+        $first = $this->postings()->post($station, $this->aPerson('J. Mollel'), PostingSource::WrittenHere);
+        $second = $this->postings()->post($station, $this->aPerson('A. Sanka'), PostingSource::WrittenHere);
+
+        $this->postings()->appointLeader($first);
+        $this->postings()->appointLeader($second);
+
+        self::assertFalse($first->isLeader());
+        self::assertTrue($second->isLeader());
+        self::assertCount(1, array_filter(
+            $this->postings()->standingAt($station),
+            static fn (Posting $p): bool => $p->isLeader(),
+        ));
+    }
+
+    /** Two stations each have their own leader; appointing at one leaves the other. */
+    public function testEachStationHasItsOwnLeader(): void
+    {
+        $area = $this->anArea();
+        $first = $this->stations()->add($area, 'Seneto Gate Post', -29.75, -3.2);
+        $second = $this->stations()->add($area, 'Lerai Ranger Post', -29.7, -3.2);
+
+        $a = $this->postings()->post($first, $this->aPerson('J. Mollel'), PostingSource::WrittenHere);
+        $b = $this->postings()->post($second, $this->aPerson('A. Sanka'), PostingSource::WrittenHere);
+        $this->postings()->appointLeader($a);
+        $this->postings()->appointLeader($b);
+
+        self::assertTrue($a->isLeader());
+        self::assertTrue($b->isLeader());
+    }
+
+    /** A leader whose posting ends leaves the station without one, not with a ghost. */
+    public function testEndingTheLeadersPostingLeavesTheStationWithoutALeader(): void
+    {
+        $station = $this->aStation();
+        $posting = $this->postings()->post($station, $this->aPerson('J. Mollel'), PostingSource::WrittenHere);
+        $this->postings()->appointLeader($posting);
+
+        $this->postings()->end($posting);
+
+        self::assertNull($this->postings()->leaderAt($station));
+    }
+
+    /** An ended posting cannot be handed the lead. */
+    public function testAnEndedPostingCannotBeAppointedLeader(): void
+    {
+        $posting = $this->postings()->post($this->aStation(), $this->aPerson('J. Mollel'), PostingSource::WrittenHere);
+        $this->postings()->end($posting);
+
+        $this->expectException(PostingException::class);
+        $this->expectExceptionMessageMatches('/ended/');
+
+        $this->postings()->appointLeader($posting);
+    }
+
+    // ---------------------------------------------------------------- fixtures
+
+    private function postings(): PostingService
+    {
+        /** @var PostingService $service */
+        $service = static::getContainer()->get('test_public.area.postings');
+
+        return $service;
+    }
+
+    private function stations(): StationService
+    {
+        /** @var StationService $service */
+        $service = static::getContainer()->get('test_public.area.stations');
+
+        return $service;
+    }
+
+    private function aStation(): Station
+    {
+        return $this->stations()->add($this->anArea(), 'Seneto Gate Post', -29.75, -3.2, 'ST-01');
+    }
+
+    private function aPerson(string $name): HostPerson
+    {
+        [$first, $last] = explode(' ', $name, 2);
+        $person = new HostPerson()->named($first, $last);
+        $this->em->persist($person);
+        $this->em->flush();
+
+        return $person;
+    }
+}

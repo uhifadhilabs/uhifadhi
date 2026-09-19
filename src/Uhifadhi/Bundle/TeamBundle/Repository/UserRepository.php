@@ -35,6 +35,34 @@ final class UserRepository extends ServiceEntityRepository
         parent::__construct($registry, User::class);
     }
 
+    /**
+     * THE PEOPLE A SURFACE IS ABOUT TO DRAW, in one query — what the person
+     * facet seam answers with. Their position and its department are joined
+     * eagerly, because the caller asked precisely for those two.
+     *
+     * @param list<string> $uuids
+     *
+     * @return list<User>
+     */
+    public function findByUuids(array $uuids): array
+    {
+        if ([] === $uuids) {
+            return [];
+        }
+
+        /** @var list<User> $users */
+        $users = $this->createQueryBuilder('u')
+            ->addSelect('p', 'd')
+            ->leftJoin('u.position', 'p')
+            ->leftJoin('p.department', 'd')
+            ->where('u.uuid IN (:uuids)')
+            ->setParameter('uuids', $uuids)
+            ->getQuery()
+            ->getResult();
+
+        return $users;
+    }
+
     public function findOneByEmail(string $email): ?User
     {
         return $this->findOneBy(['email' => strtolower($email)]);

@@ -23,8 +23,10 @@ use Uhifadhi\Bundle\AreaBundle\AreaBundle;
 use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Fixtures\CollectedModules;
+use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Fixtures\HostPerson;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Fixtures\TaggedFigureProvider;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
+use Uhifadhi\Contracts\Entity\UserInterface;
 use Uhifadhi\Contracts\Kpi\ZoneFigureProviderInterface;
 
 use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
@@ -81,9 +83,27 @@ class TestKernel extends Kernel
                 // metadata-driven SQL meets the column names it will actually
                 // meet in an installation.
                 'naming_strategy' => 'doctrine.orm.naming_strategy.underscore',
-                // NO `mappings` FOR THIS BUNDLE and NO `resolve_target_entities`,
-                // deliberately: both are the bundle's own prepend, and an
-                // installation writes neither.
+                // NO `mappings` FOR THIS BUNDLE and NO `resolve_target_entities`
+                // FOR THE AREA CONTRACT, deliberately: both are the bundle's own
+                // prepend, and an installation writes neither.
+                //
+                // THE USER CONTRACT IS THE OTHER WAY ROUND. A posting points at
+                // a person, and who a person IS belongs to the team bundle,
+                // which this kernel deliberately does not install — so the
+                // installation's end of that contract is answered here with
+                // {@see HostPerson}, exactly as a real installation answers it.
+                // That the area can hold a posting without team is the point.
+                'resolve_target_entities' => [
+                    UserInterface::class => HostPerson::class,
+                ],
+                'mappings' => [
+                    'AreaTestPeople' => [
+                        'type' => 'attribute',
+                        'dir' => __DIR__.'/Fixtures',
+                        'prefix' => 'Uhifadhi\\Bundle\\AreaBundle\\Tests\\Integration\\Fixtures',
+                        'is_bundle' => false,
+                    ],
+                ],
             ],
         ]);
 
@@ -96,6 +116,7 @@ class TestKernel extends Kernel
         $services->alias('test_public.area.zone_set', 'area.zone_set')->public();
         $services->alias('test_public.area.zone_figures', 'area.zone_figures')->public();
         $services->alias('test_public.area.stations', 'area.stations')->public();
+        $services->alias('test_public.area.postings', 'area.postings')->public();
 
         /*
          * A MODULE'S ZONE-FIGURE PROVIDER, tagged BY HAND exactly as a real

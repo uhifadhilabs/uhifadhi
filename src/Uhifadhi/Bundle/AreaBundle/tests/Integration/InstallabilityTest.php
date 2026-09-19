@@ -142,6 +142,7 @@ final class InstallabilityTest extends KernelTestCase
                 'Version20260101000000.php', 'Version20260101000100.php',
                 'Version20260101000110.php', 'Version20260101000120.php',
                 'Version20260101000130.php', 'Version20260101000140.php',
+                'Version20260101000500.php',
             ],
             array_map(basename(...), glob(\dirname(__DIR__, 2).'/migrations/*.php') ?: []),
         );
