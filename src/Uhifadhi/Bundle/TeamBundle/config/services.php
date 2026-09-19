@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
 use Symfony\Component\Console\Application;
+use Uhifadhi\Bundle\RegistryBundle\Event\ModuleInstalledEvent;
 use Uhifadhi\Bundle\ShellBundle\Contract\NavigationSourceInterface;
 use Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceInterface;
 use Uhifadhi\Bundle\TeamBundle\Api\State\MeProvider;
@@ -33,6 +34,7 @@ use Uhifadhi\Bundle\TeamBundle\Controller\TeamController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamWidgetsController;
 use Uhifadhi\Bundle\TeamBundle\Devkit\TeamContentProvider;
 use Uhifadhi\Bundle\TeamBundle\EventListener\ApiErrorListener;
+use Uhifadhi\Bundle\TeamBundle\EventListener\ModuleHistoryListener;
 use Uhifadhi\Bundle\TeamBundle\People\TeamPersonDirectory;
 use Uhifadhi\Bundle\TeamBundle\People\TeamPersonFacets;
 use Uhifadhi\Bundle\TeamBundle\Performance\StaffingTopic;
@@ -273,6 +275,22 @@ return static function (ContainerConfigurator $container): void {
      * #[AsEventListener] attribute would never be read and the document would
      * silently be whatever each layer felt like.
      */
+    /*
+     * A MODULE SWITCHED ON TODAY IS ASKED ABOUT THE PERIODS THAT HAVE
+     * ALREADY CLOSED, so the page it appears on has something to compare
+     * against. Guarded on the event's class: an installation without the
+     * registry has no modules to install and nothing to listen for.
+     */
+    if (class_exists(ModuleInstalledEvent::class)) {
+        $services->set('team.module_history_listener', ModuleHistoryListener::class)
+            ->args([
+                service(DepartmentRepository::class),
+                service('team.department_performance'),
+                service('team.performance_history'),
+            ])
+            ->tag('kernel.event_listener', ['event' => ModuleInstalledEvent::class, 'method' => 'onModuleInstalled']);
+    }
+
     $services->set('team.api_error_listener', ApiErrorListener::class)
         ->tag('kernel.event_listener', ['event' => 'kernel.exception', 'method' => 'onException', 'priority' => 512])
         ->tag('kernel.event_listener', ['event' => 'kernel.response', 'method' => 'onResponse', 'priority' => -1024]);

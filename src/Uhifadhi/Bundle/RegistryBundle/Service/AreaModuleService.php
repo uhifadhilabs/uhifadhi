@@ -14,7 +14,10 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\RegistryBundle\Service;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use Uhifadhi\Bundle\RegistryBundle\Entity\AreaModule;
+use Uhifadhi\Bundle\RegistryBundle\Event\ModuleInstalledEvent;
+use Uhifadhi\Bundle\RegistryBundle\Event\ModuleUninstalledEvent;
 use Uhifadhi\Bundle\RegistryBundle\Repository\AreaModuleRepository;
 use Uhifadhi\Contracts\Entity\AreaInterface;
 
@@ -38,6 +41,13 @@ final readonly class AreaModuleService
         private EntityManagerInterface $em,
         private AreaModuleRepository $areaModules,
         private ModuleCatalogue $catalogue,
+        /**
+         * WHAT SAYS SO WHEN AN AREA'S MODULES CHANGE. Most surfaces need
+         * nothing — they read the ledger every time they draw — but
+         * anything that WRITES on the strength of a module being present
+         * has to be told, and until this there was nothing to be told by.
+         */
+        private EventDispatcherInterface $events,
     ) {
     }
 
@@ -92,8 +102,17 @@ final readonly class AreaModuleService
     {
         $existing = $this->assignmentFor($area, $slug);
         if (null !== $existing) {
+            $wasParked = !$existing->isActive();
             $existing->setActive(true);
             $this->em->flush();
+
+            // SWITCHING A PARKED MODULE BACK ON IS AN INSTALL to everybody
+            // outside the registry: from the area's point of view the
+            // module is present again. Announcing a switch-on of something
+            // already on would be an event about nothing.
+            if ($wasParked) {
+                $this->events->dispatch(new ModuleInstalledEvent($area, $slug));
+            }
 
             return $existing;
         }
@@ -118,6 +137,8 @@ final readonly class AreaModuleService
         $this->em->persist($assignment);
         $this->em->flush();
 
+        $this->events->dispatch(new ModuleInstalledEvent($area, $slug));
+
         return $assignment;
     }
 
@@ -141,6 +162,8 @@ final readonly class AreaModuleService
 
         $assignment->setActive(false);
         $this->em->flush();
+
+        $this->events->dispatch(new ModuleUninstalledEvent($area, $slug));
     }
 
     /**

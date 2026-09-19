@@ -13,7 +13,10 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\RegistryBundle\Tests\Integration\Area;
 
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Uhifadhi\Bundle\RegistryBundle\Entity\AreaModule;
+use Uhifadhi\Bundle\RegistryBundle\Event\ModuleInstalledEvent;
+use Uhifadhi\Bundle\RegistryBundle\Event\ModuleUninstalledEvent;
 use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleLedger;
 use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleService;
 use Uhifadhi\Bundle\RegistryBundle\Tests\Integration\InstallationTestCase;
@@ -236,6 +239,80 @@ final class AreaModuleInstallationTest extends InstallationTestCase
         $this->areaModules()->reorder($area, ['tides', 'sightings']);
 
         self::assertSame(['tides', 'sightings', 'ferries'], $this->activeSlugs($area));
+    }
+
+    /**
+     * SWITCHING A MODULE ON SAYS SO, OUT LOUD.
+     *
+     * Installing a module changes what an area can be asked about, and
+     * anything that WRITES on the strength of a module being present has
+     * to be told: the first such listener writes down the closed periods
+     * the new module can compute, because a module that arrives in
+     * September can answer for July but nothing asks it to.
+     */
+    public function testInstallingAndParkingAnnounceThemselves(): void
+    {
+        $area = $this->areaAfterInstalling(['sightings']);
+        $heard = $this->listenFor();
+
+        $this->areaModules()->install($area, 'sightings');
+        $this->areaModules()->uninstall($area, 'sightings');
+
+        self::assertSame(['installed:sightings', 'uninstalled:sightings'], $heard());
+    }
+
+    /**
+     * AND SWITCHING ON WHAT IS ALREADY ON ANNOUNCES NOTHING. An event about
+     * a state that did not change is an event a listener has to defend
+     * itself against.
+     */
+    public function testInstallingSomethingAlreadyInstalledAnnouncesNothing(): void
+    {
+        $area = $this->areaAfterInstalling(['sightings']);
+        $this->areaModules()->install($area, 'sightings');
+
+        $heard = $this->listenFor();
+        $this->areaModules()->install($area, 'sightings');
+
+        self::assertSame([], $heard());
+    }
+
+    /** A pinned module cannot be parked, so nothing is announced either. */
+    public function testParkingWhatCannotBeParkedAnnouncesNothing(): void
+    {
+        $area = $this->areaAfterInstalling(['ferries' => ['base' => true, 'pinned' => true]]);
+        $heard = $this->listenFor();
+
+        $this->areaModules()->uninstall($area, 'ferries');
+
+        self::assertSame([], $heard());
+    }
+
+    /**
+     * Whatever the registry announces from here on, in order.
+     *
+     * @return \Closure(): list<string>
+     */
+    private function listenFor(): \Closure
+    {
+        $heard = [];
+
+        $dispatcher = static::getContainer()->get('event_dispatcher');
+        self::assertInstanceOf(EventDispatcherInterface::class, $dispatcher);
+
+        $dispatcher->addListener(ModuleInstalledEvent::class, static function (ModuleInstalledEvent $event) use (&$heard): void {
+            $heard[] = 'installed:'.$event->slug;
+        });
+        $dispatcher->addListener(ModuleUninstalledEvent::class, static function (ModuleUninstalledEvent $event) use (&$heard): void {
+            $heard[] = 'uninstalled:'.$event->slug;
+        });
+
+        // BY REFERENCE, because an arrow function captures by VALUE — one
+        // that closed over $heard would answer with the empty list it was
+        // born holding, whatever the listeners went on to record.
+        return static function () use (&$heard): array {
+            return $heard;
+        };
     }
 
     /**

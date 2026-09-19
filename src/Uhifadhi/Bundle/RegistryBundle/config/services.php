@@ -99,6 +99,7 @@ return static function (ContainerConfigurator $container): void {
             service('doctrine.orm.entity_manager'),
             service(AreaModuleRepository::class),
             service('registry.catalogue'),
+            service('event_dispatcher'),
         ]);
 
     $services->set('registry.area_module_ledger', AreaModuleLedger::class)
