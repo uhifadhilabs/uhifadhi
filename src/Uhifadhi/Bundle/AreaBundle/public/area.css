@@ -73,6 +73,27 @@
    The design states the override on the strip, so it is stated here. */
 .ao-kstrip .kpi .sub { display: block; line-height: 1.55; }
 
+/* ── A MODULE COLUMN ───────────────────────────────────────────────────────
+   A heading over a stack of one module's cells, so the seam between two
+   modules is a thing a reader can point at — the module-columns
+   arrangement of this surface.
+
+   THE DOT IS NEUTRAL HERE. A module's own hue is the module's: it declares
+   `.ao-col i.<its slug>` in its own stylesheet, which the surface links,
+   exactly as the sidebar's identity dot works. The core names no module. */
+.ao-col { display: flex; align-items: center; gap: 10px; margin: 0 2px 12px; }
+.ao-col i { width: 9px; height: 9px; border-radius: 3px; font-style: normal; flex: none; background: rgb(var(--c-fog)); }
+.ao-col b {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    letter-spacing: .16em; text-transform: uppercase; color: rgb(var(--c-tx));
+}
+/* WHAT THE COLUMN AMOUNTS TO, at the far end of its heading. */
+.ao-col .n { margin-left: auto; font-family: var(--font-mono); font-size: 9.5px; color: rgb(var(--c-dim)); }
+.ao-col a { font-family: var(--font-mono); font-size: 9.5px; }
+/* AND THE STACK ITSELF: one module's cells, further apart than the cards
+   inside one of them, so the seam reads. */
+.ao-colstack { display: flex; flex-direction: column; gap: 20px; }
+
 /* ── THE FIVE-STATE FLOW BAR ───────────────────────────────────────────────
    Open records by where they have got to: one bar, one segment per state,
    the rail under each segment fading as the state gets further along.
@@ -137,7 +158,9 @@
 .tbl td { padding: 9px 10px; border-bottom: 1px dashed color-mix(in srgb, rgb(var(--c-fog)) 18%, transparent); vertical-align: middle; font-variant-numeric: tabular-nums; }
 .tbl tr:last-child td { border-bottom: 0; }
 .tbl tr:hover td { background: color-mix(in srgb, rgb(var(--c-acc)) 4%, transparent); }
-.tbl a { color: rgb(var(--c-acc)); text-decoration: none; font-weight: 600; }
+/* A ROW'S LINK CARRIES WEIGHT — the colour and the underline are the
+   shell's base answer for every link in the product. */
+.tbl a { font-weight: 600; }
 
 /* Figures are tabular so a column of them lines up on the decimal. */
 .tbl .num {

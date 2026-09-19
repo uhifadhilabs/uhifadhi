@@ -151,6 +151,17 @@ body {
     position: relative;
     margin: 0;
 }
+/* EVERY LINK IN THE PRODUCT, ANSWERED ONCE.
+   A component that IS a link states its own colour and out-ranks this
+   (.more, .open-btn, .cta, .tgl, a.c …), so this only ever reaches the
+   links nothing else answered for — and those were the browser's blue and
+   underlined, on somebody else's page as often as our own: a contributed
+   cell's flow bar, a table's row link, the modules card's "Open →". Each
+   was patched where it was seen, which is three copies of one missing base
+   rule. */
+a { color: rgb(var(--c-acc)); text-decoration: none; }
+a:hover { text-decoration: underline; text-underline-offset: 2px; }
+
 /* A faint survey grid on the canvas: identity, never an encoding. */
 body::before {
     content: "";
@@ -513,7 +524,6 @@ body::before {
     color: rgb(var(--c-fog));
     margin: 2px 0 6px;
 }
-.crumb a { color: rgb(var(--c-acc)); text-decoration: none; }
 /* Title and subtitle left, the page's own actions right. */
 .pghead { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
 h1.pg { font-family: var(--font-display); font-size: 27px; font-weight: 700; letter-spacing: -.02em; margin: 0 0 4px; }
@@ -865,7 +875,9 @@ table.tbl td {
     font-variant-numeric: tabular-nums;
 }
 table.tbl tr:hover td { background: color-mix(in srgb, rgb(var(--c-acc)) 4%, transparent); }
-table.tbl a { color: rgb(var(--c-acc)); text-decoration: none; font-weight: 600; }
+/* A ROW'S LINK IS THE ROW'S SUBJECT, so it carries weight the base rule
+   does not give it; the colour and the underline are the base rule's. */
+table.tbl a { font-weight: 600; }
 table.tbl .num { text-align: right; font-family: var(--font-mono); }
 table.tbl td.num { font-size: 12px; }
 
@@ -1076,7 +1088,7 @@ table.tbl tr:hover .open-btn {
 .upl-zone:hover { border-color: var(--fog); }
 .upl-zone.over { border-color: var(--acc); color: var(--acc); background: color-mix(in srgb, var(--acc) 8%, transparent); }
 .upl-zone .lead { font-size: 13px; line-height: 1.5; }
-.upl-zone .lead a { color: var(--acc); text-decoration: none; font-weight: 600; }
+.upl-zone .lead a { font-weight: 600; }
 .upl-zone > svg { display: block; color: inherit; }
 .upl-kinds { font: 500 9.5px "JetBrains Mono", monospace; letter-spacing: .06em; color: var(--dim); line-height: 1.6; }
 /* THE INPUT IS THE ZONE'S WHOLE HIT AREA ALREADY, so the browser's own

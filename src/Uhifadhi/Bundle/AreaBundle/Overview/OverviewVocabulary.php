@@ -62,6 +62,11 @@ final class OverviewVocabulary
         // THE HONEST NOT-INSTALLED-HERE AFFORDANCE, and one row of it.
         'ao-slot',
         'ao-slotrow',
+
+        // A HEADING OVER ONE MODULE'S STACK OF CELLS, and the stack itself,
+        // so the seam between two modules is a thing a reader can point at.
+        'ao-col',
+        'ao-colstack',
     ];
 
     private function __construct()

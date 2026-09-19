@@ -1447,7 +1447,13 @@ blue underlined links. Write these and the area's stylesheet dresses them:
 | `.ao-flow` | records by where they have got to; `a.s1`–`a.s5` are the states, `.n` `.s` `.b` the parts, `a.late` the overdue one |
 | `.ao-slot` | the honest not-installed-here affordance |
 | `.ao-slotrow` | one row inside it — `.nm` the name, `.wd` what it would hold, `.st` its state |
+| `.ao-col` | a heading over one module's stack — `i` the dot, `b` the name, `.n` what it amounts to |
+| `.ao-colstack` | the stack under that heading |
 <!-- /overview-vocabulary -->
+
+Your module's own hue is yours: declare `.ao-col i.<your slug>` (and `.ao-by.<your slug> i`) in
+your own stylesheet, which this surface links. The core names no module, so the dot is neutral
+until you colour it.
 
 The list is published as `Overview\OverviewVocabulary::HOST_CLASSES`, so a module's vocabulary test
 can assert that every class its cells write is either its own or one of these. The shell's

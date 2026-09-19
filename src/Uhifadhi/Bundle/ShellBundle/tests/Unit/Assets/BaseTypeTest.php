@@ -66,6 +66,82 @@ final class BaseTypeTest extends TestCase
     }
 
     /**
+     * EVERY LINK IN THE PRODUCT IS ANSWERED ONCE, by a base rule.
+     *
+     * The shell shipped no `a` rule at all: three sheets restated one each
+     * where somebody had noticed (`.crumb a`, `table.tbl a`, the upload
+     * zone's), and every other link in the product was the browser's blue
+     * and underlined — a contributed cell's flow bar, a table's row link,
+     * the modules card's "Open →". Each of those was reported as its own
+     * defect; all of them were this one.
+     */
+    public function testTheShellAnswersEveryLinkWithOneBaseRule(): void
+    {
+        $shell = self::shell();
+
+        self::assertMatchesRegularExpression(
+            '/\na\s*\{[^}]*color:\s*rgb\(var\(--c-acc\)\)/',
+            $shell,
+            'A link nothing else styles is the browser\'s blue without this.',
+        );
+        self::assertMatchesRegularExpression('/\na\s*\{[^}]*text-decoration:\s*none/', $shell);
+        self::assertMatchesRegularExpression(
+            '/\na:hover\s*\{[^}]*text-decoration:\s*underline/',
+            $shell,
+            'The design underlines a link on hover, and only on hover.',
+        );
+    }
+
+    /**
+     * AND NO SHEET RESTATES IT. A scoped copy of the base answer is how one
+     * surface comes to keep the old colour after the base one changes; a
+     * scoped rule that adds something (a weight, say) is not a copy.
+     */
+    public function testNoSheetRestatesTheBaseLinkAnswer(): void
+    {
+        foreach (['shell', ...self::LAYERED] as $name) {
+            $css = 'shell' === $name ? self::shell() : self::sheet($name);
+            if (null === $css) {
+                continue;
+            }
+
+            foreach (self::rulesIn($css) as $selector => $body) {
+                if (!str_contains($selector, ' a') || 'a' === trim($selector)) {
+                    continue;
+                }
+
+                self::assertDoesNotMatchRegularExpression(
+                    '/(?<![-\w])color:\s*(rgb\(var\(--c-acc\)\)|var\(--acc\))\s*;\s*text-decoration:\s*none/',
+                    $body,
+                    \sprintf('%s restates the base link answer in "%s".', $name, $selector),
+                );
+            }
+        }
+    }
+
+    /**
+     * Every rule in a sheet as selector => declarations.
+     *
+     * @return array<string, string>
+     */
+    private static function rulesIn(string $css): array
+    {
+        // COMMENTS FIRST. A selector read with the comment above it glued
+        // to its front is a selector this check cannot recognise — and the
+        // rule it belongs to would be tested as somebody else's.
+        $css = (string) preg_replace('#/\*.*?\*/#s', '', $css);
+
+        preg_match_all('/([^{}]+)\{([^}]*)\}/', $css, $found, \PREG_SET_ORDER);
+
+        $rules = [];
+        foreach ($found as [, $selector, $body]) {
+            $rules[trim($selector)] = $body;
+        }
+
+        return $rules;
+    }
+
+    /**
      * A STRIP NESTED IN A CELL IS SPACED ONCE, not twice.
      *
      * Measured on the area overview: the figure strip inside a widget cell
