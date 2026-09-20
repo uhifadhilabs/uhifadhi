@@ -52,9 +52,13 @@ final class AreasMine
      * are an external contract a released client reads, and an array says exactly
      * what goes across without depending on serializer naming conventions.
      *
-     * `stations` is present and EMPTY. This platform has no station record, and
-     * publishing the station names typed on past work as a register would hand a
-     * client a list of guesses with positions nobody holds. `boundary` is GeoJSON
+     * `stations` IS THE AREA'S POSTS, in the same shape `/stations?near=` hands
+     * them over — uuid, name, code, lat, lon, catchment — because that is what
+     * the picker and the confirm screen already read, and a second shape for one
+     * thing is two parsers kept in step by hand. It was published empty while the
+     * platform had no station record; it has one now, and a phone whose cache
+     * said "no posts" had to be online to learn the names of the posts it works
+     * at. `boundary` is GeoJSON
      * in lon/lat order (RFC 7946), a MultiPolygon or a Polygon depending on
      * whether the ground is one piece, and null for an area whose edge has not
      * been imported.
@@ -63,7 +67,7 @@ final class AreasMine
      *     id: string,
      *     name: string,
      *     areaKm2: float,
-     *     stations: list<array{id: string, name: string, position: array{lat: float, lon: float}}>,
+     *     stations: list<array{uuid: string, name: string, code: string|null, lat: float|null, lon: float|null, catchmentM: int|null}>,
      *     team: list<array{id: string, name: string}>,
      *     boundary: array<string, mixed>|null
      * }> $areas

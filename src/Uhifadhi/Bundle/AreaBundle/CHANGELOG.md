@@ -8,6 +8,12 @@
 
 Not released yet.
 
+ * `GET /api/areas/mine` carries THE AREA'S POSTS, in the same shape
+   `/stations?near=` hands them over (uuid · name · code · lat · lon ·
+   catchment). It was published empty while the platform had no station
+   record; a phone whose cache said "no posts" had to be online to learn the
+   names of the posts it works at, which is the one thing that endpoint exists
+   to prevent
  * a zone name that arrives ENTIRELY UPPER CASE is title-cased at import, and
    a name with one lower-case letter in it is left exactly as it arrived: a
    GIS export shouts because its tool writes that way, not because anybody

@@ -53,7 +53,11 @@ final readonly class DutyStationService
     /**
      * @param string|null $near `lat,lon` — a hint, never a filter
      *
-     * @return list<array{uuid: string, name: string, lat: float|null, lon: float|null, catchmentM: int|null}>
+     * `code` has been sent since the phone learned to join a watch's station
+     * to its cached posts; the shape said otherwise, which is how a caller
+     * ends up parsing a field the type says is not there
+     *
+     * @return list<array{uuid: string, name: string, code: string|null, lat: float|null, lon: float|null, catchmentM: int|null}>
      */
     public function listFor(AreaOfInterest $area, ?string $near = null): array
     {

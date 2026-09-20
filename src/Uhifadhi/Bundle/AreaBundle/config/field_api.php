@@ -86,6 +86,7 @@ return static function (ContainerConfigurator $container): void {
             service(AreaOfInterestRepository::class),
             service('area.api.roster'),
             service('security.authorization_checker'),
+            service('area.duty_stations'),
         ])
         ->tag('api_platform.state_provider', ['key' => AreasMineProvider::class]);
 

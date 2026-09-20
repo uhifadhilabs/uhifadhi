@@ -216,7 +216,10 @@ asks nothing. `GET /api/areas/mine` is that cache:
       "id": "0192f3c1-…",                    // the public address, never the sequential key
       "name": "Northern Conservation Reserve",
       "areaKm2": 9903.4,                     // ST_Area on the spheroid, to a tenth
-      "stations": [],
+      "stations": [                          // the area's posts, in the /stations?near= shape
+        { "uuid": "0192f3c2-…", "name": "Seneto Gate Post", "code": "ST-01",
+          "lat": -3.2, "lon": 35.5, "catchmentM": 300 }
+      ],
       "team": [{ "id": "sl-0142", "name": "…" }],
       "boundary": { "type": "MultiPolygon", "coordinates": [ /* lon, lat */ ] }
     }
@@ -237,9 +240,14 @@ draws it at zooms where a vertex every few metres is invisible. It is a
 `MultiPolygon` or a `Polygon` depending on whether the ground is one piece, and
 `null` for an area whose edge has not been imported, which also measures `0.0`.
 
-**`stations` is present and empty.** This platform has no station record;
-publishing the station names typed on past work as a register would hand a client
-a list of guesses with positions nobody holds.
+**`stations` is the area's posts, in the same shape `/stations?near=` hands them
+over** — uuid, name, code, lat, lon, catchment. That is what the picker and the
+confirm screen already read, and a second shape for one thing would be two parsers
+kept in step by hand. They are not ordered by distance: the cache is taken at
+sign-in, and there is nothing to be near yet. An area with no posts carries an
+empty list, which is a real answer. (It was published empty while the platform
+had no station record; a phone whose cache said "no posts" then had to be online
+to learn the names of the posts it works at.)
 
 **`team` is the roster, and it is asked of the contract.** This bundle owns ground,
 not people: it reads `Uhifadhi\Contracts\Entity\UserInterface`, so whichever

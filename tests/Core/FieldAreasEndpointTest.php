@@ -86,12 +86,37 @@ final class FieldAreasEndpointTest extends FieldApiTestCase
     }
 
     /**
-     * EMPTY, AND HONESTLY SO. This platform has no station record. Inventing one
-     * from the station names typed on past work would hand a handset a list of
-     * guesses dressed as a register, with positions nobody holds — so the key is
-     * present, as the contract states, and the list is empty.
+     * THE AREA'S POSTS, IN THE SHAPE `/stations?near=` ALREADY HANDS OVER.
+     *
+     * This was published empty while the platform had no station record. It
+     * has one now, and a phone whose cache said "no posts" had to be online
+     * to learn the names of the posts it works at — which is the one thing
+     * this endpoint exists to prevent.
+     *
+     * ONE SHAPE FOR ONE THING: the picker and the confirm screen already read
+     * these rows from the near-endpoint, and a second shape would be two
+     * parsers kept in step by hand.
      */
-    public function testStationsIsAnEmptyListUntilStationsAreModelled(): void
+    public function testStationsAreTheAreasPostsInTheShapeTheNearEndpointUses(): void
+    {
+        $area = $this->area('Northern Conservation Reserve');
+        $this->station($area, 'Seneto Gate Post', 35.5, -3.2, 300, 'ST-01');
+
+        $body = $this->get(self::ENDPOINT, $this->tokenFor($this->ranger()));
+        $stations = self::nested($body, 'areas', 0, 'stations');
+
+        self::assertCount(1, $stations);
+
+        $post = $stations[0];
+        self::assertIsArray($post);
+        self::assertSame(['uuid', 'name', 'code', 'lat', 'lon', 'catchmentM'], array_keys($post));
+        self::assertSame('Seneto Gate Post', $post['name']);
+        self::assertSame('ST-01', $post['code'], 'what a ranger says on the radio, beside the name');
+        self::assertSame(300, $post['catchmentM']);
+    }
+
+    /** An area with no posts says so as an empty list, which is a real answer. */
+    public function testAnAreaWithNoPostsCarriesAnEmptyList(): void
     {
         $this->area('Northern Conservation Reserve');
         $body = $this->get(self::ENDPOINT, $this->tokenFor($this->ranger()));

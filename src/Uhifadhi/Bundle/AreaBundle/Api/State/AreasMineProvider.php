@@ -20,6 +20,7 @@ use Uhifadhi\Bundle\AreaBundle\Api\FieldRoster;
 use Uhifadhi\Bundle\AreaBundle\ApiResource\AreasMine;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
+use Uhifadhi\Bundle\AreaBundle\Service\DutyStationService;
 
 /**
  * Answers `GET /api/areas/mine`: builds a field client's offline cache.
@@ -65,6 +66,7 @@ final readonly class AreasMineProvider implements ProviderInterface
         private AreaOfInterestRepository $areas,
         private FieldRoster $roster,
         private AuthorizationCheckerInterface $authorization,
+        private DutyStationService $stations,
     ) {
     }
 
@@ -93,7 +95,26 @@ final readonly class AreasMineProvider implements ProviderInterface
                 'id' => (string) $area->getUuidString(),
                 'name' => (string) $area->getName(),
                 'areaKm2' => $this->areaKm2($area),
-                'stations' => [],
+                /*
+                 * THE AREA'S POSTS, IN THE SAME SHAPE `/stations?near=` HANDS
+                 * THEM OVER — uuid, name, code, lat, lon, catchment.
+                 *
+                 * This was published EMPTY, with a note saying the platform
+                 * had no station record. It has one now, and a phone that
+                 * cached an empty list at sign-in had to be online to learn
+                 * the names of the posts it works at — which is the one thing
+                 * this endpoint exists to prevent.
+                 *
+                 * ONE SHAPE FOR ONE THING. The near-endpoint's rows are what
+                 * the picker and the confirm screen already read, so handing
+                 * the cache a different shape would make a client parse the
+                 * same post two ways and keep them in step by hand.
+                 *
+                 * UNSORTED BY DISTANCE, because there is no standing to be
+                 * near: the cache is taken at sign-in and the near query is
+                 * asked from wherever somebody is at the time.
+                 */
+                'stations' => $this->stations->listFor($area),
                 'team' => $team,
                 'boundary' => $this->boundary($area),
             ];
