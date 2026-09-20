@@ -51,7 +51,8 @@ final readonly class PostingService
     /**
      * @param \DateTimeImmutable|null $since the day it starts; today where nobody said
      *
-     * @throws PostingException when this person already stands at this station
+     * @throws PostingException when this person already stands anywhere — one
+     *                          posting a person, one station and one area
      */
     public function post(
         Station $station,
@@ -62,6 +63,29 @@ final readonly class PostingService
     ): Posting {
         if (null !== $this->postings->findStandingFor($station, $person)) {
             throw PostingException::alreadyPosted($person->getFullName(), (string) $station->getName());
+        }
+
+        /*
+         * ONE POSTING A PERSON — one station, one area (ruled).
+         *
+         * A posting is where somebody WORKS, and they work in one place: two
+         * standing postings make a roll that cannot be read, a head count
+         * that double-counts, and a handset that cannot say which post its
+         * check-in is against. Moving somebody is therefore two acts and not
+         * one — end the posting they have, make the one they are going to —
+         * which is also the only version that leaves last year's patrol with
+         * a crew.
+         *
+         * IT IS A RULE HERE AND NOT A CONSTRAINT for the same reason the one
+         * leader per station is: what expresses it is a PARTIAL unique index
+         * (`WHERE ended_at IS NULL`), the ORM mapping cannot declare one, and
+         * an index added by hand is an index `migrations:diff` removes on the
+         * next run. So it is a check in the one supported way a posting is
+         * written, and a test.
+         */
+        $standing = $this->postings->findStandingByPerson($person);
+        if ([] !== $standing) {
+            throw PostingException::alreadyPostedElsewhere($person->getFullName(), (string) $standing[0]->getStation()?->getName());
         }
 
         $posting = new Posting()

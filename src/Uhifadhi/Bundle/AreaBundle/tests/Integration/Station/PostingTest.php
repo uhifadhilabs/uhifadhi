@@ -110,6 +110,66 @@ final class PostingTest extends IntegrationTestCase
         $this->postings()->post($station, $person, PostingSource::WrittenHere);
     }
 
+    /**
+     * ONE POSTING A PERSON — one station, one area (ruled).
+     *
+     * A posting is where somebody WORKS, and they work in one place. Two
+     * standing postings make a roll nobody can read, a head count that
+     * double-counts the same ranger, and a check-in the handset cannot say
+     * which post it is against.
+     */
+    public function testSomebodyStandingAtOnePostIsNotPostedToASecond(): void
+    {
+        $area = $this->anArea();
+        $first = $this->stations()->add($area, 'Seneto Gate Post', -29.75, -3.2);
+        $second = $this->stations()->add($area, 'Lerai Ranger Post', -29.7, -3.2);
+        $person = $this->aPerson('J. Mollel');
+        $this->postings()->post($first, $person, PostingSource::WrittenHere);
+
+        $this->expectException(PostingException::class);
+        // The refusal names where they already stand: the person asking has
+        // almost always forgotten rather than meant it.
+        $this->expectExceptionMessageMatches('/posted to Seneto Gate Post/');
+
+        $this->postings()->post($second, $person, PostingSource::WrittenHere);
+    }
+
+    /** AND NOT TO A POST IN ANOTHER AREA EITHER — one posting is one posting. */
+    public function testSomebodyStandingInOneAreaIsNotPostedInAnother(): void
+    {
+        $north = $this->stations()->add($this->anArea('Northern Reserve'), 'Seneto Gate Post', -29.75, -3.2);
+        $south = $this->stations()->add($this->anArea('Southern Reserve'), 'Endulen Ranger Post', -29.6, -3.4);
+        $person = $this->aPerson('A. Sanka');
+        $this->postings()->post($north, $person, PostingSource::WrittenHere);
+
+        $this->expectException(PostingException::class);
+
+        $this->postings()->post($south, $person, PostingSource::WrittenHere);
+    }
+
+    /**
+     * MOVING SOMEBODY IS TWO ACTS, and that is the point rather than a cost:
+     * ending the posting they have is what leaves last year's patrol with a
+     * crew, and what the roll reads back.
+     */
+    public function testEndingThePostingFreesThePersonForTheNextOne(): void
+    {
+        $area = $this->anArea();
+        $first = $this->stations()->add($area, 'Seneto Gate Post', -29.75, -3.2);
+        $second = $this->stations()->add($area, 'Lerai Ranger Post', -29.7, -3.2);
+        $person = $this->aPerson('M. Kisanga');
+        $this->postings()->end($this->postings()->post($first, $person, PostingSource::WrittenHere));
+
+        $moved = $this->postings()->post($second, $person, PostingSource::WrittenHere);
+
+        self::assertNull($moved->getEndedAt());
+        self::assertCount(1, $this->postings()->standingAt($second));
+        self::assertCount(0, $this->postings()->standingAt($first));
+        // And the row that ended is still there, because who was posted where
+        // last year is how last year's patrol has a crew.
+        self::assertCount(2, $this->em->getRepository(Posting::class)->findAll());
+    }
+
     /** Somebody whose posting ended may be posted again — people come back. */
     public function testSomebodyWhosePostingEndedMayBePostedAgain(): void
     {

@@ -45,6 +45,14 @@ use Uhifadhi\Contracts\Entity\UserInterface;
  * last year's patrol has a crew, so `endedAt` takes a row out of the standing
  * set and nothing takes it out of the table.
  *
+ * ONE POSTING A PERSON, AMONG THE STANDING ONES — ruled: one station, one
+ * area. A posting is where somebody WORKS and they work in one place, so
+ * moving them is two acts and not one: end the posting they have, make the
+ * one they are going to. Enforced in
+ * {@see \Uhifadhi\Bundle\AreaBundle\Service\PostingService::post()}, for
+ * the same reason as the rule below — what expresses it is a partial unique
+ * index (`WHERE ended_at IS NULL`) the ORM mapping cannot declare.
+ *
  * ONE LEADER PER STATION, AMONG THE STANDING POSTINGS — enforced by
  * {@see \Uhifadhi\Bundle\AreaBundle\Service\PostingService}, which is the only
  * supported way this column is written. It is not a database constraint

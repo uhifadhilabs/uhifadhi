@@ -8,6 +8,10 @@
 
 Not released yet.
 
+ * ONE POSTING A PERSON (ruled): one station, one area. `PostingService::post()`
+   refuses somebody who already stands anywhere and names where, so moving
+   them is two acts — end the posting they have, make the one they are going
+   to — which is also what leaves last year's patrol with a crew
  * FOUR FIGURES TO A ROW, never five (ruled): the area overview's right-now
    strip is three module tiles and the attention count, and the zones and
    stations registers drop the count of the thing they list — the band above
