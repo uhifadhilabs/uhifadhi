@@ -40,6 +40,7 @@ use Uhifadhi\Bundle\TeamBundle\Exception\NameNotUniqueException;
 use Uhifadhi\Bundle\TeamBundle\Model\DepartmentQuery;
 use Uhifadhi\Bundle\TeamBundle\Performance\DepartmentsBand;
 use Uhifadhi\Bundle\TeamBundle\Performance\PeriodKind;
+use Uhifadhi\Bundle\TeamBundle\Performance\RequiredPeriod;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentGoalRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
@@ -52,6 +53,7 @@ use Uhifadhi\Bundle\TeamBundle\Service\PerformanceTopics;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionService;
 use Uhifadhi\Bundle\TeamBundle\Shell\DepartmentSectionTabs;
 use Uhifadhi\Contracts\Entity\AreaInterface;
+use Uhifadhi\Contracts\Kpi\CurrentPeriodInterface;
 use Uhifadhi\Contracts\Performance\PerformanceScope;
 
 /**
@@ -151,6 +153,18 @@ final readonly class DepartmentController
         private PerformanceTopics $topics,
         private DepartmentsBand $band,
         private DepartmentPalette $palette,
+        /**
+         * WHAT PERIOD IT IS NOW, from whoever publishes one — rather
+         * than the wall clock this read used to ask, which made the
+         * answer depend on the day the page happened to be opened and
+         * could not be pinned at a month boundary by any test.
+         *
+         * OPTIONAL IN THE CONTAINER, REQUIRED AT THE SCREEN. This
+         * bundle's MODEL needs no calendar; its performance pages do.
+         * A kernel taking the entities and not the pages must boot —
+         * see {@see RequiredPeriod}.
+         */
+        private ?CurrentPeriodInterface $periods,
     ) {
     }
 
@@ -205,7 +219,7 @@ final readonly class DepartmentController
         // page contradicting its own filter.
         $bandScope = $this->bandScope($query, $areas);
         $periodKind = PeriodKind::fromRequest($request->query->getString('period'));
-        $bandPeriod = $periodKind->period(new \DateTimeImmutable());
+        $bandPeriod = $periodKind->period(RequiredPeriod::of($this->periods)->now());
 
         return new Response($this->twig->render('@Team/departments/index.html.twig', [
             // ORG-WIDE FIRST, THEN AREA-LEVEL: the register is read from the
@@ -969,7 +983,7 @@ final readonly class DepartmentController
             $published[$kpi->moduleSlug.'.'.$kpi->key] = $kpi->value;
         }
 
-        $now = new \DateTimeImmutable();
+        $now = RequiredPeriod::of($this->periods)->now();
         $states = [];
         foreach ($this->goals->findForDepartment($department) as $goal) {
             $ref = $goal->getKpiRef();

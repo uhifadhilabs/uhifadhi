@@ -1,5 +1,43 @@
 # UPGRADE FROM 0.x to 1.0
 
+## One clock-fed source says what period it is
+
+**What changed.** `Uhifadhi\Contracts\Kpi\CurrentPeriodInterface` — `now()`,
+`month()`, `quarter()`, `year()`, `days(int)` — answered by
+`AtlasBundle\Calendar\Periods`, which is fed by `psr/clock`.
+
+**Why.** "This month's figures" was decided separately in eleven places
+across two bundles, each writing
+`FigurePeriod::month(new \DateTimeImmutable())`. Every one asked the wall
+clock, so every one turned over on the 1st, two surfaces either side of
+midnight could caption two different months in one reading, and no test
+could stand on a month boundary without moving the server's date.
+
+**What to change in a module.** Type-hint the contract and stop building
+periods from an instant you took yourself:
+
+```diff
+-$period = FigurePeriod::month(new \DateTimeImmutable());
++$period = $this->periods->month();
+```
+
+**Declare it the way your bundle actually needs it.** A package whose
+screens cannot draw without a period asks for the contract outright; a
+package that is *also* a model an installation persists — entities, a user
+provider — must still boot in a kernel that took the model and not the
+screens, so it asks with `->nullOnInvalid()` and says what is missing at the
+screen:
+
+```php
+$services->set('your.navigation', YourNavigation::class)
+    ->args([service(CurrentPeriodInterface::class)->nullOnInvalid()]);
+```
+
+Naming another bundle's service id (`atlas.periods`) instead makes that
+kernel fail at container compile, in somebody else's suite, a long way from
+the change that caused it. A bundle declares what it needs; it never assumes
+what a kernel registered.
+
 ## `/` is the organisation dashboard
 
 **What changed.** The core ships a dashboard at `/` — a widget surface

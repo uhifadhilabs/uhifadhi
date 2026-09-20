@@ -13,8 +13,10 @@ declare(strict_types=1);
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
+use Uhifadhi\Bundle\AtlasBundle\Calendar\Periods;
 use Uhifadhi\Bundle\AtlasBundle\Map\MapBuilder;
 use Uhifadhi\Bundle\AtlasBundle\Map\MapBuilderInterface;
+use Uhifadhi\Contracts\Kpi\CurrentPeriodInterface;
 
 /*
  * The bundle's static service wiring.
@@ -51,5 +53,27 @@ return static function (ContainerConfigurator $container): void {
          * is what a consumer's own explicit wiring references.
          */
         ->alias(MapBuilderInterface::class, 'atlas.map_builder')
+
+        /*
+         * WHAT PERIOD IT IS NOW, from a clock a test can set.
+         *
+         * "This month's figures" used to be decided separately in eleven
+         * places across two bundles, each reading the wall clock — correct
+         * on the 14th and wrong on the 1st, and unpinnable without pinning
+         * the server. One source, fed by psr/clock, so pinning the clock
+         * pins every period on every page.
+         */
+        ->set('atlas.periods', Periods::class)
+        ->args([service('clock')])
+
+        ->alias(Periods::class, 'atlas.periods')
+
+        /*
+         * AND THE NAME EVERY CONSUMER ACTUALLY ASKS FOR. A bundle that
+         * captions a period names the CONTRACT; this bundle is what answers
+         * it. One that named `atlas.periods` directly could not boot in a
+         * kernel that took its entities and not its screens.
+         */
+        ->alias(CurrentPeriodInterface::class, 'atlas.periods')
     ;
 };

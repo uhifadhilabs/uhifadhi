@@ -29,11 +29,13 @@ use Uhifadhi\Bundle\TeamBundle\Performance\Comparison;
 use Uhifadhi\Bundle\TeamBundle\Performance\GoalsTopic;
 use Uhifadhi\Bundle\TeamBundle\Performance\OrganisationBand;
 use Uhifadhi\Bundle\TeamBundle\Performance\PeriodKind;
+use Uhifadhi\Bundle\TeamBundle\Performance\RequiredPeriod;
 use Uhifadhi\Bundle\TeamBundle\Performance\TopicCard;
 use Uhifadhi\Bundle\TeamBundle\Performance\TopicCards;
 use Uhifadhi\Bundle\TeamBundle\Service\PerformanceTopics;
 use Uhifadhi\Bundle\TeamBundle\Shell\PerformanceSectionTabs;
 use Uhifadhi\Contracts\Entity\AreaInterface;
+use Uhifadhi\Contracts\Kpi\CurrentPeriodInterface;
 use Uhifadhi\Contracts\Kpi\FigurePeriod;
 use Uhifadhi\Contracts\Performance\DepartmentDirectoryInterface;
 use Uhifadhi\Contracts\Performance\PerformanceScope;
@@ -96,6 +98,18 @@ final readonly class PerformanceController
         private OrganisationBand $band,
         private UrlGeneratorInterface $urls,
         private EntityManagerInterface $entityManager,
+        /**
+         * WHAT PERIOD IT IS NOW, from whoever publishes one — rather
+         * than the wall clock this read used to ask, which made the
+         * answer depend on the day the page happened to be opened and
+         * could not be pinned at a month boundary by any test.
+         *
+         * OPTIONAL IN THE CONTAINER, REQUIRED AT THE SCREEN. This
+         * bundle's MODEL needs no calendar; its performance pages do.
+         * A kernel taking the entities and not the pages must boot —
+         * see {@see RequiredPeriod}.
+         */
+        private ?CurrentPeriodInterface $periods,
     ) {
     }
 
@@ -284,7 +298,7 @@ final readonly class PerformanceController
     {
         $kind = PeriodKind::fromRequest($request->query->getString('period'));
         $compare = Comparison::fromRequest($request->query->getString('compare'));
-        $period = $kind->period(new \DateTimeImmutable());
+        $period = $kind->period(RequiredPeriod::of($this->periods)->now());
 
         return [$kind, $compare, $period->comparedWith($compare->of($period))];
     }

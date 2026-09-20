@@ -21,7 +21,9 @@ use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Performance\Comparison;
 use Uhifadhi\Bundle\TeamBundle\Performance\MatrixPlacing;
 use Uhifadhi\Bundle\TeamBundle\Performance\PeriodKind;
+use Uhifadhi\Bundle\TeamBundle\Performance\RequiredPeriod;
 use Uhifadhi\Bundle\TeamBundle\Service\PerformanceTopics;
+use Uhifadhi\Contracts\Kpi\CurrentPeriodInterface;
 use Uhifadhi\Contracts\Performance\PerformanceScope;
 use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
 
@@ -51,6 +53,18 @@ final readonly class PerformanceConfigureController
     public function __construct(
         private Environment $twig,
         private PerformanceTopics $topics,
+        /**
+         * WHAT PERIOD IT IS NOW, from whoever publishes one — rather
+         * than the wall clock this read used to ask, which made the
+         * answer depend on the day the page happened to be opened and
+         * could not be pinned at a month boundary by any test.
+         *
+         * OPTIONAL IN THE CONTAINER, REQUIRED AT THE SCREEN. This
+         * bundle's MODEL needs no calendar; its performance pages do.
+         * A kernel taking the entities and not the pages must boot —
+         * see {@see RequiredPeriod}.
+         */
+        private ?CurrentPeriodInterface $periods,
     ) {
     }
 
@@ -58,7 +72,7 @@ final readonly class PerformanceConfigureController
     #[IsGranted(PermissionEnum::TeamManage->value)]
     public function settings(): Response
     {
-        $period = PeriodKind::Month->period(new \DateTimeImmutable());
+        $period = PeriodKind::Month->period(RequiredPeriod::of($this->periods)->now());
         $topics = $this->topics->forScope(PerformanceScope::organisation(), $period);
 
         return new Response($this->twig->render('@Team/performance/configure.html.twig', [

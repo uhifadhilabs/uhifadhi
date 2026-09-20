@@ -8,6 +8,18 @@
 
 Not released yet.
 
+ * THIS BUNDLE BOOTS WITHOUT THE ATLAS. Its performance screens caption the
+   period they read; for a moment they took it from a service of the
+   atlas's, BY ID, and the container then required the atlas at compile —
+   so a module's own test kernel, registering team for its entities and its
+   user provider and nothing else, died with "non-existent service
+   atlas.periods" in somebody else's suite. The dependency is on the
+   CONTRACT now (`Uhifadhi\Contracts\Kpi\CurrentPeriodInterface`), tolerated
+   when absent: the sidebar's Performance row keeps its place and simply
+   does not drill, and a screen that genuinely needs a period fails with a
+   sentence naming the package to add. This bundle is a model AND a set of
+   screens, and only the screens want a calendar.
+
  * PEOPLE AND POSITIONS ON THE SETTINGS SECTION: how many people there are
    and how many of them are POSTED (through the posting seam, so an
    installation with no area package says the question has no answer rather

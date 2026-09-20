@@ -118,6 +118,7 @@ use Uhifadhi\Bundle\TeamBundle\Widget\DepartmentWidgets;
 use Uhifadhi\Bundle\TeamBundle\Widget\PositionWidgets;
 use Uhifadhi\Bundle\TeamBundle\Widget\TeamWidgets;
 use Uhifadhi\Contracts\Area\StationDirectoryInterface;
+use Uhifadhi\Contracts\Kpi\CurrentPeriodInterface;
 use Uhifadhi\Contracts\People\PersonDirectoryProviderInterface;
 use Uhifadhi\Contracts\People\PersonFacetProviderInterface;
 use Uhifadhi\Contracts\People\PersonPostingProviderInterface;
@@ -613,6 +614,7 @@ return static function (ContainerConfigurator $container): void {
                 // THE SAME COLLECTOR THE REGISTER READS, so the tree and the
                 // page cannot list two different sets of topics.
                 service('team.performance_topics'),
+                service(CurrentPeriodInterface::class)->nullOnInvalid(),
             ])
             ->tag('shell.nav_section');
 
@@ -1043,6 +1045,7 @@ return static function (ContainerConfigurator $container): void {
             service('team.performance_topics'),
             service('team.performance.departments_band'),
             service('team.department_palette'),
+            service(CurrentPeriodInterface::class)->nullOnInvalid(),
         ])
         ->tag('controller.service_arguments');
     $services->alias(DepartmentController::class, 'team.controller.department')->public();
@@ -1064,6 +1067,7 @@ return static function (ContainerConfigurator $container): void {
             service('team.performance.organisation_band'),
             service('router'),
             service('doctrine.orm.entity_manager'),
+            service(CurrentPeriodInterface::class)->nullOnInvalid(),
         ])
         ->tag('controller.service_arguments');
     $services->alias(PerformanceController::class, 'team.controller.performance')->public();
@@ -1108,6 +1112,7 @@ return static function (ContainerConfigurator $container): void {
         ->args([
             service('twig'),
             service('team.performance_topics'),
+            service(CurrentPeriodInterface::class)->nullOnInvalid(),
         ])
         ->tag('controller.service_arguments');
     $services->alias(PerformanceConfigureController::class, 'team.controller.performance_configure')->public();

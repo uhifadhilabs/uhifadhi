@@ -23,8 +23,9 @@ use Uhifadhi\Bundle\ShellBundle\Model\NavItem;
 use Uhifadhi\Bundle\ShellBundle\Model\NavSection;
 use Uhifadhi\Bundle\TeamBundle\Controller\PerformanceController;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
+use Uhifadhi\Bundle\TeamBundle\Performance\RequiredPeriod;
 use Uhifadhi\Bundle\TeamBundle\Service\PerformanceTopics;
-use Uhifadhi\Contracts\Kpi\FigurePeriod;
+use Uhifadhi\Contracts\Kpi\CurrentPeriodInterface;
 use Uhifadhi\Contracts\Performance\PerformanceScope;
 use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
 use Uhifadhi\Contracts\Shell\NavGroup;
@@ -67,6 +68,18 @@ final readonly class PerformanceNavigation implements NavigationSourceInterface
         private AuthorizationCheckerInterface $authorization,
         private RequestStack $requests,
         private PerformanceTopics $topics,
+        /**
+         * WHAT PERIOD IT IS NOW, from whoever publishes one — rather
+         * than the wall clock this read used to ask, which made the
+         * answer depend on the day the page happened to be opened and
+         * could not be pinned at a month boundary by any test.
+         *
+         * OPTIONAL IN THE CONTAINER, REQUIRED AT THE SCREEN. This
+         * bundle's MODEL needs no calendar; its performance pages do.
+         * A kernel taking the entities and not the pages must boot —
+         * see {@see RequiredPeriod}.
+         */
+        private ?CurrentPeriodInterface $periods,
     ) {
     }
 
@@ -130,7 +143,16 @@ final readonly class PerformanceNavigation implements NavigationSourceInterface
             return $topics;
         }
 
-        $period = FigurePeriod::month(new \DateTimeImmutable());
+        // NO PERIOD, NO SUBTREE — and the row itself stands. The topics are
+        // read FOR a period, so a kernel that took this bundle's entities
+        // and not its performance screens has nothing to drill; a sidebar
+        // that took the whole app down to say so would be the worst
+        // possible way to learn it.
+        if (null === $this->periods) {
+            return $topics;
+        }
+
+        $period = $this->periods->month();
         $scope = PerformanceScope::organisation();
 
         $rows = [];
