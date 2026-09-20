@@ -15,6 +15,10 @@ Not released yet.
    the stale one, and the people who are on no ground at all)
  * `LayerShape::Live`/`LiveStale`/`LiveAbsent`, one mark in three states, and a
    legend row whose swatch is a drawing rather than a colour
+ * a plate's legend comes out IN THE ORDER IT WAS BUILT — a layer's own row
+   where the layer was added, a stated key row where it was stated. Sorting
+   the layer rows above the stated ones put a caller's own mark in the middle
+   of somebody else's key
  * a calendar pill's dot is painted with a COLOUR token and not a channel one
    — the roles mapped to `--c-acc`/`--c-ok`/…, which resolve to a bare `62 217
    168` in a `background` and painted nothing at all, so every pill dot on

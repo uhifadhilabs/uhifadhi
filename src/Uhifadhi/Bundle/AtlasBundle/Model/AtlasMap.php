@@ -54,8 +54,20 @@ final class AtlasMap
     /** @var list<GeoJsonLayer> */
     private array $layers = [];
 
-    /** @var list<LegendItem> */
-    private array $statedLegendItems = [];
+    /**
+     * THE LEGEND IN THE ORDER IT WAS BUILT — a layer's own row and a stated
+     * key row, interleaved.
+     *
+     * Kept as one list rather than derived from the two sources, because the
+     * order rows come out in is the order the caller wrote them and nothing
+     * else. Sorting the layer rows above the stated ones put a caller's own
+     * mark in the middle of somebody else's key: the posts row landed between
+     * the live position and the state that says it is stale, which reads as
+     * three states of one mark and is not.
+     *
+     * @var list<GeoJsonLayer|LegendItem>
+     */
+    private array $legendRows = [];
 
     private ?Boundary $boundary = null;
 
@@ -104,6 +116,7 @@ final class AtlasMap
     public function addLayer(GeoJsonLayer $layer): self
     {
         $this->layers[] = $layer;
+        $this->legendRows[] = $layer;
 
         return $this;
     }
@@ -137,7 +150,7 @@ final class AtlasMap
      */
     public function addLegendItem(LegendItem $item): self
     {
-        $this->statedLegendItems[] = $item;
+        $this->legendRows[] = $item;
 
         return $this;
     }
@@ -215,17 +228,22 @@ final class AtlasMap
     }
 
     /**
-     * The whole legend as one list: each layer's own row first, in the order
-     * the layers were added, then the rows the map stated by hand.
+     * The whole legend as one list, IN THE ORDER IT WAS BUILT — a layer's own
+     * row where the layer was added, a stated row where it was stated.
+     *
+     * The order is the caller's sentence about their own plate, so the map
+     * does not rewrite it: a key that groups "live position · stale · no
+     * position" and then names the posts reads as one mark's states and then
+     * another mark, and the same rows in any other order do not.
      *
      * @return list<LegendItem>
      */
     public function legend(): array
     {
-        return [
-            ...array_map(static fn (GeoJsonLayer $layer) => $layer->legendItem(), $this->layers),
-            ...$this->statedLegendItems,
-        ];
+        return array_map(
+            static fn (GeoJsonLayer|LegendItem $row): LegendItem => $row instanceof GeoJsonLayer ? $row->legendItem() : $row,
+            $this->legendRows,
+        );
     }
 
     /**

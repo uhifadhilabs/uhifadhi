@@ -153,9 +153,11 @@ final class LivePlateTest extends TestCase
     }
 
     /**
-     * A CALLER'S OWN MARK JOINS THE SAME HEADING. The posts are the roster's
-     * layer, not the atlas's, and the design draws them in this group — which
-     * works because a group is a label, exactly as it is in the sidebar.
+     * A CALLER'S OWN MARK JOINS THE SAME HEADING, AND KEEPS ITS PLACE. The
+     * posts are the roster's layer, not the atlas's, and the design draws
+     * them in this group and LAST — after the three states of the live mark.
+     * Rows come out in the order they were added, so writing them in the
+     * design's order is all a caller has to do.
      */
     public function testALayerOfTheCallersOwnCanShareTheHeading(): void
     {
@@ -176,11 +178,11 @@ final class LivePlateTest extends TestCase
         );
 
         self::assertSame(
-            ['Live position2 on', 'Post on', 'Stale · older than two intervals1', 'No position0'],
+            ['Live position2 on', 'Stale · older than two intervals1', 'No position0', 'Post on'],
             $group->filter('.lay')->each(
                 static fn (Crawler $n): string => trim(preg_replace('/\s+/', ' ', $n->text()) ?? ''),
             ),
-            'One heading, and the layer rows sort above the stated key rows — the plate\'s own rule.',
+            'One heading, and the rows in the order the caller wrote them.',
         );
     }
 
