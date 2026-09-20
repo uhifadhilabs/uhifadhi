@@ -16,6 +16,7 @@ namespace Uhifadhi\Bundle\TeamBundle\Performance;
 use Uhifadhi\Contracts\Kpi\FigurePeriod;
 use Uhifadhi\Contracts\Performance\PerformanceScope;
 use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
+use Uhifadhi\Contracts\Performance\TopicLedgerInterface;
 use Uhifadhi\Contracts\Performance\TopicMovementInterface;
 
 /**
@@ -33,6 +34,45 @@ use Uhifadhi\Contracts\Performance\TopicMovementInterface;
 final readonly class TopicCards
 {
     /**
+     * THE OVERVIEW'S STRIP — one card a topic, FOUR of them.
+     *
+     * A figure row is four to a row (ruled), and this one had five: on a
+     * small laptop the fifth wrapped and the strip read as four plates and
+     * an orphan. What gives way is not decided here — a topic whose reading
+     * is a LEDGER rather than one moving number says so itself
+     * ({@see TopicLedgerInterface}), because it knows what kind of reading
+     * it has and this class is not allowed to know which topic is which.
+     *
+     * IT IS NOT A TRUNCATION. The topic keeps its row in the sidebar, its
+     * card on the Topics register and its own record; what it declines is a
+     * slot on the one strip that asks every topic for a single number.
+     *
+     * @param list<PerformanceTopicProviderInterface> $topics in the page's order
+     * @param (\Closure(string): ?string)|null        $urlFor the way into one topic, by its key
+     *
+     * @return list<TopicCard>
+     */
+    public function strip(
+        array $topics,
+        PerformanceScope $scope,
+        FigurePeriod $period,
+        ?\Closure $urlFor = null,
+    ): array {
+        return $this->build(
+            array_values(array_filter(
+                $topics,
+                static fn (PerformanceTopicProviderInterface $topic): bool => !$topic instanceof TopicLedgerInterface,
+            )),
+            $scope,
+            $period,
+            $urlFor,
+        );
+    }
+
+    /**
+     * EVERY TOPIC, one card each — the Topics register's own list, where a
+     * ledger belongs like any other.
+     *
      * @param list<PerformanceTopicProviderInterface> $topics in the page's order
      * @param (\Closure(string): ?string)|null        $urlFor the way into one topic, by its key
      *

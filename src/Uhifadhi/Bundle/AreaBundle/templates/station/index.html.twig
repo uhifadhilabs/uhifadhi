@@ -45,15 +45,16 @@
     <a class="more" href="{{ path('area_stations_configure', {uuid: area.uuidString}) }}">Configure stations &rarr;</a>
 </div>
 
-{# FIVE FIGURES OR NONE. Three are the area's own; two come from whatever
-   modules publish about a station. A card whose module is not installed says
-   so rather than being dropped, or the row would be three. #}
+{# FOUR FIGURES, NEVER FIVE (ruled): a strip is four to a row, and a fifth
+   wrapped onto a second line on a small laptop. Two are the area's own and
+   two come from whatever modules publish about a station; a card whose module
+   is not installed says so rather than being dropped, or the row would be
+   two.
+
+   AND THE COUNT OF STATIONS IS NOT ONE OF THEM, for the same reason the zones
+   register does not count its zones: the band says it and the register under
+   it is the list. #}
 <div class="grid kstrip">
-    <div class="c kpi">
-        <span class="tab">Stations</span>
-        <b class="disp">{{ stationCount }}</b>
-        <span class="sub">{{ staffed }} posted</span>
-    </div>
     <div class="c kpi">
         <span class="tab">People posted</span>
         <b class="disp">{{ peopleTotal }}</b>

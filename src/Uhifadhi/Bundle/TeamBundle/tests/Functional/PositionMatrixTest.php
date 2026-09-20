@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Tests\Functional;
 
+use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\DomCrawler\Field\ChoiceFormField;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
@@ -46,6 +47,25 @@ final class PositionMatrixTest extends WebTestCaseWithSchema
         self::assertResponseIsSuccessful();
         self::assertSame('Team', $crawler->filter('h1.pg')->text());
         self::assertSame('Positions', $crawler->filter('.atabs a.on')->text());
+    }
+
+    /**
+     * FOUR TO A ROW, and this fold already was — pinned so it stays that way.
+     * A figure row is four (ruled); five wrapped an orphan onto a second line
+     * on a small laptop, and the way a strip grows a fifth is one card at a
+     * time with nobody counting.
+     */
+    public function testThePositionsFoldIsFourCards(): void
+    {
+        $this->administrator();
+        $crawler = $this->client->request('GET', '/team/positions');
+
+        $cards = $crawler->filter('.kstrip .c.kpi');
+        self::assertCount(4, $cards, 'A figure row is four to a row, and never five.');
+        self::assertSame(
+            ['Positions', 'Placement', 'Grantable', 'Above the matrix'],
+            $cards->filter('.tab')->each(static fn (Crawler $c): string => $c->text()),
+        );
     }
 
     /** Gated on the permission it grants — a Staff member without it is refused. */

@@ -359,8 +359,8 @@ final class AreaPagesTest extends WebTestCase
         self::assertStringContainsString('Nothing in the catalogue', $body);
         self::assertStringContainsString('Nothing is asking for attention', $body);
         /*
-         * ABSENT IS NOT ZERO, and the strip says which. The row is five cards
-         * wherever it is drawn — a row of one where the design has five is a
+         * ABSENT IS NOT ZERO, and the strip says which. The row is four cards
+         * wherever it is drawn — a row of one where the design has four is a
          * different design, and a reader cannot tell a short row from a quiet
          * morning — so the cards nobody filled state that nobody publishes
          * them. What none of them does is claim a measurement: the only
@@ -368,7 +368,7 @@ final class AreaPagesTest extends WebTestCase
          * attention list it draws below.
          */
         self::assertStringContainsString('no module publishes this', $body);
-        self::assertSame(4, substr_count($body, 'no module publishes this'));
+        self::assertSame(3, substr_count($body, 'no module publishes this'));
     }
 
     /** An unzoned area is the normal state, and the page explains what a zone is. */

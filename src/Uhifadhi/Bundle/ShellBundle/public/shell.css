@@ -1320,9 +1320,17 @@ i.livedot.none::after { animation: none; border: 0; }
 .more {
     font-family: var(--font-mono); font-size: 9.5px; font-weight: 600;
     letter-spacing: .1em; text-transform: uppercase; color: rgb(var(--c-fog)); text-decoration: none;
-    padding: 9px 15px; background: none; border: 0; cursor: pointer;
+    background: none; border: 0; cursor: pointer;
 }
 .more:hover { color: rgb(var(--c-acc)); }
+/* THE PADDING IS THE BAND'S, NOT THE DOOR'S. `9px 15px` is what an identity
+   band's trailing link needs to sit on the band's own baseline, and it was on
+   the base rule — so the first bare `.more` written outside a card or a band,
+   the roster rail's head, came out taller and wider than the row it sits in.
+   A component's base rule carries what the component IS; where it sits is the
+   place's business. The card's own door (`.c > .more`) states its own and is
+   untouched by either. */
+.factband .more { padding: 9px 15px; }
 
 /* ---- THE FOCUS LINE, THE ONE LEFT MARK A CARD MAY CARRY ----------------
    RULED 2026-09-21. A card may wear exactly ONE vertical mark on its left

@@ -209,6 +209,31 @@ final class ComponentContractTest extends ContractTestCase
     }
 
     /**
+     * THE QUIET DOOR CARRIES NO PADDING OF ITS OWN, and the band's belongs to
+     * the band.
+     *
+     * `.more` is written in three places — at the end of an identity band, at
+     * the end of a card's own row, and, pinned to a card's top edge, as the
+     * card's one quiet door. The band's `9px 15px` sat on the BASE rule, so
+     * the first bare `.more` written outside a card or a band came out taller
+     * and wider than the row holding it. A component's base rule carries what
+     * the component IS; where it sits is the place's business.
+     */
+    public function testTheQuietDoorTakesItsPaddingFromWhereItSitsAndNotFromTheBaseRule(): void
+    {
+        $css = $this->stylesheet();
+
+        $base = preg_match('/(?:^|\})\s*\.more\s*\{([^}]*)\}/m', $css, $found) ? $found[1] : '';
+        self::assertNotSame('', $base, 'the base rule is there to be checked');
+        self::assertStringNotContainsString('padding', $base, 'A bare door pads itself out of its own row.');
+
+        self::assertStringContainsString('.factband .more { padding: 9px 15px; }', $css, "the band's own spacing");
+
+        // And the card's door keeps the pill it has always drawn.
+        self::assertMatchesRegularExpression('/\.c > \.more \{[^}]*padding: 3px 9px;/s', $css);
+    }
+
+    /**
      * A RUNNING STATE IS THE FILLED ACCENT, AND A READY ONE THE OUTLINE.
      *
      * Ruled 2026-09-21: "the accent, since it is reserved for live". The two

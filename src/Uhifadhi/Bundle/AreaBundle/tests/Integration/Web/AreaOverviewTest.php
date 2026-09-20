@@ -72,23 +72,23 @@ final class AreaOverviewTest extends WebTestCase
     }
 
     /**
-     * FIVE TILES OR NONE. Three of the five are typically a module's; where
+     * FOUR TILES OR NONE. Three of the five are typically a module's; where
      * no module publishes one, the card keeps its slot and says so.
      */
-    public function testTheRightNowStripIsAlwaysFiveTiles(): void
+    public function testTheRightNowStripIsAlwaysFourTiles(): void
     {
         $this->boot();
         $this->signIn();
 
         $body = $this->body($this->anArea());
 
-        self::assertSame(5, substr_count($body, 'class="c kpi'));
+        self::assertSame(4, substr_count($body, 'class="c kpi'));
         self::assertStringContainsString('no module publishes this', $body);
     }
 
     /**
      * THE STRIP IS THE SHELL'S, WHOLE — its track and its spacing. This
-     * bundle used to restate the track at 168px, which squeezed five cards
+     * bundle used to restate the track at 168px, which squeezed four cards
      * where the design fits them at 196, and then zeroed the strip's bottom
      * margin, which closed the twenty pixels between it and the card below.
      */

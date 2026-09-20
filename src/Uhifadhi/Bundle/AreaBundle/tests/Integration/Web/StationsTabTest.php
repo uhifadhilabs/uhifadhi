@@ -30,7 +30,7 @@ use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web\Fixtures\HostUser;
  * figures, the plate, one flat table and the people posted — and every
  * control that would change something points at Configure.
  *
- * FIVE FIGURES OR NONE. Two of the five are whatever modules publish about a
+ * FOUR FIGURES OR NONE. Two of the four are whatever modules publish about a
  * post; where none does, the cards say so rather than being dropped, because
  * a row of three is a different design.
  */
@@ -104,7 +104,7 @@ final class StationsTabTest extends WebTestCase
 
         $body = $this->body($this->tab($area));
 
-        self::assertSame(5, substr_count($body, 'class="c kpi"'));
+        self::assertSame(4, substr_count($body, 'class="c kpi"'));
         self::assertStringContainsString('no module publishes figures for these posts', $body);
     }
 

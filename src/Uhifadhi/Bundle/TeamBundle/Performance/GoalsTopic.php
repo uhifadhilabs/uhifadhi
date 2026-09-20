@@ -35,6 +35,7 @@ use Uhifadhi\Contracts\Performance\TopicChart;
 use Uhifadhi\Contracts\Performance\TopicDecision;
 use Uhifadhi\Contracts\Performance\TopicDecisionsInterface;
 use Uhifadhi\Contracts\Performance\TopicKpi;
+use Uhifadhi\Contracts\Performance\TopicLedgerInterface;
 use Uhifadhi\Contracts\Performance\TopicMatrix;
 use Uhifadhi\Contracts\Performance\TopicMovement;
 use Uhifadhi\Contracts\Performance\TopicMovementInterface;
@@ -63,7 +64,7 @@ use Uhifadhi\Contracts\Performance\TopicMovementInterface;
  * IT PUBLISHES THROUGH THE SAME SEAM A MODULE DOES, as
  * {@see StaffingTopic} does and for the same reason.
  */
-final readonly class GoalsTopic implements PerformanceTopicProviderInterface, TopicDecisionsInterface, TopicMovementInterface
+final readonly class GoalsTopic implements PerformanceTopicProviderInterface, TopicDecisionsInterface, TopicLedgerInterface, TopicMovementInterface
 {
     public const string KEY = 'goals';
 

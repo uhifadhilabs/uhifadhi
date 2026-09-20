@@ -31,18 +31,22 @@ final class DepartmentSectionScreensTest extends WebTestCaseWithSchema
     // ---- the overview ------------------------------------------------------
 
     /**
-     * FIVE KPI CARDS, FIVE OR NONE — and no workshop index codes on them. The
-     * drawn row labels its plates DP·K1 … DP·K5 so a reviewer can name one;
-     * those labels belong in the design file and never in the product.
+     * FOUR KPI CARDS, FOUR OR NONE — a figure row is four to a row (ruled),
+     * and no workshop index codes on them. The drawn row labels its plates
+     * DP·K1 … so a reviewer can name one; those labels belong in the design
+     * file and never in the product.
+     *
+     * THE COUNT OF DEPARTMENTS IS NOT ONE OF THE FOUR: the band directly
+     * above opens with exactly that fact and the register below is the list.
      */
-    public function testTheOverviewOpensWithFiveKpiCardsAndNoWorkshopLabels(): void
+    public function testTheOverviewOpensWithFourKpiCardsAndNoWorkshopLabels(): void
     {
         $crawler = $this->overview();
 
-        self::assertCount(5, $crawler->filter('.kstrip .c.kpi'));
+        self::assertCount(4, $crawler->filter('.kstrip .c.kpi'));
         self::assertCount(0, $crawler->filter('.kstrip .idx'));
         self::assertSame(
-            ['Departments', 'Positions filled', 'People', 'Modules attached', 'Goals declared'],
+            ['Positions filled', 'People', 'Modules attached', 'Goals declared'],
             $crawler->filter('.kstrip .c.kpi .tab')->each(static fn (Crawler $c): string => $c->text()),
         );
     }
@@ -53,10 +57,10 @@ final class DepartmentSectionScreensTest extends WebTestCaseWithSchema
         $crawler = $this->overview();
         $figures = $crawler->filter('.kstrip .c.kpi b.disp')->each(static fn (Crawler $c): string => $c->text());
 
-        // Three departments; two positions, one of them held; one person.
-        self::assertSame('3', $figures[0]);
-        self::assertStringStartsWith('1', $figures[1]);
-        self::assertSame('1', $figures[2]);
+        // Two positions, one of them held; one person. (The count of
+        // departments is the band's, not the strip's.)
+        self::assertStringStartsWith('1', $figures[0]);
+        self::assertSame('1', $figures[1]);
     }
 
     /**

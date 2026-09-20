@@ -201,7 +201,8 @@ final readonly class TeamSectionOverview
     }
 
     /**
-     * THE FIVE KPI CARDS, FIVE OR NONE — the area overview's own row.
+     * THE FOUR KPI CARDS, FOUR OR NONE — the area overview's own row, and
+     * four to a row is the ruled shape of every strip in the product.
      *
      * @param list<User>           $people
      * @param list<Position>       $positions
@@ -263,17 +264,17 @@ final readonly class TeamSectionOverview
                 delta: self::movement($postings, $before, TeamFigures::POSTINGS),
             ),
             /*
-             * THE TIERS ARE THREE AND THEY DO NOT MOVE, so the card's
-             * movement is the figure under it that does: how many people may
-             * administer the team.
+             * AND NOT A FIFTH. A strip is FOUR to a row (ruled): five wrapped
+             * an orphan onto a second line on a small laptop, and a row of
+             * four is the shape every strip in the product keeps.
+             *
+             * ROLES WAS THE ONE TO GO, and not by length. The tiers are three
+             * and they never move — a card whose figure is a constant of the
+             * product is a card that tells a reader nothing twice a day — and
+             * the number under it that DOES move, how many people may
+             * administer, is already the People card's own business and is
+             * drawn in full on the people register's strip.
              */
-            new SectionKpi(
-                'Roles',
-                (string) \count(TeamRoleEnum::cases()),
-                qualifier: \sprintf('tiers · %d of %d may administer', self::mayAdminister($people), \count($people)),
-                delta: self::movement(self::mayAdminister($people), $before, TeamFigures::ADMINISTRATORS),
-                hot: true,
-            ),
         ];
     }
 

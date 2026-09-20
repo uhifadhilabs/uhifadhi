@@ -40,9 +40,11 @@
         <a class="more" href="{{ path('team_configure') }}">Team settings &rarr;</a>
     </div>
 
-    {# FIVE KPI CARDS, FIVE OR NONE. A card's movement is read from the period
-       history — the figure written down while the last closed period was
-       still true — and a period nobody wrote gets no pill at all. #}
+    {# FOUR KPI CARDS, FOUR OR NONE — a strip is four to a row (ruled), and a
+       fifth wrapped an orphan onto a second line on a small laptop. A card's
+       movement is read from the period history — the figure written down while
+       the last closed period was still true — and a period nobody wrote gets no
+       pill at all. #}
     <div class="grid kstrip" data-kpi>
         {% for kpi in kpis %}
             <div class="c kpi{{ kpi.hot ? ' hot' }}">

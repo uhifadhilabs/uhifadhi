@@ -83,7 +83,7 @@ final class ZonesTabTest extends WebTestCase
     /**
      * NO MODULE PUBLISHES ABOUT A ZONE HERE, so the cards that would carry a
      * module's figure say so and keep their slot — a row of three where the
-     * design has five is a different design.
+     * design has four is a different design.
      */
     public function testTheModuleFiguresSayNobodyPublishesRatherThanBeingDropped(): void
     {
@@ -93,7 +93,7 @@ final class ZonesTabTest extends WebTestCase
 
         $body = $this->body($this->tab($area));
 
-        self::assertSame(5, substr_count($body, 'class="c kpi"'));
+        self::assertSame(4, substr_count($body, 'class="c kpi"'));
         self::assertStringContainsString('no module publishes this', $body);
     }
 

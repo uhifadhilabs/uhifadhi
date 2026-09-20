@@ -6,7 +6,7 @@
    never a stored counter — a person who is deactivated stops being counted as
    active because the column says so.
 
-   A FRESH INSTALLATION GETS NO STRIP AT ALL. Four of the five counts would be
+   A FRESH INSTALLATION GETS NO STRIP AT ALL. Three of the four counts would be
    zero, and a strip of zeros is a strip that says nothing. The honest first-run
    fact is a sentence, and the useful thing to do from it is a button. #}
 {% import '@Team/team/_bits.html.twig' as bits %}
@@ -33,17 +33,12 @@
             <span class="sub">{{ overview.active }} active{% if overview.deactivated %} &middot; <span class="fog">{{ overview.deactivated }} deactivated</span>{% endif %}</span>
         </div>
 
-        {# No link to the matrix on this sub-line. It was the longest thing on the
-           strip and the only one that wrapped, and it was the THIRD route to the
-           same page: the header carries "Positions & permissions" and every
-           position name in the table below is a link to it. A KPI sub-line says
-           what the number is made of; it is not navigation. #}
-        <div class="c kpi">
-            <span class="tab">Positions</span>
-            <b class="disp">{{ overview.positions }}</b>
-            <span class="sub">{{ overview.departments }} department{{ overview.departments == 1 ? '' : 's' }} &middot; {{ overview.positionsHeld }} of {{ overview.positions }} held</span>
-        </div>
-
+        {# FOUR TO A ROW, NEVER FIVE (ruled), and POSITIONS is the one this fold
+           gives up. Every other card here counts PEOPLE — who has arrived, who
+           holds nothing, who may administer — and the positions figure is the
+           Positions fold's own first card, where it is drawn with its placement
+           beside it. A strip that borrows the next page's headline to make five
+           is a strip saying one thing twice. #}
         <div class="c kpi">
             <span class="tab">Never signed in</span>
             <b class="disp">{{ overview.neverSignedIn|length }}</b>

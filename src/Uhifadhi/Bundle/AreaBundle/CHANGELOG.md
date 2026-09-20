@@ -8,6 +8,10 @@
 
 Not released yet.
 
+ * FOUR FIGURES TO A ROW, never five (ruled): the area overview's right-now
+   strip is three module tiles and the attention count, and the zones and
+   stations registers drop the count of the thing they list — the band above
+   each already says it and the register below is the list
  * a zone's category wraps at EIGHTEEN, not nine: Ngorongoro's eleven zones
    now draw eleven distinct marks, the last two reading as kin to the first
    two rather than as duplicates of them

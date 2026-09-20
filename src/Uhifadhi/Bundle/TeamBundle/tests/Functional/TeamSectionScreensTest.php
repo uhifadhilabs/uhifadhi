@@ -40,14 +40,24 @@ final class TeamSectionScreensTest extends WebTestCaseWithSchema
 
     // ---- the overview ----------------------------------------------------
 
-    /** FIVE KPI CARDS, FIVE OR NONE — the area overview's own row. */
-    public function testTheOverviewOpensWithTheFiveKpiCards(): void
+    /**
+     * FOUR KPI CARDS, FOUR OR NONE — the area overview's own row, and four to
+     * a row is the ruled shape of every figure row in the product.
+     *
+     * ROLES IS NOT ONE OF THEM: the tiers are three and never move, so the
+     * card's figure is a constant of the product. It keeps its place in the
+     * identity band, where a fact that does not move belongs.
+     */
+    public function testTheOverviewOpensWithTheFourKpiCards(): void
     {
         $this->installation();
 
+        $cards = $this->visit('/team/overview')->filter('.kstrip .kpi');
+
+        self::assertCount(4, $cards, 'A figure row is four to a row, and never five.');
         self::assertSame(
-            ['People', 'Positions', 'Seats filled', 'Postings', 'Roles'],
-            $this->visit('/team/overview')->filter('.kstrip .kpi .tab')->each(static fn (Crawler $c): string => $c->text()),
+            ['People', 'Positions', 'Seats filled', 'Postings'],
+            $cards->filter('.tab')->each(static fn (Crawler $c): string => $c->text()),
         );
     }
 
@@ -113,7 +123,7 @@ final class TeamSectionScreensTest extends WebTestCaseWithSchema
     {
         $this->installation();
 
-        $labels = $this->visit('/team/overview')->filter('.c')->eq(5)->filter('.sxbar .l')
+        $labels = $this->visit('/team/overview')->filter('.c')->eq(4)->filter('.sxbar .l')
             ->each(static fn (Crawler $c): string => $c->text());
 
         self::assertContains('No department', $labels);

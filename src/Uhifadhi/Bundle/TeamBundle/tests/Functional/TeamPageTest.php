@@ -389,6 +389,29 @@ final class TeamPageTest extends WebTestCase
      * ONE NUMBER, TWO MECHANISMS — and the sub-line names both, because the
      * tier column can no longer answer this on its own.
      */
+    /**
+     * FOUR TO A ROW, AND EVERY ONE OF THEM ABOUT A PERSON.
+     *
+     * The people fold used to carry five, the fifth being the count of
+     * POSITIONS — the next page's own headline, drawn here with its
+     * placement stripped off. A figure row is four to a row (ruled), and the
+     * card to give up is the one whose question another page answers better.
+     */
+    public function testThePeopleFoldIsFourCardsAndEveryOneIsAboutAPerson(): void
+    {
+        $naomi = $this->settled();
+
+        $this->client->loginUser($naomi);
+        $crawler = $this->client->request('GET', '/team');
+
+        $cards = $crawler->filter('[data-w="kpis"] .c.kpi');
+        self::assertCount(4, $cards, 'A figure row is four to a row, and never five.');
+        self::assertSame(
+            ['People', 'Never signed in', 'Hold nothing', 'Can administer'],
+            $cards->filter('.tab')->each(static fn (\Symfony\Component\DomCrawler\Crawler $c): string => $c->text()),
+        );
+    }
+
     public function testTheAdministratorCountNamesBothMechanisms(): void
     {
         $naomi = $this->settled();

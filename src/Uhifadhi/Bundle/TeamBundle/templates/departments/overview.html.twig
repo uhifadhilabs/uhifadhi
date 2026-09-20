@@ -42,9 +42,10 @@
             <a class="more" href="{{ path('team_departments_configure') }}">Departments settings &rarr;</a>
         </div>
 
-        {# FIVE KPI CARDS, FIVE OR NONE — the area overview's own row. A card's
-           movement is drawn only where a previous period was recorded; a pill
-           reading zero would be a claim this installation cannot make. #}
+        {# FOUR KPI CARDS, FOUR OR NONE — the area overview's own row, and four
+           to a row is the ruled shape. A card's movement is drawn only where a
+           previous period was recorded; a pill reading zero would be a claim
+           this installation cannot make. #}
         <div class="grid kstrip" data-kpi>
             {% for kpi in kpis %}
                 <div class="c kpi{{ kpi.hot ? ' hot' }}">

@@ -8,6 +8,9 @@
 
 Not released yet.
 
+ * `Performance\TopicLedgerInterface` — a topic whose reading is a ledger
+   rather than one moving number, declared beside the topic provider so the
+   across-the-topics strip can be four cards without a page naming a topic
  * `PlatePalette::CATEGORIES` — eighteen, the nine and the lightness ring
    after them; `category()` resolves every one of them and refuses a
    nineteenth rather than wrapping it into somebody else's colour

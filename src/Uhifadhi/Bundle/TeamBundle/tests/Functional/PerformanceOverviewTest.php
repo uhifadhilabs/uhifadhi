@@ -110,14 +110,28 @@ final class PerformanceOverviewTest extends WebTestCaseWithSchema
         self::assertStringContainsString('Northern Reserve', $area->filter('p.pgsub')->text());
     }
 
-    /** One card a topic, and the host's three are always among them. */
-    public function testEveryTopicIsACardWithItsHeadlineFigure(): void
+    /**
+     * ONE CARD A TOPIC, FOUR TO A ROW — and a LEDGER takes no slot.
+     *
+     * The strip asks every topic for one moving number. Goals declared is a
+     * list of commitments with a target and a date each, and the number of
+     * rows in it is not a performance reading — so the topic says so itself
+     * (TopicLedgerInterface) and keeps its card on the Topics register, its
+     * row in the sidebar and its own record instead. That is what makes the
+     * row four and not five with an orphan wrapped under it — and the
+     * register keeping every topic is pinned by
+     * testTheTopicsRegisterIsOneCardATopic below.
+     */
+    public function testEveryTopicWithAMovingFigureIsACardAndALedgerIsNot(): void
     {
         $titles = $this->page()->filter('.tpk .c.kpi > .tab')->each(static fn (Crawler $c): string => $c->text());
 
         self::assertContains('Staffing', $titles);
-        self::assertContains('Goals', $titles);
         self::assertContains('Attention & output', $titles);
+        self::assertNotContains('Goals', $titles, 'A ledger has no single moving number to put on the strip.');
+        // How many cards there are depends on how many modules publish a
+        // topic; what never varies is that the row does not exceed four.
+        self::assertLessThanOrEqual(4, \count($titles), 'A figure row is four to a row, and never five.');
     }
 
     /**

@@ -8,6 +8,9 @@
 
 Not released yet.
 
+ * the quiet door (`.more`) carries NO padding on its base rule — the band's
+   `9px 15px` moved to `.factband .more`, so the first bare door written
+   outside a card or a band no longer renders taller and wider than its row
  * A RUNNING STATE WEARS THE ACCENT, FILLED (ruled): `.chip.run` beside the
    outline `.chip.acc`, so "in progress" stops borrowing a category token in
    one module and a module hue in another. The conformance suite refuses a

@@ -270,7 +270,13 @@
    four: a reader reads the row in one movement of the eye or reads it twice.
    The card itself is the shell's `.c.kpi` — this states the grid and the
    three things a topic's card carries that a bare KPI does not. */
-.tpk { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; margin: 0 0 18px; }
+/* FOUR TO A ROW, like every figure row in the product (ruled). This was five
+   columns, which is the shape the ruling is against: on a small laptop the
+   fifth card wrapped and the strip read as four plates and an orphan. A topic
+   whose reading is a ledger rather than a moving number takes no slot here
+   (TopicLedgerInterface), which is what makes four the true count and not a
+   truncation. */
+.tpk { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin: 0 0 18px; }
 @media (max-width: 1080px) { .tpk { grid-template-columns: repeat(auto-fit, minmax(178px, 1fr)); } }
 .tpk .c.kpi { padding: 13px 14px 14px; text-decoration: none; }
 .tpk .c.kpi:hover { border-color: color-mix(in srgb, rgb(var(--c-acc)) 45%, var(--c-ln)); }

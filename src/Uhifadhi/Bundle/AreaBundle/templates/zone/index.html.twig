@@ -47,15 +47,16 @@
     <a class="more" href="{{ path('area_settings', {uuid: area.uuidString}) }}">Area settings &rarr;</a>
 </div>
 
-{# FIVE FIGURES OR NONE. Three are the area's own; two are whatever the
-   modules publish about a zone. A card whose module is not installed says so
-   and keeps its slot, or the row would be three. #}
+{# FOUR FIGURES, NEVER FIVE (ruled): a strip is four to a row, and a fifth
+   wrapped onto a second line on a small laptop — "nobody wants that kpi
+   style". Two are the area's own and two are whatever the modules publish
+   about a zone; a card whose module is not installed says so and keeps its
+   slot, or the row would be two.
+
+   AND THE COUNT OF ZONES IS NOT ONE OF THEM. The band above already says how
+   many there are, and the register below is the list of them: a figure whose
+   answer is on the same screen twice is the one to drop. #}
 <div class="grid kstrip">
-    <div class="c kpi">
-        <span class="tab">Zones</span>
-        <b class="disp">{{ set.count > 0 ? set.count : '&mdash;'|raw }}</b>
-        <span class="sub">{{ set.count > 0 ? 'presence-driven' : 'none imported' }}</span>
-    </div>
     <div class="c kpi">
         <span class="tab">Stations</span>
         <b class="disp">{{ stationCount }}</b>

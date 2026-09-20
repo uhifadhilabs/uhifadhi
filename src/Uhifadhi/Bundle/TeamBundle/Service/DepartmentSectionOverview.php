@@ -117,8 +117,14 @@ final readonly class DepartmentSectionOverview
                 new SectionFact('Positions', (string) $seats, \sprintf('across %d departments', \count($departments))),
                 new SectionFact('People', (string) $people, \sprintf('%d of %d positions filled', $filled, $seats)),
             ],
+            /*
+             * FOUR TO A ROW, NEVER FIVE (ruled) — and the one dropped is the
+             * COUNT OF DEPARTMENTS, because the band directly above this strip
+             * opens with exactly that fact and the register below is the list
+             * of them. A figure a reader can already read on the same screen
+             * is the cheapest of the five to lose.
+             */
             'kpis' => [
-                new SectionKpi('Departments', (string) \count($departments), null, \sprintf('org-wide %d · area-level %d', $orgWide, $areaLevel)),
                 new SectionKpi('Positions filled', (string) $filled, \sprintf('of %d', $seats), \sprintf('%d vacant', $seats - $filled)),
                 new SectionKpi('People', (string) $people, null, \sprintf('%d in a position', $people)),
                 new SectionKpi('Modules attached', (string) $attached, null, \sprintf('%d of %d departments · %d installed', $this->departmentsReadingSomething($modules), \count($departments), $this->catalogue->count())),

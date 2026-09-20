@@ -33,9 +33,14 @@
    these two macros draw the totals first and then each area's sets UNDER THE AREA
    NAME THE FIGURE ITSELF CARRIES. Nothing is dropped and nothing is summed here:
    the page renders what it was given, labelled honestly. #}
+{# FOUR TO A ROW (ruled), so the department's own row of totals stops at four.
+   A department with five attached modules publishing a figure each drew five
+   tiles and wrapped an orphan under them on a small laptop. The rest are not
+   lost: every figure keeps its place in the per-area groups below, and the
+   full reading is the module's own page. #}
 {% macro kpi_tiles(figures) %}
     {% set areas = figures|reduce((names, kpi) => kpi.isTotal or kpi.areaName in names ? names : names|merge([kpi.areaName]), []) %}
-    {% for kpi in figures|filter(kpi => kpi.isTotal) %}
+    {% for kpi in figures|filter(kpi => kpi.isTotal)|slice(0, 4) %}
         {# AN UNKNOWN FIGURE IS A DASHED SLOT, never a zero: "we did not measure"
            and "we measured nothing" are different facts, and the value object is
            what draws the distinction. #}

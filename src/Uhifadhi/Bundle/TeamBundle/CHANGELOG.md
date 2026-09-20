@@ -8,6 +8,14 @@
 
 Not released yet.
 
+ * FOUR FIGURES TO A ROW, never five (ruled), across the section screens:
+   Departments Overview drops the count of departments (the band says it),
+   Team Overview drops Roles (three tiers that never move; it stays a band
+   fact), the people fold drops Positions (the Positions fold's own headline)
+   and a department record's totals row stops at four
+ * a performance topic whose reading is a LEDGER takes no slot on the
+   across-the-topics strip — it says so itself (`TopicLedgerInterface`) and
+   keeps its card on the Topics register, its sidebar row and its record
  * a section's children are drawn as its own SCREENS and not as places inside
    it: Team and Departments now say so (`NavItem::$screens`), so their rows
    sit on the screen rung like Performance's and the department records below

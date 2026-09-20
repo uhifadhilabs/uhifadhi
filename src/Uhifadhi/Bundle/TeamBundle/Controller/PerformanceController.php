@@ -110,7 +110,7 @@ final readonly class PerformanceController
 
         return new Response($this->twig->render('@Team/performance/overview.html.twig', [
             ...$this->frame($scope, $period, $kind, $compare, self::ROUTE),
-            'cards' => $this->cards->build(
+            'cards' => $this->cards->strip(
                 $topics,
                 $scope,
                 $period,
