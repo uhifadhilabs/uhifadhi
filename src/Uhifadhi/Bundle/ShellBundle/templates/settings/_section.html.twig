@@ -1,0 +1,36 @@
+{# THE SETTINGS SECTION'S FRAME — the head every one of its screens wears.
+
+   SETTINGS WEARS THE AREA IDIOM (ruled 2026-09-20), and the area tab header
+   rule with it: the SAME head on every screen — the section's name — with a
+   subline that changes per screen to say what THIS one answers. A reader who
+   has learnt an area has learnt this.
+
+   ONE CONTROL IN THE ACTION ROW, and it is a statement rather than a switch:
+   everything in this section is true of the whole installation, and a scope
+   dropdown here would have one setting for ever. An area's own settings are
+   on the area and a module's are on that module's Configure page, which is
+   what the chip is saying.
+
+   THE STRIP IS THE SECTION'S SCREENS, from the one declaration the sidebar's
+   subtree is built from — so a tab and a sidebar child cannot disagree about
+   which screens the section has.
+
+   A SCREEN FILLS `shell_page` AND NOTHING ELSE. It types no head, no strip
+   and no crumb; those are the frame's, here as everywhere. #}
+{% extends '@Shell/page.html.twig' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block shell_breadcrumbs %}
+    {%- set brand = shell_brand() -%}
+    <a href="{{ brand.url }}">{{ brand.name }}</a> / settings
+{% endblock %}
+
+{% block shell_page_title %}{{ title }}{% endblock %}
+{% block shell_page_subtitle %}{{ subtitle }}{% endblock %}
+
+{% block shell_page_actions %}<span class="chip acc">{{ scope }}</span>{% endblock %}
+
+{% block shell_page_tabs %}
+    {%- include '@Shell/_area_tabs.html.twig' with {tabs: tabs} only -%}
+{% endblock %}

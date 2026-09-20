@@ -121,6 +121,10 @@ final class Installation
                     name: $name,
                     version: \is_string($entry['pretty_version'] ?? null) ? $entry['pretty_version'] : 'dev',
                     note: self::NOTES[$name] ?? null,
+                    // WHAT THE PACKAGE SAYS ABOUT ITSELF, quoted rather than
+                    // invented — see InstalledPackage on why that is not the
+                    // shell describing a module.
+                    description: $this->descriptionAt($entry['install_path'].'/composer.json'),
                 );
 
                 if (null !== $package->note) {
@@ -191,6 +195,29 @@ final class Installation
         }
 
         return $parts;
+    }
+
+    /**
+     * WHAT ONE PACKAGE SAYS ABOUT ITSELF, or null where it says nothing and
+     * null again where the manifest cannot be read.
+     *
+     * A directory may be a zipball install with no manifest, a path repository
+     * somebody is editing, or simply unreadable by the web user. None of those
+     * is worth a 500 on the screen whose job is to report on the installation,
+     * so each of them is an absence the table draws.
+     */
+    private function descriptionAt(string $manifest): ?string
+    {
+        if (!is_file($manifest)) {
+            return null;
+        }
+
+        $json = json_decode((string) file_get_contents($manifest), true);
+        if (!\is_array($json) || !\is_string($json['description'] ?? null) || '' === trim($json['description'])) {
+            return null;
+        }
+
+        return $json['description'];
     }
 
     /**

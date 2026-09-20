@@ -1615,12 +1615,16 @@ surface's because the surface is what decides that every module's cell reads the
 shipping its own flow bar is two flows that drift, and one shipping none renders its segments as
 blue underlined links. Write these and the area's stylesheet dresses them:
 
+The needs-attention row is no longer one of them. `.ao-att` is drawn on three surfaces now — this
+overview, the organisation dashboard and the settings section — so it moved into the shell's own
+sheet and is listed with the frame's components in `Contract\LayoutContract::COMPONENTS`. Nothing
+about the markup changed, and a cell already writing it keeps working wherever it is drawn.
+
 <!-- overview-vocabulary -->
 | Class | What it is |
 |---|---|
 | `.ao-by` | the contributor tag every card on this surface wears (`.host`, `.next`, or your slug) |
 | `.ao-live` | the live dot — only on a cell that actually polls |
-| `.ao-att` | one needs-attention row: the surface's row, your content |
 | `.ao-flow` | records by where they have got to; `a.s1`–`a.s5` are the states, `.n` `.s` `.b` the parts, `a.late` the overdue one |
 | `.ao-slot` | the honest not-installed-here affordance |
 | `.ao-slotrow` | one row inside it — `.nm` the name, `.wd` what it would hold, `.st` its state |

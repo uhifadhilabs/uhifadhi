@@ -1,0 +1,35 @@
+{# WHAT RUNS WHERE — every area of the installation against every module it
+   could run.
+
+   AN AREA THAT RUNS NOTHING IS THE POINT OF THE TABLE. It reports nothing
+   anywhere else in the product, precisely because it has no module to report
+   through, so this is the only place it can be seen — which is why the empty
+   rows stay and are drawn quiet rather than filtered out.
+
+   THE SAME TABLE ON TWO SCREENS, because it is the same fact: the
+   installation screen asks it as "what runs where" and the modules screen
+   asks it as "the catalogue". Two queries for it would be two answers with no
+   way to say which was right. #}
+{%- if matrix.rows is empty -%}
+    <p class="use">No area is registered here yet, so there is nothing to run a module in.</p>
+{%- else -%}
+    <table class="tbl">
+        <tr>
+            <th>area</th>
+            {%- for column in matrix.columns %}<th>{{ column.label|lower }}</th>{% endfor -%}
+            <th>zones</th>
+            <th>state</th>
+        </tr>
+        {%- for row in matrix.rows -%}
+            <tr>
+                <td{{ row.isLive ? '' : ' class="fog"' }}><b>{{ row.name }}</b></td>
+                {%- for column in matrix.columns -%}
+                    {%- set on = row.running[column.slug]|default(false) -%}
+                    <td class="{{ on ? 'g' : 'fog' }}">{{ on ? 'on' : 'off' }}</td>
+                {%- endfor -%}
+                <td class="{{ row.zones ? 'g' : 'fog' }}">{{ row.zones is null ? '—' : row.zones }}</td>
+                <td><span class="chip {{ row.isLive ? 'ok' : 'idle' }}">{{ row.isLive ? 'live' : 'awaiting setup' }}</span></td>
+            </tr>
+        {%- endfor -%}
+    </table>
+{%- endif -%}

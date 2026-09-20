@@ -39,6 +39,7 @@ final class NavGroupsAreJoinedByConstantTest extends TestCase
         \Uhifadhi\Bundle\TeamBundle\Shell\PerformanceNavigation::class => NavGroup::OBSERVATORY,
         \Uhifadhi\Bundle\ShellBundle\Service\OrgModulesNavigation::class => NavGroup::OBSERVATORY,
         \Uhifadhi\Bundle\TeamBundle\Shell\TeamNavigation::class => NavGroup::ORGANIZATION,
+        \Uhifadhi\Bundle\ShellBundle\Service\SettingsNavigation::class => NavGroup::SETTINGS,
     ];
 
     /**

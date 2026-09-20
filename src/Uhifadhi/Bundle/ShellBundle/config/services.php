@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
 use Uhifadhi\Bundle\ShellBundle\Contract\LayoutContract;
+use Uhifadhi\Bundle\ShellBundle\Controller\SettingsController;
 use Uhifadhi\Bundle\ShellBundle\Controller\WelcomeController;
 use Uhifadhi\Bundle\ShellBundle\Frame\Controller\ConfigureController;
 use Uhifadhi\Bundle\ShellBundle\Frame\Registry\ConfigurationSectionsRegistry;
@@ -25,12 +26,17 @@ use Uhifadhi\Bundle\ShellBundle\Service\Navigation;
 use Uhifadhi\Bundle\ShellBundle\Service\OrgModulesNavigation;
 use Uhifadhi\Bundle\ShellBundle\Service\OrgShell;
 use Uhifadhi\Bundle\ShellBundle\Service\Scopes;
+use Uhifadhi\Bundle\ShellBundle\Service\SettingsNavigation;
+use Uhifadhi\Bundle\ShellBundle\Service\SettingsReading;
+use Uhifadhi\Bundle\ShellBundle\Service\SettingsSection;
 use Uhifadhi\Bundle\ShellBundle\Service\Stylesheets;
 use Uhifadhi\Bundle\ShellBundle\Service\Theme;
 use Uhifadhi\Bundle\ShellBundle\Service\UserBadgeReader;
 use Uhifadhi\Bundle\ShellBundle\ShellBundle;
 use Uhifadhi\Bundle\ShellBundle\Twig\ShellExtension;
 use Uhifadhi\Bundle\ShellBundle\Twig\ShellRuntime;
+use Uhifadhi\Contracts\Settings\ModuleMatrixSourceInterface;
+use Uhifadhi\Contracts\Settings\OrganisationIdentitySourceInterface;
 use Uhifadhi\Contracts\Shell\ConfigurationSectionsInterface;
 use Uhifadhi\Contracts\Shell\ModuleTabsInterface;
 
@@ -233,6 +239,70 @@ return static function (ContainerConfigurator $container): void {
         ->args([
             service('twig'),
             service('shell.frame'),
+        ])
+        ->tag('controller.service_arguments');
+
+    /*
+     * THE SETTINGS SECTION — the reading, the frame, its row in the sidebar,
+     * and the one controller that draws all four of its screens.
+     *
+     * THE READING IS COMPOSED, NOT AUTHORED. What the section can read for
+     * itself is composer's runtime metadata and the wordmark it was
+     * configured with; areas, people, what runs where and whose installation
+     * this is arrive through the contracts, which is why every collaborator
+     * below is either a tagged iterator or a locator of optional aliases.
+     *
+     * TWO OF THEM ARE ALIASES RATHER THAN COLLECTIONS. Which modules run in
+     * which areas, and whose organisation this is, each have exactly one
+     * answer; two things claiming to know either would be a disagreement with
+     * no way to settle it. They are looked up through a locator so that an
+     * installation where nobody answers gets a screen that says so, rather
+     * than a container that refuses to compile.
+     */
+    $services->set('shell.settings.reading', SettingsReading::class)
+        ->args([
+            service('shell.installation'),
+            tagged_iterator(ShellBundle::SETTINGS_FIGURE_TAG),
+            tagged_iterator(ShellBundle::SETTINGS_CHECK_TAG),
+            tagged_iterator(ShellBundle::SETTINGS_DECISION_TAG),
+            tagged_iterator(ShellBundle::SETTINGS_CHANGE_TAG),
+            service_locator([
+                ModuleMatrixSourceInterface::SERVICE => service(ModuleMatrixSourceInterface::SERVICE)->ignoreOnInvalid(),
+                OrganisationIdentitySourceInterface::SERVICE => service(OrganisationIdentitySourceInterface::SERVICE)->ignoreOnInvalid(),
+            ]),
+            '%shell.brand_name%',
+        ]);
+
+    $services->set('shell.settings.section', SettingsSection::class)
+        ->args([
+            service('router'),
+            service('shell.settings.reading'),
+        ]);
+
+    /*
+     * ITS ROW IN THE SIDEBAR, in the group that comes last. Tagged by hand,
+     * like every other contribution here: this bundle is not autoconfigured.
+     * The row disappears on its own where the application has not imported
+     * the section's route resource, because the source generates the address
+     * and yields nothing when it cannot.
+     */
+    $services->set('shell.settings.navigation', SettingsNavigation::class)
+        ->args([
+            service('shell.settings.section'),
+            service('request_stack'),
+        ])
+        ->tag(ShellBundle::NAV_TAG);
+
+    /*
+     * THE SECTION'S ONE CONTROLLER. The `controller.service_arguments` tag is
+     * what lets the route address it by id; registering it puts it at no
+     * address — config/routes/settings.php does that, and nothing here loads
+     * that file (see ShellBundle::SETTINGS_ROUTES).
+     */
+    $services->set('shell.controller.settings', SettingsController::class)
+        ->args([
+            service('twig'),
+            service('shell.settings.section'),
         ])
         ->tag('controller.service_arguments');
 

@@ -1,0 +1,26 @@
+{# THE SECTION'S FIRST SCREEN — how big this installation is, and what it
+   gives you.
+
+   THE FIGURE ROW IS SETTLED AND IS HERE. Four to a row, and not one of them
+   the section's own: how many modules run is the catalogue's answer, how many
+   areas is the areas', how many people is the team's, and what is kept is
+   whoever keeps it. A row that any one package had written would be four
+   numbers nobody owns.
+
+   THE REST OF THE BODY IS BEING AMENDED and is deliberately not drawn yet.
+   The owner ruled that what a fresh installation is told at `/` today keeps a
+   PERMANENT home on this screen — what the installation gives you, evergreen,
+   with a next-steps list that is true at any age rather than only on the
+   first day — and the amendment drawing it is in hand. Drawing the previous
+   composition here and replacing it in a week would put a screen in front of
+   people twice. #}
+{% extends '@Shell/settings/_section.html.twig' %}
+
+{% block shell_page %}
+    {{ include('@Shell/settings/_figures.html.twig', {figures: settings.figures}, with_context: false) }}
+
+    {{ include('@Shell/_page_hint.html.twig', {
+        lead: 'The rest of this screen is being drawn.',
+        say: 'What this installation gives you, and what to do next at any age of it, land here. What is installed and at what version is on the Installation tab; the catalogue is on Modules; who this belongs to is on Organisation.',
+    }, with_context: false) }}
+{% endblock %}

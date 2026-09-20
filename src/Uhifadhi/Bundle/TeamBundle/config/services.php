@@ -95,6 +95,7 @@ use Uhifadhi\Bundle\TeamBundle\Service\SuperAdminInvariant;
 use Uhifadhi\Bundle\TeamBundle\Service\TeamOverview;
 use Uhifadhi\Bundle\TeamBundle\Service\TeamSectionOverview;
 use Uhifadhi\Bundle\TeamBundle\Service\UserService;
+use Uhifadhi\Bundle\TeamBundle\Settings\PeopleFigure;
 use Uhifadhi\Bundle\TeamBundle\Shell\DepartmentAreaNavChildren;
 use Uhifadhi\Bundle\TeamBundle\Shell\DepartmentAreaSections;
 use Uhifadhi\Bundle\TeamBundle\Shell\DepartmentSectionConfiguration;
@@ -118,6 +119,7 @@ use Uhifadhi\Contracts\People\PersonFacetProviderInterface;
 use Uhifadhi\Contracts\People\PersonPostingProviderInterface;
 use Uhifadhi\Contracts\Performance\DepartmentDirectoryInterface;
 use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
+use Uhifadhi\Contracts\Settings\SettingsFigureSourceInterface;
 use Uhifadhi\Contracts\Shell\AreaNavChildrenInterface;
 use Uhifadhi\Contracts\Shell\AreaSectionsInterface;
 use Uhifadhi\Contracts\Shell\ConfigurationSectionsInterface;
@@ -205,6 +207,15 @@ return static function (ContainerConfigurator $container): void {
     $services->set('team.person_directory', TeamPersonDirectory::class)
         ->args([service(UserRepository::class)])
         ->tag(PersonDirectoryProviderInterface::TAG);
+
+    /*
+     * HOW MANY PEOPLE THIS INSTALLATION IS FOR — the settings section's third
+     * figure. Active, because that is the number every other figure in the
+     * product is about; the closed accounts are the caption's.
+     */
+    $services->set('team.settings.figure', PeopleFigure::class)
+        ->args([service(UserRepository::class)])
+        ->tag(SettingsFigureSourceInterface::TAG);
 
     $services->set(UserRepository::class)
         ->args([service('doctrine')])

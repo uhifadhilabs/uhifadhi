@@ -381,6 +381,13 @@ final class LayoutContract
         'rdf-foot',
         'rdf-page',
 
+        // ONE THING THAT NEEDS SOMEBODY, as a row — the queue three surfaces
+        // draw from three different owners' items (an area's overview, the
+        // organisation dashboard, the settings section). It was the area
+        // overview's own until the second surface needed it; the rail is the
+        // urgency and it is the only thing on the row that takes a colour.
+        'ao-att',
+
         // the person's mark, and the two quiet buttons
         'avatar',
         'open-btn',

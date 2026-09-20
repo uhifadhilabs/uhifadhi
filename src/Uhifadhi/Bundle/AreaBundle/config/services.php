@@ -62,6 +62,11 @@ use Uhifadhi\Bundle\AreaBundle\Service\ZoneOverlapService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneSetService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneStationService;
+use Uhifadhi\Bundle\AreaBundle\Settings\AreaFigure;
+use Uhifadhi\Bundle\AreaBundle\Settings\AreaModuleMatrix;
+use Uhifadhi\Bundle\AreaBundle\Settings\AreaSetup;
+use Uhifadhi\Bundle\AreaBundle\Settings\AreaSetupCheck;
+use Uhifadhi\Bundle\AreaBundle\Settings\AreaSetupDecision;
 use Uhifadhi\Bundle\AreaBundle\Widget\AreaIndexWidgets;
 use Uhifadhi\Bundle\AreaBundle\Widget\AreaOverviewWidgets;
 use Uhifadhi\Bundle\AtlasBundle\Map\MapBuilderInterface;
@@ -78,6 +83,10 @@ use Uhifadhi\Contracts\People\PersonFacetProviderInterface;
 use Uhifadhi\Contracts\People\PersonPostingProviderInterface;
 use Uhifadhi\Contracts\PermissionDeclarationInterface;
 use Uhifadhi\Contracts\Roster\WatchProviderInterface;
+use Uhifadhi\Contracts\Settings\ModuleMatrixSourceInterface;
+use Uhifadhi\Contracts\Settings\SettingsCheckSourceInterface;
+use Uhifadhi\Contracts\Settings\SettingsDecisionSourceInterface;
+use Uhifadhi\Contracts\Settings\SettingsFigureSourceInterface;
 
 /*
  * The bundle's static service wiring.
@@ -109,6 +118,54 @@ return static function (ContainerConfigurator $container): void {
     $services->set(AreaOfInterestRepository::class)
         ->args([service('doctrine')])
         ->tag('doctrine.repository_service');
+
+    /*
+     * WHAT RUNS WHERE, AND HOW MANY AREAS THERE ARE — the settings section's
+     * two area-shaped answers.
+     *
+     * THE MATRIX IS AN ALIAS, NOT A TAGGED CONTRIBUTION. There is one answer
+     * to "which modules run in which areas", and two things claiming to know
+     * it would be a disagreement with nothing to settle it — so the section
+     * looks the implementation up by the id the contract publishes, and an
+     * installation with no areas bundle simply has no matrix.
+     *
+     * THE FIGURE READS THE MATRIX rather than counting areas again: the table
+     * and the card are on the same screen, and two counts made a query apart
+     * is how one comes to disagree with the other.
+     *
+     * THE SETUP CHECK IS ONE FACT WITH TWO READINGS — a health row and a
+     * queue item — which is why it is one service carrying both tags.
+     */
+    $services->set('area.settings.module_matrix', AreaModuleMatrix::class)
+        ->args([
+            service(AreaOfInterestRepository::class),
+            service(ZoneRepository::class),
+            service('registry.catalogue'),
+            service('registry.area_module_ledger'),
+        ]);
+    $services->alias(ModuleMatrixSourceInterface::SERVICE, 'area.settings.module_matrix');
+
+    $services->set('area.settings.figure', AreaFigure::class)
+        ->args([service('area.settings.module_matrix')])
+        ->tag(SettingsFigureSourceInterface::TAG);
+
+    /*
+     * TWO SOURCES OVER ONE READING. A class cannot implement two contract
+     * interfaces that each publish a `TAG` constant — PHP refuses it — and
+     * sharing the reading is the better shape anyway: the check and the queue
+     * item are the same fact, so they are built from the same answer and the
+     * matrix is read once.
+     */
+    $services->set('area.settings.setup', AreaSetup::class)
+        ->args([service('area.settings.module_matrix')]);
+
+    $services->set('area.settings.setup_check', AreaSetupCheck::class)
+        ->args([service('area.settings.setup')])
+        ->tag(SettingsCheckSourceInterface::TAG);
+
+    $services->set('area.settings.setup_decision', AreaSetupDecision::class)
+        ->args([service('area.settings.setup')])
+        ->tag(SettingsDecisionSourceInterface::TAG);
 
     $services->set(ZoneRepository::class)
         ->args([service('doctrine')])

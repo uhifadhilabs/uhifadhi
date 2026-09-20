@@ -39,7 +39,7 @@ namespace Uhifadhi\Bundle\AreaBundle\Overview;
 final class OverviewVocabulary
 {
     /**
-     * The entry classes. Their parts — `.ao-flow a .n`, `.ao-att .hl`,
+     * The entry classes. Their parts — `.ao-flow a .n`,
      * `.ao-slotrow .st` — belong to the entry and are not listed separately,
      * because a part without its entry is not a thing a module can write.
      *
@@ -52,9 +52,6 @@ final class OverviewVocabulary
 
         // ONLY A CELL THAT ACTUALLY POLLS may wear the live dot.
         'ao-live',
-
-        // ONE NEEDS-ATTENTION ROW — the surface's row, a module's content.
-        'ao-att',
 
         // RECORDS BY WHERE THEY HAVE GOT TO: one bar, one segment per state.
         'ao-flow',

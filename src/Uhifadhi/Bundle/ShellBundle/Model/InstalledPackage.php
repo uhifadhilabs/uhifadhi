@@ -26,18 +26,33 @@ namespace Uhifadhi\Bundle\ShellBundle\Model;
  * for everything else, on purpose: a shell that described a module would be a
  * shell that knew what modules are, and the description it invented would be
  * out of date in the repository it was guessing about.
+ *
+ * `description` IS THE OTHER HALF OF THAT RULE AND NOT AN EXCEPTION TO IT: it
+ * is what the package says about ITSELF, read out of its own composer.json at
+ * render time. The shell still describes nothing — it quotes — and the line is
+ * as current as the release that is installed, which is the opposite of a
+ * description typed here. Null where the manifest is unreadable or says
+ * nothing, and the table draws the absence rather than guessing.
  */
 final class InstalledPackage
 {
     /**
-     * @param string      $name    the composer name, e.g. "uhifadhi/<name>-module"
-     * @param string      $version what composer reports it as, pretty
-     * @param string|null $note    what this package is, if the shell can say
+     * @param string      $name        the composer name, e.g. "uhifadhi/<name>-module"
+     * @param string      $version     what composer reports it as, pretty
+     * @param string|null $note        what this package is, if the shell can say
+     * @param string|null $description what the package says about itself
      */
     public function __construct(
         public string $name,
         public string $version,
         public ?string $note = null,
+        public ?string $description = null,
     ) {
+    }
+
+    /** The one line to print for this package, whoever wrote it. */
+    public function line(): ?string
+    {
+        return $this->note ?? $this->description;
     }
 }

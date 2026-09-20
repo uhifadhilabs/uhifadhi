@@ -155,6 +155,11 @@ final class ComponentContractTest extends ContractTestCase
             'rdf-foot',
             'rdf-page',
 
+            // ONE THING THAT NEEDS SOMEBODY, as a row: the queue three
+            // surfaces draw from three owners' items. Hoisted out of the
+            // area overview's own sheet when the second surface needed it.
+            'ao-att',
+
             // THE PERSON'S MARK, AND THE TWO QUIET BUTTONS.
             'avatar',
             'open-btn',

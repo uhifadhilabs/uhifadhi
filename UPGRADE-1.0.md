@@ -1,5 +1,87 @@
 # UPGRADE FROM 0.x to 1.0
 
+## The settings section, and the route an application imports for it
+
+**What changed.** The core ships a Settings section — `/settings`, with
+**Installation**, **Modules** and **Organisation** as its tabs — and it is
+reachable only where the application asks for it, exactly like the welcome
+page and the configure page:
+
+```yaml
+# config/routes/shell.yaml (your application)
+shell_settings:
+    resource: '@ShellBundle/config/routes/settings.php'
+```
+
+Without that line there is no section and no row in the sidebar for one; the
+navigation source generates the address and yields nothing when it cannot.
+The constant is `ShellBundle::SETTINGS_ROUTES`, for the reason the other two
+are constants: the string is written in the recipe, in the skeleton and in
+every installation.
+
+**The sidebar's last group.** `NavGroup::SETTINGS` holds one row whose
+children are the section's tabs — the shape an area and the files section
+already wear. The shell derives what is open from the row marked `current`,
+so nothing about this needs an installation to configure anything.
+
+**What lives there.** What is installed and at what version, which areas run
+which modules, the installation's health checks, and who the installation
+belongs to. **Two figures and two columns state their own absence on an
+ordinary installation**, and that is the honest reading rather than a gap:
+whether a package is BEHIND needs a release feed to compare against, and when
+the installation last DEPLOYED needs whatever deployed it to have said so.
+Neither is a thing a running application can read about itself.
+
+**What a module can contribute.** Five new contracts in
+`Uhifadhi\Contracts\Settings`, each tagged by hand as usual:
+
+| Tag | Interface | What it puts on the section |
+| --- | --- | --- |
+| `shell.settings_figure` | `SettingsFigureSourceInterface` | a card in the figure row |
+| `shell.settings_check` | `SettingsCheckSourceInterface` | a row in the health list |
+| `shell.settings_decision` | `SettingsDecisionSourceInterface` | an item in the queue |
+| `shell.settings_change` | `SettingsChangeSourceInterface` | a row in what changed |
+
+Two more facts have exactly ONE answer, so they are aliases rather than
+collected lists — two things claiming to know which modules run in which
+areas would be a disagreement with nothing to settle it:
+
+```php
+$services->alias(ModuleMatrixSourceInterface::SERVICE, MyMatrix::class);
+$services->alias(OrganisationIdentitySourceInterface::SERVICE, MyIdentity::class);
+```
+
+Both are optional. An installation where nobody answers gets a screen that
+says so — the identity falls back to the wordmark the shell was configured
+with, and every other field reads "not set".
+
+**A source that throws does not take the page.** This is the one screen
+somebody opens to find out whether anything is wrong, so a check source that
+fails becomes a row saying it could not be run, with the reason, and every
+other check still answers. Write a check that is cheap: it runs on a page
+render, and anything expensive is measured on a schedule and reported here
+from what was stored.
+
+**One class cannot carry two of these tags.** PHP refuses a class that
+implements two interfaces each declaring a `TAG` constant. Where one fact has
+two readings — a health row and a queue item — publish it as two small
+sources over one shared reading, which is what the core does for the areas
+that run no module.
+
+## `.ao-att` is the frame's now
+
+**What changed.** The needs-attention row moved out of `area.css` into
+`shell.css` and joined `Contract\LayoutContract::COMPONENTS`. Three surfaces
+draw one — an area's overview, the organisation dashboard and the settings
+section — from three different owners' items, and a copy in a second sheet
+would have been two rows that drift, whichever sheet happened to load last.
+
+**What to change in a module.** Nothing. The markup and the three states
+(`.now`, `.soon`, `.watch`) are what they were; a cell already writing them
+keeps working, and now works on a page that does not load the area's sheet.
+`OverviewVocabulary::HOST_CLASSES` no longer lists it, because it is no
+longer the area overview's to lend.
+
 ## A mark says whose set it is
 
 **What changed.** `VocabularyConformanceTestCase` gains

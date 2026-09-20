@@ -1,0 +1,63 @@
+{# WHO THIS INSTALLATION BELONGS TO.
+
+   EVERY FIELD STATES ITS CONSEQUENCE, which is the whole reason the third
+   column is there: somebody deciding whether to set a logo needs to know what
+   happens if they do not, and somebody reading the time zone needs to know
+   that every instant on every screen is read in it.
+
+   A FRESH INSTALLATION HAS BEEN GIVEN NO NAME, and the screen says so rather
+   than inventing one: the name falls back to the wordmark it was shipped
+   with and every other field reads "not set". That is the page telling
+   somebody exactly what there is to do.
+
+   DRAWN TO ITS SCOPE, NOT TO ITS FULL DEPTH (ruled 2026-09-20). The fields
+   are settled; the editing form, the logo upload and who may change any of it
+   are queued, and the hint says so. #}
+{% extends '@Shell/settings/_section.html.twig' %}
+
+{% block shell_page %}
+    {%- set identity = settings.identity -%}
+    <div class="c">
+        <span class="tab">Identity<span class="src">&middot; what the organisation is called, and how it is drawn</span></span>
+        <table class="tbl">
+            <tr>
+                <td>Name</td>
+                <td><b>{{ identity.name }}</b></td>
+                <td class="mono fog">shown in the header and on every export</td>
+            </tr>
+            <tr>
+                <td>Short name</td>
+                <td>{% if identity.shortName %}<b>{{ identity.shortName }}</b>{% else %}<span class="w">not set</span>{% endif %}</td>
+                <td class="mono fog">used where the full name will not fit</td>
+            </tr>
+            <tr>
+                <td>Logo</td>
+                <td>{% if identity.logo %}<b>{{ identity.logo }}</b>{% else %}<span class="w">not set</span>{% endif %}</td>
+                <td class="mono fog">falls back to the wordmark</td>
+            </tr>
+            <tr>
+                <td>Time zone</td>
+                <td>
+                    {%- if identity.timeZone -%}
+                        <b>{{ identity.timeZone }}</b>
+                        {%- set offset = identity.utcOffset(date()) -%}
+                        {%- if offset %} <span class="mono">{{ offset }}</span>{% endif -%}
+                    {%- else -%}
+                        <span class="w">not set</span>
+                    {%- endif -%}
+                </td>
+                <td class="mono fog">every instant on every screen is read in the viewer’s zone</td>
+            </tr>
+            <tr>
+                <td>Country</td>
+                <td>{% if identity.country %}<b>{{ identity.country }}</b>{% else %}<span class="w">not set</span>{% endif %}</td>
+                <td class="mono fog">the map’s default extent</td>
+            </tr>
+        </table>
+    </div>
+
+    {{ include('@Shell/_page_hint.html.twig', {
+        lead: 'This tab is drawn to its scope, not to its full depth.',
+        say: 'The fields above are settled and each states its consequence. Still to draw: the editing form itself, the logo upload, and who may change any of it.',
+    }, with_context: false) }}
+{% endblock %}

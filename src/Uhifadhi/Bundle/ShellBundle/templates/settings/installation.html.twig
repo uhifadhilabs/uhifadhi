@@ -1,0 +1,95 @@
+{# WHAT IS INSTALLED — the screen the front door used to be.
+
+   `/` is the organisation dashboard now, and what used to answer there is
+   here: what this installation runs, at what version, which areas run it, and
+   whether any of it needs attention. It is the one screen in the product that
+   is about the SOFTWARE rather than about the work.
+
+   NOTHING ON IT IS PER-AREA CONFIGURATION, which is what the hint at the
+   bottom says: turning a module on for one area is the area's own business,
+   and what that module then does is that module's Configure page.
+
+   TWO FIGURES AND TWO COLUMNS STATE THEIR OWN ABSENCE on an ordinary
+   installation, and that is the honest reading rather than a gap. Whether a
+   package is BEHIND needs a release feed to compare against and when the
+   installation last DEPLOYED needs whatever deployed it to have said so;
+   neither is a thing a running application can read about itself, and a
+   screen that filled them in would be guessing on the one page whose whole
+   job is not to. #}
+{% extends '@Shell/settings/_section.html.twig' %}
+
+{% block shell_page %}
+    {{ include('@Shell/settings/_figures.html.twig', {figures: settings.installationFigures}, with_context: false) }}
+
+    <h2 class="zone">What is installed</h2>
+
+    <div class="c">
+        <span class="tab">What is installed<span class="src">&middot; the core and every package beside it, with the version this installation runs</span></span>
+        <table class="tbl">
+            <tr>
+                <th>package</th>
+                <th>what it is</th>
+                <th>installed</th>
+                <th>released</th>
+                <th>state</th>
+            </tr>
+            {%- for package in settings.packages -%}
+                <tr>
+                    <td><b>{{ package.name }}</b></td>
+                    <td>{{ package.line ?? '—' }}</td>
+                    <td class="mono">{{ package.version }}</td>
+                    {# NOTHING TO COMPARE AGAINST. An installation reads its own
+                       vendor directory and no index of releases, so the two
+                       columns the design draws beside the version are drawn and
+                       left honestly empty — the card's caption below says why,
+                       once, rather than each row saying it five times. #}
+                    <td class="mono fog">—</td>
+                    <td class="fog">—</td>
+                </tr>
+            {%- endfor -%}
+        </table>
+        <p class="use">Read from composer at render time, so this is what the installation
+            actually has. What has been RELEASED is not read from anywhere: nothing here
+            subscribes to a release feed, so no row can say it is behind.</p>
+    </div>
+
+    <h2 class="zone">What runs where</h2>
+
+    <div class="c">
+        <span class="tab">Modules per area<span class="src">&middot;
+            {{ settings.matrix.rows|length }} area{{ settings.matrix.rows|length == 1 ? '' : 's' }} &middot;
+            {{ settings.matrix.columns|length }} module{{ settings.matrix.columns|length == 1 ? '' : 's' }} &middot;
+            {{ settings.matrix.liveAreas }} running</span></span>
+        {{ include('@Shell/settings/_matrix.html.twig', {matrix: settings.matrix}, with_context: false) }}
+    </div>
+
+    <h2 class="zone">Health</h2>
+
+    <div class="c">
+        <span class="tab">Health<span class="src">&middot;
+            {%- if settings.checks is empty %} nothing installed here publishes a check yet
+            {%- else %} {{ settings.checks|length }} check{{ settings.checks|length == 1 ? '' : 's' }} &middot;
+                {{ settings.checksPassed }} pass
+                {%- if settings.checksPassed < settings.checks|length %} &middot;
+                    {{ settings.checks|length - settings.checksPassed }} to check
+                {%- endif -%}
+            {%- endif -%}
+        </span></span>
+        {%- for check in settings.checks -%}
+            <div class="rln">
+                <span><span class="chip {{ check.passed ? 'ok' : 'warn' }}">{{ check.passed ? 'pass' : 'check' }}</span>
+                    <b>{{ check.title }}</b></span>
+                {%- if check.detail %}<span class="mono fog">{{ check.detail }}</span>{% endif -%}
+            </div>
+        {%- else -%}
+            <p class="use">A check arrives with whatever can answer it — the core answers for
+                what it keeps, and a module answers for its own. Nothing installed here
+                publishes one yet, which is a reading and not a failure.</p>
+        {%- endfor -%}
+    </div>
+
+    {{ include('@Shell/_page_hint.html.twig', {
+        lead: 'Nothing on this page is per-area configuration.',
+        say: 'It states what this installation is. Turning a module on or off for one area is that area’s own business, and what the module then does is its own Configure page.',
+    }, with_context: false) }}
+{% endblock %}

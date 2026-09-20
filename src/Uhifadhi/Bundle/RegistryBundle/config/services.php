@@ -27,7 +27,9 @@ use Uhifadhi\Bundle\RegistryBundle\Service\ModulePermissionCatalogue;
 use Uhifadhi\Bundle\RegistryBundle\Service\ModuleRouteGate;
 use Uhifadhi\Bundle\RegistryBundle\Service\ProviderCatalogueMapper;
 use Uhifadhi\Bundle\RegistryBundle\Service\RegistrySyncService;
+use Uhifadhi\Bundle\RegistryBundle\Settings\CatalogueFigure;
 use Uhifadhi\Bundle\RegistryBundle\Version\DependencyOrderComparator;
+use Uhifadhi\Contracts\Settings\SettingsFigureSourceInterface;
 
 /*
  * The bundle's static service wiring.
@@ -104,6 +106,20 @@ return static function (ContainerConfigurator $container): void {
 
     $services->set('registry.area_module_ledger', AreaModuleLedger::class)
         ->args([service('registry.catalogue'), service(AreaModuleRepository::class)]);
+
+    /*
+     * HOW MANY MODULES THIS INSTALLATION RUNS, for the settings section's
+     * figure row. The section can read the vendor directory and see
+     * packages; what a MODULE is, is this runtime's definition, so the
+     * count is answered here.
+     *
+     * TAGGED BY HAND, and the tag is the CONTRACT's constant rather than the
+     * shell's: this bundle names no sibling bundle, and the contracts package
+     * is the one place both ends can read the spelling from.
+     */
+    $services->set('registry.settings.figure', CatalogueFigure::class)
+        ->args([service('registry.catalogue')])
+        ->tag(SettingsFigureSourceInterface::TAG);
 
     $services->set('registry.entry_routes', ModuleEntryRouteResolver::class)
         ->args([$providers]);

@@ -1597,6 +1597,70 @@ table.tbl td.num { font-size: 12px; }
 }
 .rln:last-child { border: 0; }
 
+/* ---- ONE THING THAT NEEDS SOMEBODY, as a row ----------------------------
+   A LIST OF THESE IS A QUEUE, and three surfaces draw one: an area's
+   overview, the organisation dashboard and the settings section, each from a
+   different owner's items. It was the area overview's until the second
+   surface needed it; a copy in a second sheet would have been two rows that
+   drift, and on a page that loaded both it would have been whichever sheet
+   came last.
+
+   THE RAIL IS THE URGENCY AND IT IS THE ONLY THING THAT COLOURS THE ROW. The
+   text stays the page's ink whatever the row is about, so a queue of five
+   reads as one list rather than as three colours; what changes with urgency
+   is the 4px rail and the age at the end of the row. The three states are
+   `.now`, `.soon` and `.watch`, in that order of loudness.
+
+   WHAT GOES INSIDE IS THE CALLER'S: `.sev` is the rail, `.bd` the body — a
+   `.t` sentence and a `.m` row of small facts — and `.age` how long it has
+   been true. The row is an anchor wherever the caller can say where to act. */
+.ao-att {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 11px 2px;
+    border-bottom: 1px dashed color-mix(in srgb, rgb(var(--c-fog)) 18%, transparent);
+    text-decoration: none;
+    color: rgb(var(--c-tx));
+}
+
+.ao-att:last-of-type { border-bottom: 0; }
+
+/* The rail is the severity, and it is the only thing that colours the row. */
+.ao-att .sev { width: 4px; align-self: stretch; border-radius: 2px; flex: none; background: rgb(var(--c-fog)); margin-top: 2px; }
+.ao-att.now .sev { background: rgb(var(--c-fail)); }
+.ao-att.soon .sev { background: rgb(var(--c-warn)); }
+.ao-att.watch .sev { background: rgb(var(--c-fog)); opacity: .5; }
+
+.ao-att .bd { flex: 1; min-width: 0; }
+.ao-att .bd .t { font-size: 12.5px; line-height: 1.5; display: block; }
+
+.ao-att .bd .m {
+    display: flex;
+    gap: 9px;
+    flex-wrap: wrap;
+    margin-top: 5px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: rgb(var(--c-dim));
+}
+
+.ao-att .bd .m i { width: 6px; height: 6px; border-radius: 2px; background: rgb(var(--c-fog)); align-self: center; }
+
+.ao-att .age {
+    flex: none;
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    font-weight: 700;
+    color: rgb(var(--c-fog));
+    padding-top: 2px;
+    text-align: right;
+    min-width: 64px;
+}
+
+.ao-att.now .age { color: rgb(var(--c-fail)); }
+.ao-att.soon .age { color: rgb(var(--c-warn)); }
+
 /* ---- THE PAGER, and the foot it sits in --------------------------------- */
 .rdf-foot {
     display: flex; align-items: center; justify-content: space-between; gap: 12px;

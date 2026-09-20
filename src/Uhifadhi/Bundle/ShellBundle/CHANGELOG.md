@@ -8,6 +8,24 @@
 
 Not released yet.
 
+ * THE SETTINGS SECTION, in the area idiom: `/settings` with Installation,
+   Modules and Organisation as its tabs, one head on every screen and a
+   subline per screen, shipped as a third route resource
+   (`ShellBundle::SETTINGS_ROUTES`) an application imports in one line. Its
+   door is the sidebar's last group, holding one row whose children are the
+   tabs. The screens are composed from `Uhifadhi\Contracts\Settings\*`:
+   figures (`shell.settings_figure`), health checks
+   (`shell.settings_check`), the queue (`shell.settings_decision`), changes
+   (`shell.settings_change`), and two aliases with one answer each — what
+   runs where and whose installation this is. A source that throws becomes a
+   row saying so rather than a 500 on the one screen that reports trouble
+ * ONE THING THAT NEEDS SOMEBODY, as a row: `.ao-att` moves out of the area
+   overview's own sheet into the frame's, because three surfaces draw one
+   from three different owners' items. Nothing about the markup changed
+ * a package's own one-line description is read from its manifest and drawn
+   beside it, so the installation screen quotes each package rather than the
+   shell describing any of them
+
  * THE SHELL MOUNTS A MODULE'S ORGANISATION-LEVEL PAGES: a row in
    Observatory after Performance per module tagged `shell.org_pages`, its
    screens as the tabs under it, and the scope control (`shell.scope_source`,

@@ -125,6 +125,22 @@ final class ShellBundle extends AbstractBundle
     public const string CONFIGURE_ROUTES = '@ShellBundle/config/routes/configure.php';
 
     /**
+     * THE SETTINGS SECTION'S ADDRESS, shipped the same way and imported the
+     * same way:
+     *
+     *     shell_settings:
+     *         resource: '@ShellBundle/config/routes/settings.php'
+     *
+     * A THIRD RESOURCE FOR A THIRD DECISION, by the same argument the
+     * configure page's is a second one: an installation may want the section
+     * and not the welcome page — the ordinary case now that `/` belongs to
+     * the organisation dashboard — or neither. One file per decision keeps
+     * each of them reversible in one line, and the sidebar's Settings group
+     * simply does not appear where the line is missing.
+     */
+    public const string SETTINGS_ROUTES = '@ShellBundle/config/routes/settings.php';
+
+    /**
      * The AssetMapper namespace this bundle's assets/ directory is mapped to.
      *
      * It is the npm-style form of the composer package name, and it has to be:
@@ -181,6 +197,25 @@ final class ShellBundle extends AbstractBundle
      * chrome, exactly as it does for an area's tabs.
      */
     public const string ORG_PAGES_TAG = 'shell.org_pages';
+
+    /**
+     * WHAT A BUNDLE TAGS TO PUT A FIGURE ON THE SETTINGS OVERVIEW'S ROW.
+     *
+     * The row states how big this installation is and no single package
+     * knows: areas belong to one bundle, people to another, what is kept to a
+     * module. Same spelling discipline as the nav tag, and the same reason —
+     * a contributor writes the string by hand in its own extension.
+     */
+    public const string SETTINGS_FIGURE_TAG = 'shell.settings_figure';
+
+    /** WHAT A BUNDLE TAGS TO ANSWER ONE OF THE INSTALLATION SCREEN'S HEALTH QUESTIONS. */
+    public const string SETTINGS_CHECK_TAG = 'shell.settings_check';
+
+    /** WHAT A BUNDLE TAGS TO SAY THE INSTALLATION NEEDS A DECISION. */
+    public const string SETTINGS_DECISION_TAG = 'shell.settings_decision';
+
+    /** WHAT A BUNDLE TAGS TO REPORT A CHANGE TO THE INSTALLATION. */
+    public const string SETTINGS_CHANGE_TAG = 'shell.settings_change';
 
     /** Config lives under "shell:", not the class-derived "uhifadhi_shell:". */
     protected string $extensionAlias = 'shell';

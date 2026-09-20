@@ -1,0 +1,29 @@
+{# THE CATALOGUE — every module this installation can run, and who runs it.
+
+   THE SAME TABLE THE INSTALLATION SCREEN DRAWS, and deliberately the same:
+   one screen asks "what runs where" and this one asks "what is the
+   catalogue", and they are the same fact. Two readings of it would be two
+   answers with no way to say which was right.
+
+   DRAWN TO ITS SCOPE, NOT TO ITS FULL DEPTH (ruled 2026-09-20). What it
+   STATES is settled — the catalogue and the areas that run it. Installing and
+   removing a module at organisation scope, and the consequence screen that
+   says what data an uninstall would orphan, are queued and are not here; the
+   hint at the bottom says so rather than leaving a reader to wonder whether
+   the buttons are missing or the feature is. #}
+{% extends '@Shell/settings/_section.html.twig' %}
+
+{% block shell_page %}
+    <div class="c">
+        <span class="tab">The catalogue<span class="src">&middot;
+            {{ settings.matrix.columns|length }} installed &middot;
+            running in {{ settings.matrix.liveAreas }} of {{ settings.matrix.rows|length }}
+            area{{ settings.matrix.rows|length == 1 ? '' : 's' }}</span></span>
+        {{ include('@Shell/settings/_matrix.html.twig', {matrix: settings.matrix}, with_context: false) }}
+    </div>
+
+    {{ include('@Shell/_page_hint.html.twig', {
+        lead: 'This tab is drawn to its scope, not to its full depth.',
+        say: 'What it states is settled: the catalogue, and the areas that run each of them — the matrix above is the reading of it. Still to draw: installing and removing at organisation scope, and the screen that says what data an uninstall would orphan.',
+    }, with_context: false) }}
+{% endblock %}

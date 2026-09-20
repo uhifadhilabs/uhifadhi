@@ -1,0 +1,27 @@
+{# A ROW OF HEADLINE FIGURES — four to a row, wherever the section draws one.
+
+   A FIGURE THAT CANNOT BE MEASURED SAYS SO, and it says so where the number
+   would have been: an em dash, with the caption carrying the reason. Zero is
+   a measurement and this is the absence of one, and a row that drew them the
+   same would report a quiet installation and an unconfigured one identically.
+
+   THE CAPTION IS TWO FRAGMENTS. The second one is ink — the part that wants
+   an eye — which is why the source hands them over separately and the colour
+   is decided here. #}
+<div class="grid kstrip">
+    {%- for figure in figures -%}
+        <div class="c kpi{{ figure.hot ? ' hot' }}">
+            <span class="tab">{{ figure.label }}</span>
+            <b class="disp">{{ figure.isMeasured ? figure.value : '—' }}
+                {%- if figure.unit %}<em>{{ figure.unit }}</em>{% endif -%}
+            </b>
+            {%- if figure.caption or figure.warning -%}
+                <span class="sub">
+                    {{- figure.caption -}}
+                    {%- if figure.caption and figure.warning %} &middot; {% endif -%}
+                    {%- if figure.warning %}<span class="w">{{ figure.warning }}</span>{% endif -%}
+                </span>
+            {%- endif -%}
+        </div>
+    {%- endfor -%}
+</div>
