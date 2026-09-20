@@ -8,6 +8,10 @@
 
 Not released yet.
 
+ * a calendar pill's dot is painted with a COLOUR token and not a channel one
+   — the roles mapped to `--c-acc`/`--c-ok`/…, which resolve to a bare `62 217
+   168` in a `background` and painted nothing at all, so every pill dot on
+   every calendar drew empty while the markup was exactly right
  * the plate RESOLVES a token swatch where it draws — `var(--plate-ok)` handed
    to Leaflet painted nothing at all, so a legend read right while the map drew
    empty — and resolves it again when the theme flips

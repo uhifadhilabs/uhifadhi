@@ -74,7 +74,7 @@ final class CalendarContractTest extends TestCase
             '2026-09-19' => new CalendarDay('2026-09-19', [new CalendarPill('night 1 of 2', PillHue::Problem)]),
         ]), '2026-09');
 
-        self::assertStringContainsString('--pill-hue:var(--c-fail)', $html);
+        self::assertStringContainsString('--pill-hue:var(--fail)', $html);
         self::assertStringNotContainsString('#', $html, 'a hue is a token, never a literal colour');
     }
 
@@ -192,6 +192,40 @@ final class CalendarContractTest extends TestCase
         $html = $this->render($this->feed([]), '2026-09', attributes: [self::CELL_HEIGHT_PROPERTY => '120px']);
 
         self::assertStringContainsString('style="--cal-cell-height:120px"', $html);
+    }
+
+    /**
+     * A ROLE IS PAINTED WITH A COLOUR TOKEN, NEVER A CHANNEL TOKEN.
+     *
+     * THE SHELL PUBLISHES BOTH AND THEY ARE NOT INTERCHANGEABLE:
+     * `--c-acc` is `62 217 168`, three numbers meant to be spent inside
+     * `rgb(...)`, and `--acc` is the colour. The pill's dot hands this
+     * value straight to a `background`, so a channel token painted
+     * nothing at all — and the markup, the class and the custom
+     * property were all exactly right while every dot drew empty.
+     */
+    public function testEveryHueIsAColourTokenAndNotAChannelTriple(): void
+    {
+        $html = $this->render($this->feed([
+            '2026-09-19' => new CalendarDay('2026-09-19', [
+                new CalendarPill('subject'),
+                new CalendarPill('good', PillHue::Good),
+                new CalendarPill('attention', PillHue::Attention),
+                new CalendarPill('problem', PillHue::Problem),
+                new CalendarPill('quiet', PillHue::Quiet),
+            ]),
+        ]), '2026-09');
+
+        preg_match_all('/--pill-hue:\s*([^"]+)"/', $html, $found);
+
+        self::assertNotSame([], $found[1], 'a month of pills paints some dots');
+        foreach (array_unique($found[1]) as $hue) {
+            self::assertDoesNotMatchRegularExpression(
+                '/var\(--c-/',
+                $hue,
+                'A channel token in a background paints nothing: spend --acc, not --c-acc.',
+            );
+        }
     }
 
     // ---------------------------------------------------------------- fixtures

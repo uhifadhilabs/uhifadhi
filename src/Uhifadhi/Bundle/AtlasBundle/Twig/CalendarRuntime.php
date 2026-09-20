@@ -47,13 +47,23 @@ final readonly class CalendarRuntime implements RuntimeExtensionInterface
     /** A property handed in attributes sizes the GRID, not a cell's content. */
     public const string CUSTOM_PROPERTY_PREFIX = '--';
 
-    /** What a hue role is painted with. The roles are the contracts'; the paint is the atlas's. */
+    /**
+     * WHAT A HUE ROLE IS PAINTED WITH. The roles are the contracts'; the
+     * paint is the atlas's.
+     *
+     * A COLOUR TOKEN AND NEVER A CHANNEL TOKEN. The shell publishes both:
+     * `--c-acc` is the three numbers `62 217 168`, meant to be spent
+     * inside `rgb(...)`, and `--acc` is the colour itself. This value is
+     * handed straight to a `background`, so a channel token resolved to
+     * a bare triple, painted nothing, and every pill dot on every
+     * calendar in the product drew empty while the markup looked right.
+     */
     private const array HUES = [
-        PillHue::Subject->value => 'var(--c-acc)',
-        PillHue::Good->value => 'var(--c-ok, var(--c-acc))',
-        PillHue::Attention->value => 'var(--c-warn)',
-        PillHue::Problem->value => 'var(--c-fail)',
-        PillHue::Quiet->value => 'var(--c-fog)',
+        PillHue::Subject->value => 'var(--acc)',
+        PillHue::Good->value => 'var(--ok)',
+        PillHue::Attention->value => 'var(--warn)',
+        PillHue::Problem->value => 'var(--fail)',
+        PillHue::Quiet->value => 'var(--fog)',
     ];
 
     public function __construct(
