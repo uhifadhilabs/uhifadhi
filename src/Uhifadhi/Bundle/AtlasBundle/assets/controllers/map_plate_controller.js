@@ -1098,6 +1098,11 @@ export default class extends Controller {
         const subject = this.subject;
         const bounds = subject?.bounds?.isValid() ? subject.bounds : this.bounds;
         if (!bounds?.isValid()) {
+            // NOTHING TO FRAME IS NOT NOTHING TO DO. The size was invalidated
+            // a few lines above, so whatever is already drawn is now in a
+            // frame of a different width — and a label does not follow one.
+            this.replaceLabels();
+
             return;
         }
 
@@ -1119,11 +1124,52 @@ export default class extends Controller {
                 maxZoom: subject?.zoom ?? undefined,
                 animate: false,
             });
+            this.replaceLabels();
 
             return;
         }
 
         this.map?.setView(bounds.getCenter(), subject?.zoom ?? POINT_ZOOM, { animate: false });
+        this.replaceLabels();
+    }
+
+    /**
+     * EVERY PERMANENT LABEL, PUT BACK WHERE ITS FEATURE IS.
+     *
+     * A PATH IS PROJECTED ON EVERY DRAW AND A TOOLTIP IS NOT. Leaflet places
+     * a permanent tooltip when it opens it and moves it again only on `zoom`
+     * and `viewreset`. Nothing the fit above does is either of those: the
+     * `invalidateSize({pan: false})` fires `resize`, and the `fitBounds`
+     * after it very often lands on the zoom and the centre the map was
+     * already at — the frame got narrower, not further away. So the boundary
+     * redraws correctly and its zone labels stay pinned to the pixels of a
+     * frame that no longer exists, which on a plate composed onto a widget
+     * grid means negative x: outside the plate, until somebody reloads the
+     * page and the card happens to have its final width before the map is
+     * built.
+     *
+     * ASKING EACH TOOLTIP RATHER THAN FIRING `viewreset`. Firing the event
+     * would work and would also wake every other listener on it — the
+     * chrome's, a module's, whatever is added next — to move some labels.
+     * `update()` is exactly the work that is wanted, it is what Leaflet's own
+     * handler calls, and it is a no-op on a tooltip that is already right, so
+     * the path where the fit DID change the zoom costs a re-layout nobody
+     * sees.
+     *
+     * IT IS ON THE FIT'S PATH, NOT ON A HOOK OF ITS OWN, which is what makes
+     * fullscreen and swap correct without either of them knowing that labels
+     * exist: {@see refit} is the one funnel every re-frame goes through.
+     *
+     * AND IT CANNOT TAKE THE PLATE DOWN. A label is worth less than a map, so
+     * a tooltip that throws while re-placing itself is reported and the rest
+     * are still asked.
+     */
+    replaceLabels() {
+        try {
+            this.map?.eachLayer((drawnLayer) => drawnLayer.getTooltip?.()?.update());
+        } catch (error) {
+            console.error('[atlas] the plate could not re-place its labels', error);
+        }
     }
 
     /**

@@ -8,6 +8,18 @@
 
 Not released yet.
 
+ * A ZONE LABEL FOLLOWS ITS PLATE WHEN THE PLATE CHANGES SIZE. A label is a
+   permanent tooltip, and Leaflet re-places one only on `zoom` and
+   `viewreset` — neither of which the plate's own catching-up fires, since
+   `invalidateSize({pan: false})` fires `resize` and the `fitBounds` after it
+   usually lands on the zoom and centre the map was already at. On a plate
+   composed onto a widget grid that narrows it after the map is built, the
+   labels stayed at the pixels of the wider frame, which put them at negative
+   x — outside the plate — until the page was reloaded. `refit()` now asks
+   every tooltip to update itself on each of its three paths out, which
+   covers fullscreen and swap too because `refit()` is the one funnel every
+   re-frame goes through
+
  * a live position's breathing ring is no longer CLIPPED: the marker's box is
    sized by the ring at full breath (2.05 × the radius plus half its stroke)
    rather than by the dot, so the pulse is round instead of a square-ish
