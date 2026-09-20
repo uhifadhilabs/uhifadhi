@@ -45,7 +45,8 @@ final readonly class LivePresence
 
     /**
      * @param list<LivePosition> $positions           one per person, latest fix first
-     * @param int                $pingIntervalMinutes how often this area's handsets are told to report
+     * @param int                $pingIntervalMinutes how often this area's handsets are told to report, and
+     *                                                the fallback for a position that states none of its own
      */
     public function __construct(
         public array $positions,
@@ -65,10 +66,19 @@ final readonly class LivePresence
      * draws it dimmed with its age, never drops it, because a marker
      * that vanished when a phone lost signal would read as a ranger who
      * went home.
+     *
+     * BY ITS OWN AREA'S CLOCK WHERE IT HAS ONE. A reading across areas
+     * holds positions expected at different intervals, and judging all
+     * of them by one would call a thirty-minute area's rangers stale
+     * beside a five-minute area's on the same silence. A position that
+     * states no interval is read at the set's, which is every per-area
+     * reading.
      */
     public function isStale(LivePosition $position): bool
     {
-        return $position->ageSeconds($this->asOf) > $this->pingIntervalMinutes * 60 * self::STALE_AFTER_INTERVALS;
+        $interval = $position->pingIntervalMinutes ?? $this->pingIntervalMinutes;
+
+        return $position->ageSeconds($this->asOf) > $interval * 60 * self::STALE_AFTER_INTERVALS;
     }
 
     /** How many of the positions nobody should be believing any more. */

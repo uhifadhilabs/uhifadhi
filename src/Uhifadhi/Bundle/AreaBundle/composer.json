@@ -23,6 +23,7 @@
     "require": {
         "php": ">=8.4",
         "ext-mbstring": "*",
+        "psr/clock": "^1.0",
         "api-platform/core": "^4.3",
         "doctrine/collections": "^2.2",
         "doctrine/dbal": "^4.0",

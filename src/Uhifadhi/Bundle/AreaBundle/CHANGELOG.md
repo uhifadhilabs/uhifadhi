@@ -8,6 +8,25 @@
 
 Not released yet.
 
+ * A WATCH IS OVER WHEN THE MOMENT ASKED FOR SAYS SO, never when the server
+   happens to be running. `PresenceService` read the WALL CLOCK to decide
+   whether the roster had already ended an open watch, so a live plate asked
+   for half past ten answered correctly all morning and emptied itself after
+   the evening's rostered end had passed — a suite pinning its own clock
+   failed every evening and passed on a re-run next morning. The moment is
+   passed down from the caller now, and the one read with no moment of its
+   own (a whole day's board) takes it from an injected `psr/clock`, once,
+   so every row of one answer is judged at the same instant. The suite's
+   kernel pins that clock LATE on purpose: a read that still consults it is
+   wrong in every run rather than only after six.
+ * A LIVE READING IS ANSWERABLE ONE SCOPE WIDER: `PresenceService::forScope()`
+   and `LivePositionsInterface::forScope()` take the organisation or one
+   area. It is NOT a second aggregate — the wide answer walks the same
+   per-area loop and concatenates it, which is asserted — and every position
+   carries its own area's ping interval (`LivePosition::$pingIntervalMinutes`,
+   read by `LivePresence::isStale()`), so one plate does not call a
+   thirty-minute area's rangers stale beside a five-minute area's.
+
  * THE AREA'S THREE SET-UP STEPS, on the settings section's checklist —
    add an area, import zones, switch modules on — each stating where this
    installation is rather than whether it has begun, and each read off the

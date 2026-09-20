@@ -15,6 +15,7 @@ namespace Uhifadhi\Bundle\AreaBundle\Tests\Integration;
 
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
+use Symfony\Component\Clock\MockClock;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
@@ -24,11 +25,13 @@ use Uhifadhi\Bundle\AreaBundle\Repository\StationEventRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneEventRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Fixtures\CollectedModules;
+use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Fixtures\FixtureRoster;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Fixtures\HostPerson;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Fixtures\TaggedFigureProvider;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
 use Uhifadhi\Contracts\Entity\UserInterface;
 use Uhifadhi\Contracts\Kpi\ZoneFigureProviderInterface;
+use Uhifadhi\Contracts\Roster\WatchProviderInterface;
 use UtafitiLabs\PostGISBundle\UtafitiLabsPostGISBundle;
 
 use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
@@ -54,6 +57,11 @@ use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_it
 class TestKernel extends Kernel
 {
     use CheckoutTempDirTrait;
+    /**
+     * THE LAST MINUTE OF THE FIXTURE DAY. Late deliberately — see where the
+     * clock is registered below.
+     */
+    public const string CLOCK = '2026-09-19T23:59:00+03:00';
 
     public function __construct()
     {
@@ -122,6 +130,30 @@ class TestKernel extends Kernel
         /* The day, and the pings that prove it — API-CONTRACT.md §13. */
         $services->alias('test_public.area.checkin_statuses', 'area.checkin_statuses')->public();
         $services->alias('test_public.area.presence', 'area.presence')->public();
+
+        /*
+         * THE CLOCK IS PINNED, AND LATE ON PURPOSE.
+         *
+         * A reading that decides whether a rostered watch is over must never
+         * ask the wall clock: a suite of this shape used to pass all morning
+         * and fail after six, because every open watch read as one the
+         * roster had already ended and the live plate emptied itself.
+         * Pinning the clock to the last minute of the fixture day means any
+         * read that still consults it is WRONG IN EVERY RUN rather than only
+         * in the evening — a test that fails at 09:00 is a test somebody
+         * fixes.
+         */
+        $services->set('clock', MockClock::class)
+            ->args([self::CLOCK])
+            ->public();
+
+        /*
+         * A ROSTER, so the "the watch ended and nobody checked out" branch is
+         * reachable at all. Tagged by hand, as a real module bundle has to.
+         */
+        $services->set(FixtureRoster::class)
+            ->tag(WatchProviderInterface::TAG)
+            ->public();
         $services->alias('test_public.area.postings', 'area.postings')->public();
         $services->alias('test_public.area.station_directory', 'area.station_directory')->public();
         $services->alias('test_public.area.zone_stations', 'area.zone_stations')->public();

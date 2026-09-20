@@ -489,6 +489,11 @@ return static function (ContainerConfigurator $container): void {
      */
     $services->set('area.presence', PresenceService::class)
         ->args([
+            // WHAT TIME IT IS, FROM SOMETHING A TEST CAN SET. This service
+            // decides whether a rostered watch is over, and it used to ask
+            // the wall clock: a suite pinning a clock at half past ten
+            // passed all morning and emptied the live plate after six.
+            service('clock'),
             service(AreaOfInterestRepository::class),
             service(CheckInRepository::class),
             service(PersonPositionRepository::class),

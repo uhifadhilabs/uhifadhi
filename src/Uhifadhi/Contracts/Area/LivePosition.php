@@ -29,10 +29,17 @@ namespace Uhifadhi\Contracts\Area;
  * differently from the day board. So the state is derived once, by the
  * same derivation the day is read with, and travels with the point.
  *
- * WHETHER IT IS STALE IS NOT HERE. That depends on when you ask and on
- * the area's own ping interval, neither of which a position knows —
- * {@see LivePresence::isStale()} answers it, because that object holds
- * both.
+ * WHETHER IT IS STALE IS NOT HERE. That depends on when you ask, and
+ * {@see LivePresence::isStale()} answers it.
+ *
+ * THE INTERVAL IS HERE, THOUGH, AND IT HAS TO BE. How often a handset
+ * was told to ping is the AREA's, and a reading one scope wider holds
+ * positions from several areas at once: an organisation-level plate
+ * given one interval for all of them would paint the rangers of a
+ * thirty-minute area amber beside the rangers of a five-minute one, on
+ * the same silence. So a position carries the interval it was expected
+ * at, and the set's own interval is the fallback for a position that
+ * does not state one.
  */
 final readonly class LivePosition
 {
@@ -66,6 +73,16 @@ final readonly class LivePosition
         public ?float $distanceM = null,
         /** What the handset had left, where it said. */
         public ?int $batteryPct = null,
+        /**
+         * HOW OFTEN THIS POSITION'S OWN AREA TELLS ITS HANDSETS TO PING.
+         *
+         * Null where the caller is reading one area and the set already
+         * states it — which is every per-area reading, and why this is
+         * last and optional. A reading ACROSS areas fills it, because
+         * that is the only way one plate can judge two areas' silences
+         * by their own clocks.
+         */
+        public ?int $pingIntervalMinutes = null,
     ) {
     }
 
