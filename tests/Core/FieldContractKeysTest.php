@@ -36,9 +36,9 @@ final class FieldContractKeysTest extends FieldApiTestCase
     private const array RANGER = ['id', 'name', 'role'];
 
     /** `GET /api/areas/mine`: one key, whose list is the offline cache. */
-    private const array AREAS_MINE = ['areas'];
+    private const array AREAS_MINE = ['areas', 'postedAreaId'];
 
-    private const array AREA = ['id', 'name', 'areaKm2', 'stations', 'team', 'boundary'];
+    private const array AREA = ['id', 'name', 'areaKm2', 'stations', 'team', 'boundary', 'posted'];
 
     private const array TEAM_MEMBER = ['id', 'name'];
 

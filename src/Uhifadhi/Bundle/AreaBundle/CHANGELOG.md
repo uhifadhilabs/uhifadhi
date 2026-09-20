@@ -8,6 +8,11 @@
 
 Not released yet.
 
+ * `GET /api/areas/mine` says WHERE THE PERSON WORKS: `postedAreaId` (the area
+   of their standing posting, null where they stand nowhere) and `posted: true`
+   on that area's entry, so a phone opens the right ground instead of the first
+   name in the alphabet. It is a pointer into the payload — somebody posted
+   into ground they may not view gets null, because a posting is not a grant
  * `.tav` and `.stsep` are the design's, value for value: the avatar takes
    its accent-tinted ground and edge (it was a plain raised panel, so a stack
    read as a row of empty chips), `.tav.sm` is actually smaller than the base

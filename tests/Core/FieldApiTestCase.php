@@ -18,7 +18,10 @@ use Doctrine\ORM\Tools\SchemaTool;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
+use Uhifadhi\Bundle\AreaBundle\Entity\Posting;
 use Uhifadhi\Bundle\AreaBundle\Entity\Station;
+use Uhifadhi\Bundle\AreaBundle\Enum\PostingSource;
+use Uhifadhi\Bundle\AreaBundle\Service\PostingService;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
@@ -243,6 +246,22 @@ abstract class FieldApiTestCase extends WebTestCase
         $this->em->flush();
 
         return $station;
+    }
+
+    /**
+     * SOMEBODY STANDING AT A POST — through the service that holds the rule,
+     * because a test that wrote the row itself would pass while the rule the
+     * product enforces was broken.
+     */
+    protected function postTo(Station $station, User $person): Posting
+    {
+        $postings = static::getContainer()->get('test_public.area.postings');
+        self::assertInstanceOf(PostingService::class, $postings);
+
+        $posting = $postings->post($station, $person, PostingSource::WrittenHere);
+        $this->em->flush();
+
+        return $posting;
     }
 
     /**

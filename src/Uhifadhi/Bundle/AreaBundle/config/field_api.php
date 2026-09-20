@@ -25,6 +25,7 @@ use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\CheckInCorrectionRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\CheckInRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\PersonPositionRepository;
+use Uhifadhi\Bundle\AreaBundle\Repository\PostingRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\StationRepository;
 use Uhifadhi\Bundle\AreaBundle\Service\CheckInService;
 use Uhifadhi\Bundle\AreaBundle\Service\CheckInStatusService;
@@ -87,6 +88,8 @@ return static function (ContainerConfigurator $container): void {
             service('area.api.roster'),
             service('security.authorization_checker'),
             service('area.duty_stations'),
+            service(PostingRepository::class),
+            service('security.token_storage'),
         ])
         ->tag('api_platform.state_provider', ['key' => AreasMineProvider::class]);
 

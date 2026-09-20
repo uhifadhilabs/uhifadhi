@@ -221,9 +221,11 @@ asks nothing. `GET /api/areas/mine` is that cache:
           "lat": -3.2, "lon": 35.5, "catchmentM": 300 }
       ],
       "team": [{ "id": "sl-0142", "name": "…" }],
-      "boundary": { "type": "MultiPolygon", "coordinates": [ /* lon, lat */ ] }
+      "boundary": { "type": "MultiPolygon", "coordinates": [ /* lon, lat */ ] },
+      "posted": true                         // this is where the person works
     }
-  ]
+  ],
+  "postedAreaId": "0192f3c1-…"               // null where they stand nowhere
 }
 ```
 
@@ -248,6 +250,22 @@ sign-in, and there is nothing to be near yet. An area with no posts carries an
 empty list, which is a real answer. (It was published empty while the platform
 had no station record; a phone whose cache said "no posts" then had to be online
 to learn the names of the posts it works at.)
+
+**`postedAreaId` is where the person WORKS, so the phone opens that one.** It is
+the area of their standing posting — posting → station → area, read through the
+posting and never from what they have recorded lately, because somebody covering
+a shift elsewhere for a week would otherwise have the phone open the wrong ground
+for a month afterwards. The entry it names carries `posted: true`, and somebody
+stands at one post at a time, so there is one or there is none. Without it a
+client opened whichever area came first in the alphabet, which is nobody's
+answer.
+
+It is a **pointer into this payload**, so it only ever names an area in the list
+above. Somebody posted into ground they may not view gets `null` and their
+viewable areas, exactly as if they stood nowhere: naming it would hand the client
+an id it cannot open and would tell them an area exists that they may not see. A
+posting is where they work, but this endpoint answers *what may this account
+open* — and a posting is not a grant.
 
 **`team` is the roster, and it is asked of the contract.** This bundle owns ground,
 not people: it reads `Uhifadhi\Contracts\Entity\UserInterface`, so whichever

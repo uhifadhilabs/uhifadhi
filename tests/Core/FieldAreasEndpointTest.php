@@ -55,11 +55,11 @@ final class FieldAreasEndpointTest extends FieldApiTestCase
         $body = $this->get(self::ENDPOINT, $this->tokenFor($ranger));
 
         self::assertSame(Response::HTTP_OK, $this->client->getResponse()->getStatusCode());
-        self::assertSame(['areas'], array_keys($body));
+        self::assertSame(['areas', 'postedAreaId'], array_keys($body));
         self::assertCount(1, self::nested($body, 'areas'));
 
         $sent = self::nested($body, 'areas', 0);
-        self::assertSame(['id', 'name', 'areaKm2', 'stations', 'team', 'boundary'], array_keys($sent));
+        self::assertSame(['id', 'name', 'areaKm2', 'stations', 'team', 'boundary', 'posted'], array_keys($sent));
 
         // The public address, never the sequential key: an area is a UUID
         // everywhere in this product, so a client round-trips a UUID.
@@ -113,6 +113,84 @@ final class FieldAreasEndpointTest extends FieldApiTestCase
         self::assertSame('Seneto Gate Post', $post['name']);
         self::assertSame('ST-01', $post['code'], 'what a ranger says on the radio, beside the name');
         self::assertSame(300, $post['catchmentM']);
+    }
+
+    /**
+     * THE PHONE OPENS WHERE THE PERSON WORKS, not the first name in the
+     * alphabet.
+     *
+     * `postedAreaId` is the area of their standing posting — posting →
+     * station → area, read through the posting and never from what they have
+     * recorded lately — and the entry it names carries `posted: true`.
+     * Somebody covering a shift elsewhere for a week would otherwise have the
+     * phone open the wrong ground for a month afterwards.
+     */
+    public function testTheAnswerNamesTheAreaThePersonIsPostedIn(): void
+    {
+        $first = $this->area('Aardvark Reserve');
+        $second = $this->area('Zebra Reserve');
+        $ranger = $this->ranger();
+        $this->postTo($this->station($second, 'Seneto Gate Post', 35.5, -3.2), $ranger);
+
+        $body = $this->get(self::ENDPOINT, $this->tokenFor($ranger));
+
+        self::assertSame($second->getUuidString(), $body['postedAreaId']);
+        self::assertSame(
+            [false, true],
+            array_map(static fn (mixed $a): mixed => \is_array($a) ? $a['posted'] : null, self::nested($body, 'areas')),
+            'the alphabet still orders the list; the posting says which one to open',
+        );
+        self::assertNotSame($first->getUuidString(), $body['postedAreaId']);
+    }
+
+    /**
+     * SOMEBODY WHO STANDS NOWHERE GETS NULL, and that is an ordinary state —
+     * an analyst, a coordinator, somebody between postings. The client opens
+     * its picker rather than a guess.
+     */
+    public function testSomebodyWhoStandsNowhereIsPostedNowhere(): void
+    {
+        $this->area('Northern Conservation Reserve');
+
+        $body = $this->get(self::ENDPOINT, $this->tokenFor($this->ranger()));
+
+        self::assertNull($body['postedAreaId']);
+        self::assertSame(
+            [false],
+            array_map(static fn (mixed $a): mixed => \is_array($a) ? $a['posted'] : null, self::nested($body, 'areas')),
+        );
+    }
+
+    /**
+     * A POSTING INTO GROUND THEY MAY NOT VIEW POINTS AT NOTHING — and the
+     * ruling is that PERMISSION WINS.
+     *
+     * The pointer only ever points into this payload: an area the person may
+     * not view is not in the list, so naming it would hand the client an id
+     * it cannot open, and would tell somebody an area exists that they are
+     * not allowed to see — which is the one thing an endpoint handing out a
+     * list must not do. A posting is where they WORK, but this endpoint
+     * answers "what may this account open", and a posting is not a grant. If
+     * it should be, that is a change to the permission model and not to a
+     * cache.
+     */
+    public function testAPostingIntoGroundTheyMayNotViewNamesNothing(): void
+    {
+        $theirs = $this->area('Aardvark Reserve');
+        $elsewhere = $this->area('Zebra Reserve');
+
+        // Their authority is confined to one area by their department's scope.
+        $ranger = $this->ranger(department: $this->areaDepartment('Aardvark Wardens', $theirs));
+        $this->postTo($this->station($elsewhere, 'Seneto Gate Post', 35.5, -3.2), $ranger);
+
+        $body = $this->get(self::ENDPOINT, $this->tokenFor($ranger));
+
+        self::assertSame(
+            ['Aardvark Reserve'],
+            array_map(static fn (mixed $a): mixed => \is_array($a) ? $a['name'] : null, self::nested($body, 'areas')),
+            'the list is what they may view, and that has not changed',
+        );
+        self::assertNull($body['postedAreaId'], 'a pointer into this payload, or nothing at all');
     }
 
     /** An area with no posts says so as an empty list, which is a real answer. */

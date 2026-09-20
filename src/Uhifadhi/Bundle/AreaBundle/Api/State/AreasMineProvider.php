@@ -15,12 +15,15 @@ namespace Uhifadhi\Bundle\AreaBundle\Api\State;
 
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProviderInterface;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Uhifadhi\Bundle\AreaBundle\Api\FieldRoster;
 use Uhifadhi\Bundle\AreaBundle\ApiResource\AreasMine;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
+use Uhifadhi\Bundle\AreaBundle\Repository\PostingRepository;
 use Uhifadhi\Bundle\AreaBundle\Service\DutyStationService;
+use Uhifadhi\Contracts\Entity\UserInterface;
 
 /**
  * Answers `GET /api/areas/mine`: builds a field client's offline cache.
@@ -67,6 +70,8 @@ final readonly class AreasMineProvider implements ProviderInterface
         private FieldRoster $roster,
         private AuthorizationCheckerInterface $authorization,
         private DutyStationService $stations,
+        private PostingRepository $postings,
+        private TokenStorageInterface $tokens,
     ) {
     }
 
@@ -79,6 +84,7 @@ final readonly class AreasMineProvider implements ProviderInterface
         // Read once, outside the loop: the roster is the same list whichever
         // piece of ground somebody is standing on.
         $team = $this->roster->members();
+        $posted = $this->postedArea();
 
         $areas = [];
         // BY NAME, because a client's picker must not reorder between two syncs;
@@ -117,10 +123,54 @@ final readonly class AreasMineProvider implements ProviderInterface
                 'stations' => $this->stations->listFor($area),
                 'team' => $team,
                 'boundary' => $this->boundary($area),
+                'posted' => null !== $posted && $posted === $area->getUuidString(),
             ];
         }
 
-        return new AreasMine($areas);
+        /*
+         * THE POINTER ONLY EVER POINTS INTO THIS PAYLOAD. An area the person
+         * may not view is not in the list above, so naming it here would hand
+         * a client an id it cannot open — and would tell somebody an area
+         * exists that they are not allowed to see, which is the one thing an
+         * endpoint that hands out a list must not do.
+         *
+         * SO PERMISSION WINS OVER THE POSTING, and that is the ruling for the
+         * odd case: somebody posted into ground they may not view gets their
+         * viewable areas and no pointer, exactly as if they stood nowhere.
+         * The posting is where they WORK, but this endpoint answers "what may
+         * this account open", and a posting is not a grant — if it should be,
+         * that is a change to the permission model and not to a cache.
+         */
+        $reachable = null !== $posted && [] !== array_filter($areas, static fn (array $one): bool => $one['id'] === $posted);
+
+        return new AreasMine($areas, $reachable ? $posted : null);
+    }
+
+    /**
+     * THE AREA THIS PERSON WORKS IN — read through the posting, never by
+     * recorder.
+     *
+     * A posting is the statement of where somebody works: posting → station →
+     * area, one hop each, and somebody stands at one post at a time (ruled),
+     * so there is one answer or there is none. What a person has RECORDED
+     * lately is a different question with a different answer — somebody
+     * covering a shift somewhere else for a week would have the phone open
+     * the wrong ground for a month afterwards.
+     *
+     * NULL WHERE THEY STAND NOWHERE, which is an ordinary state: an analyst,
+     * a coordinator, somebody between postings. The client opens its picker
+     * rather than a guess.
+     */
+    private function postedArea(): ?string
+    {
+        $person = $this->tokens->getToken()?->getUser();
+        if (!$person instanceof UserInterface) {
+            return null;
+        }
+
+        $standing = $this->postings->findStandingByPerson($person);
+
+        return [] === $standing ? null : $standing[0]->getStation()?->getArea()?->getUuidString();
     }
 
     /**
