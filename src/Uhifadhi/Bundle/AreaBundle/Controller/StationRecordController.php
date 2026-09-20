@@ -32,9 +32,9 @@ use Uhifadhi\Bundle\AreaBundle\Service\PostingBoardService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationFigureService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationSectionService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneSetService;
+use Uhifadhi\Bundle\AtlasBundle\Calendar\Periods;
 use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleService;
 use Uhifadhi\Contracts\Area\StationSurface;
-use Uhifadhi\Contracts\Kpi\FigurePeriod;
 use Uhifadhi\Contracts\Kpi\StationRef;
 
 /**
@@ -69,6 +69,13 @@ final readonly class StationRecordController
         private StationFigureService $figures,
         private StationSectionService $sections,
         private AreaModuleService $areaModules,
+        /**
+         * WHAT PERIOD IT IS NOW, from the one source that decides it. This
+         * was `FigurePeriod::month(new \DateTimeImmutable())` written here
+         * and in ten other places, each asking the wall clock: correct on
+         * the 14th, wrong on the 1st, and unpinnable by a test.
+         */
+        private Periods $periods,
     ) {
     }
 
@@ -108,7 +115,7 @@ final readonly class StationRecordController
          */
         $dock = $this->figures->collect(
             [new StationRef((string) $station->getUuidString(), (string) $area->getUuidString(), (string) $station->getName())],
-            FigurePeriod::month(new \DateTimeImmutable()),
+            $this->periods->month(),
             fn (string $slug): bool => $this->runs($area, $slug),
         );
 

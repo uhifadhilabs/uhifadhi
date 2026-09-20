@@ -342,6 +342,7 @@ return static function (ContainerConfigurator $container): void {
             service('area.zone_figures'),
             service('registry.area_modules'),
             service('registry.catalogue'),
+            service('atlas.periods'),
         ]);
     $services->alias(ZoneListService::class, 'area.zone_list');
 

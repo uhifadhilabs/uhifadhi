@@ -20,9 +20,9 @@ use Uhifadhi\Bundle\AreaBundle\Model\ZoneListRow;
 use Uhifadhi\Bundle\AreaBundle\Model\ZoneRegister;
 use Uhifadhi\Bundle\AreaBundle\Repository\PostingRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\StationRepository;
+use Uhifadhi\Bundle\AtlasBundle\Calendar\Periods;
 use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleService;
 use Uhifadhi\Bundle\RegistryBundle\Service\ModuleCatalogue;
-use Uhifadhi\Contracts\Kpi\FigurePeriod;
 use Uhifadhi\Contracts\Kpi\ZoneFigureProviderInterface;
 use Uhifadhi\Contracts\Kpi\ZoneRef;
 
@@ -51,6 +51,13 @@ final readonly class ZoneListService
         private ZoneFigureService $figures,
         private AreaModuleService $areaModules,
         private ModuleCatalogue $catalogue,
+        /**
+         * WHAT PERIOD IT IS NOW, from the one source that decides it. This
+         * was `FigurePeriod::month(new \DateTimeImmutable())` written here
+         * and in ten other places, each asking the wall clock: correct on
+         * the 14th, wrong on the 1st, and unpinnable by a test.
+         */
+        private Periods $periods,
     ) {
     }
 
@@ -68,7 +75,7 @@ final readonly class ZoneListService
                 static fn ($row): ZoneRef => new ZoneRef($row->uuid, (string) $area->getUuidString(), $row->name),
                 $zones,
             ),
-            FigurePeriod::month(new \DateTimeImmutable()),
+            $this->periods->month(),
             fn (string $slug): bool => $this->areaModules->isActive($area, $slug),
         );
 

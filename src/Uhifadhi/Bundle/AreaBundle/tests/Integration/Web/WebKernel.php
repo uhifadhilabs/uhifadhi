@@ -18,6 +18,7 @@ use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Bundle\SecurityBundle\SecurityBundle;
 use Symfony\Bundle\TwigBundle\TwigBundle;
+use Symfony\Component\Clock\MockClock;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\HttpFoundation\Response;
@@ -76,24 +77,32 @@ final class WebKernel extends Kernel
      */
     use CheckoutTempDirTrait;
     use MicroKernelTrait;
+    /** The instant this suite's pages are read at, unless a test says otherwise. */
+    public const string CLOCK = '2026-09-19 11:42:00';
 
     /** @var list<string> */
     public array $grants = [];
 
-    /** @param list<string> $grants */
     /**
      * @param list<string> $grants    what the viewer holds
      * @param int          $attention how many items the stand-in module
      *                                raises — two by default, and as many as
      *                                a test proving a card is BOUNDED needs
+     * @param string       $clock     WHEN THIS KERNEL THINKS IT IS. Pinned, and a
+     *                                suite may move it: which month a page is
+     *                                about is read from the clock now, so a
+     *                                month boundary is a thing a test can
+     *                                stand on
      */
-    public function __construct(array $grants = [], private int $attention = 2)
+    public function __construct(array $grants = [], private int $attention = 2, private string $clock = self::CLOCK)
     {
         $this->grants = $grants;
         // The cache is keyed by what the viewer holds AND by what the
         // stand-in contributes: two kernels with different grants or
-        // different fixtures must not share a compiled container.
-        parent::__construct('test'.md5(implode(',', $grants).'|'.$attention), true);
+        // different fixtures must not share a compiled container. The clock
+        // joins them for the same reason — a container built at one instant
+        // must not answer for another.
+        parent::__construct('test'.md5(implode(',', $grants).'|'.$attention.'|'.$this->clock), true);
     }
 
     public function registerBundles(): iterable
@@ -374,6 +383,18 @@ final class WebKernel extends Kernel
         // real queries in it, and the one every other contribution derives from.
         $services->alias('test_public.area.settings.module_matrix', 'area.settings.module_matrix')->public();
         $services->alias('test_public.area.org_catalogue', 'area.org_catalogue')->public();
+        $services->alias('test_public.area.zone_list', 'area.zone_list')->public();
+        $services->alias('test_public.atlas.periods', 'atlas.periods')->public();
+
+        /*
+         * WHAT TIME THIS INSTALLATION THINKS IT IS. Pinned, because pages
+         * here caption the period they are about and that period is read
+         * from the clock: a suite on the wall clock asserts a different
+         * month every thirty days.
+         */
+        $services->set('clock', MockClock::class)
+            ->args([$this->clock])
+            ->public();
         $services->alias('test_public.event_dispatcher', 'event_dispatcher')->public();
         $services->alias('test_public.token_storage', 'security.token_storage')->public();
     }

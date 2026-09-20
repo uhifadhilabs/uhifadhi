@@ -199,6 +199,7 @@ return static function (ContainerConfigurator $container): void {
             service('area.zone_list'),
             service('registry.area_modules'),
             service('registry.entry_routes'),
+            service('atlas.periods'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(ZoneController::class, 'area.controller.zone')->public();
@@ -219,6 +220,7 @@ return static function (ContainerConfigurator $container): void {
             service('area.zone_figures'),
             service('registry.area_modules'),
             service('registry.entry_routes'),
+            service('atlas.periods'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(ZoneRecordController::class, 'area.controller.zone_record')->public();
@@ -257,6 +259,7 @@ return static function (ContainerConfigurator $container): void {
             service('area.station_figures'),
             service('area.station_sections'),
             service('registry.area_modules'),
+            service('atlas.periods'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(StationRecordController::class, 'area.controller.station_record')->public();
@@ -279,6 +282,7 @@ return static function (ContainerConfigurator $container): void {
             service('area.station_figures'),
             service('registry.area_modules'),
             service('registry.entry_routes'),
+            service('atlas.periods'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(StationsController::class, 'area.controller.stations')->public();
@@ -342,6 +346,7 @@ return static function (ContainerConfigurator $container): void {
             service('area.zone_figures'),
             service('registry.area_modules'),
             service('security.csrf.token_manager'),
+            service('atlas.periods'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(ZoneConfigureController::class, 'area.controller.zone_configure')->public();

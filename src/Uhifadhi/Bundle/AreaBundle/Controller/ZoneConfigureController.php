@@ -35,8 +35,8 @@ use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportDraftStore;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneSetService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneStationService;
+use Uhifadhi\Bundle\AtlasBundle\Calendar\Periods;
 use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleService;
-use Uhifadhi\Contracts\Kpi\FigurePeriod;
 use Uhifadhi\Contracts\Kpi\ZoneRef;
 
 /**
@@ -101,6 +101,13 @@ final readonly class ZoneConfigureController
         private ZoneFigureService $figures,
         private AreaModuleService $areaModules,
         private CsrfTokenManagerInterface $csrf,
+        /**
+         * WHAT PERIOD IT IS NOW, from the one source that decides it. This
+         * was `FigurePeriod::month(new \DateTimeImmutable())` written here
+         * and in ten other places, each asking the wall clock: correct on
+         * the 14th, wrong on the 1st, and unpinnable by a test.
+         */
+        private Periods $periods,
     ) {
     }
 
@@ -142,7 +149,7 @@ final readonly class ZoneConfigureController
                 static fn ($row): ZoneRef => new ZoneRef($row->uuid, (string) $area->getUuidString(), $row->name),
                 $view->rows,
             ),
-            FigurePeriod::days(self::OPEN_CARD_DAYS, new \DateTimeImmutable()),
+            $this->periods->days(self::OPEN_CARD_DAYS),
             fn (string $slug): bool => $this->areaModules->isActive($area, $slug),
         );
 

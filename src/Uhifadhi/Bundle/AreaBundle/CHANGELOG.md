@@ -8,6 +8,15 @@
 
 Not released yet.
 
+ * WHICH MONTH A PAGE IS ABOUT COMES FROM ONE CLOCK-FED SOURCE. Six
+   surfaces here each wrote `FigurePeriod::month(new \DateTimeImmutable())`
+   and asked the wall clock, so each decided the period separately: correct
+   on the 14th, turned over on the 1st, and two of them rendered either side
+   of midnight could caption two different months in one reading. They ask
+   `Uhifadhi\Contracts\Kpi\CurrentPeriodInterface` now, and the web suite's
+   kernel pins its clock — so a month boundary is a thing a test can stand
+   on rather than a date somebody has to change the server to reach.
+
  * THE ORGANISATION SEAM IS EXERCISED BY A STAND-IN MODULE in this bundle's
    own suite: a tagged contributor whose cell is drawn from its OWN partial,
    reads its own figures under `by.<slug>`, publishes a figure into the

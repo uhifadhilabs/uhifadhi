@@ -35,10 +35,10 @@ use Uhifadhi\Bundle\AreaBundle\Service\AreaPlateService;
 use Uhifadhi\Bundle\AreaBundle\Service\PostingBoardService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneFigureService;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneSetService;
+use Uhifadhi\Bundle\AtlasBundle\Calendar\Periods;
 use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleService;
 use Uhifadhi\Bundle\RegistryBundle\Service\ModuleEntryRouteResolver;
 use Uhifadhi\Contracts\Kpi\DepartmentKpi;
-use Uhifadhi\Contracts\Kpi\FigurePeriod;
 use Uhifadhi\Contracts\Kpi\ZoneFigureProviderInterface;
 use Uhifadhi\Contracts\Kpi\ZoneRef;
 
@@ -81,6 +81,13 @@ final readonly class ZoneRecordController
         private ZoneFigureService $figures,
         private AreaModuleService $areaModules,
         private ModuleEntryRouteResolver $entryRoutes,
+        /**
+         * WHAT PERIOD IT IS NOW, from the one source that decides it. This
+         * was `FigurePeriod::month(new \DateTimeImmutable())` written here
+         * and in ten other places, each asking the wall clock: correct on
+         * the 14th, wrong on the 1st, and unpinnable by a test.
+         */
+        private Periods $periods,
     ) {
     }
 
@@ -145,7 +152,7 @@ final readonly class ZoneRecordController
          */
         $figures = $this->figures->collect(
             [new ZoneRef((string) $zone->getUuidString(), (string) $area->getUuidString(), null === $row ? (string) $zone->getName() : $row->name)],
-            FigurePeriod::month(new \DateTimeImmutable()),
+            $this->periods->month(),
             fn (string $slug): bool => $this->areaModules->isActive($area, $slug),
         );
 
