@@ -32,6 +32,7 @@ use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Model\DepartmentQuery;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPalette;
+use Uhifadhi\Contracts\Shell\NavGroup;
 
 /**
  * THE ONE ROW THIS BUNDLE PUTS IN THE SIDEBAR.
@@ -76,7 +77,7 @@ use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPalette;
 final readonly class TeamNavigation implements NavigationSourceInterface
 {
     /** The heading the row files under, as the design draws it. */
-    public const string SECTION = 'Organization';
+    public const string SECTION = NavGroup::ORGANIZATION;
 
     /**
      * Between an installation's own Observatory rows and its System ones. A

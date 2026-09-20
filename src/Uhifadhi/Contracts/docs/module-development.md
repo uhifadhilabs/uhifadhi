@@ -775,6 +775,7 @@ interface instead:
 use Uhifadhi\Bundle\ShellBundle\Contract\NavigationSourceInterface;
 use Uhifadhi\Bundle\ShellBundle\Model\NavItem;
 use Uhifadhi\Bundle\ShellBundle\Model\NavSection;
+use Uhifadhi\Contracts\Shell\NavGroup;
 
 final readonly class SightingsNavigation implements NavigationSourceInterface
 {
@@ -807,7 +808,11 @@ final readonly class SightingsNavigation implements NavigationSourceInterface
             return;
         }
 
-        yield new NavSection('Observatory', [
+        // THE GROUP IS ONE OF FOUR, AND IT IS A CONSTANT. Observatory is what
+        // the organisation watches, Organization what it is and holds, System
+        // what the system raises to you, Settings configuration, last. A label
+        // that is not one of them is refused.
+        yield new NavSection(NavGroup::OBSERVATORY, [
             new NavItem(
                 label: 'Sightings',
                 url: $url,

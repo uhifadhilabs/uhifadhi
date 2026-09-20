@@ -16,6 +16,7 @@ namespace Uhifadhi\Bundle\ShellBundle\Service;
 use Uhifadhi\Bundle\ShellBundle\Contract\NavigationSourceInterface;
 use Uhifadhi\Bundle\ShellBundle\Model\NavItem;
 use Uhifadhi\Bundle\ShellBundle\Model\NavSection;
+use Uhifadhi\Contracts\Shell\NavGroup;
 
 /**
  * THE SIDEBAR'S CONTENT, COLLECTED — and nothing else.
@@ -45,17 +46,22 @@ final class Navigation
      * Every section, in declared-position order with registration as the
      * tie-break.
      *
-     * ONE HEADING PER LABEL. A section label is a PLACE in the sidebar, not a
-     * thing a source owns: two modules that both file a row under "System" have
+     * ONE HEADING PER GROUP. A section label is a PLACE in the sidebar, not a
+     * thing a source owns: two modules that both file a row under System have
      * named the same place, so the heading is drawn once with every contributed
      * row under it. A heading drawn twice would tell a reader there are two
      * Systems, which is a sidebar answering "where am I" with a lie.
      *
-     * The merged section sits at the EARLIEST position any of its contributors
-     * asked for, and its rows are ordered by the position each contribution
-     * declared — so a module that files a row low in the System group stays low
-     * whichever order the container happened to register the bundles in, which
-     * is what the field is for at both levels.
+     * AND THERE ARE FOUR PLACES, NAMED IN THE CONTRACT. A label that is not one
+     * of {@see NavGroup::ORDER} is refused here, by name, with the four in the
+     * message: a near-miss ("Organisation", "Org") used to grow a fifth heading
+     * that nobody designed, silently, in whoever's installation had that module.
+     *
+     * THE GROUPS ARE DRAWN IN THE CONTRACT'S ORDER — Observatory, Organization,
+     * System, Settings — and a contribution's `position` orders its ROWS inside
+     * its group. That is the split a contributing module can actually answer:
+     * where its row sits among the System rows is its business, where System
+     * sits among the headings is the shell's.
      *
      * @return list<NavSection>
      */
@@ -71,6 +77,10 @@ final class Navigation
 
         $sections = [];
         foreach ($contributions as $label => $contributed) {
+            // Refused before anything is merged, so the message is about the
+            // label that was typed and not about a heading nobody asked for.
+            NavGroup::position((string) $label);
+
             // Stable since PHP 8.0, which is what makes registration the
             // tie-break rather than an accident of the sort implementation.
             usort($contributed, static fn (NavSection $a, NavSection $b): int => $a->position <=> $b->position);
@@ -85,7 +95,10 @@ final class Navigation
             $sections[] = new NavSection($merged->label, $this->derive($merged->items, ''), $merged->position);
         }
 
-        usort($sections, static fn (NavSection $a, NavSection $b): int => $a->position <=> $b->position);
+        usort(
+            $sections,
+            static fn (NavSection $a, NavSection $b): int => NavGroup::position($a->label) <=> NavGroup::position($b->label),
+        );
 
         return $sections;
     }

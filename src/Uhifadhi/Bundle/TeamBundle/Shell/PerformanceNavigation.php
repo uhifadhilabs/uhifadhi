@@ -27,6 +27,7 @@ use Uhifadhi\Bundle\TeamBundle\Service\PerformanceTopics;
 use Uhifadhi\Contracts\Kpi\FigurePeriod;
 use Uhifadhi\Contracts\Performance\PerformanceScope;
 use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
+use Uhifadhi\Contracts\Shell\NavGroup;
 
 /**
  * PERFORMANCE IN THE SIDEBAR, with its three screens under it.
@@ -55,7 +56,7 @@ use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
 final readonly class PerformanceNavigation implements NavigationSourceInterface
 {
     /** Beside Areas, under the heading both belong to. */
-    public const string SECTION = 'Observatory';
+    public const string SECTION = NavGroup::OBSERVATORY;
 
     /** After the areas tree (10) and before the org chart's rows (20). */
     public const int POSITION = 15;

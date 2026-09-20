@@ -1,5 +1,48 @@
 # UPGRADE FROM 0.x to 1.0
 
+## The sidebar has four groups, and a module joins one by constant
+
+**What changed.** The sidebar's groups are published in the contracts —
+`Uhifadhi\Contracts\Shell\NavGroup` — and there are four of them, in this
+order:
+
+| Constant | Label | What it holds |
+| --- | --- | --- |
+| `NavGroup::OBSERVATORY` | Observatory | what the organisation WATCHES: Areas, Performance, a module's organisation-level pages |
+| `NavGroup::ORGANIZATION` | Organization | what it IS AND HOLDS: Departments, Team, Files |
+| `NavGroup::SYSTEM` | System | what the system RAISES TO YOU: Alerts, Telemetry |
+| `NavGroup::SETTINGS` | Settings | configuration, and it comes last |
+
+The shell refuses a label that is not one of the four, naming them in the
+message. A near-miss — `Organisation`, `Org`, `system` — used to grow a fifth
+heading that nobody designed, in whoever's installation had that module.
+
+**What a module does.** Name the group by constant:
+
+```diff
+-public const string SECTION = 'System';
++public const string SECTION = NavGroup::SYSTEM;
+```
+
+The string VALUES are unchanged, so a module still on a literal keeps working
+exactly as before — until it misspells one, which is the point.
+
+**Order is the shell's now.** The four headings are drawn in the contract's
+order whatever position a contribution declared; `NavSection::$position` still
+orders the ROWS inside a group, which is the question a contributing module
+can answer. A module that leaned on a low position to sit its whole group
+first no longer does.
+
+**Storage: Files moves to Organization.** Files is a standing fact about the
+organisation, not something the system raises to you, so
+`FilesNavigation::SECTION` becomes `NavGroup::ORGANIZATION` — a change in
+`uhifadhi/storage-module`, in its own release. Until then Files renders under
+System as it does today; nothing breaks either way.
+
+**Settings.** The group exists now for the Settings section that follows: one
+row with its tabs as children, and it may grow. A module has no reason to
+file under it yet.
+
 ## A module can answer at organisation level
 
 **What changed.** A module may now contribute an ORGANISATION-LEVEL page set

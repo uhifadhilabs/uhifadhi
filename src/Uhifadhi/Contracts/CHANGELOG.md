@@ -8,6 +8,12 @@
 
 Not released yet.
 
+ * `Shell\NavGroup` — the four sidebar groups the shell draws, their meaning
+   and their order, published as constants: Observatory (what the
+   organisation watches), Organization (what it is and holds), System (what
+   the system raises to you) and Settings (configuration, last). A module
+   joins one by constant, and anything else is refused with the four named
+   rather than grown into a fifth heading
  * `Shell\OrgPagesInterface`, `Shell\OrgPage`, `Shell\Scope` and
    `Shell\ScopeSourceInterface` — a module answers at organisation level by
    contributing its page set, and the shell mounts it and supplies the scope

@@ -29,6 +29,7 @@ use Uhifadhi\Bundle\ShellBundle\Model\AreaTab;
 use Uhifadhi\Bundle\ShellBundle\Model\NavItem;
 use Uhifadhi\Bundle\ShellBundle\Model\NavSection;
 use Uhifadhi\Contracts\Shell\AreaNavChildrenInterface;
+use Uhifadhi\Contracts\Shell\NavGroup;
 
 /**
  * THE AREAS SECTION OF THE SIDEBAR — the register, and under it every area with
@@ -56,7 +57,7 @@ use Uhifadhi\Contracts\Shell\AreaNavChildrenInterface;
 final readonly class AreaNavigation implements NavigationSourceInterface
 {
     /** The heading the rows file under, as the design draws it. */
-    public const string SECTION = 'Observatory';
+    public const string SECTION = NavGroup::OBSERVATORY;
 
     /** Above the organisation rows TeamBundle contributes at 20. */
     public const int POSITION = 10;

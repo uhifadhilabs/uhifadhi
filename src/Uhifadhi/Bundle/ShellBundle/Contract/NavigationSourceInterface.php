@@ -15,6 +15,7 @@ namespace Uhifadhi\Bundle\ShellBundle\Contract;
 
 use Uhifadhi\Bundle\ShellBundle\Model\NavSection;
 use Uhifadhi\Bundle\ShellBundle\ShellBundle;
+use Uhifadhi\Contracts\Shell\NavGroup;
 
 /**
  * WHERE THE SIDEBAR'S CONTENT COMES FROM.
@@ -30,12 +31,18 @@ use Uhifadhi\Bundle\ShellBundle\ShellBundle;
  *   - a MODULE BUNDLE may implement one too, for the rare platform-wide row
  *     that belongs to nobody's area.
  *
- * A SECTION LABEL NAMES A PLACE, NOT YOUR SECTION. Sources that return the same
- * label are contributing to one heading, and the shell draws it once with every
- * contributed row under it, at the earliest position any contributor asked for,
- * the rows ordered by the position each contribution declared.
- * So file a row under the heading the design draws it under, and do not invent a
- * near-miss label to avoid a collision — the collision IS the grouping.
+ * A SECTION LABEL NAMES A PLACE, NOT YOUR SECTION, and there are FOUR places:
+ * {@see NavGroup::OBSERVATORY}, {@see NavGroup::ORGANIZATION},
+ * {@see NavGroup::SYSTEM}, {@see NavGroup::SETTINGS} — what the organisation
+ * watches, what it is and holds, what the system raises to you, and
+ * configuration last. Join one BY CONSTANT; anything else is refused with the
+ * four named, because a near-miss label used to grow a heading nobody designed.
+ *
+ * Sources that name the same group are contributing to one heading, and the
+ * shell draws it once with every contributed row under it, in the contract's
+ * group order, the rows ordered by the position each contribution declared.
+ * So file a row under the heading the design draws it under — the collision IS
+ * the grouping.
  *
  * GATING IS YOURS, NOT THE SHELL'S. The shell holds no authorization service
  * and asks nothing about the viewer. A row the viewer may not have is simply

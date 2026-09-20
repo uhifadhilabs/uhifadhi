@@ -20,6 +20,7 @@ use Uhifadhi\Bundle\ShellBundle\Service\Navigation;
 use Uhifadhi\Bundle\ShellBundle\ShellBundle;
 use Uhifadhi\Bundle\ShellBundle\Tests\Integration\ContractTestCase;
 use Uhifadhi\Bundle\ShellBundle\Tests\Integration\Fixtures\HostKernel;
+use Uhifadhi\Contracts\Shell\NavGroup;
 
 /**
  * SPEC 2 — THE NAV CONTRACT.
@@ -61,17 +62,18 @@ final class NavigationContractTest extends ContractTestCase
 
     /**
      * THE WHOLE CONTRACT IN ONE TEST. Two sources, neither of them known to the
-     * shell, both rendered — and the slugs are invented on purpose, because a
+     * shell, both rendered — and the ROWS are invented on purpose, because a
      * contract that only works for the modules that exist today is a hardcoded list
-     * with extra steps.
+     * with extra steps. The GROUP each row joins is not invented: it is one of
+     * the four {@see NavGroup} names, which is the half the shell does own.
      */
     public function testASourceContributesASectionAndTheShellRendersIt(): void
     {
         HostKernel::$navSources = [
-            'observatory' => new NavSection('Observatory', [
+            'observatory' => new NavSection(NavGroup::OBSERVATORY, [
                 new NavItem(label: 'Areas', url: '/areas', icon: 'shell:map'),
             ]),
-            'ferries' => new NavSection('Fleet', [
+            'ferries' => new NavSection(NavGroup::SYSTEM, [
                 new NavItem(label: 'Ferries', url: '/ferries', icon: 'shell:ship'),
             ]),
         ];
@@ -79,7 +81,7 @@ final class NavigationContractTest extends ContractTestCase
         $crawler = $this->crawl('@fixtures/body_only_page.html.twig');
 
         self::assertSame(
-            ['Observatory', 'Fleet'],
+            ['Observatory', 'System'],
             $crawler->filter('nav.nav div.nav-hd')->each(static fn ($n): string => trim($n->text())),
         );
         self::assertSame(
@@ -89,21 +91,50 @@ final class NavigationContractTest extends ContractTestCase
     }
 
     /**
-     * SECTIONS COME OUT IN THE ORDER THEY WERE PUT IN. Registration order, and
-     * a declared position as the tie-break — the contract's ruling about
-     * position() applies here for the same reason it applied there: a contract
-     * field nothing reads is a lie in the contract.
+     * AND A GROUP THE CONTRACT DOES NOT KNOW NEVER REACHES THE PAGE. The old
+     * rule — any label makes a heading — meant a mistyped group grew a fifth
+     * one in whoever's installation had that module, silently. The refusal
+     * names the four, at the moment the author is choosing between them.
      */
-    public function testADeclaredPositionOrdersTheSectionsAndRegistrationBreaksTies(): void
+    public function testAnInventedGroupIsRefusedAndTheFourAreNamed(): void
     {
         HostKernel::$navSources = [
-            'system' => new NavSection('System', [], position: 30),
-            'org' => new NavSection('Organization', [], position: 20),
-            'obs' => new NavSection('Observatory', [], position: 10),
+            'ferries' => new NavSection('Fleet', [
+                new NavItem(label: 'Ferries', url: '/ferries', icon: 'shell:ship'),
+            ]),
+        ];
+
+        try {
+            $this->navigation()->sections();
+            self::fail('"Fleet" is not one of the four groups and must be refused.');
+        } catch (\InvalidArgumentException $refusal) {
+            self::assertStringContainsString('"Fleet" is not a sidebar group', $refusal->getMessage());
+
+            foreach (NavGroup::ORDER as $group) {
+                self::assertStringContainsString($group, $refusal->getMessage());
+            }
+        }
+    }
+
+    /**
+     * THE HEADINGS COME OUT IN THE CONTRACT'S ORDER — what the organisation
+     * watches, what it is and holds, what the system raises to you, and
+     * configuration last — whatever order they were registered in and whatever
+     * position each contribution declared. A position is a contributing
+     * module's answer to "where among the rows", which it can know; where
+     * System sits among the headings is the shell's, which it cannot.
+     */
+    public function testTheGroupsComeOutInTheContractsOrderWhateverWasDeclared(): void
+    {
+        HostKernel::$navSources = [
+            'settings' => new NavSection(NavGroup::SETTINGS, [], position: 1),
+            'system' => new NavSection(NavGroup::SYSTEM, [], position: 30),
+            'org' => new NavSection(NavGroup::ORGANIZATION, [], position: 20),
+            'obs' => new NavSection(NavGroup::OBSERVATORY, [], position: 40),
         ];
 
         self::assertSame(
-            ['Observatory', 'Organization', 'System'],
+            NavGroup::ORDER,
             array_map(static fn (NavSection $s): string => $s->label, $this->navigation()->sections()),
         );
     }

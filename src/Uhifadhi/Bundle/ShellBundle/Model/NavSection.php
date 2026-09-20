@@ -13,20 +13,27 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\ShellBundle\Model;
 
+use Uhifadhi\Contracts\Shell\NavGroup;
+
 /**
  * A LABELLED GROUP OF SIDEBAR ROWS — the org level a set of rows belongs to.
  *
- * `position` is a declared order with registration as the tie-break. A contract
- * field nothing reads is a lie in the contract, so the shell reads it: a
- * contributing bundle that wants to sit under the host's own sections says so
- * with a number rather than by hoping about container compilation order.
+ * THE LABEL IS ONE OF THE FOUR {@see NavGroup} names, given by constant. The
+ * shell refuses anything else, and it draws the four in the contract's order.
+ *
+ * `position` is a declared order with registration as the tie-break, and it
+ * orders the ROWS inside the group — not the group among the headings, which
+ * the contract fixes. A contract field nothing reads is a lie in the contract,
+ * so the shell reads it: a contributing bundle that wants its row under the
+ * host's own says so with a number rather than by hoping about container
+ * compilation order.
  */
 final class NavSection
 {
     /**
-     * @param string        $label    the section heading
+     * @param string        $label    the group heading, a {@see NavGroup} constant
      * @param list<NavItem> $items    its rows, in the order they should render
-     * @param int           $position lower sorts first; ties keep registration order
+     * @param int           $position lower sorts first among the group's rows; ties keep registration order
      */
     public function __construct(
         public string $label,

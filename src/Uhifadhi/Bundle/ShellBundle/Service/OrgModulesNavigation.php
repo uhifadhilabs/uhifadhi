@@ -20,6 +20,7 @@ use Uhifadhi\Bundle\ShellBundle\Contract\NavigationSourceInterface;
 use Uhifadhi\Bundle\ShellBundle\Model\NavItem;
 use Uhifadhi\Bundle\ShellBundle\Model\NavSection;
 use Uhifadhi\Bundle\ShellBundle\ShellBundle;
+use Uhifadhi\Contracts\Shell\NavGroup;
 use Uhifadhi\Contracts\Shell\OrgPagesInterface;
 
 /**
@@ -51,7 +52,7 @@ use Uhifadhi\Contracts\Shell\OrgPagesInterface;
 final readonly class OrgModulesNavigation implements NavigationSourceInterface
 {
     /** The same heading the areas and the performance section file under. */
-    public const string SECTION = 'Observatory';
+    public const string SECTION = NavGroup::OBSERVATORY;
 
     /** After the areas (10) and Performance (15). */
     public const int POSITION = 20;
