@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Core\Tests\Core;
 
 use PHPUnit\Framework\Attributes\CoversNothing;
+use Uhifadhi\Bundle\AreaBundle\Devkit\DemoArea;
 use Uhifadhi\Bundle\AreaBundle\Service\PostingService;
 use Uhifadhi\Contracts\Devkit\ContentProviderInterface;
 
@@ -82,20 +83,26 @@ final class DemoContentSeedsUnderTheRulesTest extends MigrationsTestCase
     }
 
     /**
-     * EXACTLY ONE POST IN EACH AREA STANDS EMPTY, and that is the whole
-     * reason the roster is the size it is.
+     * THE POSTS THE GROUND LEAVES EMPTY ARE THE ONES IT MEANT TO, and no
+     * others. That is the whole reason the roster is the size it is.
      *
      * "Nobody works out of here" is a state the screens have to draw, so the
-     * demo ground leaves one post in each area empty on purpose. It only says
-     * anything while every OTHER post is staffed: a ground that seeded three
-     * posts and left thirteen empty makes the deliberate one invisible, which
-     * is what happened the day somebody could no longer stand at two posts.
+     * demo ground leaves some posts empty on purpose — which ones is written
+     * in the table, as a headcount of nought. It only says anything while
+     * every OTHER post is staffed: a ground that seeded three posts and left
+     * thirteen empty makes the deliberate ones invisible, which is what
+     * happened the day somebody could no longer stand at two posts.
+     *
+     * SO THE COUNT IS READ FROM THE TABLE AND NEVER RETYPED. It used to be
+     * the literal 1, and grew wrong the moment the ground grew a second
+     * empty post; a test that states a number the code also states is a test
+     * that has to be edited every time the code is right.
      *
      * THE TWO SIDES ARE HELD IN STEP HERE because nothing else can see both:
      * the area bundle depends on the team bundle, so the ground cannot ask
      * the roster how big it is, and the roster must not know about ground.
      */
-    public function testExactlyOnePostInEachAreaStandsEmpty(): void
+    public function testThePostsTheGroundLeavesEmptyAreTheOnesItMeantTo(): void
     {
         $this->seedTheDemoOrganisation();
 
@@ -116,8 +123,17 @@ final class DemoContentSeedsUnderTheRulesTest extends MigrationsTestCase
             }
         }
 
+        $meant = 0;
+        foreach (DemoArea::all()[0]->stations() as $post) {
+            if (0 === $post->posted) {
+                ++$meant;
+            }
+        }
+
+        self::assertGreaterThan(0, $meant, 'the ground means to leave a post empty at all');
+
         foreach ($empty as $area => $count) {
-            self::assertSame(1, $count, \sprintf('area %s leaves exactly one post empty', $area));
+            self::assertSame($meant, $count, \sprintf('area %s leaves exactly the posts the table leaves empty', $area));
         }
     }
 
@@ -127,17 +143,18 @@ final class DemoContentSeedsUnderTheRulesTest extends MigrationsTestCase
      * this is the check that the arithmetic still matches the ground, since
      * neither bundle may look at the other.
      */
-    public function testTheRosterIsBigEnoughToStaffEveryPostButOne(): void
+    public function testTheRosterIsBigEnoughToStaffEveryPost(): void
     {
         $this->seedTheDemoOrganisation();
 
-        $posts = $this->rowCount('SELECT COUNT(*) FROM station');
-        $areas = $this->rowCount('SELECT COUNT(DISTINCT area_id) FROM station');
-        $people = $this->rowCount('SELECT COUNT(*) FROM team_user');
+        $posted = $this->rowCount('SELECT COUNT(*) FROM posting WHERE ended_at IS NULL');
 
-        // Two a post — somebody leading and somebody with them — on every
-        // post but the one each area leaves empty.
-        self::assertGreaterThanOrEqual(2 * ($posts - $areas), $people);
+        // AS MANY AS THE GROUND ASKS FOR. Posts are not the same size — a
+        // main gate holds five and an outpost holds none — so the roster is
+        // the SUM of the table's headcounts and not two a post. Counting
+        // postings rather than people is what makes this the check it is:
+        // people left over are fine, a post left short is not.
+        self::assertSame(DemoArea::headcount(), $posted, 'every post the ground staffs is fully staffed');
     }
 
     /**

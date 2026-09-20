@@ -34,6 +34,17 @@ final readonly class DemoStation
         public float $northOfCorner,
         public int $elevationM,
         public string $locality,
+        /**
+         * HOW MANY PEOPLE WORK OUT OF IT, the first of them its leader.
+         *
+         * POSTS ARE NOT THE SAME SIZE. A main gate holds five and a
+         * roadside marker holds nobody, and a demo that staffed every post
+         * with the same two made every screen that ranks, groups or
+         * compares posts draw a flat line — which is the one thing those
+         * screens exist not to draw. Zero is a post nobody works out of,
+         * which is a state, not a gap.
+         */
+        public int $posted = 2,
     ) {
     }
 }

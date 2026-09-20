@@ -128,25 +128,54 @@ final readonly class DemoArea
     }
 
     /**
-     * THE POSTS, laid out against the same grid: one in the middle of each
-     * zone, a second one sharing the first zone — because a zone with two posts
-     * is what an area's staffing page is for — and one out on ground the scheme
-     * does not reach.
+     * THE POSTS, laid out against the same grid: two inside most zones —
+     * because a zone with two posts is what an area's staffing page is for —
+     * one inside the last, and one out on ground the scheme does not reach.
+     *
+     * A PARK IS TWELVE POSTS AND NOT EIGHT, AND THEY ARE NOT THE SAME SIZE.
+     * A main gate holds five people and a roadside marker holds nobody. The
+     * demo used to give every post the same two, and every screen that
+     * ranks, groups or compares posts drew a flat line — a duty board with
+     * nothing to read, which is exactly the screen somebody opens the demo
+     * to judge. The spread here is the one the roster design draws: one
+     * five, one four, the rest between three and nothing.
+     *
+     * TWO OF THEM ARE EMPTY, and deliberately: one inside a zone, one out on
+     * the unzoned ground. "Nobody works out of here" is a state every
+     * register, board and plate has to draw, and a demo with no empty post
+     * never shows it.
      *
      * @return list<DemoStation>
      */
     public function stations(): array
     {
         return [
-            new DemoStation('Alpha Gate', 'STN-01', 0.195, 0.240, 1180, 'Southern gate approach'),
-            new DemoStation('Alpha Ridge', 'STN-02', 0.160, 0.320, 1465, 'Upper ridge line'),
-            new DemoStation('Bravo Crossing', 'STN-03', 0.395, 0.240, 940, 'River crossing'),
-            new DemoStation('Charlie Bend', 'STN-04', 0.595, 0.240, 1025, 'Eastern bend'),
-            new DemoStation('Delta Camp', 'STN-05', 0.195, 0.540, 1310, 'Basin camp'),
-            new DemoStation('Echo Watch', 'STN-06', 0.395, 0.540, 1580, 'Escarpment lookout'),
-            new DemoStation('Foxtrot Post', 'STN-07', 0.595, 0.540, 870, 'Northern flats'),
-            new DemoStation('Outer Marker', 'STN-08', 0.850, 0.850, 620, 'Beyond the scheme'),
+            new DemoStation('Alpha Gate', 'STN-01', 0.150, 0.240, 1180, 'Southern gate approach', posted: 5),
+            new DemoStation('Alpha Ridge', 'STN-02', 0.240, 0.240, 1465, 'Upper ridge line', posted: 3),
+            new DemoStation('Bravo Crossing', 'STN-03', 0.350, 0.240, 940, 'River crossing', posted: 3),
+            new DemoStation('Bravo Ford', 'STN-04', 0.440, 0.240, 985, 'Lower ford', posted: 2),
+            new DemoStation('Charlie Bend', 'STN-05', 0.550, 0.240, 1025, 'Eastern bend', posted: 4),
+            new DemoStation('Charlie Rise', 'STN-06', 0.640, 0.240, 1240, 'Eastern rise', posted: 2),
+            new DemoStation('Delta Camp', 'STN-07', 0.150, 0.540, 1310, 'Basin camp', posted: 3),
+            new DemoStation('Delta Outpost', 'STN-08', 0.240, 0.540, 1120, 'Basin margin', posted: 0),
+            new DemoStation('Echo Watch', 'STN-09', 0.350, 0.540, 1580, 'Escarpment lookout', posted: 4),
+            new DemoStation('Echo Gate', 'STN-10', 0.440, 0.540, 1395, 'Escarpment road', posted: 2),
+            new DemoStation('Foxtrot Post', 'STN-11', 0.550, 0.540, 870, 'Northern flats', posted: 3),
+            new DemoStation('Outer Marker', 'STN-12', 0.850, 0.850, 620, 'Beyond the scheme', posted: 0),
         ];
+    }
+
+    /** How many people the whole demo ground asks for, counted from the table. */
+    public static function headcount(): int
+    {
+        $people = 0;
+        foreach (self::all() as $area) {
+            foreach ($area->stations() as $post) {
+                $people += $post->posted;
+            }
+        }
+
+        return $people;
     }
 
     /** @return array{0: float, 1: float} longitude then latitude, as everything here is */

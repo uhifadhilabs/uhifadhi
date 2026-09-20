@@ -83,12 +83,13 @@ final readonly class TeamContentProvider implements ContentProviderInterface
     /**
      * THE FIELD STAFF THE DEMO GROUND NEEDS, and the number is not arbitrary.
      *
-     * The demo ground is two areas of eight posts each, one post in each left
-     * deliberately empty because "nobody works out of here" is a state the
-     * screens have to draw. Every other post takes a leader and somebody with
-     * them — 2 × (8 − 1) × 2 areas — and somebody stands at ONE post (ruled),
-     * so the roster has to be that big or the ground seeds half-empty and the
-     * empty posts stop meaning anything.
+     * The demo ground is two areas of twelve posts each, two posts in each
+     * left deliberately empty because "nobody works out of here" is a state
+     * the screens have to draw. The rest are not the same size — a main gate
+     * holds five and an outpost holds two, which is what makes a duty board
+     * worth reading — and somebody stands at ONE post (ruled), so the roster
+     * has to be the sum of those sizes or the ground seeds half-empty and
+     * the empty posts stop meaning anything.
      *
      * IT IS A NUMBER AND NOT A LOOKUP. This bundle knows nothing about ground
      * — the area bundle depends on it, not the other way round — so the two
@@ -96,7 +97,7 @@ final readonly class TeamContentProvider implements ContentProviderInterface
      * by a test in the core instead (DemoContentSeedsUnderTheRulesTest), which
      * may see both.
      */
-    public const int FIELD_STAFF = 28;
+    public const int FIELD_STAFF = 62;
 
     /**
      * The names they are seeded under, cycled with a surname list so twenty-

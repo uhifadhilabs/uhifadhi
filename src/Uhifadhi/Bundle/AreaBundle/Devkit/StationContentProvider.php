@@ -57,9 +57,6 @@ use Uhifadhi\Contracts\Entity\UserInterface;
  */
 final readonly class StationContentProvider implements ContentProviderInterface
 {
-    /** The post left unstaffed, by its place in {@see DemoArea::stations()}. */
-    private const int UNSTAFFED = 6;
-
     public function __construct(
         private AreaOfInterestRepository $register,
         private StationRepository $posts,
@@ -112,7 +109,7 @@ final readonly class StationContentProvider implements ContentProviderInterface
                 continue;
             }
 
-            foreach ($demo->stations() as $index => $post) {
+            foreach ($demo->stations() as $post) {
                 [$lon, $lat] = $demo->pointOf($post);
 
                 $this->stations->add(
@@ -129,18 +126,18 @@ final readonly class StationContentProvider implements ContentProviderInterface
                     continue;
                 }
 
-                if (self::UNSTAFFED === $index) {
-                    continue;
-                }
-
-                $this->staff($station, $roster, $next);
+                // HOW MANY WORK HERE IS THE POST'S OWN NUMBER, and two of
+                // them are nought: an empty post is described by the table
+                // rather than by an index this file has to keep in step
+                // with it.
+                $this->staff($station, $post->posted, $roster, $next);
             }
         }
     }
 
     /**
-     * SOMEBODY IN CHARGE AND, WHERE THERE IS ANYBODY LEFT, SOMEBODY WITH
-     * THEM — taken from wherever the roster has got to and never from the
+     * SOMEBODY IN CHARGE AND AS MANY BEHIND THEM AS THE POST ASKS FOR —
+     * taken from wherever the roster has got to and never from the
      * beginning again.
      *
      * A PERSON IS SPENT WHEN THEY ARE POSTED. One posting a person (ruled),
@@ -148,12 +145,13 @@ final readonly class StationContentProvider implements ContentProviderInterface
      * person stands empty rather than borrowing somebody from an earlier
      * gate.
      *
+     * @param int                 $wanted how many work out of this post; nought is a post nobody does
      * @param list<UserInterface> $roster
      * @param int                 $next   how far through the roster the seeding has got
      */
-    private function staff(Station $station, array $roster, int &$next): void
+    private function staff(Station $station, int $wanted, array $roster, int &$next): void
     {
-        if (!isset($roster[$next])) {
+        if ($wanted < 1 || !isset($roster[$next])) {
             return;
         }
 
@@ -161,7 +159,11 @@ final readonly class StationContentProvider implements ContentProviderInterface
         ++$next;
         $this->postings->appointLeader($leader);
 
-        if (isset($roster[$next])) {
+        for ($n = 1; $n < $wanted; ++$n) {
+            if (!isset($roster[$next])) {
+                return;
+            }
+
             $this->postings->post($station, $roster[$next], PostingSource::WrittenHere);
             ++$next;
         }
