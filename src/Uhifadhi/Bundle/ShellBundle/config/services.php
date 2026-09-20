@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
 use Uhifadhi\Bundle\ShellBundle\Contract\LayoutContract;
+use Uhifadhi\Bundle\ShellBundle\Controller\FaviconController;
 use Uhifadhi\Bundle\ShellBundle\Controller\SettingsController;
 use Uhifadhi\Bundle\ShellBundle\Controller\WelcomeController;
 use Uhifadhi\Bundle\ShellBundle\Frame\Controller\ConfigureController;
@@ -299,6 +300,16 @@ return static function (ContainerConfigurator $container): void {
      * address — config/routes/settings.php does that, and nothing here loads
      * that file (see ShellBundle::SETTINGS_ROUTES).
      */
+    /*
+     * `/favicon.ico`, ANSWERED FROM THE FILE THE DOCUMENT ALREADY LINKS. The
+     * path is resolved here rather than in the controller so the controller
+     * stays a thing a test can hand any file to — and there is one statement
+     * of where the bundle keeps its mark.
+     */
+    $services->set('shell.controller.favicon', FaviconController::class)
+        ->args([\dirname(__DIR__).'/public/favicon.svg'])
+        ->tag('controller.service_arguments');
+
     $services->set('shell.controller.settings', SettingsController::class)
         ->args([
             service('twig'),

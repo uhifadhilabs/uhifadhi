@@ -1,5 +1,35 @@
 # UPGRADE FROM 0.x to 1.0
 
+## `/favicon.ico` is answered, where the application asks for it
+
+**What changed.** The shell ships a fourth route resource, and it serves the
+same file the document head has always linked:
+
+```yaml
+# config/routes/shell.yaml (your application)
+shell_favicon:
+    resource: '@ShellBundle/config/routes/favicon.php'
+```
+
+**Why.** Every page declares `<link rel="icon">` and every browser asks for
+`/favicon.ico` anyway — before the first page, on a redirect, on an error
+page, and whenever it has nothing cached. Nothing answered, so the request
+became an exception: on a staging installation the ONLY error group telemetry
+had ever captured was `NotFoundHttpException … /favicon.ico`. A log whose
+single entry is noise is a log nobody reads, and the next real error goes
+into it unseen.
+
+**What it serves.** The bundle's own `public/favicon.svg`, with
+`image/svg+xml` and a week's public cache — the same bytes the head links, so
+the tab icon cannot drift from the brandmark and there is one file to replace
+when an installation wants its own. It is not a redirect to the digested
+asset: a redirect is a second round trip for exactly the browsers that have
+nothing cached.
+
+**An installation that serves its own icon** from its web server or a CDN in
+front of it leaves the import out, and the address is its own — which is why
+this is a resource of its own rather than a line in the welcome page's.
+
 ## The settings section, and the route an application imports for it
 
 **What changed.** The core ships a Settings section — `/settings`, with

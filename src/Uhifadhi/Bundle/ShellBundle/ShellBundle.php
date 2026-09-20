@@ -141,6 +141,18 @@ final class ShellBundle extends AbstractBundle
     public const string SETTINGS_ROUTES = '@ShellBundle/config/routes/settings.php';
 
     /**
+     * `/favicon.ico`, shipped the same way and imported the same way:
+     *
+     *     shell_favicon:
+     *         resource: '@ShellBundle/config/routes/favicon.php'
+     *
+     * A FOURTH RESOURCE FOR A FOURTH DECISION. An installation serving its
+     * own icon from the web server, or from a CDN in front of it, wants this
+     * address left alone, and deleting one import is how it says so.
+     */
+    public const string FAVICON_ROUTES = '@ShellBundle/config/routes/favicon.php';
+
+    /**
      * The AssetMapper namespace this bundle's assets/ directory is mapped to.
      *
      * It is the npm-style form of the composer package name, and it has to be:

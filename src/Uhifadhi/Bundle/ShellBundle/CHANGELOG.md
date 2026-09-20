@@ -8,6 +8,14 @@
 
 Not released yet.
 
+ * `/favicon.ico` IS ANSWERED, from the very file the document head already
+   links, as a fourth route resource (`ShellBundle::FAVICON_ROUTES`) an
+   application imports in one line. Every browser asks for that address
+   whatever the head declares — before the first page, on a redirect, on an
+   error page — and nothing answered: on a staging installation the only
+   error group telemetry had ever captured was `NotFoundHttpException …
+   /favicon.ico`, which is a log nobody reads and a real error lost in it
+
  * THE SETTINGS SECTION, in the area idiom: `/settings` with Installation,
    Modules and Organisation as its tabs, one head on every screen and a
    subline per screen, shipped as a third route resource
