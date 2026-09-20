@@ -94,6 +94,34 @@ final class TwoSurfaceLibraryTest extends WebTestCase
     }
 
     /**
+     * A DOOR LANDS ON THE SURFACE IT NAMES. A module with two surfaces has
+     * two doors into one library page — the roster's Live tab links
+     * `…/widgets#rail` — and a door that always landed at the top would make
+     * the reader hunt for the thing it just opened.
+     *
+     * The id is the SECTION's, so the heading and its line come into view
+     * with the surface rather than the strip appearing without a name above
+     * it. A surface that names no anchor gets no id, because an id nothing
+     * links to is a name nobody agreed on.
+     */
+    public function testASectionCarriesTheAnchorItsDoorNames(): void
+    {
+        $this->signIn();
+        $crawler = new Crawler($this->body(self::BOTH));
+
+        $ids = $crawler->filter('section.w-surface')->each(
+            static fn (Crawler $n): ?string => $n->attr('id'),
+        );
+
+        self::assertSame([null, 'rail'], $ids);
+        self::assertSame(
+            'The plate rail',
+            trim($crawler->filter('section.w-surface#rail h2.zone')->text()),
+            'the door lands on the heading, not on the strip under it',
+        );
+    }
+
+    /**
      * A TOKEN IS GOOD FOR ONE SURFACE. The two sections write to different
      * compositions, so they are protected separately — a page that rendered
      * one token for both would let a form from one section post to the other

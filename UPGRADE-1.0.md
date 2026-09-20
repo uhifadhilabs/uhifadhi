@@ -63,7 +63,9 @@ you do:
 ```
 
 and give every `[data-widget-reset]` button in the page header the surface it
-resets: `data-widget-reset="roster-live-rail"`. A bare one is still honoured
+resets: `data-widget-reset="roster-live-rail"`. A surface may also carry an
+`anchor`, rendered as the section's `id`, so a door elsewhere in the product
+lands on that surface (`…/widgets#rail`) instead of at the top of the page. A bare one is still honoured
 where the page has a single library, and ignored where it would be ambiguous —
 a button that does not say which surface it resets is not one anything can act
 on safely.

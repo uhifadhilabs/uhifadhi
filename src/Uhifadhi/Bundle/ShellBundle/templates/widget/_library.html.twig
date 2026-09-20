@@ -23,9 +23,15 @@
      SEVERAL SURFACES:
        surfaces  list of those same parameter bags, one a surface, in the order
                  the page reads. Each may add:
-                   label  the section's heading — what this surface IS, in the
-                          page's words ("The Live tab's plate rail")
-                   intro  one line under it, or nothing
+                   label   the section's heading — what this surface IS, in the
+                           page's words ("The Live tab's plate rail")
+                   intro   one line under it, or nothing
+                   anchor  the section's id, so a door elsewhere in the product
+                           lands on THIS surface rather than at the top of the
+                           page: `…/widgets#rail`. A module with two surfaces
+                           has two doors into one page, and a door that always
+                           lands at the top is a door that makes the reader
+                           hunt for the thing it just opened.
 
    A SECTION IS THE HOUSE SECTION (`h2.zone` + `p.pgsub`), not furniture of the
    library's own: a reader moving down this page is reading the same page
@@ -47,7 +53,7 @@
     }, with_context: false) }}
 {% else %}
     {% for surface in _surfaces %}
-        <section class="w-surface">
+        <section class="w-surface"{% if surface.anchor is defined and surface.anchor %} id="{{ surface.anchor }}"{% endif %}>
             {% if surface.label is defined and surface.label %}
                 <h2 class="zone">{{ surface.label }}</h2>
             {% endif %}

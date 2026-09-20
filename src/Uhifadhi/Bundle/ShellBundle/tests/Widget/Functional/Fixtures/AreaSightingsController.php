@@ -145,13 +145,14 @@ final readonly class AreaSightingsController
 
         $surfaces = [];
         foreach ([
-            ['catalog' => self::catalog(), 'label' => 'The dashboard', 'intro' => 'What the module opens on.'],
-            ['catalog' => self::railCatalog(), 'label' => 'The plate rail', 'intro' => 'The column beside the plate.'],
+            ['catalog' => self::catalog(), 'label' => 'The dashboard', 'intro' => 'What the module opens on.', 'anchor' => null],
+            ['catalog' => self::railCatalog(), 'label' => 'The plate rail', 'intro' => 'The column beside the plate.', 'anchor' => 'rail'],
         ] as $section) {
             $catalog = $section['catalog'];
             $surfaces[] = [
                 'label' => $section['label'],
                 'intro' => $section['intro'],
+                'anchor' => $section['anchor'],
                 'catalog' => $catalog,
                 'builtins' => $catalog->builtins(),
                 'customPresets' => $this->widgets->customPresets($catalog, $user, $area),

@@ -19,8 +19,10 @@ Not released yet.
  * THE WIDGET LIBRARY TAKES SEVERAL SURFACES: a module with two compositions —
    the roster's Overview and its Live plate rail — passes `surfaces` and gets
    one library page with a section each, every section carrying its own
-   catalogue, presets, write routes and CSRF token. The single-surface call is
-   unchanged; the body moved to `_library_surface.html.twig`
+   catalogue, presets, write routes and CSRF token, and an optional `anchor`
+   rendered as the section's id so a door can land on one surface
+   (`…/widgets#rail`). The single-surface call is unchanged; the body moved to
+   `_library_surface.html.twig`
  * `initWidgetLibraries()` arms EVERY library on the page, and a surface's
    reset button is matched by `data-widget-reset="<surface>"` — arming the
    first root left a second section's cards rendered and dead, and a bare
