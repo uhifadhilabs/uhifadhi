@@ -8,6 +8,14 @@
 
 Not released yet.
 
+ * A LINK THAT NAMES A CLOSED STATION SHOWS IT. The register rests on the
+   active posts, so "Edit the station" on a closed post's record resolved
+   the row, found it on no page and drew the register without it — a dead
+   door. A link naming a row the RESTING filter hides now widens that filter
+   to all for the request, and the chip says "all", so the controls never
+   disagree with the rows. A filter the reader chose explicitly is never
+   overruled.
+
  * A DEEP LINK INTO THE STATIONS REGISTER LANDS ON THE STATION IT NAMES.
    The register paginates eight cards to a page and `?open=<uuid>` only
    opened a card the FIRST page happened to hold, so from the ninth station

@@ -106,7 +106,82 @@ final class StationDeepLinkTest extends WebTestCase
         self::assertStringContainsString('open>', $this->body($url));
     }
 
+    /**
+     * A LINK THAT NAMES A CLOSED STATION SHOWS IT (ruled 2026-09-21). The
+     * register rests on the active ones, so the card used to be simply
+     * absent — a dead door on the record of every closed post.
+     */
+    public function testALinkToAClosedStationWidensTheRestingFilterAndOpensIt(): void
+    {
+        $this->boot();
+        $this->signIn();
+        [$area, $closed] = $this->aClosedStation();
+
+        $url = $this->section($area).'?open='.$closed->getUuidString();
+
+        self::assertContains('Post 03', $this->listed($url), 'The closed card the link named is drawn.');
+        self::assertStringContainsString('open>', $this->body($url));
+    }
+
+    /** And the filter row says so, rather than showing a set it disagrees with. */
+    public function testTheWidenedFilterIsHonestAboutWhatItIsShowing(): void
+    {
+        $this->boot();
+        $this->signIn();
+        [$area, $closed] = $this->aClosedStation();
+
+        $body = $this->body($this->section($area).'?open='.$closed->getUuidString());
+
+        self::assertMatchesRegularExpression(
+            '#<span class="i-ddval">all</span>#',
+            $body,
+            'The activity chip reads "all", so the controls and the rows agree.',
+        );
+    }
+
+    /**
+     * BUT A FILTER THE READER CHOSE IS NEVER OVERRULED. Somebody who asked
+     * for the active ones and then followed a link to a closed post gets the
+     * answer they asked for; the address is theirs.
+     */
+    public function testAnExplicitActivityFilterIsNotWidened(): void
+    {
+        $this->boot();
+        $this->signIn();
+        [$area, $closed] = $this->aClosedStation();
+
+        $listed = $this->listed($this->section($area).'?active=yes&open='.$closed->getUuidString());
+
+        self::assertNotContains('Post 03', $listed, 'They asked for the active ones.');
+    }
+
     // ---------------------------------------------------------------- fixtures
+
+    /**
+     * Three posts, the third closed — the row the resting filter hides.
+     *
+     * @return array{0: AreaOfInterest, 1: Station}
+     */
+    private function aClosedStation(): array
+    {
+        $area = $this->anArea();
+        $stations = static::getContainer()->get('test_public.area.stations');
+        \assert($stations instanceof StationService);
+
+        $closed = null;
+        for ($n = 1; $n <= 3; ++$n) {
+            $station = $stations->add($area, \sprintf('Post %02d', $n), -29.75 + ($n / 100), -3.2, \sprintf('ST-%02d', $n));
+            if (3 === $n) {
+                $closed = $station;
+                $station->setActive(false);
+            }
+        }
+        $this->em->flush();
+
+        \assert($closed instanceof Station);
+
+        return [$area, $closed];
+    }
 
     /** @return array{0: AreaOfInterest, 1: Station} the area, and the ninth station by name */
     private function nineStations(): array

@@ -105,9 +105,16 @@
                     label: 'zone', all: 'zone', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\StationQuery::ZONE'),
                     chosen: query.zone, chosenLabel: register.zoneLabel(query.zone), options: register.zones, query: query,
                 }) }}
+                {# "ALL" IS A STATE THE CHIP HAS TO BE ABLE TO SAY. A link naming
+                   a closed post widens the resting filter (see
+                   StationConfigureController), and a chip that still read
+                   "active" over a register holding a closed row would be a page
+                   disagreeing with its own controls. #}
                 {{ include('@Area/_partial/_filter.html.twig', {
                     label: 'active', all: 'active', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\StationQuery::ACTIVE'),
-                    chosen: query.active, chosenLabel: query.active == 'yes' ? 'active' : 'inactive', options: register.activity, query: query,
+                    chosen: query.active,
+                    chosenLabel: query.active is null ? 'all' : (query.active == 'yes' ? 'active' : 'inactive'),
+                    options: register.activity, query: query,
                 }) }}
                 {{ include('@Area/_partial/_filter.html.twig', {
                     label: 'posted', all: 'posted', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\StationQuery::POSTED'),

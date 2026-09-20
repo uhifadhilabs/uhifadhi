@@ -108,6 +108,31 @@ final readonly class StationConfigureController
          * with nothing open, which reads as a dead link.
          */
         $open = self::openRowOf($request, $area, $this->stations);
+
+        /*
+         * A LINK THAT NAMES A ROW MUST SHOW IT (ruled 2026-09-21).
+         *
+         * The register rests on the ACTIVE stations, so a link naming a
+         * CLOSED one — the header's "Edit the station" on a closed post's
+         * record — resolved the row, found it on no page, and drew the
+         * register without it. The card was simply absent, which reads as a
+         * dead door rather than as a filter doing its job.
+         *
+         * SO THE DEFAULT WIDENS, AND ONLY THE DEFAULT. A filter the reader
+         * chose is part of the address and is never overruled: somebody who
+         * asked for `?active=yes` and then followed a link to a closed post
+         * gets the answer they asked for. What widens is the resting state
+         * nobody typed.
+         *
+         * AND THE CHIP SAYS SO. Widening to "all" puts `active=all` in the
+         * filter row, so the register never shows a set the controls
+         * disagree with — a page quietly showing rows its own filter
+         * excludes is worse than the missing card.
+         */
+        if (null !== $open && !$open->isActive() && !$request->query->has(StationQuery::ACTIVE)) {
+            $query = self::showingEveryActivity($query);
+        }
+
         $register = $this->register->register(
             $area,
             $query,
@@ -183,6 +208,24 @@ final readonly class StationConfigureController
         $station = $stations->findOneBy(['uuid' => $uuid]);
 
         return $station instanceof Station && $station->getArea()?->getId() === $area->getId() ? $station : null;
+    }
+
+    /**
+     * THE SAME QUESTION WITH THE ACTIVITY FILTER OPENED OUT — every other
+     * word of the address kept, because widening one filter is not a reason
+     * to forget a zone, a search or an order the reader also stated.
+     */
+    private static function showingEveryActivity(StationQuery $query): StationQuery
+    {
+        return new StationQuery(
+            zone: $query->zone,
+            active: null,
+            posted: $query->posted,
+            lead: $query->lead,
+            search: $query->search,
+            sort: $query->sort,
+            page: $query->page,
+        );
     }
 
     /** The open row as the register reads it, when this page of it holds one. */
