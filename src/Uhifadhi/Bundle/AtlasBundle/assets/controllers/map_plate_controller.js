@@ -82,6 +82,11 @@ const STYLES = {
     point: (color) => ({ radius: 6, color, weight: 1.5, fillColor: color, fillOpacity: 0.85 }),
 };
 
+/* THE LIVE MARK'S BOX. Wide enough for the dot and the age beside it, and
+ * anchored on the dot's centre so the point the phone reported is the point
+ * the dot sits on rather than the corner of a label. */
+const LIVE_MARK = { width: 64, height: 22, cx: 9, cy: 11, r: 8 };
+
 /*
  * THE SPOTLIGHT, ONE ANSWER FOR THE WHOLE PLATFORM. Hovering a row in a list
  * beside a map lifts the feature that row is about and pushes the rest back. How
@@ -349,7 +354,9 @@ export default class extends Controller {
     drawLayer(layer) {
         const drawn = this.L.geoJSON(layer.features ?? null, {
             style: (feature) => this.styleFor(layer, feature),
-            pointToLayer: (feature, latlng) => this.L.circleMarker(latlng, this.styleFor(layer, feature)),
+            pointToLayer: (feature, latlng) => ('live' === layer.shape
+                ? this.L.marker(latlng, { icon: this.liveIcon(feature), keyboard: false })
+                : this.L.circleMarker(latlng, this.styleFor(layer, feature))),
             onEachFeature: (feature, drawnFeature) => this.dressFeature(layer, feature, drawnFeature),
         });
 
@@ -389,6 +396,43 @@ export default class extends Controller {
 
         this.extend(drawn);
         this.refit();
+    }
+
+    /**
+     * SOMEBODY'S LAST KNOWN POSITION, as the one mark the accent is reserved
+     * for: the dot, the ring breathing out of it, their initials inside it and
+     * the age of the fix beside it.
+     *
+     * A DIV ICON AND NOT A CIRCLE MARKER, because the mark is a drawing rather
+     * than a colour — a ring that animates, two labels and a title — and a
+     * circle marker is one path with a fill. The sheet owns every line of it
+     * (`.livedot` in the shell): nothing here names a colour, a size or a
+     * typeface, so the mark reads the same in a legend row, in a list and here.
+     *
+     * STALE IS THE SAME MARK, dimmed and still. The state arrives as a feature
+     * property because the contract decides it — two ping intervals, and the
+     * plate has no business re-deciding what "current" means.
+     */
+    liveIcon(feature) {
+        const properties = feature?.properties ?? {};
+        const stale = true === properties.stale;
+        const name = properties.name ?? '';
+        const age = properties.age ?? '';
+        const { width, height, cx, cy, r } = LIVE_MARK;
+
+        return this.L.divIcon({
+            className: '',
+            iconSize: [width, height],
+            iconAnchor: [cx, cy],
+            html: `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" aria-hidden="true">`
+                + `<g class="livedot${stale ? ' stale' : ''}">`
+                + `<title>${escapeHtml(name)} · last ping ${escapeHtml(age)} · ${stale ? 'stale' : 'live'}</title>`
+                + `<circle class="lv-ring" cx="${cx}" cy="${cy}" r="${r}"/>`
+                + `<circle class="lv-core" cx="${cx}" cy="${cy}" r="${r}"/>`
+                + `<text class="lv-ini" x="${cx}" y="${cy + 2}" text-anchor="middle">${escapeHtml(properties.initials ?? '')}</text>`
+                + `<text class="lv-age" x="${cx + r + 3}" y="${cy + 3}">${escapeHtml(age)}</text>`
+                + '</g></svg>',
+        });
     }
 
     /**

@@ -8,6 +8,13 @@
 
 Not released yet.
 
+ * WHERE PEOPLE ARE, ON THE PLATE: `AtlasMap::livePositions()` draws a
+   `LivePresence` as the shell's live dot — one marker a position, stale where
+   the contract says stale, nothing at all for a person with no fix — and adds
+   the key the map-legend contract requires ("On the plate": the live position,
+   the stale one, and the people who are on no ground at all)
+ * `LayerShape::Live`/`LiveStale`/`LiveAbsent`, one mark in three states, and a
+   legend row whose swatch is a drawing rather than a colour
  * a calendar pill's dot is painted with a COLOUR token and not a channel one
    — the roles mapped to `--c-acc`/`--c-ok`/…, which resolve to a bare `62 217
    168` in a `background` and painted nothing at all, so every pill dot on

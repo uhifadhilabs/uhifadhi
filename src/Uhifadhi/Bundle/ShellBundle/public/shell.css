@@ -1037,6 +1037,71 @@ h2.zone::after { content: ""; flex: 1; height: 1px; background: var(--c-ln2); }
 .viewer [fill="var(--plate-dim)"] { fill: var(--plate-dim); }
 .viewer [stroke="var(--plate-dim)"] { stroke: var(--plate-dim); }
 
+/* ==================== THE LIVE DOT ====================
+   THE ONE MARK THE ACCENT IS RESERVED FOR.
+
+   A position whose last ping is younger than TWO ping intervals is LIVE: the
+   accent dot, with a soft ring breathing out of it. Older than two intervals
+   and it is the SAME dot, static and dimmed — the shape never changes, only
+   its claim to being current. A person with no position at all draws NOTHING
+   on the ground; absence is stated in a list or a key, never guessed at.
+
+   PRESENCE STATE IS NOT A MARKER COLOUR. At post verified, at post unverified,
+   special assignment, working elsewhere, not working — all of that is the
+   ROW's business, wherever the rows are. The plate answers one question: is
+   this where the person IS, or where they WERE? Two answers, two marks, and
+   the accent means the first.
+
+   Two presentations of one primitive:
+     svg .livedot   on a plate — the plate palette, because imagery is dark in
+                    both themes (see THE PLATE above)
+     i.livedot      inline in a legend row or a list — the theme palette,
+                    because those sit on the page ground
+   Reduced motion keeps the ring and drops the animation: the ring is
+   information, the breathing is only a way of noticing it.
+   ======================================================================= */
+@keyframes lv-breathe {
+    0% { transform: scale(1); opacity: .6; }
+    70% { transform: scale(2.05); opacity: 0; }
+    100% { transform: scale(2.05); opacity: 0; }
+}
+svg .livedot .lv-ring {
+    fill: none; stroke: var(--plate-acc); stroke-width: 1.6;
+    transform-box: fill-box; transform-origin: center;
+    animation: lv-breathe 2.6s ease-out infinite;
+}
+svg .livedot .lv-core { fill: var(--plate-acc); stroke: var(--plate-ring); stroke-width: 2; }
+/* The two labels the mark carries: who it is, inside the core, and how old the
+   fix is beside it. Stated here rather than inline on the marker, because the
+   drawing is the sheet's and a module that built its own marker would otherwise
+   be choosing a typeface. */
+svg .livedot .lv-ini { fill: var(--plate-ring); font-family: var(--font-mono); font-size: 7.5px; font-weight: 800; }
+svg .livedot .lv-age { fill: var(--plate-ink); font-family: var(--font-mono); font-size: 8px; font-weight: 600; }
+/* Stale — the same dot, dimmed and still. The ring stays, unanimated and
+   faint, so a stale position is legible as "a position", not as a smudge. */
+svg .livedot.stale .lv-ring { animation: none; stroke: var(--plate-dim); opacity: .3; transform: scale(1.35); }
+svg .livedot.stale .lv-core { fill: var(--plate-dim); }
+svg .livedot.stale .lv-age { fill: var(--plate-dim); }
+i.livedot {
+    position: relative; display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+    background: rgb(var(--c-acc)); flex: none; font-style: normal;
+}
+i.livedot::after {
+    content: ""; position: absolute; inset: -1px; border-radius: 50%;
+    border: 1.5px solid rgb(var(--c-acc));
+    animation: lv-breathe 2.6s ease-out infinite;
+}
+i.livedot.stale { background: rgb(var(--c-dim)); }
+i.livedot.stale::after { animation: none; border-color: rgb(var(--c-dim)); opacity: .3; transform: scale(1.35); }
+/* Nobody's position: the outline of a dot, in the colour of a thing that is
+   missing. It appears in keys and lists and never on the ground. */
+i.livedot.none { background: none; border: 1px solid rgb(var(--c-fail)); }
+i.livedot.none::after { animation: none; border: 0; }
+@media (prefers-reduced-motion: reduce) {
+    svg .livedot .lv-ring { animation: none; opacity: .34; }
+    i.livedot::after { animation: none; opacity: .34; }
+}
+
 /* THE READ-ONLY SWATCH. A category's colour is SHOWN, never picked: this is
    the one mark that says "this is the hue this thing wears". It is a square,
    not a button, and it carries no hover and no cursor. */

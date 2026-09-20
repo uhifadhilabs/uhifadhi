@@ -315,6 +315,17 @@ final class LayoutContract
         'more',
         'mdot',
 
+        // WHERE SOMEBODY IS, RIGHT NOW — the one mark the accent is reserved
+        // for. `.livedot` is two presentations of one primitive: a `<g>` inside
+        // an SVG, drawn in the plate palette because imagery is dark in both
+        // themes, and an `<i>` inline in a list or a legend row, drawn in the
+        // theme palette. `.stale` is the same dot dimmed and still — older
+        // than two ping intervals — and `.none` is the outline of one, for a
+        // person with no fix, which is a row in a key and never a mark on the
+        // ground. Presence state is NOT a marker colour: what somebody is
+        // doing belongs to the row, wherever the rows are.
+        'livedot',
+
         // the KPI plate, and the strip it sits in
         'kpi',
         'kstrip',

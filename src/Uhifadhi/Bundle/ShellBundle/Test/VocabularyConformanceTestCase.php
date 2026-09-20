@@ -586,6 +586,17 @@ abstract class VocabularyConformanceTestCase extends TestCase
     /** @return list<string> */
     private static function selectors(string $css): array
     {
+        /*
+         * A KEYFRAME STEP IS NOT A SELECTOR. `0%`, `70%`, `from` and `to` name
+         * points in one animation's own timeline, and two sheets each having a
+         * `0%` inside differently-named keyframes are not restating a rule —
+         * they are two animations. Left in, the first sheet to grow a
+         * `@keyframes` block made every other sheet with one fail a check
+         * about selector collisions, which is a check measuring the wrong
+         * thing rather than a collision.
+         */
+        $css = (string) preg_replace('/@keyframes[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/', '', $css);
+
         // Everything before a brace that is not itself an at-rule prelude.
         preg_match_all('/(^|\})([^{}@]+)\{/m', $css, $matches);
 

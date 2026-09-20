@@ -202,6 +202,10 @@
     border: 1px solid color-mix(in srgb, rgb(var(--c-tx)) 18%, transparent);
 }
 .map-legend .lay .sw.ln { height: 0; border: 0; border-top: 2.2px solid currentColor; border-radius: 0; }
+/* A ROW WHOSE MARK IS A DOT rather than a patch of colour — a live position,
+   and the two states beside it. The swatch box keeps its size so the rows stay
+   on one grid, and holds the shell's `.livedot` instead of painting itself. */
+.map-legend .lay .sw.dot { background: none; display: grid; place-items: center; }
 /* THE FIGURE IS QUIETER THAN THE NAME: the name is what the colour means and
    the figure is how much of it there is. */
 .map-legend .lay em { font-style: normal; font-weight: 500; color: rgb(var(--c-dim)); }

@@ -110,6 +110,17 @@ final class ComponentContractTest extends ContractTestCase
             'more',
             'mdot',
 
+            // WHERE SOMEBODY IS, RIGHT NOW — the one mark the accent is reserved
+            // for. `.livedot` is two presentations of one primitive: a `<g>` inside
+            // an SVG, drawn in the plate palette because imagery is dark in both
+            // themes, and an `<i>` inline in a list or a legend row, drawn in the
+            // theme palette. `.stale` is the same dot dimmed and still — older
+            // than two ping intervals — and `.none` is the outline of one, for a
+            // person with no fix, which is a row in a key and never a mark on the
+            // ground. Presence state is NOT a marker colour: what somebody is
+            // doing belongs to the row, wherever the rows are.
+            'livedot',
+
             // THE KPI PLATE, and the strip it sits in.
             'kpi',
             'kstrip',
@@ -194,6 +205,50 @@ final class ComponentContractTest extends ContractTestCase
         foreach (self::contractV1() as $class) {
             yield $class => [$class];
         }
+    }
+
+    /**
+     * THE LIVE DOT IS ONE PRIMITIVE IN TWO PRESENTATIONS, and the sheet has to
+     * carry both or a module ends up drawing its own.
+     *
+     * On a plate the mark is an SVG group in the PLATE palette, because
+     * imagery is dark in both themes; inline in a list or a legend row it is
+     * an `<i>` in the THEME palette, because those sit on the page ground. A
+     * sheet that shipped only one of them would send the other's author to
+     * pick a colour, and the accent is reserved for exactly this.
+     */
+    public function testTheLiveDotIsDrawnForThePlateAndForAList(): void
+    {
+        $css = $this->stylesheet();
+
+        self::assertStringContainsString('svg .livedot .lv-core', $css, 'the mark on a plate');
+        self::assertStringContainsString('svg .livedot.stale .lv-core', $css, 'and the same mark, stale');
+        self::assertStringContainsString('i.livedot', $css, 'the mark inline in a row');
+        self::assertStringContainsString('i.livedot.stale', $css);
+        self::assertStringContainsString('i.livedot.none', $css, 'and the outline of one, for nobody');
+        self::assertStringContainsString('@keyframes lv-breathe', $css, 'the ring is what breathes');
+    }
+
+    /**
+     * AND THE BREATHING IS OPTIONAL WHERE MOTION IS. The ring stays either
+     * way, because the ring is information; the animation is only a way of
+     * noticing it, and a reader who has asked for less motion has not asked
+     * to be told less.
+     */
+    public function testTheLiveDotKeepsItsRingWhenMotionIsRefused(): void
+    {
+        $css = $this->stylesheet();
+
+        $reduced = preg_match(
+            '~@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{(.+?)\n\}~s',
+            $css,
+            $match,
+        ) ? $match[1] : '';
+
+        self::assertStringContainsString('.lv-ring', $reduced, 'the plate mark stops breathing');
+        self::assertStringContainsString('i.livedot::after', $reduced, 'and so does the inline one');
+        self::assertStringContainsString('animation: none', $reduced);
+        self::assertStringNotContainsString('display: none', $reduced, 'the ring itself never goes');
     }
 
     /**

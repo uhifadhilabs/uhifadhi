@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\AtlasBundle\Model;
 
 use Symfony\UX\Map\Map as UxMap;
+use Uhifadhi\Contracts\Area\LivePresence;
 
 /**
  * A map as the platform draws it: a UX Map map, plus everything the atlas adds
@@ -103,6 +104,29 @@ final class AtlasMap
     public function addLayer(GeoJsonLayer $layer): self
     {
         $this->layers[] = $layer;
+
+        return $this;
+    }
+
+    /**
+     * WHERE PEOPLE ARE — the live layer and the key that must come with it, in
+     * one call.
+     *
+     * Two things arrive together because the map-legend contract says a layer
+     * ships a legend, and here the legend says more than the layer can: the
+     * mark has a state the plate draws dimmed and a state it draws NOWHERE,
+     * and a caller left to remember the second would ship a plate that is
+     * silent about the people it is not showing.
+     *
+     * @param int $withoutPosition how many people the caller knows of that this
+     *                             read had no fix for
+     */
+    public function livePositions(LivePresence $presence, int $withoutPosition = 0): self
+    {
+        $this->addLayer(LiveMarks::layer($presence));
+        foreach (LiveMarks::key($presence, $withoutPosition) as $row) {
+            $this->addLegendItem($row);
+        }
 
         return $this;
     }

@@ -59,7 +59,15 @@
                         <b><i style="background:{{ group.items|first.swatch }}"></i>{{ group.label }}</b>
                     {% endif %}
                     {% for item in group.items %}
-                        {% set swatch %}<span class="sw{{ item.shape.value == 'line' ? ' ln' : '' }}" style="{{ item.shape.value == 'line' ? 'color:' ~ item.swatch : 'background:' ~ item.swatch }}"></span>{% endset %}
+                        {# THE MARK, IN WHICHEVER OF ITS THREE FORMS THE SHAPE ASKS FOR: a
+                           patch of colour, a rule for a line, or — for a live position and
+                           the two states beside it — the shell's own dot, which carries its
+                           state in a class because it is a drawing rather than a colour. #}
+                        {% set swatch %}
+                            {%- if item.shape.liveDot %}<span class="sw dot"><i class="{{ item.shape.liveDot }}"></i></span>
+                            {%- else %}<span class="sw{{ item.shape.value == 'line' ? ' ln' : '' }}" style="{{ item.shape.value == 'line' ? 'color:' ~ item.swatch : 'background:' ~ item.swatch }}"></span>
+                            {%- endif -%}
+                        {% endset %}
                         {% if item.layerId %}
                             <button type="button" class="lay{{ item.visible ? '' : ' off' }}"
                                     data-action="{{ controller }}#toggleLayer"
@@ -69,7 +77,10 @@
                                 <span class="tog">{{ item.visible ? 'on' : 'off' }}</span>
                             </button>
                         {% else %}
-                            <span class="lay">{{- swatch -}}{{ item.label }}{% if item.count is not null %}<em>{{ item.count }}</em>{% endif %}</span>
+                            {# A KEY CAN BE DRAWN OFF TOO — the row for a mark the plate shows
+                               nowhere ("no position") is not a control, but it is not on
+                               either, and reading as on would claim the ground shows it. #}
+                            <span class="lay{{ item.visible ? '' : ' off' }}">{{- swatch -}}{{ item.label }}{% if item.count is not null %}<em>{{ item.count }}</em>{% endif %}</span>
                         {% endif %}
                     {% endfor %}
                 </div>

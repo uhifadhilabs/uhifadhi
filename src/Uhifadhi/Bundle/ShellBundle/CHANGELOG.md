@@ -8,6 +8,11 @@
 
 Not released yet.
 
+ * `.livedot` — the one mark the accent is reserved for, in two presentations
+   of one primitive: `svg .livedot` on a plate (plate palette) and `i.livedot`
+   inline in a list or a legend row (theme palette), with `.stale` for a
+   position older than two ping intervals and `.none` for nobody's position.
+   Reduced motion keeps the ring and drops the breathing
  * THE SIDEBAR TREE OPENS ONLY THE PATH TO THE PAGE (ruled): the shell derives
    what is open from the row a source marks `current` — the ancestor path and
    the current row's own children, one rung at a time — and `NavItem::$open`
