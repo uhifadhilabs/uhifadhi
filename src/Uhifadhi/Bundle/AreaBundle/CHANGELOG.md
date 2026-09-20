@@ -8,6 +8,15 @@
 
 Not released yet.
 
+ * A ZONE CARD OPENS IN THE BROWSER, the twin of the stations register's:
+   the zones register is a native `<details>`, so a click costs no round
+   trip, and `?open=` still decides which card ARRIVES open. The rename
+   disclosure moved out of the card header into the body — as a `<summary>`
+   the header would have held a `<details>` inside a `<details>`'s summary,
+   invalid markup whose one certain behaviour is that clicking Rename
+   toggles the card. An edit belongs in the open card, where the stations
+   twin keeps its own.
+
  * THE DASHBOARD'S FIGURES STRIP IS THE MODULES', AND THE ORGANISATION ONLY
    FILLS IT. With the roster, patrols, incidents and files all publishing,
    the host's "Areas" tile sat first and pushed "Open incidents" off the end

@@ -103,11 +103,27 @@
                 <div class="zcstack">
                     {% for row in set.rows %}
                         {% set isOpen = openZone == row.uuid %}
-                        <article class="zcard{{ isOpen ? ' on focusline' : '' }}">
-                            <div class="zc-hd">
-                                <a class="ovx" href="{{ isOpen ? section : section ~ '?open=' ~ row.uuid }}"
-                                   aria-expanded="{{ isOpen ? 'true' : 'false' }}"
-                                   aria-label="{{ isOpen ? 'Collapse' : 'Expand' }} {{ row.name }}">{{ ux_icon('shell:chevron-right') }}</a>
+                        {# A NATIVE DISCLOSURE, the twin of the stations register's
+                           card. Opening a zone used to be a NAVIGATION —
+                           `?open=<uuid>`, a round trip and a repaint to reveal
+                           markup the page could have carried — and the reload is
+                           what a reader notices. `<details>` opens it in the
+                           browser, with no script to ship and keyboard and
+                           screen-reader support already right.
+
+                           THE SERVER STILL DECIDES WHAT ARRIVES OPEN: `?open=`
+                           renders `open` on the card it names, so a link into a
+                           zone still lands on it.
+
+                           THE RENAME DISCLOSURE MOVED INTO THE BODY. It used to
+                           sit in the header, and a `<details>` inside a
+                           `<summary>` is invalid markup whose one certain
+                           behaviour is that clicking it toggles the card. An
+                           edit belongs in the open card anyway, which is where
+                           the stations twin keeps its own. #}
+                        <details class="zcard{{ isOpen ? ' on focusline' : '' }}"{{ isOpen ? ' open' : '' }}>
+                            <summary class="zc-hd">
+                                <span class="ovx" aria-hidden="true">{{ ux_icon('shell:chevron-right') }}</span>
                                 <span class="zsw" data-cat="{{ row.cat }}"></span>
                                 <div class="zc-bd">
                                     <span class="nmrow"><a class="zc-nm" href="{{ path('area_zones', {uuid: area.uuidString}) }}">{{ row.name }}</a></span>
@@ -125,6 +141,10 @@
                                     <span class="f">{% if posts %}<b>{{ posts }}</b> st{% else %}no station{% endif %}</span>
                                     <span class="f">{% if people %}<b>{{ people }}</b> posted{% else %}nobody posted{% endif %}</span>
                                 </span>
+                            </summary>
+
+                                <hr class="zc-rule">
+
                                 {# RENAME COMMITS ON ITS OWN — it touches no geometry, so it needs
                                    neither the map nor a file — and it sits behind a disclosure.
                                    A field and a button in every collapsed card's header made the
@@ -142,10 +162,6 @@
                                         </form>
                                     </div>
                                 </details>
-                            </div>
-
-                            {% if isOpen %}
-                                <hr class="zc-rule">
 
                                 {# WHAT THE MODULES PUBLISH ABOUT THIS GROUND, over the rolling
                                    window the controller asked for. The covered share is already in
@@ -248,8 +264,7 @@
                                                 data-confirm-modal-danger-value="true">{{ ux_icon('shell:trash-2') }} Remove the zone</button>
                                     </form>
                                 </div>
-                            {% endif %}
-                        </article>
+                        </details>
                     {% endfor %}
                 </div>
             {% endif %}

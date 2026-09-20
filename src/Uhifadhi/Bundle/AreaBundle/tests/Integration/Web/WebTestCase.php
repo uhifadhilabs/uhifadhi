@@ -195,6 +195,8 @@ abstract class WebTestCase extends KernelTestCase
 
     protected const string A_BOUNDARY = '{"type":"MultiPolygon","coordinates":[[[[-30.0,-3.6],[-29.0,-3.6],[-29.0,-2.8],[-30.0,-2.8],[-30.0,-3.6]]]]}';
     protected const string A_WEST_HALF = '{"type":"MultiPolygon","coordinates":[[[[-30.0,-3.6],[-29.5,-3.6],[-29.5,-2.8],[-30.0,-2.8],[-30.0,-3.6]]]]}';
+    /** The other half, so a suite can put TWO zones on one area without them overlapping. */
+    protected const string AN_EAST_HALF = '{"type":"MultiPolygon","coordinates":[[[[-29.5,-3.6],[-29.0,-3.6],[-29.0,-2.8],[-29.5,-2.8],[-29.5,-3.6]]]]}';
 
     protected function anArea(string $name = 'Northern Conservation Reserve', string $source = 'WDPA'): AreaOfInterest
     {
