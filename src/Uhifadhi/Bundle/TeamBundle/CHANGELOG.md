@@ -8,6 +8,11 @@
 
 Not released yet.
 
+ * the host's three performance topics draw the design's four: Staffing
+   (Positions · Filled · Vacant · Over threshold), Goals (Declared · Met ·
+   Off track · No figure yet, at-risk and missed folded with both kept in the
+   fragment) and Attention (Items raised · Unowned · Resolved · Records, with
+   coverage moved into the first card's caption)
  * FOUR FIGURES TO A ROW, never five (ruled), across the section screens:
    Departments Overview drops the count of departments (the band says it),
    Team Overview drops Roles (three tiers that never move; it stays a band

@@ -113,13 +113,24 @@ final readonly class StaffingTopic implements PerformanceTopicProviderInterface,
         $filled = $now[StaffingFigures::FILLED] ?? 0.0;
         $seats = $now[StaffingFigures::POSITIONS] ?? 0.0;
 
+        /*
+         * FOUR, IN THE DESIGN'S ORDER: the establishment, how much of it
+         * is filled, how much is not, and how much has been not for too
+         * long. It reads left to right as one sentence about the same
+         * set of posts.
+         *
+         * PEOPLE IS NOT ONE OF THEM. A position is one post held by one
+         * person, so the count of people in positions and the count of
+         * filled positions are the same number with the same movement —
+         * two cards saying one thing, and the one that names the POST is
+         * the one the other three are about.
+         */
         return [
-            $this->figure(StaffingFigures::FILLED, 'Positions filled', $filled, $departments, $period, ColumnPolarity::Up,
+            $this->figure(StaffingFigures::POSITIONS, 'Positions', $seats, $departments, $period, ColumnPolarity::None,
+                \sprintf('across %d %s', \count($departments), 1 === \count($departments) ? 'department' : 'departments')),
+            $this->figure(StaffingFigures::FILLED, 'Filled', $filled, $departments, $period, ColumnPolarity::Up,
                 \sprintf('of %s', self::plainly($seats))),
             $this->figure(StaffingFigures::VACANT, 'Vacant', $now[StaffingFigures::VACANT] ?? 0.0, $departments, $period, ColumnPolarity::Down),
-            $this->figure(StaffingFigures::PEOPLE, 'People', $now[StaffingFigures::PEOPLE] ?? 0.0, $departments, $period, ColumnPolarity::Up,
-                \sprintf('in %s positions', self::plainly($seats))),
-            $this->figure(StaffingFigures::POSITIONS, 'Positions', $seats, $departments, $period, ColumnPolarity::None),
             /*
              * AND HOW MANY POSTS HAVE STOOD EMPTY TOO LONG — counted from
              * the day each fell vacant, which is written when it falls
@@ -343,11 +354,14 @@ final readonly class StaffingTopic implements PerformanceTopicProviderInterface,
 
         return new TopicKpi(
             key: 'staffing.over_threshold',
-            label: \sprintf('Vacant over %d days', self::THRESHOLD_DAYS),
+            // THE LABEL NAMES THE RULE AND THE FRAGMENT NAMES THE NUMBER:
+            // "Vacant over 60 days" spent the widest card in the row on a
+            // constant, and the row beside it already says Vacant.
+            label: 'Over threshold',
             value: (float) $over,
             caption: 0 === $undated
-                ? 'counted from the day each fell vacant'
-                : \sprintf('%d more stood empty before the day was recorded', $undated),
+                ? \sprintf('unfilled past %d days', self::THRESHOLD_DAYS)
+                : \sprintf('unfilled past %d days · %d more stood empty before the day was recorded', self::THRESHOLD_DAYS, $undated),
             polarity: ColumnPolarity::Down,
         );
     }

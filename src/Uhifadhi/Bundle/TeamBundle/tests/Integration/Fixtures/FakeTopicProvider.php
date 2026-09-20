@@ -31,7 +31,7 @@ use Uhifadhi\Contracts\Performance\TopicMatrix;
  * A MODULE PUBLISHING A TOPIC, playing the contract and nothing else.
  *
  * IT IS THE MODULE SIDE OF THE SEAM, standing in for patrols and incidents
- * until those are briefed: five headline figures, a chart of a stated
+ * until those are briefed: four headline figures, a chart of a stated
  * shape, and a matrix of only the departments that read it — the last of
  * which is the whole difference from the board this replaces, where one
  * module's columns were imposed on every department.
@@ -69,8 +69,10 @@ final readonly class FakeTopicProvider implements PerformanceTopicProviderInterf
         return [
             new TopicKpi($this->slug.'.open', 'Open', 12.0, delta: 3.0, history: [9.0, 10.0, null, 11.0, 12.0, 12.0], polarity: ColumnPolarity::Down),
             new TopicKpi($this->slug.'.closed', 'Closed', 31.0, delta: -2.0, polarity: ColumnPolarity::Up),
-            new TopicKpi($this->slug.'.median', 'Median days', 4.5, unit: 'd', polarity: ColumnPolarity::Down),
             new TopicKpi($this->slug.'.total', 'Records', 561.0, polarity: ColumnPolarity::None),
+            // AND ONE THE STAND-IN CANNOT ANSWER, because the contract's
+            // fourth slot is filled with a figure that states its own
+            // absence rather than left short.
             new TopicKpi($this->slug.'.unowned', 'Unowned', null, caption: 'nobody has published this yet'),
         ];
     }

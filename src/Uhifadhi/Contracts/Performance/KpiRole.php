@@ -62,4 +62,17 @@ enum KpiRole: string
      * covering both would hide whichever moved.
      */
     case ItemsUnowned = 'items_unowned';
+
+    /**
+     * ITEMS THE MODULE CLOSED IN THIS PERIOD — the other half of the
+     * attention reading, and the half a reader needs to know whether a
+     * rising count of raised items is a rising workload or a standing
+     * one being worked through.
+     *
+     * A MODULE THAT RAISES ITEMS SHOULD PUBLISH THIS. Until it does the
+     * card states its own absence rather than reading zero: "nothing
+     * resolved" and "nobody reported resolving anything" are different
+     * facts, and the second is the honest one to draw.
+     */
+    case ItemsResolved = 'items_resolved';
 }

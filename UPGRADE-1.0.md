@@ -1,5 +1,40 @@
 # UPGRADE FROM 0.x to 1.0
 
+## A performance topic publishes FOUR headline figures, not five
+
+**What changed.** `Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface::kpis()`
+now returns **exactly four** `TopicKpi`s, in one row. A figure row is four to
+a row everywhere in the product (ruled 2026-09-21), and a record does not get
+two rows of four either: the fifth card wrapped an orphan onto a second line
+on a small laptop.
+
+The host's three topics were ported from the design, label for label and in
+order:
+
+| topic | the four | what went, and where |
+| --- | --- | --- |
+| Staffing | Positions · Filled · Vacant · Over threshold | **People** — a position is one post held by one person, so it was the same number and the same movement as Filled |
+| Goals | Declared · Met · Off track · No figure yet | **At risk** and **Missed** folded into one card; the fragment keeps them apart ("2 at risk · 1 missed") and the Briefing still asks about them separately |
+| Attention & output | Items raised · Unowned · Resolved · Records | **Measuring** and **Folded** became the first card's caption — they say how much of the organisation the other figures are about, which is what a caption is for |
+
+**What a module topic must change.** Return four. The design named the drop
+for the two shipped module topics, and each is that module's own commit:
+
+  - **incident-module** drops *Claims open*
+  - **patrol-module** drops *Out right now*
+
+A topic with less to say fills the fourth slot with a figure that states its
+own absence (a null value with a caption), rather than returning three — a
+short row and a quiet month look identical otherwise. A topic with more to say
+FOLDS two verdicts a reader acts on the same way into one card and keeps both
+in the fragment.
+
+**One new role.** `KpiRole::ItemsResolved` — items the module closed in this
+period. A module that raises items should publish it: without it a rising
+count of raised items cannot be read as either a rising workload or a standing
+one being worked through, and those call for opposite decisions. Until a
+module publishes it the card states its own absence rather than reading zero.
+
 ## A module with two widget surfaces has one library page
 
 **What changed.** `@Shell/widget/_library.html.twig` now takes either shape.

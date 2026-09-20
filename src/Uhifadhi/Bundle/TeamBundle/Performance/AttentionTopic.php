@@ -97,15 +97,32 @@ final readonly class AttentionTopic implements PerformanceTopicProviderInterface
         $unowned = self::sum($measured, KpiRole::ItemsUnowned);
         $records = self::sum($measured, KpiRole::Records);
 
+        $resolved = self::sum($measured, KpiRole::ItemsResolved);
+
         $measuring = \count($measured);
         $all = \count($this->departmentsIn($scope));
 
+        /*
+         * FOUR, IN THE DESIGN'S ORDER: what came in, how much of it is
+         * nobody's, how much went out, and how much was written down
+         * while all that happened.
+         *
+         * COVERAGE IS A CAPTION, NOT TWO CARDS. How many departments are
+         * measuring — and how many are folded because no module of
+         * theirs raises or writes — used to be a plate each. They say
+         * how much of the organisation the other figures are ABOUT,
+         * which is what a caption is for; spending two of four plates on
+         * them left the topic with two figures about attention and two
+         * about itself.
+         */
         return [
             new TopicKpi(
                 key: 'attention.raised',
                 label: 'Items raised',
                 value: $raised,
-                caption: \sprintf('across %d measuring %s', $measuring, 1 === $measuring ? 'department' : 'departments'),
+                caption: $measuring === $all
+                    ? \sprintf('across %d measuring %s', $measuring, 1 === $measuring ? 'department' : 'departments')
+                    : \sprintf('across %d measuring of %d · %d folded', $measuring, $all, max(0, $all - $measuring)),
                 polarity: ColumnPolarity::Down,
             ),
             /*
@@ -120,32 +137,31 @@ final readonly class AttentionTopic implements PerformanceTopicProviderInterface
                 caption: 'raised against no position',
                 polarity: ColumnPolarity::Down,
             ),
+            /*
+             * AND HOW MUCH WENT OUT. Without it a rising count of raised
+             * items cannot be read: it is either a rising workload or a
+             * standing one being worked through, and those call for
+             * opposite decisions.
+             *
+             * A MODULE THAT DOES NOT PUBLISH IT LEAVES THE CARD ABSENT
+             * rather than reading zero — "nothing resolved" and "nobody
+             * said" are different facts.
+             */
+            new TopicKpi(
+                key: 'attention.resolved',
+                label: 'Resolved',
+                value: $resolved,
+                caption: 'closed by the module that raised them',
+                polarity: ColumnPolarity::Up,
+                role: KpiRole::ItemsResolved,
+            ),
             new TopicKpi(
                 key: 'attention.records',
-                label: 'Records this period',
+                label: 'Records',
                 value: $records,
                 caption: 'written by every module that writes',
                 polarity: ColumnPolarity::Up,
                 role: KpiRole::Records,
-            ),
-            new TopicKpi(
-                key: 'attention.measuring',
-                label: 'Measuring',
-                value: (float) $measuring,
-                caption: \sprintf('of %d departments', $all),
-                polarity: ColumnPolarity::None,
-            ),
-            /*
-             * AND HOW MANY ARE FOLDED. Stated as a figure of its own so
-             * that "three measuring" can never be read as "six scored
-             * nothing".
-             */
-            new TopicKpi(
-                key: 'attention.folded',
-                label: 'Folded',
-                value: (float) max(0, $all - $measuring),
-                caption: 'no module that raises or writes',
-                polarity: ColumnPolarity::None,
             ),
         ];
     }

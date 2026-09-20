@@ -22,6 +22,7 @@ use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\FakeTopicProvider;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\IntegrationTestCase;
 use Uhifadhi\Contracts\Kpi\FigurePeriod;
 use Uhifadhi\Contracts\Performance\PerformanceScope;
+use Uhifadhi\Contracts\Performance\TopicKpi;
 
 /**
  * WHICH TOPICS A PERFORMANCE PAGE HAS, AND IN WHICH ORDER.
@@ -89,13 +90,35 @@ final class PerformanceTopicsTest extends IntegrationTestCase
      * the collector is where that is checked, once, rather than in each of
      * five renderers.
      */
-    public function testEveryTopicPublishesFiveHeadlineFigures(): void
+    public function testEveryTopicPublishesFourHeadlineFigures(): void
     {
         $this->aCatalogue(['patrols' => 0]);
 
         foreach ($this->topics()->forScope(PerformanceScope::organisation(), self::period()) as $topic) {
-            self::assertCount(5, $topic->kpis(PerformanceScope::organisation(), self::period()), $topic->key());
+            self::assertCount(4, $topic->kpis(PerformanceScope::organisation(), self::period()), $topic->key());
         }
+    }
+
+    /**
+     * AND THE ROW EACH ONE DRAWS IS THE DESIGN'S, label for label and in
+     * order. A topic's four are a sentence read left to right, so the
+     * order is part of the drawing and not a detail of assembly.
+     */
+    public function testEachTopicsRowIsTheDesignsRowInOrder(): void
+    {
+        $this->aCatalogue(['patrols' => 0]);
+
+        $rows = [];
+        foreach ($this->topics()->forScope(PerformanceScope::organisation(), self::period()) as $topic) {
+            $rows[$topic->key()] = array_map(
+                static fn (TopicKpi $kpi): string => $kpi->label,
+                $topic->kpis(PerformanceScope::organisation(), self::period()),
+            );
+        }
+
+        self::assertSame(['Positions', 'Filled', 'Vacant', 'Over threshold'], $rows['staffing']);
+        self::assertSame(['Declared', 'Met', 'Off track', 'No figure yet'], $rows['goals']);
+        self::assertSame(['Items raised', 'Unowned', 'Resolved', 'Records'], $rows['attention']);
     }
 
     /**
@@ -126,11 +149,12 @@ final class PerformanceTopicsTest extends IntegrationTestCase
         self::assertNotNull($staffing);
 
         $figures = $staffing->kpis(PerformanceScope::organisation(), self::period());
-        $overThreshold = $figures[4];
+        $overThreshold = $figures[3];
 
         self::assertSame('staffing.over_threshold', $overThreshold->key);
         self::assertSame(1.0, $overThreshold->value);
         self::assertStringContainsString('1 more stood empty', $overThreshold->caption);
+        self::assertStringContainsString('unfilled past', $overThreshold->caption);
     }
 
     /**
@@ -173,7 +197,9 @@ final class PerformanceTopicsTest extends IntegrationTestCase
 
         self::assertSame(1.0, $figures['goals.no_figure']);
         self::assertSame(0.0, $figures['goals.met']);
-        self::assertSame(0.0, $figures['goals.missed']);
+        // At risk and missed are one card now; neither is inflated by a
+        // goal nothing can be measured against.
+        self::assertSame(0.0, $figures['goals.off_track']);
         self::assertSame(1.0, $figures['goals.declared']);
     }
 
@@ -308,7 +334,7 @@ final class PerformanceTopicsTest extends IntegrationTestCase
         // The stand-in module publishes 12 under a column it calls "Open",
         // declaring the items-raised role; the host never reads the word.
         self::assertSame(12.0, $figures['attention.raised']);
-        self::assertSame(1.0, $figures['attention.measuring']);
+        self::assertArrayNotHasKey('attention.measuring', $figures, 'Coverage is a caption, not a plate.');
     }
 
     /**

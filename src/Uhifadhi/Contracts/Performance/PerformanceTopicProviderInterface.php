@@ -22,7 +22,7 @@ use Uhifadhi\Contracts\Kpi\FigurePeriod;
  * columns on every department, and half its cells were about departments
  * that had never attached the module — a matrix of comparable figures
  * where the figures were not comparable. So a module publishes its OWN
- * page section instead: five headline figures, two or three charts, and a
+ * page section instead: four headline figures, two or three charts, and a
  * matrix of the departments that actually read it. Adding a module adds a
  * topic and touches nothing else — no host column changes, no department
  * row changes, no shared list to edit.
@@ -85,10 +85,21 @@ interface PerformanceTopicProviderInterface
     public function title(): string;
 
     /**
-     * EXACTLY FIVE HEADLINE FIGURES. A topic with less to say fills the
-     * slot with a figure that states its own absence: a row of three
-     * where the design has five is a different design, and a reader
-     * cannot tell a short row from a quiet month.
+     * EXACTLY FOUR HEADLINE FIGURES, in one row — ruled 2026-09-21, and
+     * the same rule every figure row in the product keeps: four to a
+     * row, never five, and never two rows on a record. A fifth card
+     * wrapped an orphan onto a second line on a small laptop, and the
+     * owner's verdict on that was plain.
+     *
+     * A TOPIC WITH LESS TO SAY FILLS THE SLOT with a figure that states
+     * its own absence: a row of three where the design has four is a
+     * different design, and a reader cannot tell a short row from a
+     * quiet month.
+     *
+     * A TOPIC WITH MORE TO SAY FOLDS, rather than dropping. Two verdicts
+     * that a reader acts on the same way are one card with both in its
+     * fragment — the goals topic's "Off track · 2 at risk · 1 missed" —
+     * and a figure another card already implies is not a figure.
      *
      * @return list<TopicKpi>
      */

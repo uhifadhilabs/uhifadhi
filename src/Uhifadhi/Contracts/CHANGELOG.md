@@ -8,6 +8,11 @@
 
 Not released yet.
 
+ * a performance topic publishes EXACTLY FOUR headline figures, one row
+   (ruled) — `PerformanceTopicProviderInterface::kpis()`; a topic with more to
+   say folds two verdicts into one card rather than dropping one
+ * `KpiRole::ItemsResolved` — what a module closed in the period, without
+   which a rising count of raised items cannot be read
  * `Performance\TopicLedgerInterface` — a topic whose reading is a ledger
    rather than one moving number, declared beside the topic provider so the
    across-the-topics strip can be four cards without a page naming a topic

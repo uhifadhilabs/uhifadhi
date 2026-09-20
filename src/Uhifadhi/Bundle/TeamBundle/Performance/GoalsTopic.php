@@ -113,7 +113,31 @@ final readonly class GoalsTopic implements PerformanceTopicProviderInterface, To
         $tally = self::tally($states);
         $departments = \count($states);
 
+        $atRisk = $tally[GoalStateEnum::AtRisk->value];
+        $missed = $tally[GoalStateEnum::Missed->value];
+
+        /*
+         * FOUR, IN THE DESIGN'S ORDER: what was declared, what was met,
+         * what is not on course, and what nothing can be measured
+         * against.
+         *
+         * AT RISK AND MISSED ARE ONE CARD. They are two verdicts a
+         * reader acts on the same way — this is not going to land, so
+         * somebody has to decide — and a row of four has no room for
+         * the distinction as a plate. It is not lost: the fragment
+         * keeps them apart ("2 at risk · 1 missed"), and the BRIEFING
+         * asks about them separately, because the two asks really are
+         * different once you are deciding rather than counting (a
+         * missed goal is finished; one at risk can still be moved).
+         */
         return [
+            new TopicKpi(
+                key: 'goals.declared',
+                label: 'Declared',
+                value: (float) $declared,
+                caption: \sprintf('by %d of %d departments', $declaring, $departments),
+                polarity: ColumnPolarity::None,
+            ),
             new TopicKpi(
                 key: 'goals.met',
                 label: 'Met',
@@ -122,36 +146,22 @@ final readonly class GoalsTopic implements PerformanceTopicProviderInterface, To
                 polarity: ColumnPolarity::Up,
             ),
             new TopicKpi(
-                key: 'goals.at_risk',
-                label: 'At risk',
-                value: (float) $tally[GoalStateEnum::AtRisk->value],
-                caption: 'still open, and behind',
-                polarity: ColumnPolarity::Down,
-            ),
-            new TopicKpi(
-                key: 'goals.missed',
-                label: 'Missed',
-                value: (float) $tally[GoalStateEnum::Missed->value],
-                caption: 'closed, and short',
+                key: 'goals.off_track',
+                label: 'Off track',
+                value: (float) ($atRisk + $missed),
+                caption: \sprintf('%d at risk · %d missed', $atRisk, $missed),
                 polarity: ColumnPolarity::Down,
             ),
             /*
              * NOT A MISS AND NOT A PASS. A goal whose module has not
              * reported is counted here and nowhere else, so neither of
-             * the two verdicts above is inflated by a silence.
+             * the verdicts above is inflated by a silence.
              */
             new TopicKpi(
                 key: 'goals.no_figure',
                 label: 'No figure yet',
                 value: (float) $tally[GoalStateEnum::NoFigure->value],
                 caption: 'nothing published to measure against',
-                polarity: ColumnPolarity::None,
-            ),
-            new TopicKpi(
-                key: 'goals.declared',
-                label: 'Declared',
-                value: (float) $declared,
-                caption: \sprintf('by %d of %d departments', $declaring, $departments),
                 polarity: ColumnPolarity::None,
             ),
         ];

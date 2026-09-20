@@ -232,7 +232,7 @@ final class PerformanceOverviewTest extends WebTestCaseWithSchema
         self::assertResponseIsSuccessful();
         self::assertSame('Staffing', $crawler->filter('.tphead .t')->text());
         self::assertSame('the host', $crawler->filter('.tphead .by')->text());
-        self::assertCount(5, $crawler->filter('.tpk .c.kpi'), 'exactly five, or a reader cannot tell a short row from a quiet month');
+        self::assertCount(4, $crawler->filter('.tpk .c.kpi'), 'exactly four, or a reader cannot tell a short row from a quiet month');
         self::assertCount(1, $crawler->filter('#tp-matrix.pfc'));
         self::assertGreaterThan(0, $crawler->filter('#tp-matrix .legend')->count());
     }
