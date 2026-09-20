@@ -1186,6 +1186,36 @@ i.livedot.none::after { animation: none; border: 0; }
     i.livedot::after { animation: none; opacity: .34; }
 }
 
+/* ==================== THE PAGE HINT ====================
+   ONE ROW, AT THE BOTTOM, AND ONLY WHERE A PAGE NEEDS IT — ruled: a page
+   that has something to explain says it ONCE, as a fragment, under the thing
+   it is about. Not two cards of prose above the register (which is what the
+   files hub had, and what the design deleted), and not a paragraph in the
+   lead: a reader comes to a register to find something, and the explanation
+   is what they want after they have failed to.
+
+   IT IS AT THE BOTTOM because that is where somebody who needs it looks. A
+   hint above the content is read by everybody, every visit, forever; a hint
+   below it is read by the person still wondering.
+
+   THE DASHED ACCENT EDGE says "this is the product talking, not your data" —
+   the one place a page speaks in its own voice. The values are the design's
+   `.f-say`, read value for value; it was drawn four times in four module
+   sheets under four names, which is exactly the kind of thing that belongs
+   here once.
+
+   ONE PER PAGE. Two hints is an essay in instalments, and the second is the
+   one nobody reads.
+   ============================================================================ */
+.pghint {
+    display: flex; gap: 12px; align-items: flex-start;
+    border: 1px dashed color-mix(in srgb, rgb(var(--c-acc)) 42%, transparent);
+    border-radius: 12px; padding: 13px 15px; margin: 22px 0 0;
+    font-size: 12.5px; color: rgb(var(--c-fog)); line-height: 1.6;
+}
+.pghint svg { flex: none; color: rgb(var(--c-acc)); margin-top: 2px; width: 17px; height: 17px; }
+.pghint b { color: rgb(var(--c-tx)); }
+
 /* ==================== THE CHART PRIMITIVES ====================
    A PLOTTED FIGURE IS HOUSE VOCABULARY, and it was on loan: `.ch` and its
    parts lived in a module's sheet under a name that is nobody's module,

@@ -335,6 +335,14 @@ final class LayoutContract
         'more',
         'mdot',
 
+        // THE PAGE HINT — one row, at the BOTTOM, where a page has
+        // something to explain. Ruled: said once, as a fragment, under
+        // the thing it is about, and never as two cards of prose above
+        // a register. One per page, and the shell draws it (`@Shell/
+        // _page_hint.html.twig`) so every hint in the product reads
+        // alike — the design had four near-copies in four module sheets.
+        'pghint',
+
         // WHERE SOMEBODY IS, RIGHT NOW — the one mark the accent is reserved
         // for. `.livedot` is two presentations of one primitive: a `<g>` inside
         // an SVG, drawn in the plate palette because imagery is dark in both

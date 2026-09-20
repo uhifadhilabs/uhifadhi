@@ -8,6 +8,12 @@
 
 Not released yet.
 
+ * THE PAGE HINT (ruled): a page that has something to explain says it ONCE,
+   as a fragment at the BOTTOM — `@Shell/_page_hint.html.twig` and `.pghint`,
+   the design's `.f-say` values. A hint above the content is read by everybody
+   on every visit; one below it is read by the person still wondering. The
+   conformance suite refuses a module's own copy, which is the fifth the same
+   card was drawn as before the design hoisted it
  * the chart primitives (`.ch` and its axis, gridlines and tick labels) are
    the shell's now. They were on loan in a module's sheet under a name that is
    nobody's module, restated there the way `.kpi` once was

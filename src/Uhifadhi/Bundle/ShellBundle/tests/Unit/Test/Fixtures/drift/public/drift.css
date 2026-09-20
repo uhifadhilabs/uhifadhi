@@ -4,3 +4,6 @@
 
 /* A running state told apart instead of judged — the thing the ruling refuses. */
 .drift-st.wip { color: var(--cat-3); border-color: var(--cat-3); }
+
+/* A fifth near-copy of the page hint, under a fifth name — refused. */
+.drift-say { border: 1px dashed var(--acc); border-radius: 12px; padding: 13px 15px; }

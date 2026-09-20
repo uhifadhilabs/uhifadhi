@@ -331,6 +331,66 @@ abstract class VocabularyConformanceTestCase extends TestCase
      * meant.
      */
     /**
+     * NO MODULE DRAWS ITS OWN PAGE HINT — ruled: a page that has something to
+     * explain says it ONCE, as a fragment at the bottom, in the shell's
+     * `.pghint`.
+     *
+     * THIS ONE HAS A HISTORY, which is why it is a rule and not a note. The
+     * same dashed-accent card was drawn FOUR times in four module sheets
+     * under four names — `.f-say`, `.wf-say`, `.i-lensnote`, `.p-note` —
+     * differing by a padding value, and the design hoisted them itself after
+     * the fourth. A fifth near-copy under a fifth name is the failure this
+     * refuses: a reader would meet the same card in two weights depending on
+     * which page they were on.
+     *
+     * WHAT IS REFUSED IS A COPY, not the idea. A module writes
+     * `@Shell/_page_hint.html.twig` and gets the house one; what it may not
+     * do is define a `-say`, `-note` or `-hint` class of its own that draws a
+     * dashed bordered block with an accent edge.
+     */
+    public function testNoOwnSheetDrawsAPageHintOfItsOwn(): void
+    {
+        $copies = [];
+        foreach (self::hintLikeRules(self::ownCss()) as $selector => $body) {
+            if (1 === preg_match('/border(?:-color)?\s*:[^;]*dashed|dashed[^;]*(?:--acc|--c-acc)/', $body)) {
+                $copies[] = $selector;
+            }
+        }
+        sort($copies);
+
+        self::assertSame([], $copies, \sprintf(
+            "This bundle draws its own page hint: %s.\n"
+            .'A page says its one thing through @Shell/_page_hint.html.twig — the same card was drawn four times '
+            .'in four sheets under four names before it was hoisted, and a fifth is a reader meeting one card in '
+            .'two weights.',
+            implode(', ', $copies),
+        ));
+    }
+
+    /**
+     * THE RULES WHOSE SELECTOR NAMES A HINT-SHAPED THING, by the words those
+     * four copies were called: a class ending in `-say`, `-note` or `-hint`.
+     * A longer word does not count — `.p-notebook` is furniture, not a hint.
+     *
+     * @return array<string, string> selector to the declarations inside it
+     */
+    private static function hintLikeRules(string $css): array
+    {
+        $css = (string) preg_replace('#/\*.*?\*/#s', '', $css);
+
+        $rules = [];
+        preg_match_all('/([^{}]+)\{([^{}]*)\}/', $css, $matches, \PREG_SET_ORDER);
+        foreach ($matches as [, $selector, $body]) {
+            $selector = trim(preg_replace('/\s+/', ' ', $selector) ?? '');
+            if (1 === preg_match('/\.[a-z0-9]+-(?:say|note|hint)(?![a-z0-9-])/i', $selector)) {
+                $rules[$selector] = $body;
+            }
+        }
+
+        return $rules;
+    }
+
+    /**
      * A RUNNING STATE WEARS THE ACCENT, and never a category or a module's
      * own hue — RULED 2026-09-21, in the owner's words "the accent, since it
      * is reserved for live".

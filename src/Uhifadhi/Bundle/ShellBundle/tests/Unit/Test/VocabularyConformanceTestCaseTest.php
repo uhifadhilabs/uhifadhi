@@ -76,6 +76,19 @@ final class VocabularyConformanceTestCaseTest extends TestCase
         self::drifting()->testNoRunningStateIsColouredWithACategoryOrAModuleHue();
     }
 
+    /**
+     * A MODULE'S OWN PAGE HINT FAILS — the ruling, enforced. The same
+     * dashed-accent card was drawn four times under four names before it was
+     * hoisted; a fifth is a reader meeting one card in two weights.
+     */
+    public function testAModulesOwnPageHintFails(): void
+    {
+        $this->expectException(AssertionFailedError::class);
+        $this->expectExceptionMessageMatches('/drift-say/');
+
+        self::drifting()->testNoOwnSheetDrawsAPageHintOfItsOwn();
+    }
+
     /** The reader is watched working too, or a failure could be an empty sweep. */
     public function testTheDriftingBundlesOwnVocabularyIsSeen(): void
     {

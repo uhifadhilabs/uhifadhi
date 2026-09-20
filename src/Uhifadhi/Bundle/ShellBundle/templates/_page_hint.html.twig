@@ -1,0 +1,29 @@
+{# THE PAGE HINT — one row, at the bottom, and only where a page needs one.
+
+   RULED: a page with something to explain says it ONCE, as a fragment, under
+   the thing it is about. The files hub carried two cards of prose above its
+   register and the design deleted them: a reader comes to a register to find
+   something, and the explanation is what they want after they have failed to.
+   So a hint sits at the BOTTOM, where the person still wondering will look,
+   rather than above the content where everybody reads it on every visit
+   forever.
+
+   PARAMETERS:
+     lead  the first few words, in bold — what the hint IS about, so a reader
+           can tell in one glance whether it is theirs
+     say   the rest of it, one sentence or two. Fragments, not an essay: what
+           does not fit here belongs in the module's own docs
+     icon  a ux-icons name, or nothing for the shell's own (`shell:info`)
+
+   ONE PER PAGE. Two hints is an essay in instalments, and the second is the
+   one nobody reads — which is why this is a partial a page includes once and
+   not a list it feeds.
+
+   THE MARKUP IS THE SHELL'S so every hint in the product reads alike, and a
+   module that drew its own would be the fifth near-copy of the same card (the
+   design had four, in four module sheets, under four names). The conformance
+   suite refuses one. #}
+<div class="pghint">
+    {{ ux_icon(icon|default('shell:info')) }}
+    <div><b>{{ lead }}</b> {{ say }}</div>
+</div>
