@@ -8,6 +8,12 @@
 
 Not released yet.
 
+ * a live position's breathing ring is no longer CLIPPED: the marker's box is
+   sized by the ring at full breath (2.05 × the radius plus half its stroke)
+   rather than by the dot, so the pulse is round instead of a square-ish
+   flicker. The box passes pointer events through and the dot takes them back,
+   so a marker four times the size of its mark does not steal the cursor from
+   the map under it
  * A CHART SERIES IS A CATEGORY, NOT A COLOUR: `ChartSeries::$cat` (1-18),
    resolved where the chart is drawn by the new `chart-plate` controller — at
    mount and again when the theme flips, the same door the map plate's layers

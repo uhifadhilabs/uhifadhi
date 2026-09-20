@@ -82,10 +82,34 @@ const STYLES = {
     point: (color) => ({ radius: 6, color, weight: 1.5, fillColor: color, fillOpacity: 0.85 }),
 };
 
-/* THE LIVE MARK'S BOX. Wide enough for the dot and the age beside it, and
- * anchored on the dot's centre so the point the phone reported is the point
- * the dot sits on rather than the corner of a label. */
-const LIVE_MARK = { width: 64, height: 22, cx: 9, cy: 11, r: 8 };
+/* THE LIVE MARK'S BOX, AND IT IS SIZED BY THE RING AT FULL BREATH.
+ *
+ * The ring animates to 2.05× (`lv-breathe`), and an SVG clips to its own
+ * viewport — so a box drawn to fit the DOT cut the breathing ring off at the
+ * top, the bottom and the left, and the pulse came out as a square-ish
+ * flicker instead of the round one the design draws. The design's own dots
+ * live inside the plate's big SVG, where there is room; a marker has only the
+ * box it is given.
+ *
+ * SO THE HALF-EXTENT IS THE RING'S: 2.05 × (r + half the stroke), rounded up.
+ * `cx`/`cy` sit at that half-extent, the anchor sits on them, and the width
+ * adds the age label's room to the right. The stale ring (`scale(1.35)`) is
+ * well inside it.
+ */
+const LIVE_RING_SCALE = 2.05;
+const LIVE_RING_STROKE = 1.6;
+const LIVE_R = 8;
+/** How far the ring reaches from the core's centre at full breath. */
+const LIVE_REACH = Math.ceil(LIVE_RING_SCALE * (LIVE_R + LIVE_RING_STROKE / 2));
+/** Room for "4 h 21" beside the dot, at the 8px the sheet draws it. */
+const LIVE_AGE_ROOM = 37;
+const LIVE_MARK = {
+    width: LIVE_REACH + LIVE_R + 3 + LIVE_AGE_ROOM,
+    height: LIVE_REACH * 2,
+    cx: LIVE_REACH,
+    cy: LIVE_REACH,
+    r: LIVE_R,
+};
 
 /*
  * THE SPOTLIGHT, ONE ANSWER FOR THE WHOLE PLATFORM. Hovering a row in a list

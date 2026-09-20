@@ -202,6 +202,19 @@
     border: 1px solid color-mix(in srgb, rgb(var(--c-tx)) 18%, transparent);
 }
 .map-legend .lay .sw.ln { height: 0; border: 0; border-top: 2.2px solid currentColor; border-radius: 0; }
+/* THE LIVE MARK'S BOX IS BIGGER THAN THE MARK, so the ring has room to
+   breathe — and a box that captured clicks over all of it would make a
+   38-pixel square of empty air steal the cursor from whatever is under it on
+   the map. The box passes pointer events through; the dot itself takes them
+   back, so what is clickable is what is drawn.
+
+   `overflow: visible` besides, because Leaflet's own marker rules and an
+   SVG's default viewport both clip, and the ring at full breath reaches
+   exactly to the edge of the box this controller sizes. */
+.leaflet-marker-icon > svg { overflow: visible; pointer-events: none; }
+.leaflet-marker-icon > svg .livedot .lv-core,
+.leaflet-marker-icon > svg .livedot .lv-ini { pointer-events: auto; }
+
 /* A ROW WHOSE MARK IS A DOT rather than a patch of colour — a live position,
    and the two states beside it. The swatch box keeps its size so the rows stay
    on one grid, and holds the shell's `.livedot` instead of painting itself. */
