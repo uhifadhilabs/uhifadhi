@@ -125,15 +125,75 @@ final class OrgDashboardTest extends WebTestCase
         self::assertCount(0, $this->crawl('/')->filter('[data-w="watches"]'), 'And a module cell nobody ships is simply absent.');
     }
 
-    /** Every cell the core ships is the organisation's own, and drawn from its own partial. */
-    public function testTheOrganisationsOwnCellsAreTheOnlyOnesHere(): void
+    /**
+     * A MODULE'S CELL REACHES THE DASHBOARD, drawn from the MODULE'S OWN
+     * partial and reading its own figures under `by.<slug>` — the contract,
+     * exercised end to end. A page rendered with only the host's cells
+     * proves the host and nothing about the seam it exists for.
+     */
+    public function testAModulesCellIsDrawnFromItsOwnPartialOnItsOwnFigures(): void
+    {
+        $this->boot();
+        $this->signIn();
+        $this->aLiveArea('Northern Conservation Reserve');
+
+        $cell = $this->crawl('/')->filter('[data-w="patrols_org"]');
+
+        self::assertCount(1, $cell, 'The contributed cell is on the grid.');
+        self::assertStringContainsString('96 km walked today, everywhere', $cell->text(), 'It read the scope it was handed.');
+    }
+
+    /**
+     * AND IT NAMES ITSELF. Every contributed cell carries its contributor, so
+     * that the day the module is uninstalled its disappearance reads as the
+     * system working rather than as a bug.
+     */
+    public function testAContributedCellStatesWhoseFigureItIs(): void
+    {
+        $this->boot();
+        $this->signIn();
+        $this->aLiveArea('Northern Conservation Reserve');
+
+        self::assertStringContainsString(
+            'patrols',
+            $this->crawl('/')->filter('[data-w="patrols_org"] .ao-by')->text(),
+        );
+    }
+
+    /** A module's figure joins the four-to-a-row strip beside the host's own. */
+    public function testAModulesFigureJoinsTheStrip(): void
+    {
+        $this->boot();
+        $this->signIn();
+        $this->aLiveArea('Northern Conservation Reserve');
+
+        $strip = $this->crawl('/')->filter('[data-w="kpis"] .kpi');
+
+        self::assertCount(4, $strip);
+        self::assertStringContainsString('Areas', $strip->eq(0)->text(), 'The organisation’s own is first.');
+        self::assertStringContainsString('Patrols out', $strip->eq(1)->text(), 'Then the module’s.');
+    }
+
+    /** And the module's cell is counted as ITS contribution, not the host's. */
+    public function testTheHostsOwnCellsAreNotCountedAsAnybodysContribution(): void
     {
         $this->boot();
 
-        $contributors = array_values(array_unique(array_values($this->catalogue()->contributorOf())));
+        self::assertSame(['patrols' => 1], $this->catalogue()->widgetCounts());
+        self::assertSame(OrgOverviewWidgets::SLUG, $this->catalogue()->contributorOf()['areas']);
+        self::assertSame('patrols', $this->catalogue()->contributorOf()['patrols_org']);
+    }
 
-        self::assertSame([OrgOverviewWidgets::SLUG], $contributors, 'With no module installed, every cell is the host’s.');
-        self::assertSame([], $this->catalogue()->widgetCounts(), 'And nothing is counted as a module’s contribution.');
+    /** A contributed cell brings its own stylesheet, and the page links it. */
+    public function testAContributedCellBringsItsSheet(): void
+    {
+        $this->boot();
+        $this->signIn();
+
+        self::assertStringContainsString(
+            'bundles/patrols/patrols.css',
+            (string) $this->browser()->request('GET', '/')->filter('head')->html(),
+        );
     }
 
     // ---------------------------------------------------------- the empty state

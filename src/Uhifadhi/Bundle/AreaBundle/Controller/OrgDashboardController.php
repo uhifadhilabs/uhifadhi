@@ -107,7 +107,6 @@ final readonly class OrgDashboardController
             'cells' => $cells,
             'cellContext' => $context,
             'partials' => $this->catalogue->partials(),
-            'contributors' => $this->catalogue->contributorOf(),
             'moduleStylesheets' => $this->catalogue->stylesheets(),
             'libraryUrl' => $this->router->generate(self::WIDGETS_ROUTE),
         ]));
@@ -127,12 +126,15 @@ final readonly class OrgDashboardController
             'customPresets' => $this->widgets->customPresets($catalog, $user),
             'active' => $this->widgets->activeRef($catalog, $user),
             'widgets' => $this->widgets->resolve($catalog, $user),
-            'partial' => '@Area/org/_w_%s.html.twig',
+            // A MAP, NOT A PATTERN. Each cell is drawn from its own
+            // contributor's namespace — the library takes either shape, and
+            // one sprintf pattern would mean every module's cell had to live
+            // in this bundle's templates.
+            'partial' => $this->catalogue->partials(),
             // EVERY PARTIAL RENDERS THE REAL CELL ON REAL DATA, at full size:
             // the picture of a widget IS the widget, so what somebody
             // arranges here is exactly what they get.
             'widgetContext' => $this->read($now),
-            'contributors' => $this->catalogue->contributorOf(),
             'moduleStylesheets' => $this->catalogue->stylesheets(),
             'urls' => $this->urls(),
             'csrfToken' => $this->endpoint->csrfToken($catalog),

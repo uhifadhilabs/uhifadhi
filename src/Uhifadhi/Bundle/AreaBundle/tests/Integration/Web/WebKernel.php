@@ -28,6 +28,7 @@ use Symfony\UX\Map\UXMapBundle;
 use Symfony\UX\StimulusBundle\StimulusBundle;
 use Twig\Environment;
 use Uhifadhi\Bundle\AreaBundle\AreaBundle;
+use Uhifadhi\Bundle\AreaBundle\Overview\OrgOverviewContributorInterface;
 use Uhifadhi\Bundle\AreaBundle\Overview\OverviewContributorInterface;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\CheckoutTempDirTrait;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Fixtures\ChattyFigureProvider;
@@ -284,6 +285,16 @@ final class WebKernel extends Kernel
         $services->set('fake.overview_widgets.incidents', FakeOverviewWidgets::class)
             ->args(['incidents'])
             ->tag(OverviewContributorInterface::TAG);
+
+        /*
+         * AND A MODULE ANSWERING AT ORGANISATION LEVEL, tagged by hand as a
+         * real module bundle has to tag it. Without one the dashboard is
+         * rendered with nothing but the host's own cells, which proves the
+         * host and nothing about the seam the page exists for.
+         */
+        $services->set(FakeOrgWidgets::class)
+            ->args(['patrols'])
+            ->tag(OrgOverviewContributorInterface::TAG);
 
         /*
          * A BUNDLE CONTRIBUTING A SECTION TO THE AREA'S CONFIGURE STRIP,

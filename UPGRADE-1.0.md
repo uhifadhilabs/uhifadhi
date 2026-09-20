@@ -5,9 +5,20 @@
 **What changed.** The core ships a dashboard at `/` — a widget surface
 composed from contributors, exactly as an area's overview is, one scope
 wider. It is an ordinary attribute route on `AreaBundle`'s controllers, so an
-installation that already imports them has it; the page that used to answer
-`/` is the shell's welcome screen, whose content now lives at **Settings →
-Overview**.
+installation that already imports them has it.
+
+**THE ROOT ROUTE CHANGES, and here is where its two halves went.** `/` used
+to be the shell's welcome screen, which reported what was installed and told
+a new operator what to do next. Both readings kept a home:
+
+| what it was | where it is now |
+| --- | --- |
+| what is installed, at what version, where it runs, its health | **`/settings/installation`** |
+| what the platform gives you, and what is left to set up | **`/settings`** (Settings → Overview) |
+
+The shell still ships `welcome.php` as a route resource; an installation that
+prefers the old front door simply keeps importing it and does not import
+AreaBundle's controllers at `/`. One of the two answers `/`, never both.
 
 **The brandmark.** `shell.home_route` defaults to `organisation_dashboard`.
 An installation with its own front door sets its own route name, as before.

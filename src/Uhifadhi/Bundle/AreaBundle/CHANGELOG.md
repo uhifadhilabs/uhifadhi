@@ -8,6 +8,13 @@
 
 Not released yet.
 
+ * THE ORGANISATION SEAM IS EXERCISED BY A STAND-IN MODULE in this bundle's
+   own suite: a tagged contributor whose cell is drawn from its OWN partial,
+   reads its own figures under `by.<slug>`, publishes a figure into the
+   four-to-a-row strip, names itself on the card and brings its own
+   stylesheet. A dashboard rendered with only the host's cells proves the
+   host and nothing about the seam the page exists for.
+
  * THE ORGANISATION DASHBOARD IS `/`. A widget surface composed the way an
    area's overview is, one scope wider: five cells of its own — the figures
    strip, what needs a decision anywhere, the ground with everybody on it,
