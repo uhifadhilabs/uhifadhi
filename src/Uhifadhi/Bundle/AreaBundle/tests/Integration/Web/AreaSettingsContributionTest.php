@@ -56,6 +56,8 @@ final class AreaSettingsContributionTest extends WebTestCase
         $matrix = $this->matrix()->moduleMatrix();
 
         self::assertCount(2, $matrix->rows);
+        self::assertSame('Patrols', $matrix->columns[0]->label);
+        self::assertNotNull($matrix->columns[0]->description, 'A module says what it is about in its own words.');
         self::assertSame(1, $matrix->liveAreas());
         self::assertSame(1, $matrix->awaitingSetup());
         self::assertSame(1, $matrix->rows[0]->zones, 'The row carries the area\'s own zone count.');
