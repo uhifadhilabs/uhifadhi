@@ -267,11 +267,16 @@ return static function (ContainerConfigurator $container): void {
             tagged_iterator(ShellBundle::SETTINGS_CHECK_TAG),
             tagged_iterator(ShellBundle::SETTINGS_DECISION_TAG),
             tagged_iterator(ShellBundle::SETTINGS_CHANGE_TAG),
+            tagged_iterator(ShellBundle::SETTINGS_STEP_TAG),
             service_locator([
                 ModuleMatrixSourceInterface::SERVICE => service(ModuleMatrixSourceInterface::SERVICE)->ignoreOnInvalid(),
                 OrganisationIdentitySourceInterface::SERVICE => service(OrganisationIdentitySourceInterface::SERVICE)->ignoreOnInvalid(),
             ]),
             '%shell.brand_name%',
+            // WHAT THE KERNEL ACTUALLY BOOTS. A part of the core on disk that
+            // nothing registers is a directory, and the page may not report
+            // it as something this installation has.
+            param('kernel.bundles'),
         ]);
 
     $services->set('shell.settings.section', SettingsSection::class)

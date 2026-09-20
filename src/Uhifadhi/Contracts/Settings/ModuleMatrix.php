@@ -50,6 +50,16 @@ final readonly class ModuleMatrix
         return \count($this->rows) - $this->liveAreas();
     }
 
+    /**
+     * HOW MANY AREAS RUN ONE MODULE — the reading "installed once, switched
+     * on per area" is about, and the one number that separates a module
+     * somebody is using from a module somebody installed.
+     */
+    public function areasRunning(string $slug): int
+    {
+        return \count(array_filter($this->rows, static fn (AreaRun $row): bool => $row->running[$slug] ?? false));
+    }
+
     public function isEmpty(): bool
     {
         return [] === $this->rows && [] === $this->columns;

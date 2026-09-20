@@ -23,6 +23,7 @@ use Uhifadhi\Contracts\Settings\ModuleMatrix;
 use Uhifadhi\Contracts\Settings\OrganisationIdentity;
 use Uhifadhi\Contracts\Settings\SettingsCheck;
 use Uhifadhi\Contracts\Settings\SettingsFigure;
+use Uhifadhi\Contracts\Settings\SettingsStep;
 use Uhifadhi\Contracts\Settings\SettingsTab;
 
 /**
@@ -184,6 +185,59 @@ final class SettingsContractTest extends TestCase
             self::assertNotSame('', trim($tab->label()), $tab->value.' says nothing in the strip.');
             self::assertNotSame('', trim($tab->subtitle()), $tab->value.' says nothing under the head.');
         }
+    }
+
+    /**
+     * A STEP SAYS WHERE THE INSTALLATION IS, NOT WHETHER IT HAS BEGUN — the
+     * whole of what makes the checklist worth opening in year three. The
+     * value object carries `standing` and not a boolean "started", so there
+     * is no shape in which a step could say the other thing.
+     */
+    public function testAStepStatesWhereTheInstallationIsAndWhatIsLeft(): void
+    {
+        $step = new SettingsStep('import-zones', 'Import zones', 'the ground records sit in', '1 of 4 areas divided', '/areas', false, '3 areas to go');
+
+        self::assertSame('1 of 4 areas divided', $step->standing);
+        self::assertFalse($step->done);
+        self::assertSame('3 areas to go', $step->remaining);
+    }
+
+    /** Done is done, and then it carries no remainder to read. */
+    public function testAStepWithNothingOutstandingCarriesNoRemainder(): void
+    {
+        $step = new SettingsStep('add-an-area', 'Add an area', 'a place every record resolves to', '4 registered', done: true);
+
+        self::assertTrue($step->done);
+        self::assertNull($step->remaining);
+    }
+
+    /** A step nobody can name and a step that says nothing are both refused. */
+    public function testAStepWithoutAKeyOrALabelIsRefused(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        new SettingsStep('', 'Add an area', 'a place', 'none');
+    }
+
+    /**
+     * HOW MANY AREAS RUN ONE MODULE is the number that separates a module
+     * somebody is USING from a module somebody installed, which is what the
+     * "installed once, switched on per area" reading is about.
+     */
+    public function testTheMatrixCountsTheAreasRunningOneModule(): void
+    {
+        $matrix = new ModuleMatrix(
+            [new ModuleColumn('one', 'One'), new ModuleColumn('two', 'Two')],
+            [
+                new AreaRun('North', ['one' => true, 'two' => false]),
+                new AreaRun('South', ['one' => true, 'two' => false]),
+                new AreaRun('East', ['one' => false, 'two' => false]),
+            ],
+        );
+
+        self::assertSame(2, $matrix->areasRunning('one'));
+        self::assertSame(0, $matrix->areasRunning('two'), 'Installed everywhere and switched on nowhere is a real state.');
+        self::assertSame(0, $matrix->areasRunning('never-heard-of-it'));
     }
 
     /**

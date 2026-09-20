@@ -67,6 +67,7 @@ use Uhifadhi\Bundle\AreaBundle\Settings\AreaModuleMatrix;
 use Uhifadhi\Bundle\AreaBundle\Settings\AreaSetup;
 use Uhifadhi\Bundle\AreaBundle\Settings\AreaSetupCheck;
 use Uhifadhi\Bundle\AreaBundle\Settings\AreaSetupDecision;
+use Uhifadhi\Bundle\AreaBundle\Settings\AreaSteps;
 use Uhifadhi\Bundle\AreaBundle\Widget\AreaIndexWidgets;
 use Uhifadhi\Bundle\AreaBundle\Widget\AreaOverviewWidgets;
 use Uhifadhi\Bundle\AtlasBundle\Map\MapBuilderInterface;
@@ -87,6 +88,7 @@ use Uhifadhi\Contracts\Settings\ModuleMatrixSourceInterface;
 use Uhifadhi\Contracts\Settings\SettingsCheckSourceInterface;
 use Uhifadhi\Contracts\Settings\SettingsDecisionSourceInterface;
 use Uhifadhi\Contracts\Settings\SettingsFigureSourceInterface;
+use Uhifadhi\Contracts\Settings\SettingsStepSourceInterface;
 
 /*
  * The bundle's static service wiring.
@@ -166,6 +168,15 @@ return static function (ContainerConfigurator $container): void {
     $services->set('area.settings.setup_decision', AreaSetupDecision::class)
         ->args([service('area.settings.setup')])
         ->tag(SettingsDecisionSourceInterface::TAG);
+
+    /*
+     * THE THREE STEPS THAT ARE ABOUT THE GROUND. They come off the same
+     * matrix the tables do, so the checklist and the Installation tab cannot
+     * disagree about how much of this installation is set up.
+     */
+    $services->set('area.settings.steps', AreaSteps::class)
+        ->args([service('area.settings.module_matrix'), service('router')])
+        ->tag(SettingsStepSourceInterface::TAG);
 
     $services->set(ZoneRepository::class)
         ->args([service('doctrine')])

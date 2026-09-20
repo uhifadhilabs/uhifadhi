@@ -37,7 +37,7 @@ namespace Uhifadhi\Contracts\Settings;
  */
 enum SettingsTab: string
 {
-    /** What this installation is, what it runs, and who it belongs to. */
+    /** What this installation gives you, what it runs, and what is left to set up. */
     case Overview = 'overview';
 
     /** What is installed, at what version, where it runs, and its health. */
@@ -83,7 +83,7 @@ enum SettingsTab: string
     public function subtitle(): string
     {
         return match ($this) {
-            self::Overview => 'What this installation is, what it runs, and who it belongs to. Organisation scope — an area’s own settings are on the area, and a module’s are on that module’s Configure page.',
+            self::Overview => 'What this installation gives you, what it runs, and who it belongs to. Organisation scope — an area’s own settings are on the area, and a module’s are on that module’s Configure page.',
             self::Installation => 'What is installed, at what version, which areas run it, and whether any of it needs attention. This is the page that used to be the front door.',
             self::Modules => 'The catalogue: every module this installation can run, what it does, and which areas run it.',
             self::Organisation => 'Who this installation belongs to: the name it is known by, its mark, and where in the world it is.',

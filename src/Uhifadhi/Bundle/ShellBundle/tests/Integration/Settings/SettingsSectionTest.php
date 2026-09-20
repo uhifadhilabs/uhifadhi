@@ -224,6 +224,85 @@ final class SettingsSectionTest extends ShellKernelTestCase
     }
 
     /**
+     * THE FIRST SCREEN SAYS WHAT THIS INSTALLATION GIVES YOU — the page the
+     * front door's welcome used to be, kept somewhere a reader can come back
+     * to now that `/` is the organisation dashboard (ruled 2026-09-20).
+     */
+    public function testTheFirstScreenSaysWhatTheInstallationGivesYou(): void
+    {
+        $crawler = $this->get('/settings');
+
+        self::assertSame(
+            ['What this installation gives you', 'Next steps'],
+            $crawler->filter('div.pgbody h2.zone')->each(static fn (Crawler $one): string => trim($one->text())),
+        );
+        self::assertCount(3, $crawler->filter('div.pgbody .grid.g3 > .c'), 'The ground, what a module adds, and what stays true.');
+    }
+
+    /**
+     * WHAT IS HERE WHETHER A MODULE IS INSTALLED OR NOT is READ, not typed:
+     * the parts of the core, each quoting its own manifest. A hand-written
+     * list would be wrong the first time the core grew a part, on the one
+     * screen whose job is to report.
+     */
+    public function testTheGroundIsReadFromTheCoresOwnParts(): void
+    {
+        $rows = $this->get('/settings')->filter('div.pgbody .grid.g3 > .c')->first()->filter('table.tbl tr');
+
+        self::assertGreaterThan(1, $rows->count(), 'Every part of the core this kernel boots has a row.');
+        self::assertStringContainsString('uhifadhi/', $rows->first()->text(), 'A part names the package it would answer to.');
+    }
+
+    /**
+     * WHAT IS INSTALLED IS NOT WHAT CAN BE, which is the point of the last
+     * row: it stays whether or not anything is installed.
+     */
+    public function testWhatAModuleAddsKeepsItsOpenEnd(): void
+    {
+        $card = $this->get('/settings')->filter('div.pgbody .grid.g3 > .c')->eq(1);
+
+        self::assertStringContainsString('composer require', $card->text());
+        self::assertStringContainsString('anything else', $card->text());
+    }
+
+    /** And the three standing facts, drawn as the queue's own rows. */
+    public function testTheRulesTheRestFollowsAreStated(): void
+    {
+        $rules = $this->get('/settings')->filter('div.pgbody .grid.g3 > .c')->eq(2)->filter('.ao-att');
+
+        self::assertCount(3, $rules);
+        self::assertStringContainsString('registers with the registry', $rules->first()->text());
+    }
+
+    /**
+     * THE CHECKLIST IS EVERGREEN, and this is the assertion that keeps it so:
+     * nothing on the page may say "first". A page that is true only once is a
+     * page everybody stops opening, and then the one place that says what the
+     * platform gives you is a page nobody reads.
+     */
+    public function testNothingOnTheScreenClaimsToBeAFirstRun(): void
+    {
+        $body = strtolower($this->get('/settings')->filter('div.pgbody')->text());
+
+        foreach (['first installation', 'fresh installation', 'get started', 'welcome'] as $once) {
+            self::assertStringNotContainsString($once, $body, \sprintf('"%s" is true once; this page is read for years.', $once));
+        }
+    }
+
+    /**
+     * WITH NOBODY PUBLISHING A STEP the card says so rather than drawing an
+     * empty table — the checklist is assembled from whoever owns each step,
+     * and this kernel installs none of them.
+     */
+    public function testWithNoStepSourceTheChecklistStatesItsOwnAbsence(): void
+    {
+        self::assertStringContainsString(
+            'Nothing installed here publishes one yet',
+            $this->get('/settings')->filter('div.pgbody')->text(),
+        );
+    }
+
+    /**
      * EVERY SCREEN THAT IS DRAWN TO ITS SCOPE RATHER THAN TO ITS FULL DEPTH
      * SAYS SO, once, at the bottom. A reader who cannot tell whether a
      * control is missing or the feature is has been left to guess.

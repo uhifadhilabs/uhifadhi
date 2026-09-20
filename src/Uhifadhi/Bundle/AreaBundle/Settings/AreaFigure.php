@@ -31,8 +31,8 @@ use Uhifadhi\Contracts\Settings\SettingsFigureSourceInterface;
  */
 final readonly class AreaFigure implements SettingsFigureSourceInterface
 {
-    /** After what the installation runs, before who runs it. */
-    public const int POSITION = 20;
+    /** FIRST: the places come before what runs in them. */
+    public const int POSITION = 10;
 
     public function __construct(private ModuleMatrixSourceInterface $matrix)
     {
@@ -55,8 +55,8 @@ final readonly class AreaFigure implements SettingsFigureSourceInterface
             (string) $areas,
             caption: 0 === $areas
                 ? 'none registered yet'
-                : \sprintf('%d live', $matrix->liveAreas()),
-            warning: 0 === $waiting ? null : \sprintf('%d awaiting setup', $waiting),
+                : \sprintf('%d running', $matrix->liveAreas()),
+            warning: 0 === $waiting ? null : \sprintf('%d registered, empty', $waiting),
         );
     }
 }

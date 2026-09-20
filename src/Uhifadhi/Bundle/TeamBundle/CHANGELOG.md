@@ -8,6 +8,11 @@
 
 Not released yet.
 
+ * PEOPLE AND POSITIONS ON THE SETTINGS SECTION: how many people there are
+   and how many of them are POSTED (through the posting seam, so an
+   installation with no area package says the question has no answer rather
+   than reading nought), how many positions are composed and how many of
+   them grant anything, and the two steps that go with them.
  * THE PERSON'S RECORD SAYS WHERE A POSTING IS MADE AND GOES THERE. The
    Postings card stays read-only — a posting belongs to the station, in the
    area that owns the ground — and carries a door: the area's stations where

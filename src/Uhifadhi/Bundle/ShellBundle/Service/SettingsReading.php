@@ -14,9 +14,11 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\ShellBundle\Service;
 
 use Psr\Container\ContainerInterface;
+use Uhifadhi\Bundle\ShellBundle\Model\CorePart;
 use Uhifadhi\Bundle\ShellBundle\Model\InstalledPackage;
 use Uhifadhi\Contracts\Settings\CheckVerdict;
 use Uhifadhi\Contracts\Settings\DecisionUrgency;
+use Uhifadhi\Contracts\Settings\ModuleColumn;
 use Uhifadhi\Contracts\Settings\ModuleMatrix;
 use Uhifadhi\Contracts\Settings\ModuleMatrixSourceInterface;
 use Uhifadhi\Contracts\Settings\OrganisationIdentity;
@@ -29,6 +31,8 @@ use Uhifadhi\Contracts\Settings\SettingsDecision;
 use Uhifadhi\Contracts\Settings\SettingsDecisionSourceInterface;
 use Uhifadhi\Contracts\Settings\SettingsFigure;
 use Uhifadhi\Contracts\Settings\SettingsFigureSourceInterface;
+use Uhifadhi\Contracts\Settings\SettingsStep;
+use Uhifadhi\Contracts\Settings\SettingsStepSourceInterface;
 
 /**
  * EVERYTHING THE SETTINGS SCREENS DRAW, COMPOSED FROM WHOEVER OWNS IT.
@@ -70,6 +74,9 @@ final class SettingsReading
     /** @var list<SettingsChange>|null */
     private ?array $changes = null;
 
+    /** @var list<SettingsStep>|null */
+    private ?array $steps = null;
+
     private ?ModuleMatrix $matrix = null;
 
     private ?OrganisationIdentity $identity = null;
@@ -79,7 +86,9 @@ final class SettingsReading
      * @param iterable<SettingsCheckSourceInterface>    $checkSources
      * @param iterable<SettingsDecisionSourceInterface> $decisionSources
      * @param iterable<SettingsChangeSourceInterface>   $changeSources
+     * @param iterable<SettingsStepSourceInterface>     $stepSources
      * @param ContainerInterface                        $singles         the two facts that have ONE answer, not a collected many
+     * @param array<string, string>                     $bundles         the kernel's registered bundles, name => class name
      */
     public function __construct(
         private readonly Installation $installation,
@@ -87,9 +96,83 @@ final class SettingsReading
         private readonly iterable $checkSources,
         private readonly iterable $decisionSources,
         private readonly iterable $changeSources,
+        private readonly iterable $stepSources,
         private readonly ContainerInterface $singles,
         private readonly string $brandName,
+        private readonly array $bundles = [],
     ) {
+    }
+
+    /**
+     * WHAT IS HERE WHETHER A MODULE IS INSTALLED OR NOT — the parts of the
+     * core, each quoting its own manifest.
+     *
+     * READ, NEVER TYPED. A hand-written list of what the platform gives you
+     * is wrong the first time the core grows a part, on the one page whose
+     * job is to say what this installation has.
+     *
+     * INSTALLED MEANS REGISTERED. A directory this kernel does not boot is a
+     * directory, and telling somebody otherwise is telling them a screen
+     * exists where none does.
+     *
+     * @return list<CorePart>
+     */
+    public function coreParts(): array
+    {
+        return $this->installation->coreParts($this->installation->coreInstallPath(), $this->bundles);
+    }
+
+    /**
+     * WHAT A MODULE ADDS — installed once, switched on per area.
+     *
+     * The matrix's own columns, because that is where the modules are known:
+     * this card and the table on the next screen cannot then disagree about
+     * what is installed.
+     *
+     * @return list<ModuleColumn>
+     */
+    public function modules(): array
+    {
+        return $this->matrix()->columns;
+    }
+
+    /**
+     * WHAT IS LEFT TO SET UP, AND WHERE THIS INSTALLATION IS ON EACH.
+     *
+     * EVERGREEN. Not one row says whether the installation has begun; each
+     * states where it has got to, so the list is as worth opening in year
+     * three as in week one — which is the whole reason the page it sits on
+     * replaced a welcome screen.
+     *
+     * @return list<SettingsStep>
+     */
+    public function steps(): array
+    {
+        if (null !== $this->steps) {
+            return $this->steps;
+        }
+
+        $sources = [];
+        foreach ($this->stepSources as $source) {
+            $sources[] = $source;
+        }
+
+        usort($sources, static fn (SettingsStepSourceInterface $a, SettingsStepSourceInterface $b): int => $a->position() <=> $b->position());
+
+        $steps = [];
+        foreach ($sources as $source) {
+            foreach ($source->settingsSteps() as $step) {
+                $steps[] = $step;
+            }
+        }
+
+        return $this->steps = $steps;
+    }
+
+    /** How many of the steps have nothing outstanding today. */
+    public function stepsDone(): int
+    {
+        return \count(array_filter($this->steps(), static fn (SettingsStep $step): bool => $step->done));
     }
 
     /**

@@ -1,26 +1,128 @@
-{# THE SECTION'S FIRST SCREEN — how big this installation is, and what it
-   gives you.
+{# WHAT THIS INSTALLATION GIVES YOU — the section's first screen, and the
+   page the front door's welcome used to be.
 
-   THE FIGURE ROW IS SETTLED AND IS HERE. Four to a row, and not one of them
-   the section's own: how many modules run is the catalogue's answer, how many
-   areas is the areas', how many people is the team's, and what is kept is
-   whoever keeps it. A row that any one package had written would be four
-   numbers nobody owns.
+   `/` IS THE ORGANISATION DASHBOARD NOW, and what a fresh installation used
+   to be told there had to keep a home somebody can come back to. This is it
+   (ruled 2026-09-20).
 
-   THE REST OF THE BODY IS BEING AMENDED and is deliberately not drawn yet.
-   The owner ruled that what a fresh installation is told at `/` today keeps a
-   PERMANENT home on this screen — what the installation gives you, evergreen,
-   with a next-steps list that is true at any age rather than only on the
-   first day — and the amendment drawing it is in hand. Drawing the previous
-   composition here and replacing it in a week would put a screen in front of
-   people twice. #}
+   EVERGREEN, NOT A FIRST RUN, and every row is built for it: the checklist at
+   the bottom never says whether the installation has BEGUN, it says where it
+   has got to — "4 registered", "18 of 22 posted", "1 of 4 areas running" —
+   which is as worth reading in year three as in week one. A page that was
+   true once is a page everybody stops opening, and then the one place that
+   says what the platform gives you is a page nobody reads.
+
+   NOTHING ON IT IS TYPED. The figures, the parts of the core, the modules and
+   every step arrive from whoever owns the fact; a hand-written list of what
+   the platform gives you is wrong the first time it grows a part, on the one
+   screen whose whole job is to report. #}
 {% extends '@Shell/settings/_section.html.twig' %}
 
 {% block shell_page %}
     {{ include('@Shell/settings/_figures.html.twig', {figures: settings.figures}, with_context: false) }}
 
+    <h2 class="zone">What this installation gives you</h2>
+
+    <div class="grid g3">
+        <div class="c">
+            <span class="tab">The ground<span class="src">&middot; here whether a module is installed or not</span></span>
+            {# THE CORE'S OWN PARTS, each quoting its own manifest. None carries
+               a version: they ride with the core, and a version beside each
+               would invite somebody to update one alone. #}
+            <table class="tbl">
+                {%- for part in settings.coreParts -%}
+                    <tr>
+                        <td><b>{{ part.name }}</b></td>
+                        <td>{{ part.description }}</td>
+                    </tr>
+                {%- else -%}
+                    <tr><td class="fog">Composer cannot say what this core is made of from here.</td></tr>
+                {%- endfor -%}
+            </table>
+        </div>
+
+        <div class="c">
+            <span class="tab">What a module adds<span class="src">&middot; installed once, switched on per area</span></span>
+            <a class="more" href="{{ modulesUrl }}">Modules &rarr;</a>
+            <table class="tbl">
+                {%- for module in settings.modules -%}
+                    {%- set running = settings.matrix.areasRunning(module.slug) -%}
+                    <tr>
+                        <td><b>{{ module.label }}</b></td>
+                        <td>{{ module.description ?? '—' }}</td>
+                        <td class="{{ running ? 'g' : 'fog' }}">
+                            {{- running ? 'on in ' ~ running ~ ' ' ~ (running == 1 ? 'area' : 'areas') : 'on nowhere' -}}
+                        </td>
+                    </tr>
+                {%- endfor -%}
+                {# THE LAST ROW IS THE OPEN END OF THE LIST, and it is the point
+                   of the card: what is installed is not what CAN be. #}
+                <tr>
+                    <td class="fog">anything else</td>
+                    <td class="fog"><span class="mono">composer require</span> a module and its pages, its cells on the
+                        dashboard and its rows in the permission matrix arrive with it</td>
+                    <td class="fog">&mdash;</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="c">
+            <span class="tab">What stays true<span class="src">&middot; the rules the rest follows</span></span>
+            {# THREE STANDING FACTS, in the queue's own row, because they are
+               the kind of thing a reader acts on once and then relies on. They
+               name nothing installed and go out of date with nothing. #}
+            <span class="ao-att watch">
+                <span class="sev"></span>
+                <span class="bd"><span class="t"><b>A module registers with the registry and renders in the shell.</b>
+                    Nothing is wired by hand and no list here is typed — install or remove a package and the pages
+                    follow.</span></span>
+            </span>
+            <span class="ao-att watch">
+                <span class="sev"></span>
+                <span class="bd"><span class="t"><b>Nothing is granted by default, read included.</b>
+                    A person may do exactly what the position they hold grants, where their seat says.</span></span>
+            </span>
+            <span class="ao-att watch">
+                <span class="sev"></span>
+                <span class="bd"><span class="t"><b>Zero of everything is a working installation.</b>
+                    An empty page here is an honest report, never a half-finished one.</span></span>
+            </span>
+        </div>
+    </div>
+
+    <h2 class="zone">Next steps</h2>
+
+    <div class="c">
+        <span class="tab">Next steps<span class="src">&middot;
+            {%- if settings.steps is empty %} nothing installed here publishes one
+            {%- else %} the same {{ settings.steps|length }} on day one and on day one thousand &middot;
+                {{ settings.stepsDone }} with nothing outstanding{% endif -%}
+        </span></span>
+        {%- if settings.steps is empty -%}
+            <p class="use">A step arrives with whoever owns it — adding an area is one bundle's, composing a
+                position is another's. Nothing installed here publishes one yet.</p>
+        {%- else -%}
+            <table class="tbl">
+                <tr>
+                    <th>step</th>
+                    <th>what it gives</th>
+                    <th>where this installation is</th>
+                    <th>state</th>
+                </tr>
+                {%- for step in settings.steps -%}
+                    <tr>
+                        <td><b>{{ step.label }}</b></td>
+                        <td>{{ step.gives }}</td>
+                        <td>{% if step.url %}<a href="{{ step.url }}">{{ step.standing }}</a>{% else %}{{ step.standing }}{% endif %}</td>
+                        <td class="{{ step.done ? 'g' : 'w' }}">{{ step.done ? 'done' : (step.remaining ?? 'to do') }}</td>
+                    </tr>
+                {%- endfor -%}
+            </table>
+        {%- endif -%}
+    </div>
+
     {{ include('@Shell/_page_hint.html.twig', {
-        lead: 'The rest of this screen is being drawn.',
-        say: 'What this installation gives you, and what to do next at any age of it, land here. What is installed and at what version is on the Installation tab; the catalogue is on Modules; who this belongs to is on Organisation.',
+        lead: 'This is the page to come back to.',
+        say: 'It says what the installation gives you and what is left to set up, at any age. Settings is the organisation’s, not a module’s: a module keeps its own settings on its own Configure page, and what lives here is what is true of the whole installation.',
     }, with_context: false) }}
 {% endblock %}

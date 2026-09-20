@@ -84,6 +84,11 @@ final class SettingsSection
             'subtitle' => $tab->subtitle(),
             'scope' => self::SCOPE,
             'tabs' => $this->tabs($tab),
+            // THE ONE SCREEN ANOTHER SCREEN LINKS INTO BY NAME. A card that
+            // reads the strip by position would follow the wrong tab the day
+            // one is added; naming the case is safe here because a screen is
+            // not a module and the shell may say its own words.
+            'modulesUrl' => $this->addressOf(SettingsTab::Modules),
             // THE READING ITSELF, NOT ITS ANSWERS. Each screen draws a
             // different few of them, and a controller that resolved all of
             // them would run the health checks to draw the identity card.

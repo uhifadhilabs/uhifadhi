@@ -13,32 +13,35 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Settings;
 
-use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Contracts\Settings\SettingsFigure;
 use Uhifadhi\Contracts\Settings\SettingsFigureSourceInterface;
 
 /**
- * HOW MANY PEOPLE THIS INSTALLATION IS FOR.
+ * HOW MANY PEOPLE THIS INSTALLATION IS FOR, AND HOW MANY OF THEM ARE POSTED.
  *
- * ACTIVE FIRST, BECAUSE THAT IS THE NUMBER EVERY OTHER FIGURE IS ABOUT. An
- * account that has been closed still has records attached to it and still
- * appears in a history; it does not appear on a watch, in a patrol or in a
- * queue, so a headline count that included it would over-state the size of
- * the organisation the rest of the product is reporting on. The closed ones
- * are the caption's, where they belong: kept, and not counted twice.
+ * ACTIVE, BECAUSE THAT IS THE NUMBER EVERY OTHER FIGURE IS ABOUT. A closed
+ * account still has records attached to it and still appears in a history; it
+ * does not appear on a watch, in a patrol or in a queue, so a headline count
+ * that included it would over-state the organisation the rest of the product
+ * is reporting on.
  *
- * NOT SPLIT BY DEPARTMENT, though the department is what somebody reading
- * this eventually wants. A caption naming two departments is right for an
- * installation with two and wrong for one with nine, and which two would be
- * this card choosing on somebody's behalf. The department reading has a
- * screen of its own; this card says how big the organisation is.
+ * AND THE CAPTION IS WHERE THEY WORK, because that is what somebody setting
+ * an installation up is actually short of: an account nobody posted is a
+ * person the ground does not know about. Where nothing in this installation
+ * owns the ground the question has no answer, and the caption says so rather
+ * than reading nought posted.
+ *
+ * NOT SPLIT BY DEPARTMENT, though that is what somebody eventually wants. A
+ * caption naming two departments is right for an installation with two and
+ * wrong for one with nine, and which two would be this card choosing on
+ * somebody's behalf.
  */
 final readonly class PeopleFigure implements SettingsFigureSourceInterface
 {
-    /** After the areas: the places first, then who is in them. */
+    /** After the areas and what runs in them: the places, then the people. */
     public const int POSITION = 30;
 
-    public function __construct(private UserRepository $people)
+    public function __construct(private PeopleReading $reading)
     {
     }
 
@@ -49,18 +52,19 @@ final readonly class PeopleFigure implements SettingsFigureSourceInterface
 
     public function settingsFigures(): iterable
     {
-        $active = $this->people->countActive();
-        $all = $this->people->countAll();
-        $closed = $all - $active;
+        $active = $this->reading->active();
+        $posted = $this->reading->posted();
 
         yield new SettingsFigure(
             'people',
             'People',
             (string) $active,
-            caption: 0 === $active
-                ? 'nobody has an account here yet'
-                : \sprintf('%d active', $active),
-            warning: $closed > 0 ? \sprintf('%d closed', $closed) : null,
+            caption: match (true) {
+                0 === $active => 'nobody has an account here yet',
+                null === $posted => 'nothing here owns the ground, so none of them is posted anywhere',
+                default => \sprintf('%d posted', $posted),
+            },
+            warning: null !== $posted && $active > $posted ? \sprintf('%d not posted', $active - $posted) : null,
         );
     }
 }

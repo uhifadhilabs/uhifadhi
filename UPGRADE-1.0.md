@@ -54,9 +54,12 @@ children are the section's tabs — the shape an area and the files section
 already wear. The shell derives what is open from the row marked `current`,
 so nothing about this needs an installation to configure anything.
 
-**What lives there.** What is installed and at what version, which areas run
-which modules, the installation's health checks, and who the installation
-belongs to. **Two figures and two columns state their own absence on an
+**What lives there.** The first screen says **what this installation gives
+you** — the parts of the core (read from each one's own manifest, never
+typed), what each installed module adds and how many areas run it, the rules
+the rest follows, and the set-up checklist. Behind it: what is installed and
+at what version, which areas run which modules, the installation's health
+checks, and who the installation belongs to. **Two figures and two columns state their own absence on an
 ordinary installation**, and that is the honest reading rather than a gap:
 whether a package is BEHIND needs a release feed to compare against, and when
 the installation last DEPLOYED needs whatever deployed it to have said so.
@@ -71,6 +74,16 @@ Neither is a thing a running application can read about itself.
 | `shell.settings_check` | `SettingsCheckSourceInterface` | a row in the health list |
 | `shell.settings_decision` | `SettingsDecisionSourceInterface` | an item in the queue |
 | `shell.settings_change` | `SettingsChangeSourceInterface` | a row in what changed |
+| `shell.settings_step` | `SettingsStepSourceInterface` | a row in the set-up checklist |
+
+**A step is evergreen, and the contract is shaped so it cannot be otherwise.**
+`SettingsStep` carries `standing` — *where this installation is* ("4
+registered", "18 of 22 posted", "1 of 4 areas running") — and no "has it
+begun" flag, because the first screen of Settings is where the welcome page's
+content went and a page that is true only once is a page everybody stops
+opening. `done` means nothing is outstanding TODAY: an installation that adds
+a fifth area is not done with zones again until that area has some, and the
+row says so the same day.
 
 Two more facts have exactly ONE answer, so they are aliases rather than
 collected lists — two things claiming to know which modules run in which

@@ -97,6 +97,9 @@ use Uhifadhi\Bundle\TeamBundle\Service\TeamOverview;
 use Uhifadhi\Bundle\TeamBundle\Service\TeamSectionOverview;
 use Uhifadhi\Bundle\TeamBundle\Service\UserService;
 use Uhifadhi\Bundle\TeamBundle\Settings\PeopleFigure;
+use Uhifadhi\Bundle\TeamBundle\Settings\PeopleReading;
+use Uhifadhi\Bundle\TeamBundle\Settings\PositionFigure;
+use Uhifadhi\Bundle\TeamBundle\Settings\TeamSteps;
 use Uhifadhi\Bundle\TeamBundle\Shell\DepartmentAreaNavChildren;
 use Uhifadhi\Bundle\TeamBundle\Shell\DepartmentAreaSections;
 use Uhifadhi\Bundle\TeamBundle\Shell\DepartmentSectionConfiguration;
@@ -121,6 +124,7 @@ use Uhifadhi\Contracts\People\PersonPostingProviderInterface;
 use Uhifadhi\Contracts\Performance\DepartmentDirectoryInterface;
 use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
 use Uhifadhi\Contracts\Settings\SettingsFigureSourceInterface;
+use Uhifadhi\Contracts\Settings\SettingsStepSourceInterface;
 use Uhifadhi\Contracts\Shell\AreaNavChildrenInterface;
 use Uhifadhi\Contracts\Shell\AreaSectionsInterface;
 use Uhifadhi\Contracts\Shell\ConfigurationSectionsInterface;
@@ -214,9 +218,36 @@ return static function (ContainerConfigurator $container): void {
      * figure. Active, because that is the number every other figure in the
      * product is about; the closed accounts are the caption's.
      */
+    /*
+     * HOW MANY PEOPLE, HOW MANY POSTED, AND WHAT IS LEFT TO DO ABOUT IT —
+     * one reading behind a figure and a step, so a card saying "18 posted"
+     * over a checklist saying "4 to post" is arithmetic a reader can do.
+     *
+     * WHERE SOMEBODY WORKS IS NOT THIS BUNDLE'S: it arrives through the
+     * posting seam, and an installation with no area package answers
+     * nothing — which both readings state rather than reading as nought.
+     */
+    $services->set('team.settings.people', PeopleReading::class)
+        ->args([
+            service(UserRepository::class),
+            tagged_iterator(PersonPostingProviderInterface::TAG),
+        ]);
+
     $services->set('team.settings.figure', PeopleFigure::class)
-        ->args([service(UserRepository::class)])
+        ->args([service('team.settings.people')])
         ->tag(SettingsFigureSourceInterface::TAG);
+
+    $services->set('team.settings.position_figure', PositionFigure::class)
+        ->args([service(PositionRepository::class)])
+        ->tag(SettingsFigureSourceInterface::TAG);
+
+    $services->set('team.settings.steps', TeamSteps::class)
+        ->args([
+            service('team.settings.people'),
+            service(PositionRepository::class),
+            service('router'),
+        ])
+        ->tag(SettingsStepSourceInterface::TAG);
 
     $services->set(UserRepository::class)
         ->args([service('doctrine')])

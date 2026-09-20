@@ -359,6 +359,9 @@ final class WebKernel extends Kernel
         // same way the screen does rather than inserting rows behind it.
         $services->alias('test_public.registry.area_modules', 'registry.area_modules')->public();
         $services->alias('test_public.area.navigation', 'area.navigation')->public();
+        // WHAT THIS BUNDLE TELLS THE SETTINGS SECTION — the one reading with
+        // real queries in it, and the one every other contribution derives from.
+        $services->alias('test_public.area.settings.module_matrix', 'area.settings.module_matrix')->public();
         $services->alias('test_public.event_dispatcher', 'event_dispatcher')->public();
         $services->alias('test_public.token_storage', 'security.token_storage')->public();
     }

@@ -32,6 +32,8 @@ use Uhifadhi\Contracts\Settings\SettingsDecision;
 use Uhifadhi\Contracts\Settings\SettingsDecisionSourceInterface;
 use Uhifadhi\Contracts\Settings\SettingsFigure;
 use Uhifadhi\Contracts\Settings\SettingsFigureSourceInterface;
+use Uhifadhi\Contracts\Settings\SettingsStep;
+use Uhifadhi\Contracts\Settings\SettingsStepSourceInterface;
 
 /**
  * THE SETTINGS SECTION'S READING, COMPOSED FROM WHOEVER OWNS EACH FACT.
@@ -211,6 +213,40 @@ final class SettingsReadingTest extends TestCase
     }
 
     /**
+     * THE CHECKLIST IS ASSEMBLED IN THE ORDER SOMEBODY WOULD DO IT, across
+     * its owners: the ground first, then the people in it. A list grouped by
+     * the bundle that published each step would read as an accident of
+     * installation order.
+     */
+    public function testTheChecklistIsAssembledInTheOrderItsOwnersDeclared(): void
+    {
+        $reading = $this->reading(steps: [
+            $this->steps(30, $this->step('post-people'), $this->step('compose-a-position')),
+            $this->steps(10, $this->step('add-an-area'), $this->step('import-zones')),
+        ]);
+
+        self::assertSame(
+            ['add-an-area', 'import-zones', 'post-people', 'compose-a-position'],
+            array_column($reading->steps(), 'key'),
+        );
+    }
+
+    /**
+     * DONE IS COUNTED, NOT ASSERTED. The caption says how many have nothing
+     * outstanding today, which is a number that goes back down when an
+     * installation grows.
+     */
+    public function testTheChecklistCountsWhatHasNothingOutstanding(): void
+    {
+        $reading = $this->reading(steps: [
+            $this->steps(10, $this->step('a', done: true), $this->step('b'), $this->step('c', done: true)),
+        ]);
+
+        self::assertCount(3, $reading->steps());
+        self::assertSame(2, $reading->stepsDone());
+    }
+
+    /**
      * AN INSTALLATION WHERE NOBODY ANSWERS IS A READING, NOT A FAILURE. No
      * areas bundle means no matrix and a screen that says so; no identity
      * source means the wordmark the installation was shipped with, and every
@@ -295,6 +331,7 @@ final class SettingsReadingTest extends TestCase
      * @param list<SettingsCheckSourceInterface>    $checks
      * @param list<SettingsDecisionSourceInterface> $decisions
      * @param list<SettingsChangeSourceInterface>   $changes
+     * @param list<SettingsStepSourceInterface>     $steps
      * @param array<string, object>                 $singles
      */
     private function reading(
@@ -302,6 +339,7 @@ final class SettingsReadingTest extends TestCase
         array $checks = [],
         array $decisions = [],
         array $changes = [],
+        array $steps = [],
         array $singles = [],
     ): SettingsReading {
         return new SettingsReading(
@@ -310,6 +348,7 @@ final class SettingsReadingTest extends TestCase
             $checks,
             $decisions,
             $changes,
+            $steps,
             new class($singles) implements ContainerInterface {
                 /** @param array<string, object> $services */
                 public function __construct(private readonly array $services)
@@ -398,6 +437,31 @@ final class SettingsReadingTest extends TestCase
                 yield from \array_slice($this->changes, 0, $limit);
             }
         };
+    }
+
+    private function steps(int $position, SettingsStep ...$steps): SettingsStepSourceInterface
+    {
+        return new class($position, array_values($steps)) implements SettingsStepSourceInterface {
+            /** @param list<SettingsStep> $steps */
+            public function __construct(private readonly int $at, private readonly array $steps)
+            {
+            }
+
+            public function position(): int
+            {
+                return $this->at;
+            }
+
+            public function settingsSteps(): iterable
+            {
+                yield from $this->steps;
+            }
+        };
+    }
+
+    private function step(string $key, bool $done = false): SettingsStep
+    {
+        return new SettingsStep($key, 'Do the thing', 'what it gives', 'where this one is', done: $done);
     }
 
     private function decision(string $key, DecisionUrgency $urgency): SettingsDecision

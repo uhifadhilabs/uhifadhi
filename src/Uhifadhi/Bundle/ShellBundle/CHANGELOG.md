@@ -27,6 +27,14 @@ Not released yet.
    (`shell.settings_change`), and two aliases with one answer each — what
    runs where and whose installation this is. A source that throws becomes a
    row saying so rather than a 500 on the one screen that reports trouble
+ * ITS FIRST SCREEN SAYS WHAT THIS INSTALLATION GIVES YOU — the welcome
+   page's content, kept somewhere a reader can come back to now that `/` is
+   the organisation dashboard. The parts of the core are READ from each
+   one's own manifest, what a module adds comes off the same matrix the
+   tables do, and the set-up checklist is assembled from
+   `shell.settings_step`: every row states WHERE this installation is rather
+   than whether it has begun, so the page is as worth opening in year three
+   as in week one
  * ONE THING THAT NEEDS SOMEBODY, as a row: `.ao-att` moves out of the area
    overview's own sheet into the frame's, because three surfaces draw one
    from three different owners' items. Nothing about the markup changed

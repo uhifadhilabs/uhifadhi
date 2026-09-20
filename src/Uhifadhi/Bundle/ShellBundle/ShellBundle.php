@@ -229,6 +229,16 @@ final class ShellBundle extends AbstractBundle
     /** WHAT A BUNDLE TAGS TO REPORT A CHANGE TO THE INSTALLATION. */
     public const string SETTINGS_CHANGE_TAG = 'shell.settings_change';
 
+    /**
+     * WHAT A BUNDLE TAGS TO PUT A STEP ON THE SETTINGS OVERVIEW'S CHECKLIST.
+     *
+     * Adding an area is one bundle's step and composing a position another's,
+     * and a module with a step of its own publishes it the day it is
+     * installed. A hardcoded list would go stale the first time the product
+     * grew one more.
+     */
+    public const string SETTINGS_STEP_TAG = 'shell.settings_step';
+
     /** Config lives under "shell:", not the class-derived "uhifadhi_shell:". */
     protected string $extensionAlias = 'shell';
 

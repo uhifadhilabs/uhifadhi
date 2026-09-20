@@ -43,8 +43,8 @@ use Uhifadhi\Contracts\Settings\SettingsFigureSourceInterface;
  */
 final readonly class CatalogueFigure implements SettingsFigureSourceInterface
 {
-    /** The first card of the row. */
-    public const int POSITION = 10;
+    /** After the places: what runs IN them. */
+    public const int POSITION = 20;
 
     public function __construct(private ModuleCatalogue $catalogue)
     {
@@ -57,15 +57,21 @@ final readonly class CatalogueFigure implements SettingsFigureSourceInterface
 
     public function settingsFigures(): iterable
     {
-        $count = $this->catalogue->count();
+        $names = [];
+        foreach ($this->catalogue->all() as $module) {
+            $names[] = strtolower($module->getName() ?? (string) $module->getSlug());
+        }
 
         yield new SettingsFigure(
             'modules',
             'Modules installed',
-            (string) $count,
-            caption: 0 === $count
+            (string) \count($names),
+            // THE CARD NAMES THEM, because "3" answers nothing an operator
+            // was asking: which three is the question, and three is a short
+            // enough list to answer it on the card.
+            caption: [] === $names
                 ? 'nothing has registered with the catalogue yet'
-                : \sprintf('%d in the catalogue', $count),
+                : implode(' · ', $names),
             hot: true,
         );
     }

@@ -8,6 +8,10 @@
 
 Not released yet.
 
+ * THE AREA'S THREE SET-UP STEPS, on the settings section's checklist —
+   add an area, import zones, switch modules on — each stating where this
+   installation is rather than whether it has begun, and each read off the
+   same matrix the Installation tab's tables are.
  * A POSTING HAS A DOOR TO WHERE IT IS MADE. A post with nobody at it named
    the area's configure page and left the reader to find it; the empty state
    now opens that page on this very station, gated on `area.edit` — what
