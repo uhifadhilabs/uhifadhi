@@ -160,8 +160,13 @@ final class OrgDashboardTest extends WebTestCase
         );
     }
 
-    /** A module's figure joins the four-to-a-row strip beside the host's own. */
-    public function testAModulesFigureJoinsTheStrip(): void
+    /**
+     * THE ROW IS THE MODULES', AND THE ORGANISATION ONLY FILLS IT. The
+     * design's four figures are a module's each; the host's "Areas" tile is
+     * there so a fresh installation does not show a row of one, and it takes
+     * a slot no module wanted rather than the first one.
+     */
+    public function testAModulesFigureLeadsTheStripAndTheHostsOnlyFillsIt(): void
     {
         $this->boot();
         $this->signIn();
@@ -170,8 +175,30 @@ final class OrgDashboardTest extends WebTestCase
         $strip = $this->crawl('/')->filter('[data-w="kpis"] .kpi');
 
         self::assertCount(4, $strip);
-        self::assertStringContainsString('Areas', $strip->eq(0)->text(), 'The organisation’s own is first.');
-        self::assertStringContainsString('Patrols out', $strip->eq(1)->text(), 'Then the module’s.');
+        self::assertStringContainsString('Patrols out', $strip->eq(0)->text(), 'The module’s figure leads.');
+        self::assertStringContainsString('Areas', $strip->eq(1)->text(), 'The organisation’s fills the next slot.');
+    }
+
+    /**
+     * AND A MODULE'S FIGURE IS NEVER DISPLACED BY THE HOST'S. With four
+     * publishing, the host tile goes: an installation that put it first lost
+     * a module's figure off the end of the row, which is the defect this
+     * rule exists for.
+     */
+    public function testFourModuleFiguresPushTheHostsTileOut(): void
+    {
+        $this->boot(figures: 4);
+        $this->signIn();
+        $this->aLiveArea('Northern Conservation Reserve');
+
+        $strip = $this->crawl('/')->filter('[data-w="kpis"] .kpi');
+
+        self::assertCount(4, $strip, 'Still four to a row.');
+        self::assertStringNotContainsString(
+            'Areas',
+            implode(' | ', $strip->each(static fn (Crawler $one): string => $one->text())),
+            'Every slot is a module’s, so the filler is not drawn at all.',
+        );
     }
 
     /** And the module's cell is counted as ITS contribution, not the host's. */
@@ -249,8 +276,17 @@ final class OrgDashboardTest extends WebTestCase
         $strip = $this->crawl('/')->filter('[data-w="kpis"] .kpi');
 
         self::assertCount(4, $strip, 'A figure row is four to a row, filled or not.');
-        self::assertStringContainsString('nothing measured', $strip->first()->text());
-        self::assertStringContainsString('no area registered', $strip->first()->text());
+
+        // `text()` on a node list is the FIRST node's, so the whole row is
+        // read here rather than asserted against whichever tile leads.
+        $row = implode(' | ', $strip->each(static fn (Crawler $one): string => $one->text()));
+        self::assertStringContainsString('nothing measured', $row);
+        self::assertStringContainsString('no area registered', $row, 'The organisation’s own tile says why.');
+        self::assertStringContainsString(
+            'no module publishes this',
+            $strip->last()->text(),
+            'And a slot nobody filled says so rather than going missing.',
+        );
     }
 
     /** AND NO PLATE: a map of no areas is a map of nothing. */

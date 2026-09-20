@@ -88,6 +88,23 @@ widening its signature would break all of them for a screen most have no
 org-level reading for. A module with nothing to say across areas says
 nothing, and loses no cells on the area page.
 
+**The figures strip is the MODULES', four to a row.** A contributor's
+`figures()` tiles fill it in their declared priority; the organisation's own
+"Areas" tile is FILLER — it takes a slot no module wanted and never displaces
+one, because a strip that led with the host lost a module's figure off the
+end the moment four modules published. Two consequences for a module author:
+
+- your figure is never pushed out by the host's, only by another module's
+  lower `priority`;
+- **a fifth figure does not shrink the row — it waits in the library.** The
+  strip stays four, and the tiles beyond it remain in the catalogue for
+  somebody to compose onto the dashboard as optional cells. A row that grew
+  to six would stop being the four-to-a-row every figure row in the product
+  keeps.
+
+An empty slot says "nothing measured · no module publishes this". It cannot
+name the module that would have filled it: the host knows no module.
+
 **EVERY FIGURE IS THE PER-AREA READING ONE SCOPE WIDER — never a second
 aggregate.** The `Scope` is handed in for exactly that: answer
 `forScope($scope)` and let the organisation's answer BE the areas' answers.

@@ -46,10 +46,10 @@ abstract class WebTestCase extends KernelTestCase
      * @param list<string> $grants
      * @param int          $attention how many items the stand-in module raises
      */
-    protected function boot(array $grants = self::ALL_AREA_PERMISSIONS, int $attention = 2, string $clock = WebKernel::CLOCK): void
+    protected function boot(array $grants = self::ALL_AREA_PERMISSIONS, int $attention = 2, string $clock = WebKernel::CLOCK, int $figures = 1): void
     {
         self::ensureKernelShutdown();
-        $kernel = new WebKernel($grants, $attention, $clock);
+        $kernel = new WebKernel($grants, $attention, $clock, $figures);
         $kernel->boot();
         self::$kernel = $kernel;
         self::$booted = true;

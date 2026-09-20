@@ -1,26 +1,31 @@
-{# THE ORGANISATION RIGHT NOW — FOUR FIGURES OR NONE, like every figure row
-   in the product (ruled: four to a row).
+{# THE ORGANISATION RIGHT NOW — FOUR FIGURES, like every figure row in the
+   product (ruled: four to a row).
 
-   ONE TILE PER CONTRIBUTOR. The organisation's own is how many areas there
-   are; every other is a module's, at organisation scope, through the seam.
-   The page lays them out, orders them and counts nothing itself.
+   THE ROW IS THE MODULES', AND THE ORGANISATION ONLY FILLS IT. The design's
+   four are a module's each — on duty, patrols out, open incidents, files
+   kept — and none is the host's. The organisation's own "Areas" tile is
+   there because a row of one on a fresh installation says nothing: it takes
+   a slot no module wanted and never displaces one. The strip is assembled in
+   the catalogue, which is where that rule lives; this template lays out what
+   it is handed and counts nothing.
 
    A SLOT NOBODY FILLED SAYS SO, and that is what makes the empty dashboard a
    report rather than a broken page: four cards reading "nothing measured" is
-   an answer; four cards missing is a page somebody has to debug. #}
-{% set shown = figures|slice(0, 4) %}
+   an answer; four cards missing is a page somebody has to debug. It cannot
+   name the module that WOULD fill it — the host knows no module — so it says
+   what it can, which is that nothing here publishes one. #}
 <div class="grid kstrip ao-kstrip" data-w="kpis">
-    {% for tile in shown %}
+    {% for tile in figures %}
         <div class="c kpi{{ tile.tone == 'hot' ? ' hot' : '' }}{{ tile.tone == 'bad' ? ' bad' : '' }}">
             <span class="tab">{{ tile.label }}{% if tile.live %}<span class="src">&middot; <span class="ao-live"><i></i></span></span>{% endif %}</span>
             <b class="disp">{{ tile.value }}{% if tile.unit %}<em>{{ tile.unit }}</em>{% endif %}</b>
             {% if tile.subline %}<span class="sub">{{ tile.subline }}{% if tile.alarm %} &middot; <span class="r">{{ tile.alarm }}</span>{% endif %}</span>{% endif %}
         </div>
     {% endfor %}
-    {% if shown|length < 4 %}
-        {% for _ in 1..(4 - shown|length) %}
+    {% if figures|length < 4 %}
+        {% for _ in 1..(4 - figures|length) %}
             <div class="c kpi">
-                <span class="tab">From the modules</span>
+                <span class="tab">Nothing measured</span>
                 <b class="disp">&mdash;</b>
                 <span class="sub">nothing measured &middot; no module publishes this</span>
             </div>

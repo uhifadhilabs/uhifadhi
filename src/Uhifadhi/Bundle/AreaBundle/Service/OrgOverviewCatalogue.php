@@ -55,6 +55,13 @@ final readonly class OrgOverviewCatalogue
     /** Everything, in contributor order. Ruled as the one this ships on. */
     public const string DEFAULT_PRESET = 'e';
 
+    /**
+     * FOUR TO A ROW, everywhere in the product. The strip holds the first
+     * four figures the modules publish; the organisation's own tile fills a
+     * slot nobody wanted, and a fifth module's figure waits in the library.
+     */
+    public const int FIGURES = 4;
+
     /** @param iterable<OrgOverviewContributorInterface> $contributors */
     public function __construct(private iterable $contributors)
     {
@@ -203,16 +210,40 @@ final readonly class OrgOverviewCatalogue
      */
     public function figures(Scope $scope, \DateTimeImmutable $now): array
     {
-        $tiles = [];
+        $modules = [];
+        $host = [];
         foreach ($this->contributors as $contributor) {
+            $mine = OrgOverviewWidgets::SLUG === $contributor->moduleSlug();
             foreach ($contributor->figures($scope, $now) as $tile) {
-                $tiles[] = $tile;
+                if ($mine) {
+                    $host[] = $tile;
+                } else {
+                    $modules[] = $tile;
+                }
             }
         }
 
-        usort($tiles, static fn (NowTile $a, NowTile $b): int => $a->priority <=> $b->priority);
+        usort($modules, static fn (NowTile $a, NowTile $b): int => $a->priority <=> $b->priority);
+        usort($host, static fn (NowTile $a, NowTile $b): int => $a->priority <=> $b->priority);
 
-        return $tiles;
+        /*
+         * THE ROW IS THE MODULES', AND THE HOST ONLY FILLS IT.
+         *
+         * The design's strip is four module figures — on duty, patrols out,
+         * open incidents, files kept — and no tile of the organisation's own.
+         * The host's "Areas" tile exists because a row of one on a fresh
+         * installation says nothing, so it is FILLER: it takes a slot no
+         * module wanted and never displaces one. With four modules
+         * publishing, an installation that put the host first lost "Open
+         * incidents" off the end of the row — which is the whole defect.
+         *
+         * AND THE ROW STAYS FOUR. A fifth module's figure is not dropped from
+         * the product, it is dropped from THIS row: it remains in the
+         * catalogue for somebody to compose in, which is what the widget
+         * library is for. A strip that grew to six would stop being the
+         * four-to-a-row every figure row in the product keeps.
+         */
+        return \array_slice([...$modules, ...$host], 0, self::FIGURES);
     }
 
     /**

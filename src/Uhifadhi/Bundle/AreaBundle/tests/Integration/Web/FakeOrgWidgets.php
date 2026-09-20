@@ -40,7 +40,13 @@ use Uhifadhi\Contracts\Shell\Scope;
  */
 final readonly class FakeOrgWidgets implements OrgOverviewContributorInterface, ContributesStylesheetInterface
 {
-    public function __construct(private string $slug)
+    /**
+     * @param int $figures how many headline figures this stand-in publishes —
+     *                     one by default, and four where a suite needs to
+     *                     prove that a full row of module figures leaves no
+     *                     slot for the organisation's own filler
+     */
+    public function __construct(private string $slug, private int $figures = 1)
     {
     }
 
@@ -73,14 +79,19 @@ final readonly class FakeOrgWidgets implements OrgOverviewContributorInterface, 
 
     public function figures(Scope $scope, \DateTimeImmutable $now): array
     {
-        return [new NowTile(
-            index: 'ST·G1',
-            moduleSlug: $this->slug,
-            label: ucfirst($this->slug).' out',
-            value: '3',
-            subline: 'across every area',
-            priority: 50,
-        )];
+        $tiles = [];
+        for ($n = 1; $n <= $this->figures; ++$n) {
+            $tiles[] = new NowTile(
+                index: 'ST·G'.$n,
+                moduleSlug: $this->slug,
+                label: 1 === $n ? ucfirst($this->slug).' out' : ucfirst($this->slug).' figure '.$n,
+                value: '3',
+                subline: 'across every area',
+                priority: 50 + $n,
+            );
+        }
+
+        return $tiles;
     }
 
     public function context(Scope $scope, \DateTimeImmutable $now): array

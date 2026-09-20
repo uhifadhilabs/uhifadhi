@@ -88,13 +88,17 @@ final class WebKernel extends Kernel
      * @param int          $attention how many items the stand-in module
      *                                raises — two by default, and as many as
      *                                a test proving a card is BOUNDED needs
+     * @param int          $figures   how many headline figures the stand-in module
+     *                                publishes — one by default, four where a suite
+     *                                proves a full row leaves no slot for the
+     *                                organisation's own filler
      * @param string       $clock     WHEN THIS KERNEL THINKS IT IS. Pinned, and a
      *                                suite may move it: which month a page is
      *                                about is read from the clock now, so a
      *                                month boundary is a thing a test can
      *                                stand on
      */
-    public function __construct(array $grants = [], private int $attention = 2, private string $clock = self::CLOCK)
+    public function __construct(array $grants = [], private int $attention = 2, private string $clock = self::CLOCK, private int $figures = 1)
     {
         $this->grants = $grants;
         // The cache is keyed by what the viewer holds AND by what the
@@ -102,7 +106,7 @@ final class WebKernel extends Kernel
         // different fixtures must not share a compiled container. The clock
         // joins them for the same reason — a container built at one instant
         // must not answer for another.
-        parent::__construct('test'.md5(implode(',', $grants).'|'.$attention.'|'.$this->clock), true);
+        parent::__construct('test'.md5(implode(',', $grants).'|'.$attention.'|'.$this->clock.'|'.$this->figures), true);
     }
 
     public function registerBundles(): iterable
@@ -302,7 +306,7 @@ final class WebKernel extends Kernel
          * host and nothing about the seam the page exists for.
          */
         $services->set(FakeOrgWidgets::class)
-            ->args(['patrols'])
+            ->args(['patrols', $this->figures])
             ->tag(OrgOverviewContributorInterface::TAG);
 
         /*

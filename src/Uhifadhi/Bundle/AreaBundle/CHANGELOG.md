@@ -8,6 +8,15 @@
 
 Not released yet.
 
+ * THE DASHBOARD'S FIGURES STRIP IS THE MODULES', AND THE ORGANISATION ONLY
+   FILLS IT. With the roster, patrols, incidents and files all publishing,
+   the host's "Areas" tile sat first and pushed "Open incidents" off the end
+   of a four-wide row. Module figures lead, in their own priority; the
+   organisation's tile takes a slot nobody wanted and is not drawn at all
+   when four modules publish; a fifth figure waits in the library rather
+   than growing the row. An empty slot reads "nothing measured · no module
+   publishes this".
+
  * WHICH MONTH A PAGE IS ABOUT COMES FROM ONE CLOCK-FED SOURCE. Six
    surfaces here each wrote `FigurePeriod::month(new \DateTimeImmutable())`
    and asked the wall clock, so each decided the period separately: correct
