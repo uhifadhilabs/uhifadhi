@@ -362,6 +362,7 @@ final class WebKernel extends Kernel
         // WHAT THIS BUNDLE TELLS THE SETTINGS SECTION — the one reading with
         // real queries in it, and the one every other contribution derives from.
         $services->alias('test_public.area.settings.module_matrix', 'area.settings.module_matrix')->public();
+        $services->alias('test_public.area.org_catalogue', 'area.org_catalogue')->public();
         $services->alias('test_public.event_dispatcher', 'event_dispatcher')->public();
         $services->alias('test_public.token_storage', 'security.token_storage')->public();
     }

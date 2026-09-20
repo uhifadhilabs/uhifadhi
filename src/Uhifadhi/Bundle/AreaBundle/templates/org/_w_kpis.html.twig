@@ -1,0 +1,29 @@
+{# THE ORGANISATION RIGHT NOW — FOUR FIGURES OR NONE, like every figure row
+   in the product (ruled: four to a row).
+
+   ONE TILE PER CONTRIBUTOR. The organisation's own is how many areas there
+   are; every other is a module's, at organisation scope, through the seam.
+   The page lays them out, orders them and counts nothing itself.
+
+   A SLOT NOBODY FILLED SAYS SO, and that is what makes the empty dashboard a
+   report rather than a broken page: four cards reading "nothing measured" is
+   an answer; four cards missing is a page somebody has to debug. #}
+{% set shown = figures|slice(0, 4) %}
+<div class="grid kstrip ao-kstrip" data-w="kpis">
+    {% for tile in shown %}
+        <div class="c kpi{{ tile.tone == 'hot' ? ' hot' : '' }}{{ tile.tone == 'bad' ? ' bad' : '' }}">
+            <span class="tab">{{ tile.label }}{% if tile.live %}<span class="src">&middot; <span class="ao-live"><i></i></span></span>{% endif %}</span>
+            <b class="disp">{{ tile.value }}{% if tile.unit %}<em>{{ tile.unit }}</em>{% endif %}</b>
+            {% if tile.subline %}<span class="sub">{{ tile.subline }}{% if tile.alarm %} &middot; <span class="r">{{ tile.alarm }}</span>{% endif %}</span>{% endif %}
+        </div>
+    {% endfor %}
+    {% if shown|length < 4 %}
+        {% for _ in 1..(4 - shown|length) %}
+            <div class="c kpi">
+                <span class="tab">From the modules</span>
+                <b class="disp">&mdash;</b>
+                <span class="sub">nothing measured &middot; no module publishes this</span>
+            </div>
+        {% endfor %}
+    {% endif %}
+</div>

@@ -613,6 +613,8 @@ return static function (ContainerConfigurator $container): void {
             tagged_iterator('uhifadhi.map.layer'),
             tagged_iterator('uhifadhi.overview.pulse'),
             service(AreaModuleRepository::class),
+            // THE AREAS, so the attention queue can be read one scope wider.
+            service(AreaOfInterestRepository::class),
         ]);
     $services->alias(AreaOverview::class, 'area.overview');
 

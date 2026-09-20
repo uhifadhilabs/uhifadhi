@@ -35,6 +35,7 @@ final class NavGroupsAreJoinedByConstantTest extends TestCase
 {
     /** The core's own sidebar contributors. */
     private const array SOURCES = [
+        \Uhifadhi\Bundle\AreaBundle\Shell\OrgDashboardNavigation::class => NavGroup::OBSERVATORY,
         \Uhifadhi\Bundle\AreaBundle\Shell\AreaNavigation::class => NavGroup::OBSERVATORY,
         \Uhifadhi\Bundle\TeamBundle\Shell\PerformanceNavigation::class => NavGroup::OBSERVATORY,
         \Uhifadhi\Bundle\ShellBundle\Service\OrgModulesNavigation::class => NavGroup::OBSERVATORY,

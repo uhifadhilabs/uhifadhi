@@ -1,0 +1,28 @@
+{# MODULES ACROSS THE ORGANISATION — what each one puts on THIS page.
+
+   A NAME AND A COUNT, NOT A CATALOGUE. The register of what is installed
+   lives in Settings; this card answers the question a reader of the dashboard
+   actually has, which is whose figures they are looking at and how much of
+   the page each module is responsible for.
+
+   THE ORGANISATION'S OWN CELLS ARE NOT A CONTRIBUTION TO ANYBODY, so they are
+   not counted here: the question is what installing a module ADDS. #}
+<div class="c" data-w="modules">
+    <span class="tab">Modules across the organisation<span class="src">&middot; {{ moduleTable|length }} answering at organisation level</span></span>
+    {% if modulesUrl %}<a class="more" href="{{ modulesUrl }}">Settings &middot; Modules &rarr;</a>{% endif %}
+    <span class="ao-by next"><i></i>the registry</span>
+
+    {% if moduleTable is empty %}
+        <p class="zeb">No module answers at organisation level yet. A module that has an org-wide reading contributes its cells here the day it is installed.</p>
+    {% else %}
+        <table class="tbl">
+            <tr><th>module</th><th>cells on this page</th></tr>
+            {% for slug, cells in moduleTable %}
+                <tr>
+                    <td><b>{{ slug }}</b></td>
+                    <td class="g">{{ cells }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% endif %}
+</div>

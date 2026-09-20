@@ -1,0 +1,39 @@
+{# NEEDS A DECISION — everything asking for somebody, anywhere in the
+   organisation, sorted by urgency and never by module.
+
+   THE SAME QUEUE THE AREA OVERVIEW DRAWS, one scope wider: the rows are the
+   areas' rows concatenated, and the sort is the one rule both scopes use, so
+   a reader who has learnt one queue has learnt the other.
+
+   BOUNDED, LIKE EVERY LIST IN A CARD. The card draws the most urgent few and
+   says what it is drawing them out of, with the way to the rest. #}
+<div class="c" data-w="attention">
+    <span class="tab">Needs a decision<span class="src">&middot; {{ attention|length }} item{{ attention|length == 1 ? '' : 's' }} &middot; sorted by urgency, not by module</span></span>
+    <a class="more" href="{{ path('area_index') }}">Every area &rarr;</a>
+    <span class="ao-by"><i></i>the organisation &middot; module items</span>
+
+    {% for item in attention|slice(0, latest) %}
+        <a class="ao-att {{ item.severity.cssClass }}" href="{{ item.url }}">
+            <span class="sev"></span>
+            <span class="bd">
+                <span class="t"><b>{{ item.headline }}</b>{% if item.detail %} {{ item.detail }}{% endif %}</span>
+                <span class="m"><i></i>{{ item.moduleLabel }} &middot; {{ item.kind }}
+                    {%- for fact in item.meta %}<span>{{ fact }}</span>{% endfor -%}
+                </span>
+            </span>
+            <span class="age">{{ item.ageLabel }}</span>
+        </a>
+    {% else %}
+        {# A GOOD DAY IS ALLOWED TO LOOK LIKE ONE. #}
+        <p class="zeb">Nothing in the organisation is asking for a decision.
+            {% if areas is empty %}No area is registered yet, so nothing is watching.{% endif %}</p>
+    {% endfor %}
+
+    {% if attention|length > latest %}
+        <div class="ao-more">
+            <span class="mono">{{ latest }} of {{ attention|length }}</span>
+            <span class="sp"></span>
+            <span class="mono">the rest are in the modules that raised them</span>
+        </div>
+    {% endif %}
+</div>

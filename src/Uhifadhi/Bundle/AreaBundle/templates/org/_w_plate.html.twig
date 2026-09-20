@@ -1,0 +1,23 @@
+{# WHERE EVERYBODY IS — the organisation's ground, with a marker per live
+   position.
+
+   THE AREAS REGISTER'S PLATE PLUS THE MARKERS. Every area's boundary is drawn
+   — bold where it is running, quiet where it is only mapped — and the live
+   layer goes over it. One plate service, so the two pages that draw these
+   areas cannot draw them differently.
+
+   NO PLATE WHERE THERE IS NO GROUND. A map of no areas is a map of nothing,
+   so an installation with none does not draw one; the figures above it keep
+   their slots and say what they could not measure, which is the honest
+   report. #}
+{% if map is not null %}
+    <div class="c" data-w="plate">
+        <span class="tab">Where everybody is<span class="src">&middot; <span class="ao-live"><i></i>live</span> &middot; <time datetime="{{ now|date('c') }}" data-localtime-format="stamp">{{ now|date('j M') }} &middot; {{ now|date('H:i') }}</time></span></span>
+        <span class="ao-by"><i></i>the organisation&rsquo;s ground &middot; module layers</span>
+        {{ render_map(map, {
+            '--map-plate-height': 'min(58vh, 560px)',
+            'role': 'img',
+            'aria-label': 'Every area, and everybody reporting a position',
+        }) }}
+    </div>
+{% endif %}

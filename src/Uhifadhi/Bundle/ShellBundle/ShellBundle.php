@@ -396,7 +396,7 @@ final class ShellBundle extends AbstractBundle
         );
         $builder->setParameter(
             'shell.home_route',
-            \is_string($config['home_route'] ?? null) ? $config['home_route'] : 'dashboard_index',
+            \is_string($config['home_route'] ?? null) ? $config['home_route'] : 'organisation_dashboard',
         );
 
         // Which theme a visitor who has never chosen one gets. Light by default

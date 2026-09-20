@@ -1,0 +1,72 @@
+{# THE ORGANISATION DASHBOARD — what `/` is.
+
+   Design: index.html and org.widgets.js in the design workspace.
+
+   COMPOSED, NOT AUTHORED. Every figure on this page arrives from an installed
+   module through the organisation overview seam; the host owns the grid, the
+   five presets and its own five cells, and nothing else. This template names
+   no module, knows no module's numbers and contains no widget markup —
+   install a module in any area and its cells appear in the library here.
+
+   THERE IS NO SCOPE CONTROL (ruled). The dashboard IS the organisation, so a
+   dropdown here would have one setting for ever.
+
+   NO WIDGET INDICES. The design prints one in each cell's tab (RO·G1, OR·G2);
+   that is the workspace's referencing system and not product. What a reader
+   needs — WHOSE figure this is — is the contributor tag each cell carries,
+   the same mark the area overview uses. #}
+{% extends '@Shell/page.html.twig' %}
+
+{% block title %}{{ shell_brand().name }}{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {{ include('@Area/_stylesheets.html.twig') }}
+    <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Bundle\\ShellBundle\\ShellBundle::WIDGET_STYLESHEET')) }}">
+    {# AND EACH CONTRIBUTING MODULE'S OWN SHEET, once and last — a cell drawn
+       here whose rules live in its own package renders as browser defaults
+       without it. #}
+    {% for sheet in moduleStylesheets %}
+        <link rel="stylesheet" href="{{ asset(sheet) }}">
+    {% endfor %}
+{% endblock %}
+
+{# The dashboard is not inside a place, so it fills the tab socket with
+   nothing rather than inheriting an area strip. #}
+{% block shell_page_tabs %}{% endblock %}
+
+{% block shell_breadcrumbs %}{{ shell_brand().name|lower }}{% endblock %}
+
+{% block shell_page_title %}{{ shell_brand().name }}{% endblock %}
+
+{% block shell_page_subtitle %}What the whole organisation looks like this minute, composed from every module installed in every area.{% endblock %}
+
+{% block shell_page_actions %}
+    {# THE WIDGET-LIBRARY DOOR IS ONE STANDARD LINK, identical on every surface
+       in the product — not "Customize widgets", not a plus icon. Editing never
+       happens on the dashboard itself. #}
+    <a class="tgl w-act" href="{{ libraryUrl }}">{{ ux_icon('shell:layout-grid') }} Widget library</a>
+    <a class="cta" href="{{ path('area_new') }}">{{ ux_icon('shell:plus') }} New area</a>
+{% endblock %}
+
+{% block shell_page %}
+    <div class="w-grid">
+        {% for cell in cells %}
+            <div class="w-cell w-span-{{ cell.cols }}">
+                {# ONE MAP, AND NOT THE PAGE'S CONTEXT. A contributed cell is
+                   rendered `with_context: false` and reads its own figures
+                   under `by.<slug>` — the contract every module template on
+                   the area overview is already written against. #}
+                {{ include(partials[cell.id], cellContext, with_context: false) }}
+            </div>
+        {% endfor %}
+    </div>
+
+    {{ include('@Shell/_page_hint.html.twig', areas is empty ? {
+        lead: 'Nothing to show yet.',
+        say: 'Add an area, import its zones, post people, switch a module on — every figure above appears the moment a module has something to report. What this installation gives you is on Settings.',
+    } : {
+        lead: 'This page is composed, not authored.',
+        say: 'Every figure on it arrives from an installed module through the overview seam; the host owns the grid, the presets and nothing else. Install a module in any area and its cells appear in the library here.',
+    }, with_context: false) }}
+{% endblock %}

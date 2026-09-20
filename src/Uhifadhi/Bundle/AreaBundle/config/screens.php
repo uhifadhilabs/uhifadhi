@@ -18,6 +18,7 @@ use Uhifadhi\Bundle\AreaBundle\Controller\AreaCreateController;
 use Uhifadhi\Bundle\AreaBundle\Controller\AreaEditController;
 use Uhifadhi\Bundle\AreaBundle\Controller\AreaModulesController;
 use Uhifadhi\Bundle\AreaBundle\Controller\AreaWidgetsController;
+use Uhifadhi\Bundle\AreaBundle\Controller\OrgDashboardController;
 use Uhifadhi\Bundle\AreaBundle\Controller\StationConfigureController;
 use Uhifadhi\Bundle\AreaBundle\Controller\StationEditController;
 use Uhifadhi\Bundle\AreaBundle\Controller\StationRecordController;
@@ -27,18 +28,22 @@ use Uhifadhi\Bundle\AreaBundle\Controller\ZoneController;
 use Uhifadhi\Bundle\AreaBundle\Controller\ZoneEditController;
 use Uhifadhi\Bundle\AreaBundle\Controller\ZoneImportController;
 use Uhifadhi\Bundle\AreaBundle\Controller\ZoneRecordController;
+use Uhifadhi\Bundle\AreaBundle\Overview\OrgOverviewContributorInterface;
 use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\PostingRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\StationEventRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\StationRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneEventRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
+use Uhifadhi\Bundle\AreaBundle\Service\OrgOverviewCatalogue;
 use Uhifadhi\Bundle\AreaBundle\Service\StationNoticeStore;
 use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportDraftStore;
 use Uhifadhi\Bundle\AreaBundle\Shell\AreaConfigurationSections;
 use Uhifadhi\Bundle\AreaBundle\Shell\AreaNavigation;
 use Uhifadhi\Bundle\AreaBundle\Shell\AreaShellSource;
 use Uhifadhi\Bundle\AreaBundle\Shell\AreasTheViewerMayOpen;
+use Uhifadhi\Bundle\AreaBundle\Shell\OrgDashboardNavigation;
+use Uhifadhi\Bundle\AreaBundle\Widget\OrgOverviewWidgets;
 use Uhifadhi\Bundle\ShellBundle\Contract\AreaShellSourceInterface;
 use Uhifadhi\Bundle\ShellBundle\Contract\NavigationSourceInterface;
 use Uhifadhi\Bundle\ShellBundle\Model\ModuleGroup;
@@ -107,6 +112,41 @@ return static function (ContainerConfigurator $container): void {
         ])
         ->tag('controller.service_arguments');
     $services->alias(AreaWidgetsController::class, 'area.controller.widgets')->public();
+
+    /*
+     * THE ORGANISATION DASHBOARD — `/` and its widget library.
+     *
+     * A WIDGET SURFACE LIKE ANY OTHER: the catalogue is assembled from
+     * contributors, the framework resolves the person's adopted preset over
+     * it, and the controller renders. What is unusual is only the scope —
+     * the organisation rather than one area — and the readings it hands the
+     * cells are the per-area ones widened, never a second aggregate.
+     */
+    $services->set('area.org_catalogue', OrgOverviewCatalogue::class)
+        ->args([tagged_iterator(OrgOverviewContributorInterface::TAG)]);
+    $services->alias(OrgOverviewCatalogue::class, 'area.org_catalogue');
+
+    /* And the organisation's own cells, contributed the same way a module's are. */
+    $services->set('area.org_widgets', OrgOverviewWidgets::class)
+        ->args([service('area.register')])
+        ->tag(OrgOverviewContributorInterface::TAG);
+
+    $services->set('area.controller.dashboard', OrgDashboardController::class)
+        ->args([
+            service('twig'),
+            service('area.org_catalogue'),
+            service('shell.widget.service'),
+            service('shell.widget.endpoint'),
+            service('router'),
+            service('security.token_storage'),
+            service('area.register'),
+            service('area.overview'),
+            service('area.map'),
+            service('area.preset_library'),
+            service('area.presence'),
+        ])
+        ->tag('controller.service_arguments');
+    $services->alias(OrgDashboardController::class, 'area.controller.dashboard')->public();
 
     $services->set('area.controller.create', AreaCreateController::class)
         ->args([
@@ -440,5 +480,13 @@ return static function (ContainerConfigurator $container): void {
             ])
             ->tag('shell.nav_section');
         $services->alias(AreaNavigation::class, 'area.navigation');
+
+        /*
+         * DASHBOARD, THE FIRST ROW OF OBSERVATORY. `/` is a page now, so it
+         * needs a door; the brandmark points at the same address.
+         */
+        $services->set('area.dashboard_navigation', OrgDashboardNavigation::class)
+            ->args([service('router'), service('request_stack')])
+            ->tag('shell.nav_section');
     }
 };

@@ -21,7 +21,9 @@ use Uhifadhi\Bundle\AreaBundle\Overview\MapLayerProviderInterface;
 use Uhifadhi\Bundle\AreaBundle\Overview\NowTile;
 use Uhifadhi\Bundle\AreaBundle\Overview\NowTileProviderInterface;
 use Uhifadhi\Bundle\AreaBundle\Overview\PulseProviderInterface;
+use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
 use Uhifadhi\Bundle\RegistryBundle\Repository\AreaModuleRepository;
+use Uhifadhi\Contracts\Shell\Scope;
 
 /**
  * WHAT AN AREA'S OVERVIEW IS MADE OF — gathered from every module installed in
@@ -55,6 +57,11 @@ final readonly class AreaOverview
         private iterable $mapLayers,
         private iterable $pulse,
         private AreaModuleRepository $areaModules,
+        /**
+         * THE AREAS, so the queue can be read one scope wider. Nothing else
+         * here needs them: every other read is handed the area it is about.
+         */
+        private AreaOfInterestRepository $areas,
     ) {
     }
 
@@ -105,6 +112,55 @@ final readonly class AreaOverview
             }
         }
 
+        return self::byUrgency($items);
+    }
+
+    /**
+     * THE SAME QUEUE ONE SCOPE WIDER — the organisation, or one area of it.
+     *
+     * NOT A SECOND AGGREGATE. This walks the very loop {@see attentionFor()}
+     * walks, once per area, and sorts the result by the same rule; there is
+     * no org-level provider call and no other place an item can come from.
+     * The organisation's queue IS the areas' queues, which is what lets a
+     * test assert it by construction rather than by hoping two derivations
+     * agree.
+     *
+     * SORTED ACROSS AREAS, NEVER GROUPED BY THEM. Somebody reading it is
+     * asking "what do I have to do", and a list arranged by where it
+     * happened makes them read all of it to find out. Which area an item is
+     * in is a fact on the row.
+     *
+     * @return list<AttentionItem>
+     */
+    public function attentionForScope(Scope $scope, \DateTimeImmutable $now): array
+    {
+        if (!$scope->isOrganisation()) {
+            $area = $this->areas->findOneBy(['uuid' => $scope->areaUuid]);
+
+            return null === $area ? [] : $this->attentionFor($area, $now);
+        }
+
+        $items = [];
+        foreach ($this->areas->findAllOrdered() as $area) {
+            foreach ($this->attentionFor($area, $now) as $item) {
+                $items[] = $item;
+            }
+        }
+
+        return self::byUrgency($items);
+    }
+
+    /**
+     * URGENCY FIRST, THEN OLDEST — because a thing that has been waiting
+     * longer is the more embarrassing one. One rule, so a queue read at one
+     * scope orders the same way as a queue read at another.
+     *
+     * @param list<AttentionItem> $items
+     *
+     * @return list<AttentionItem>
+     */
+    private static function byUrgency(array $items): array
+    {
         usort($items, static fn (AttentionItem $a, AttentionItem $b): int => [$a->severity->rank(), -$a->ageSeconds] <=> [$b->severity->rank(), -$b->ageSeconds]);
 
         return $items;

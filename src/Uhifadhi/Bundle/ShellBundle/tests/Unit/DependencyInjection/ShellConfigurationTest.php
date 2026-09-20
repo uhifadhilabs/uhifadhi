@@ -33,7 +33,7 @@ final class ShellConfigurationTest extends TestCase
     {
         self::assertSame([
             'brand_name' => 'Uhifadhi',
-            'home_route' => 'dashboard_index',
+            'home_route' => 'organisation_dashboard',
             'default_theme' => 'light',
         ], $this->process([]));
     }

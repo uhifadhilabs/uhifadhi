@@ -8,6 +8,31 @@
 
 Not released yet.
 
+ * THE ORGANISATION DASHBOARD IS `/`. A widget surface composed the way an
+   area's overview is, one scope wider: five cells of its own — the figures
+   strip, what needs a decision anywhere, the ground with everybody on it,
+   the areas and what runs where — and every operational cell contributed
+   through the new `uhifadhi.overview.org_widget_provider` seam
+   (`Overview\OrgOverviewContributorInterface`). The five compositions are
+   the design's to the twelfth and **E, everything in contributor order, is
+   the one it ships on**; a composition may name a cell a module has not
+   installed, and the catalogue composes it down rather than refusing it, so
+   the same five designs get richer as an installation grows. Its library is
+   `/widgets`, the shell's shared component on this surface's catalogue.
+ * AN EMPTY DASHBOARD IS A REPORT, NOT A BROKEN PAGE. With no areas the
+   figures keep their four slots and say what was not measured and why, no
+   plate is drawn — a map of no areas is a map of nothing — and the hint
+   carries the one door out, to what this installation gives you.
+ * DASHBOARD IS THE FIRST ROW OF OBSERVATORY, and the brandmark points at it:
+   `/` is a page now, and a page only reachable by clicking a logo is one
+   most people never reach twice. It lights on `/` alone, because its
+   address is the prefix of every other.
+ * THE QUEUE READS ONE SCOPE WIDER: `AreaOverview::attentionForScope()` —
+   the same per-area loop concatenated and sorted by the one rule, never a
+   second aggregate. `AreaMapService::organisation()` is the network map plus
+   the live layer, and `AreaPresetLibrary::mapAreas()` is public so both
+   surfaces turn a register row into a plate the same way.
+
  * A LINK THAT NAMES A CLOSED STATION SHOWS IT. The register rests on the
    active posts, so "Edit the station" on a closed post's record resolved
    the row, found it on no page and drew the register without it — a dead

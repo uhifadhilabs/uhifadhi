@@ -221,7 +221,17 @@ final readonly class AreaPresetLibrary
      *
      * @return list<array{name: string, live: bool, href: string, boundary: string|null}>
      */
-    private function mapAreas(array $rows): array
+    /**
+     * HOW A REGISTER ROW BECOMES A THING ON A PLATE — the one mapping, public
+     * because two surfaces draw the same areas: this library's own plate and
+     * the organisation dashboard's. Two copies would be two answers about
+     * which areas count as running.
+     *
+     * @param list<AreaRow> $rows
+     *
+     * @return list<array{name: string, live: bool, href: string, boundary: string|null}>
+     */
+    public function mapAreas(array $rows): array
     {
         $areas = [];
         foreach ($rows as $row) {

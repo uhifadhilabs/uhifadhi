@@ -24,6 +24,7 @@ use Uhifadhi\Bundle\AtlasBundle\Model\Boundary;
 use Uhifadhi\Bundle\AtlasBundle\Model\GeoJsonLayer;
 use Uhifadhi\Bundle\AtlasBundle\Model\LayerShape;
 use Uhifadhi\Bundle\AtlasBundle\Model\LegendItem;
+use Uhifadhi\Contracts\Area\LivePresence;
 use Uhifadhi\Contracts\Atlas\PlatePalette;
 
 /**
@@ -130,6 +131,23 @@ final readonly class AreaMapService
         }
 
         return $map;
+    }
+
+    /**
+     * THE ORGANISATION'S PLATE — every area's ground, with everybody on it.
+     *
+     * IT IS THE NETWORK MAP PLUS THE MARKERS, and nothing else: the
+     * boundaries, the live/quiet split and the per-area pins are already
+     * {@see register()}'s, so this adds the one layer that makes it a
+     * control room rather than drawing a second map that would drift from
+     * the first.
+     *
+     * @param list<array{name: string, live: bool, href: string, boundary: string|null}> $areas
+     * @param int                                                                        $withoutPosition how many on duty have reported no fix, for the key
+     */
+    public function organisation(array $areas, LivePresence $presence, int $withoutPosition = 0): AtlasMap
+    {
+        return $this->register($areas)->livePositions($presence, $withoutPosition);
     }
 
     /**

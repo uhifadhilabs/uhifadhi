@@ -1,5 +1,78 @@
 # UPGRADE FROM 0.x to 1.0
 
+## `/` is the organisation dashboard
+
+**What changed.** The core ships a dashboard at `/` — a widget surface
+composed from contributors, exactly as an area's overview is, one scope
+wider. It is an ordinary attribute route on `AreaBundle`'s controllers, so an
+installation that already imports them has it; the page that used to answer
+`/` is the shell's welcome screen, whose content now lives at **Settings →
+Overview**.
+
+**The brandmark.** `shell.home_route` defaults to `organisation_dashboard`.
+An installation with its own front door sets its own route name, as before.
+
+**What a module contributes.** A new seam beside the area's, opted into
+deliberately:
+
+```php
+// src/Org/PatrolOrgWidgets.php
+final class PatrolOrgWidgets implements OrgOverviewContributorInterface
+{
+    public function moduleSlug(): string { return 'patrols'; }
+    public function group(): WidgetGroup { /* your headed section */ }
+    public function widgets(): array { /* your cells */ }
+    public function partialPattern(): string { return '@Patrol/org/_w_%s.html.twig'; }
+    public function figures(Scope $scope, \DateTimeImmutable $now): array { /* your NowTiles */ }
+    public function context(Scope $scope, \DateTimeImmutable $now): array { /* what they read */ }
+}
+```
+
+```php
+$services->set('patrol.org_widgets', PatrolOrgWidgets::class)
+    ->tag('uhifadhi.overview.org_widget_provider');
+```
+
+**Why it is a second interface rather than a wider first one.** The area
+contract is answered against an area ENTITY by every installed module, and
+widening its signature would break all of them for a screen most have no
+org-level reading for. A module with nothing to say across areas says
+nothing, and loses no cells on the area page.
+
+**EVERY FIGURE IS THE PER-AREA READING ONE SCOPE WIDER — never a second
+aggregate.** The `Scope` is handed in for exactly that: answer
+`forScope($scope)` and let the organisation's answer BE the areas' answers.
+The core holds itself to this (`PresenceService::forScope()`,
+`AreaOverview::attentionForScope()`) and asserts it —
+`OrgScopeIsTheSumOfAreasTest` proves the wide reading is the narrow ones
+position for position, not two numbers that happen to match. A module that
+grew a second aggregate would have two answers to one question and no way to
+say which was right.
+
+**A preset may name a cell you have not installed.** The five compositions
+the dashboard ships name `watches`, `patrols`, `incidents`, `goals` and
+`files`; the catalogue composes each design down to the cells this
+installation actually has, so the same five get richer as it grows. Note the
+distinction if you ship presets of your own: the DECLARATION is the design,
+the CATALOGUE is this installation's composition of it, and a surface still
+refuses a preset naming a cell it ships nothing for.
+
+## A live position carries its own area's ping interval
+
+**What changed.** `LivePosition::$pingIntervalMinutes` (new, optional, last)
+and `LivePresence::isStale()` reads it in preference to the set's.
+`LivePositionsInterface` gains `forScope(Scope, \DateTimeImmutable)`.
+
+**Why.** A reading across areas holds positions expected at different rates.
+One interval for all of them calls a thirty-minute area's rangers stale
+beside a five-minute area's on the same silence — and then the
+organisation's stale count is not the areas' stale counts added up, which is
+the property the whole widened-reading rule depends on.
+
+**What to change in a module.** Nothing: only the core implements that
+interface, consumers call `liveIn()` as before, and a per-area reading still
+states its interval once on the set.
+
 ## `/favicon.ico` is answered, where the application asks for it
 
 **What changed.** The shell ships a fourth route resource, and it serves the

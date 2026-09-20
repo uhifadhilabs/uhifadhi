@@ -8,6 +8,11 @@
 
 Not released yet.
 
+ * THE BRANDMARK'S DEFAULT DESTINATION IS THE ORGANISATION DASHBOARD.
+   `shell.home_route` now defaults to `organisation_dashboard`, the page the
+   core ships at `/`; an installation that puts something else at its front
+   door says so in one line, as before.
+
  * `/favicon.ico` IS ANSWERED, from the very file the document head already
    links, as a fourth route resource (`ShellBundle::FAVICON_ROUTES`) an
    application imports in one line. Every browser asks for that address

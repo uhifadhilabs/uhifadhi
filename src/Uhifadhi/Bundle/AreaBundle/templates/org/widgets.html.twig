@@ -1,0 +1,54 @@
+{# THE ORGANISATION DASHBOARD'S WIDGET LIBRARY — chrome around the shell's
+   shared preset component.
+
+   Design: widgets.html in the design workspace.
+
+   NOTHING ORGANISATION-SHAPED HAPPENS INSIDE THAT COMPONENT: it is handed
+   this surface's catalogue, this surface's partial name and this surface's
+   routes, and it renders the strips, the toolbar and the canvas. Arranging
+   this dashboard works exactly as arranging any other in the installation,
+   which is the whole reason this page rides the framework rather than
+   carrying a copy of it.
+
+   THE SECTIONS ARE THE CONTRIBUTORS, NOT DESIGN DIRECTIONS. A person needs to
+   know that "Patrols out right now" came from the patrols module, so that the
+   day it is uninstalled its disappearance reads as the system working rather
+   than as a bug. The five directions the page was drawn in are the PRESETS. #}
+{% extends '@Shell/page.html.twig' %}
+
+{% block title %}The organisation &middot; widget library{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {{ include('@Area/_stylesheets.html.twig') }}
+    <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Bundle\\ShellBundle\\ShellBundle::WIDGET_STYLESHEET')) }}">
+    {% for sheet in moduleStylesheets %}
+        <link rel="stylesheet" href="{{ asset(sheet) }}">
+    {% endfor %}
+{% endblock %}
+
+{% block shell_page_tabs %}{% endblock %}
+
+{% block shell_breadcrumbs %}
+    <a href="{{ urls.dashboard }}">{{ shell_brand().name|lower }}</a> / widget library
+{% endblock %}
+
+{% block shell_page_title %}The organisation &middot; widget library{% endblock %}
+
+{% block shell_page_subtitle %}
+    What <a href="{{ urls.dashboard }}">the dashboard</a> is composed from. Adopt one of the five compositions
+    this installation ships, or compose your own &mdash; every widget is the real thing at full size, and every
+    one of them names the module it came from.
+{% endblock %}
+
+{% block shell_page_actions %}
+    <form method="post" action="{{ urls.reset }}">
+        <input type="hidden" name="_token" value="{{ csrfToken }}">
+        <button type="submit" class="tgl w-act">{{ ux_icon('shell:rotate-ccw') }} Reset to defaults</button>
+    </form>
+    <a class="cta" href="{{ urls.dashboard }}">{{ ux_icon('shell:chevron-left') }} Back to the dashboard</a>
+{% endblock %}
+
+{% block shell_page %}
+    {{ include('@Shell/widget/_library.html.twig') }}
+{% endblock %}
