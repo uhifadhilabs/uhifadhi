@@ -209,6 +209,19 @@ final class Kernel extends BaseKernel
             ->alias('test_public.team.devkit.content', 'team.devkit.content')
             ->public();
 
+        // The ground's own demo content, for the same reason: a specification
+        // that seeds the shipped organisation has to reach the providers an
+        // installation's devkit would run, not copies of them.
+        $container->services()
+            ->alias('test_public.area.devkit.areas', 'area.devkit.areas')
+            ->public()
+            ->alias('test_public.area.devkit.zones', 'area.devkit.zones')
+            ->public()
+            ->alias('test_public.area.devkit.stations', 'area.devkit.stations')
+            ->public()
+            ->alias('test_public.area.postings', 'area.postings')
+            ->public();
+
         // The credential a field client carries. The field-API specifications
         // mint a real token through it, so their requests cross the same
         // authenticator an installation's do rather than a logged-in session.

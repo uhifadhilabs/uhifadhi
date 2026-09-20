@@ -37,7 +37,9 @@ use Uhifadhi\Contracts\Entity\UserInterface;
  *
  *   · a post the zoning scheme does not reach, so its zone is blank because the
  *     ground is, not because the derivation failed;
- *   · a post nobody works out of, which is a staffing gap rather than an error;
+ *   · a post nobody works out of, which is a staffing gap rather than an error,
+ *     and every post past the end of the roster, which is the same thing said
+ *     by arithmetic;
  *   · everywhere else, exactly one leader — the invariant
  *     {@see PostingService::appointLeader()} holds, seen from the outside.
  *
@@ -89,7 +91,19 @@ final readonly class StationContentProvider implements ContentProviderInterface
 
     public function load(): void
     {
+        /*
+         * THE ROSTER IS HANDED OUT ONCE. Somebody stands at ONE post (ruled),
+         * so this walks the roster forward across every area and every post
+         * and never round it: a demo that put the same ranger at two gates
+         * was describing a state the product refuses, and the seeder was the
+         * first thing to hit that refusal.
+         *
+         * WHEN IT RUNS OUT, THE REST OF THE POSTS STAND EMPTY — which is a
+         * state the screens already draw, and an honest one: an installation
+         * with nine posts and four people has five empty posts.
+         */
         $roster = $this->roster();
+        $next = 0;
 
         foreach (DemoArea::all() as $demo) {
             $area = $this->register->findOneBy(['name' => $demo->name]);
@@ -119,31 +133,37 @@ final readonly class StationContentProvider implements ContentProviderInterface
                     continue;
                 }
 
-                $this->staff($station, $index, $roster);
+                $this->staff($station, $roster, $next);
             }
         }
     }
 
     /**
-     * SOMEBODY IN CHARGE AND, WHERE THE ROSTER IS BIG ENOUGH, SOMEBODY WITH
-     * THEM — walked round the roster so the demo has people standing at more
-     * than one post, which is the ordinary case and the one a person's own page
-     * is built for.
+     * SOMEBODY IN CHARGE AND, WHERE THERE IS ANYBODY LEFT, SOMEBODY WITH
+     * THEM — taken from wherever the roster has got to and never from the
+     * beginning again.
+     *
+     * A PERSON IS SPENT WHEN THEY ARE POSTED. One posting a person (ruled),
+     * so `$next` only ever moves forward; a post reached after the last
+     * person stands empty rather than borrowing somebody from an earlier
+     * gate.
      *
      * @param list<UserInterface> $roster
+     * @param int                 $next   how far through the roster the seeding has got
      */
-    private function staff(Station $station, int $index, array $roster): void
+    private function staff(Station $station, array $roster, int &$next): void
     {
-        $people = \count($roster);
-        if (0 === $people) {
+        if (!isset($roster[$next])) {
             return;
         }
 
-        $leader = $this->postings->post($station, $roster[$index % $people], PostingSource::WrittenHere);
+        $leader = $this->postings->post($station, $roster[$next], PostingSource::WrittenHere);
+        ++$next;
         $this->postings->appointLeader($leader);
 
-        if ($people > 1) {
-            $this->postings->post($station, $roster[($index + 1) % $people], PostingSource::WrittenHere);
+        if (isset($roster[$next])) {
+            $this->postings->post($station, $roster[$next], PostingSource::WrittenHere);
+            ++$next;
         }
     }
 

@@ -8,6 +8,11 @@
 
 Not released yet.
 
+ * the shipped demo content posts each person ONCE. It walked round the roster
+   so that the same ranger stood at two gates, which the posting rule now
+   refuses — the seeder was the first thing to hit that refusal, and it hit it
+   in somebody else's pipeline. Posts past the end of the roster stand empty,
+   which is the honest reading of an installation with more posts than people
  * `GET /api/areas/mine` carries THE AREA'S POSTS, in the same shape
    `/stations?near=` hands them over (uuid · name · code · lat · lon ·
    catchment). It was published empty while the platform had no station
