@@ -1,5 +1,38 @@
 # UPGRADE FROM 0.x to 1.0
 
+## A module with two widget surfaces has one library page
+
+**What changed.** `@Shell/widget/_library.html.twig` now takes either shape.
+The single-surface call is exactly what it was — `catalog`, `builtins`,
+`customPresets`, `active`, `widgets`, `partial`, `widgetContext`, `urls`,
+`csrfToken`, passed flat — and renders exactly what it rendered before, with no
+section wrapped around it. A module with more than one surface passes
+`surfaces` instead: a list of those same bags, each optionally carrying `label`
+and `intro`, and gets one `h2.zone` + `p.pgsub` section per surface.
+
+The body moved to `@Shell/widget/_library_surface.html.twig`. Nothing includes
+that by hand — the section chrome and the arming of several roots on one page
+are the entry point's business — but a sheet or a test that pointed at the old
+file's contents should point at the new one.
+
+**Why.** The roster's Live plate rail is a widget surface beside the module's
+Overview (ruled), and a module's widgets are configured in one place. Two
+library pages for one module is two answers to "where do I change my widgets".
+
+**What to change in a module.** Nothing, unless you have a second surface. If
+you do:
+
+```diff
+-{{ include('@Shell/widget/_library.html.twig') }}
++{{ include('@Shell/widget/_library.html.twig', {surfaces: surfaces}) }}
+```
+
+and give every `[data-widget-reset]` button in the page header the surface it
+resets: `data-widget-reset="roster-live-rail"`. A bare one is still honoured
+where the page has a single library, and ignored where it would be ambiguous —
+a button that does not say which surface it resets is not one anything can act
+on safely.
+
 ## The sidebar decides what is open, and a page no longer can
 
 **What changed.** `ShellBundle\Model\NavItem::$open` is DERIVED. The shell

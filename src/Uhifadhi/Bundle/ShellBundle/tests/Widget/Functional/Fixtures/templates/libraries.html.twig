@@ -1,0 +1,8 @@
+{# A module with TWO widget surfaces: the shell's component, once, given both. #}
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Sightings &middot; widget library</title></head>
+<body>
+<button type="button" data-widget-reset="sightings">Reset the dashboard</button>
+<button type="button" data-widget-reset="sightings-rail">Reset the rail</button>
+{{ include('@Shell/widget/_library.html.twig', {surfaces: surfaces}, with_context: false) }}
+</body></html>

@@ -256,6 +256,12 @@
    utility. Every one below is a word. */
 
 /* ---- the strips ---- */
+/* A MODULE WITH TWO WIDGET SURFACES HAS ONE LIBRARY PAGE, a section each. The
+   section is the house section — its heading is `h2.zone` and its line is
+   `.pgsub`, the same two a reader meets everywhere else — so all this owns is
+   the air between one surface's picker and the next surface's heading. */
+.w-surface + .w-surface { margin-top: 34px; }
+
 .w-presets { margin: 0 0 26px; }
 /* Compact cards want a denser row than dashboard tiles did. */
 .w-presetrow {

@@ -129,6 +129,45 @@ final readonly class AreaSightingsController
     }
 
     /**
+     * THE SAME PAGE, WITH BOTH OF THIS MODULE'S SURFACES ON IT — one section
+     * each, which is what a module with two compositions has instead of two
+     * library pages.
+     *
+     * Each section carries its own catalogue, its own presets and its own
+     * CSRF token: they are separate compositions that happen to be configured
+     * in one place, and a token good for one of them is not good for the
+     * other.
+     */
+    public function libraries(string $uuid): Response
+    {
+        $area = Uuid::fromString($uuid);
+        $user = $this->endpoint->user();
+
+        $surfaces = [];
+        foreach ([
+            ['catalog' => self::catalog(), 'label' => 'The dashboard', 'intro' => 'What the module opens on.'],
+            ['catalog' => self::railCatalog(), 'label' => 'The plate rail', 'intro' => 'The column beside the plate.'],
+        ] as $section) {
+            $catalog = $section['catalog'];
+            $surfaces[] = [
+                'label' => $section['label'],
+                'intro' => $section['intro'],
+                'catalog' => $catalog,
+                'builtins' => $catalog->builtins(),
+                'customPresets' => $this->widgets->customPresets($catalog, $user, $area),
+                'active' => $this->widgets->activeRef($catalog, $user, $area),
+                'widgets' => $this->widgets->resolve($catalog, $user, $area),
+                'partial' => '@Fixture/_w_%s.html.twig',
+                'widgetContext' => [],
+                'urls' => $this->urls($uuid),
+                'csrfToken' => $this->endpoint->csrfToken($catalog, $area),
+            ];
+        }
+
+        return new Response($this->twig->render('@Fixture/libraries.html.twig', ['surfaces' => $surfaces]));
+    }
+
+    /**
      * The library's action URLs, with the placeholders the browser substitutes:
      * `__ID__` for a design's id and a valid uuid for a saved preset's, because
      * the routes constrain that parameter and a router refuses to generate a URL
@@ -183,5 +222,10 @@ final readonly class AreaSightingsController
     private static function catalog(): WidgetCatalog
     {
         return new SightingsSurface()->catalog();
+    }
+
+    private static function railCatalog(): WidgetCatalog
+    {
+        return new SightingsSurface()->railCatalog();
     }
 }

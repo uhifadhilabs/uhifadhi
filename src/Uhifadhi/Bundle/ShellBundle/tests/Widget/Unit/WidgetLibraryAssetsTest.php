@@ -80,6 +80,44 @@ final class WidgetLibraryAssetsTest extends TestCase
      *
      * Importing the module is the whole contract now.
      */
+    /**
+     * AND IT ARMS EVERY LIBRARY ON THE PAGE, not the first one it finds.
+     *
+     * A module with two widget surfaces — the roster's Overview and its Live
+     * plate rail — has ONE library page with a section each, so "the library"
+     * stopped being a single thing to find. Arming only the first left the
+     * second section's cards rendered and dead, which is exactly the defect
+     * the self-arming above exists to prevent.
+     */
+    public function testEveryLibraryOnThePageIsArmedAndNotOnlyTheFirst(): void
+    {
+        $js = self::widgetsJs();
+
+        self::assertStringContainsString('export function initWidgetLibraries()', $js);
+        self::assertMatchesRegularExpression(
+            '/document\.querySelectorAll\(ROOT_SELECTOR\)\.forEach/',
+            $js,
+            'Arming walks every root; a querySelector here is the single-library bug again.',
+        );
+    }
+
+    /**
+     * THE RESET BUTTON BELONGS TO A SURFACE. It lives in the page header,
+     * outside the root, so on a page with two libraries there are two of them
+     * — and the first one found is the wrong one half the time. A button that
+     * names its surface is matched by name, and a bare one is honoured only
+     * where there is a single library and it therefore cannot be ambiguous.
+     */
+    public function testTheResetButtonIsMatchedByItsSurfaceWhereThereIsMoreThanOneLibrary(): void
+    {
+        $js = self::widgetsJs();
+
+        self::assertStringContainsString('function resetButtonFor(surface)', $js);
+        self::assertStringContainsString("'[' + ATTR.reset + '=\"' + surface + '\"]'", $js);
+        self::assertStringContainsString('document.querySelectorAll(ROOT_SELECTOR).length > 1', $js);
+        self::assertStringContainsString('const reset = resetButtonFor(def.surface);', $js);
+    }
+
     public function testTheScriptArmsItselfSoImportingItIsTheWholeContract(): void
     {
         $js = self::widgetsJs();
@@ -90,8 +128,8 @@ final class WidgetLibraryAssetsTest extends TestCase
         self::assertStringContainsString("document.addEventListener('DOMContentLoaded'", $js);
         self::assertSame(
             2,
-            substr_count($js, 'initWidgetLibrary();'),
-            'Both arms of the readiness check must actually arm the library.',
+            substr_count($js, 'initWidgetLibraries();'),
+            'Both arms of the readiness check must actually arm the libraries.',
         );
         // Guarded, because a module may be evaluated where there is no document.
         self::assertStringContainsString("'undefined' !== typeof document", $js);
@@ -283,7 +321,7 @@ final class WidgetLibraryAssetsTest extends TestCase
     /**
      * EVERY constant() A TEMPLATE NAMES ACTUALLY RESOLVES.
      *
-     * This exists because of a real bug a real install found: `_library.html.twig`
+     * This exists because of a real bug a real install found: `_library_surface.html.twig`
      * still named `Uhifadhi\Service\WidgetService::NAME_MAX`, the namespace this
      * code had BEFORE it was extracted from the host into a bundle. Twig resolves
      * a constant at RENDER time, so nothing failed until a page was actually

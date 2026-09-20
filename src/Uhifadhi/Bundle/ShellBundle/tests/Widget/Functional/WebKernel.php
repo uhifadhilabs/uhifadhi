@@ -179,6 +179,11 @@ final class WebKernel extends Kernel
             ->requirements($area)
             ->methods(['GET']);
 
+        $routes->add('sightings_widgets_both', $prefix.'/widgets/both')
+            ->controller([AreaSightingsController::class, 'libraries'])
+            ->requirements($area)
+            ->methods(['GET']);
+
         $routes->add('sightings_widgets_save', $prefix.'/widgets/save')
             ->controller([AreaSightingsController::class, 'save'])
             ->requirements($area)

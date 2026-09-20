@@ -32,6 +32,32 @@ final class SightingsSurface implements WidgetSurfaceInterface
     /** What a stored row is keyed by. */
     public const string SURFACE = 'sightings';
 
+    /**
+     * A SECOND SURFACE OF THE SAME MODULE — the rail beside its plate, which
+     * is a composition of its own and not a second library. One module, two
+     * catalogues, one library page with a section each.
+     */
+    public const string RAIL_SURFACE = 'sightings-rail';
+
+    /**
+     * The rail's catalogue: one column wide, so every widget in it is full
+     * width and there is nothing to choose about spans.
+     */
+    public function railCatalog(): WidgetCatalog
+    {
+        return new WidgetCatalog(
+            self::RAIL_SURFACE,
+            [new WidgetGroup('rail', 'The rail', 'What stands beside the plate.')],
+            [
+                new Widget('watchers', 'Who is watching', 'rail', 12, [12]),
+                new Widget('recent', 'Latest sightings', 'rail', 12, [12]),
+            ],
+            [
+                new WidgetPreset('people-first', 'People first', 'Who is out, then what they saw.', ['watchers' => 12, 'recent' => 12]),
+            ],
+        );
+    }
+
     public function catalog(): WidgetCatalog
     {
         return new WidgetCatalog(

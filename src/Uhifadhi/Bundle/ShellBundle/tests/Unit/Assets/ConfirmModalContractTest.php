@@ -151,7 +151,7 @@ final class ConfirmModalContractTest extends TestCase
         $siblings = \dirname($core, 2);
 
         $candidates = [
-            'the shell’s widget library' => $core.'/Bundle/ShellBundle/templates/widget/_library.html.twig',
+            'the shell’s widget library' => $core.'/Bundle/ShellBundle/templates/widget/_library_surface.html.twig',
             'the area’s zones section' => $core.'/Bundle/AreaBundle/templates/zone/configure.html.twig',
             'the area’s stations section' => $core.'/Bundle/AreaBundle/templates/station/configure.html.twig',
             'patrol-module' => $siblings.'/patrol-module/templates/widgets/show.html.twig',

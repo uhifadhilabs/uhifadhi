@@ -111,7 +111,7 @@ final class ConfirmModalSeamTest extends TestCase
     private static function shellsOwnTrigger(): string
     {
         return (string) file_get_contents(
-            \dirname(__DIR__, 4).'/ShellBundle/templates/widget/_library.html.twig',
+            \dirname(__DIR__, 4).'/ShellBundle/templates/widget/_library_surface.html.twig',
         );
     }
 

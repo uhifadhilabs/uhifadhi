@@ -95,6 +95,46 @@ const armed = new WeakSet();
  * where there is nothing to arm, so a page without a library costs nothing and a
  * second call (a Turbo re-visit, a lazily mounted controller) is harmless.
  */
+/**
+ * The reset button belonging to `surface`, or null.
+ *
+ * `[data-widget-reset="<surface>"]` is the unambiguous form and the one a page
+ * with more than one library must write. A bare `[data-widget-reset]` is
+ * honoured only where there is a single library on the page: on a page with
+ * two, a button that does not say which surface it resets is not a button
+ * anything can safely act on.
+ */
+function resetButtonFor(surface) {
+    const named = document.querySelector('[' + ATTR.reset + '="' + surface + '"]');
+    if (named) {
+        return named;
+    }
+
+    return document.querySelectorAll(ROOT_SELECTOR).length > 1
+        ? null
+        : document.querySelector('[' + ATTR.reset + ']');
+}
+
+/**
+ * Arm every library on the page. A module with more than one widget surface
+ * has one library page with a section per surface, so "the library" is not a
+ * single thing to find — and arming only the first left the second section's
+ * cards rendered and dead, which is the same defect the auto-arm below was
+ * written to fix in the first place.
+ *
+ * @return {number} how many were armed
+ */
+export function initWidgetLibraries() {
+    let armedNow = 0;
+    document.querySelectorAll(ROOT_SELECTOR).forEach((root) => {
+        if (initWidgetLibrary(root)) {
+            armedNow += 1;
+        }
+    });
+
+    return armedNow;
+}
+
 export function initWidgetLibrary(root = document.querySelector(ROOT_SELECTOR)) {
     if (!root || armed.has(root)) {
         return false;
@@ -1178,12 +1218,19 @@ export function initWidgetLibrary(root = document.querySelector(ROOT_SELECTOR)) 
     });
 
     /* ---- reset ------------------------------------------------------------ */
+    /* THE BUTTON THIS SURFACE'S RESET LIVES ON. It sits in the page header,
+     * outside the root, because that is where the house puts a page action —
+     * so with two libraries on one page there are two of them, and taking the
+     * first one found would have reset the wrong surface from the second
+     * library's canvas. A button that names its surface is matched by name; a
+     * bare one is matched only when it cannot be ambiguous, which is what
+     * every single-surface page already has. */
     /* Reset throws the choice away, so it asks first — through the installation's
      * reusable confirm-modal controller, never the browser's own dialog. The
      * button carries its data attributes and dispatches `confirm-modal:confirmed`
      * when the person agrees; where that controller is absent the click still
      * resets, because the library may not require a controller to be installed. */
-    const reset = document.querySelector('[' + ATTR.reset + ']');
+    const reset = resetButtonFor(def.surface);
     if (reset) {
         reset.addEventListener('confirm-modal:confirmed', () => {
             commit(root.getAttribute(ATTR.resetUrl), tokenBody({}));
@@ -1259,10 +1306,10 @@ export function initWidgetLibrary(root = document.querySelector(ROOT_SELECTOR)) 
 if ('undefined' !== typeof document) {
     if ('loading' === document.readyState) {
         document.addEventListener('DOMContentLoaded', () => {
-            initWidgetLibrary();
+            initWidgetLibraries();
         }, { once: true });
     } else {
-        initWidgetLibrary();
+        initWidgetLibraries();
     }
 }
 
