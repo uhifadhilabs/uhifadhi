@@ -58,6 +58,12 @@
                 "fetch": "eager",
                 "enabled": true
             },
+            "chart-plate": {
+                "main": "../src/Uhifadhi/Bundle/AtlasBundle/assets/controllers/chart_plate_controller.js",
+                "name": "uhifadhi--atlas-bundle--chart-plate",
+                "fetch": "eager",
+                "enabled": true
+            },
             "area-register": {
                 "main": "../src/Uhifadhi/Bundle/AreaBundle/assets/controllers/area_register_controller.js",
                 "name": "uhifadhi--area-bundle--area-register",

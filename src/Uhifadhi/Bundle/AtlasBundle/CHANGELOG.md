@@ -8,6 +8,11 @@
 
 Not released yet.
 
+ * A CHART SERIES IS A CATEGORY, NOT A COLOUR: `ChartSeries::$cat` (1-18),
+   resolved where the chart is drawn by the new `chart-plate` controller — at
+   mount and again when the theme flips, the same door the map plate's layers
+   go through. `ChartBuilder`'s six hex colours are gone; `$swatch` is
+   deprecated and honoured for one release
  * A LINK CHANGES THE PLATE WITHOUT NAVIGATING, wherever it sits and whether
    or not the plate is fullscreen: `data-atlas-swap` on a same-origin link
    swaps the plate's subtrees out of the fetched page, and

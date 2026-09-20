@@ -8,6 +8,9 @@
 
 Not released yet.
 
+ * the chart primitives (`.ch` and its axis, gridlines and tick labels) are
+   the shell's now. They were on loan in a module's sheet under a name that is
+   nobody's module, restated there the way `.kpi` once was
  * the quiet door (`.more`) carries NO padding on its base rule — the band's
    `9px 15px` moved to `.factband .more`, so the first bare door written
    outside a card or a band no longer renders taller and wider than its row

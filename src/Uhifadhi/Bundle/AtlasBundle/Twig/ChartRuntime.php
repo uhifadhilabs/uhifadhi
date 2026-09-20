@@ -44,6 +44,17 @@ final readonly class ChartRuntime implements RuntimeExtensionInterface
     /** A property handed in attributes sizes the BOX, not the canvas. */
     public const string CUSTOM_PROPERTY_PREFIX = '--';
 
+    /**
+     * THE CONTROLLER THAT RESOLVES A SERIES' CATEGORY where the chart is
+     * drawn. Chart.js paints onto a canvas, and a canvas does not resolve a
+     * custom property the way an element does — so the colours cross as
+     * tokens and are turned into values at mount, and again when the theme
+     * flips. The plate carries it, not the canvas: the canvas is UX Map's
+     * and UX Chart.js's own element, and a second controller on it would be
+     * a module fighting the bridge for it.
+     */
+    public const string CONTROLLER = 'uhifadhi--atlas-bundle--chart-plate';
+
     public function __construct(
         private Environment $twig,
         private ChartBuilder $charts,
@@ -67,6 +78,7 @@ final readonly class ChartRuntime implements RuntimeExtensionInterface
         }
 
         return $this->twig->render(self::TEMPLATE, [
+            'controller' => self::CONTROLLER,
             'title' => $title,
             'caption' => $caption,
             'empty' => $chart->isEmpty(),

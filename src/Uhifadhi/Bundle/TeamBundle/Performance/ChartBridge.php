@@ -42,19 +42,23 @@ final readonly class ChartBridge
             labels: $chart->labels,
             series: array_map(
                 /*
-                 * THE CATEGORY DOES NOT CROSS YET, and passing it as a
-                 * colour is exactly what it must not become. A topic may
-                 * state `cat` on a series; the atlas's own series still
-                 * takes a colour STRING, and Chart.js — like Leaflet
-                 * before the plate learnt to resolve one — paints nothing
-                 * at all when handed `var(--cat-3)`. Until the chart
-                 * canvas resolves a token the way the plate now does, a
-                 * series is coloured by its position, which is what the
-                 * atlas already does and is never wrong, only unchosen.
+                 * AND THE CATEGORY CROSSES. It did not: the atlas's series
+                 * took a colour STRING, and Chart.js — like Leaflet before
+                 * the plate learnt to resolve one — paints nothing at all
+                 * when handed `var(--cat-3)`, so a topic's stated category
+                 * was dropped and the series took its position instead.
+                 * The chart plate resolves a token at mount now, the same
+                 * way the map plate does, so the category is the thing
+                 * that travels and the colour is decided where it is drawn.
+                 *
+                 * NULL STILL MEANS "IN ORDER", which is what most series
+                 * want: a topic states a category only where the series is
+                 * the same thing as something else on the page.
                  */
                 static fn (ChartSeries $series): AtlasSeries => new AtlasSeries(
                     label: $series->label,
                     points: $series->points,
+                    cat: $series->cat,
                 ),
                 $chart->series,
             ),

@@ -1,5 +1,36 @@
 # UPGRADE FROM 0.x to 1.0
 
+## A chart series states a category, not a colour
+
+**What changed.** `AtlasBundle\Model\ChartSeries` takes `cat` — its position
+in the palette, 1 to 18 — and `ChartBuilder` writes `var(--cat-n)` into the
+dataset instead of one of six hex colours it used to own. The new
+`uhifadhi--atlas-bundle--chart-plate` controller resolves the token against the
+element the chart is mounted on, at mount and again when the theme flips.
+
+**Why.** Chart.js paints onto a canvas, and a canvas does not resolve a custom
+property the way an element does: a token handed to the 2D context draws
+nothing, which is why the builder shipped colours at all. They were a seventh
+palette beside the one the product has — right on the night canvas, wrong on
+paper, and never the same mark as the zone of the same category on the plate
+beside them.
+
+**What to change in a module.** Nothing, unless you set a series' colour:
+
+```diff
+-new ChartSeries('Patrols', $points, swatch: '#49E6B4')
++new ChartSeries('Patrols', $points, cat: 1)
+```
+
+A series that states nothing takes the next category in order, which is what
+most want. `$swatch` still wins where it is set and is **deprecated, removed in
+the next release** — the two-release rule, since a shipped module reading a
+property that vanished is a 500 on somebody else's page.
+
+An installation that lists Stimulus controllers by hand adds `chart-plate`
+beside `map-plate`; one whose importmap is written by Flex gets it with the
+recipe.
+
 ## A performance topic publishes FOUR headline figures, not five
 
 **What changed.** `Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface::kpis()`

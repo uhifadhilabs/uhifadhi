@@ -1,12 +1,18 @@
 {
     "name": "@uhifadhi/atlas-bundle",
-    "description": "The platform's shared map modules — the basemap contract, the boundary drawing and the map chrome, contributed into a host's importmap by Flex.",
+    "description": "The platform's shared map modules \u2014 the basemap contract, the boundary drawing and the map chrome, contributed into a host's importmap by Flex.",
     "license": "AGPL-3.0-or-later",
     "symfony": {
         "controllers": {
             "map-plate": {
                 "main": "controllers/map_plate_controller.js",
                 "name": "uhifadhi--atlas-bundle--map-plate",
+                "fetch": "eager",
+                "enabled": true
+            },
+            "chart-plate": {
+                "main": "controllers/chart_plate_controller.js",
+                "name": "uhifadhi--atlas-bundle--chart-plate",
                 "fetch": "eager",
                 "enabled": true
             }

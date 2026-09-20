@@ -17,6 +17,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Uhifadhi\Bundle\AtlasBundle\AtlasBundle;
 use Uhifadhi\Bundle\AtlasBundle\Tests\Integration\Asset\AssetContractTest;
+use Uhifadhi\Bundle\AtlasBundle\Twig\ChartRuntime;
 use Uhifadhi\Bundle\AtlasBundle\Twig\MapPlateRuntime;
 
 /**
@@ -148,14 +149,19 @@ final class ImportmapContributionTest extends TestCase
         $controllers = $symfony['controllers'] ?? null;
         self::assertIsArray($controllers);
 
-        self::assertSame(['map-plate'], array_keys($controllers));
+        // TWO PLATES, TWO CONTROLLERS. The chart plate's resolves a series'
+        // category where the chart is drawn, because a canvas does not
+        // resolve a custom property the way an element does.
+        self::assertSame(['map-plate', 'chart-plate'], array_keys($controllers));
 
-        $plate = $controllers['map-plate'];
-        self::assertIsArray($plate);
-        self::assertSame(MapPlateRuntime::CONTROLLER, $plate['name'] ?? null);
-        self::assertTrue($plate['enabled'] ?? false);
-        self::assertIsString($plate['main'] ?? null);
-        self::assertFileExists(self::root().'/assets/'.$plate['main']);
+        foreach (['map-plate' => MapPlateRuntime::CONTROLLER, 'chart-plate' => ChartRuntime::CONTROLLER] as $key => $name) {
+            $plate = $controllers[$key];
+            self::assertIsArray($plate);
+            self::assertSame($name, $plate['name'] ?? null);
+            self::assertTrue($plate['enabled'] ?? false);
+            self::assertIsString($plate['main'] ?? null);
+            self::assertFileExists(self::root().'/assets/'.$plate['main']);
+        }
     }
 
     /**

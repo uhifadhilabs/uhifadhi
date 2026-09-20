@@ -1186,6 +1186,23 @@ i.livedot.none::after { animation: none; border: 0; }
     i.livedot::after { animation: none; opacity: .34; }
 }
 
+/* ==================== THE CHART PRIMITIVES ====================
+   A PLOTTED FIGURE IS HOUSE VOCABULARY, and it was on loan: `.ch` and its
+   parts lived in a module's sheet under a name that is nobody's module,
+   restated there the way `.kpi` once was, because the shell did not ship
+   them and two surfaces already drew one. The shell collects the loan here;
+   the block is the design's, value for value.
+
+   THESE ARE THE FURNITURE AND NOT THE DATA. The axis, the gridlines and the
+   tick labels are the same on every chart in the product, whoever built it;
+   what a SERIES is drawn in is a category the caller states, resolved from
+   the palette (see THE CATEGORICAL NINE above) rather than written here.
+   ============================================================================ */
+.ch { width: 100%; height: auto; display: block; }
+.ch text { font-family: var(--font-mono); font-size: 7.5px; fill: rgb(var(--c-fog)); }
+.ch line.grid { stroke: color-mix(in srgb, rgb(var(--c-fog)) 22%, transparent); stroke-width: .6; }
+.ch line.ax { stroke: color-mix(in srgb, rgb(var(--c-fog)) 55%, transparent); stroke-width: .8; }
+
 /* THE READ-ONLY SWATCH. A category's colour is SHOWN, never picked: this is
    the one mark that says "this is the hue this thing wears". It is a square,
    not a button, and it carries no hover and no cursor. */

@@ -18,6 +18,7 @@ use Symfony\UX\Chartjs\Model\Chart;
 use Uhifadhi\Bundle\AtlasBundle\Model\AtlasChart;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartKind;
 use Uhifadhi\Bundle\AtlasBundle\Model\ChartSeries;
+use Uhifadhi\Contracts\Atlas\PlatePalette;
 
 /**
  * WHAT A STATED CHART BECOMES — the one place the platform decides what a
@@ -39,20 +40,17 @@ use Uhifadhi\Bundle\AtlasBundle\Model\ChartSeries;
 final readonly class ChartBuilder
 {
     /**
-     * THE PLATFORM'S SERIES COLOURS, in order.
+     * HOW MANY SERIES TAKE A CATEGORY OF THEIR OWN before the order
+     * begins again — the palette's own count, so a chart and a zone key
+     * beside it never disagree about how many distinct marks there are.
      *
-     * A module that owns a hue states it and keeps it; everything else
-     * takes these, so two charts built by two modules on one page do not
-     * read as one chart with nine series.
+     * THIS WAS SIX HEX COLOURS. They were picked once, they were right on
+     * the night canvas and wrong on paper, and they were a seventh palette
+     * beside the one the product has. A series is a CATEGORY now: the
+     * caller states it or takes the next one in order, and the value is
+     * resolved where the chart is drawn.
      */
-    public const array SWATCHES = [
-        '#49E6B4',
-        '#4FA8E8',
-        '#E8C15A',
-        '#9B6BD8',
-        '#E05B41',
-        '#9DBF4A',
-    ];
+    private const int CATEGORIES = PlatePalette::CATEGORIES;
 
     public function __construct(private ChartBuilderInterface $charts)
     {
@@ -92,7 +90,18 @@ final readonly class ChartBuilder
     /** @return array<string, mixed> */
     private static function dataset(ChartSeries $series, int $position, ChartKind $kind): array
     {
-        $colour = $series->swatch ?? self::SWATCHES[$position % \count(self::SWATCHES)];
+        /*
+         * THE TOKEN, NOT THE VALUE. Chart.js is handed `var(--cat-3)` and
+         * the chart's own controller resolves it against the element it is
+         * mounted on, at mount and again when the theme flips — the same
+         * door the map plate's layers go through, for the same reason: a
+         * colour decided in PHP is a colour that cannot follow a palette
+         * it has never seen.
+         *
+         * A `swatch` still wins where a module states one, which is the
+         * deprecated door and is honoured for one release.
+         */
+        $colour = $series->swatch ?? \sprintf('var(--cat-%d)', $series->cat ?? ($position % self::CATEGORIES) + 1);
 
         $dataset = [
             'label' => $series->label,

@@ -105,7 +105,34 @@ final class AtlasChartTest extends TestCase
             self::at(self::dataset($chart, 0), 'backgroundColor'),
             self::at(self::dataset($chart, 1), 'backgroundColor'),
         );
-        self::assertSame(ChartBuilder::SWATCHES[0], self::at(self::dataset($chart, 0), 'backgroundColor'));
+        // A TOKEN, NEVER A VALUE: the first series takes the first category
+        // and the chart's own controller resolves it where it is drawn, so
+        // the same series follows the theme and matches the third zone on a
+        // plate beside it.
+        self::assertSame('var(--cat-1)', self::at(self::dataset($chart, 0), 'backgroundColor'));
+        self::assertSame('var(--cat-2)', self::at(self::dataset($chart, 1), 'backgroundColor'));
+    }
+
+    /** A SERIES MAY STATE ITS CATEGORY, and then it wears that one wherever it sits. */
+    public function testASeriesStatesItsCategoryAndKeepsIt(): void
+    {
+        $chart = self::builder()->chart(new AtlasChart(
+            ChartKind::Bar,
+            ['apr'],
+            [new ChartSeries('One', [1.0], cat: 7), new ChartSeries('Two', [2.0])],
+        ));
+
+        self::assertSame('var(--cat-7)', self::at(self::dataset($chart, 0), 'backgroundColor'));
+        // And the one that states nothing still takes its place in order.
+        self::assertSame('var(--cat-2)', self::at(self::dataset($chart, 1), 'backgroundColor'));
+    }
+
+    /** A category outside the palette is refused where it is stated, not drawn as nothing. */
+    public function testACategoryOutsideThePaletteIsRefused(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        new ChartSeries('One', [1.0], cat: 19);
     }
 
     /** And a module that owns a colour keeps it — a module's hue is its own. */

@@ -8,6 +8,9 @@
 
 Not released yet.
 
+ * a performance topic's stated series category now crosses to the chart —
+   `ChartBridge` dropped it while Chart.js could not resolve a token, and the
+   chart plate resolves one now
  * THE DEPARTMENTS OVERVIEW IS A WIDGET SURFACE, like the team roster and the
    area overview: seven cells, four directions to adopt, copy and mix, and its
    own library at `/departments/widgets`. The identity band and the doors stay

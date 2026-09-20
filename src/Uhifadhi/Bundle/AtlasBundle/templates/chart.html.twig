@@ -12,7 +12,10 @@
 
    Rendered by Twig\ChartRuntime, never included by hand — a module writes
    {{ atlas_chart(chart, 'Title') }}. #}
-<div class="chart-plate"{% if boxStyle %} style="{{ boxStyle }}"{% endif %}>
+{# THE CONTROLLER IS ON THE PLATE, NOT THE CANVAS. The canvas is UX Chart.js's
+   own element and carries its controller; the pre-connect event bubbles to
+   this one, which is where a series' category token becomes a colour. #}
+<div class="chart-plate" data-controller="{{ controller }}"{% if boxStyle %} style="{{ boxStyle }}"{% endif %}>
     {% if title %}<span class="tab">{{ title }}{% if unit %}<span class="src">&middot; {{ unit }}</span>{% endif %}</span>{% endif %}
 
     {% if empty %}

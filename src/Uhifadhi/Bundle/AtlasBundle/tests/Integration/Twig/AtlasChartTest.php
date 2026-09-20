@@ -76,7 +76,8 @@ final class AtlasChartTest extends TestCase
             attributes: ['--chart-height' => '240px', 'aria-label' => 'Seats'],
         );
 
-        self::assertStringContainsString('<div class="chart-plate" style="--chart-height:240px">', $html);
+        self::assertStringContainsString('style="--chart-height:240px"', $html);
+        self::assertStringContainsString('data-controller="uhifadhi--atlas-bundle--chart-plate"', $html);
         self::assertStringContainsString('aria-label="Seats"', $html);
         self::assertStringNotContainsString('--chart-height', substr($html, strpos($html, 'chart-box') ?: 0));
     }

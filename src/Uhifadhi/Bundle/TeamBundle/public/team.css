@@ -3103,26 +3103,6 @@ form.dpf > .k { flex-basis: 100%; }
 .gdots i.nofig { background: none; border: 1px solid color-mix(in srgb, rgb(var(--c-fog)) 72%, transparent); }
 
 /* ============================================================================
-   THE CHART PRIMITIVES — ON LOAN, and they belong in the shell.
-   ----------------------------------------------------------------------------
-   A plotted figure is house vocabulary: the design workspace keeps `.ch` and
-   its parts in the vendor sheet every screen is written against, and two
-   surfaces already draw one. The platform's shell does not ship them yet, so
-   they are restated here the way `.kpi` once was — under a name that is
-   nobody's module, so the block hoists unchanged the day the shell collects
-   the loan.
-
-   EVERY RULE SPENDS A TOKEN AND NAMES NO COLOUR, which is what makes the same
-   chart correct under both palettes.
-   ========================================================================== */
-.ch { width: 100%; height: auto; display: block; }
-.ch text {
-    font-family: var(--font-mono); font-size: 7.5px; fill: var(--fog);
-}
-.ch line.grid { stroke: color-mix(in srgb, var(--fog) 22%, transparent); stroke-width: .6; }
-.ch line.ax { stroke: color-mix(in srgb, var(--fog) 55%, transparent); stroke-width: .8; }
-
-/* ============================================================================
    THE MEMBER RECORD'S SPLIT — a main column and a rail.
    ----------------------------------------------------------------------------
    The incident sheet's rail, on a record page: an 18px gutter, a 340px rail
