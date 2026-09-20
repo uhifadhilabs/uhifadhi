@@ -1,0 +1,13 @@
+{# DP·K — FOUR KPI CARDS, FOUR OR NONE, and four to a row is the ruled shape.
+   A card's movement is drawn only where a previous period was recorded; a pill
+   reading zero would be a claim this installation cannot make. #}
+{% import '@Team/departments/_bits.html.twig' as di %}
+<div class="grid kstrip" data-kpi>
+    {% for kpi in kpis %}
+        <div class="c kpi{{ kpi.hot ? ' hot' }}">
+            <span class="tab">{{ kpi.label }}</span>
+            <b class="disp">{{ kpi.value }}{% if kpi.of %}<em>{{ kpi.of }}</em>{% endif %}</b>
+            <span class="sub">{{ kpi.qualifier }}{% if kpi.delta is not null %} {{ di.delta(kpi.delta, kpi.tone()) }}{% endif %}</span>
+        </div>
+    {% endfor %}
+</div>

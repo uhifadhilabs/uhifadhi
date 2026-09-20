@@ -19,10 +19,13 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Environment;
 use Uhifadhi\Bundle\RegistryBundle\Entity\Module;
 use Uhifadhi\Bundle\RegistryBundle\Service\ModuleCatalogue;
+use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetEndpoint;
+use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentSectionOverview;
+use Uhifadhi\Bundle\TeamBundle\Widget\DepartmentWidgets;
 
 /**
  * THE DEPARTMENTS SECTION'S TWO READING SCREENS — its Overview and its Modules
@@ -52,6 +55,8 @@ final readonly class DepartmentSectionController
         private DepartmentSectionOverview $overview,
         private DepartmentRepository $departments,
         private ModuleCatalogue $catalogue,
+        private WidgetService $widgets,
+        private WidgetEndpoint $endpoint,
     ) {
     }
 
@@ -64,7 +69,32 @@ final readonly class DepartmentSectionController
     #[IsGranted(PermissionEnum::TeamManage->value)]
     public function overview(): Response
     {
-        return new Response($this->twig->render('@Team/departments/overview.html.twig', $this->overview->read()));
+        /*
+         * THE PAGE IS A COMPOSITION, not a fixed order of cells. What a reader
+         * comes to this tab for differs by who they are — somebody staffing
+         * the organisation, somebody wiring modules up, a director reading
+         * goals — and one order cannot be right for all three. So the surface
+         * ships directions and the reader adopts one, exactly as Team and the
+         * area overview do.
+         */
+        $catalog = new DepartmentWidgets()->catalog();
+
+        return new Response($this->twig->render('@Team/departments/overview.html.twig', [
+            ...$this->widgetContext(),
+            'widgets' => $this->widgets->resolve($catalog, $this->endpoint->user()),
+        ]));
+    }
+
+    /**
+     * WHAT EVERY ONE OF THIS SURFACE'S WIDGETS IS DRAWN FROM — the same
+     * reading whether it is drawn on the overview or at full size in the
+     * library, because the picture of a widget IS the widget.
+     *
+     * @return array<string, mixed>
+     */
+    public function widgetContext(): array
+    {
+        return $this->overview->read();
     }
 
     /**

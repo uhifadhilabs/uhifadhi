@@ -1,9 +1,15 @@
-{# DEPARTMENTS · OVERVIEW — the section's first tab.
+{# DEPARTMENTS · OVERVIEW — the section's first tab, AND A WIDGET SURFACE.
 
    SCOPED, STAFFED AND ATTACHED, read from the organisation inwards. Every
    figure here is owned somewhere else — by the register, by Team, by
    Performance — and this page reads them and writes none of them, which is why
    it carries no control at all.
+
+   THE CELLS ARE A COMPOSITION. What a reader comes here for differs by who
+   they are, so the surface ships directions and the reader adopts one; the
+   band and the doors below are not part of it, because the band is what the
+   section IS and the doors are the way out of it, and neither is a reading
+   anybody would arrange differently.
 
    THE HEADER IS THE SECTION'S, NOT THIS TAB'S. The title is "Departments" on
    every tab of the section and the strip says which one you are on; the
@@ -28,6 +34,7 @@
 
 {% block shell_page_actions %}
     <a class="cta" href="{{ path('team_departments') }}#add">{{ ux_icon('shell:plus', {width: 15, height: 15}) }} Add a department</a>
+    <a class="tgl w-act" href="{{ path('department_widgets') }}">{{ ux_icon('shell:layout-template', {width: 15, height: 15}) }} Widget library</a>
 {% endblock %}
 
 {% block shell_page %}
@@ -42,127 +49,17 @@
             <a class="more" href="{{ path('team_departments_configure') }}">Departments settings &rarr;</a>
         </div>
 
-        {# FOUR KPI CARDS, FOUR OR NONE — the area overview's own row, and four
-           to a row is the ruled shape. A card's movement is drawn only where a
-           previous period was recorded; a pill reading zero would be a claim
-           this installation cannot make. #}
-        <div class="grid kstrip" data-kpi>
-            {% for kpi in kpis %}
-                <div class="c kpi{{ kpi.hot ? ' hot' }}">
-                    <span class="tab">{{ kpi.label }}</span>
-                    <b class="disp">{{ kpi.value }}{% if kpi.of %}<em>{{ kpi.of }}</em>{% endif %}</b>
-                    <span class="sub">{{ kpi.qualifier }}{% if kpi.delta is not null %} {{ di.delta(kpi.delta, kpi.tone()) }}{% endif %}</span>
-                </div>
-            {% endfor %}
-        </div>
-
-        <div class="grid g2">
-            {# DP·C1 — ranked bars, longest first, scaled to the largest
-               department so the comparison the card exists to make is the one
-               a reader gets. #}
-            <div class="c">
-                <span class="tab">Positions filled by department<span class="src">&middot; longest first</span></span>
-                <div class="sxbars">
-                    {% for bar in staffing %}
-                        <div class="sxbar{{ bar.isQuiet() ? ' q' }}">
-                            <span class="l">{{ bar.label }}</span>
-                            <span class="t">{% if not bar.isQuiet() %}<i class="f" style="width:{{ bar.filledWidth }}%"></i><i class="v" style="width:{{ bar.restWidth }}%"></i>{% endif %}</span>
-                            <span class="n">{{ bar.isQuiet() ? bar.note|raw : ('<b>' ~ bar.value ~ '</b>/' ~ bar.total ~ ' &middot; ' ~ (bar.total - bar.value) ~ ' vacant')|raw }}</span>
+        {# THE CELL CLASSES ARE THE SHELL'S: `.w-grid > .w-cell.w-span-N`. #}
+        <div class="w-grid">
+            {% for widget in widgets %}
+                {% if widget.on %}
+                    <div data-w="{{ widget.id }}" class="w-cell w-span-{{ widget.cols }}">
+                        <div class="w-inner">
+                            {{ include('@Team/departments/_w_' ~ widget.id ~ '.html.twig') }}
                         </div>
-                    {% else %}
-                        <p class="use">No department yet.</p>
-                    {% endfor %}
-                </div>
-                <div class="sxmxkey">
-                    <span><i class="sxdot"></i>filled</span>
-                    <span><i class="sxdot" style="background:color-mix(in srgb,var(--fail) 42%,transparent)"></i>vacant</span>
-                    <span>scaled to the largest department</span>
-                </div>
-                <div class="sxmore"><span>{{ staffing|length }} of {{ staffing|length }} departments &middot; nothing hidden</span><span class="sp"></span><a href="{{ path('team_departments') }}">The register &rarr;</a></div>
-            </div>
-
-            {# DP·C2 — where each department is read. Two readings of one model:
-               the org-wide bucket every area inherits, and each area's own. #}
-            <div class="c">
-                <span class="tab">Departments by scope<span class="src">&middot; where each one is read</span></span>
-                <div class="sxbars">
-                    <div class="sxbar{{ scope.orgWide == 0 ? ' q' }}">
-                        <span class="l">Org-wide</span>
-                        <span class="t">{% if scope.orgWide > 0 %}<i class="f" style="width:100%"></i>{% endif %}</span>
-                        <span class="n"><b>{{ scope.orgWide }}</b> &middot; every area</span>
                     </div>
-                    {% for area in scope.areas %}
-                        <div class="sxbar">
-                            <span class="l">{{ area.name }}</span>
-                            <span class="t"><i class="b" style="width:{{ scope.areaLevel > 0 ? (area.areaLevel / scope.areaLevel * 100)|round(1) : 0 }}%"></i></span>
-                            <span class="n"><b>{{ area.areaLevel }}</b> &middot; its own</span>
-                        </div>
-                    {% endfor %}
-                </div>
-                <div class="sxmxkey">
-                    <span><i class="sxdot"></i>Org-wide &mdash; every area reads it</span>
-                    <span><i class="sxdot" style="background:color-mix(in srgb,var(--acc) 42%,transparent)"></i>Area-level &mdash; one area only</span>
-                </div>
-                <div class="rln"><span>Read in every area</span><span class="mono d">{{ scope.orgWide }} org-wide</span></div>
-                <div class="rln"><span>Read in one area</span><span class="mono d">{{ scope.areaLevel }} area-level</span></div>
-                <div class="rln"><span>Confining an org-wide department</span><span class="mono d">costs a reason &middot; narrows its positions, people and figures to that area</span></div>
-                <div class="sxmore"><span>scope is changed on the department&rsquo;s own card</span><span class="sp"></span><a href="{{ path('team_departments') }}">The register &rarr;</a></div>
-            </div>
-        </div>
-
-        <div class="grid g2">
-            {# DP·C3 — how many of the installed modules each department reads. #}
-            <div class="c">
-                <span class="tab">Modules per department<span class="src">&middot; of the installed catalogue</span></span>
-                <div class="sxbars">
-                    {% for bar in modules %}
-                        <div class="sxbar{{ bar.value == 0 ? ' q' }}">
-                            <span class="l">{{ bar.label }}</span>
-                            <span class="t">{% if bar.value > 0 %}<i class="b" style="width:{{ bar.filledWidth }}%"></i>{% endif %}</span>
-                            <span class="n">{{ bar.note }}</span>
-                        </div>
-                    {% else %}
-                        <p class="use">No department yet.</p>
-                    {% endfor %}
-                </div>
-                <div class="sxmore"><span>{{ modules|length }} of {{ modules|length }} departments</span><span class="sp"></span><a href="{{ path('team_departments_modules') }}">The matrix &rarr;</a></div>
-            </div>
-
-            {# DP·A1 — a department with no module has people and positions but
-                 no figure of its own, so it never reaches Performance. #}
-            <div class="c">
-                <span class="tab">Departments with no module<span class="src">&middot; needs attention</span></span>
-                {% for line in unattached %}
-                    <div class="rln"><span><a href="{{ path('team_department_show', {uuid: line.uuid}) }}">{{ line.label }}</a></span><span class="mono d">{{ line.note }}</span></div>
-                {% else %}
-                    <div class="rln"><span class="d">Every department reads at least one module.</span></div>
-                {% endfor %}
-                <div class="sxmore"><span>{{ unattached|length }} of {{ unattachedTotal }} shown</span><span class="sp"></span><a href="{{ path('team_departments_modules') }}">The matrix &rarr;</a></div>
-            </div>
-        </div>
-
-        <div class="grid g2">
-            {# DP·A2 — the positions nobody holds, longest vacant first. #}
-            <div class="c">
-                <span class="tab">Positions nobody holds<span class="src">&middot; longest vacant first</span></span>
-                {% for line in vacancies %}
-                    <div class="rln"><span><a href="{{ path('team_positions') }}">{{ line.label }}</a></span><span class="mono {{ line.tone }}">{{ line.note }}</span></div>
-                {% else %}
-                    <div class="rln"><span class="d">Every position is held.</span></div>
-                {% endfor %}
-                <div class="sxmore"><span>{{ vacancies|length }} of {{ vacanciesTotal }} positions</span><span class="sp"></span><a href="{{ path('team_positions') }}">Positions in Team &rarr;</a></div>
-            </div>
-
-            {# DP·A3 — what the departments have declared they will reach. #}
-            <div class="c">
-                <span class="tab">Goals declared<span class="src">&middot; {{ goalsTotal }}</span></span>
-                {% for line in goals %}
-                    <div class="rln"><span>{{ line.label }}</span><span class="mono d">{{ line.note }}</span></div>
-                {% else %}
-                    <div class="rln"><span class="d">No department has declared a goal.</span></div>
-                {% endfor %}
-                <div class="sxmore"><span>{{ goals|length }} of {{ goalsTotal }}</span><span class="sp"></span><a href="{{ path('team_departments') }}">The register &rarr;</a></div>
-            </div>
+                {% endif %}
+            {% endfor %}
         </div>
 
         <h2 class="zone">Where this goes on</h2>

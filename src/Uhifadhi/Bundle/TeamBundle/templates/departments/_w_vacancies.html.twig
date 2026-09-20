@@ -1,0 +1,10 @@
+{# DP·A2 — the positions nobody holds, longest vacant first. #}
+<div class="c">
+    <span class="tab">Positions nobody holds<span class="src">&middot; longest vacant first</span></span>
+    {% for line in vacancies %}
+        <div class="rln"><span><a href="{{ path('team_positions') }}">{{ line.label }}</a></span><span class="mono {{ line.tone }}">{{ line.note }}</span></div>
+    {% else %}
+        <div class="rln"><span class="d">Every position is held.</span></div>
+    {% endfor %}
+    <div class="sxmore"><span>{{ vacancies|length }} of {{ vacanciesTotal }} positions</span><span class="sp"></span><a href="{{ path('team_positions') }}">Positions in Team &rarr;</a></div>
+</div>

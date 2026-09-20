@@ -142,6 +142,89 @@ final class DepartmentSectionScreensTest extends WebTestCaseWithSchema
 
     // ---- the ground both screens stand on ---------------------------------
 
+    // ---- the overview as a widget surface ---------------------------------
+
+    /**
+     * THE OVERVIEW IS A COMPOSITION, not a fixed order of cells.
+     *
+     * What a reader comes to this tab for differs by who they are — somebody
+     * staffing the organisation, somebody wiring modules up, a director
+     * reading goals — and one order cannot be right for all three. So the
+     * section ships directions and the reader adopts one, exactly as the team
+     * roster and the area overview do.
+     */
+    public function testTheOverviewDrawsTheCompositionAndNotAFixedOrderOfCells(): void
+    {
+        $crawler = $this->overview();
+
+        $cells = $crawler->filter('.w-grid .w-cell')->each(
+            static fn (Crawler $c): string => (string) $c->attr('data-w'),
+        );
+
+        self::assertSame(
+            ['kpis', 'staffing', 'scope', 'modules', 'unattached', 'vacancies', 'goals'],
+            $cells,
+            'The shipped direction is every cell, in the order the organisation is read from the outside in.',
+        );
+    }
+
+    /**
+     * AND THE BAND AND THE DOORS ARE NOT PART OF IT. The band is what the
+     * section IS, drawn the same on every tab, and the doors are the way out
+     * of it — neither is a reading anybody would arrange differently, and a
+     * page whose every last element is arrangeable has no shape of its own.
+     */
+    public function testTheBandAndTheDoorsStayPageChrome(): void
+    {
+        $crawler = $this->overview();
+
+        self::assertCount(1, $crawler->filter('.factband'));
+        self::assertCount(0, $crawler->filter('.w-grid .factband'));
+        self::assertCount(3, $crawler->filter('.sxdoors .sxdoor'));
+        self::assertCount(0, $crawler->filter('.w-grid .sxdoors'));
+    }
+
+    /** The door to the library is on the page it composes. */
+    public function testTheOverviewCarriesTheDoorToItsLibrary(): void
+    {
+        $crawler = $this->overview();
+
+        $door = $crawler->filter('.pgact a[href="/departments/widgets"]');
+        self::assertCount(1, $door);
+        self::assertStringContainsString('Widget library', $door->text());
+    }
+
+    /** And the library opens on the direction this surface ships. */
+    public function testTheLibraryOpensOnTheShippedDirection(): void
+    {
+        $crawler = $this->screen('/departments/widgets');
+
+        self::assertResponseIsSuccessful();
+        self::assertSame(1, substr_count($crawler->html(), 'w-presetflag-active'), 'exactly one card wears Active');
+        self::assertStringContainsString('data-preset-kind="design" data-preset-id="default"', $crawler->html());
+        self::assertStringContainsString('data-preset-kind="design" data-preset-id="staffing"', $crawler->html());
+    }
+
+    /**
+     * ADOPTING A DIRECTION CHANGES THE OVERVIEW, which is the whole point: the
+     * library is not a preferences screen that describes a page somewhere
+     * else, it composes the page itself.
+     */
+    public function testAdoptingADirectionRecomposesTheOverview(): void
+    {
+        $crawler = $this->screen('/departments/widgets');
+        $token = (string) $crawler->filter('[data-widget-root]')->attr('data-widget-csrf-token');
+
+        $this->client->request('POST', '/departments/widgets/preset/asks', ['_token' => $token]);
+        self::assertResponseRedirects('/departments/widgets');
+
+        $cells = $this->client->request('GET', '/departments/overview')->filter('.w-grid .w-cell')->each(
+            static fn (Crawler $c): string => (string) $c->attr('data-w'),
+        );
+
+        self::assertSame(['kpis', 'unattached', 'vacancies', 'goals'], $cells);
+    }
+
     private function overview(): Crawler
     {
         return $this->screen('/departments/overview');

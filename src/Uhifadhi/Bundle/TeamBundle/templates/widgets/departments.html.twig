@@ -1,0 +1,39 @@
+{# THE WIDGET LIBRARY for the departments overview — chrome around the shell's
+   shared preset component.
+
+   Nothing department-shaped happens inside that component: it is handed this
+   surface's catalogue, this surface's partial name and this surface's routes,
+   and it renders the strips, the toolbar and the canvas. Arranging this
+   overview works exactly as arranging the team's does, which is the whole
+   reason this bundle rides the framework rather than carrying a copy of it. #}
+{% extends '@Shell/page.html.twig' %}
+{% import '@Team/team/_bits.html.twig' as bits %}
+
+{% block title %}Departments widgets{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {{ include('@Team/_stylesheets.html.twig') }}
+{% endblock %}
+
+{% block shell_page_tabs %}{% endblock %}
+
+{% block shell_breadcrumbs %}
+    <a href="{{ path('team_departments_overview') }}">uhifadhi</a> / <a href="{{ path('team_departments_overview') }}">departments</a> / widgets
+{% endblock %}
+
+{% block shell_page_title %}Departments widgets{% endblock %}
+
+{% block shell_page_subtitle %}
+    Four directions through the same seven cells, and every one of them a different question:
+    how the organisation is staffed, what each department reads, what is waiting on somebody.
+    A direction is <b>adopted</b>, copied and mixed &mdash; never picked once and frozen.
+{% endblock %}
+
+{% block shell_page_actions %}
+    <a class="tgl w-act" href="{{ path('team_departments_overview') }}">{{ bits.icon_back() }} Back to the overview</a>
+{% endblock %}
+
+{% block shell_page %}
+    {{ include('@Shell/widget/_library.html.twig') }}
+{% endblock %}

@@ -1,0 +1,11 @@
+{# DP·A1 — a department with no module has people and positions but
+     no figure of its own, so it never reaches Performance. #}
+<div class="c">
+    <span class="tab">Departments with no module<span class="src">&middot; needs attention</span></span>
+    {% for line in unattached %}
+        <div class="rln"><span><a href="{{ path('team_department_show', {uuid: line.uuid}) }}">{{ line.label }}</a></span><span class="mono d">{{ line.note }}</span></div>
+    {% else %}
+        <div class="rln"><span class="d">Every department reads at least one module.</span></div>
+    {% endfor %}
+    <div class="sxmore"><span>{{ unattached|length }} of {{ unattachedTotal }} shown</span><span class="sp"></span><a href="{{ path('team_departments_modules') }}">The matrix &rarr;</a></div>
+</div>

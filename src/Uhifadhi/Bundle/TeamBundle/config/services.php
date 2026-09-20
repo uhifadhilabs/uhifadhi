@@ -27,6 +27,7 @@ use Uhifadhi\Bundle\TeamBundle\Controller\AreaDepartmentController;
 use Uhifadhi\Bundle\TeamBundle\Controller\DepartmentConfigureController;
 use Uhifadhi\Bundle\TeamBundle\Controller\DepartmentController;
 use Uhifadhi\Bundle\TeamBundle\Controller\DepartmentSectionController;
+use Uhifadhi\Bundle\TeamBundle\Controller\DepartmentWidgetsController;
 use Uhifadhi\Bundle\TeamBundle\Controller\InviteController;
 use Uhifadhi\Bundle\TeamBundle\Controller\MemberController;
 use Uhifadhi\Bundle\TeamBundle\Controller\PasswordResetController;
@@ -108,6 +109,7 @@ use Uhifadhi\Bundle\TeamBundle\Shell\UserBadgeSource;
 use Uhifadhi\Bundle\TeamBundle\Twig\AreaScopeExtension;
 use Uhifadhi\Bundle\TeamBundle\Twig\MatrixExtension;
 use Uhifadhi\Bundle\TeamBundle\Twig\MatrixRuntime;
+use Uhifadhi\Bundle\TeamBundle\Widget\DepartmentWidgets;
 use Uhifadhi\Bundle\TeamBundle\Widget\PositionWidgets;
 use Uhifadhi\Bundle\TeamBundle\Widget\TeamWidgets;
 use Uhifadhi\Contracts\Area\StationDirectoryInterface;
@@ -865,6 +867,9 @@ return static function (ContainerConfigurator $container): void {
     $services->set('team.widget_surface.positions', PositionWidgets::class)
         ->tag(WidgetSurfaceInterface::TAG);
 
+    $services->set('team.widget_surface.departments', DepartmentWidgets::class)
+        ->tag(WidgetSurfaceInterface::TAG);
+
     /*
      * THE TEAM PAGE — the roster surface. Gated on team.manage by an attribute
      * on the action, so the gate is a permission this installation's matrix can
@@ -1179,9 +1184,26 @@ return static function (ContainerConfigurator $container): void {
             service('team.department_section_overview'),
             service(DepartmentRepository::class),
             service('registry.catalogue'),
+            service('shell.widget.service'),
+            service('shell.widget.endpoint'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(DepartmentSectionController::class, 'team.controller.department_section')->public();
+
+    /*
+     * THE DEPARTMENTS OVERVIEW'S OWN LIBRARY — the same framework the roster
+     * and the positions matrix ride, handed this surface's catalogue.
+     */
+    $services->set('team.controller.department_widgets', DepartmentWidgetsController::class)
+        ->args([
+            service('twig'),
+            service('router'),
+            service('shell.widget.service'),
+            service('shell.widget.endpoint'),
+            service('team.controller.department_section'),
+        ])
+        ->tag('controller.service_arguments');
+    $services->alias(DepartmentWidgetsController::class, 'team.controller.department_widgets')->public();
 
     /*
      * THE ONE DOOR A KIND IS WRITTEN THROUGH — trimmed, not empty, unique.

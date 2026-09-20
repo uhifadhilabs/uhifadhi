@@ -8,6 +8,11 @@
 
 Not released yet.
 
+ * THE DEPARTMENTS OVERVIEW IS A WIDGET SURFACE, like the team roster and the
+   area overview: seven cells, four directions to adopt, copy and mix, and its
+   own library at `/departments/widgets`. The identity band and the doors stay
+   page chrome — the band is what the section IS and the doors are the way out
+   of it
  * the host's three performance topics draw the design's four: Staffing
    (Positions · Filled · Vacant · Over threshold), Goals (Declared · Met ·
    Off track · No figure yet, at-risk and missed folded with both kept in the

@@ -1,0 +1,10 @@
+{# DP·A3 — what the departments have declared they will reach. #}
+<div class="c">
+    <span class="tab">Goals declared<span class="src">&middot; {{ goalsTotal }}</span></span>
+    {% for line in goals %}
+        <div class="rln"><span>{{ line.label }}</span><span class="mono d">{{ line.note }}</span></div>
+    {% else %}
+        <div class="rln"><span class="d">No department has declared a goal.</span></div>
+    {% endfor %}
+    <div class="sxmore"><span>{{ goals|length }} of {{ goalsTotal }}</span><span class="sp"></span><a href="{{ path('team_departments') }}">The register &rarr;</a></div>
+</div>
