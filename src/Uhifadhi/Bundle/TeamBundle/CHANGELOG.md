@@ -8,6 +8,14 @@
 
 Not released yet.
 
+ * THE PERSON'S RECORD SAYS WHERE A POSTING IS MADE AND GOES THERE. The
+   Postings card stays read-only — a posting belongs to the station, in the
+   area that owns the ground — and carries a door: the area's stations where
+   the viewer may open exactly one, the areas register otherwise, gated on
+   `area.edit` and absent rather than disabled. "Nullable · office-based
+   staff have none" was a docblock that had got into the product and now
+   states the fact: office-based staff hold no posting.
+
  * NO MODULE IDENTITY HUES LEFT (ruled): the permission matrix's per-module
    dots and umbrella tints, and the department chip's dots, were a list of the
    modules this sheet had heard of — so a fourth module looked like the host's

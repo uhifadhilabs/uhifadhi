@@ -8,6 +8,17 @@
 
 Not released yet.
 
+ * A POSTING HAS A DOOR TO WHERE IT IS MADE. A post with nobody at it named
+   the area's configure page and left the reader to find it; the empty state
+   now opens that page on this very station, gated on `area.edit` — what
+   posting somebody costs, not the `area.view` that merely opens the page.
+ * A STATION CARD OPENS IN THE BROWSER. The stations register is a native
+   `<details>`: opening a card used to be a NAVIGATION (`?open=<uuid>`, a
+   round trip to reveal markup the page could have carried). The whole head
+   is the control, the closed summary states "N posted · post somebody
+   inside", and `?open=` still decides which card ARRIVES open, so every deep
+   link into a station keeps working.
+
  * A STATION'S CATCHMENT CAN BE SET. The read side derived "verified at a
    post" from it all along and nothing ever wrote one, so every post had no
    ring, every day claimed at one derived UNVERIFIED, and Live read "verified

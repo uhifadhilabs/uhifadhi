@@ -89,6 +89,7 @@ use Uhifadhi\Bundle\TeamBundle\Service\PositionTitleService;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionVacancy;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionVocabulary;
 use Uhifadhi\Bundle\TeamBundle\Service\PostingBoard;
+use Uhifadhi\Bundle\TeamBundle\Service\PostingDoorService;
 use Uhifadhi\Bundle\TeamBundle\Service\RolesBoard;
 use Uhifadhi\Bundle\TeamBundle\Service\StaffingFigures;
 use Uhifadhi\Bundle\TeamBundle\Service\SuperAdminInvariant;
@@ -947,9 +948,19 @@ return static function (ContainerConfigurator $container): void {
             service('team.mail'),
             // WHERE THIS PERSON WORKS, from whoever owns the ground.
             tagged_iterator(PersonPostingProviderInterface::TAG),
+            service('team.posting_door'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(MemberController::class, 'team.controller.member')->public();
+
+    /*
+     * WHERE A POSTING IS MADE. This bundle holds no areas, so the door is
+     * resolved from the shell's scope source — the one place the areas, the
+     * account and the voters are folded together — and is route-tolerant,
+     * because the addresses belong to the application.
+     */
+    $services->set('team.posting_door', PostingDoorService::class)
+        ->args([service('router'), service('shell.scopes')]);
 
     /*
      * POSITIONS AND PERMISSIONS — the matrix surface, and the one screen that

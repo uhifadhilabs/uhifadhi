@@ -40,6 +40,7 @@ use Uhifadhi\Bundle\TeamBundle\Service\Mail;
 use Uhifadhi\Bundle\TeamBundle\Service\MemberHistory;
 use Uhifadhi\Bundle\TeamBundle\Service\PasswordResetService;
 use Uhifadhi\Bundle\TeamBundle\Service\PermissionCatalogue;
+use Uhifadhi\Bundle\TeamBundle\Service\PostingDoorService;
 use Uhifadhi\Bundle\TeamBundle\Service\SuperAdminInvariant;
 use Uhifadhi\Bundle\TeamBundle\Service\UserService;
 use Uhifadhi\Contracts\People\PersonPosting;
@@ -123,6 +124,11 @@ final readonly class MemberController
          * @var iterable<PersonPostingProviderInterface>
          */
         private iterable $postingProviders,
+        /**
+         * WHERE A POSTING IS MADE, so the record can carry a door to it
+         * rather than naming the page and leaving the reader to look.
+         */
+        private PostingDoorService $postingDoor,
     ) {
     }
 
@@ -156,6 +162,10 @@ final readonly class MemberController
             // WHERE THEY WORK, read through the seam and never written here: a
             // posting is made on the station, in the area that owns the ground.
             'postings' => $postings,
+            // AND WHERE ONE IS MADE. Null where this installation mounts no
+            // area pages at all, and the record then states the fact without
+            // offering a door to nowhere.
+            'postingDoor' => $this->postingDoor->url(),
             // HOW FAR THE POSITION REACHES — how many people sit in the one
             // this person holds. A position is one post in this model, so the
             // answer is one or none; it is counted rather than assumed,

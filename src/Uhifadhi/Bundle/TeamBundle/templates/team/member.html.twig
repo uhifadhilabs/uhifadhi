@@ -245,10 +245,23 @@
        here, because a posting is made on the station, in the area. #}
     <div class="c">
         <span class="tab">Postings<span class="src">&middot; {{ postings|length }} &middot; read-only, made in the area</span></span>
+        {# READ-ONLY HERE, AND STILL A DOOR. A posting is made on the station,
+           in the area that owns the ground — so this card names that page and
+           goes to it, rather than naming it and leaving the reader to look.
+           Gated on `area.edit`, which is what making a posting costs, and
+           absent rather than disabled: a door that closes in somebody's face
+           is worse than no door.
+
+           "Nullable · office-based staff have none" was a docblock that had
+           got into the product: a reader is told what is true of this person,
+           not what is true of a column. #}
         {% if postings is empty %}
             <div class="mb-empty" style="margin-top:14px">
                 {{ bits.icon_warn() }}
-                <span><b>Not posted to a station.</b> Nullable &middot; office-based staff have none.</span>
+                <span><b>Not posted to a station.</b> Office-based staff hold no posting.</span>
+                {% if postingDoor and is_granted('area.edit') %}
+                    <a class="more" href="{{ postingDoor }}">Post them at a station &rarr;</a>
+                {% endif %}
             </div>
         {% else %}
             <table class="tbl" style="margin-top:14px">

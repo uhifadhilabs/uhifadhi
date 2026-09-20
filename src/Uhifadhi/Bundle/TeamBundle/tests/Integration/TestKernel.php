@@ -396,6 +396,16 @@ final class TestKernel extends Kernel
         // shell's welcome page). It exists here because the firewall's
         // default_target_path sends a fresh sign-in to it, and a redirect to
         // nowhere would make the suite prove nothing.
+        /*
+         * THE AREA PAGES A REAL INSTALLATION HAS, stood in for. The person's
+         * record carries a door to where a posting is MADE, and a posting is
+         * made in the area — this bundle mounts no such address, so a suite
+         * without these two could only ever prove the door is absent.
+         */
+        $routes->add('area_index', '/areas')->controller(ShellPageController::class);
+        $routes->add('area_stations_configure', '/areas/{uuid}/stations/settings')
+            ->controller(ShellPageController::class);
+
         $routes->add('home', '/')->controller(GuardedController::class);
     }
 

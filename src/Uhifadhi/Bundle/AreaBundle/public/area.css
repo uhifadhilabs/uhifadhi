@@ -1107,6 +1107,26 @@ table.zltbl td.num em.pnone { font-size: 9.5px; }
     padding: 11px 14px 12px; min-width: 0;
 }
 .zc-hd { display: flex; align-items: center; gap: 11px; flex-wrap: wrap; }
+
+/* ── A card opens in the browser, not on the server ───────────────────────────
+   THE CARD IS A NATIVE DISCLOSURE. It used to open by NAVIGATING —
+   `?open=<uuid>`, a round trip and a repaint to reveal markup the page could
+   have carried — and the reload is what a reader notices. `<details>` costs no
+   script and brings the keyboard and the screen reader with it.
+
+   THE WHOLE HEAD IS THE CONTROL, so the marker goes: a caret drawn twice, once
+   by the browser and once by the house, is two carets. `list-style` covers
+   every engine that draws it as a list item and the webkit pseudo-element
+   covers the one that does not. */
+.zcard > summary.zc-hd { cursor: pointer; list-style: none; }
+.zcard > summary.zc-hd::-webkit-details-marker { display: none; }
+.zcard > summary.zc-hd::marker { content: ''; }
+
+/* THE HOUSE CARET TURNS ON THE OPEN STATE. `.ovx` used to read
+   `[aria-expanded]` off its own anchor; the summary carries the state now, so
+   the rule reads it off the card. */
+.zcard[open] > summary.zc-hd .ovx { color: rgb(var(--c-acc)); border-color: color-mix(in srgb, rgb(var(--c-acc)) 45%, transparent); }
+.zcard[open] > summary.zc-hd .ovx svg { transform: rotate(90deg); }
 .zc-bd { min-width: 120px; }
 .zc-nm { font-size: 13.5px; font-weight: 700; color: rgb(var(--c-tx)); text-decoration: none; }
 a.zc-nm:hover { color: rgb(var(--c-acc)); }
