@@ -32,6 +32,24 @@ Not released yet.
    exactly the loose bucket the overview draws as its own line. A period
    nobody wrote gets no pill.
 
+ * **a quarter's and a year's movements were measured against the previous
+   MONTH** — every topic read its comparison from a hardcoded one-month-back
+   key. They read `FigurePeriod::against()` now, through a key chosen by the
+   period's length, so a length nobody has stored reads as no history rather
+   than as another period's number
+ * "Compare with" — the previous period, or the same period last year, in the
+   address like the scope and the window. The design's third option is not
+   offered: "the declared target" is not a period, and the ledger's Pace
+   column already answers it
+ * performance DECLARES ITSELF A SECTION (`PerformanceSectionTabs`,
+   `PerformanceSectionConfiguration`), so the shell draws its strip and its
+   one Configure action — the pages were building a strip of their own and
+   therefore never had a Configure at all
+ * `/departments/performance/settings` — what the section opens on, and the
+   rules its figures are read under, with the placing's own number read from
+   the one place that holds it
+ * the organisation's six-figure band, on the Overview and on every record,
+   picked by key from the host's own three topics
  * the briefing leads with the LEDGER and puts what changed and what to decide
    beside it as two cards of equal height — a director opens the page to see
    where the goals stand, and the other two are readings of that

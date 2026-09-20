@@ -19,6 +19,7 @@ use Uhifadhi\Bundle\TeamBundle\Entity\DepartmentPeriodFigure;
 use Uhifadhi\Bundle\TeamBundle\Entity\InstallationPeriodFigure;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentPeriodFigureRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\InstallationPeriodFigureRepository;
+use Uhifadhi\Contracts\Kpi\FigurePeriod;
 
 /**
  * WHAT THE FIGURES WERE, PERIOD BY PERIOD — the only thing in the core that
@@ -58,6 +59,31 @@ final readonly class PerformanceHistory
     public static function yearKey(\DateTimeImmutable $when): string
     {
         return $when->format('Y');
+    }
+
+    /**
+     * THE KEY A WHOLE PERIOD IS STORED UNDER, chosen by its LENGTH.
+     *
+     * THE BUG THIS EXISTS FOR: every topic used to read its comparison
+     * from `monthKey($period->from->modify('-1 month'))`, which is the
+     * month before a month — and the month before a QUARTER, and the
+     * month before a YEAR. A quarter's movement was measured against
+     * one month and was wrong by two.
+     *
+     * A QUARTER WITH NO QUARTER ROW READS AS NO HISTORY, which is the
+     * honest answer: the figure was never written down at that length,
+     * and a page that said "no history yet" is right where one that
+     * printed a month's number in a quarter's place was not.
+     */
+    public static function keyFor(FigurePeriod $period): string
+    {
+        $days = (int) $period->from->diff($period->until)->days;
+
+        return match (true) {
+            $days > 200 => self::yearKey($period->from),
+            $days > 45 => self::quarterKey($period->from),
+            default => self::monthKey($period->from),
+        };
     }
 
     /**

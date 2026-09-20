@@ -1,7 +1,13 @@
-{# WHAT EVERY SCREEN IN THIS SECTION WEARS — the crumb, the head, the two
-   controls and the strip. Written once, because a reader moving from the
-   Overview to a topic is changing screen and never subject, and a header
-   rebuilt per page is a header that drifts per page.
+{# WHAT EVERY SCREEN IN THIS SECTION WEARS — the crumb, the head and the
+   three controls. Written once, because a reader moving from the Overview to
+   a topic is changing screen and never subject, and a header rebuilt per page
+   is a header that drifts per page.
+
+   THE STRIP AND THE CONFIGURE ACTION ARE NOT HERE, on purpose: they are the
+   FRAME's, drawn from the surface this section's routes declare
+   (PerformanceSectionTabs). A section that built its own would be the one
+   place in the product where either of them moved — and that is exactly what
+   this template did until the section declared itself.
 
    A page fills `perf_page` and nothing else. #}
 {% extends '@Shell/page.html.twig' %}
@@ -52,10 +58,29 @@
     </label>
 
     {{ include('@Shell/_period_group.html.twig', {kinds: kinds, chosen: kind.value, urls: urls}, with_context = false) }}
-{% endblock %}
 
-{% block shell_page_tabs %}
-    {{ include('@Shell/_area_tabs.html.twig', {tabs: tabs}, with_context = false) }}
+    {# WHAT THE PERIOD IS READ AGAINST. Two options and not the design's
+       three: "the declared target" is not a period — it compares a figure
+       with what somebody committed to, which is a goal's business and is
+       already answered in the ledger's Pace column. Two kinds of comparison
+       behind one control would make "up 3" mean two things on one page. #}
+    <label class="ov-ctl sm">
+        <span class="k">Compare with</span>
+        <details class="i-dd">
+            <summary class="mchip i-ddt">
+                <span class="i-ddval">{{ compare.label(period) }}</span>
+                <span class="i-ddcaret">&#9662;</span>
+            </summary>
+            <div class="i-ddmenu">
+                <span class="i-ddhead">what the movement is measured against</span>
+                {% for option in comparisons %}
+                    <a class="i-ddopt{{ option.on ? ' on' }}" href="{{ option.url }}">
+                        <span class="i-ddopt-l">{{ option.label }}</span>
+                    </a>
+                {% endfor %}
+            </div>
+        </details>
+    </label>
 {% endblock %}
 
 {% block shell_page %}{% block perf_page %}{% endblock %}{% endblock %}

@@ -40,6 +40,11 @@ Not released yet.
    would be right about seats and wrong about days-to-settle, where a sum of
    averages is a number nobody measured. A column that stays silent simply has
    no total in its header.
+ * `Kpi\FigurePeriod::against()`, `comparedWith()` and `sameLastYear()` — what a
+   period is READ AGAINST, stated once on the period so every figure on a page
+   is compared the same way. **A provider reads `against()` and never
+   `previous()` directly**: the topics were hardcoding "one month back", which
+   compared a QUARTER against a month and was wrong by two
  * `Performance\TopicDecisionsInterface` and `TopicDecision` — what somebody
    has to DECIDE, which is neither a figure nor a movement: what is wrong, the
    ask, and the department it belongs to, all in the topic's own words. The

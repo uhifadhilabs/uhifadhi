@@ -271,7 +271,7 @@ final readonly class StaffingTopic implements PerformanceTopicProviderInterface,
     public function matrix(PerformanceScope $scope, FigurePeriod $period): TopicMatrix
     {
         $months = PerformanceHistory::monthsEndingAt($period->from, self::PERIODS);
-        $previous = PerformanceHistory::monthKey($period->from->modify('-1 month'));
+        $previous = PerformanceHistory::keyFor($period->against());
 
         $columns = [
             new MatrixColumn(StaffingFigures::FILLED, 'Positions filled', polarity: ColumnPolarity::Up),
@@ -380,7 +380,7 @@ final readonly class StaffingTopic implements PerformanceTopicProviderInterface,
         string $caption = '',
     ): TopicKpi {
         $months = PerformanceHistory::monthsEndingAt($period->from, self::PERIODS);
-        $previous = PerformanceHistory::monthKey($period->from->modify('-1 month'));
+        $previous = PerformanceHistory::keyFor($period->against());
 
         $history = [];
         foreach ($months as $month) {

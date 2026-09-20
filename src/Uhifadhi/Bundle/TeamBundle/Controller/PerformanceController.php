@@ -21,16 +21,18 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Environment;
-use Uhifadhi\Bundle\ShellBundle\Model\AreaTab;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Performance\AcrossTopicsMatrix;
 use Uhifadhi\Bundle\TeamBundle\Performance\ChartBridge;
+use Uhifadhi\Bundle\TeamBundle\Performance\Comparison;
 use Uhifadhi\Bundle\TeamBundle\Performance\GoalsTopic;
+use Uhifadhi\Bundle\TeamBundle\Performance\OrganisationBand;
 use Uhifadhi\Bundle\TeamBundle\Performance\PeriodKind;
 use Uhifadhi\Bundle\TeamBundle\Performance\TopicCard;
 use Uhifadhi\Bundle\TeamBundle\Performance\TopicCards;
 use Uhifadhi\Bundle\TeamBundle\Service\PerformanceTopics;
+use Uhifadhi\Bundle\TeamBundle\Shell\PerformanceSectionTabs;
 use Uhifadhi\Contracts\Entity\AreaInterface;
 use Uhifadhi\Contracts\Kpi\FigurePeriod;
 use Uhifadhi\Contracts\Performance\DepartmentDirectoryInterface;
@@ -71,6 +73,14 @@ final readonly class PerformanceController
     public const string TOPIC_ROUTE = 'team_performance_topic';
     public const string BRIEFING_ROUTE = 'team_performance_briefing';
 
+    /**
+     * THE SURFACE MARKER — the route default that tells the shell this
+     * page is a screen of the performance section, so the frame draws
+     * the strip and the one Configure action rather than the page
+     * building either for itself.
+     */
+    public const array SURFACE = ['_uhifadhi_module' => PerformanceSectionTabs::SURFACE];
+
     /** How many of the raised decisions the briefing prints before it counts the rest. */
     public const int DECISIONS_SHOWN = 5;
 
@@ -83,23 +93,23 @@ final readonly class PerformanceController
         private DepartmentDirectoryInterface $directory,
         private AcrossTopicsMatrix $across,
         private TopicCards $cards,
+        private OrganisationBand $band,
         private UrlGeneratorInterface $urls,
         private EntityManagerInterface $entityManager,
     ) {
     }
 
-    #[Route('/departments/performance', name: self::ROUTE, methods: ['GET'])]
+    #[Route('/departments/performance', name: self::ROUTE, defaults: self::SURFACE, methods: ['GET'])]
     #[IsGranted(PermissionEnum::TeamManage->value)]
     public function overview(Request $request): Response
     {
-        $kind = PeriodKind::fromRequest($request->query->getString('period'));
-        $period = $kind->period(new \DateTimeImmutable());
+        [$kind, $compare, $period] = $this->reading($request);
         $scope = $this->scope($request);
 
         $topics = $this->topics->forScope($scope, $period);
 
         return new Response($this->twig->render('@Team/performance/overview.html.twig', [
-            ...$this->frame($scope, $period, $kind, self::ROUTE),
+            ...$this->frame($scope, $period, $kind, $compare, self::ROUTE),
             'cards' => $this->cards->build(
                 $topics,
                 $scope,
@@ -128,12 +138,11 @@ final readonly class PerformanceController
      * record behind it answers the topic. Five topics stacked on one
      * page would be five pages nobody scrolls to the bottom of.
      */
-    #[Route('/departments/performance/topics', name: self::TOPICS_ROUTE, methods: ['GET'])]
+    #[Route('/departments/performance/topics', name: self::TOPICS_ROUTE, defaults: self::SURFACE, methods: ['GET'])]
     #[IsGranted(PermissionEnum::TeamManage->value)]
     public function topics(Request $request): Response
     {
-        $kind = PeriodKind::fromRequest($request->query->getString('period'));
-        $period = $kind->period(new \DateTimeImmutable());
+        [$kind, $compare, $period] = $this->reading($request);
         $scope = $this->scope($request);
 
         $topics = $this->topics->forScope($scope, $period);
@@ -143,7 +152,7 @@ final readonly class PerformanceController
         ));
 
         return new Response($this->twig->render('@Team/performance/topics.html.twig', [
-            ...$this->frame($scope, $period, $kind, self::TOPICS_ROUTE),
+            ...$this->frame($scope, $period, $kind, $compare, self::TOPICS_ROUTE),
             'cards' => $cards,
             // HOW MANY OF THEM ARE THE HOST'S, said once above the grid —
             // the same distinction the key below it explains, counted.
@@ -164,8 +173,7 @@ final readonly class PerformanceController
     #[IsGranted(PermissionEnum::TeamManage->value)]
     public function topic(Request $request, string $key): Response
     {
-        $kind = PeriodKind::fromRequest($request->query->getString('period'));
-        $period = $kind->period(new \DateTimeImmutable());
+        [$kind, $compare, $period] = $this->reading($request);
         $scope = $this->scope($request);
 
         $topic = $this->topics->byKey($key, $scope, $period);
@@ -177,7 +185,7 @@ final readonly class PerformanceController
         }
 
         return new Response($this->twig->render('@Team/performance/topic.html.twig', [
-            ...$this->frame($scope, $period, $kind, self::TOPICS_ROUTE),
+            ...$this->frame($scope, $period, $kind, $compare, self::TOPICS_ROUTE),
             'topic' => $topic->title(),
             'byModule' => PerformanceTopicProviderInterface::HOST !== $topic->moduleSlug(),
             'kpis' => $topic->kpis($scope, $period),
@@ -207,12 +215,11 @@ final readonly class PerformanceController
      * and the ledger is the Goals topic's matrix drawn in the one
      * grammar every matrix is drawn in.
      */
-    #[Route('/departments/performance/briefing', name: self::BRIEFING_ROUTE, methods: ['GET'])]
+    #[Route('/departments/performance/briefing', name: self::BRIEFING_ROUTE, defaults: self::SURFACE, methods: ['GET'])]
     #[IsGranted(PermissionEnum::TeamManage->value)]
     public function briefing(Request $request): Response
     {
-        $kind = PeriodKind::fromRequest($request->query->getString('period'));
-        $period = $kind->period(new \DateTimeImmutable());
+        [$kind, $compare, $period] = $this->reading($request);
         $scope = $this->scope($request);
 
         $topics = $this->topics->forScope($scope, $period);
@@ -247,7 +254,7 @@ final readonly class PerformanceController
         $goals = $this->topics->byKey(GoalsTopic::KEY, $scope, $period);
 
         return new Response($this->twig->render('@Team/performance/briefing.html.twig', [
-            ...$this->frame($scope, $period, $kind, self::BRIEFING_ROUTE),
+            ...$this->frame($scope, $period, $kind, $compare, self::BRIEFING_ROUTE),
             // THE BAND IS THE GOALS TOPIC'S OWN FIVE, by the keys it
             // published them under — a briefing that summed them itself
             // would be a second answer to a question already answered.
@@ -264,6 +271,25 @@ final readonly class PerformanceController
     }
 
     /**
+     * WHAT THE ADDRESS SAYS THIS PAGE IS ABOUT: which window, what it
+     * is read against, and the period the two work out to.
+     *
+     * ONE READING FOR THE WHOLE SECTION, because a comparison that
+     * meant one thing on the Overview and another on a record would
+     * make "up 3" two different claims on one page.
+     *
+     * @return array{PeriodKind, Comparison, FigurePeriod}
+     */
+    private function reading(Request $request): array
+    {
+        $kind = PeriodKind::fromRequest($request->query->getString('period'));
+        $compare = Comparison::fromRequest($request->query->getString('compare'));
+        $period = $kind->period(new \DateTimeImmutable());
+
+        return [$kind, $compare, $period->comparedWith($compare->of($period))];
+    }
+
+    /**
      * WHAT EVERY SCREEN IN THIS SECTION CARRIES: the scope and the
      * period in the action row, the strip of sibling screens, and the
      * subline that names all three. Composed once, because a reader
@@ -271,19 +297,52 @@ final readonly class PerformanceController
      *
      * @return array<string, mixed>
      */
-    private function frame(PerformanceScope $scope, FigurePeriod $period, PeriodKind $kind, string $current): array
+    private function frame(PerformanceScope $scope, FigurePeriod $period, PeriodKind $kind, Comparison $compare, string $current): array
     {
         return [
+            // THE SAME SIX ON EVERY SCREEN OF THE SECTION, picked by key
+            // from the host's own three topics — a module never changes
+            // the organisation's own band.
+            'band' => $this->band->build($this->topics->forScope($scope, $period), $scope, $period),
             'scope' => $scope,
             'organisation' => self::ORGANISATION,
             'areas' => $this->areas(),
             'period' => $period,
-            'previous' => $period->previous(),
+            // WHAT THE SUBLINE NAMES is what the figures were actually
+            // read against — the two cannot disagree, because they are
+            // the same object.
+            'previous' => $period->against(),
             'kind' => $kind,
             'kinds' => PeriodKind::labels(),
-            'urls' => $this->periodUrls($scope),
-            'tabs' => $this->tabs($current, $scope, $kind),
+            'urls' => $this->periodUrls($scope, $compare),
+            'compare' => $compare,
+            'comparisons' => $this->comparisons($scope, $period, $kind, $compare),
         ];
+    }
+
+    /**
+     * THE COMPARISONS ON OFFER, each an address — the same rule the
+     * scope and the period keep, so a reader can send the page they are
+     * looking at to somebody.
+     *
+     * @return list<array{label: string, url: string, on: bool}>
+     */
+    private function comparisons(PerformanceScope $scope, FigurePeriod $period, PeriodKind $kind, Comparison $chosen): array
+    {
+        $offered = [];
+        foreach (Comparison::cases() as $case) {
+            $offered[] = [
+                'label' => $case->label($period),
+                'url' => $this->urls->generate(self::ROUTE, [
+                    'period' => $kind->value,
+                    'area' => $scope->areaUuid,
+                    'compare' => $case->value,
+                ]),
+                'on' => $case === $chosen,
+            ];
+        }
+
+        return $offered;
     }
 
     /**
@@ -293,37 +352,18 @@ final readonly class PerformanceController
      *
      * @return array<string, string>
      */
-    private function periodUrls(PerformanceScope $scope): array
+    private function periodUrls(PerformanceScope $scope, Comparison $compare): array
     {
         $urls = [];
         foreach (PeriodKind::cases() as $kind) {
             $urls[$kind->value] = $this->urls->generate(self::ROUTE, [
                 'period' => $kind->value,
                 'area' => $scope->areaUuid,
+                'compare' => $compare->value,
             ]);
         }
 
         return $urls;
-    }
-
-    /**
-     * THE THREE SIBLING SCREENS, carrying the reader's scope and period
-     * with them: moving from Overview to Topics is a change of screen
-     * and never a change of subject.
-     *
-     * @return list<AreaTab>
-     */
-    private function tabs(string $current, PerformanceScope $scope, PeriodKind $kind): array
-    {
-        $tabs = [];
-        foreach ([self::ROUTE => 'Overview', self::TOPICS_ROUTE => 'Topics', self::BRIEFING_ROUTE => 'Briefing'] as $route => $label) {
-            $tabs[] = new AreaTab($label, $this->urls->generate($route, [
-                'period' => $kind->value,
-                'area' => $scope->areaUuid,
-            ]), $route === $current);
-        }
-
-        return $tabs;
     }
 
     /** The organisation, or the one area the address names. */

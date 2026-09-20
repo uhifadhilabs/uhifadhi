@@ -30,6 +30,7 @@ use Uhifadhi\Bundle\TeamBundle\Controller\DepartmentSectionController;
 use Uhifadhi\Bundle\TeamBundle\Controller\InviteController;
 use Uhifadhi\Bundle\TeamBundle\Controller\MemberController;
 use Uhifadhi\Bundle\TeamBundle\Controller\PasswordResetController;
+use Uhifadhi\Bundle\TeamBundle\Controller\PerformanceConfigureController;
 use Uhifadhi\Bundle\TeamBundle\Controller\PerformanceController;
 use Uhifadhi\Bundle\TeamBundle\Controller\PositionController;
 use Uhifadhi\Bundle\TeamBundle\Controller\PositionWidgetsController;
@@ -50,6 +51,7 @@ use Uhifadhi\Bundle\TeamBundle\Performance\AttentionTopic;
 use Uhifadhi\Bundle\TeamBundle\Performance\GoalsTopic;
 use Uhifadhi\Bundle\TeamBundle\Performance\MatrixPlacing;
 use Uhifadhi\Bundle\TeamBundle\Performance\MatrixViewBuilder;
+use Uhifadhi\Bundle\TeamBundle\Performance\OrganisationBand;
 use Uhifadhi\Bundle\TeamBundle\Performance\StaffingTopic;
 use Uhifadhi\Bundle\TeamBundle\Performance\TopicCards;
 use Uhifadhi\Bundle\TeamBundle\Repository\ApiTokenRepository;
@@ -96,6 +98,8 @@ use Uhifadhi\Bundle\TeamBundle\Shell\DepartmentAreaSections;
 use Uhifadhi\Bundle\TeamBundle\Shell\DepartmentSectionConfiguration;
 use Uhifadhi\Bundle\TeamBundle\Shell\DepartmentSectionTabs;
 use Uhifadhi\Bundle\TeamBundle\Shell\PerformanceNavigation;
+use Uhifadhi\Bundle\TeamBundle\Shell\PerformanceSectionConfiguration;
+use Uhifadhi\Bundle\TeamBundle\Shell\PerformanceSectionTabs;
 use Uhifadhi\Bundle\TeamBundle\Shell\TeamNavigation;
 use Uhifadhi\Bundle\TeamBundle\Shell\TeamSectionConfiguration;
 use Uhifadhi\Bundle\TeamBundle\Shell\TeamSectionTabs;
@@ -499,6 +503,14 @@ return static function (ContainerConfigurator $container): void {
      */
     $services->set('team.performance.topic_cards', TopicCards::class);
     $services->alias(TopicCards::class, 'team.performance.topic_cards');
+
+    /*
+     * AND THE SIX FIGURES EVERY SCREEN OF THE SECTION OPENS WITH, picked
+     * by key from the host's own three topics — ruled, and a module
+     * never changes the organisation's own band.
+     */
+    $services->set('team.performance.organisation_band', OrganisationBand::class);
+    $services->alias(OrganisationBand::class, 'team.performance.organisation_band');
 
     $services->set('team.performance.across_topics', AcrossTopicsMatrix::class);
     $services->alias(AcrossTopicsMatrix::class, 'team.performance.across_topics');
@@ -980,6 +992,7 @@ return static function (ContainerConfigurator $container): void {
             service('team.department_directory'),
             service('team.performance.across_topics'),
             service('team.performance.topic_cards'),
+            service('team.performance.organisation_band'),
             service('router'),
             service('doctrine.orm.entity_manager'),
         ])
@@ -1006,6 +1019,29 @@ return static function (ContainerConfigurator $container): void {
     $services->set('team.department_section_configuration', DepartmentSectionConfiguration::class)
         ->tag(ConfigurationSectionsInterface::TAG);
     $services->alias(DepartmentSectionConfiguration::class, 'team.department_section_configuration');
+
+    /*
+     * AND THE PERFORMANCE SECTION'S OWN, on the same two contracts. Its
+     * pages were drawing a strip of their own and therefore never got the
+     * frame's one Configure action; declaring the surface buys both and
+     * costs the page the code it was using to fake one of them.
+     */
+    $services->set('team.performance_section_tabs', PerformanceSectionTabs::class)
+        ->args([service('request_stack')])
+        ->tag(ModuleTabsInterface::TAG);
+    $services->alias(PerformanceSectionTabs::class, 'team.performance_section_tabs');
+
+    $services->set('team.performance_section_configuration', PerformanceSectionConfiguration::class)
+        ->tag(ConfigurationSectionsInterface::TAG);
+    $services->alias(PerformanceSectionConfiguration::class, 'team.performance_section_configuration');
+
+    $services->set('team.controller.performance_configure', PerformanceConfigureController::class)
+        ->args([
+            service('twig'),
+            service('team.performance_topics'),
+        ])
+        ->tag('controller.service_arguments');
+    $services->alias(PerformanceConfigureController::class, 'team.controller.performance_configure')->public();
 
     /*
      * WHAT THE SECTION'S OVERVIEW READS. It owns no figure on that page: every

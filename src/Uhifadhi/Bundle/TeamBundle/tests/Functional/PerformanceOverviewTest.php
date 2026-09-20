@@ -15,6 +15,8 @@ namespace Uhifadhi\Bundle\TeamBundle\Tests\Functional;
 
 use Symfony\Component\DomCrawler\Crawler;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
+use Uhifadhi\Bundle\TeamBundle\Performance\MatrixPlacing;
+use Uhifadhi\Bundle\TeamBundle\Performance\OrganisationBand;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\Area\HostArea;
 
 /**
@@ -315,6 +317,70 @@ final class PerformanceOverviewTest extends WebTestCaseWithSchema
             'the tone is one of the four the platform names, never a colour',
         );
         self::assertStringContainsString('/departments/performance/topics/', (string) $first->attr('href'));
+    }
+
+    /**
+     * THE SAME SIX ON EVERY SCREEN of the section, picked by key from
+     * the host's own three topics — a band assembled from whatever a
+     * module happened to publish would be a different band per
+     * installation.
+     */
+    public function testTheOrganisationsBandIsTheSameSixOnEveryScreen(): void
+    {
+        $this->seed();
+
+        $expected = array_values(OrganisationBand::FIGURES);
+
+        foreach (['/departments/performance', '/departments/performance/topics/staffing'] as $path) {
+            $band = $this->client->request('GET', $path)
+                ->filter('.factband .f .k')
+                ->each(static fn (Crawler $c): string => $c->text());
+
+            self::assertSame($expected, $band, $path.' draws the organisation\'s own band');
+        }
+    }
+
+    /**
+     * WHAT A PERIOD IS READ AGAINST IS A CONTROL AND AN ADDRESS, and
+     * the subline names what the figures were ACTUALLY compared with —
+     * the two cannot disagree, because they are the same object.
+     */
+    public function testTheComparisonIsAnAddressAndTheSublineNamesIt(): void
+    {
+        $this->seed();
+
+        $lastYear = $this->client->request('GET', '/departments/performance?compare=last-year');
+
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString(
+            new \DateTimeImmutable('first day of this month -1 year')->format('F Y'),
+            $lastYear->filter('p.pgsub')->text(),
+        );
+
+        // AND IT SURVIVES A CHANGE OF SCREEN: moving from the Overview to
+        // Topics is a change of screen and never of subject.
+        self::assertStringContainsString(
+            'compare=last-year',
+            (string) $lastYear->filter('.atabs a')->eq(1)->attr('href'),
+        );
+    }
+
+    /** The section's one Configure action opens its settings, and the frame draws it. */
+    public function testConfigureOpensTheSectionsSettings(): void
+    {
+        $this->seed();
+
+        $crawler = $this->client->request('GET', '/departments/performance');
+        $configure = $crawler->filter('.pgact a.tgl');
+
+        self::assertCount(1, $configure, 'one configure entry, written by the frame');
+        self::assertSame('/departments/performance/settings', $configure->attr('href'));
+
+        $settings = $this->client->request('GET', '/departments/performance/settings');
+
+        self::assertResponseIsSuccessful();
+        // THE RULE'S OWN NUMBER, read from the one place that holds it.
+        self::assertStringContainsString((string) MatrixPlacing::FEWEST, $settings->filter('.grid .c')->eq(1)->text());
     }
 
     /** Performance is in the sidebar, under Observatory, with its screens. */

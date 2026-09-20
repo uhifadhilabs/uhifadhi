@@ -33,6 +33,11 @@ final readonly class FigurePeriod
         public \DateTimeImmutable $from,
         public \DateTimeImmutable $until,
         public string $label,
+        /**
+         * WHAT THIS PERIOD IS BEING READ AGAINST, where somebody chose.
+         * Null is the ordinary case and means the period before it.
+         */
+        private ?self $comparison = null,
     ) {
         if ($until <= $from) {
             throw new \InvalidArgumentException('A period ends after it starts.');
@@ -97,7 +102,43 @@ final readonly class FigurePeriod
         return new self($now->modify(\sprintf('-%d days', $days)), $now, \sprintf('%d days', $days));
     }
 
-    /** The period before this one, of the same length — what a move is measured against. */
+    /**
+     * WHAT EVERY MOVEMENT ON A PAGE IS MEASURED AGAINST — the period
+     * before, unless a reader asked for another.
+     *
+     * A PROVIDER READS THIS AND NEVER `previous()` DIRECTLY. That is
+     * the whole of what makes "compare with the same period last year"
+     * a real control rather than a caption: the page states the
+     * comparison once, on the period, and every figure on it is read
+     * the same way. A topic that hardcoded "one month back" would
+     * compare a QUARTER against a month and be wrong by three.
+     */
+    public function against(): self
+    {
+        return $this->comparison ?? $this->previous();
+    }
+
+    /** The same period, read against another one. */
+    public function comparedWith(self $against): self
+    {
+        return new self($this->from, $this->until, $this->label, $against);
+    }
+
+    /**
+     * THE SAME WINDOW ONE YEAR EARLIER — what "against last year" means
+     * for a month, a quarter and a year alike, because each is the same
+     * calendar shape moved back twelve months.
+     */
+    public function sameLastYear(): self
+    {
+        $from = $this->from->modify('-1 year');
+
+        return new self($from, $this->until->modify('-1 year'), $from->format(
+            $this->from->format('m-d') === $this->until->format('m-d') ? 'Y' : 'F Y',
+        ));
+    }
+
+    /** The period before this one, of the same length — the default comparison. */
     public function previous(): self
     {
         $length = $this->from->diff($this->until);

@@ -28,6 +28,25 @@
         <span class="by{{ byModule ? ' mod' }}" title="Who publishes this topic">{{ publisher }}</span>
     </div>
 
+    {# THE SIX THE ORGANISATION IS READ BY, the same six on every screen of
+       this section — picked by key from the host's own three topics, so a
+       module never changes the organisation's own band. #}
+    <div class="factband">
+        {% for figure in band %}
+            <span class="f">
+                <span class="k">{{ figure.label }}</span>
+                <span class="v">{{ figure.figure ?: '—' }}
+                    {%- if figure.caption or figure.delta %}<em>
+                        {{- figure.caption }}
+                        {%- if figure.caption and figure.delta %} &middot; {% endif %}
+                        {%- if figure.delta %}<span class="d{{ figure.tone ? ' ' ~ figure.tone }}">{{ figure.delta }}</span>{% endif %}
+                    </em>{% endif %}</span>
+            </span>
+        {% endfor %}
+        <span class="sp"></span>
+        <a class="more" href="{{ path('team_performance_briefing') }}">What needs a decision {{ ux_icon('shell:arrow-right') }}</a>
+    </div>
+
     <div class="tpk">
         {% for kpi in kpis %}
             <span class="c kpi">

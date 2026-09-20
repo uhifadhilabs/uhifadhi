@@ -8,6 +8,9 @@
 
 Not released yet.
 
+ * a strip of figures is FOUR to a row and eight is two rows of four (ruled):
+   `.kstrip` states its columns instead of folding on content width, which is
+   how five came to be drawn — four plates and an orphan on a small laptop
  * a sheet that does not declare the palette may name no colour of its own —
    the fleet rule, with the shell and the atlas's ground exempt because they
    declare one

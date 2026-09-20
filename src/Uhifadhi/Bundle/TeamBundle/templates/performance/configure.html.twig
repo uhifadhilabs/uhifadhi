@@ -1,0 +1,67 @@
+{# PERFORMANCE · CONFIGURE — what this section opens on, and the rules the
+   figures on it are read under.
+
+   READ-ONLY, AND THAT IS THE DESIGN, exactly as the departments section's
+   settings are. The window and the comparison are chosen in the HEADER, on
+   the page they are about, and that choice is in the address so it can be
+   sent to somebody; a second control here would be a second place the same
+   decision lived.
+
+   WHAT IT IS FOR: the rules. A reader who wants to know why a cell is shaded,
+   or why a department has no figure, finds the answer here rather than in the
+   code — and the numbers that state those rules are read from the one place
+   that holds them, never typed twice.
+
+   THE STRIP ABOVE IS THIS SURFACE'S SECTIONS, written by the shell's frame. #}
+{% extends '@Shell/page.html.twig' %}
+
+{% block title %}Performance{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {{ include('@Team/performance/_stylesheets.html.twig') }}
+{% endblock %}
+
+{% block shell_breadcrumbs %}
+    <a href="{{ path('team_index') }}">uhifadhi</a> /
+    <a href="{{ path('team_departments') }}">departments</a> /
+    <a href="{{ path('team_performance') }}">performance</a> / configure
+{% endblock %}
+
+{% block shell_page_title %}Performance{% endblock %}
+{% block shell_page_subtitle %}What this section opens on, and what a period is read against.{% endblock %}
+
+{% block shell_page %}
+    <div class="grid g2">
+        <div class="c">
+            <span class="tab">The reading<span class="src">&middot; what a page opens on</span></span>
+            <div class="rln"><span>Window on open</span><span class="mono d">{{ kinds|first }}</span></div>
+            <div class="rln"><span>Windows offered</span><span class="mono d">{{ kinds|join(' · ')|lower }}</span></div>
+            <div class="rln"><span>Compared with, on open</span><span class="mono d">{{ comparisons|first }}</span></div>
+            <div class="rln"><span>Comparisons offered</span><span class="mono d">{{ comparisons|length }}</span></div>
+            <div class="rln"><span>Where the choice lives</span><span class="mono d">the address, so a page can be sent to somebody</span></div>
+        </div>
+
+        <div class="c">
+            <span class="tab">The shades<span class="src">&middot; what a tint claims</span></span>
+            <div class="rln"><span>What a shade is</span><span class="mono d">a placing inside one column and one band</span></div>
+            <div class="rln"><span>A column with no polarity</span><span class="mono d">never tinted</span></div>
+            <div class="rln"><span>Fewest figures to place a column</span><span class="mono d">{{ fewest }}</span></div>
+            <div class="rln"><span>An absence</span><span class="mono d">dashed, and never a pale figure</span></div>
+        </div>
+    </div>
+
+    <h2 class="zone">The topics this installation carries</h2>
+
+    <div class="c">
+        <span class="tab">Topics<span class="src">&middot; the host's own, then a module's in the order the organisation arranged them</span></span>
+        {% for topic in topics %}
+            <div class="rln">
+                <span>{{ topic.title }}</span>
+                <span class="mono d">{{ topic.publisher }}</span>
+            </div>
+        {% else %}
+            <p class="perf-empty">This installation publishes no topics at all, which is not the same as an organisation with nothing to report.</p>
+        {% endfor %}
+    </div>
+{% endblock %}

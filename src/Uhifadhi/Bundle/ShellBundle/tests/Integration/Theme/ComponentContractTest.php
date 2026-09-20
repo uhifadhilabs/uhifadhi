@@ -1179,4 +1179,23 @@ final class ComponentContractTest extends ContractTestCase
     }
 
     private const string SECTION = 'THE COMPONENT VOCABULARY';
+
+    /**
+     * A STRIP OF FIGURES IS FOUR TO A ROW — ruled, and stated rather
+     * than left to `auto-fit`.
+     *
+     * FIVE COLLAPSES ON A SMALL LAPTOP: the fifth plate wraps alone and
+     * the row reads as four and an orphan. Eight is two rows of four,
+     * which is why the count is stated once here and a surface that
+     * needs more figures takes another row rather than a narrower
+     * column.
+     */
+    public function testAStripOfFiguresIsFourToARow(): void
+    {
+        self::assertMatchesRegularExpression(
+            '/\.kstrip \{[^}]*grid-template-columns:\s*repeat\(4, minmax\(0, 1fr\)\)/',
+            $this->stylesheet(),
+            'A strip that folds on its own content width cannot promise four, and five is what it drew.',
+        );
+    }
 }

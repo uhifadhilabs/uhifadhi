@@ -12,64 +12,33 @@
    somebody else's figures — where a department stands — is the placing's.
 
    WHAT THE DESIGN DRAWS THAT IS NOT HERE YET, and is named rather than
-   quietly dropped: the six-figure band above the cards, the two bounded
-   charts beside each other (the second is a geo card, which waits for the
-   geo seam), and the "Compare with" control — the page compares with the
-   period before, which is what every movement on it is measured against. #}
-{% extends '@Shell/page.html.twig' %}
+   quietly dropped: the two bounded charts beside each other — the first is
+   a chart of what each topic's headline did, the second a cartogram, and
+   that one waits for the geo seam. #}
+{% extends '@Team/performance/_frame.html.twig' %}
 
-{% block title %}Performance{% endblock %}
+{% block perf_crumb %}performance{% endblock %}
 
-{% block stylesheets %}
-    {{ parent() }}
-    {{ include('@Team/performance/_stylesheets.html.twig') }}
-{% endblock %}
+{% block perf_page %}
+    {# THE SIX THE ORGANISATION IS READ BY, the same six on every screen of
+       this section — picked by key from the host's own three topics, so a
+       module never changes the organisation's own band. #}
+    <div class="factband">
+        {% for figure in band %}
+            <span class="f">
+                <span class="k">{{ figure.label }}</span>
+                <span class="v">{{ figure.figure ?: '—' }}
+                    {%- if figure.caption or figure.delta %}<em>
+                        {{- figure.caption }}
+                        {%- if figure.caption and figure.delta %} &middot; {% endif %}
+                        {%- if figure.delta %}<span class="d{{ figure.tone ? ' ' ~ figure.tone }}">{{ figure.delta }}</span>{% endif %}
+                    </em>{% endif %}</span>
+            </span>
+        {% endfor %}
+        <span class="sp"></span>
+        <a class="more" href="{{ path('team_performance_briefing') }}">What needs a decision {{ ux_icon('shell:arrow-right') }}</a>
+    </div>
 
-{% block shell_breadcrumbs %}
-    <a href="{{ path('team_index') }}">uhifadhi</a> /
-    <a href="{{ path('team_departments') }}">departments</a> / performance
-{% endblock %}
-
-{% block shell_page_title %}Performance{% endblock %}
-
-{% block shell_page_subtitle %}
-    {{ scope.label }} &middot; {{ period.label }}, against {{ previous.label }}.
-{% endblock %}
-
-{% block shell_page_actions %}
-    {# THE SCOPE IS A PLACE, so every option is a link and the control needs
-       no script of ours: the organisation's page and one area's page are two
-       addresses, and either can be sent to somebody. #}
-    <label class="ov-ctl">
-        <span class="k">Scope</span>
-        <details class="i-dd">
-            <summary class="mchip i-ddt">
-                <span class="i-ddval">{{ scope.label }}</span>
-                <span class="i-ddcaret">&#9662;</span>
-            </summary>
-            <div class="i-ddmenu">
-                <span class="i-ddhead">whose performance</span>
-                <a class="i-ddopt{{ scope.isOrganisation ? ' on' }}" href="{{ path('team_performance', {period: kind.value}) }}">
-                    <span class="i-ddopt-l">{{ organisation }}</span>
-                </a>
-                {% for area in areas %}
-                    <a class="i-ddopt{{ scope.areaUuid == area.uuidString ? ' on' }}"
-                       href="{{ path('team_performance', {period: kind.value, area: area.uuidString}) }}">
-                        <span class="i-ddopt-l">{{ area.name }}</span>
-                    </a>
-                {% endfor %}
-            </div>
-        </details>
-    </label>
-
-    {{ include('@Shell/_period_group.html.twig', {kinds: kinds, chosen: kind.value, urls: urls}, with_context = false) }}
-{% endblock %}
-
-{% block shell_page_tabs %}
-    {{ include('@Shell/_area_tabs.html.twig', {tabs: tabs}, with_context = false) }}
-{% endblock %}
-
-{% block shell_page %}
     <div class="sphalf">
         <span class="lb">Across the topics</span>
         <span class="t">One figure a topic, and where it moved</span>

@@ -1249,10 +1249,21 @@ h2.zone::after { content: ""; flex: 1; height: 1px; background: var(--c-ln2); }
 .kpi.hot { border-color: color-mix(in srgb, rgb(var(--c-acc)) 45%, var(--c-ln)); }
 .kpi.bad { border-color: color-mix(in srgb, rgb(var(--c-fail)) 45%, var(--c-ln)); }
 
-/* A strip of plates is not the page's four-up: the same strip has to sit in
-   twelve columns and in six, so the plates fold on their own content width
-   rather than on the page's breakpoint. A modifier on `.grid`, never alone. */
-.kstrip { grid-template-columns: repeat(auto-fit, minmax(196px, 1fr)); }
+/* FOUR TO A ROW. RULED: five KPI cards collapse on a small laptop — the
+   fifth wraps alone and the row reads as four plates and an orphan — so a
+   strip is four, and a surface that needs more takes EIGHT as two rows of
+   four. Never five.
+
+   IT WAS `auto-fit` BEFORE, which is how five got drawn at all: the strip
+   folded on its own content width, so the same five plates were five across
+   on a wide screen and four-and-one on the next one down, and neither the
+   page nor the design could say which it would be. A stated four is a
+   decision; auto-fit was the absence of one.
+
+   A modifier on `.grid`, never alone. */
+.kstrip { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 1100px) { .kstrip { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .kstrip { grid-template-columns: minmax(0, 1fr); } }
 
 /* ---- THE REGISTER TABLE -------------------------------------------------
    Header cells are mono small-caps and LEFT aligned; the browser's centred bold
