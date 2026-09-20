@@ -51,6 +51,13 @@ final readonly class ZoneFeaturePlan
      * @param string      $whySubject the zone or feature the reason is about, printed in bold; empty where there is none
      * @param string      $whyTail    the rest of the reason
      * @param string      $note       a qualifier on a feature that is still arriving; empty when there is nothing to say
+     * @param string      $fileSaid   the name as the FILE wrote it, where the
+     *                                importer read it differently — a shouted
+     *                                name title-cased. Empty where the name
+     *                                arrived as it is. The change is shown in
+     *                                the preview rather than recorded in a
+     *                                column: the preview is where somebody
+     *                                still has a chance to object to it
      */
     private function __construct(
         public string $name,
@@ -60,12 +67,13 @@ final readonly class ZoneFeaturePlan
         public string $whySubject = '',
         public string $whyTail = '',
         public string $note = '',
+        public string $fileSaid = '',
     ) {
     }
 
-    public static function arriving(string $name, string $geom, ?int $km2): self
+    public static function arriving(string $name, string $geom, ?int $km2, string $fileSaid = ''): self
     {
-        return new self($name, $geom, $km2);
+        return new self($name, $geom, $km2, fileSaid: $fileSaid === $name ? '' : $fileSaid);
     }
 
     /** A name the area already carries. The file is the thing to change, or the zone. */
@@ -142,6 +150,6 @@ final readonly class ZoneFeaturePlan
 
     private function because(string $lead, string $subject = '', string $tail = ''): self
     {
-        return new self($this->name, $this->geom, $this->km2, $lead, $subject, $tail, $this->note);
+        return new self($this->name, $this->geom, $this->km2, $lead, $subject, $tail, $this->note, $this->fileSaid);
     }
 }

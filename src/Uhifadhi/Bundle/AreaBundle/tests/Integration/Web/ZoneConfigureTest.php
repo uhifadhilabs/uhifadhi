@@ -435,6 +435,34 @@ final class ZoneConfigureTest extends WebTestCase
         return (string) json_encode(['type' => 'FeatureCollection', 'features' => $features], \JSON_THROW_ON_ERROR);
     }
 
+    /**
+     * A NAME THE IMPORTER READ DIFFERENTLY SAYS SO IN THE PREVIEW.
+     *
+     * A shouted name is title-cased on the way in, and the preview is the one
+     * place somebody still has a chance to object to that before anything is
+     * written. It is shown rather than stored: a column holding the file's
+     * spelling would be a second name nobody reads, and the file itself is
+     * not kept.
+     */
+    public function testThePreviewSaysWhatTheFileSaidWhereTheNameWasRetitled(): void
+    {
+        $this->boot();
+        $this->signIn();
+        $area = $this->anArea();
+
+        $this->preview($area, $this->collection([
+            $this->feature('WESTERN SECTOR', self::A_WEST_HALF_RING),
+            $this->feature('Eastern Sector', self::A_EAST_HALF_RING),
+        ]));
+
+        $body = $this->body($this->section($area));
+
+        self::assertStringContainsString('Western Sector', $body);
+        self::assertStringContainsString('file said WESTERN SECTOR', $body);
+        // And a name nobody changed says nothing at all.
+        self::assertStringNotContainsString('file said Eastern Sector', $body);
+    }
+
     private function twoHalves(): string
     {
         return $this->collection([

@@ -384,7 +384,10 @@ final readonly class ZoneImportService
     private function verdict(AreaOfInterest $area, array $feature, string $nameProperty, array $above): ZoneFeaturePlan
     {
         $name = $this->nameOf($feature, $nameProperty);
-        $unusable = ZoneFeaturePlan::arriving($name, '{}', null);
+        // What the FILE said, where this is not it — shown in the preview, so
+        // somebody reading the list before they commit to it can object.
+        $fileSaid = $this->propertyOf($feature, $nameProperty);
+        $unusable = ZoneFeaturePlan::arriving($name, '{}', null, $fileSaid);
 
         /*
          * EVERY FEATURE HERE DECLARES A POLYGON OR NOTHING — a point layer was
@@ -403,7 +406,7 @@ final readonly class ZoneImportService
         }
 
         $km2 = $this->zoneRepository->stGeometryKm2($geom);
-        $planned = ZoneFeaturePlan::arriving($name, $geom, (int) round($km2));
+        $planned = ZoneFeaturePlan::arriving($name, $geom, (int) round($km2), $fileSaid);
 
         /*
          * A ZONE MAY LIE OUTSIDE THE BOUNDARY, so this says so and moves on.

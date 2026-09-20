@@ -339,7 +339,11 @@
                                 {% else %}
                                     <span class="zsw hollow"></span>
                                 {% endif %}
-                                <span class="zfnm">{{ feature.name }}</span>
+                                {# WHAT THE FILE SAID, where the importer read it
+                                   differently: a name shouted in upper case is
+                                   title-cased, and this is the one place somebody
+                                   still has a chance to object to that. #}
+                                <span class="zfnm">{{ feature.name }}{% if feature.fileSaid %} <em class="zfwas">file said {{ feature.fileSaid }}</em>{% endif %}</span>
                                 {% if feature.isArriving %}
                                     <span class="zfm">{{ feature.km2|number_format }} km&sup2;</span>
                                     <span class="chip ok">arriving</span>

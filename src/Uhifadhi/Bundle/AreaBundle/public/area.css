@@ -1170,6 +1170,13 @@ a.zc-nm:hover { color: rgb(var(--c-acc)); }
     border-bottom: 1px dashed var(--c-ln); font-size: 12.5px; cursor: pointer;
 }
 .zfeat .zfnm { font-weight: 600; color: rgb(var(--c-tx)); flex: none; min-width: 104px; }
+/* WHAT THE FILE SAID, beside the name the product will use — quieter than the
+   name and in the same monospace the rest of the row's facts are in, because
+   it is a fact about the file rather than a second name. */
+.zfeat .zfnm .zfwas {
+    font-family: var(--font-mono); font-size: 9.5px; font-weight: 500; font-style: normal;
+    color: rgb(var(--c-dim)); margin-left: 6px; white-space: nowrap;
+}
 .zfeat .zfm {
     font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10.5px; font-weight: 500;
     color: rgb(var(--c-dim)); flex: none;

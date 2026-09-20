@@ -12,7 +12,9 @@ Not released yet.
    a name with one lower-case letter in it is left exactly as it arrived: a
    GIS export shouts because its tool writes that way, not because anybody
    decided the zone is called CRATER — and a corrected name that is now wrong
-   is worse than a shouting one
+   is worse than a shouting one. Where a name WAS retitled the import preview
+   says so beside it ("Crater · file said CRATER"), which is the one place
+   somebody can still object before anything is written
  * ONE POSTING A PERSON (ruled): one station, one area. `PostingService::post()`
    refuses somebody who already stands anywhere and names where, so moving
    them is two acts — end the posting they have, make the one they are going
