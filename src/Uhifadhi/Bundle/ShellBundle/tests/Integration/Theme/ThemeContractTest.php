@@ -116,9 +116,10 @@ final class ThemeContractTest extends ContractTestCase
             '--font-body',
             '--font-mono',
 
-            // THE CATEGORICAL NINE. A surface writes `data-cat` and reads
-            // `--cat`; the numbered nine are listed because painting an SVG
-            // attribute is the one place that indirection cannot reach.
+            // THE CATEGORICAL NINE AND THE RING AFTER THEM. A surface writes
+            // `data-cat` and reads `--cat`; the numbered ones are listed
+            // because painting an SVG attribute is the one place that
+            // indirection cannot reach.
             '--cat-1',
             '--cat-2',
             '--cat-3',
@@ -128,6 +129,15 @@ final class ThemeContractTest extends ContractTestCase
             '--cat-7',
             '--cat-8',
             '--cat-9',
+            '--cat-10',
+            '--cat-11',
+            '--cat-12',
+            '--cat-13',
+            '--cat-14',
+            '--cat-15',
+            '--cat-16',
+            '--cat-17',
+            '--cat-18',
             '--cat-p-1',
             '--cat-p-2',
             '--cat-p-3',
@@ -137,6 +147,15 @@ final class ThemeContractTest extends ContractTestCase
             '--cat-p-7',
             '--cat-p-8',
             '--cat-p-9',
+            '--cat-p-10',
+            '--cat-p-11',
+            '--cat-p-12',
+            '--cat-p-13',
+            '--cat-p-14',
+            '--cat-p-15',
+            '--cat-p-16',
+            '--cat-p-17',
+            '--cat-p-18',
             // WHAT A PLATE DRAWS WITH. Imagery is dark under both themes.
             '--plate-ink',
             '--plate-veil',
@@ -194,6 +213,15 @@ final class ThemeContractTest extends ContractTestCase
             '--cat-p-7',
             '--cat-p-8',
             '--cat-p-9',
+            '--cat-p-10',
+            '--cat-p-11',
+            '--cat-p-12',
+            '--cat-p-13',
+            '--cat-p-14',
+            '--cat-p-15',
+            '--cat-p-16',
+            '--cat-p-17',
+            '--cat-p-18',
             '--plate-ink', '--plate-veil', '--plate-rule', '--plate-edge',
             '--plate-acc', '--plate-ring', '--plate-ok', '--plate-warn',
             '--plate-fail', '--plate-dim', '--plate-base', '--plate-panel',

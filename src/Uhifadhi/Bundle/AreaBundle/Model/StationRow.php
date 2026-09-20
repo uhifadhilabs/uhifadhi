@@ -48,7 +48,7 @@ final readonly class StationRow
         public ?string $code,
         public ?string $zoneUuid,
         public ?string $zoneName,
-        /** The category of the zone this post stands in, 1 to 9; null where it stands in none. */
+        /** The category of the zone this post stands in, 1 to 18; null where it stands in none. */
         public ?int $zoneCat,
         public int $posted,
         public bool $led,

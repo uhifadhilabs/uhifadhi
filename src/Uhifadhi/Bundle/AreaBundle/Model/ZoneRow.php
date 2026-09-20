@@ -41,7 +41,7 @@ final readonly class ZoneRow
     public function __construct(
         public string $uuid,
         public string $name,
-        /** The category the register's order gave it, 1 to 9 — never a colour. */
+        /** The category the register's order gave it, 1 to 18 — never a colour. */
         public int $cat,
         public int $km2,
         public ?float $shareOfArea,

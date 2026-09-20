@@ -16,6 +16,7 @@ namespace Uhifadhi\Bundle\ShellBundle\Tests\Integration\Theme;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Uhifadhi\Bundle\ShellBundle\Contract\LayoutContract;
 use Uhifadhi\Bundle\ShellBundle\Tests\Integration\ContractTestCase;
+use Uhifadhi\Contracts\Atlas\PlatePalette;
 
 /**
  * SPEC 5 — THE COMPONENT VOCABULARY.
@@ -659,7 +660,7 @@ final class ComponentContractTest extends ContractTestCase
     {
         $sheet = $this->stylesheet();
 
-        for ($n = 1; $n <= 9; ++$n) {
+        for ($n = 1; $n <= PlatePalette::CATEGORIES; ++$n) {
             self::assertMatchesRegularExpression(
                 '/--cat-'.$n.'\s*:/',
                 $sheet,
@@ -674,6 +675,59 @@ final class ComponentContractTest extends ContractTestCase
 
         // The dark theme aliases the plate values rather than restating them.
         self::assertStringContainsString('--cat-1: var(--cat-p-1);', $sheet);
+        self::assertStringContainsString('--cat-18: var(--cat-p-18);', $sheet);
+    }
+
+    /**
+     * PAST NINE, A SECOND LIGHTNESS RING — ruled 2026-09-21, and the point of
+     * it is that it is a RING and not a repeat: eighteen positions, eighteen
+     * distinct values, in each of the three readings.
+     *
+     * An area with eleven zones — Ngorongoro has eleven — got nine colours
+     * and two repeats before this, so two zones at opposite ends of a plate
+     * drew the same ring and the key beside it said two different names.
+     */
+    public function testTheRingIsEighteenDistinctValuesInEveryReading(): void
+    {
+        $sheet = $this->stylesheet();
+
+        foreach (['--cat-p-' => 'on imagery', '--cat-' => 'on paper'] as $prefix => $where) {
+            $values = [];
+            for ($n = 1; $n <= PlatePalette::CATEGORIES; ++$n) {
+                $stated = 1 === preg_match('/'.preg_quote($prefix.$n, '/').'\s*:\s*(#[0-9A-Fa-f]{6})\s*;/', $sheet, $found)
+                    ? $found[1]
+                    : null;
+
+                self::assertNotNull($stated, \sprintf('%s%d is a stated value %s', $prefix, $n, $where));
+                $values[] = strtoupper($stated);
+            }
+
+            self::assertSame(
+                PlatePalette::CATEGORIES,
+                \count(array_unique($values)),
+                \sprintf('Two of the eighteen read the same %s, which is a repeat and not a ring.', $where),
+            );
+        }
+    }
+
+    /**
+     * AND EVERY ONE OF THE EIGHTEEN IS ASSIGNED AND REPAINTED. A token nobody
+     * can reach through `[data-cat]` is a token that does not exist, and a
+     * plate marker written as `fill="var(--cat-14)"` with no repaint rule is
+     * a mark drawn in the paper reading on top of imagery.
+     */
+    public function testEveryPositionIsAssignedAndRepaintedOnAPlate(): void
+    {
+        $sheet = $this->stylesheet();
+
+        for ($n = 1; $n <= PlatePalette::CATEGORIES; ++$n) {
+            self::assertStringContainsString(
+                \sprintf('[data-cat="%d"] { --cat: var(--cat-%d); --cat-plate: var(--cat-p-%d); }', $n, $n, $n),
+                $sheet,
+            );
+            self::assertStringContainsString(\sprintf('.viewer [fill="var(--cat-%d)"] { fill: var(--cat-p-%d); }', $n, $n), $sheet);
+            self::assertStringContainsString(\sprintf('.viewer [stroke="var(--cat-%d)"] { stroke: var(--cat-p-%d); }', $n, $n), $sheet);
+        }
     }
 
     /**

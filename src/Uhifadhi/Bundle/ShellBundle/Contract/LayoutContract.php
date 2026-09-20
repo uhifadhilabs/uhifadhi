@@ -181,10 +181,12 @@ final class LayoutContract
         '--font-body',
         '--font-mono',
 
-        // THE CATEGORICAL NINE, and the plate reading of each. A surface
-        // writes `data-cat` and reads `--cat`; these are listed because a
-        // module legitimately reads one to paint an SVG attribute, which is
-        // the one place the indirection cannot reach.
+        // THE CATEGORICAL NINE AND THE RING AFTER THEM, and the plate
+        // reading of each. A surface writes `data-cat` and reads `--cat`;
+        // these are listed because a module legitimately reads one to paint
+        // an SVG attribute, which is the one place the indirection cannot
+        // reach. Ten to eighteen are the same nine hues one lightness step
+        // further from the ground — a second ring, never a tenth hue.
         '--cat-1',
         '--cat-2',
         '--cat-3',
@@ -194,6 +196,15 @@ final class LayoutContract
         '--cat-7',
         '--cat-8',
         '--cat-9',
+        '--cat-10',
+        '--cat-11',
+        '--cat-12',
+        '--cat-13',
+        '--cat-14',
+        '--cat-15',
+        '--cat-16',
+        '--cat-17',
+        '--cat-18',
         '--cat-p-1',
         '--cat-p-2',
         '--cat-p-3',
@@ -203,9 +214,18 @@ final class LayoutContract
         '--cat-p-7',
         '--cat-p-8',
         '--cat-p-9',
+        '--cat-p-10',
+        '--cat-p-11',
+        '--cat-p-12',
+        '--cat-p-13',
+        '--cat-p-14',
+        '--cat-p-15',
+        '--cat-p-16',
+        '--cat-p-17',
+        '--cat-p-18',
         // `--cat` and `--cat-plate` are deliberately absent: they are set per
         // element by `[data-cat]`, never on the root, and a module reads them
-        // rather than choosing one of the nine by number.
+        // rather than choosing one of the eighteen by number.
 
         // WHAT A PLATE DRAWS WITH. Imagery is dark in both themes, so none of
         // these turns over and a module never writes a literal on a `.viewer`.

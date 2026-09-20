@@ -8,6 +8,11 @@
 
 Not released yet.
 
+ * PAST NINE, A SECOND LIGHTNESS RING (ruled): `--cat-10..18` and
+   `--cat-p-10..18` are the same nine hues one lightness step further from the
+   ground — never a tenth hue — with their `[data-cat]` assignments and their
+   plate repaint pairs, so a set of eleven gets eleven distinct marks instead
+   of nine and two repeats
  * `.livedot` — the one mark the accent is reserved for, in two presentations
    of one primitive: `svg .livedot` on a plate (plate palette) and `i.livedot`
    inline in a list or a legend row (theme palette), with `.stale` for a

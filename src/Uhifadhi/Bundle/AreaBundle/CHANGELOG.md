@@ -8,6 +8,9 @@
 
 Not released yet.
 
+ * a zone's category wraps at EIGHTEEN, not nine: Ngorongoro's eleven zones
+   now draw eleven distinct marks, the last two reading as kin to the first
+   two rather than as duplicates of them
  * every colour is gone from this bundle: `ZonePalette` publishes a CATEGORY
    (its position in the register's order, wrapping at nine) instead of eleven
    hexes of its own, the zone dots and station rows carry `data-cat`, and the

@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Contracts\Shell;
 
+use Uhifadhi\Contracts\Atlas\PlatePalette;
+
 /**
  * ONE ROW A BUNDLE HANGS UNDER AN AREA'S SCREEN IN THE SIDEBAR.
  *
@@ -31,7 +33,7 @@ final readonly class AreaNavChild
         /** Whether the viewer is on it — the contributor knows its own pages. */
         public bool $current = false,
         /**
-         * THE CATEGORY THIS ROW WEARS — 1 to 9, its position in its own
+         * THE CATEGORY THIS ROW WEARS — 1 to 18, its position in its own
          * declared order, and never a colour.
          *
          * A MODULE DOES NOT KNOW WHAT GREEN IS HERE. The product has one
@@ -45,8 +47,8 @@ final readonly class AreaNavChild
          */
         public ?int $cat = null,
     ) {
-        if (null !== $cat && ($cat < 1 || $cat > 9)) {
-            throw new \InvalidArgumentException(\sprintf('A category is its position in a declared order, 1 to 9; "%d" is not one. An order beyond nine wraps to 1, and that is the caller\'s to do.', $cat));
+        if (null !== $cat && ($cat < 1 || $cat > PlatePalette::CATEGORIES)) {
+            throw new \InvalidArgumentException(\sprintf('A category is its position in a declared order, 1 to %d; "%d" is not one. An order beyond that wraps to 1, and that is the caller\'s to do.', PlatePalette::CATEGORIES, $cat));
         }
     }
 }

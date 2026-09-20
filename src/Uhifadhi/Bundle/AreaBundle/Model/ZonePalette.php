@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\AreaBundle\Model;
 
+use Uhifadhi\Contracts\Atlas\PlatePalette;
+
 /**
  * WHICH CATEGORY EACH ZONE IN A SET IS — its position in the register's
  * order, and never a colour.
@@ -30,18 +32,23 @@ namespace Uhifadhi\Bundle\AreaBundle\Model;
  * resolves it for the page, and {@see PlatePalette::category()} resolves it
  * for the plate.
  *
- * IT WRAPS AT NINE, FOR NOW. An area with a tenth zone starts the nine again
- * rather than running out — two zones alike at opposite ends of a plate is a
- * smaller problem than a zone with no colour at all. WHAT SHOULD ACTUALLY
- * HAPPEN at the tenth is an open question with the owner; when it is answered
- * this is the one place that changes.
+ * IT WRAPS AT EIGHTEEN, and the tenth zone is answered rather than repeated.
+ * RULED 2026-09-21: past nine the categorical set continues as a SECOND
+ * LIGHTNESS RING of the same nine hues — the same hue one step further from
+ * the ground — never a tenth hue. So an area with eleven zones (Ngorongoro
+ * has eleven) gets eleven distinct marks, the last two reading as kin to the
+ * first two rather than as duplicates of them. The step itself is the
+ * palette's, in the shell's sheet; all this knows is the position.
  */
 final readonly class ZonePalette
 {
-    /** How many categories the product has, and therefore where this wraps. */
-    public const int CATEGORIES = 9;
+    /**
+     * How many categories the product has, and therefore where this wraps:
+     * the nine, and the lightness ring after them.
+     */
+    public const int CATEGORIES = PlatePalette::CATEGORIES;
 
-    /** The category a zone at this position in its set wears, 1 to 9. */
+    /** The category a zone at this position in its set wears, 1 to 18. */
     public static function catFor(int $position): int
     {
         return $position % self::CATEGORIES + 1;

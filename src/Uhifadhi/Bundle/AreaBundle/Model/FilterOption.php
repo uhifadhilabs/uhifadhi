@@ -40,7 +40,7 @@ final readonly class FilterOption
         public string $value,
         public string $label,
         public int $count = 0,
-        /** The category this option's thing wears, 1 to 9; null where it wears none. */
+        /** The category this option's thing wears, 1 to 18; null where it wears none. */
         public ?int $cat = null,
     ) {
         $this->hue = null === $cat ? null : \sprintf('var(--cat-%d)', $cat);

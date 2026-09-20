@@ -24,7 +24,7 @@ final readonly class ChartSeries
 {
     /**
      * @param list<float|null> $points one per label on the chart's axis, in the same order
-     * @param int|null         $cat    the category this series wears, 1 to 9 — its
+     * @param int|null         $cat    the category this series wears, 1 to 18 — its
      *                                 position in its own declared order, never a
      *                                 colour: the host owns the palette and it turns
      *                                 over with the theme

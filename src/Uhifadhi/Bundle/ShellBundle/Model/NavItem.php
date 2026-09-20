@@ -149,7 +149,7 @@ final class NavItem
          */
         if (null !== $swatch
             && 1 !== preg_match('/^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i', $swatch)
-            && 1 !== preg_match('/^var\\(--cat-[1-9]\\)$/', $swatch)
+            && 1 !== preg_match('/^var\\(--cat-(?:[1-9]|1[0-8])\\)$/', $swatch)
         ) {
             throw new \InvalidArgumentException(\sprintf('A nav row\'s swatch is a hex colour or a category token the shell prints onto its dot; "%s" is neither.', $swatch));
         }

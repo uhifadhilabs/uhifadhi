@@ -8,6 +8,9 @@
 
 Not released yet.
 
+ * `PlatePalette::CATEGORIES` — eighteen, the nine and the lightness ring
+   after them; `category()` resolves every one of them and refuses a
+   nineteenth rather than wrapping it into somebody else's colour
  * `Storage\FileSourceInterface` — a module saying that it stores files and
    what it calls one. They are the only two facts the files hub cannot work
    out for itself: an installed module with nothing stored yet and one that
