@@ -1,3 +1,6 @@
 .drift-mark { color: var(--tx); }
 .drift-absent { color: var(--tx); }
 .cta { background: red; }
+
+/* A running state told apart instead of judged — the thing the ruling refuses. */
+.drift-st.wip { color: var(--cat-3); border-color: var(--cat-3); }

@@ -923,6 +923,22 @@ h2.zone::after { content: ""; flex: 1; height: 1px; background: var(--c-ln2); }
 .chip.fail { color: rgb(var(--c-fail)); border-color: color-mix(in srgb, rgb(var(--c-fail)) 40%, transparent); }
 .chip.idle { color: rgb(var(--c-dim)); border: 1px dashed color-mix(in srgb, rgb(var(--c-fog)) 45%, transparent); font-weight: 600; }
 .chip.acc { color: rgb(var(--c-acc)); border-color: color-mix(in srgb, rgb(var(--c-acc)) 45%, transparent); }
+/* A RUNNING STATE WEARS THE ACCENT, FILLED — ruled 2026-09-21, in the owner's
+   words "the accent, since it is reserved for live".
+
+   THE STATUS SET IS JUDGED, and a running state is the one that is HAPPENING:
+   reported needs a look, ready is waiting, resolved went well, closed is
+   spent, and in progress is now. That is a meaning, so it takes a semantic
+   token — and before this it took a CATEGORY token or a module's own hue,
+   which says only that one thing is not another and leaves a reader to learn
+   per module what blue means.
+
+   FILLED, AND `acc` BESIDE IT KEEPS THE OUTLINE: a thing that is running and
+   a thing that is ready to run are both the accent, and one glance apart, the
+   same pair of weights a step strip spends on the step you are on versus the
+   steps you have passed. `run` is the shell's, so a module writes the class
+   instead of the colour and every module's "in progress" reads alike. */
+.chip.run { color: rgb(var(--c-accT)); background: rgb(var(--c-acc)); border-color: rgb(var(--c-acc)); }
 
 /* The MINI CHIP: a compact pill that carries an interactive control rather than
    a status word — a width toggle, a pinned item, a removable selection. It is

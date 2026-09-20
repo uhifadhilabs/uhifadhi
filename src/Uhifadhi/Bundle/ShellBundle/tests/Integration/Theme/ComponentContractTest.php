@@ -209,6 +209,31 @@ final class ComponentContractTest extends ContractTestCase
     }
 
     /**
+     * A RUNNING STATE IS THE FILLED ACCENT, AND A READY ONE THE OUTLINE.
+     *
+     * Ruled 2026-09-21: "the accent, since it is reserved for live". The two
+     * are one glance apart on purpose — a thing that is running and a thing
+     * that is ready to run are both the accent, told apart by weight and not
+     * by hue — and the shell ships both so a module writes the class instead
+     * of the colour.
+     */
+    public function testARunningStatusIsTheFilledAccentBesideTheOutlineOne(): void
+    {
+        $css = $this->stylesheet();
+
+        self::assertStringContainsString(
+            '.chip.run { color: rgb(var(--c-accT)); background: rgb(var(--c-acc)); border-color: rgb(var(--c-acc)); }',
+            $css,
+            'A running state is the accent, filled.',
+        );
+        self::assertStringContainsString(
+            '.chip.acc { color: rgb(var(--c-acc)); border-color: color-mix(in srgb, rgb(var(--c-acc)) 45%, transparent); }',
+            $css,
+            'And ready keeps the outline, so the two are a glance apart.',
+        );
+    }
+
+    /**
      * THE LIVE DOT IS ONE PRIMITIVE IN TWO PRESENTATIONS, and the sheet has to
      * carry both or a module ends up drawing its own.
      *

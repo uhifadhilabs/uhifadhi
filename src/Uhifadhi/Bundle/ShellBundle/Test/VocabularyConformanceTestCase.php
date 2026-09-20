@@ -330,6 +330,70 @@ abstract class VocabularyConformanceTestCase extends TestCase
      * is a HUE — a colour somebody picked instead of naming what they
      * meant.
      */
+    /**
+     * A RUNNING STATE WEARS THE ACCENT, and never a category or a module's
+     * own hue — RULED 2026-09-21, in the owner's words "the accent, since it
+     * is reserved for live".
+     *
+     * THE STATUS SET IS JUDGED. Reported needs a look, ready is waiting,
+     * resolved went well, closed is spent — each of those has a semantic
+     * token that means what it means. "In progress" is the one that is
+     * HAPPENING, and that is a meaning too; it was the one state told apart
+     * rather than judged, so it borrowed a CATEGORY token in one module and
+     * the patrol hue in another, and a reader had to learn per module what
+     * that blue meant.
+     *
+     * What this refuses is narrow and deliberate: a rule whose selector names
+     * a running state, colouring it with `--cat-*` or a `--dept-*`/module
+     * hue. Spend `--acc` (the shell ships `.chip.run`, filled), or say what
+     * the state MEANS with the token for that meaning.
+     */
+    public function testNoRunningStateIsColouredWithACategoryOrAModuleHue(): void
+    {
+        $borrowed = [];
+        foreach (self::runningStateRules(self::ownCss()) as $selector => $body) {
+            preg_match_all('/var\(\s*(--(?:cat|dept)-[a-z0-9-]+)/i', $body, $found);
+            foreach (array_unique($found[1]) as $token) {
+                $borrowed[] = $selector.' → var('.$token.')';
+            }
+        }
+        sort($borrowed);
+
+        self::assertSame([], $borrowed, \sprintf(
+            "A running state is coloured with a category or a module hue:\n  %s\n"
+            .'A status is judged, not told apart — in progress wears the accent (`.chip.run`, filled), '
+            .'and the categorical set says only that one thing is not another.',
+            implode("\n  ", $borrowed),
+        ));
+    }
+
+    /**
+     * THE RULES WHOSE SELECTOR NAMES A RUNNING STATE.
+     *
+     * Matched on the state word in a class, because that is the only thing
+     * every module's status vocabulary has in common: `.i-st.wip`,
+     * `.wf-st.doing`, `.p-st.running`. A word in a longer name does not count
+     * — `.ongoing-total` is a figure, not a status — so the class ends at the
+     * word or continues with a state modifier.
+     *
+     * @return array<string, string> selector to the declarations inside it
+     */
+    private static function runningStateRules(string $css): array
+    {
+        $css = (string) preg_replace('#/\*.*?\*/#s', '', $css);
+
+        $rules = [];
+        preg_match_all('/([^{}]+)\{([^{}]*)\}/', $css, $matches, \PREG_SET_ORDER);
+        foreach ($matches as [, $selector, $body]) {
+            $selector = trim(preg_replace('/\s+/', ' ', $selector) ?? '');
+            if (1 === preg_match('/\.(?:wip|doing|running|ongoing|inprogress|in-progress|progressing)(?![a-z0-9-])/i', $selector)) {
+                $rules[$selector] = $body;
+            }
+        }
+
+        return $rules;
+    }
+
     public function testNoOwnSheetNamesAColourOfItsOwn(): void
     {
         // The bundle that DECLARES the palette writes its values; the rule

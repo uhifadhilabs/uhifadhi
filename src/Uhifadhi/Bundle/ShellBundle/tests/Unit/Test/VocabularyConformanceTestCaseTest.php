@@ -62,6 +62,20 @@ final class VocabularyConformanceTestCaseTest extends TestCase
         self::drifting()->testTheOwnSheetsRestateNoSelectorTheChainShips();
     }
 
+    /**
+     * A RUNNING STATE COLOURED WITH A CATEGORY FAILS — the ruling, enforced.
+     * A status is judged, not told apart, and "in progress" borrowing the
+     * third category is exactly what sent a reader off to learn per module
+     * what that blue meant.
+     */
+    public function testARunningStateColouredWithACategoryFails(): void
+    {
+        $this->expectException(AssertionFailedError::class);
+        $this->expectExceptionMessageMatches('/--cat-3/');
+
+        self::drifting()->testNoRunningStateIsColouredWithACategoryOrAModuleHue();
+    }
+
     /** The reader is watched working too, or a failure could be an empty sweep. */
     public function testTheDriftingBundlesOwnVocabularyIsSeen(): void
     {

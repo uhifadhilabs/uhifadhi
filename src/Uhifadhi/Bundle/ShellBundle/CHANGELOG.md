@@ -8,6 +8,11 @@
 
 Not released yet.
 
+ * A RUNNING STATE WEARS THE ACCENT, FILLED (ruled): `.chip.run` beside the
+   outline `.chip.acc`, so "in progress" stops borrowing a category token in
+   one module and a module hue in another. The conformance suite refuses a
+   rule whose selector names a running state and colours it with `--cat-*` or
+   a `--dept-*` hue
  * THE WIDGET LIBRARY TAKES SEVERAL SURFACES: a module with two compositions —
    the roster's Overview and its Live plate rail — passes `surfaces` and gets
    one library page with a section each, every section carrying its own
