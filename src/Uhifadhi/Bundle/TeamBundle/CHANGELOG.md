@@ -8,6 +8,11 @@
 
 Not released yet.
 
+ * the demo organisation seeds the FIELD STAFF the demo ground needs
+   (`TeamContentProvider::FIELD_STAFF`), beside the six named roles: with
+   somebody standing at one post at a time, six people staffed three posts of
+   sixteen and left thirteen empty, which made the one post left empty ON
+   PURPOSE say nothing at all
  * a performance topic's stated series category now crosses to the chart —
    `ChartBridge` dropped it while Chart.js could not resolve a token, and the
    chart plate resolves one now

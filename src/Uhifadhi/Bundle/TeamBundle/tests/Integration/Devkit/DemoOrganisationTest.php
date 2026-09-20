@@ -53,7 +53,12 @@ final class DemoOrganisationTest extends IntegrationTestCase
 
         self::assertCount(3, $this->service(DepartmentRepository::class)->findAllOrdered());
         self::assertCount(4, $this->service(PositionRepository::class)->findAllOrdered());
-        self::assertCount(6, $this->service(UserRepository::class)->findAllByName());
+        // THE SIX NAMED ROLES AND THE FIELD STAFF BEHIND THEM. The six are
+        // the roles a reader has to see; the rest are the body of the
+        // organisation, and without them the demo GROUND seeds with three
+        // posts staffed and thirteen empty — see TeamContentProvider's own
+        // note on why the number is what it is.
+        self::assertCount(6 + TeamContentProvider::FIELD_STAFF, $this->service(UserRepository::class)->findAllByName());
     }
 
     /**
@@ -71,7 +76,7 @@ final class DemoOrganisationTest extends IntegrationTestCase
 
         self::assertCount(3, $this->service(DepartmentRepository::class)->findAllOrdered());
         self::assertCount(4, $this->service(PositionRepository::class)->findAllOrdered());
-        self::assertCount(6, $this->service(UserRepository::class)->findAllByName());
+        self::assertCount(6 + TeamContentProvider::FIELD_STAFF, $this->service(UserRepository::class)->findAllByName());
     }
 
     /**

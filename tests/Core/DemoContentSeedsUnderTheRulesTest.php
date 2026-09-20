@@ -82,6 +82,65 @@ final class DemoContentSeedsUnderTheRulesTest extends MigrationsTestCase
     }
 
     /**
+     * EXACTLY ONE POST IN EACH AREA STANDS EMPTY, and that is the whole
+     * reason the roster is the size it is.
+     *
+     * "Nobody works out of here" is a state the screens have to draw, so the
+     * demo ground leaves one post in each area empty on purpose. It only says
+     * anything while every OTHER post is staffed: a ground that seeded three
+     * posts and left thirteen empty makes the deliberate one invisible, which
+     * is what happened the day somebody could no longer stand at two posts.
+     *
+     * THE TWO SIDES ARE HELD IN STEP HERE because nothing else can see both:
+     * the area bundle depends on the team bundle, so the ground cannot ask
+     * the roster how big it is, and the roster must not know about ground.
+     */
+    public function testExactlyOnePostInEachAreaStandsEmpty(): void
+    {
+        $this->seedTheDemoOrganisation();
+
+        $rows = $this->connection->fetchAllAssociative(
+            'SELECT s.area_id, COUNT(p.id) AS standing'
+            .' FROM station s LEFT JOIN posting p ON p.station_id = s.id AND p.ended_at IS NULL'
+            .' GROUP BY s.area_id, s.id',
+        );
+
+        self::assertNotSame([], $rows);
+
+        $empty = [];
+        foreach ($rows as $row) {
+            $area = (string) (\is_scalar($row['area_id']) ? $row['area_id'] : '');
+            $empty[$area] ??= 0;
+            if (0 === (int) (is_numeric($row['standing']) ? $row['standing'] : 0)) {
+                ++$empty[$area];
+            }
+        }
+
+        foreach ($empty as $area => $count) {
+            self::assertSame(1, $count, \sprintf('area %s leaves exactly one post empty', $area));
+        }
+    }
+
+    /**
+     * AND THE ROSTER IS SIZED FOR THE GROUND. The number the team bundle
+     * seeds is stated as a constant with its arithmetic written beside it;
+     * this is the check that the arithmetic still matches the ground, since
+     * neither bundle may look at the other.
+     */
+    public function testTheRosterIsBigEnoughToStaffEveryPostButOne(): void
+    {
+        $this->seedTheDemoOrganisation();
+
+        $posts = $this->rowCount('SELECT COUNT(*) FROM station');
+        $areas = $this->rowCount('SELECT COUNT(DISTINCT area_id) FROM station');
+        $people = $this->rowCount('SELECT COUNT(*) FROM team_user');
+
+        // Two a post — somebody leading and somebody with them — on every
+        // post but the one each area leaves empty.
+        self::assertGreaterThanOrEqual(2 * ($posts - $areas), $people);
+    }
+
+    /**
      * A POST PAST THE END OF THE ROSTER STANDS EMPTY rather than borrowing
      * somebody from an earlier gate. That is the honest reading of an
      * installation with more posts than people, and it is the state the

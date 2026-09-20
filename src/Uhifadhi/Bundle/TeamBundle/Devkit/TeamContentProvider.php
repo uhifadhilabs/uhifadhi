@@ -80,6 +80,39 @@ final readonly class TeamContentProvider implements ContentProviderInterface
         'unseated' => 'yara.benali@example.test',
     ];
 
+    /**
+     * THE FIELD STAFF THE DEMO GROUND NEEDS, and the number is not arbitrary.
+     *
+     * The demo ground is two areas of eight posts each, one post in each left
+     * deliberately empty because "nobody works out of here" is a state the
+     * screens have to draw. Every other post takes a leader and somebody with
+     * them — 2 × (8 − 1) × 2 areas — and somebody stands at ONE post (ruled),
+     * so the roster has to be that big or the ground seeds half-empty and the
+     * empty posts stop meaning anything.
+     *
+     * IT IS A NUMBER AND NOT A LOOKUP. This bundle knows nothing about ground
+     * — the area bundle depends on it, not the other way round — so the two
+     * cannot be wired together without inverting that. They are held in step
+     * by a test in the core instead (DemoContentSeedsUnderTheRulesTest), which
+     * may see both.
+     */
+    public const int FIELD_STAFF = 28;
+
+    /**
+     * The names they are seeded under, cycled with a surname list so twenty-
+     * eight people read as people rather than as "Ranger 14". Nobody here is
+     * anybody: they are the same invented-name shape as the six above.
+     *
+     * @var list<string>
+     */
+    private const array GIVEN = [
+        'Adanna', 'Bakari', 'Chiamaka', 'Dawit', 'Eshe', 'Farai', 'Gugu',
+        'Hakim', 'Imani', 'Juma', 'Kesi', 'Lulu', 'Mosi', 'Nia',
+    ];
+
+    /** @var list<string> */
+    private const array FAMILY = ['Abara', 'Diallo', 'Kimathi', 'Mwangi', 'Nkosi', 'Osei', 'Tesfaye'];
+
     public function __construct(
         private UserService $accounts,
         private PositionService $positions,
@@ -137,7 +170,38 @@ final readonly class TeamContentProvider implements ContentProviderInterface
         // to draw: verified, able to sign in, and able to do nothing at all.
         $this->person(self::ACCOUNTS['unseated'], 'Yara', 'Benali', TeamRoleEnum::Staff, null);
 
+        $this->fieldStaff($ranger);
+
         $this->twelveMonthsOfHistory([$protection, $ecology, $operations]);
+    }
+
+    /**
+     * THE PEOPLE WHO ACTUALLY WORK OUT OF THE POSTS.
+     *
+     * The six above are the roles a reader has to see — the super admin, the
+     * one who may administer, the analyst, the person holding nothing. These
+     * are the body of the organisation, and without them the demo ground
+     * seeds with three posts staffed and thirteen empty, which makes the one
+     * deliberately empty post say nothing at all.
+     *
+     * THEY ALL HOLD THE SAME POSITION, because that is what a field roster
+     * looks like: one position, many people, which is also the case the
+     * positions screen is built to show.
+     */
+    private function fieldStaff(Position $ranger): void
+    {
+        for ($n = 0; $n < self::FIELD_STAFF; ++$n) {
+            $given = self::GIVEN[$n % \count(self::GIVEN)];
+            $family = self::FAMILY[intdiv($n, \count(self::GIVEN)) % \count(self::FAMILY)];
+
+            $this->person(
+                \sprintf('%s.%s%d@example.test', mb_strtolower($given), mb_strtolower($family), $n + 1),
+                $given,
+                $family,
+                TeamRoleEnum::Staff,
+                $ranger,
+            );
+        }
     }
 
     /**
