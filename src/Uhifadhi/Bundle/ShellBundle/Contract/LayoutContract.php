@@ -135,6 +135,7 @@ final class LayoutContract
         // accent
         '--c-acc',
         '--c-accT',
+        '--c-failT',
 
         // state
         '--c-ok',
@@ -164,6 +165,7 @@ final class LayoutContract
         '--dim',
         '--acc',
         '--accT',
+        '--failT',
         '--ok',
         '--warn',
         '--fail',

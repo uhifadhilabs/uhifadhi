@@ -67,6 +67,12 @@
     --c-dim: 118 132 122;    /* tertiary */
     --c-acc: 15 138 104;     /* the jade accent: live and CTA, nothing else */
     --c-accT: 255 255 255;   /* text that survives on the accent */
+    /* AND ON THE FAIL FILL, which is the other saturated ground a control is
+       ever painted with. It is stated once and NOT redefined after dark: the
+       fail colour is saturated in both palettes, so what survives on it does
+       not turn over — unlike the accent, which is deep jade on paper and mint
+       at night and therefore takes ink of two kinds. */
+    --c-failT: 255 255 255;
     --c-ok: 30 122 70;
     --c-warn: 154 107 20;
     --c-fail: 186 66 39;
@@ -111,6 +117,7 @@
     --dim: rgb(var(--c-dim));
     --acc: rgb(var(--c-acc));
     --accT: rgb(var(--c-accT));
+    --failT: rgb(var(--c-failT));
     --ok: rgb(var(--c-ok));
     --warn: rgb(var(--c-warn));
     --fail: rgb(var(--c-fail));

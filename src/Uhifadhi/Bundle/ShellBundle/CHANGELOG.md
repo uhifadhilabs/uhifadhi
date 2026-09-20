@@ -8,6 +8,9 @@
 
 Not released yet.
 
+ * `--c-failT`/`--failT` — the ink that survives on the fail fill, stated once
+   because that colour is saturated in both palettes (unlike the accent, which
+   is deep jade on paper and mint at night and therefore takes ink of two kinds)
  * THE PAGE HINT (ruled): a page that has something to explain says it ONCE,
    as a fragment at the BOTTOM — `@Shell/_page_hint.html.twig` and `.pghint`,
    the design's `.f-say` values. A hint above the content is read by everybody

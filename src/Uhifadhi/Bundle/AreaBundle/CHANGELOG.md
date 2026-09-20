@@ -8,6 +8,12 @@
 
 Not released yet.
 
+ * `.tav` and `.stsep` are the design's, value for value: the avatar takes
+   its accent-tinted ground and edge (it was a plain raised panel, so a stack
+   read as a row of empty chips), `.tav.sm` is actually smaller than the base
+   (it was the same 22px, a class that did nothing), the stack's separating
+   ring is the CARD's ground rather than the canvas's, and the module
+   separator's weights and colours match the drawn ones
  * the shipped demo content posts each person ONCE. It walked round the roster
    so that the same ranger stood at two gates, which the posting rule now
    refuses — the seeder was the first thing to hit that refusal, and it hit it

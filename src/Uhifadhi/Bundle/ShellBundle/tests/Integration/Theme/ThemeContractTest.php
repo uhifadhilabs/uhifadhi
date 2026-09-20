@@ -66,6 +66,7 @@ final class ThemeContractTest extends ContractTestCase
             // ACCENT — one, and the text that survives on it.
             '--c-acc',
             '--c-accT',
+            '--c-failT',
 
             // STATE — four. `fail` is a thing that went wrong and `crit` is a
             // thing that is still going wrong and wants somebody now; one
@@ -97,6 +98,7 @@ final class ThemeContractTest extends ContractTestCase
             '--dim',
             '--acc',
             '--accT',
+            '--failT',
             '--ok',
             '--warn',
             '--fail',
@@ -197,7 +199,7 @@ final class ThemeContractTest extends ContractTestCase
         return array_values(array_diff(self::contractV1(), [
             // Derived — ride the channels, single definition, no dark redefinition.
             '--cv', '--p1', '--p2', '--raised', '--tx', '--fog', '--dim',
-            '--acc', '--accT', '--ok', '--warn', '--fail', '--crit', '--ln', '--ln2',
+            '--acc', '--accT', '--failT', '--ok', '--warn', '--fail', '--crit', '--ln', '--ln2',
             '--logo-tile', '--logo-child', '--logo-accent',
             '--font-display', '--font-body', '--font-mono',
 
@@ -222,6 +224,9 @@ final class ThemeContractTest extends ContractTestCase
             '--cat-p-16',
             '--cat-p-17',
             '--cat-p-18',
+            // Stated once: the fail fill is saturated in both palettes, so
+            // what survives on it does not turn over the way accent ink does.
+            '--c-failT',
             '--plate-ink', '--plate-veil', '--plate-rule', '--plate-edge',
             '--plate-acc', '--plate-ring', '--plate-ok', '--plate-warn',
             '--plate-fail', '--plate-dim', '--plate-base', '--plate-panel',

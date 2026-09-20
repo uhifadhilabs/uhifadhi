@@ -195,9 +195,12 @@
 [data-tm] table.tbl th,
 [data-pm] table.tbl th,
 [data-people] table.tbl th { white-space: nowrap; }
-/* #fff, not a token: this is text on a saturated red fill, which is the same
-   red in both themes — a token that flips would put dark text on it. */
-.open-btn.danger:hover { background: rgb(var(--c-fail)) !important; border-color: rgb(var(--c-fail)) !important; color: #fff !important; }
+/* THE INK THAT SURVIVES ON THE FAIL FILL, and it is a token now: this was
+   `#fff` with a note saying why a literal was right, and the note was right
+   about the colour and wrong about where it belongs — the shell ships
+   `--c-failT` beside `--c-accT`, stated once because the fail colour is
+   saturated in both palettes. */
+.open-btn.danger:hover { background: rgb(var(--c-fail)) !important; border-color: rgb(var(--c-fail)) !important; color: rgb(var(--c-failT)) !important; }
 /* A position row navigates (its name and its Edit button open the position), so
    the whole row says so. Create rows and band headers are not rows of data. */
 [data-positions] table.tbl tbody tr:not(.newrow):not(.gh) { cursor: pointer; }
@@ -493,18 +496,20 @@ td.dcell + td { white-space: nowrap; }
     color: rgb(var(--c-dim)); border: 1px solid var(--c-ln2); border-radius: 999px;
     padding: 3px 8px 2px; line-height: 1; white-space: nowrap; flex: none;
 }
-.pm-by i { width: 6px; height: 6px; border-radius: 2px; font-style: normal; flex: none; background: rgb(var(--c-fog)); }
+/* WHO CONTRIBUTED THE PERMISSION, AND A MODULE HAS NO HUE — ruled 2026-09-21.
+   This carried one colour a module: patrol jade, incident red, a roster blue
+   invented here and kept in two values because the invented one was illegible
+   on paper. Three problems, and the third is the fatal one: the colours were
+   a list of the modules this bundle had heard of, so the fourth module to
+   ship got the default and looked like the host's own.
+
+   WHAT IS CONTRIBUTED VERSUS WHAT IS THE HOST'S is the distinction the row
+   has to draw, and that is TWO states, not one per module: the host's own is
+   the muted dot, a module's is the accent, and a bundle that is not installed
+   is the hollow dashed one below. The module's NAME is written beside it,
+   which is what actually tells a reader which module it is. */
+.pm-by i { width: 6px; height: 6px; border-radius: 2px; font-style: normal; flex: none; background: rgb(var(--c-acc)); }
 .pm-by.core i { background: rgb(var(--c-fog)); }
-/* The module colours, matched to nav.css and area-overview.css exactly. */
-.pm-by.patrols i { background: rgb(var(--c-acc)); }
-.pm-by.incidents i { background: var(--i-poach, #E05B41); }
-/* Roster blue, legible on both grounds. The shell ships light as the bare
-   :root and dark as html.dark, so the darker blue is the default here and the
-   lighter one is the dark-mode override — the design system spelled it the
-   other way round because its own default was dark. */
-.pm-by.roster i { background: #3457B5; }
-html.dark .pm-by.roster i { background: #7FA6F0; }
-.pm-by.surveys i { background: rgb(var(--c-warn)); }
 /* A permission from a bundle that is NOT installed here — drawn dashed and
    hollow, the same grammar the area overview's honest not-installed slot uses. */
 .pm-by.next { border-style: dashed; }
@@ -527,12 +532,11 @@ html.dark .pm-by.roster i { background: #7FA6F0; }
     font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 10px; color: rgb(var(--c-dim));
     margin-left: auto; white-space: nowrap;
 }
-/* A module umbrella is tinted by its own colour, faintly, so a screenshot of
-   the matrix still says which rows are contributed. */
+/* A CONTRIBUTED UMBRELLA IS TINTED, AND BY ONE THING. It was tinted per
+   module, which made the band's colour a list of module names this sheet had
+   memorised; what a reader needs from the tint is "these rows came from a
+   module", and that is one fact with one answer. */
 .pm-umb.pm-mod { background: color-mix(in srgb, rgb(var(--c-acc)) 6%, transparent); }
-.pm-umb.pm-mod-incidents { background: color-mix(in srgb, var(--i-poach, #E05B41) 7%, transparent); }
-.pm-umb.pm-mod-roster { background: color-mix(in srgb, #7FA6F0 9%, transparent); }
-.pm-umb.pm-mod-surveys { background: color-mix(in srgb, rgb(var(--c-warn)) 7%, transparent); }
 
 /* ==================== A · THE GRID =======================================
    Positions across, permissions down, a box at every intersection. The only
@@ -3048,10 +3052,11 @@ form.dpf > .k { flex-basis: 100%; }
     border: 1px solid var(--c-ln2); border-radius: 8px; background: rgb(var(--c-raised));
     font-size: 11.5px; font-weight: 600; color: rgb(var(--c-tx));
 }
-.dpchip i { width: 7px; height: 7px; border-radius: 50%; background: rgb(var(--c-fog)); flex: none; }
-.dpchip i.patrols { background: rgb(var(--c-acc)); }
-.dpchip i.incidents { background: #C85A93; }
-.dpchip i.roster { background: #4FA8E8; }
+/* THE ATTACHED MODULE'S DOT, and a module has no hue (ruled): this had a
+   colour each for the three modules somebody happened to think of, in values
+   that belonged to no palette here. A chip carries the module's NAME; the dot
+   says it is a module. */
+.dpchip i { width: 7px; height: 7px; border-radius: 50%; background: rgb(var(--c-acc)); flex: none; }
 .dpchip button {
     width: 18px; height: 18px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 5px;
     background: transparent; color: rgb(var(--c-dim)); font-size: 13px; line-height: 1; cursor: pointer;

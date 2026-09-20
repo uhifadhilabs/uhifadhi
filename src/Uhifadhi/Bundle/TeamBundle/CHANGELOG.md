@@ -8,6 +8,12 @@
 
 Not released yet.
 
+ * NO MODULE IDENTITY HUES LEFT (ruled): the permission matrix's per-module
+   dots and umbrella tints, and the department chip's dots, were a list of the
+   modules this sheet had heard of — so a fourth module looked like the host's
+   own. Contributed is the accent, the host's is the muted dot, and the
+   module's NAME says which module it is. team.css is no longer exempt from
+   the no-colour rule
  * the demo organisation seeds the FIELD STAFF the demo ground needs
    (`TeamContentProvider::FIELD_STAFF`), beside the six named roles: with
    somebody standing at one post at a time, six people staffed three posts of

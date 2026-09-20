@@ -49,14 +49,18 @@ final class VocabularyConformanceTest extends VocabularyConformanceTestCase
     }
 
     /**
-     * EXEMPT, AND THAT IS DEBT RATHER THAN A DESIGN. `team.css` still
-     * carries module identity hues — a roster blue, an incidents pink —
-     * which the "modules have no hue" ruling already refuses: selection
-     * is the house accent and a category is one of the nine. They come
-     * out with the departments surfaces, and this exemption with them.
+     * NOT EXEMPT ANY MORE, and the debt it stood for is paid.
+     *
+     * `team.css` carried module identity hues — a roster blue kept in two
+     * values because the invented one was illegible on paper, an incidents
+     * pink, an incidents red — which the "modules have no hue" ruling
+     * refuses: a module is the accent or it is the host's muted dot, and the
+     * module's NAME is what says which module it is. The one literal left
+     * was the white on a danger button's fill, and that is a token now
+     * (`--c-failT`).
      */
     protected static function declaresItsOwnPalette(): bool
     {
-        return true;
+        return false;
     }
 }

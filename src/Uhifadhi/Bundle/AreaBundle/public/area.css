@@ -1344,9 +1344,14 @@ a.zc-nm:hover { color: rgb(var(--c-acc)); }
 /* THE FACES OVERLAP because a stack of six reads as a group and six circles
    in a row read as a list. The ring is the card's own ground, so they layer. */
 .avstack { display: inline-flex; align-items: center; }
-.avstack .tav { margin-left: -6px; box-shadow: 0 0 0 2px rgb(var(--c-cv)); }
+/* THE RING THAT SEPARATES OVERLAPPING AVATARS IS THE CARD'S GROUND, not the
+   canvas's: a stack sits inside a card, and a ring in the canvas colour cut a
+   visible notch out of every avatar but the first. */
+.avstack .tav { margin-left: -6px; box-shadow: 0 0 0 2px rgb(var(--c-p1)); }
 .avstack .tav:first-child { margin-left: 0; }
-.tav.sm { width: 22px; height: 22px; font-size: 9.5px; }
+/* The small one is SMALLER. It was the same 22px as the base, which made
+   `.sm` a class that did nothing at all. */
+.tav.sm { width: 19px; height: 19px; font-size: 8.5px; }
 .tav.more { color: rgb(var(--c-dim)); }
 
 /* ══ A STATION'S RECORD ═══════════════════════════════════════════════════
@@ -1393,11 +1398,17 @@ a.zc-nm:hover { color: rgb(var(--c-acc)); }
 .pline:last-child { border-bottom: 0; }
 .pline b { font-weight: 600; color: rgb(var(--c-tx)); }
 .pline em { font-style: normal; font-size: 11.5px; color: rgb(var(--c-fog)); }
+/* SOMEBODY'S INITIALS, AND THE GROUND IS TINTED. The design draws the avatar
+   on an accent-tinted ground with an accent-tinted edge — not the plain raised
+   panel this had, which made a stack of them read as a row of empty chips. The
+   values are the design's, read value for value. */
 .tav {
     width: 22px; height: 22px; flex: none; border-radius: 50%; display: grid; place-items: center;
     font-family: "JetBrains Mono", ui-monospace, monospace; line-height: normal;
     font-size: 9.5px; font-weight: 800;
-    color: rgb(var(--c-tx)); background: rgb(var(--c-raised)); border: 1px solid var(--c-ln2);
+    color: rgb(var(--c-tx));
+    background: color-mix(in srgb, rgb(var(--c-acc)) 18%, rgb(var(--c-raised)));
+    border: 1px solid color-mix(in srgb, rgb(var(--c-acc)) 30%, transparent);
 }
 .tav.leads { border-color: color-mix(in srgb, rgb(var(--c-acc)) 55%, transparent); color: rgb(var(--c-acc)); }
 .stlead { flex: none; }
@@ -1422,13 +1433,13 @@ a.zc-nm:hover { color: rgb(var(--c-acc)); }
 
 /* WHAT THE MODULES PUBLISH — one row per module, through the station seam. */
 .stsep {
-    display: flex; align-items: baseline; gap: 8px; margin: 16px 0 9px; padding-top: 12px;
+    display: flex; align-items: center; gap: 9px; margin: 14px 0 2px; padding-top: 12px;
     border-top: 1px solid var(--c-ln);
     font-family: "JetBrains Mono", ui-monospace, monospace; line-height: normal;
     font-size: 9px; font-weight: 600;
-    letter-spacing: .14em; text-transform: uppercase; color: rgb(var(--c-dim));
+    letter-spacing: .14em; text-transform: uppercase; color: rgb(var(--c-fog));
 }
-.stsep span { margin-left: auto; letter-spacing: .04em; text-transform: none; font-weight: 500; }
+.stsep span { margin-left: auto; letter-spacing: .06em; text-transform: none; font-weight: 600; color: rgb(var(--c-dim)); }
 .stdock { display: flex; flex-direction: column; gap: 7px; }
 .stdockrow { display: flex; align-items: baseline; gap: 9px; font-size: 12.5px; }
 .stdockrow > i {
