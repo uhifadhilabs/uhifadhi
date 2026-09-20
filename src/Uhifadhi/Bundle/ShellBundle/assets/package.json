@@ -28,6 +28,12 @@
                 "main": "controllers/localtime_controller.js",
                 "fetch": "eager",
                 "enabled": true
+            },
+            "scope": {
+                "main": "controllers/scope_controller.js",
+                "name": "uhifadhi--shell-bundle--scope",
+                "fetch": "eager",
+                "enabled": true
             }
         },
         "importmap": {

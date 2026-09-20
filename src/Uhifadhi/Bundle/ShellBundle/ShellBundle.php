@@ -162,6 +162,26 @@ final class ShellBundle extends AbstractBundle
      */
     public const string STYLESHEET_TAG = 'shell.stylesheet';
 
+    /**
+     * WHAT A HOST TAGS TO FILL THE SCOPE CONTROL — the slices this viewer
+     * may look at, on an organisation-level page.
+     *
+     * The shell draws the control and knows no areas: it holds no domain and
+     * no authorization service, so the list comes from the one place that has
+     * both. Same reasoning, and same spelling discipline, as the nav tag.
+     */
+    public const string SCOPE_TAG = 'shell.scope_source';
+
+    /**
+     * WHAT A MODULE TAGS TO ANSWER AT ORGANISATION LEVEL — its own page set,
+     * which the shell mounts in Observatory after Performance.
+     *
+     * A module writes no sidebar item, no tab strip and no scope control:
+     * it says which screens it has one scope wider and the shell draws the
+     * chrome, exactly as it does for an area's tabs.
+     */
+    public const string ORG_PAGES_TAG = 'shell.org_pages';
+
     /** Config lives under "shell:", not the class-derived "uhifadhi_shell:". */
     protected string $extensionAlias = 'shell';
 

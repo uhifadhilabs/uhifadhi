@@ -8,6 +8,12 @@
 
 Not released yet.
 
+ * THE SHELL MOUNTS A MODULE'S ORGANISATION-LEVEL PAGES: a row in
+   Observatory after Performance per module tagged `shell.org_pages`, its
+   screens as the tabs under it, and the scope control (`shell.scope_source`,
+   `?area=`) in the action row. `.ov-ctl` is unscoped — it is the shell's
+   control, not the performance page's — and `.orgarea`, `.orgband` and
+   `.lfilt-n` join the vocabulary
  * a specification that every Stimulus controller the core ships actually
    REACHES an installation: declared in its bundle's `assets/package.json`,
    its package keyworded `symfony-ux`, and named in the application's own

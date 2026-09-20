@@ -52,6 +52,12 @@
                 "fetch": "lazy",
                 "enabled": true
             },
+            "scope": {
+                "main": "../src/Uhifadhi/Bundle/ShellBundle/assets/controllers/scope_controller.js",
+                "name": "uhifadhi--shell-bundle--scope",
+                "fetch": "eager",
+                "enabled": true
+            },
             "map-plate": {
                 "main": "../src/Uhifadhi/Bundle/AtlasBundle/assets/controllers/map_plate_controller.js",
                 "name": "uhifadhi--atlas-bundle--map-plate",

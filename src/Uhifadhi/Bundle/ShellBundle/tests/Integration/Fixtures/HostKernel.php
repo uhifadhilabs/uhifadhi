@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\ShellBundle\Tests\Integration\Fixtures;
 
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 use Uhifadhi\Bundle\ShellBundle\Model\AreaTab;
 use Uhifadhi\Bundle\ShellBundle\Model\NavSection;
 use Uhifadhi\Bundle\ShellBundle\ShellBundle;
@@ -95,6 +96,8 @@ final class HostKernel extends TestKernel
         self::$place = 'Test Area';
         self::$flashes = [];
         self::$userBadge = null;
+        FixtureOrgModule::reset();
+        FixtureScopeSource::reset();
     }
 
     protected function configureContainer(ContainerConfigurator $container): void
@@ -121,6 +124,23 @@ final class HostKernel extends TestKernel
             ->tag(ShellBundle::STYLESHEET_TAG)
             ->public();
 
+        // A MODULE THAT ANSWERS AT ORGANISATION LEVEL, tagged by hand as a
+        // real module bundle has to tag it. The shell mounts the page set,
+        // draws the Observatory row and supplies the scope control; nothing
+        // module-shaped reaches the shell but an interface.
+        $services->set(FixtureOrgController::class)
+            ->public();
+
+        $services->set(FixtureOrgModule::class)
+            ->tag(ShellBundle::ORG_PAGES_TAG)
+            ->public();
+
+        // And what the viewer may look at, which is the host's answer because
+        // the shell has neither the areas nor the voters.
+        $services->set(FixtureScopeSource::class)
+            ->tag(ShellBundle::SCOPE_TAG)
+            ->public();
+
         $services->set(FixtureAreaShellSource::class)
             ->public();
 
@@ -140,9 +160,28 @@ final class HostKernel extends TestKernel
         $services->alias('shell.user_badge_source', FixtureUserBadgeSource::class);
 
         $services->alias('test.shell.navigation', 'shell.navigation')->public();
+        $services->alias('test.shell.scopes', 'shell.scopes')->public();
         $services->alias('test.shell.area_shell', 'shell.area_shell')->public();
         $services->alias('test.shell.user_badge', 'shell.user_badge')->public();
         $services->alias('test.shell.contract', 'shell.contract')->public();
         $services->alias('test.shell.theme', 'shell.theme')->public();
+    }
+
+    /**
+     * THE ADDRESSES THE APPLICATION MOUNTS. A module contributes route NAMES
+     * and the host mounts them — which is why the sidebar generates a url
+     * rather than printing a path, and why a page whose route nobody mounted
+     * is skipped rather than drawn as a link to a 404. Both states are
+     * asserted, so both are mounted here and one is deliberately left out.
+     */
+    protected function configureRoutes(RoutingConfigurator $routes): void
+    {
+        $routes->add('fixture_org_overview', '/sightings')
+            ->controller(FixtureOrgController::class)
+            ->methods(['GET']);
+
+        $routes->add('fixture_org_today', '/sightings/today')
+            ->controller(FixtureOrgController::class)
+            ->methods(['GET']);
     }
 }

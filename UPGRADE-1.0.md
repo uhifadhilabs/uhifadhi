@@ -1,5 +1,48 @@
 # UPGRADE FROM 0.x to 1.0
 
+## A module can answer at organisation level
+
+**What changed.** A module may now contribute an ORGANISATION-LEVEL page set
+— its own screens once across every area — and the shell mounts it: a row in
+Observatory after Performance, the screens as its tabs, and the scope control
+in the page's action row. The module writes no sidebar item, no tab strip and
+no scope control, and the host writes no module code.
+
+**What a module does.** Implement `Uhifadhi\Contracts\Shell\OrgPagesInterface`
+beside `ModuleProviderInterface` and tag the provider `shell.org_pages`:
+
+```php
+public function orgPages(): array
+{
+    return [
+        new OrgPage('overview', 'Overview', 'roster_org_overview'),
+        new OrgPage('today', 'Today', 'roster_org_today'),
+    ];
+}
+```
+
+Route NAMES, never paths — the application mounts them, and a screen whose
+route this installation has not mounted is left out rather than drawn as a
+link to a 404. A module that has no organisation-level reading simply does
+not implement the interface; nothing is missing.
+
+**Every figure is the area query one scope wider.** The module's own service
+takes a `Uhifadhi\Contracts\Shell\Scope` — the organisation, or one area —
+and the area page passes one area where the org page passes the organisation.
+A module that grew a second aggregate for this would have two numbers for one
+question and no way to say which was right.
+
+**What a host does.** Fill the scope control by tagging a
+`Uhifadhi\Contracts\Shell\ScopeSourceInterface` with `shell.scope_source`.
+The shell holds no areas and no voters, so the list is yours and is already
+narrowed to what the account may open: somebody scoped to one area gets that
+area and no control at all, and the page is the same page. The current slice
+is resolved off `?area=<uuid>` (`Shell\Service\Scopes::PARAMETER`).
+
+**`.ov-ctl` is unscoped now.** It was `.pgact .ov-ctl` in the shell's sheet,
+which made it a control only the page action row could draw. A stylesheet
+that restated it for its own surface should drop that copy.
+
 ## A chart series states a category, not a colour
 
 **What changed.** `AtlasBundle\Model\ChartSeries` takes `cat` — its position

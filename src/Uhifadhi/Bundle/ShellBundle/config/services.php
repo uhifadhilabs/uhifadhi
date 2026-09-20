@@ -22,6 +22,8 @@ use Uhifadhi\Bundle\ShellBundle\Frame\Service\ModuleFrameService;
 use Uhifadhi\Bundle\ShellBundle\Service\AreaShell;
 use Uhifadhi\Bundle\ShellBundle\Service\Installation;
 use Uhifadhi\Bundle\ShellBundle\Service\Navigation;
+use Uhifadhi\Bundle\ShellBundle\Service\OrgModulesNavigation;
+use Uhifadhi\Bundle\ShellBundle\Service\Scopes;
 use Uhifadhi\Bundle\ShellBundle\Service\Stylesheets;
 use Uhifadhi\Bundle\ShellBundle\Service\Theme;
 use Uhifadhi\Bundle\ShellBundle\Service\UserBadgeReader;
@@ -77,6 +79,26 @@ return static function (ContainerConfigurator $container): void {
      */
     $services->set('shell.navigation', Navigation::class)
         ->args([tagged_iterator(ShellBundle::NAV_TAG)]);
+
+    /*
+     * HOW WIDE THE PAGE IS LOOKING. The shell draws the scope control and
+     * knows no areas: the slices come from the host, which has the areas,
+     * the viewer and the voters, and the current one is resolved off the
+     * address.
+     */
+    $services->set('shell.scopes', Scopes::class)
+        ->args([tagged_iterator(ShellBundle::SCOPE_TAG), service('request_stack')]);
+    $services->alias(Scopes::class, 'shell.scopes');
+
+    /*
+     * AND THE MODULES THAT ANSWER AT ORGANISATION LEVEL, as rows in
+     * Observatory. Tagged as a nav source like any other contributor — the
+     * shell collects an interface from the contracts package and names no
+     * module doing it.
+     */
+    $services->set('shell.org_modules_navigation', OrgModulesNavigation::class)
+        ->args([tagged_iterator(ShellBundle::ORG_PAGES_TAG), service('router'), service('request_stack')])
+        ->tag(ShellBundle::NAV_TAG);
 
     /*
      * THE SHEETS A PAGE LINKS FOR COMPONENTS IT DOES NOT KNOW IT WILL

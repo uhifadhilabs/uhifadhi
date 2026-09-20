@@ -8,6 +8,11 @@
 
 Not released yet.
 
+ * `Shell\OrgPagesInterface`, `Shell\OrgPage`, `Shell\Scope` and
+   `Shell\ScopeSourceInterface` — a module answers at organisation level by
+   contributing its page set, and the shell mounts it and supplies the scope
+   control. Every figure is the area query one scope wider, never a second
+   aggregate
  * a performance topic publishes EXACTLY FOUR headline figures, one row
    (ruled) — `PerformanceTopicProviderInterface::kpis()`; a topic with more to
    say folds two verdicts into one card rather than dropping one

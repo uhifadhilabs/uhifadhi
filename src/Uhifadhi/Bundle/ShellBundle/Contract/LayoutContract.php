@@ -337,6 +337,21 @@ final class LayoutContract
         'more',
         'mdot',
 
+        // THE ORGANISATION-LEVEL MARKS. An org page is the area page one
+        // scope wider, so it borrows everything; these three exist only
+        // because "which area" is a column area level does not have.
+        // `.orgarea` names the area on a row (its category swatch, never a
+        // hue of its own), `.orgband` is one area's row header inside a
+        // card, and `.lfilt-n` is what a filter bar is letting through.
+        'orgarea',
+        'orgband',
+        'lfilt-n',
+
+        // THE SCOPE CONTROL, the shell's and not a page's: every
+        // organisation-level surface the seam contributes gets this one,
+        // and a module states none of its own.
+        'ov-ctl',
+
         // THE PAGE HINT — one row, at the BOTTOM, where a page has
         // something to explain. Ruled: said once, as a fragment, under
         // the thing it is about, and never as two cards of prose above

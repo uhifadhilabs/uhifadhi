@@ -737,8 +737,13 @@ h1.pg { font-family: var(--font-display); font-size: 27px; font-weight: 700; let
    The caption is a line above the box and never a placeholder inside it: a
    select whose first option names the question has no question left to show
    once somebody has answered it. */
-.pgact .ov-ctl { display: flex; flex-direction: column; gap: 4px; }
-.pgact .ov-ctl .k {
+/* UNSCOPED, because it is the SHELL's control now and not the performance
+   page's. Every organisation-level surface the seam contributes gets this one
+   — the module states none of its own and no module sheet restates it — and a
+   rule that only worked inside `.pgact` would be a control a contributed page
+   could not draw. The design moved it into the house sheet for exactly this. */
+.ov-ctl { display: flex; flex-direction: column; gap: 4px; }
+.ov-ctl .k {
     font-family: var(--font-mono); font-size: 8.5px; font-weight: 600;
     /* THE CAPTION'S OWN LEADING, and the reason the control row is 46px rather
        than 49px: the design writes this rule with the `font:` shorthand, which
@@ -748,8 +753,8 @@ h1.pg { font-family: var(--font-display); font-size: 27px; font-weight: 700; let
     line-height: normal;
     letter-spacing: .15em; text-transform: uppercase; color: rgb(var(--c-dim));
 }
-.pgact .ov-ctl .fsel > select.fld { min-width: 200px; }
-.pgact .ov-ctl.sm .fsel > select.fld { min-width: 138px; }
+.ov-ctl .fsel > select.fld { min-width: 200px; }
+.ov-ctl.sm .fsel > select.fld { min-width: 138px; }
 
 /* THE PERIOD IS A SEGMENTED GROUP, not a select: a reader who wants this
    quarter should not have to open a menu to get it. The three that matter are
@@ -1192,6 +1197,34 @@ i.livedot.none::after { animation: none; border: 0; }
     svg .livedot .lv-ring { animation: none; opacity: .34; }
     i.livedot::after { animation: none; opacity: .34; }
 }
+
+/* ==================== THE ORGANISATION-LEVEL MARKS ====================
+   AN ORG-LEVEL PAGE IS THE AREA PAGE ONE SCOPE WIDER, so it borrows
+   everything: the tabs, the fact band, the cards, the plate, the filter
+   grammar. Three marks are new, and only because "which area" is a column
+   that does not exist at area level.
+   ======================================================================= */
+
+/* THE AREA, NAMED ON THE ROW. A fact, never a filter state and never a key a
+   reader has to learn: the swatch is the area's position in the declared
+   order, the same `--cat-n` every other surface gives it. No area owns a hue. */
+.orgarea { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; color: rgb(var(--c-tx)); white-space: nowrap; }
+.orgarea i { width: 7px; height: 7px; border-radius: 2px; background: var(--cat, rgb(var(--c-fog))); flex: none; }
+.orgarea.sm { font-size: 11px; color: rgb(var(--c-fog)); }
+.orgarea.sm i { width: 6px; height: 6px; }
+
+/* The count that closes a filter bar: what the bar is currently letting
+   through, so a narrowed list never lies about how much it is hiding. */
+.lfilt-n { font-size: 9.5px; letter-spacing: .04em; color: rgb(var(--c-dim)); }
+
+/* ONE BAND PER AREA INSIDE A CARD — the org answer to "which of them is the
+   problem". The band is the area's row header and not a card of its own:
+   nesting four cards inside a card is how a dashboard stops being readable. */
+.orgband { display: flex; align-items: center; gap: 9px; padding: 9px 0 7px; border-bottom: 1px solid var(--c-ln); }
+.orgband:first-of-type { padding-top: 2px; }
+.orgband b { font-size: 12.5px; font-weight: 600; color: rgb(var(--c-tx)); }
+.orgband .n { margin-left: auto; font-family: var(--font-mono); font-size: 10.5px; color: rgb(var(--c-fog)); }
+.orgband .n em { font-style: normal; color: rgb(var(--c-dim)); }
 
 /* ==================== THE PAGE HINT ====================
    ONE ROW, AT THE BOTTOM, AND ONLY WHERE A PAGE NEEDS IT — ruled: a page

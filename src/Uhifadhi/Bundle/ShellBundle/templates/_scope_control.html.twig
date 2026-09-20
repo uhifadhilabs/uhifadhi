@@ -1,0 +1,33 @@
+{# THE SCOPE CONTROL — the shell's, and the one control an organisation-level
+   page carries in its action row.
+
+   A MODULE STATES NO SCOPE CONTROL OF ITS OWN. Every org-level surface the
+   seam contributes gets this one, so "which slice am I looking at" is asked
+   the same way on every page in the product and no module sheet restates it.
+
+   IT IS A FORM WITH NO BUTTON, and that is deliberate: the control changes
+   where you are looking, which is a navigation, so it submits on change with
+   the script and submits on Enter without one. Nothing here needs JavaScript
+   to work — `method="get"` and the page reloads at the new address.
+
+   ONE PARAMETER, `?area=`, named once in Shell\Service\Scopes. A link from
+   anywhere to "this page, that area" is a link anybody can write.
+
+   PARAMETERS:
+     scopes   list<Scope> — what this viewer may look at, the host's answer
+     current  Scope       — the one the page is drawn at
+     label    the control's own word; "Scope" unless a page has a better one #}
+{% if scopes|length > 1 %}
+    <form class="ov-ctl" method="get" data-controller="uhifadhi--shell-bundle--scope">
+        <span class="k">{{ label|default('Scope') }}</span>
+        <span class="fsel">
+            <select class="fld" name="{{ constant('Uhifadhi\\Bundle\\ShellBundle\\Service\\Scopes::PARAMETER') }}"
+                    aria-label="{{ label|default('Scope') }}"
+                    data-action="change->uhifadhi--shell-bundle--scope#go">
+                {% for scope in scopes %}
+                    <option value="{{ scope.areaUuid }}"{{ scope.is(current) ? ' selected' }}>{{ scope.label }}</option>
+                {% endfor %}
+            </select>
+        </span>
+    </form>
+{% endif %}

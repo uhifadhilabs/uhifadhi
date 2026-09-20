@@ -111,6 +111,21 @@ final class ComponentContractTest extends ContractTestCase
             'more',
             'mdot',
 
+            // THE ORGANISATION-LEVEL MARKS. An org page is the area page one
+            // scope wider, so it borrows everything; these three exist only
+            // because "which area" is a column area level does not have.
+            // `.orgarea` names the area on a row (its category swatch, never a
+            // hue of its own), `.orgband` is one area's row header inside a
+            // card, and `.lfilt-n` is what a filter bar is letting through.
+            'orgarea',
+            'orgband',
+            'lfilt-n',
+
+            // THE SCOPE CONTROL, the shell's and not a page's: every
+            // organisation-level surface the seam contributes gets this one,
+            // and a module states none of its own.
+            'ov-ctl',
+
             // THE PAGE HINT — one row, at the BOTTOM, where a page has
             // something to explain. Ruled: said once, as a fragment, under
             // the thing it is about, and never as two cards of prose above
@@ -428,7 +443,9 @@ final class ComponentContractTest extends ContractTestCase
     {
         $declarations = [
             // A LABELLED CONTROL IS A COLUMN: caption above, box below.
-            '.pgact .ov-ctl' => ['display' => 'flex', 'flex-direction' => 'column', 'gap' => '4px'],
+            // UNSCOPED NOW: the scope control is the shell's, so a contributed
+            // organisation-level page can draw one outside `.pgact` too.
+            '.ov-ctl' => ['display' => 'flex', 'flex-direction' => 'column', 'gap' => '4px'],
             // AND THE SEGMENTED GROUP AND THE CHIP BESIDE IT are the row's
             // own height, like everything else in it.
             '.pgact .periodpick' => ['height' => '32px', 'box-sizing' => 'border-box'],
