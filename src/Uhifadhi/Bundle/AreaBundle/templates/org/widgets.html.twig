@@ -51,4 +51,9 @@
 
 {% block shell_page %}
     {{ include('@Shell/widget/_library.html.twig') }}
+
+    {{ include('@Shell/_page_hint.html.twig', {
+        lead: 'The sections are the contributors, not design directions.',
+        say: 'A person needs to know that “out right now” came from the patrols module, so that the day it is uninstalled its disappearance is not a bug. The five directions the dashboard was drawn in are the compositions above.',
+    }, with_context: false) }}
 {% endblock %}

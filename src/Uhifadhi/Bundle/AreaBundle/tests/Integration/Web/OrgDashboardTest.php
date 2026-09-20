@@ -347,6 +347,11 @@ final class OrgDashboardTest extends WebTestCase
 
         self::assertCount(1, $page->filter('[data-widget-root]'), 'The framework’s library root.');
         self::assertStringContainsString('widget library', $page->filter('h1.pg')->text());
+        self::assertStringContainsString(
+            'sections are the contributors',
+            $page->filter('div.pgbody .pghint')->text(),
+            'The library says why it is grouped by module and not by direction.',
+        );
     }
 
     private function catalogue(): OrgOverviewCatalogue
