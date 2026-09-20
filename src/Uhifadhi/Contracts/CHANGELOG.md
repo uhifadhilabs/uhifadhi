@@ -40,6 +40,13 @@ Not released yet.
    would be right about seats and wrong about days-to-settle, where a sum of
    averages is a number nobody measured. A column that stays silent simply has
    no total in its header.
+ * `Performance\TopicDecisionsInterface` and `TopicDecision` — what somebody
+   has to DECIDE, which is neither a figure nor a movement: what is wrong, the
+   ask, and the department it belongs to, all in the topic's own words. The
+   third optional seam, and it carries the same refusal as the other two —
+   a topic with nothing to raise is not asked. Every decision comes from
+   figures the topic already holds; a seam that ran its own queries for a
+   briefing would be a second, slower answer
  * `Performance\TopicMovementInterface`, `TopicMovement` and `MovementTone` —
    what moved this period, in the TOPIC's own words. An optional second
    interface, because a topic with nothing to say has no answer to give and a

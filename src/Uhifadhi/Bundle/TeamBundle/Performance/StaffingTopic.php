@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\TeamBundle\Performance;
 
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
+use Uhifadhi\Bundle\TeamBundle\Model\DepartmentMark;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
@@ -31,6 +32,8 @@ use Uhifadhi\Contracts\Performance\MovementTone;
 use Uhifadhi\Contracts\Performance\PerformanceScope;
 use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
 use Uhifadhi\Contracts\Performance\TopicChart;
+use Uhifadhi\Contracts\Performance\TopicDecision;
+use Uhifadhi\Contracts\Performance\TopicDecisionsInterface;
 use Uhifadhi\Contracts\Performance\TopicKpi;
 use Uhifadhi\Contracts\Performance\TopicMatrix;
 use Uhifadhi\Contracts\Performance\TopicMovement;
@@ -55,7 +58,7 @@ use Uhifadhi\Contracts\Performance\TopicMovementInterface;
  * closed period cannot be recomputed. Where nothing was written down the
  * figures still draw and their deltas say there is no history yet.
  */
-final readonly class StaffingTopic implements PerformanceTopicProviderInterface, TopicMovementInterface
+final readonly class StaffingTopic implements PerformanceTopicProviderInterface, TopicDecisionsInterface, TopicMovementInterface
 {
     public const string KEY = 'staffing';
 
@@ -129,6 +132,55 @@ final readonly class StaffingTopic implements PerformanceTopicProviderInterface,
              */
             $this->vacancies($departments, $period),
         ];
+    }
+
+    /**
+     * WHAT SOMEBODY HAS TO DECIDE ABOUT THE ESTABLISHMENT: a post that
+     * has stood empty past the threshold.
+     *
+     * THE ASK IS "FILL IT OR CLOSE IT", and that is the whole reason
+     * this is a decision rather than a figure. A post empty for
+     * seventy-four days is either work nobody is doing or a post the
+     * organisation no longer needs, and the figure cannot tell you
+     * which — a person has to.
+     *
+     * NO NEW QUERY. These are the same positions the over-threshold
+     * figure is counted from, asked for by name instead of by number.
+     *
+     * @return list<TopicDecision>
+     */
+    public function decisions(PerformanceScope $scope, FigurePeriod $period): array
+    {
+        $departments = $this->departmentsIn($scope);
+        $now = new \DateTimeImmutable();
+
+        $raised = [];
+        foreach ($this->positions->findAllOrdered() as $position) {
+            $department = $position->getDepartment();
+            if (null === $department || !$this->holds($departments, $department) || null === $position->getVacantSince()) {
+                continue;
+            }
+
+            $days = $this->vacancy->daysVacant($position, $now);
+            if (null === $days || $days < self::THRESHOLD_DAYS) {
+                continue;
+            }
+
+            $raised[] = [$days, new TopicDecision(
+                what: \sprintf('%s has stood empty %d days', (string) $position->getName(), $days),
+                ask: 'Fill the post, or close it — an empty post is work nobody is doing or a post nobody needs.',
+                departmentName: (string) $department->getName(),
+                departmentMark: DepartmentMark::of((string) $department->getName()),
+                tone: MovementTone::Bad,
+            )];
+        }
+
+        // WORST FIRST, which here is longest empty: a post nobody has
+        // filled in four months is a different conversation from one
+        // that crossed the line last week.
+        usort($raised, static fn (array $a, array $b): int => $b[0] <=> $a[0]);
+
+        return array_map(static fn (array $row): TopicDecision => $row[1], $raised);
     }
 
     /**

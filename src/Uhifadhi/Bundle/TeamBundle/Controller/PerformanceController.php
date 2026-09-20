@@ -37,6 +37,7 @@ use Uhifadhi\Contracts\Performance\DepartmentDirectoryInterface;
 use Uhifadhi\Contracts\Performance\PerformanceScope;
 use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
 use Uhifadhi\Contracts\Performance\TopicChart;
+use Uhifadhi\Contracts\Performance\TopicDecisionsInterface;
 use Uhifadhi\Contracts\Performance\TopicMovementInterface;
 
 /**
@@ -69,6 +70,9 @@ final readonly class PerformanceController
     public const string TOPICS_ROUTE = 'team_performance_topics';
     public const string TOPIC_ROUTE = 'team_performance_topic';
     public const string BRIEFING_ROUTE = 'team_performance_briefing';
+
+    /** How many of the raised decisions the briefing prints before it counts the rest. */
+    public const int DECISIONS_SHOWN = 5;
 
     /** What the scope picker calls the organisation, on the page and in the picker. */
     public const string ORGANISATION = 'Organisation — all areas';
@@ -214,7 +218,20 @@ final readonly class PerformanceController
         $topics = $this->topics->forScope($scope, $period);
 
         $moved = [];
+        $decisions = [];
+        $raised = 0;
         foreach ($topics as $topic) {
+            if ($topic instanceof TopicDecisionsInterface) {
+                $own = $topic->decisions($scope, $period);
+                $raised += \count($own);
+                foreach ($own as $decision) {
+                    $decisions[] = ['topic' => $topic->title(), 'decision' => $decision, 'url' => $this->urls->generate(
+                        self::TOPIC_ROUTE,
+                        ['key' => $topic->key(), 'period' => $kind->value, 'area' => $scope->areaUuid],
+                    )];
+                }
+            }
+
             // A TOPIC THAT CANNOT WRITE A SENTENCE IS NOT ASKED, and one
             // with nothing worth saying answers null — both are silence
             // rather than an empty row.
@@ -237,6 +254,12 @@ final readonly class PerformanceController
             'goals' => $goals?->kpis($scope, $period) ?? [],
             'ledger' => $goals?->matrix($scope, $period),
             'moved' => $moved,
+            // THE FIRST FEW, AND HOW MANY THERE ARE IN ALL. "5 of 12" is
+            // a decision about attention, and it is the page's to make —
+            // a card that listed twelve would be a list nobody reads to
+            // the end of.
+            'decisions' => \array_slice($decisions, 0, self::DECISIONS_SHOWN),
+            'raised' => $raised,
         ]));
     }
 

@@ -16,6 +16,7 @@ namespace Uhifadhi\Bundle\TeamBundle\Performance;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Entity\DepartmentGoal;
 use Uhifadhi\Bundle\TeamBundle\Enum\GoalStateEnum;
+use Uhifadhi\Bundle\TeamBundle\Model\DepartmentMark;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentGoalRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPerformance;
@@ -31,6 +32,8 @@ use Uhifadhi\Contracts\Performance\MovementTone;
 use Uhifadhi\Contracts\Performance\PerformanceScope;
 use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
 use Uhifadhi\Contracts\Performance\TopicChart;
+use Uhifadhi\Contracts\Performance\TopicDecision;
+use Uhifadhi\Contracts\Performance\TopicDecisionsInterface;
 use Uhifadhi\Contracts\Performance\TopicKpi;
 use Uhifadhi\Contracts\Performance\TopicMatrix;
 use Uhifadhi\Contracts\Performance\TopicMovement;
@@ -60,7 +63,7 @@ use Uhifadhi\Contracts\Performance\TopicMovementInterface;
  * IT PUBLISHES THROUGH THE SAME SEAM A MODULE DOES, as
  * {@see StaffingTopic} does and for the same reason.
  */
-final readonly class GoalsTopic implements PerformanceTopicProviderInterface, TopicMovementInterface
+final readonly class GoalsTopic implements PerformanceTopicProviderInterface, TopicDecisionsInterface, TopicMovementInterface
 {
     public const string KEY = 'goals';
 
@@ -151,6 +154,64 @@ final readonly class GoalsTopic implements PerformanceTopicProviderInterface, To
                 polarity: ColumnPolarity::None,
             ),
         ];
+    }
+
+    /**
+     * WHAT SOMEBODY HAS TO DECIDE ABOUT THE GOALS: one that was missed,
+     * and one still open and behind.
+     *
+     * TWO DIFFERENT ASKS, and that is why they are two decisions rather
+     * than one count. A MISSED goal is finished and the question is
+     * what the next one should be; an AT-RISK goal is still open and
+     * the question is whether anything can still be done about it.
+     * Collapsing them into "2 goals in trouble" would hide the one that
+     * can still be saved.
+     *
+     * NO NEW QUERY: these are the same states the five figures are
+     * tallied from, asked for by department instead of by count.
+     *
+     * @return list<TopicDecision>
+     */
+    public function decisions(PerformanceScope $scope, FigurePeriod $period): array
+    {
+        $missed = [];
+        $atRisk = [];
+
+        // READ ONCE, not once per department: this is the same tally the
+        // five figures are counted from, and asking for it inside the
+        // loop would be the briefing paying a query per department for
+        // an answer it already had.
+        $byDepartment = $this->statesIn($scope);
+
+        foreach ($this->departmentsIn($scope) as $department) {
+            $name = (string) $department->getName();
+            $states = $byDepartment[(string) $department->getUuidString()] ?? [];
+
+            foreach ($states as $state) {
+                if (GoalStateEnum::Missed === $state) {
+                    $missed[] = new TopicDecision(
+                        what: \sprintf('%s missed a declared goal this period', $name),
+                        ask: 'Decide what replaces it — a goal nobody restates is a goal the organisation has quietly dropped.',
+                        departmentName: $name,
+                        departmentMark: DepartmentMark::of($name),
+                        tone: MovementTone::Bad,
+                    );
+                }
+
+                if (GoalStateEnum::AtRisk === $state) {
+                    $atRisk[] = new TopicDecision(
+                        what: \sprintf('%s has a goal behind pace and still open', $name),
+                        ask: 'Decide whether it can still be made, and say so while there is time to act.',
+                        departmentName: $name,
+                        departmentMark: DepartmentMark::of($name),
+                        tone: MovementTone::Attention,
+                    );
+                }
+            }
+        }
+
+        // MISSED FIRST: it is the one that is already true.
+        return [...$missed, ...$atRisk];
     }
 
     /**

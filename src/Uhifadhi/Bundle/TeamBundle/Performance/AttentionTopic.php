@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\TeamBundle\Performance;
 
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
+use Uhifadhi\Bundle\TeamBundle\Model\DepartmentMark;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentGoalRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Service\StaffingFigures;
@@ -29,6 +30,8 @@ use Uhifadhi\Contracts\Performance\MovementTone;
 use Uhifadhi\Contracts\Performance\PerformanceScope;
 use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
 use Uhifadhi\Contracts\Performance\TopicChart;
+use Uhifadhi\Contracts\Performance\TopicDecision;
+use Uhifadhi\Contracts\Performance\TopicDecisionsInterface;
 use Uhifadhi\Contracts\Performance\TopicKpi;
 use Uhifadhi\Contracts\Performance\TopicMatrix;
 use Uhifadhi\Contracts\Performance\TopicMovement;
@@ -58,7 +61,7 @@ use Uhifadhi\Contracts\Performance\TopicMovementInterface;
  * slug rather than by identity so that a second host topic added later
  * cannot start counting itself.
  */
-final readonly class AttentionTopic implements PerformanceTopicProviderInterface, TopicMovementInterface
+final readonly class AttentionTopic implements PerformanceTopicProviderInterface, TopicDecisionsInterface, TopicMovementInterface
 {
     public const string KEY = 'attention';
 
@@ -145,6 +148,45 @@ final readonly class AttentionTopic implements PerformanceTopicProviderInterface
                 polarity: ColumnPolarity::None,
             ),
         ];
+    }
+
+    /**
+     * WHAT SOMEBODY HAS TO DECIDE ABOUT THE WORKLOAD: the items raised
+     * against a department that no position is answerable for.
+     *
+     * THE ASK IS ABOUT THE ORG CHART, not about working harder. An
+     * unowned item does not get done by the department trying; it gets
+     * done when somebody says whose it is — which is a decision, and
+     * the only one this topic can raise, because everything else it
+     * knows is somebody else's module's to act on.
+     *
+     * ONE DECISION A DEPARTMENT, not one an item: twelve unowned items
+     * at one department is one conversation about that department.
+     *
+     * @return list<TopicDecision>
+     */
+    public function decisions(PerformanceScope $scope, FigurePeriod $period): array
+    {
+        $raised = [];
+        foreach ($this->measured($scope, $period) as $uuid => $roles) {
+            $unowned = (int) ($roles[KpiRole::ItemsUnowned->value] ?? 0.0);
+            if ($unowned < 1) {
+                continue;
+            }
+
+            $name = $this->nameOf($scope, (string) $uuid);
+            $raised[] = [$unowned, new TopicDecision(
+                what: \sprintf('%d %s raised against %s with no owning position', $unowned, 1 === $unowned ? 'item' : 'items', $name),
+                ask: 'Name the position answerable for them — an unowned item is a gap in the org chart, not a workload.',
+                departmentName: $name,
+                departmentMark: DepartmentMark::of($name),
+                tone: MovementTone::Bad,
+            )];
+        }
+
+        usort($raised, static fn (array $a, array $b): int => $b[0] <=> $a[0]);
+
+        return array_map(static fn (array $row): TopicDecision => $row[1], $raised);
     }
 
     /**

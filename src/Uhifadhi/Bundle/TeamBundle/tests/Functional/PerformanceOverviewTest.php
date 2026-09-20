@@ -264,10 +264,35 @@ final class PerformanceOverviewTest extends WebTestCaseWithSchema
         self::assertContains('Declared', $band);
         self::assertContains('Met', $band);
 
-        self::assertSame(['What changed', 'Goals declared'], $crawler->filter('h2.zone')->each(
+        // THE LEDGER LEADS, then the two readings of it side by side —
+        // a director opens this page to see where the goals stand.
+        self::assertSame(['Goals declared', 'What changed, and what to decide'], $crawler->filter('h2.zone')->each(
             static fn (Crawler $c): string => $c->text(),
         ));
         self::assertCount(1, $crawler->filter('#tp-ledger.pfc'));
+        self::assertCount(2, $crawler->filter('.grid.spinerow-eq > .pfc'), 'two cards of equal height, neither leading');
+    }
+
+    /**
+     * A DECISION STATES WHAT IS WRONG AND WHAT IS BEING ASKED, in the
+     * topic's own words, against the department it belongs to — and
+     * the card says how many there are in all.
+     */
+    public function testTheDecisionsCardNamesTheDepartmentAndTheAsk(): void
+    {
+        $this->seed();
+
+        $crawler = $this->client->request('GET', '/departments/performance/briefing');
+        $card = $crawler->filter('.grid.spinerow-eq > .pfc')->eq(1);
+
+        self::assertSame('Needs a decision', $card->filter('.pfc-hd .t')->text());
+        self::assertMatchesRegularExpression('/^\d+ of \d+$/', $card->filter('.pfc-hd .n')->text());
+
+        $rows = $card->filter('.mvrow.dcn');
+        if ($rows->count() > 0) {
+            self::assertNotSame('', $rows->first()->filter('.mk')->text(), 'a decision names whose it is');
+            self::assertNotSame('', $rows->first()->filter('.l .ask')->text(), 'and what is being asked');
+        }
     }
 
     /**

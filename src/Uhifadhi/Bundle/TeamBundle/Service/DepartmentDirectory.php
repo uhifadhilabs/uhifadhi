@@ -15,6 +15,7 @@ namespace Uhifadhi\Bundle\TeamBundle\Service;
 
 use Uhifadhi\Bundle\RegistryBundle\Repository\AreaModuleRepository;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
+use Uhifadhi\Bundle\TeamBundle\Model\DepartmentMark;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Contracts\Performance\DepartmentDirectory as Directory;
 use Uhifadhi\Contracts\Performance\DepartmentDirectoryInterface;
@@ -75,7 +76,7 @@ final readonly class DepartmentDirectory implements DepartmentDirectoryInterface
                 band: self::bandOf($department),
                 attached: $attached,
                 runningSince: self::since($attached, $this->areasRead($department, $scope), $running),
-                mark: self::mark((string) $department->getName()),
+                mark: DepartmentMark::of((string) $department->getName()),
             );
         }
 
@@ -148,18 +149,5 @@ final readonly class DepartmentDirectory implements DepartmentDirectoryInterface
         $area = $department->getArea();
 
         return null === $area ? 'Org-wide' : (string) $area->getName();
-    }
-
-    /** The two letters a department is drawn by, from the name nobody typed them for. */
-    private static function mark(string $name): string
-    {
-        $words = array_values(array_filter(preg_split('/\s+/', trim($name)) ?: []));
-        if ([] === $words) {
-            return '—';
-        }
-
-        return mb_strtoupper(1 === \count($words)
-            ? mb_substr($words[0], 0, 2)
-            : mb_substr($words[0], 0, 1).mb_substr((string) end($words), 0, 1));
     }
 }

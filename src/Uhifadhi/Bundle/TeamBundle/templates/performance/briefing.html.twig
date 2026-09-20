@@ -10,10 +10,9 @@
    computed any of it would be a second answer to a question already answered
    on the page before it.
 
-   WHAT THE DESIGN DRAWS THAT IS NOT HERE YET, named rather than dropped: the
-   "Needs a decision" card (5 of 12). Nothing in the platform publishes a
-   decision — it is neither a figure nor a movement — so it wants a seam of
-   its own before it can be drawn honestly. #}
+   THE LEDGER LEADS, then the two cards of equal height. A director opens
+   this page to see where the goals stand; what changed and what to decide
+   are the two readings OF that, so they sit beside each other under it. #}
 {% extends '@Team/performance/_frame.html.twig' %}
 
 {% block title %}Briefing &mdash; Performance{% endblock %}
@@ -35,35 +34,6 @@
         </div>
     {% endif %}
 
-    <h2 class="zone">What changed</h2>
-
-    <div class="pfc">
-        <div class="pfc-hd">
-            <span class="t">What changed</span>
-            <span class="s">&middot; {{ period.label }} against {{ previous.label }}</span>
-            <span class="sp"></span>
-            <span class="n">{{ moved|length }} {{ moved|length == 1 ? 'movement' : 'movements' }}</span>
-        </div>
-        <div class="pfc-bd">
-            {% if moved %}
-                <div class="mvlist">
-                    {% for row in moved %}
-                        {# THE SENTENCE IS THE TOPIC'S AND THE TONE IS THE
-                           PLATFORM'S — the same bargain a calendar pill and a
-                           state chip strike. #}
-                        <a class="mvrow" href="{{ row.url }}">
-                            <span class="i {{ row.movement.tone.value }}"></span>
-                            <span class="l"><b>{{ row.topic }}</b>{{ row.movement.sentence }}</span>
-                            <span class="ov-open">Open {{ ux_icon('shell:chevron-right') }}</span>
-                        </a>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <p class="perf-empty">No topic has anything to report for this period, which is not the same as a period in which nothing happened.</p>
-            {% endif %}
-        </div>
-    </div>
-
     <h2 class="zone">Goals declared</h2>
 
     {% if ledger %}
@@ -77,4 +47,67 @@
     {% else %}
         <p class="perf-empty">This installation publishes no goals topic, so there is no ledger to draw.</p>
     {% endif %}
+
+    <h2 class="zone">What changed, and what to decide</h2>
+
+    {# TWO CARDS OF EQUAL HEIGHT. They are two readings of the same period —
+       what moved, and what somebody has to do about it — so neither leads. #}
+    <div class="grid g2 spinerow-eq">
+        <div class="pfc">
+            <div class="pfc-hd">
+                <span class="t">What changed</span>
+                <span class="s">&middot; {{ period.label }} against {{ previous.label }}</span>
+                <span class="sp"></span>
+                <span class="n">{{ moved|length }} {{ moved|length == 1 ? 'movement' : 'movements' }}</span>
+            </div>
+            <div class="pfc-bd">
+                {% if moved %}
+                    <div class="mvlist">
+                        {% for row in moved %}
+                            {# THE SENTENCE IS THE TOPIC'S AND THE TONE IS THE
+                               PLATFORM'S — the same bargain a calendar pill and a
+                               state chip strike. #}
+                            <a class="mvrow" href="{{ row.url }}">
+                                <span class="i {{ row.movement.tone.value }}"></span>
+                                <span class="l"><b>{{ row.topic }}</b>{{ row.movement.sentence }}</span>
+                                <span class="ov-open">Open {{ ux_icon('shell:chevron-right') }}</span>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="perf-empty">No topic has anything to report for this period, which is not the same as a period in which nothing happened.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="pfc">
+            <div class="pfc-hd">
+                <span class="t">Needs a decision</span>
+                <span class="s">&middot; the ones a director acts on first</span>
+                <span class="sp"></span>
+                <span class="n">{{ decisions|length }} of {{ raised }}</span>
+            </div>
+            <div class="pfc-bd">
+                {% if decisions %}
+                    <div class="mvlist">
+                        {% for row in decisions %}
+                            {# WHAT IS WRONG AND WHAT IS BEING ASKED, both in the
+                               topic's own words: half of it would be a figure
+                               with an opinion. #}
+                            <a class="mvrow dcn" href="{{ row.url }}">
+                                <span class="mk">{{ row.decision.departmentMark }}</span>
+                                <span class="l">
+                                    <b>{{ row.decision.what }}</b>
+                                    <span class="ask">{{ row.decision.ask }}</span>
+                                </span>
+                                <span class="ov-open">Open {{ ux_icon('shell:chevron-right') }}</span>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="perf-empty">Nothing is waiting on a decision this period — which is a reading of the period, not an empty card.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
 {% endblock %}

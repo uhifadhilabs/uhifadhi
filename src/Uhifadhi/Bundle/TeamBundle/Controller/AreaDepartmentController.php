@@ -26,6 +26,7 @@ use Twig\Environment;
 use Uhifadhi\Bundle\RegistryBundle\Service\ModuleCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
+use Uhifadhi\Bundle\TeamBundle\Model\DepartmentMark;
 use Uhifadhi\Bundle\TeamBundle\Model\DepartmentQuery;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
@@ -177,7 +178,7 @@ final readonly class AreaDepartmentController
             $mine = $owned[$key] ?? [];
             $headcount[$key] = $this->users->countActiveHoldingAnyPosition($mine);
             $figures[$key] = $this->performance->kpisFor($department);
-            $marks[$key] = self::mark((string) $department->getName());
+            $marks[$key] = DepartmentMark::of((string) $department->getName());
         }
 
         return [
@@ -237,19 +238,6 @@ final readonly class AreaDepartmentController
         }
 
         return $this->router->generate($name, array_filter($parameters, static fn (?string $v): bool => null !== $v));
-    }
-
-    /** The two letters a card wears, from the name nobody typed them for. */
-    private static function mark(string $name): string
-    {
-        $words = array_values(array_filter(preg_split('/\s+/', trim($name)) ?: []));
-        if ([] === $words) {
-            return '—';
-        }
-
-        return mb_strtoupper(1 === \count($words)
-            ? mb_substr($words[0], 0, 2)
-            : mb_substr($words[0], 0, 1).mb_substr((string) end($words), 0, 1));
     }
 
     /**

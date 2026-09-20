@@ -32,6 +32,15 @@ Not released yet.
    exactly the loose bucket the overview draws as its own line. A period
    nobody wrote gets no pill.
 
+ * the briefing leads with the LEDGER and puts what changed and what to decide
+   beside it as two cards of equal height — a director opens the page to see
+   where the goals stand, and the other two are readings of that
+ * Staffing, Goals and Attention each raise their own decisions: a post past
+   the threshold (fill it or close it), a goal missed and a goal still open
+   and behind (two different asks, so two decisions), and the items no
+   position owns (a gap in the org chart, not a workload)
+ * `DepartmentMark` — the two letters a department is drawn by, written out in
+   three places before this and therefore on its way to being three rules
  * `/departments/performance/briefing` — what changed, and what to decide: the
    goals' own figures as a band, one movement a topic, and the goal ledger in
    the one matrix grammar. It adds up nothing of its own
