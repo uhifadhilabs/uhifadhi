@@ -57,6 +57,29 @@ final readonly class FigurePeriod
     }
 
     /**
+     * THE PERIOD'S OWN WORDS, SHORTENED — what a band prints under a
+     * figure when there is room for one word and not three.
+     *
+     * IT IS THE PERIOD'S AND NOT A TEMPLATE'S, for the same reason
+     * {@see $label} is: a surface that wrote `|date(\'M\')` would be
+     * formatting an instant in whatever zone the server runs in, and
+     * the one thing this platform refuses is a date a reader cannot
+     * place. A period is not an instant — it is a named window — so it
+     * names itself here, short and long, and nothing downstream
+     * formats either.
+     */
+    public function shortLabel(): string
+    {
+        $days = (int) $this->from->diff($this->until)->days;
+
+        return mb_strtolower(match (true) {
+            $days > 200 => $this->from->format('Y'),
+            $days > 45 => \sprintf('Q%d', (int) ceil(((int) $this->from->format('n')) / 3)),
+            default => $this->from->format('M'),
+        });
+    }
+
+    /**
      * THE CALENDAR QUARTER an instant falls in — the second of the three
      * windows the performance page offers.
      *

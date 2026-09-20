@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web;
 
 use PHPUnit\Framework\Attributes\CoversClass;
+use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\HttpFoundation\Response;
 use Uhifadhi\Bundle\AreaBundle\Controller\ZoneRecordController;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
@@ -21,7 +22,12 @@ use Uhifadhi\Bundle\AreaBundle\Entity\Zone;
 use Uhifadhi\Bundle\AreaBundle\Enum\PostingSource;
 use Uhifadhi\Bundle\AreaBundle\Service\PostingService;
 use Uhifadhi\Bundle\AreaBundle\Service\StationService;
+use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Fixtures\ChattyFigureProvider;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web\Fixtures\HostUser;
+use Uhifadhi\Bundle\RegistryBundle\Entity\Module;
+use Uhifadhi\Bundle\RegistryBundle\Enum\ModuleCategory;
+use Uhifadhi\Bundle\RegistryBundle\Enum\ModuleStatus;
+use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleService;
 
 /**
  * ONE ZONE, READ.
@@ -86,6 +92,69 @@ final class ZoneRecordTest extends WebTestCase
         self::assertStringNotContainsString('no module publishes this', $body);
     }
 
+    /**
+     * THE BAND IS A LINE, NOT A LIST — one fact a module, and the
+     * module's own name on it.
+     *
+     * THE DEFECT: every figure every module published went in, so two
+     * modules drew twelve facts wrapping onto four rows, each captioned
+     * with a sentence. An identity band a reader scans four rows of is
+     * not an identity band.
+     */
+    public function testTheBandTakesOneFactAModuleAndStaysOnOneLine(): void
+    {
+        $this->boot();
+        $this->signIn();
+        [$area, $zone] = $this->aZoneWithAModuleOn();
+
+        $band = $this->page($this->record($area, $zone))->filter('.factband')->first();
+
+        // Extent · Covered · Stations · People · one a module, then the
+        // spacer and the way back to the set.
+        self::assertLessThanOrEqual(7, $band->children()->count());
+
+        $labels = $band->filter('.f .k')->each(static fn (Crawler $c): string => $c->text());
+        self::assertContains('Incidents', $labels, 'a module fact wears the MODULE\'s name');
+        self::assertNotContains('Recorded', $labels, 'and not the figure\'s own label');
+        self::assertNotContains('Open', $labels, 'the module\'s other three figures stay on the all-zones page');
+    }
+
+    /**
+     * AND THE UNIT IS THE PERIOD, never the module's caption: a caption
+     * is a sentence, and a sentence in a band is what made it four rows
+     * tall.
+     */
+    public function testEachModuleFactIsCaptionedWithThePeriodAndNotASentence(): void
+    {
+        $this->boot();
+        $this->signIn();
+        [$area, $zone] = $this->aZoneWithAModuleOn();
+
+        $units = $this->page($this->record($area, $zone))->filter('.factband .f .v em')
+            ->each(static fn (Crawler $c): string => trim($c->text()));
+
+        foreach ($units as $unit) {
+            self::assertLessThanOrEqual(
+                12,
+                mb_strlen($unit),
+                \sprintf('"%s" is a sentence; a band carries one short word under a figure.', $unit),
+            );
+        }
+    }
+
+    /** One door a module in the header, however many figures it publishes. */
+    public function testTheHeaderOffersOneDoorAModule(): void
+    {
+        $this->boot();
+        $this->signIn();
+        [$area, $zone] = $this->aZoneWithAModuleOn();
+
+        $doors = $this->page($this->record($area, $zone))->filter('.pgact a.w-act')
+            ->each(static fn (Crawler $c): string => trim($c->text()));
+
+        self::assertSame(\count($doors), \count(array_unique($doors)), 'a module is offered once, not once per figure');
+    }
+
     /** A zone with no post on it is an ordinary state and says which. */
     public function testAZoneWithNoPostSaysSo(): void
     {
@@ -144,6 +213,12 @@ final class ZoneRecordTest extends WebTestCase
         return '/areas/'.$area->getUuidString().'/zones/'.$zone->getUuidString();
     }
 
+    /** The rendered page, as a crawler — what a band's shape is measured on. */
+    private function page(string $url): Crawler
+    {
+        return new Crawler($this->body($url), $url);
+    }
+
     private function body(string $url): string
     {
         $this->browser()->request('GET', $url);
@@ -160,6 +235,38 @@ final class ZoneRecordTest extends WebTestCase
     }
 
     /** @return array{0: AreaOfInterest, 1: Zone} */
+    /**
+     * The same zone, on an area that RUNS a module — a provider is asked
+     * only where its module is switched on, so a band with module facts
+     * in it needs the ledger to say so.
+     *
+     * @return array{AreaOfInterest, Zone}
+     */
+    private function aZoneWithAModuleOn(): array
+    {
+        [$area, $zone] = $this->aWorkedZone();
+
+        $this->em->persist(new Module()
+            ->setSlug(ChattyFigureProvider::SLUG)
+            ->setName('Incidents')
+            ->setCategory(ModuleCategory::Pressure)
+            ->setStatus(ModuleStatus::Live)
+            ->setDataSource('field reports')
+            ->setPosition(0));
+        $this->em->flush();
+
+        /** @var AreaModuleService $modules */
+        $modules = static::getContainer()->get('test_public.registry.area_modules');
+        $modules->install($area, ChattyFigureProvider::SLUG);
+
+        return [$area, $zone];
+    }
+
+    /**
+     * A zone with a post on it and somebody standing there.
+     *
+     * @return array{AreaOfInterest, Zone}
+     */
     private function aWorkedZone(): array
     {
         $area = $this->anArea();

@@ -73,4 +73,16 @@ final class FigurePeriodTest extends TestCase
             FigurePeriod::quarter(new \DateTimeImmutable('2026-08-14'))->previous()->from->format('Y-m-d'),
         );
     }
+
+    /**
+     * A PERIOD NAMES ITSELF SHORT AS WELL AS LONG, because a band has
+     * room for one word — and because a surface that shortened the
+     * long one would be formatting an instant in the server's zone.
+     */
+    public function testAPeriodNamesItselfShortToo(): void
+    {
+        self::assertSame('aug', FigurePeriod::month(new \DateTimeImmutable('2026-08-14'))->shortLabel());
+        self::assertSame('q3', FigurePeriod::quarter(new \DateTimeImmutable('2026-08-14'))->shortLabel());
+        self::assertSame('2026', FigurePeriod::year(new \DateTimeImmutable('2026-08-14'))->shortLabel());
+    }
 }

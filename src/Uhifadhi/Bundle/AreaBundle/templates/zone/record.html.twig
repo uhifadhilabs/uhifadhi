@@ -41,8 +41,11 @@
 {% block shell_page_actions %}
     {# WHAT ELSE READS THIS GROUND — whatever modules report by zone, through
        their own entry routes. The core names none of them. #}
-    {% for fact in figures|filter(fact => fact.route) %}
-        <a class="tgl w-act" href="{{ path(fact.route, {uuid: area.uuidString}) }}">See {{ fact.figure.moduleName|lower }} {{ ux_icon('shell:arrow-right') }}</a>
+    {# ONE DOOR A MODULE. It was one per FIGURE, so a module publishing four
+       figures about this ground put "See incidents" in the header four
+       times. #}
+    {% for door in moduleDoors %}
+        <a class="tgl w-act" href="{{ path(door.route, {uuid: area.uuidString}) }}">See {{ door.name|lower }} {{ ux_icon('shell:arrow-right') }}</a>
     {% endfor %}
 {% endblock %}
 
@@ -63,7 +66,13 @@
         </em></span></span>
     <span class="f"><span class="k">People</span><span class="v">{{ peopleTotal ?: '&mdash;'|raw }}<em>posted</em></span></span>
     {% for fact in figures %}
-        <span class="f"><span class="k">{{ fact.figure.label }}</span><span class="v">{{ fact.figure.display }}<em>{{ fact.figure.caption ?: fact.figure.moduleName|lower }}</em></span></span>
+        {# THE MODULE IS THE LABEL AND THE PERIOD IS THE UNIT — the month in
+           three letters, as the design writes it ("aug"). A band is a line of
+           SHORT facts: the figure's own caption is a sentence, and a sentence
+           under every figure is what made this band four rows tall. The zone
+           figures are always asked for a month, which is why three letters
+           say the whole of it. #}
+        <span class="f"><span class="k">{{ fact.figure.moduleName }}</span><span class="v">{{ fact.figure.display }}<em>{{ period.shortLabel }}</em></span></span>
     {% else %}
         <span class="f"><span class="k">From the modules</span><span class="v">&mdash;<em>no module</em></span></span>
     {% endfor %}

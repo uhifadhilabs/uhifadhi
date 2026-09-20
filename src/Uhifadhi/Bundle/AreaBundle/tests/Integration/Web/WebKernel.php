@@ -29,6 +29,7 @@ use Symfony\UX\StimulusBundle\StimulusBundle;
 use Uhifadhi\Bundle\AreaBundle\AreaBundle;
 use Uhifadhi\Bundle\AreaBundle\Overview\OverviewContributorInterface;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\CheckoutTempDirTrait;
+use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Fixtures\ChattyFigureProvider;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web\Fixtures\HostDirectory;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web\Fixtures\HostUser;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web\Fixtures\PatrolsModuleTabs;
@@ -38,6 +39,7 @@ use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
 use Uhifadhi\Bundle\ShellBundle\ShellBundle;
 use Uhifadhi\Contracts\Area\StationSectionsInterface;
 use Uhifadhi\Contracts\Entity\UserInterface;
+use Uhifadhi\Contracts\Kpi\ZoneFigureProviderInterface;
 use Uhifadhi\Contracts\People\PersonDirectoryProviderInterface;
 use Uhifadhi\Contracts\Shell\AreaNavChildrenInterface;
 use Uhifadhi\Contracts\Shell\AreaSectionsInterface;
@@ -295,6 +297,15 @@ final class WebKernel extends Kernel
          */
         $services->set(FakeStationSections::class)
             ->tag(StationSectionsInterface::TAG);
+
+        /*
+         * A TALKATIVE MODULE'S ZONE FIGURES — four about one zone, each
+         * with the kind of caption a real module writes. The zone
+         * record's band took every one of them and wrapped to four
+         * rows; a fixture publishing one figure could not have seen it.
+         */
+        $services->set(ChattyFigureProvider::class)
+            ->tag(ZoneFigureProviderInterface::TAG);
 
         /*
          * A BUNDLE UNFOLDING ONE OF THE AREA'S SCREENS IN THE TREE, tagged

@@ -163,6 +163,18 @@ final readonly class ZoneRecordController
             ...$people,
             'covered' => $figures->covered((string) $zone->getUuidString()),
             'figures' => $this->moduleFacts($figures, (string) $zone->getUuidString()),
+            // THE BAND'S UNIT IS THE PERIOD — one short word under each
+            // module's figure, where the figure's own caption is a
+            // sentence and a sentence is what made the band four rows.
+            'period' => $figures->period,
+            /*
+             * ONE DOOR A MODULE, and every module that published
+             * anything about this ground gets one — including the one
+             * whose only figure is the covered share, which the band
+             * states on its own. The header used to repeat a module's
+             * name once per figure.
+             */
+            'moduleDoors' => $this->moduleDoors($figures, (string) $zone->getUuidString()),
             'events' => $this->events->findMentioning($area, (string) $zone->getName()),
             'lastImport' => $view->lastImport,
             /*
@@ -216,8 +228,26 @@ final readonly class ZoneRecordController
     }
 
     /**
-     * WHAT ELSE THE MODULES PUBLISH ABOUT THIS GROUND — every figure but the
-     * covered share, which the band states first and on its own.
+     * ONE FACT A MODULE — the band is a LINE, not a list.
+     *
+     * THE DEFECT THIS FIXES: every figure every module published about
+     * the ground went into the band, so an area running two modules
+     * drew twelve facts wrapping onto four rows, each captioned with a
+     * sentence ("every track that entered the zone"), and the header
+     * repeated "See incidents" once per figure. A band a reader has to
+     * scan four rows of is not an identity band.
+     *
+     * THE HEADLINE IS THE FIRST FIGURE THE MODULE PUBLISHED, and that
+     * is a decision worth stating. The alternative was a second
+     * well-known key beside {@see ZoneFigureProviderInterface::COVERED}
+     * — but a key every module must adopt fails SILENTLY for the ones
+     * that have not, and the symptom is an empty band. Order needs no
+     * contract change, no module edit, and it is the rule the
+     * performance matrix already reads a topic's headline by: the
+     * publisher decided which of its figures leads.
+     *
+     * THE REST ARE NOT LOST. They are the zone figure cards on the
+     * all-zones page, which is where the design puts them.
      *
      * @return list<array{figure: DepartmentKpi, route: string|null}>
      */
@@ -229,10 +259,38 @@ final readonly class ZoneRecordController
                 continue;
             }
 
-            $facts[] = ['figure' => $figure, 'route' => $this->entryRoutes->entryRouteFor($figure->moduleSlug)];
+            // FIRST WINS, and a module is in the band once.
+            if (\array_key_exists($figure->moduleSlug, $facts)) {
+                continue;
+            }
+
+            $facts[$figure->moduleSlug] = [
+                'figure' => $figure,
+                'route' => $this->entryRoutes->entryRouteFor($figure->moduleSlug),
+            ];
         }
 
-        return $facts;
+        return array_values($facts);
+    }
+
+    /**
+     * ONE WAY IN A MODULE — by distinct module, not by figure.
+     *
+     * @return list<array{name: string, route: string}>
+     */
+    private function moduleDoors(ZoneFigureSet $figures, string $zoneUuid): array
+    {
+        $doors = [];
+        foreach ($figures->forZone($zoneUuid) as $figure) {
+            $route = $this->entryRoutes->entryRouteFor($figure->moduleSlug);
+            if (null === $route || \array_key_exists($figure->moduleSlug, $doors)) {
+                continue;
+            }
+
+            $doors[$figure->moduleSlug] = ['name' => $figure->moduleName, 'route' => $route];
+        }
+
+        return array_values($doors);
     }
 
     /**

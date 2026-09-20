@@ -21,6 +21,11 @@ Not released yet.
  * the station and zone captions take the design's own sizes as well as its
    leading (`.pnone`, `.zhwhen`, `.rb-ttl`, `.tav`, `.stsrc`, `.stwhen`,
    `.stsep`) — `.stsrc` had lost the mono voice and the uppercase entirely
+ * a zone record's band is a LINE again: ONE fact a module (its first
+   published figure, the module's own name on it, the period in three
+   letters), and one door a module in the header. It took every figure every
+   module published — twelve facts over four rows, each captioned with a
+   sentence, and "See incidents" four times in the header
  * `/me/roster` says whether the person is `rostered` at all — a rest day and an
    unrostered ranger both answer with no watch, and a handset has to draw them
    differently; false where there is no roster module, because a platform that
