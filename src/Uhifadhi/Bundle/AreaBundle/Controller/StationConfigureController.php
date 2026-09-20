@@ -97,10 +97,22 @@ final readonly class StationConfigureController
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
     ): Response {
         $query = self::queryFrom($request);
-        $register = $this->register->register($area, $query);
         $view = $this->set->view($area);
 
+        /*
+         * THE OPEN ROW IS RESOLVED BEFORE THE REGISTER IS, because it decides
+         * which PAGE of the register answers. A deep link names a station —
+         * from its record's "Edit the station", from the empty state's "Post
+         * somebody", from the redirect after a form posts — and the register
+         * paginates: every station from the ninth on used to land on page one
+         * with nothing open, which reads as a dead link.
+         */
         $open = self::openRowOf($request, $area, $this->stations);
+        $register = $this->register->register(
+            $area,
+            $query,
+            holding: null === $open ? null : (string) $open->getUuidString(),
+        );
         $board = null === $open ? [] : $this->board->at($open, new PostingQuery())['rows'];
 
         $posts = [];

@@ -8,6 +8,16 @@
 
 Not released yet.
 
+ * A DEEP LINK INTO THE STATIONS REGISTER LANDS ON THE STATION IT NAMES.
+   The register paginates eight cards to a page and `?open=<uuid>` only
+   opened a card the FIRST page happened to hold, so from the ninth station
+   on every link naming one — the record's "Edit the station", the empty
+   state's "Post somebody", the redirect after a form posts — answered with
+   page one and nothing open. `StationRegisterService::register()` takes the
+   row the caller must see and returns the page it is actually on, worked
+   out where the filtering and the ordering have just happened rather than
+   in a caller that would need its own copy of all three.
+
  * A WATCH IS OVER WHEN THE MOMENT ASKED FOR SAYS SO, never when the server
    happens to be running. `PresenceService` read the WALL CLOCK to decide
    whether the roster had already ended an open watch, so a live plate asked

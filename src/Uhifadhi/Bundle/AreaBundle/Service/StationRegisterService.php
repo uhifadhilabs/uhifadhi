@@ -50,7 +50,20 @@ final readonly class StationRegisterService
     ) {
     }
 
-    public function register(AreaOfInterest $area, StationQuery $query, int $perPage = StationRegister::PER_PAGE): StationRegister
+    /**
+     * @param string|null $holding a row the caller must be able to see — the
+     *                             card a deep link named. Where the filters
+     *                             and the order put it on another page, THAT
+     *                             page is the one returned: a link into a
+     *                             register that answered with a page not
+     *                             containing the thing it named is a link
+     *                             that silently does nothing, which is what
+     *                             happened to every station from the ninth
+     *                             on. A row the filters exclude is not found
+     *                             and the asked-for page stands — the filters
+     *                             are part of the address too.
+     */
+    public function register(AreaOfInterest $area, StationQuery $query, int $perPage = StationRegister::PER_PAGE, ?string $holding = null): StationRegister
     {
         $cats = [];
         $zoneNames = [];
@@ -83,6 +96,20 @@ final readonly class StationRegisterService
         $pages = max(1, (int) ceil(\count($matching) / $perPage));
         $page = max(1, min($query->page, $pages));
 
+        /*
+         * THE PAGE A NAMED ROW IS ACTUALLY ON — decided here, where the
+         * filtering and the ordering have just happened and the answer is
+         * therefore free. A caller computing it would be a second place that
+         * had to know the sort, the filters and the page size, and would be
+         * wrong the day any of the three changed.
+         */
+        if (null !== $holding) {
+            $at = self::indexOf($matching, $holding);
+            if (null !== $at) {
+                $page = intdiv($at, $perPage) + 1;
+            }
+        }
+
         return new StationRegister(
             rows: \array_slice($matching, ($page - 1) * $perPage, $perPage),
             total: \count($matching),
@@ -98,6 +125,23 @@ final readonly class StationRegisterService
             pages: $pages,
             perPage: $perPage,
         );
+    }
+
+    /**
+     * Where a row sits in the filtered, ordered set, or null when it is not
+     * in it at all.
+     *
+     * @param list<StationRow> $matching
+     */
+    private static function indexOf(array $matching, string $uuid): ?int
+    {
+        foreach ($matching as $at => $row) {
+            if ($row->uuid === $uuid) {
+                return $at;
+            }
+        }
+
+        return null;
     }
 
     /**
