@@ -254,6 +254,12 @@ final readonly class TeamNavigation implements NavigationSourceInterface
             // exactly one screen is lit, and exactly one card under it.
             current: true,
             children: $screens,
+            // A SECTION'S CHILDREN ARE ITS OWN SCREENS, not places inside it.
+            // There is no place rung between a section and the screens its
+            // own tab strip carries, and drawing one gives a reader two kinds
+            // of row for one kind of thing — the register's departments are
+            // the rung below these, and they are the ones that are places.
+            screens: true,
         );
     }
 
@@ -300,6 +306,12 @@ final readonly class TeamNavigation implements NavigationSourceInterface
             // answers to "where am I": it is the path.
             current: true,
             children: $screens,
+            // A SECTION'S CHILDREN ARE ITS OWN SCREENS, not places inside it.
+            // There is no place rung between a section and the screens its
+            // own tab strip carries, and drawing one gives a reader two kinds
+            // of row for one kind of thing — the register's departments are
+            // the rung below these, and they are the ones that are places.
+            screens: true,
         );
     }
 

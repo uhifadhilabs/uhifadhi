@@ -8,6 +8,10 @@
 
 Not released yet.
 
+ * a section's children are drawn as its own SCREENS and not as places inside
+   it: Team and Departments now say so (`NavItem::$screens`), so their rows
+   sit on the screen rung like Performance's and the department records below
+   the register keep the place rung to themselves
  * a department's CARD wears its own hue, the same category its row in the
    sidebar wears: the card carries the index and the mark reads it. The mark
    was accent-tinted for every ACTIVE department before this, which said what

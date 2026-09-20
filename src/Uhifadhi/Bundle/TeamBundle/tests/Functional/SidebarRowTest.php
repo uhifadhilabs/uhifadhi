@@ -108,7 +108,7 @@ final class SidebarRowTest extends WebTestCaseWithSchema
 
         self::assertResponseIsSuccessful();
         self::assertSame(['nav-item closed', 'nav-item', 'nav-item path'], $this->rowClasses($crawler));
-        self::assertSame('People', trim($crawler->filter('nav.nav .ntree .on')->text()));
+        self::assertSame('People', trim($crawler->filter('nav.nav .ntree .ntt.on')->text()));
     }
 
     /**
@@ -124,7 +124,7 @@ final class SidebarRowTest extends WebTestCaseWithSchema
 
         self::assertResponseIsSuccessful();
         self::assertSame(['nav-item closed', 'nav-item', 'nav-item path'], $this->rowClasses($crawler));
-        self::assertSame('Positions', trim($crawler->filter('nav.nav .ntree .on')->text()));
+        self::assertSame('Positions', trim($crawler->filter('nav.nav .ntree .ntt.on')->text()));
     }
 
     /**
@@ -145,6 +145,36 @@ final class SidebarRowTest extends WebTestCaseWithSchema
 
         self::assertResponseIsSuccessful();
         self::assertSame(['nav-item closed', 'nav-item path', 'nav-item'], $this->rowClasses($crawler));
+    }
+
+    /**
+     * A SECTION'S CHILDREN ARE ITS OWN SCREENS, AND THE RUNG SAYS SO.
+     *
+     * The sidebar draws a PLACE (`.nta`, a name in bold with its own branch)
+     * and a SCREEN (`.ntt`) differently, and the difference is what tells a
+     * reader an area apart from the tabs inside it. A section has no place
+     * between it and the screens its own tab strip carries, so its children
+     * are screens — the same five, in the same order, because the tree and
+     * the strip are two readings of one list.
+     *
+     * The rung below them is where the places are: a department RECORD hangs
+     * off the register and is drawn as one (`.ntm`, with the department's own
+     * hue on its dot).
+     */
+    public function testASectionsChildrenAreDrawnAsItsScreensAndNotAsPlacesInsideIt(): void
+    {
+        $this->administrator();
+
+        $crawler = $this->client->request('GET', '/team');
+
+        self::assertCount(0, $crawler->filter('nav.nav .ntree .nta'), 'a section has no place rung');
+
+        // The open tree is the one the viewer is in; Performance's is in the
+        // document and folded, which is the sidebar's own rule.
+        self::assertSame(
+            ['Overview', 'People', 'Positions', 'Postings', 'Roles'],
+            $crawler->filter('nav.nav .ntree:not(.closed) .ntt')->each(static fn ($node): string => trim($node->text())),
+        );
     }
 
     /**
