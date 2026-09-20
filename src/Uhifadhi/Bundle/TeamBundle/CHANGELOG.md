@@ -32,6 +32,12 @@ Not released yet.
    exactly the loose bucket the overview draws as its own line. A period
    nobody wrote gets no pill.
 
+ * the departments register's band carries what the departments DID — the
+   modules' own figures through the performance seam, then the areas, the
+   seats and the goals — and the counts of the cards moved under the filters,
+   where a count of what is being listed belongs
+ * the register wears the section's two controls, scope and window, and a
+   register narrowed to one area narrows its band with it
  * **a quarter's and a year's movements were measured against the previous
    MONTH** — every topic read its comparison from a hardcoded one-month-back
    key. They read `FigurePeriod::against()` now, through a key chosen by the

@@ -38,6 +38,8 @@ use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Exception\MissingScopeChangeReasonException;
 use Uhifadhi\Bundle\TeamBundle\Exception\NameNotUniqueException;
 use Uhifadhi\Bundle\TeamBundle\Model\DepartmentQuery;
+use Uhifadhi\Bundle\TeamBundle\Performance\DepartmentsBand;
+use Uhifadhi\Bundle\TeamBundle\Performance\PeriodKind;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentGoalRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
@@ -46,9 +48,11 @@ use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPalette;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPerformance;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentService;
+use Uhifadhi\Bundle\TeamBundle\Service\PerformanceTopics;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionService;
 use Uhifadhi\Bundle\TeamBundle\Shell\DepartmentSectionTabs;
 use Uhifadhi\Contracts\Entity\AreaInterface;
+use Uhifadhi\Contracts\Performance\PerformanceScope;
 
 /**
  * THE ORG CHART'S HOME — the area-aware department manager, the per-department
@@ -144,6 +148,8 @@ final readonly class DepartmentController
         private AreaAuthority $authority,
         private ModuleCatalogue $catalogue,
         private DepartmentPerformance $performance,
+        private PerformanceTopics $topics,
+        private DepartmentsBand $band,
         private DepartmentPalette $palette,
     ) {
     }
@@ -193,6 +199,14 @@ final readonly class DepartmentController
         $query = DepartmentQuery::from($request);
         $areas = $this->areas();
 
+        // THE BAND READS THE PAGE'S OWN SCOPE AND WINDOW. A reader who
+        // narrowed the register to one area is asking about that area,
+        // and a band that answered for the organisation would be the
+        // page contradicting its own filter.
+        $bandScope = $this->bandScope($query, $areas);
+        $periodKind = PeriodKind::fromRequest($request->query->getString('period'));
+        $bandPeriod = $periodKind->period(new \DateTimeImmutable());
+
         return new Response($this->twig->render('@Team/departments/index.html.twig', [
             // ORG-WIDE FIRST, THEN AREA-LEVEL: the register is read from the
             // organisation inwards, and an org-wide department is one every
@@ -222,8 +236,60 @@ final readonly class DepartmentController
             'cats' => $this->palette->indexes(),
             'openDepartment' => self::openOf($request),
             'positionCount' => array_sum(array_map(\count(...), $owned)),
+            /*
+             * WHAT THE DEPARTMENTS DID, over the scope and window the
+             * page is showing — the modules' own figures through the
+             * performance seam, so a figure here and the same figure on
+             * the Performance page cannot disagree. How MANY departments
+             * there are is a fact about the page, and it reads under the
+             * filters where a count of what is listed belongs.
+             */
+            'bandScope' => $bandScope->label,
+            'periodKinds' => PeriodKind::labels(),
+            'periodKind' => $periodKind->value,
+            'periodUrls' => $this->periodUrls($query),
+            'band' => $this->band->build(
+                $this->topics->forScope($bandScope, $bandPeriod),
+                $bandScope,
+                $bandPeriod,
+                \count($areas),
+            ),
             'csrfToken' => $this->csrf->getToken(self::CSRF_ID)->getValue(),
         ]));
+    }
+
+    /**
+     * WHERE EACH SEGMENT OF THE PERIOD GROUP GOES, carrying the
+     * register's own filter with it: changing the window is not
+     * changing which departments are listed.
+     *
+     * @return array<string, string>
+     */
+    private function periodUrls(DepartmentQuery $query): array
+    {
+        $urls = [];
+        foreach (PeriodKind::cases() as $kind) {
+            $urls[$kind->value] = $this->router->generate(self::REGISTER, $query->with('period', $kind->value));
+        }
+
+        return $urls;
+    }
+
+    /**
+     * WHOSE FIGURES THE BAND SHOWS: the organisation's, or the one area
+     * the register has been narrowed to.
+     *
+     * @param list<AreaInterface> $areas
+     */
+    private function bandScope(DepartmentQuery $query, array $areas): PerformanceScope
+    {
+        foreach ($areas as $area) {
+            if (null !== $query->area && $query->area === $area->getUuidString()) {
+                return PerformanceScope::area($query->area, (string) $area->getName());
+            }
+        }
+
+        return PerformanceScope::organisation();
     }
 
     /** Which card is open is a place, so it is a query a link can carry. */

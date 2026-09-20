@@ -33,6 +33,35 @@
 
 {% block shell_page_subtitle %}Every department, created and scoped here.{% endblock %}
 
+{% block shell_page_actions %}
+    {# THE SAME TWO CONTROLS THE PERFORMANCE SECTION WEARS, because they ask
+       the same two questions of the same seam: whose figures, and over what
+       window. Every option is a link — the address is the state. #}
+    <label class="ov-ctl">
+        <span class="k">Scope</span>
+        <details class="i-dd">
+            <summary class="mchip i-ddt">
+                <span class="i-ddval">{{ bandScope }}</span>
+                <span class="i-ddcaret">&#9662;</span>
+            </summary>
+            <div class="i-ddmenu">
+                <span class="i-ddhead">whose figures</span>
+                <a class="i-ddopt{{ query.area ? '' : ' on' }}" href="{{ path('team_departments', query.with('area', null)) }}">
+                    <span class="i-ddopt-l">Organisation &mdash; all areas</span>
+                </a>
+                {% for area in areas %}
+                    <a class="i-ddopt{{ query.area == area.uuidString ? ' on' }}"
+                       href="{{ path('team_departments', query.with('area', area.uuidString)) }}">
+                        <span class="i-ddopt-l">{{ area.name }}</span>
+                    </a>
+                {% endfor %}
+            </div>
+        </details>
+    </label>
+
+    {{ include('@Shell/_period_group.html.twig', {kinds: periodKinds, chosen: periodKind, urls: periodUrls}, with_context = false) }}
+{% endblock %}
+
 {% block shell_page %}
     {{ include('@Team/team/_scope_banner.html.twig') }}
     {% set hasAreas = areas|length > 0 %}
@@ -96,16 +125,25 @@
 
         {% if anyDepartments %}
             {# THE ORGANISATION, ONCE — the slim identity band every register
-               wears, carrying the organisation's OWN figures. It is never the
-               cards below added up, so the cards do not repeat it. #}
+               wears. IT CARRIES WHAT THE DEPARTMENTS DID, not how many of
+               them there are: the modules' own figures through the
+               performance seam, then the ground, the seats and the goals. A
+               count of the cards below is a fact about the page, and it
+               reads under the filters where such a count belongs. #}
             <div class="factband">
-                <span class="f"><span class="k">Departments</span><span class="v">{{ counts.all }}<em>in the organisation</em></span></span>
-                <span class="f"><span class="k">Org-wide</span><span class="v">{{ counts.org }}<em>every area reads them</em></span></span>
-                <span class="f"><span class="k">Area-level</span><span class="v">{{ counts.area }}<em>one area each</em></span></span>
-                <span class="f"><span class="k">Positions</span><span class="v">{{ positionCount }}<em>filed under one</em></span></span>
-                <span class="f"><span class="k">Unfiled</span><span class="v">{{ loose|length ?: '&mdash;'|raw }}<em>{{ loose|length ? 'belong to nobody yet' : 'every position is filed' }}</em></span></span>
+                {% for figure in band %}
+                    <span class="f">
+                        <span class="k">{{ figure.label }}</span>
+                        <span class="v">{{ figure.figure ?: '—' }}
+                            {%- if figure.caption or figure.delta %}<em>
+                                {{- figure.caption }}
+                                {%- if figure.caption and figure.delta %} &middot; {% endif %}
+                                {%- if figure.delta %}<span class="d{{ figure.tone ? ' ' ~ figure.tone }}">{{ figure.delta }}</span>{% endif %}
+                            </em>{% endif %}</span>
+                    </span>
+                {% endfor %}
                 <span class="sp"></span>
-                <a class="more" href="{{ path('team_positions') }}">Positions &rarr;</a>
+                <a class="more" href="{{ path('team_performance') }}">Performance &rarr;</a>
             </div>
 
             {# FIND AND FILTER — the pills are the create chooser's own two
@@ -140,7 +178,11 @@
                         </span>
                     {% endif %}
                     <span class="sp"></span>
-                    <span class="cnt">{{ counts.all }} departments &middot; {{ counts.org }} org-wide &middot; {{ counts.area }} area-level</span>
+                    {# WHAT IS BEING LISTED, under the thing listing it — where the
+                       register's own counts belong, now that the band carries what
+                       the departments DID rather than how many there are. #}
+                    <span class="cnt">{{ counts.all }} departments &middot; {{ counts.org }} org-wide &middot; {{ counts.area }} area-level
+                        &middot; {{ positionCount }} positions{% if loose|length %} &middot; {{ loose|length }} unfiled{% endif %}</span>
                 </div>
             </div>
 

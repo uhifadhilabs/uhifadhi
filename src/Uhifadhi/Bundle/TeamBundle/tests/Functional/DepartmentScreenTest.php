@@ -38,6 +38,56 @@ use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentScopeChangeRepository;
  */
 final class DepartmentScreenTest extends WebTestCaseWithSchema
 {
+    /**
+     * THE BAND CARRIES WHAT THE DEPARTMENTS DID, not how many of them
+     * there are. A reader can already see how many cards are on the
+     * page; what they cannot see is what those departments have been
+     * doing, which is what the performance seam knows.
+     */
+    public function testTheBandCarriesTheFiguresAndTheCountsMoveUnderTheFilters(): void
+    {
+        $crawler = $this->screen();
+
+        $band = $crawler->filter('.factband .f .k')->each(static fn (Crawler $c): string => $c->text());
+
+        // The host's three are always there; a module's figures lead them
+        // where the installation runs any.
+        self::assertContains('Areas', $band);
+        self::assertContains('Seats filled', $band);
+        self::assertContains('Goals', $band);
+        self::assertNotContains('Departments', $band, 'a count of the cards is not a figure about the organisation');
+
+        // AND THE COUNTS ARE UNDER THE FILTERS, where a count of what is
+        // being listed belongs.
+        $caption = $crawler->filter('.dcfil .cnt')->text();
+        self::assertStringContainsString('departments', $caption);
+        self::assertStringContainsString('org-wide', $caption);
+        self::assertStringContainsString('positions', $caption);
+    }
+
+    /** The register wears the same two controls the performance section does. */
+    public function testTheHeaderCarriesTheScopeAndThePeriod(): void
+    {
+        $crawler = $this->screen();
+
+        self::assertGreaterThan(0, $crawler->filter('.pgact .ov-ctl .i-dd')->count(), 'the scope, as addresses');
+        self::assertSame(
+            ['Month', 'Quarter', 'Year'],
+            $crawler->filter('.pgact .periodpick a')->each(static fn (Crawler $c): string => $c->text()),
+        );
+
+        // A NARROWED REGISTER NARROWS THE BAND: a page that filtered its
+        // rows to one area and kept the organisation's figures would be
+        // contradicting its own filter.
+        $north = $this->north;
+        self::assertNotNull($north, 'the register was seeded with an area');
+
+        $narrowed = $this->client->request('GET', '/departments?scope=area&area='.$north->getUuidString());
+
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('Northern Reserve', $narrowed->filter('.pgact .i-ddval')->text());
+    }
+
     // ---- the register lists both scope groups, area-first -----------------
 
     /**

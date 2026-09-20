@@ -48,6 +48,7 @@ use Uhifadhi\Bundle\TeamBundle\People\TeamPersonDirectory;
 use Uhifadhi\Bundle\TeamBundle\People\TeamPersonFacets;
 use Uhifadhi\Bundle\TeamBundle\Performance\AcrossTopicsMatrix;
 use Uhifadhi\Bundle\TeamBundle\Performance\AttentionTopic;
+use Uhifadhi\Bundle\TeamBundle\Performance\DepartmentsBand;
 use Uhifadhi\Bundle\TeamBundle\Performance\GoalsTopic;
 use Uhifadhi\Bundle\TeamBundle\Performance\MatrixPlacing;
 use Uhifadhi\Bundle\TeamBundle\Performance\MatrixViewBuilder;
@@ -512,6 +513,14 @@ return static function (ContainerConfigurator $container): void {
     $services->set('team.performance.organisation_band', OrganisationBand::class);
     $services->alias(OrganisationBand::class, 'team.performance.organisation_band');
 
+    /*
+     * AND THE REGISTER'S OWN BAND — what the departments DID rather than
+     * how many of them there are, read from the same seam so a figure
+     * there and the same figure on the performance page cannot disagree.
+     */
+    $services->set('team.performance.departments_band', DepartmentsBand::class);
+    $services->alias(DepartmentsBand::class, 'team.performance.departments_band');
+
     $services->set('team.performance.across_topics', AcrossTopicsMatrix::class);
     $services->alias(AcrossTopicsMatrix::class, 'team.performance.across_topics');
 
@@ -973,6 +982,8 @@ return static function (ContainerConfigurator $container): void {
             service('team.area_authority'),
             service('registry.catalogue'),
             service('team.department_performance'),
+            service('team.performance_topics'),
+            service('team.performance.departments_band'),
             service('team.department_palette'),
         ])
         ->tag('controller.service_arguments');
