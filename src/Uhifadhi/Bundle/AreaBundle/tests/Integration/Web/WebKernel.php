@@ -26,12 +26,14 @@ use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 use Symfony\UX\Icons\UXIconsBundle;
 use Symfony\UX\Map\UXMapBundle;
 use Symfony\UX\StimulusBundle\StimulusBundle;
+use Twig\Environment;
 use Uhifadhi\Bundle\AreaBundle\AreaBundle;
 use Uhifadhi\Bundle\AreaBundle\Overview\OverviewContributorInterface;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\CheckoutTempDirTrait;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Fixtures\ChattyFigureProvider;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web\Fixtures\HostDirectory;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web\Fixtures\HostUser;
+use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web\Fixtures\OrgModule;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web\Fixtures\PatrolsModuleTabs;
 use Uhifadhi\Bundle\AreaBundle\Tests\Integration\Web\Fixtures\SignedInPerson;
 use Uhifadhi\Bundle\AtlasBundle\AtlasBundle;
@@ -338,6 +340,18 @@ final class WebKernel extends Kernel
             ->public();
 
         $services->alias('test_public.area.shell_source', 'area.shell_source')->public();
+        $services->alias('test_public.area.scopes', 'area.scopes')->public();
+
+        /*
+         * A MODULE THAT ANSWERS AT ORGANISATION LEVEL, tagged by hand as a
+         * real module bundle has to tag it. Its pages wear the shell's org
+         * frame, and the control in that frame is filled by this bundle's
+         * own scope source with nothing wired by a host — which is the whole
+         * of what the default is for.
+         */
+        $services->set(OrgModule::class)
+            ->tag(ShellBundle::ORG_PAGES_TAG)
+            ->public();
         $services->alias('test_public.area.stations', 'area.stations')->public();
         $services->alias('test_public.area.postings', 'area.postings')->public();
         $services->alias('test_public.area.zones', 'area.zones')->public();
@@ -383,6 +397,17 @@ final class WebKernel extends Kernel
         // more than one rung to be.
         $routes->add('test_module_list', '/areas/{uuid}/modules/patrols/patrols')
             ->controller('kernel::moduleEntry');
+
+        // AND THE STAND-IN MODULE'S ORGANISATION-LEVEL SCREENS, mounted by
+        // the application as a real one mounts them: the module contributes
+        // route NAMES and the host decides the addresses.
+        $routes->add('test_org_overview', '/sightings')->controller('kernel::orgPage');
+        $routes->add('test_org_today', '/sightings/today')->controller('kernel::orgPage');
+    }
+
+    public function orgPage(Environment $twig): Response
+    {
+        return new Response($twig->render('@fixtures/org_page.html.twig'));
     }
 
     public function moduleEntry(): Response

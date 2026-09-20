@@ -1,5 +1,27 @@
 # UPGRADE FROM 0.x to 1.0
 
+## The scope control has a default, and the core ships it
+
+**What changed.** `AreaBundle` ships `Shell\AreasTheViewerMayOpen`, tagged
+`shell.scope_source`: the organisation plus every area the viewer holds
+`area.view` on, asked WITH THE AREA AS SUBJECT — the same authority
+`/api/areas/mine` asks. An installation now gets the scope control on
+organisation-level pages with nothing wired.
+
+**Why.** The shell draws the control only when something tags a
+`ScopeSourceInterface`, and no installation did: the roster's organisation
+pages rendered with the row, the strip and the figures right and no control
+at all. A seam whose default is "nothing" ships a feature that passes its own
+suite and is missing on every real page.
+
+**One area is not a choice.** Where the viewer may open exactly one area, only
+that area is offered, and the shell's existing rule (a control of one row is
+not a control) leaves the action row empty.
+
+**A host may still replace it** by redefining the `area.scopes` service — a
+host that tags a second source of its own gets both lists, which is not what
+anybody wants.
+
 ## The map stylesheet is in every head — delete your link
 
 **What changed.** `bundles/atlas/map.css` is published through the shell's

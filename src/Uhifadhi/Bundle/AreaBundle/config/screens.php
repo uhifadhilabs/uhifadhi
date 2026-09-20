@@ -38,6 +38,7 @@ use Uhifadhi\Bundle\AreaBundle\Service\ZoneImportDraftStore;
 use Uhifadhi\Bundle\AreaBundle\Shell\AreaConfigurationSections;
 use Uhifadhi\Bundle\AreaBundle\Shell\AreaNavigation;
 use Uhifadhi\Bundle\AreaBundle\Shell\AreaShellSource;
+use Uhifadhi\Bundle\AreaBundle\Shell\AreasTheViewerMayOpen;
 use Uhifadhi\Bundle\ShellBundle\Contract\AreaShellSourceInterface;
 use Uhifadhi\Bundle\ShellBundle\Contract\NavigationSourceInterface;
 use Uhifadhi\Bundle\ShellBundle\Model\ModuleGroup;
@@ -400,6 +401,21 @@ return static function (ContainerConfigurator $container): void {
             ->tag('uhifadhi.configuration_sections');
         $services->alias(AreaConfigurationSections::class, 'area.configuration_sections');
     }
+
+    /*
+     * AND HOW WIDE AN ORGANISATION-LEVEL PAGE MAY LOOK — the default the
+     * core ships, because a seam whose default is "nothing" ships a control
+     * that is missing on every real page. The tag is the shell's; an
+     * installation without the shell simply has a tag nobody collects.
+     */
+    $services->set('area.scopes', AreasTheViewerMayOpen::class)
+        ->args([
+            service(AreaOfInterestRepository::class),
+            service('security.token_storage'),
+            service('security.authorization_checker'),
+        ])
+        ->tag('shell.scope_source');
+    $services->alias(AreasTheViewerMayOpen::class, 'area.scopes');
 
     if (interface_exists(NavigationSourceInterface::class)) {
         $services->set('area.navigation', AreaNavigation::class)
