@@ -1,5 +1,25 @@
 # UPGRADE FROM 0.x to 1.0
 
+## A mark says whose set it is
+
+**What changed.** `VocabularyConformanceTestCase` gains
+`testNoIconIsNamedWithoutSayingWhoseItIs`: no template, controller or
+provider in a bundle may name an icon without its set —
+`ux_icon('calendar-clock')`, `<twig:ux:icon name="plus">`, `icon: 'clock'`.
+
+**Why.** A bare name resolves in the HOST's default set, so a module writing
+one is betting that every installation happens to ship that glyph, and the
+bet fails silently until the name is rendered somewhere that does not. A nav
+row is rendered by the SHELL, in whatever application mounted the module —
+one bare `calendar-clock` in a roster nav row took that module's whole suite
+down in a fixture application with no icon directory at all.
+
+**What to change.** Name the set: `<your-alias>:<name>` for a mark your
+bundle ships in `assets/icons/<alias>/`, `shell:<name>` for one the shell
+ships. The rule sits below the three that were already there — that a prefix
+is one the bundle may use, and that a name under its own prefix resolves to a
+file it ships.
+
 ## The scope control has a default, and the core ships it
 
 **What changed.** `AreaBundle` ships `Shell\AreasTheViewerMayOpen`, tagged

@@ -184,6 +184,53 @@ abstract class VocabularyConformanceTestCase extends TestCase
     }
 
     /**
+     * NOTHING NAMES A MARK WITHOUT SAYING WHOSE IT IS.
+     *
+     * A BARE NAME RESOLVES IN THE HOST'S DEFAULT SET, so a bundle that
+     * writes one is betting that every installation happens to ship that
+     * glyph — and the bet fails SILENTLY until the name is rendered
+     * somewhere that has no such icon. One `calendar-clock` in a nav row
+     * took a whole module suite down the first time the shell drew that row
+     * in a fixture application, because a nav row is rendered by the SHELL,
+     * in whatever application mounted the module, which may have no icon
+     * directory at all.
+     *
+     * The three rules above are about namespaced names — that the prefix is
+     * one this bundle may use, and that a name under its own prefix is
+     * shipped. This is the one below them: that there is a prefix at all.
+     */
+    public function testNoIconIsNamedWithoutSayingWhoseItIs(): void
+    {
+        $bare = [];
+
+        foreach (self::sourceFiles() as $path) {
+            $contents = (string) file_get_contents($path);
+            $where = self::shortPath($path);
+
+            // The three ways a mark is asked for, each matched only when the
+            // name carries no `set:` prefix.
+            preg_match_all('/ux_icon\(\s*[\'"]([a-z0-9][a-z0-9-]*)[\'"]/', $contents, $called);
+            preg_match_all('/<twig:ux:icon[^>]*\sname="([a-z0-9][a-z0-9-]*)"/', $contents, $component);
+            preg_match_all('/\bicon:\s*[\'"]([a-z0-9][a-z0-9-]*)[\'"]/', $contents, $named);
+
+            foreach ([...$called[1], ...$component[1], ...$named[1]] as $name) {
+                $bare[] = $name.' ('.$where.')';
+            }
+        }
+
+        $bare = array_values(array_unique($bare));
+        sort($bare);
+
+        self::assertSame([], $bare, \sprintf(
+            'These name a mark with no set [%s], so it resolves wherever the host happens to look — '
+            .'and renders as nothing in an installation that ships no such glyph. Name the set: '
+            .'`%s:<name>` for a mark this bundle ships, `shell:<name>` for one the shell does.',
+            implode(', ', $bare),
+            static::alias(),
+        ));
+    }
+
+    /**
      * With on-demand fetching off — which is what an installation configures —
      * a name is answered by a file or by nothing at all. So the file is what is
      * asked for.

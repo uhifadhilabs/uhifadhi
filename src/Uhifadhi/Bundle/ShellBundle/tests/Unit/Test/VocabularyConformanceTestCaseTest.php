@@ -44,6 +44,21 @@ final class VocabularyConformanceTestCaseTest extends TestCase
         self::drifting()->testEveryIconReferenceUsesAPrefixThisBundleMayUse();
     }
 
+    /**
+     * A BARE NAME FAILS — the rule adopted from the roster's own suite. It
+     * resolves in whatever set the host happens to have, so it renders as
+     * nothing in an installation that ships no such glyph, and `calendar-clock`
+     * in one nav row took a whole module suite down exactly that way.
+     */
+    public function testAnIconNamedWithoutASetFails(): void
+    {
+        $this->expectException(AssertionFailedError::class);
+        $this->expectExceptionMessageMatches('/calendar-clock/');
+        $this->expectExceptionMessageMatches('/name a mark with no set/');
+
+        self::drifting()->testNoIconIsNamedWithoutSayingWhoseItIs();
+    }
+
     /** A name under the bundle's own prefix with no file behind it is an empty box. */
     public function testAnIconTheBundleNamesButDoesNotShipFails(): void
     {
