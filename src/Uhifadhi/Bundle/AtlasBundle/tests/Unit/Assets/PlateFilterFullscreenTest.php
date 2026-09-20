@@ -168,10 +168,25 @@ final class PlateFilterFullscreenTest extends TestCase
      */
     public function testTheAddressBarFollowsWithoutNavigating(): void
     {
-        $js = self::controllerJs();
+        // The FILTER path, specifically: twenty chips must not become twenty
+        // presses of Back. A swap verb elsewhere in the controller pushes,
+        // because which thing the map is about IS a place — so this reads
+        // refilter's own body rather than the whole file.
+        $refilter = self::refilter();
 
-        self::assertStringContainsString('history.replaceState', $js);
-        self::assertStringNotContainsString('history.pushState', $js);
+        self::assertStringContainsString('history.replaceState', $refilter);
+        self::assertStringNotContainsString('history.pushState', $refilter);
+    }
+
+    /** `refilter()`'s body — the filter path's own answer, and nobody else's. */
+    private static function refilter(): string
+    {
+        $js = self::controllerJs();
+        $from = strpos($js, 'async refilter(address) {');
+        self::assertIsInt($from);
+        $end = strpos($js, "\n    }\n", $from);
+
+        return false === $end ? substr($js, $from) : substr($js, $from, $end - $from);
     }
 
     /**

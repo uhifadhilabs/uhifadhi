@@ -8,6 +8,13 @@
 
 Not released yet.
 
+ * A LINK CHANGES THE PLATE WITHOUT NAVIGATING, wherever it sits and whether
+   or not the plate is fullscreen: `data-atlas-swap` on a same-origin link
+   swaps the plate's subtrees out of the fetched page, and
+   `data-atlas-swap-also="#selector"` brings one region beside it across so a
+   caller's own marked row moves with the map. The `href` stays the fallback,
+   history is pushed, and the server still computes the focus — a module
+   writes an attribute and no JavaScript
  * WHERE PEOPLE ARE, ON THE PLATE: `AtlasMap::livePositions()` draws a
    `LivePresence` as the shell's live dot — one marker a position, stale where
    the contract says stale, nothing at all for a person with no fix — and adds

@@ -110,6 +110,59 @@ const PANE = 'atlas-z-';
  */
 const PLATE = 'data-atlas-plate';
 
+/**
+ * THE VERB A LINK WEARS TO CHANGE A PLATE WITHOUT NAVIGATING.
+ *
+ * `data-atlas-swap` on a same-origin link means: fetch where this goes, take
+ * the plate's subtrees out of the answer and put them in place of the live
+ * ones. The link's `href` is the page it would have gone to, and it still is
+ * — with no script, or on a middle click, or when anything at all goes wrong,
+ * the browser navigates and the same page arrives the ordinary way.
+ *
+ * ITS VALUE NAMES A PLATE, or is empty for "the one this link is about": the
+ * plate the link sits inside, or the page's only plate. A page with two
+ * plates and an unnamed link is ambiguous, and an ambiguous swap is not
+ * performed — the link navigates, which is always correct.
+ *
+ * `data-atlas-swap-also` names ONE more region, by selector, to bring across
+ * from the same answer: the caller's own list beside the plate, whose marked
+ * row has to move with the map. One, deliberately — a link that re-renders
+ * half a page is a navigation with extra steps, and the page it fetched is
+ * right there.
+ *
+ * THE SERVER STILL DECIDES EVERYTHING. What is focused, what the plate frames
+ * itself on, which row is marked: all of it is computed where it was always
+ * computed, and this fetches the answer. A module writes an attribute and no
+ * JavaScript, and no map maths anywhere.
+ */
+const SWAP = 'data-atlas-swap';
+const SWAP_ALSO = 'data-atlas-swap-also';
+
+/**
+ * WHICH PLATE A SWAP LINK IS ABOUT — the one its value names as a selector,
+ * or the one it sits inside, or the page's only plate.
+ *
+ * NULL WHERE IT CANNOT BE SAID. A page with two plates and a link that sits
+ * in neither and names neither is asking a question with two answers, and
+ * the honest thing is to let the browser navigate rather than to guess which
+ * map the reader meant.
+ */
+function plateElementFor(link) {
+    const named = link.getAttribute(SWAP);
+    if (named) {
+        return document.querySelector(named);
+    }
+
+    const inside = link.closest(`[${PLATE}]`);
+    if (inside) {
+        return inside;
+    }
+
+    const plates = document.querySelectorAll(`[${PLATE}]`);
+
+    return 1 === plates.length ? plates[0] : null;
+}
+
 /*
  * WHAT A FILTER CHANGE CAN CHANGE INSIDE THE PLATE — the chips themselves (their
  * counts and which one is pressed), the map element (the new features and the
@@ -180,6 +233,16 @@ export default class extends Controller {
          * mouseover/mouseout rather than mouseenter/mouseleave: only the former
          * bubble, and delegation needs them to.
          */
+        /*
+         * THE SWAP VERB IS DELEGATED for the same reason the spotlight is: the
+         * links wearing it are somebody else's markup — a rail, a list, a row
+         * in a table — which may be re-rendered or paginated long after this
+         * controller connected, and which is very often not inside the plate
+         * at all.
+         */
+        this.onSwapClick = (event) => this.swapLink(event);
+        document.addEventListener('click', this.onSwapClick);
+
         this.onOver = (event) => this.spotlightFrom(event.target);
         this.onOut = (event) => this.releaseFrom(event);
         document.addEventListener('mouseover', this.onOver);
@@ -189,6 +252,7 @@ export default class extends Controller {
     }
 
     disconnect() {
+        document.removeEventListener('click', this.onSwapClick);
         this.element.removeEventListener('ux:map:pre-connect', this.onPreConnect);
         this.element.removeEventListener('ux:map:connect', this.onConnect);
         document.removeEventListener('mouseover', this.onOver);
@@ -741,6 +805,89 @@ export default class extends Controller {
     }
 
     /**
+     * A LINK THAT CHANGES THE PLATE, WHEREVER IT SITS AND WHETHER OR NOT THE
+     * PLATE IS FULLSCREEN.
+     *
+     * This is the general form of what the filter row does. A ranger in the
+     * roster's rail, a station in a list, a zone in a register: clicking one
+     * is "show me THIS on the map", and it was a full navigation — the page
+     * rebuilt, the scroll position lost, the map torn down and mounted again
+     * — for a change the server could answer with the same page it always
+     * answers with.
+     *
+     * WHAT IS INTERCEPTED IS NARROW ON PURPOSE. A plain left click, no
+     * modifier, no `target`, same origin, on a link wearing the verb and
+     * naming THIS plate. Everything else is the viewer asking for a real
+     * navigation or a second tab, and taking that away would be taking away
+     * something that worked.
+     *
+     * IT IS A PLACE, SO IT IS PUSHED. A filter is a view of one page and uses
+     * replaceState; choosing which ranger the map is about is somewhere the
+     * viewer went, and Back must bring them to the one before. The fetched
+     * page is the same page, so Back landing on it is honest.
+     */
+    swapLink(event) {
+        if (!isPlainClick(event)) {
+            return;
+        }
+
+        const link = event.target.closest(`a[href][${SWAP}]`);
+        if (!link || link.target || this.element !== plateElementFor(link)) {
+            return;
+        }
+
+        const address = new URL(link.href, window.location.href);
+        if (address.origin !== window.location.origin) {
+            return;
+        }
+
+        event.preventDefault();
+        this.swapTo(address, link.getAttribute(SWAP_ALSO));
+    }
+
+    /**
+     * THE PLATE AT ANOTHER ADDRESS, and one region beside it — or the
+     * navigation the link asked for, which is what happens whenever the
+     * answer is not a page this plate can be found in.
+     */
+    async swapTo(address, alsoSelector) {
+        const page = await this.fetchPage(address);
+        const fresh = page && (page.querySelectorAll(`[${PLATE}]`)[this.ordinal()] ?? null);
+        if (!fresh) {
+            window.location.assign(address);
+
+            return;
+        }
+
+        this.swap(fresh);
+        this.swapAlso(page, alsoSelector);
+        history.pushState(history.state, '', address);
+    }
+
+    /**
+     * THE ONE REGION OUTSIDE THE PLATE the link named, replaced from the same
+     * answer — the caller's own list, whose marked row moves with the map.
+     *
+     * A REGION THE ANSWER DOES NOT HAVE IS LEFT ALONE. Removing it would be
+     * this controller deciding that somebody else's list is over, and the
+     * page it fetched is the authority on what that list contains, not on
+     * whether it exists.
+     */
+    swapAlso(page, selector) {
+        if (!selector) {
+            return;
+        }
+
+        const next = page.querySelector(selector);
+        const live = document.querySelector(selector);
+        if (!next || !live) {
+            return;
+        }
+
+        live.replaceWith(document.importNode(next, true));
+    }
+
+    /**
      * THIS PLATE, AT ANOTHER QUERY, WITHOUT LEAVING FULLSCREEN — the one path
      * both kinds of chip take.
      */
@@ -793,6 +940,16 @@ export default class extends Controller {
      * https://developer.mozilla.org/en-US/docs/Web/API/RequestInit
      */
     async fetchPlate(address) {
+        const page = await this.fetchPage(address);
+
+        return page && (page.querySelectorAll(`[${PLATE}]`)[this.ordinal()] ?? null);
+    }
+
+    /**
+     * THE WHOLE ANSWER, PARSED — because a swap may want a region beside the
+     * plate as well as the plate, and both come out of one request.
+     */
+    async fetchPage(address) {
         try {
             const response = await fetch(address, {
                 headers: { Accept: 'text/html' },
@@ -802,11 +959,9 @@ export default class extends Controller {
                 return null;
             }
 
-            const page = new DOMParser().parseFromString(await response.text(), 'text/html');
-
-            return page.querySelectorAll(`[${PLATE}]`)[this.ordinal()] ?? null;
+            return new DOMParser().parseFromString(await response.text(), 'text/html');
         } catch (error) {
-            console.error('[atlas] the plate could not be refiltered in place', error);
+            console.error('[atlas] the page behind this plate could not be fetched', error);
 
             return null;
         }

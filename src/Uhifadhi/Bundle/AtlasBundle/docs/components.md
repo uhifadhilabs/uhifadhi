@@ -16,6 +16,7 @@ APIs are not written here because they are not written yet.
 - [Styling a layer's features](#styling-a-layers-features)
 - [Tooltips and popups](#tooltips-and-popups)
 - [Spotlighting a feature from elsewhere on the page](#spotlighting-a-feature-from-elsewhere-on-the-page)
+- [Changing the plate from a link](#changing-the-plate-from-a-link)
 - [How tall a plate is](#how-tall-a-plate-is)
 - [The boundary](#the-boundary)
 - [The legend](#the-legend)
@@ -207,6 +208,59 @@ back is the plate's answer, so a spotlit patrol track and a spotlit anything els
 
 The listeners are delegated from `document`, so rows re-rendered, paginated or swapped in after
 the map mounted still work.
+
+## Changing the plate from a link
+
+A ranger in a rail, a station in a list, a zone in a register: clicking one means *show me this
+one on the map*. That was a full navigation — the page rebuilt, the scroll position lost, the map
+torn down and mounted again — for a change the server answers with the same page it always
+answers with.
+
+Mark the link `data-atlas-swap` and it stops being one:
+
+```twig
+<a class="row" href="{{ path('roster_live', {focus: person.uuid}) }}" data-atlas-swap>…</a>
+```
+
+The plate fetches where the link goes, takes its own subtrees out of the answer and puts them in
+place of the live ones. **The `href` is unchanged and still does the whole job**: with no script,
+on a middle click, on a modified click, or if anything at all goes wrong, the browser navigates
+and the same page arrives the ordinary way.
+
+**The server still decides everything.** What is focused, what the plate frames itself on, which
+row is marked — all of it is computed where it was always computed (`AreaPlateService::focusOn()`
+and the rest), and this fetches the answer. You write an attribute; you write no JavaScript and no
+map maths.
+
+### The row that has to move with it
+
+A list beside the plate usually marks the row the map is about, and that mark lives outside the
+plate. Name that region and it comes across from the same answer:
+
+```twig
+<a href="…" data-atlas-swap data-atlas-swap-also="#live-rail">…</a>
+```
+
+One region, deliberately. A link that re-renders half a page is a navigation with extra steps, and
+the page it just fetched is right there. A region the answer does not contain is left standing
+rather than removed: the fetched page is the authority on what your list *contains*, not on
+whether it exists.
+
+### Two plates on one page
+
+The verb's value names the plate, as a selector, when the link is not inside the one it is about:
+
+```twig
+<a href="…" data-atlas-swap="#coverage-plate" data-atlas-swap-also="#live-rail">…</a>
+```
+
+With no value the plate is the one the link sits inside, or the page's only plate. A page with two
+plates and a link that names neither is a question with two answers, so nothing is swapped and the
+browser navigates — which is always correct.
+
+**It is a place, so it is pushed.** A filter is a view of one page and replaces the history entry;
+choosing which thing the map is about is somewhere the reader went, and Back brings them to the one
+before.
 
 ## How tall a plate is
 
