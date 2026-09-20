@@ -1,0 +1,14 @@
+{# AN ORGANISATION-LEVEL MODULE PAGE, written the way one should be written:
+   it extends the shell's org base and fills its body.
+
+   NOTE WHAT IS NOT HERE. No `.atabs` loop, no scope control, no trail naming
+   an area, and no `orgTabs` variable passed from a controller. Every one of
+   those was in the first module that shipped an org page set, in a base of
+   its own — which is the drift this base exists to end. #}
+{% extends '@Shell/org_page.html.twig' %}
+
+{% block title %}a fixture org page{% endblock %}
+
+{% block shell_page_subtitle %}what the organisation sees{% endblock %}
+
+{% block shell_page %}<p>the org body</p>{% endblock %}

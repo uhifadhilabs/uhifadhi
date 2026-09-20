@@ -13,13 +13,9 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\ShellBundle\Service;
 
-use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\Routing\Exception\RouteNotFoundException;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Uhifadhi\Bundle\ShellBundle\Contract\NavigationSourceInterface;
 use Uhifadhi\Bundle\ShellBundle\Model\NavItem;
 use Uhifadhi\Bundle\ShellBundle\Model\NavSection;
-use Uhifadhi\Bundle\ShellBundle\ShellBundle;
 use Uhifadhi\Contracts\Shell\NavGroup;
 use Uhifadhi\Contracts\Shell\OrgPagesInterface;
 
@@ -58,19 +54,19 @@ final readonly class OrgModulesNavigation implements NavigationSourceInterface
     public const int POSITION = 20;
 
     /**
-     * @param iterable<OrgPagesInterface> $modules every provider tagged {@see ShellBundle::ORG_PAGES_TAG}
+     * ONE READER FOR ONE LIST. The rows here and the tab strip on the page
+     * are the same `orgPages()` declaration filtered the same way — see
+     * {@see OrgShell} — so a tab and a sidebar row cannot disagree about
+     * which screens a module has.
      */
-    public function __construct(
-        private iterable $modules,
-        private UrlGeneratorInterface $urls,
-        private RequestStack $requests,
-    ) {
+    public function __construct(private OrgShell $orgShell)
+    {
     }
 
     public function sections(): iterable
     {
         $rows = [];
-        foreach ($this->modules as $module) {
+        foreach ($this->orgShell->modules() as $module) {
             $row = $this->rowFor($module);
             if (null !== $row) {
                 $rows[] = $row;
@@ -87,23 +83,14 @@ final readonly class OrgModulesNavigation implements NavigationSourceInterface
     /**
      * One module's row and its screens — the same shape a section wears
      * everywhere: the row is the module, its children are its own screens,
-     * and `screens: true` says there is no place rung between them.
+     * and `screens: true` says there is no place rung between them. A module
+     * with nothing mounted gets no row rather than an empty one.
      */
     private function rowFor(OrgPagesInterface $module): ?NavItem
     {
-        $pages = $module->orgPages();
-        if ([] === $pages) {
-            return null;
-        }
-
         $screens = [];
-        foreach ($pages as $page) {
-            $url = $this->urlOf($page->route);
-            if (null === $url) {
-                continue;
-            }
-
-            $screens[] = new NavItem(label: $page->label, url: $url, current: $page->route === $this->routeHere());
+        foreach ($this->orgShell->screensOf($module) as $screen) {
+            $screens[] = new NavItem(label: $screen->page->label, url: $screen->url, current: $screen->current);
         }
 
         if ([] === $screens) {
@@ -111,9 +98,9 @@ final readonly class OrgModulesNavigation implements NavigationSourceInterface
         }
 
         return new NavItem(
-            label: $this->nameOf($module),
+            label: $this->orgShell->nameOf($module),
             url: $screens[0]->url,
-            icon: $this->iconOf($module),
+            icon: $this->orgShell->iconOf($module),
             // MARKED ANYWHERE INSIDE THE MODULE'S SET, and the child says
             // which screen: that is one path, and the shell turns it into
             // one ground and a line of ink.
@@ -121,47 +108,5 @@ final readonly class OrgModulesNavigation implements NavigationSourceInterface
             children: $screens,
             screens: true,
         );
-    }
-
-    /**
-     * WHAT THE ROW SAYS. A module that also declares itself to the registry
-     * has a name already, and using it keeps the sidebar and the module grid
-     * saying the same word; one that does not falls back to its first page's
-     * own label rather than to a slug nobody writes on a screen.
-     *
-     * READ OFF THE INTERFACE IT HAPPENS TO IMPLEMENT, never off a list of
-     * module names — the shell recognises no module.
-     */
-    private function nameOf(OrgPagesInterface $module): string
-    {
-        $named = method_exists($module, 'name') ? $module->name() : null;
-
-        return \is_string($named) && '' !== $named ? $named : $module->orgPages()[0]->label;
-    }
-
-    /** Its own glyph where it has one, and the shell's default where it has none. */
-    private function iconOf(OrgPagesInterface $module): string
-    {
-        $icon = method_exists($module, 'icon') ? $module->icon() : null;
-
-        return \is_string($icon) && '' !== $icon ? $icon : 'shell:layout-grid';
-    }
-
-    /** The address, or null where the application has not mounted that route. */
-    private function urlOf(string $route): ?string
-    {
-        try {
-            return $this->urls->generate($route);
-        } catch (RouteNotFoundException) {
-            return null;
-        }
-    }
-
-    /** The route the request matched, or '' outside a request. */
-    private function routeHere(): string
-    {
-        $route = $this->requests->getCurrentRequest()?->attributes->get('_route');
-
-        return \is_string($route) ? $route : '';
     }
 }

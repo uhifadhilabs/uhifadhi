@@ -1,5 +1,50 @@
 # UPGRADE FROM 0.x to 1.0
 
+## Extend the shell's org base, draw no strip
+
+**What changed.** An organisation-level screen extends
+`@Shell/org_page.html.twig`, and the shell draws the page-level tab strip —
+from the same `orgPages()` declaration the sidebar row is mounted from,
+filtered to the routes this application actually mounted, with the screen the
+viewer is on lit. The page-level strip is the shell's, exactly as the sidebar
+row is: two copies of it drift, and a tab and a sidebar row then disagree
+about which screens a module has.
+
+**What a module drops.** Its own org base: the `.atabs` loop, the
+`_scope_control` include, the trail, and the `orgTabs` / `scopeOptions`
+variables its controllers were passing for them. They are gone, not moved —
+the shell reads the declaration itself.
+
+```diff
+-{% extends '@Shell/page.html.twig' %}
+-{% block shell_breadcrumbs %}uhifadhi / roster / overview{% endblock %}
+-{% block shell_page_actions %}
+-    {{ include('@Shell/_scope_control.html.twig', {scopes: scopeOptions, current: scope}) }}
+-{% endblock %}
+-{% block shell_page %}
+-    <div class="atabs">{% for tab in orgTabs %}…{% endfor %}</div>
+-    {% block roster_org_page %}{% endblock %}
+-{% endblock %}
++{% extends '@Shell/org_page.html.twig' %}
++{% block shell_page %}{% block roster_org_page %}{% endblock %}{% endblock %}
+```
+
+**What it fills.** `shell_page` (its body), `shell_page_subtitle`, and
+`shell_org_actions` where it has an action of its own — which lands beside
+the scope control, with Configure still last. `shell_org_trail_tail`
+overrides the trail's last segment; the trail itself names the module and the
+screen and **never an area**, because an organisation-level screen is the
+area screen one scope wider.
+
+**Reading the frame.** `shell_org()` returns the module's name, the current
+`OrgPage`, the strip, the scopes and the current `Scope` — or null on any
+page in no module's org set, where the base renders as a plain page rather
+than failing.
+
+**Two rules it brings with it.** A strip that would be one tab is not drawn
+(the rule the area strip already keeps), and the tabs carry the address's own
+`?area=` so the slice survives a tab change.
+
 ## The sidebar has four groups, and a module joins one by constant
 
 **What changed.** The sidebar's groups are published in the contracts —

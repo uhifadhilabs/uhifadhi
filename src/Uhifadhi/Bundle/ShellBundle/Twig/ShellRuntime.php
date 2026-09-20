@@ -19,8 +19,10 @@ use Uhifadhi\Bundle\ShellBundle\Frame\Model\ConfigureAction;
 use Uhifadhi\Bundle\ShellBundle\Frame\Service\ModuleFrameService;
 use Uhifadhi\Bundle\ShellBundle\Model\AreaTab;
 use Uhifadhi\Bundle\ShellBundle\Model\NavSection;
+use Uhifadhi\Bundle\ShellBundle\Model\OrgFrame;
 use Uhifadhi\Bundle\ShellBundle\Service\AreaShell;
 use Uhifadhi\Bundle\ShellBundle\Service\Navigation;
+use Uhifadhi\Bundle\ShellBundle\Service\OrgShell;
 use Uhifadhi\Bundle\ShellBundle\Service\Stylesheets;
 use Uhifadhi\Bundle\ShellBundle\Service\Theme;
 use Uhifadhi\Bundle\ShellBundle\Service\UserBadgeReader;
@@ -40,6 +42,7 @@ final class ShellRuntime implements RuntimeExtensionInterface
         private readonly Stylesheets $stylesheets,
         private readonly AreaShell $areaShell,
         private readonly ModuleFrameService $frame,
+        private readonly OrgShell $orgShell,
         private readonly UserBadgeReader $userBadge,
         private readonly Theme $theme,
         private readonly RouterInterface $router,
@@ -79,6 +82,21 @@ final class ShellRuntime implements RuntimeExtensionInterface
     public function tabs(): array
     {
         return $this->frame->tabs();
+    }
+
+    /**
+     * THE ORGANISATION-LEVEL FRAME — the module's own name, the screen the
+     * viewer is on, its sibling screens as a strip, and how wide the page is
+     * looking. Null on every page that is in no module's org page set, which
+     * is most of the product.
+     *
+     * ONE CALL, ONE ANSWER. The trail, the head, the strip and the scope
+     * control are four readings of the same question, and a template asking
+     * it four times could be given four answers by a later change.
+     */
+    public function org(): ?OrgFrame
+    {
+        return $this->orgShell->frame();
     }
 
     /**

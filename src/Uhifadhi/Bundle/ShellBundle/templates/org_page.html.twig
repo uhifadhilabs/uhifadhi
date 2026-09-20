@@ -1,0 +1,53 @@
+{# THE ORGANISATION-LEVEL FRAME — what a module's org screens extend.
+
+   RULED: the page-level tab strip of an org page set is the SHELL'S, exactly
+   as the sidebar row is. The first module to ship one wrote a base of its
+   own — its own `.atabs` loop, its own scope-control include, its own trail
+   — and the second would have written another; two copies of a strip drift,
+   and a tab and a sidebar row then disagree about which screens a module
+   has. Both are mounted here from the one `orgPages()` declaration.
+
+   THERE IS NO AREA IN IT, which is the whole difference from an area page:
+   an organisation-level screen is the area screen one scope WIDER, so the
+   trail names the module and the screen and never a place. A screen that
+   needed one area would be an area screen.
+
+   WHAT A MODULE FILLS: `shell_page`, a subtitle, and — where it has one —
+   `shell_org_actions`. It draws no strip, no scope control and no trail, and
+   its controller passes no `orgTabs`, because the shell reads the same
+   declaration the sidebar reads.
+
+   A REQUEST IN NOBODY'S PAGE SET STILL RENDERS. The frame is null, the
+   furniture that depends on it is left out, and the body is drawn — a page
+   reached at an address its module never declared is worth seeing as a plain
+   page rather than as a 500. #}
+{% extends '@Shell/page.html.twig' %}
+
+{% block shell_breadcrumbs %}
+    {%- set _org = shell_org() -%}
+    {%- if _org is not null -%}
+        {%- set _brand = shell_brand() -%}
+        <a href="{{ _brand.url }}">{{ _brand.name }}</a> / {{ _org.name }}
+        {%- block shell_org_trail_tail %}{% if _org.page is not null %} / {{ _org.page.label }}{% endif %}{% endblock -%}
+    {%- endif -%}
+{% endblock %}
+
+{% block shell_page_title %}{{ shell_org() ? shell_org().name : '' }}{% endblock %}
+
+{% block shell_page_actions %}
+    {#- THE ONE CONTROL AN ORGANISATION-LEVEL PAGE CARRIES, and it is the
+        shell's. A module states no scope control of its own, so "which slice
+        am I looking at" is asked the same way on every page in the product. -#}
+    {%- set _org = shell_org() -%}
+    {%- if _org is not null and _org.scope is not null -%}
+        {%- include '@Shell/_scope_control.html.twig' with {scopes: _org.scopes, current: _org.scope} only -%}
+    {%- endif -%}
+    {%- block shell_org_actions %}{% endblock -%}
+{% endblock %}
+
+{% block shell_page_tabs %}
+    {#- THE STRIP, FROM THE SAME DECLARATION THE SIDEBAR IS MOUNTED FROM, in
+        the place every other strip in the product stands: between the page
+        head and the body. -#}
+    {%- include '@Shell/_area_tabs.html.twig' with {tabs: shell_org() ? shell_org().tabs : []} only -%}
+{% endblock %}

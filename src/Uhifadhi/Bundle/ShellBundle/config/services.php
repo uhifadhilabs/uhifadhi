@@ -23,6 +23,7 @@ use Uhifadhi\Bundle\ShellBundle\Service\AreaShell;
 use Uhifadhi\Bundle\ShellBundle\Service\Installation;
 use Uhifadhi\Bundle\ShellBundle\Service\Navigation;
 use Uhifadhi\Bundle\ShellBundle\Service\OrgModulesNavigation;
+use Uhifadhi\Bundle\ShellBundle\Service\OrgShell;
 use Uhifadhi\Bundle\ShellBundle\Service\Scopes;
 use Uhifadhi\Bundle\ShellBundle\Service\Stylesheets;
 use Uhifadhi\Bundle\ShellBundle\Service\Theme;
@@ -96,8 +97,17 @@ return static function (ContainerConfigurator $container): void {
      * shell collects an interface from the contracts package and names no
      * module doing it.
      */
+    $services->set('shell.org_shell', OrgShell::class)
+        ->args([
+            tagged_iterator(ShellBundle::ORG_PAGES_TAG),
+            service('router'),
+            service('request_stack'),
+            service('shell.scopes'),
+        ]);
+    $services->alias(OrgShell::class, 'shell.org_shell');
+
     $services->set('shell.org_modules_navigation', OrgModulesNavigation::class)
-        ->args([tagged_iterator(ShellBundle::ORG_PAGES_TAG), service('router'), service('request_stack')])
+        ->args([service('shell.org_shell')])
         ->tag(ShellBundle::NAV_TAG);
 
     /*
@@ -235,6 +245,7 @@ return static function (ContainerConfigurator $container): void {
             service('shell.stylesheets'),
             service('shell.area_shell'),
             service('shell.frame'),
+            service('shell.org_shell'),
             service('shell.user_badge'),
             service('shell.theme'),
             service('router'),
