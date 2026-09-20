@@ -75,7 +75,7 @@ final class FieldDutyReadsTest extends FieldApiTestCase
         $body = $this->get($this->roster($area).'?from=2026-09-01&to=2026-09-30', $this->tokenFor($this->onDuty()));
 
         self::assertSame(Response::HTTP_OK, $this->client->getResponse()->getStatusCode());
-        self::assertSame(['pingIntervalMinutes', 'watches', 'checkInStatuses', 'updatedAt'], array_keys($body));
+        self::assertSame(['pingIntervalMinutes', 'rostered', 'watches', 'checkInStatuses', 'updatedAt'], array_keys($body));
     }
 
     /**
@@ -218,7 +218,7 @@ final class FieldDutyReadsTest extends FieldApiTestCase
     public function testTheStationsAreTheContractsExactDocument(): void
     {
         $area = $this->area('Northern Conservation Reserve');
-        $post = $this->station($area, 'North Gate Post', self::POST_LON, self::POST_LAT, 300);
+        $post = $this->station($area, 'North Gate Post', self::POST_LON, self::POST_LAT, 300, 'ST-01');
 
         $body = $this->get($this->stations($area), $this->tokenFor($this->onDuty()));
 
@@ -227,15 +227,41 @@ final class FieldDutyReadsTest extends FieldApiTestCase
         self::assertCount(1, self::nested($body, 'stations'));
 
         $sent = self::nested($body, 'stations', 0);
-        self::assertSame(['uuid', 'name', 'lat', 'lon', 'catchmentM'], array_keys($sent));
+        self::assertSame(['uuid', 'name', 'code', 'lat', 'lon', 'catchmentM'], array_keys($sent));
         self::assertSame($post->getUuidString(), $sent['uuid']);
         self::assertSame('North Gate Post', $sent['name']);
+        // §13E: WHAT THE RANGER SAYS OUT LOUD. The picker and the confirm
+        // print it beside the name; a uuid is what nobody says at all.
+        self::assertSame('ST-01', $sent['code']);
         // A WHOLE-NUMBER DEGREE DECODES AS AN INT, which is JSON and not a
         // contract change: the wire carries a number and the app reads a
         // Double either way.
         self::assertEqualsWithDelta(self::POST_LAT, $sent['lat'], 0.000001);
         self::assertEqualsWithDelta(self::POST_LON, $sent['lon'], 0.000001);
         self::assertSame(300, $sent['catchmentM']);
+    }
+
+    /**
+     * §13D: ROSTERED AND A REST DAY ARE DIFFERENT ANSWERS, and an empty
+     * `watches` cannot tell them apart. Somebody rostered with no watch
+     * today is resting; somebody the roster has never heard of must
+     * still be offered a check-in, because a ranger called in for one
+     * shift cannot be refused the screen for want of a plan.
+     */
+    public function testTheRosterSaysWhetherThisPersonIsRosteredAtAll(): void
+    {
+        $area = $this->area('Northern Conservation Reserve');
+        $token = $this->tokenFor($this->onDuty());
+
+        // A window the fake roster has a watch in: rostered, and working.
+        $working = $this->get($this->roster($area).'?from=2026-09-01&to=2026-09-30', $token);
+        self::assertTrue(self::leaf($working, 'rostered'));
+
+        // A window with no watch in it: the seam plans nothing here, so
+        // the phone offers a check-in rather than drawing a rest day.
+        $quiet = $this->get($this->roster($area).'?from=2026-10-01&to=2026-10-31', $token);
+        self::assertFalse(self::leaf($quiet, 'rostered'));
+        self::assertSame([], self::nested($quiet, 'watches'));
     }
 
     /**

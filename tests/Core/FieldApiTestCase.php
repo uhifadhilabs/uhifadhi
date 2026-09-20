@@ -231,12 +231,13 @@ abstract class FieldApiTestCase extends WebTestCase
     }
 
     /** A post on the ground, with the ring that says what "inside" it means. */
-    protected function station(AreaOfInterest $area, string $name, float $lon, float $lat, ?int $catchmentM = 300): Station
+    protected function station(AreaOfInterest $area, string $name, float $lon, float $lat, ?int $catchmentM = 300, ?string $code = null): Station
     {
         $station = new Station()
             ->setArea($area)
             ->setName($name)
             ->setPoint(\sprintf('{"type":"Point","coordinates":[%s,%s]}', $lon, $lat))
+            ->setCode($code)
             ->setCatchmentM($catchmentM);
         $this->em->persist($station);
         $this->em->flush();

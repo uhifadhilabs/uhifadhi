@@ -247,6 +247,43 @@ entity an installation resolved that interface to is what answers. Everybody is
 listed, the deactivated included — the list is who may be *named* on a record, not
 who may sign in.
 
+### What the day's own reads add — §13D and §13E
+
+`GET /api/areas/{areaUuid}/me/roster?from=&to=` is the handset's plan for the
+window, and `GET /api/areas/{areaUuid}/stations?near=lat,lon` is the posts it
+may claim.
+
+```jsonc
+// 200 — /me/roster
+{
+  "pingIntervalMinutes": 30,
+  "rostered": true,                  // §13D — see below
+  "watches": [ /* localDate, startsAt, endsAt, stationUuid, label */ ],
+  "checkInStatuses": [ /* the area's own words */ ],
+  "updatedAt": "2026-09-19T08:12:00+03:00"
+}
+
+// 200 — /stations
+{
+  "stations": [
+    { "uuid": "…", "name": "North Gate Post", "code": "ST-01", "lat": -3.2, "lon": 35.5, "catchmentM": 300 }
+  ]
+}
+```
+
+**`rostered` is not "has a watch today".** A rest day and an unrostered ranger
+both answer with no watch, and the handset must draw them differently: somebody
+rostered with nothing today is *resting*, and somebody the roster has never
+heard of must still be offered a check-in — a ranger called in for one shift
+cannot be refused the screen because nobody planned them. It is `false` on an
+installation with **no roster module at all**, for the same reason: a platform
+that plans nobody may not stop anybody working.
+
+**`code` is what the installation says on the radio.** The picker and the
+confirm screen print it beside the name, because "ST-01" is what a ranger says
+out loud and a uuid is what nobody says at all. `null` where the installation
+uses no codes — a real answer, not an empty string.
+
 The endpoint is registered **only where both ApiPlatformBundle and SecurityBundle
 are in the kernel**. Without api-platform there is no `/api` to attach to; without
 security there is no authorization checker, and a list of the areas somebody may

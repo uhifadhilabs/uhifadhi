@@ -21,6 +21,12 @@ Not released yet.
  * the station and zone captions take the design's own sizes as well as its
    leading (`.pnone`, `.zhwhen`, `.rb-ttl`, `.tav`, `.stsrc`, `.stwhen`,
    `.stsep`) — `.stsrc` had lost the mono voice and the uppercase entirely
+ * `/me/roster` says whether the person is `rostered` at all — a rest day and an
+   unrostered ranger both answer with no watch, and a handset has to draw them
+   differently; false where there is no roster module, because a platform that
+   plans nobody may not stop anybody working
+ * `/stations` sends each post's `code` — what a ranger says on the radio, which
+   is what the picker and the confirm screen print beside the name
  * the area answers `LivePositionsInterface`: the latest fix of everybody on an
    open watch, with the distance to the post measured by PostGIS rather than
    from degrees in PHP — a module draws "where everybody is" without reading

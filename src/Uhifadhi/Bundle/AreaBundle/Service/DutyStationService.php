@@ -73,6 +73,15 @@ final readonly class DutyStationService
             $rows[] = [
                 'uuid' => $uuid,
                 'name' => (string) $station->getName(),
+                /*
+                 * WHAT THE INSTALLATION CALLS IT ON THE RADIO. The
+                 * picker and the confirm screen print it beside the
+                 * name, because "ST-01" is what a ranger says out loud
+                 * and a uuid is what nobody says at all. Null where the
+                 * installation uses no codes, which is a real answer
+                 * rather than an empty string.
+                 */
+                'code' => $station->getCode(),
                 'lat' => $lat,
                 'lon' => $lon,
                 'catchmentM' => $station->getCatchmentM(),

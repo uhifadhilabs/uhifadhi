@@ -73,8 +73,27 @@ final readonly class DutyRosterService
      */
     public function readFor(AreaOfInterest $area, UserInterface $person, string $from, string $to): array
     {
+        $watches = $this->watches($area, $person, $from, $to);
+
         return [
             'pingIntervalMinutes' => $this->pingIntervalFor($area),
+            /*
+             * WHETHER THIS PERSON IS ROSTERED AT ALL, which is the
+             * question a rest day and an unrostered ranger answer
+             * differently and an empty `watches` array does not.
+             *
+             * A HANDSET HAS TO TELL THEM APART. Somebody rostered with
+             * no watch today is ON A REST DAY and the phone says so;
+             * somebody the roster has never heard of is not on a rest
+             * day at all, and the phone must still offer them a
+             * check-in — a ranger called in for one shift cannot be
+             * refused the screen because nobody planned them.
+             *
+             * FALSE WHERE THERE IS NO ROSTER MODULE, and that is the
+             * same answer for the same reason: an installation with no
+             * roster plans nobody, so everybody may check in.
+             */
+            'rostered' => [] !== $watches,
             'watches' => array_map(
                 static fn (Watch $watch): array => [
                     'localDate' => $watch->localDate,
@@ -83,7 +102,7 @@ final readonly class DutyRosterService
                     'stationUuid' => $watch->stationUuid,
                     'label' => $watch->label,
                 ],
-                $this->watches($area, $person, $from, $to),
+                $watches,
             ),
             'checkInStatuses' => array_map(
                 static fn (CheckInStatus $status): array => [
