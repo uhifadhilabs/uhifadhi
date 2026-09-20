@@ -511,6 +511,80 @@ abstract class VocabularyConformanceTestCase extends TestCase
     }
 
     /**
+     * NO TEMPLATE LINKS A SHEET THE HEAD ALREADY CARRIES.
+     *
+     * THE DEFECT, NAMED, AND IT HAS RECURRED FOR A YEAR: a page that drew a
+     * plate linked the atlas's map sheet by hand, and a page that did not,
+     * did not. Then the plate stopped being something a page asks for and
+     * became something a WIDGET draws — any cell of a composed surface may
+     * draw one — and "a page that draws a plate links map.css" stopped being
+     * a rule anybody could keep: the organisation Overview composed a map
+     * cell onto a page that linked no map sheet, and the plate came apart
+     * with no error anywhere. The head cannot be decided by what a page
+     * happens to compose.
+     *
+     * SO THE SHEETS COME THROUGH THE HEAD CONTRACT, in every head, and a
+     * hand-written link is now a RESTATEMENT: a second copy of the same
+     * rules, at a different point in the load order, which is the drift this
+     * suite exists to refuse everywhere else.
+     *
+     * A BUNDLE MAY LINK ITS OWN. The package that ships a sheet is the one
+     * place that may name it — that is how it reaches the chain at all.
+     */
+    public function testNoTemplateLinksASheetTheHeadAlreadyCarries(): void
+    {
+        $offenders = [];
+
+        foreach (self::files(static::bundlePath().'/templates', 'twig') as $path) {
+            $twig = (string) preg_replace('/\{#.*?#\}/s', '', (string) file_get_contents($path));
+
+            preg_match_all('/<link\b[^>]*>/i', $twig, $links);
+            foreach ($links[0] as $link) {
+                foreach (static::sheetsTheHeadCarries() as $sheet => $named) {
+                    if (str_contains($link, '/'.static::alias().'/')) {
+                        continue;
+                    }
+
+                    foreach ($named as $needle) {
+                        if (str_contains($link, $needle)) {
+                            $offenders[] = self::shortPath($path).' — '.$sheet;
+
+                            continue 3;
+                        }
+                    }
+                }
+            }
+        }
+
+        $offenders = array_values(array_unique($offenders));
+        sort($offenders);
+
+        self::assertSame([], $offenders, \sprintf(
+            'These templates link a sheet the shell already carries [%s]. The shell carries it: '
+            .'it is published through the head contract and reaches every page, so a link here is a '
+            .'second copy at a different point in the load order. Delete the link.',
+            implode(', ', $offenders),
+        ));
+    }
+
+    /**
+     * THE SHEETS THE HEAD ALREADY CARRIES, by the names a template would
+     * write them under — the asset path and the constant that resolves to
+     * it. A bundle that publishes another one through the contract adds it
+     * here so that its own consumers are held to the same rule.
+     *
+     * @return array<string, list<string>> the sheet, and what naming it looks like
+     */
+    protected static function sheetsTheHeadCarries(): array
+    {
+        return [
+            'the map sheet' => ['bundles/atlas/map.css', 'AtlasBundle::STYLESHEET'],
+            'the chart sheet' => ['bundles/atlas/chart.css', 'AtlasBundle::CHART_STYLESHEET'],
+            'the calendar sheet' => ['bundles/atlas/calendar.css', 'AtlasBundle::CALENDAR_STYLESHEET'],
+        ];
+    }
+
+    /**
      * NO LEFT RAIL ON A CARD BUT THE HOUSE FOCUS LINE.
      *
      * RULED 2026-09-21: a card may wear exactly ONE vertical mark on its left

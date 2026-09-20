@@ -23,12 +23,6 @@
 
 {% block stylesheets %}
     {{ parent() }}
-    {# The platform's one map stylesheet — the shared plate, chrome and legend
-       rules from AtlasBundle, before this bundle's own sheet so the overview can
-       build on them. The same map renders identically everywhere. Leaflet's own
-       sheet is not linked here: the UX Map Leaflet bridge's controller imports
-       it, so there is one Leaflet and one copy of its styles. #}
-    <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Bundle\\AtlasBundle\\AtlasBundle::STYLESHEET')) }}">
     {{ include('@Area/_stylesheets.html.twig') }}
     {# AND EACH CONTRIBUTING MODULE'S OWN SHEET, once and last. A module's
        cell is drawn here and its rules live in its own package; without this

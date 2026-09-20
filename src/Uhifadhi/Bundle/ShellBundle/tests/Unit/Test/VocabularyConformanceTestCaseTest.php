@@ -89,6 +89,22 @@ final class VocabularyConformanceTestCaseTest extends TestCase
         self::drifting()->testNoOwnSheetDrawsAPageHintOfItsOwn();
     }
 
+    /**
+     * A HAND-WRITTEN LINK TO A SHEET THE HEAD CARRIES FAILS — the ruling,
+     * enforced. The map sheet reaches every page through the head contract
+     * now, because a plate is drawn by widgets and no page can know whether
+     * it composed one; a link left behind is a second copy of those rules at
+     * another point in the load order.
+     */
+    public function testALinkToASheetTheHeadCarriesFails(): void
+    {
+        $this->expectException(AssertionFailedError::class);
+        $this->expectExceptionMessageMatches('/the map sheet/');
+        $this->expectExceptionMessageMatches('/The shell carries it/');
+
+        self::drifting()->testNoTemplateLinksASheetTheHeadAlreadyCarries();
+    }
+
     /** The reader is watched working too, or a failure could be an empty sweep. */
     public function testTheDriftingBundlesOwnVocabularyIsSeen(): void
     {

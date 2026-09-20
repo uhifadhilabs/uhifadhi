@@ -1,5 +1,41 @@
 # UPGRADE FROM 0.x to 1.0
 
+## The map stylesheet is in every head — delete your link
+
+**What changed.** `bundles/atlas/map.css` is published through the shell's
+head contract (`StylesheetSourceInterface`, tag `shell.stylesheet`), beside
+`chart.css` and `calendar.css`, so every page in the product carries it.
+
+**Why.** The old rule was "a page that draws a plate links `map.css`", and it
+held only while a page could know. A plate is now drawn by WIDGETS: on a
+composed surface any cell may draw one, and the organisation Overview
+composed a map cell onto a page that linked no map sheet — `.map-plate`,
+`.map-legend` and `.lay .sw` had no rules, the plate came apart, the page
+returned 200 and nothing failed. The head cannot be decided by what a page
+happens to compose.
+
+**What to change in a module.** Delete the link, everywhere it appears:
+
+```diff
+ {% block stylesheets %}
+     {{ parent() }}
+-    <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\Bundle\AtlasBundle\AtlasBundle::STYLESHEET')) }}">
+     <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\Roster\UhifadhiRosterBundle::STYLESHEET')) }}">
+ {% endblock %}
+```
+
+**It is now a conformance failure.** `VocabularyConformanceTestCase` gains
+`testNoTemplateLinksASheetTheHeadAlreadyCarries`: a template linking
+`map.css`, `chart.css` or `calendar.css` fails with "the shell carries it",
+because a second link is a second copy of those rules at a different point in
+the load order. **roster-module, patrol-module and incident-module** each
+carry such links today and will fail this rule until they are deleted — one
+line per template, no other change.
+
+Leaflet's own sheet is unaffected: the UX Map Leaflet bridge's controller
+imports it on the pages that build a map, which is a script's business rather
+than the head's.
+
 ## Extend the shell's org base, draw no strip
 
 **What changed.** An organisation-level screen extends

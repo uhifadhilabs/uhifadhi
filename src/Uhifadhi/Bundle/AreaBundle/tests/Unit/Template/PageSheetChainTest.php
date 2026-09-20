@@ -26,10 +26,12 @@ use PHPUnit\Framework\TestCase;
  * with a 63-pixel plate, a legend of raw browser text and a zoom control of
  * four bare squares — every class "shipped by somebody", none of them served.
  *
- * So this walks each page's own chain: the shell's sheet, which the document
- * always links, plus every stylesheet the page names in its `stylesheets`
- * block, plus every stylesheet the partials it includes name. A class used
- * outside that chain is a defect in the PAGE, not in the sheet.
+ * So this walks each page's own chain: the sheets the HEAD CONTRACT carries
+ * for every page — the shell's, and the atlas's three, which are published
+ * through `StylesheetSourceInterface` — plus every stylesheet the page names
+ * in its `stylesheets` block, plus every stylesheet the partials it includes
+ * name. A class used outside that chain is a defect in the PAGE, not in the
+ * sheet.
  *
  * WHAT IT CANNOT SEE is a rule that exists but does not match the element it
  * was written for. That is still a rendered check's job; this closes the gap
@@ -92,22 +94,31 @@ final class PageSheetChainTest extends TestCase
     }
 
     /**
-     * A PAGE THAT DRAWS A PLATE LINKS THE PLATE'S SHEET. Stated separately from
-     * the sweep above because it is the one that was missed and because it says
-     * so in one sentence: `render_map()` and the atlas stylesheet travel
-     * together, or the plate has no height and the legend has no rows.
+     * EVERY PAGE IS SERVED THE PLATE'S SHEET, whether it draws one or not —
+     * and none of them links it.
+     *
+     * THE RULE THIS REPLACES was "a page that draws a plate links the atlas
+     * sheet", and it held only while a page could know. A plate is drawn by
+     * WIDGETS as well: on a composed surface any cell may draw one, and the
+     * page that composes it cannot know which cells it will wear until it is
+     * rendering — which is exactly how a map cell came to be drawn on a page
+     * with no map sheet, with no error anywhere. So the sheet is in the head
+     * contract, and a link here would be a second copy of those rules at
+     * another point in the load order.
      */
-    public function testEveryPageThatDrawsAPlateLinksTheAtlasSheet(): void
+    public function testEveryPageIsServedThePlatesSheetAndNoneLinksIt(): void
     {
         foreach (self::pages() as $page => $twig) {
-            if (!str_contains($twig, 'render_map(')) {
-                continue;
-            }
-
             self::assertContains(
                 self::atlasSheet(),
                 self::chainOf($page),
-                \sprintf('%s draws a map plate and does not link the atlas stylesheet.', $page),
+                \sprintf('%s is not served the atlas stylesheet.', $page),
+            );
+
+            self::assertStringNotContainsString(
+                'AtlasBundle::STYLESHEET',
+                $twig,
+                \sprintf('%s links the atlas stylesheet by hand; the shell carries it.', $page),
             );
         }
     }
@@ -160,7 +171,16 @@ final class PageSheetChainTest extends TestCase
      */
     private static function chainOf(string $page): array
     {
-        $chain = [self::sheetOf('Uhifadhi\Bundle\ShellBundle\ShellBundle', 'STYLESHEET')];
+        // THE HEAD CONTRACT FIRST, and it is not one sheet: the shell's own,
+        // and the atlas's three, which every head carries because a
+        // component — a chart, a month, a plate in somebody's widget — is
+        // drawn into pages that have never heard of the package shipping it.
+        $chain = [
+            self::sheetOf('Uhifadhi\Bundle\ShellBundle\ShellBundle', 'STYLESHEET'),
+            self::sheetOf('Uhifadhi\Bundle\AtlasBundle\AtlasBundle', 'STYLESHEET'),
+            self::sheetOf('Uhifadhi\Bundle\AtlasBundle\AtlasBundle', 'CHART_STYLESHEET'),
+            self::sheetOf('Uhifadhi\Bundle\AtlasBundle\AtlasBundle', 'CALENDAR_STYLESHEET'),
+        ];
 
         foreach (self::reachableFrom($page) as $twig) {
             preg_match_all("/constant\\('([^']+)::(\\w+)'\\)/", str_replace('\\\\', '\\', $twig), $matches, \PREG_SET_ORDER);

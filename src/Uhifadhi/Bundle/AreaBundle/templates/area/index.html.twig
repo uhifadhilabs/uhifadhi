@@ -37,11 +37,6 @@
 
 {% block stylesheets %}
     {{ parent() }}
-    {# The map-of-the-network layout is a real plate, so the register carries the
-       platform's one map stylesheet whichever layout is adopted — exactly as the
-       library does, and for the same reason: the sheet is linked by the page, and
-       the page cannot know which layout it will wear until it is rendering. #}
-    <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Bundle\\AtlasBundle\\AtlasBundle::STYLESHEET')) }}">
     {{ include('@Area/_stylesheets.html.twig') }}
 {% endblock %}
 

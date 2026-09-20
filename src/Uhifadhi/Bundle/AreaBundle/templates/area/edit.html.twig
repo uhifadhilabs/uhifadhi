@@ -26,11 +26,6 @@
 
 {% block stylesheets %}
     {{ parent() }}
-    {# The platform's one map stylesheet, before this bundle's sheet: the
-       preview is the same map everywhere. #}
-    {% if area.hasBoundary %}
-        <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Bundle\\AtlasBundle\\AtlasBundle::STYLESHEET')) }}">
-    {% endif %}
     {{ include('@Area/_stylesheets.html.twig') }}
 {% endblock %}
 

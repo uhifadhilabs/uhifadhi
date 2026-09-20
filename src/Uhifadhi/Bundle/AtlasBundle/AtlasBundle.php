@@ -69,7 +69,7 @@ use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 final class AtlasBundle extends AbstractBundle
 {
     /**
-     * THE PLATFORM'S ONE MAP STYLESHEET, as a host links it.
+     * THE PLATFORM'S ONE MAP STYLESHEET, in every head.
      *
      * The chrome markup this bundle's chrome.js builds — the zoom column, the DIM
      * pill, the base-layer menu, the scroll-bargain hint — and Leaflet's own
@@ -82,20 +82,25 @@ final class AtlasBundle extends AbstractBundle
      * same way. It is served, versioned, out of this bundle's public/ dir, which
      * AssetMapper registers by itself. Leaflet's own sheet is not linked beside
      * it: the Leaflet bridge's controller imports it.
+     *
+     * IT IS PUBLISHED THROUGH THE SHELL'S HEAD CONTRACT and never linked by
+     * hand. A plate is drawn by widgets as well as by pages, and on a
+     * composed surface no page can know whether one of its cells drew one —
+     * so a page cannot be the thing that decides whether these rules are
+     * present. See {@see AtlasStylesheets}.
      */
     public const string STYLESHEET = 'bundles/atlas/map.css';
 
     /**
      * THE CHART'S OWN SHEET, and the month's.
      *
-     * A MAP IS ASKED FOR AND A COMPONENT IS WRITTEN IN. A page that draws
-     * a map knows it draws one and links the sheet above for itself; a
-     * chart or a month is written into somebody else's page — a module's
+     * A COMPONENT IS WRITTEN INTO SOMEBODY ELSE'S PAGE — a module's
      * Calendar tab, a topic's record — and that page cannot link a sheet
      * for a component it has never heard of. Neither can the component:
      * a stylesheet link outside the head is not conforming HTML. So these
-     * two are published through the shell's stylesheet contract and land
-     * in every head; see {@see AtlasStylesheets}.
+     * are published through the shell's stylesheet contract and land in
+     * every head, exactly as the map sheet above now is; see
+     * {@see AtlasStylesheets}.
      */
     public const string CHART_STYLESHEET = 'bundles/atlas/chart.css';
     public const string CALENDAR_STYLESHEET = 'bundles/atlas/calendar.css';

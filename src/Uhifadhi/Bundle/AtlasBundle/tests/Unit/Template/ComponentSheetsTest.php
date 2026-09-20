@@ -67,16 +67,25 @@ final class ComponentSheetsTest extends TestCase
     }
 
     /**
-     * BOTH ARE PUBLISHED TO THE SHELL and the map is not: a page that
-     * draws a map knows it draws one and links that sheet for itself,
-     * and a page with no map does not pay for Leaflet's chrome.
+     * ALL THREE ARE PUBLISHED TO THE SHELL, THE MAP INCLUDED.
+     *
+     * THE DEFECT THIS CLOSES, and it had recurred for a year: "a page that
+     * draws a map links map.css" held only while a page could know. A plate
+     * is now drawn by a WIDGET — any cell of a composed surface may draw one
+     * — so the organisation Overview composed a map cell onto a page that
+     * linked no map sheet, `.map-plate`, `.map-legend` and `.lay .sw` had no
+     * rules, and the plate came apart with no error anywhere. The head
+     * cannot be decided by what a page happens to compose, so the sheet
+     * joins the two that already reach every head.
      */
-    public function testTheTwoComponentSheetsArePublishedAndTheMapsIsNot(): void
+    public function testAllThreeSheetsArePublishedIncludingTheMaps(): void
     {
         $published = new AtlasStylesheets()->stylesheets();
 
-        self::assertSame([AtlasBundle::CHART_STYLESHEET, AtlasBundle::CALENDAR_STYLESHEET], $published);
-        self::assertNotContains(AtlasBundle::STYLESHEET, $published);
+        self::assertSame(
+            [AtlasBundle::STYLESHEET, AtlasBundle::CHART_STYLESHEET, AtlasBundle::CALENDAR_STYLESHEET],
+            $published,
+        );
     }
 
     /** And each published path is a file this bundle actually ships. */
