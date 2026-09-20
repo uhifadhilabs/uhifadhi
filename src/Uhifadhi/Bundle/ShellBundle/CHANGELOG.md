@@ -8,6 +8,11 @@
 
 Not released yet.
 
+ * a specification that every Stimulus controller the core ships actually
+   REACHES an installation: declared in its bundle's `assets/package.json`,
+   its package keyworded `symfony-ux`, and named in the application's own
+   manifest. Miss any of the three and the page renders, the markup carries
+   `data-controller`, and nothing happens — with no error anywhere
  * `--c-failT`/`--failT` — the ink that survives on the fail fill, stated once
    because that colour is saturated in both palettes (unlike the accent, which
    is deep jade on paper and mint at night and therefore takes ink of two kinds)
