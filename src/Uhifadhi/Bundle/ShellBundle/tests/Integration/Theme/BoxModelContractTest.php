@@ -86,14 +86,21 @@ final class BoxModelContractTest extends ContractTestCase
      * AND NOTHING IN THE SHEET TAKES IT BACK. A second wildcard, setting
      * content-box, would leave the platform with a box model that depends on
      * which of two rules a reader found first.
+     *
+     * THE PROPERTY IS NAMED, not the word. `content-box` is also a value of
+     * `background-clip`, where it says where a background stops and nothing at
+     * all about the box model — the inset scrollbar thumb the sidebar draws is
+     * made of one. Banning the word banned a rule that could not have broken
+     * the guarantee, which is a test that grows into a reason to write the
+     * drawing some other way.
      */
     public function testNothingInTheFrameRestoresTheContentBox(): void
     {
         $declarations = preg_replace('~/\*.*?\*/~s', '', $this->stylesheet());
         self::assertIsString($declarations);
 
-        self::assertStringNotContainsString(
-            'content-box',
+        self::assertDoesNotMatchRegularExpression(
+            '~box-sizing\s*:\s*content-box~',
             $declarations,
             'A rule in the frame restores the content box. The guarantee is only worth anything if it is unconditional.',
         );

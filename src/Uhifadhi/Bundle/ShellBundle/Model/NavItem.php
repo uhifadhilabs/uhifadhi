@@ -60,7 +60,12 @@ final class NavItem
      *                              place rung they are inside (see
      *                              `_nav_item.html.twig`, which spends the accent
      *                              once per sidebar)
-     * @param bool        $open     whether this row's children are unfolded
+     * @param bool        $open     DERIVED, and passing it changes nothing: the
+     *                              shell decides what is unfolded from where the
+     *                              viewer is (see {@see \Uhifadhi\Bundle\ShellBundle\Service\Navigation}).
+     *                              Kept on the signature for one release so an
+     *                              installed module that still names it does not
+     *                              fail to construct a row
      * @param list<self>  $children the branch under this row, if any
      * @param string|null $tone     a module row's dot class, or null for jade
      * @param string|null $swatch   a row's own dot colour, as a hex value or as
@@ -69,6 +74,11 @@ final class NavItem
      * @param bool        $screens  whether the rows under this one are its own
      *                              sibling SCREENS rather than places inside
      *                              it — see the property's own note
+     * @param bool        $path     DERIVED: whether the row the viewer is on
+     *                              hangs off this one. Accent ink, no ground —
+     *                              see the property's own note
+     * @param string      $key      DERIVED: where this row sits in the tree,
+     *                              which is how a manual fold is remembered
      */
     public function __construct(
         public string $label,
@@ -93,6 +103,35 @@ final class NavItem
          * rule intact and names the exception.
          */
         public bool $screens = false,
+        /**
+         * WHETHER THE CURRENT ROW HANGS OFF THIS ONE — one background per
+         * tree, ruled 2026-09-20.
+         *
+         * `current` and this are two different things and carry two different
+         * classes on purpose. The row the viewer is ON keeps the ground, the
+         * accent ink and the left focus line, and there is exactly one of it
+         * in the sidebar. A row it hangs OFF — the section above a screen, the
+         * area above its tabs, Modules above a module — carries the accent as
+         * INK and nothing else: no ground, no second left line. Two grounds in
+         * one tree is the sidebar answering "where am I" twice.
+         *
+         * Derived by the shell from the marked row, never by a source: a page
+         * that wrote this would be deciding how another page's tree reads.
+         */
+        public bool $path = false,
+        /**
+         * WHERE THIS ROW SITS IN THE TREE — its labels from the section down,
+         * joined. The one thing a manual fold can be remembered by.
+         *
+         * A fold is the viewer's, so it has to survive the next page, and the
+         * next page renders a tree built by different sources in a different
+         * order. What does not change is the row's PLACE, so that is the key:
+         * the same node keys the same on every page of the app, and a key that
+         * no longer matches any row simply decides nothing.
+         *
+         * Derived by the shell, like `path`.
+         */
+        public string $key = '',
     ) {
         /*
          * ONLY A COLOUR. The value is printed into a `style` attribute, so

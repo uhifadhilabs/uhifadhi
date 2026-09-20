@@ -217,7 +217,6 @@ final readonly class TeamNavigation implements NavigationSourceInterface
             $children[] = new NavItem(
                 label: $group['label'],
                 url: null,
-                open: true,
                 children: $group['rows'],
             );
         }
@@ -235,7 +234,6 @@ final readonly class TeamNavigation implements NavigationSourceInterface
             // The register IS all departments, the way the area row is the
             // area: it stays lit while none of the cards under it is.
             current: $onTheRegister && !self::litAnywhere($children),
-            open: true,
             children: $children,
         );
 
@@ -255,7 +253,6 @@ final readonly class TeamNavigation implements NavigationSourceInterface
             // enforces is one lit row among SIBLINGS, and that still holds —
             // exactly one screen is lit, and exactly one card under it.
             current: true,
-            open: true,
             children: $screens,
         );
     }
@@ -302,7 +299,6 @@ final readonly class TeamNavigation implements NavigationSourceInterface
             // child says which screen. Two marks on one path is not two
             // answers to "where am I": it is the path.
             current: true,
-            open: true,
             children: $screens,
         );
     }

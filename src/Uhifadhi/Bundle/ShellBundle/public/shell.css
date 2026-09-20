@@ -292,7 +292,21 @@ body::before {
 .collapse-btn:hover { background: rgb(var(--c-raised)); color: rgb(var(--c-tx)); }
 .collapse-btn svg { width: 18px; height: 18px; transition: transform .18s ease; }
 
-.side .nav { display: flex; flex-direction: column; gap: 5px; margin-top: 4px; }
+/* THE SIDEBAR IS ITS OWN SCROLL REGION. Open enough rungs and the tree is
+   taller than the viewport, and the overflow used to fall off the bottom of a
+   sticky column with no way to reach it. The brand row and the foot are pinned
+   outside the scrolling list, so the only thing that moves is the nav and the
+   page never scrolls to serve the sidebar. The bar shows itself on hover and
+   is the rule colour: a scrollbar is furniture, not a second border. */
+.side .nav { display: flex; flex-direction: column; gap: 5px; margin-top: 4px;
+    flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+    scrollbar-width: thin; scrollbar-color: var(--c-ln2) transparent; }
+.side .nav::-webkit-scrollbar { width: 8px; }
+.side .nav::-webkit-scrollbar-track { background: transparent; }
+.side .nav::-webkit-scrollbar-thumb { background: transparent; border-radius: 99px; border: 2px solid transparent; background-clip: content-box; }
+.side .nav:hover::-webkit-scrollbar-thumb,
+.side .nav:focus-within::-webkit-scrollbar-thumb { background: var(--c-ln2); background-clip: content-box; }
+.side-top { flex: none; }
 .nav-item {
     display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 9px;
     color: rgb(var(--c-fog)); text-decoration: none; font-size: 13px; white-space: nowrap; overflow: hidden;
@@ -306,7 +320,7 @@ body::before {
 .nav-item.off { color: rgb(var(--c-dim)); cursor: default; }
 .nav-item.off:hover { background: none; color: rgb(var(--c-dim)); }
 
-.side-foot { margin-top: auto; display: flex; flex-direction: column; gap: 6px; padding-top: 12px; border-top: 1px solid var(--c-ln); }
+.side-foot { flex: none; margin-top: auto; display: flex; flex-direction: column; gap: 6px; padding-top: 12px; border-top: 1px solid var(--c-ln); }
 .side .row {
     display: flex; align-items: center; gap: 10px; padding: 7px 11px; border-radius: 9px;
     color: rgb(var(--c-fog)); font-size: 12px; background: none; border: 0; font-family: inherit;
@@ -513,10 +527,10 @@ body::before {
 .ntree .nta::before { content: ""; position: absolute; left: 23px; top: -4px; bottom: 50%; width: 1px; background: var(--c-ln2); }
 .ntree .nta::after { content: ""; position: absolute; left: 23px; top: 50%; width: 9px; height: 1px; background: var(--c-ln2); }
 .ntree .nta:hover { background: rgb(var(--c-raised)); }
-/* The place the viewer is inside: named and weighted, but NOT the accent — the
-   accent is reserved for the one row they are actually on, however many rungs
-   below this one it sits. `.cur` is the place rung's own marking. */
-.ntree .nta.cur { color: rgb(var(--c-tx)); font-weight: 600; }
+/* An area row can itself be the row the viewer is on — the area hub — and then
+   it is `.on` like any other current row: the one ground in the tree. */
+.ntree .nta.on { color: rgb(var(--c-acc)); background: rgb(var(--c-acc) / .12); border-left-color: rgb(var(--c-acc)); font-weight: 600; }
+.ntree .nta.on b { color: rgb(var(--c-acc)); }
 
 /* DEPTH 3 — an area's own sibling screens (Overview / Modules / Zones / Settings). */
 .ntree .ntt { padding: 5px 12px 5px 52px; font-size: 11.5px; color: rgb(var(--c-fog)); }
@@ -595,6 +609,45 @@ body::before {
 .nav .nta.closed > .chev,
 .nav .ntt.closed > .chev { transform: rotate(-90deg); }
 :is(.side.rail, html.shell-rail .side) .nav .chev { display: none; }
+
+/* ONE GROUND PER TREE — ruled 2026-09-20. In the owner's words: "marking parent
+   and child active with bg is a bit too much — the parent just gets the green as
+   font colour instead of as bg."
+
+   So the two states are different things and carry different classes. `.on` is
+   the row the viewer is on: accent ink, the accent 12% ground, the left focus
+   line, exactly one per sidebar. `.path` is a row it hangs off: accent INK only.
+   Nothing below sets a background, and that is the whole rule — the shell
+   already spends its one left line on the current row (one-left-focus-line), and
+   a second one above it would draw the path twice. */
+.nav .nav-item.path,
+.ntree .nta.path,
+.ntree .ntt.path,
+.ntree .ntm.path,
+.ntree .nts.path { background: none; color: rgb(var(--c-acc)); font-weight: 600; border-left-color: transparent; }
+.nav .nav-item.path svg { color: rgb(var(--c-acc)); }
+.ntree .nta.path b { color: rgb(var(--c-acc)); }
+.nav .nav-item.path:hover,
+.ntree .nta.path:hover,
+.ntree .ntt.path:hover,
+.ntree .ntm.path:hover,
+.ntree .nts.path:hover { background: rgb(var(--c-raised)); color: rgb(var(--c-acc)); }
+/* The connector a path row draws stays the quiet line it always was: the ink
+   marks the row, not the drawing. */
+.ntree .ntt.path::before, .ntree .ntt.path::after,
+.ntree .ntm.path::before, .ntree .ntm.path::after,
+.ntree .nts.path::before, .ntree .nts.path::after { background: var(--c-ln2); }
+
+/* THE COLLAPSED RAIL KEEPS THE PATH, STATED AS A DOT. A rail has nowhere to put
+   a subtree — the trees and the carets are already gone — so the section holding
+   the row the viewer is on carries an accent dot beside its icon. That section
+   is exactly the one drawn `.path`, so there is no second flag to keep in step:
+   expanding restores the derived tree, never a remembered one. */
+:is(.side.rail, html.shell-rail .side) .nav-item { position: relative; }
+:is(.side.rail, html.shell-rail .side) .nav-item.path::after {
+    content: ""; position: absolute; right: 9px; top: 50%; transform: translateY(-50%);
+    width: 5px; height: 5px; border-radius: 99px; background: rgb(var(--c-acc));
+}
 
 /* ==================== THE PAGE FRAME ==================== */
 .page { position: relative; z-index: 1; max-width: 1280px; margin: 0 auto; padding: 26px 22px 90px; width: 100%; box-sizing: border-box; }

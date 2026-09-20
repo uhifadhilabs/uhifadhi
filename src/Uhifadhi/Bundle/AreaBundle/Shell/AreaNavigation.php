@@ -181,7 +181,6 @@ final readonly class AreaNavigation implements NavigationSourceInterface
                 current: $hereArea,
                 // Unfolded only for the area being viewed: an installation with
                 // eight areas would otherwise open with forty rows.
-                open: $hereArea,
                 children: $children,
             );
         }
@@ -252,7 +251,6 @@ final readonly class AreaNavigation implements NavigationSourceInterface
                 label: $link->title,
                 url: $link->url,
                 current: $here && !self::litAnywhere($screens) && !$configuring,
-                open: $here,
                 children: $screens,
             );
         }
@@ -263,7 +261,6 @@ final readonly class AreaNavigation implements NavigationSourceInterface
             label: $tab->label,
             url: $tab->url,
             current: $tab->current && !$litBelow,
-            open: $tab->current || $litBelow,
             children: $modules,
         );
     }
@@ -311,7 +308,6 @@ final readonly class AreaNavigation implements NavigationSourceInterface
             label: $tab->label,
             url: $tab->url,
             current: $tab->current && !$litBelow,
-            open: $tab->current || $litBelow,
             children: $zones,
         );
     }
@@ -374,7 +370,6 @@ final readonly class AreaNavigation implements NavigationSourceInterface
             label: $tab->label,
             url: $tab->url,
             current: $tab->current && !$litBelow,
-            open: $tab->current || $litBelow,
             children: $children,
         );
     }

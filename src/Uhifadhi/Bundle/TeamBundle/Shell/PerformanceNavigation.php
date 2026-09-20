@@ -103,7 +103,6 @@ final readonly class PerformanceNavigation implements NavigationSourceInterface
             // The section IS its three screens, the way the areas row is
             // the areas: it stays lit while none of its children is.
             current: $this->here($overview) && !self::litAnywhere($children),
-            open: true,
             children: $children,
             // THE CHILDREN ARE SCREENS, NOT PLACES: there is no place
             // between Performance and its three tabs, so they are drawn
@@ -151,7 +150,6 @@ final readonly class PerformanceNavigation implements NavigationSourceInterface
             label: $topics->label,
             url: $topics->url,
             current: $topics->current && !self::litAnywhere($rows),
-            open: true,
             children: $rows,
         );
     }

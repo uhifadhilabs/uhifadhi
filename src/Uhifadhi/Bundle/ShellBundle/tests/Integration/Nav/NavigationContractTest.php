@@ -297,14 +297,13 @@ final class NavigationContractTest extends ContractTestCase
     }
 
     /**
-     * ONE ACCENTED ROW IN THE TREE, AND THE PLACE ABOVE IT MARKED QUIETLY.
+     * ONE ACCENTED ROW IN THE TREE, AND EVERY RUNG ABOVE IT MARKED AS INK.
      *
-     * The design draws a module dashboard with the accent (`on`) on the leaf
-     * alone; the place rung wears the quieter `cur`, and every rung between them
-     * is nothing but an open branch. So the shell reads the rung, not only the
-     * flag: the same `current` that accents a screen MARKS a place, because the
-     * design distinguishes the two and a sidebar that accented both would answer
-     * "where am I" twice.
+     * The design draws a module dashboard with the accent and the ground
+     * (`on`) on the leaf alone; every rung the leaf hangs off carries `path` —
+     * the accent as ink, no ground. So the shell reads the whole branch, not
+     * only the flag a source set: a source marks the path, and the shell turns
+     * the path into the two classes the design draws.
      */
     public function testTheTreeAccentsOneRowAndMarksThePlaceAboveItQuietly(): void
     {
@@ -329,14 +328,17 @@ final class NavigationContractTest extends ContractTestCase
         self::assertCount(1, $crawler->filter('.ntree .on'), 'the tree accents exactly one row');
         self::assertSame('Overview', trim($crawler->filter('.ntree .nts.on')->text()));
 
-        // The place rung: marked, never accented.
-        self::assertCount(1, $crawler->filter('.ntree .nta.cur'));
+        // The place rung: marked as ink, never given the ground.
+        self::assertCount(1, $crawler->filter('.ntree .nta.path'));
         self::assertCount(0, $crawler->filter('.ntree .nta.on'));
 
-        // And the rungs in between are open branches carrying no marking of
-        // their own — `par` is the parent affordance, not a second light.
+        // And so is every rung between them — `par` is the parent affordance,
+        // `path` is the location, and neither is a second ground.
         self::assertCount(0, $crawler->filter('.ntree .ntt.on'));
         self::assertCount(0, $crawler->filter('.ntree .ntm.on'));
+        self::assertSame('Modules', trim($crawler->filter('.ntree .ntt.path')->text()));
+        self::assertSame('Sightings', trim($crawler->filter('.ntree .ntm.path')->text()));
+        self::assertSame('Areas', trim($crawler->filter('.nav .nav-item.path span')->text()));
         self::assertSame('Modules', trim($crawler->filter('.ntree .ntt.par')->text()));
         self::assertSame('Sightings', trim($crawler->filter('.ntree .ntm.par')->text()));
     }

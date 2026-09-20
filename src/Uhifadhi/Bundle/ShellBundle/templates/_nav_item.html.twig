@@ -23,20 +23,23 @@
    square dot one level up is the identity, and repeating a glyph below it would
    read as a second kind of thing.
 
-   TWO MARKINGS, AND THE RUNG DECIDES WHICH. `on` is the accent — "this is the
-   row you are on" — and the design spends it once per sidebar, on the deepest
-   row of the path. The PLACE rung spends `cur` instead: a place is something you
-   are inside rather than a row you are on, so it is named and weighted without
-   competing with the accent below it. Every rung between them carries `par` and
-   nothing else, which is why one branch can be four rungs deep and still answer
-   "where am I" exactly once. #}
+   TWO MARKINGS, AND THE PATH DECIDES WHICH — ruled 2026-09-20, one ground per
+   tree. `on` is the row the viewer is on: the accent, the accent 12% ground and
+   the left focus line, spent once per sidebar however deep the branch runs.
+   `path` is a row that row hangs off — a section above a screen, an area above
+   its tabs, Modules above a module — and it carries the accent as INK only: no
+   ground, no second left line. In the owner's words, marking parent and child
+   with a background both is a bit too much. Neither class comes from a source:
+   the shell derives both from where the viewer is, which is the only way every
+   page's tree can read the same. `par` stays what it always was — the affordance
+   of a row that has a branch — and says nothing about location. #}
 {%- set _tag = item.url is null ? 'span' : 'a' -%}
 {%- set _kids = item.children|length > 0 -%}
 {%- set _row = depth == 1 ? 'nav-item' : (depth == 2 ? 'nta' : (depth == 3 ? 'ntt' : (depth == 4 ? 'ntm' : 'nts'))) -%}
 {%- set _group = depth == 1 ? 'ntree' : (depth == 2 ? 'nta-group' : 'ntgroup') -%}
-{%- set _here = depth == 2 ? ' cur' : ' on' -%}
 
-<{{ _tag }} class="{{ _row }}{{ depth >= 3 and _kids ? ' par' }}{{ item.current ? _here }}{{ item.url is null ? ' off' }}{{ _kids and not item.open ? ' closed' }}"
+<{{ _tag }} class="{{ _row }}{{ depth >= 3 and _kids ? ' par' }}{{ item.current ? ' on' }}{{ item.path ? ' path' }}{{ item.url is null ? ' off' }}{{ _kids and not item.open ? ' closed' }}"
+    {%- if _kids %} data-nav-key="{{ item.key }}"{% endif %}
     {%- if item.url is not null %} href="{{ item.url }}"{% endif %}
     {%- if item.hint is not null %} title="{{ item.hint }}"{% endif %}>
     {%- if item.icon is not null %}{{ ux_icon(item.icon) }}{% endif -%}

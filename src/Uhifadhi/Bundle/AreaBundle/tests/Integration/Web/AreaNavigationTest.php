@@ -143,10 +143,15 @@ final class AreaNavigationTest extends WebTestCase
     }
 
     /**
-     * ONLY THE AREA BEING VIEWED IS UNFOLDED. An installation with eight areas
-     * would otherwise open with forty rows.
+     * ONLY THE AREA BEING VIEWED IS MARKED, and that is the whole of this
+     * source's answer about folding. An installation with eight areas would
+     * otherwise open with forty rows — but WHICH branch is unfolded is the
+     * shell's derivation now (ruled 2026-09-20, one tree state for every
+     * section), taken from exactly this mark and pinned frame by frame in
+     * ShellBundle's SidebarTreeStateTest. A source that also decided it gave
+     * the same page two trees depending on which bundle drew it.
      */
-    public function testOnlyTheAreaBeingViewedIsOpen(): void
+    public function testOnlyTheAreaBeingViewedIsMarked(): void
     {
         $this->boot();
         $here = $this->anArea('Aardvark Area');
@@ -154,8 +159,8 @@ final class AreaNavigationTest extends WebTestCase
 
         $areas = $this->sections($this->navAt('/areas/'.$here->getUuidString()))[0]->items[0]->children;
 
-        self::assertTrue($areas[0]->open, 'the area being viewed is unfolded');
-        self::assertFalse($areas[1]->open, 'the others are not');
+        self::assertTrue($areas[0]->current, 'the area being viewed is where the viewer is');
+        self::assertFalse($areas[1]->current, 'the others are not');
     }
 
     /** The register row lights on the register itself, never on an area beneath it. */

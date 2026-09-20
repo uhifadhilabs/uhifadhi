@@ -32,11 +32,21 @@ source's job** (the shell holds no
 absent, never hidden); a row with no destination renders inert rather than
 disappearing; folding is a class, never an omission (a caret that folds by not
 rendering has nothing to reopen); **exactly one row is current among siblings** or
-the shell refuses; **the accent is spent once per sidebar** — `on` goes to the
-deepest current row of the path, the place rung it hangs under wears the quieter
-`cur`, and every rung between them is an open branch (`par`) and nothing more; and
+the shell refuses; **the accent is spent once per sidebar** — `on`, with the
+ground and the left focus line, goes to the deepest current row of the path, and
+every rung it hangs off wears `path`, which is the accent as ink and nothing
+else (`par` stays the affordance of a row with a branch and says nothing about
+location); **what is open is derived, never declared** — only the ancestor path
+of the current row and that row's own children, so `NavItem::$open` is ignored
+and a page cannot decide how its own sidebar reads; and
 the nav is read live per render, so switching a module off takes its row with it
 the same day.
+
+A fold the viewer makes themselves is the one thing the shell does not derive:
+the caret writes it to `sessionStorage` against the row's `data-nav-key` — its
+place in the tree — so it follows them from page to page and dies with the tab.
+Nothing is written to the account, which is what makes a fresh load read the
+same for everyone.
 
 ## The area shell
 

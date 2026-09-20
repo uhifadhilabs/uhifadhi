@@ -8,6 +8,20 @@
 
 Not released yet.
 
+ * THE SIDEBAR TREE OPENS ONLY THE PATH TO THE PAGE (ruled): the shell derives
+   what is open from the row a source marks `current` — the ancestor path and
+   the current row's own children, one rung at a time — and `NavItem::$open`
+   is ignored, so a page can no longer decide how its own sidebar reads
+ * ONE GROUND PER TREE: `on` is the row the viewer is on (accent, ground, left
+   focus line, once per sidebar) and `path` is every rung above it (accent ink
+   only). `.nta.cur` is retired; the collapsed rail states the path as a dot on
+   the section holding the current row, read off the same `path`
+ * the sidebar is its own scroll region — the brand row and the foot are pinned
+   outside the nav, which takes the overflow and brings the current row into
+   view, so the page never scrolls to serve the sidebar
+ * a fold the viewer makes is kept for the TAB'S SESSION and no longer, keyed
+   by `data-nav-key` (the row's place in the tree) — `sidebar_tree` restores it
+   over the derived tree and writes nothing to the account
  * a strip of figures is FOUR to a row and eight is two rows of four (ruled):
    `.kstrip` states its columns instead of folding on content width, which is
    how five came to be drawn — four plates and an orphan on a small laptop

@@ -82,12 +82,101 @@ final class Navigation
 
             $merged = new NavSection((string) $label, $items, $contributed[0]->position);
             $this->assertOneCurrent($merged->items, \sprintf('the "%s" section', $merged->label));
-            $sections[] = $merged;
+            $sections[] = new NavSection($merged->label, $this->derive($merged->items, ''), $merged->position);
         }
 
         usort($sections, static fn (NavSection $a, NavSection $b): int => $a->position <=> $b->position);
 
         return $sections;
+    }
+
+    /**
+     * WHAT IS OPEN, AND WHICH ROW WEARS THE ACCENT — derived here, for the
+     * whole sidebar, from the one thing that is true of a render: where the
+     * viewer is. RULED 2026-09-20.
+     *
+     * Four rules, and nothing else decides:
+     *
+     *   1. Only the ANCESTOR PATH of the current row is open. Every other
+     *      section is closed to its own row — Areas is one row while you are
+     *      in Files, Performance is one row while you are in an area. A tree
+     *      that opens everything it could open is a wall of rows, and the
+     *      thing a sidebar is for is answering "where am I".
+     *   2. Open means ONE RUNG. A row shows its children, never its
+     *      grandchildren; only the path runs deeper, because the viewer is
+     *      standing in it. The row the viewer is ON shows its own children
+     *      too — the page and the rows under it then say the same thing.
+     *   3. ONE GROUND PER TREE. The row the viewer is on is `current` — the
+     *      accent, the ground, the focus line — and every row it hangs off is
+     *      `path`: the accent as ink and nothing else. A source that marked
+     *      the whole path (and they do, because the invariant above is stated
+     *      per sibling list) marked the path, not four current rows, and this
+     *      is where that becomes the two classes the design draws.
+     *   4. NO PAGE DECIDES ITS OWN TREE. Whatever a source passed for `open`
+     *      is overwritten here. It was the honest thing to pass while each
+     *      source derived its own subtree; the result was that a page's tree
+     *      read differently depending on which bundle drew it, and a reader
+     *      cannot learn a sidebar that changes shape under them.
+     *
+     * The viewer's own folds are not here and cannot be: they are the tab's,
+     * they arrive after the render, and the browser keeps them for the
+     * session against the key this gives each row.
+     *
+     * @param list<NavItem> $items
+     *
+     * @return list<NavItem>
+     */
+    private function derive(array $items, string $prefix): array
+    {
+        $rows = [];
+        foreach ($items as $item) {
+            [$row] = $this->deriveRow($item, $prefix);
+            $rows[] = $row;
+        }
+
+        return $rows;
+    }
+
+    /**
+     * One row and its branch, rebuilt.
+     *
+     * A row is on the path when the marked row is somewhere below it, and the
+     * marked row is the DEEPEST one a source lit — which is why this is
+     * bottom-up: a rung only learns it is an ancestor from its children.
+     *
+     * @return array{NavItem, bool} the rebuilt row, and whether the viewer is on it or under it
+     */
+    private function deriveRow(NavItem $item, string $prefix): array
+    {
+        $key = '' === $prefix ? $item->label : $prefix.'/'.$item->label;
+
+        $children = [];
+        $below = false;
+        foreach ($item->children as $child) {
+            [$row, $holds] = $this->deriveRow($child, $key);
+            $children[] = $row;
+            $below = $below || $holds;
+        }
+
+        $here = !$below && $item->current;
+
+        $row = new NavItem(
+            label: $item->label,
+            url: $item->url,
+            icon: $item->icon,
+            hint: $item->hint,
+            current: $here,
+            // Rules 1 and 2: the path, and the row the viewer is on.
+            open: $below || $here,
+            children: $children,
+            tone: $item->tone,
+            swatch: $item->swatch,
+            screens: $item->screens,
+            path: $below,
+            key: $key,
+        );
+
+        return [$row, $below || $here];
     }
 
     /**

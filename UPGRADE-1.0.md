@@ -1,5 +1,36 @@
 # UPGRADE FROM 0.x to 1.0
 
+## The sidebar decides what is open, and a page no longer can
+
+**What changed.** `ShellBundle\Model\NavItem::$open` is DERIVED. The shell
+reads where the viewer is from the row a source marked `current` and opens the
+path to it and nothing else; whatever a source passed for `$open` is
+overwritten. The argument is still on the constructor for this release so an
+installed module that names it does not fail to construct a row, and it goes in
+the next one.
+
+Two classes come out of that derivation, and they replace the old pair:
+
+| was | is now |
+| --- | --- |
+| `current` on every rung of the path | `on` on the row the viewer is on, once per sidebar |
+| `.nta.cur`, the place rung's own marking | `.path` — accent ink, no ground — at every rung above the current row |
+
+`.nta.cur` is gone from `shell.css`. A module stylesheet that drew something on
+it should read `.path`, which is the same rows at every depth rather than only
+at the second.
+
+**Why.** Each source derived its own subtree, so a page's tree read differently
+depending on which bundle drew it, and everything a source could open was open:
+Areas stayed unfolded while you were in Files. Ruled 2026-09-20 with the
+nav-states frames — only the ancestor path of the current page is open, one rung
+at a time, one ground per tree.
+
+**What to change in a module.** Drop `open:` from the rows you contribute and
+mark the path with `current`, which you were doing anyway. A manual fold is the
+viewer's, kept for the tab's session by the shell's own controller against the
+`data-nav-key` the shell prints; nothing to do for it.
+
 ## A layer names a token, and a zone names a category
 
 **What changed.** Nothing that draws on a map or in a legend takes a colour any

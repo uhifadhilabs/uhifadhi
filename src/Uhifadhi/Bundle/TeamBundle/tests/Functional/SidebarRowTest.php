@@ -92,8 +92,10 @@ final class SidebarRowTest extends WebTestCaseWithSchema
 
         $crawler = $this->client->request('GET', '/_elsewhere');
 
+        // Performance carries screens of its own and is therefore a branch,
+        // and a branch nobody is standing in is closed to its row.
         self::assertSame(
-            ['nav-item', 'nav-item', 'nav-item'],
+            ['nav-item closed', 'nav-item', 'nav-item'],
             $crawler->filter('nav.nav a.nav-item')->each(static fn ($node): string => (string) $node->attr('class')),
         );
     }
@@ -105,11 +107,12 @@ final class SidebarRowTest extends WebTestCaseWithSchema
         $crawler = $this->client->request('GET', '/team');
 
         self::assertResponseIsSuccessful();
-        self::assertSame(['nav-item', 'nav-item', 'nav-item on'], $this->rowClasses($crawler));
+        self::assertSame(['nav-item closed', 'nav-item', 'nav-item path'], $this->rowClasses($crawler));
+        self::assertSame('People', trim($crawler->filter('nav.nav .ntree .on')->text()));
     }
 
     /**
-     * AND LIT ON THE MATRIX TOO, which is one row for two screens on purpose:
+     * AND MARKED ON THE MATRIX TOO, which is one row for two screens on purpose:
      * the design draws Team as a single flat row, and /team/positions is a
      * screen INSIDE it rather than a second place in the product.
      */
@@ -120,14 +123,19 @@ final class SidebarRowTest extends WebTestCaseWithSchema
         $crawler = $this->client->request('GET', '/team/positions');
 
         self::assertResponseIsSuccessful();
-        self::assertSame(['nav-item', 'nav-item', 'nav-item on'], $this->rowClasses($crawler));
+        self::assertSame(['nav-item closed', 'nav-item', 'nav-item path'], $this->rowClasses($crawler));
+        self::assertSame('Positions', trim($crawler->filter('nav.nav .ntree .on')->text()));
     }
 
     /**
      * AND DEPARTMENTS IS A SECOND PLACE, not a screen inside the roster — which
-     * is the whole reason it has a top-level address. Standing on it lights its
-     * own row and leaves Team alone; a `/team/departments` would have lit both,
-     * because "am I here" is decided by path prefix.
+     * is the whole reason it has a top-level address. Standing on it marks its
+     * own row and leaves Team alone; a `/team/departments` would have marked
+     * both, because "am I here" is decided by path prefix.
+     *
+     * THE SECTION ROW CARRIES `path`, NOT `on`. One ground per tree (ruled
+     * 2026-09-20): the ground and the focus line go to the screen inside the
+     * section, and the section above it carries the accent as ink.
      */
     public function testTheDepartmentsRowIsLitOnItsOwnScreenAndTheRosterRowIsNot(): void
     {
@@ -136,7 +144,7 @@ final class SidebarRowTest extends WebTestCaseWithSchema
         $crawler = $this->client->request('GET', '/departments');
 
         self::assertResponseIsSuccessful();
-        self::assertSame(['nav-item', 'nav-item on', 'nav-item'], $this->rowClasses($crawler));
+        self::assertSame(['nav-item closed', 'nav-item path', 'nav-item'], $this->rowClasses($crawler));
     }
 
     /**
