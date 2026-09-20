@@ -255,6 +255,11 @@ final readonly class OrgDashboardController
             'attention' => $this->overview->attentionForScope($scope, $now),
             'areas' => $rows,
             'areaCounts' => $this->register->counts($rows),
+            // THE OPERATIONAL COLUMNS ARE THE MODULES', read from the same
+            // now-tiles the areas register reads: the host states how much
+            // ground an area holds and how many modules it runs, and every
+            // other column on the row belongs to whoever published it.
+            'statColumns' => AreaPresetLibrary::statColumns($rows),
             // NO PLATE WHERE THERE IS NO GROUND. A map of no areas is a map
             // of nothing, so the cell is left out rather than drawn empty —
             // and every other cell keeps its slot and says what it cannot

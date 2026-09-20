@@ -196,6 +196,44 @@ final class OrgDashboardTest extends WebTestCase
         );
     }
 
+    /**
+     * THE AREAS TABLE'S OPERATIONAL COLUMNS ARE THE MODULES' OWN, read from
+     * the same now-tiles the areas register reads. The host writes the name,
+     * the ground and the module count and states no figure it does not own —
+     * so a column exists only where a module contributed one, rather than
+     * five columns of noughts on an installation running nothing.
+     */
+    public function testTheAreasTableCarriesTheModulesOwnColumns(): void
+    {
+        $this->boot();
+        $this->signIn();
+        $this->aLiveArea('Northern Conservation Reserve');
+
+        $headers = $this->crawl('/')->filter('[data-w="areas"] table.tbl th')->each(
+            static fn (Crawler $one): string => trim($one->text()),
+        );
+
+        self::assertSame('area', $headers[0]);
+        self::assertSame('modules', $headers[1]);
+        self::assertSame('state', end($headers));
+        self::assertContains('open incidents', $headers, 'A column a module published.');
+        self::assertContains('team on duty', $headers);
+    }
+
+    /** With nothing switched on anywhere, those columns are simply not there. */
+    public function testWithNothingRunningTheTableDrawsNoOperationalColumns(): void
+    {
+        $this->boot();
+        $this->signIn();
+        $this->anArea('Registered And Empty');
+
+        $headers = $this->crawl('/')->filter('[data-w="areas"] table.tbl th')->each(
+            static fn (Crawler $one): string => trim($one->text()),
+        );
+
+        self::assertSame(['area', 'modules', 'state'], $headers);
+    }
+
     // ---------------------------------------------------------- the empty state
 
     /**

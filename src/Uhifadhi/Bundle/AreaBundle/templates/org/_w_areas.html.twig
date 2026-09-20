@@ -1,12 +1,18 @@
 {# THE AREAS — one row per area: how much ground it holds, what it runs, and
-   whether it has been set up at all.
+   what the modules in it report.
 
    AN AREA THAT RUNS NOTHING KEEPS ITS ROW, and that is the point of the
    card: it contributes to no figure and appears in no queue anywhere else,
    precisely because it has no module to contribute one, so this is the only
-   place it can be seen. #}
+   place it can be seen.
+
+   THE OPERATIONAL COLUMNS ARE THE MODULES' OWN, read from the same now-tiles
+   the areas register reads — the host writes the name, the ground and the
+   module count, and states no figure it does not own. A column exists only
+   where a module contributed one, which is why an installation with nothing
+   switched on shows three columns and not five full of noughts. #}
 <div class="c" data-w="areas">
-    <span class="tab">The areas<span class="src">&middot; {{ areaCounts.all }} &middot; {{ areaCounts.live }} running &middot; {{ areaCounts.setup }} awaiting setup</span></span>
+    <span class="tab">The areas<span class="src">&middot; {{ areaCounts.all }} &middot; {{ areaCounts.live }} live &middot; {{ areaCounts.setup }} awaiting setup</span></span>
     <a class="more" href="{{ path('area_index') }}">The areas register &rarr;</a>
     <span class="ao-by"><i></i>the organisation</span>
 
@@ -14,16 +20,26 @@
         <p class="zeb">No area is registered yet. An area is the place every record resolves to, so it is the first thing an installation gets.</p>
     {% else %}
         <table class="tbl">
-            <tr><th>area</th><th>ground</th><th>modules</th><th>needs a decision</th><th>state</th></tr>
+            <tr>
+                <th>area</th>
+                <th>modules</th>
+                {% for column in statColumns %}<th>{{ column|lower }}</th>{% endfor %}
+                <th>state</th>
+            </tr>
             {% for row in areas %}
                 <tr>
                     <td{{ row.isLive ? '' : ' class="fog"' }}>
                         <b>{{ row.area.name }}</b>
-                        <span class="mono">{{ row.areaKm2|number_format }} km&sup2;</span>
+                        {% if row.areaKm2 %}<span class="mono">{{ row.areaKm2|number_format }} km&sup2;</span>{% endif %}
                     </td>
-                    <td class="mono {{ row.areaKm2 ? '' : 'fog' }}">{{ row.areaKm2 ? (row.areaKm2|number_format) : '—' }}</td>
                     <td class="{{ row.liveModules ? 'g' : 'fog' }}">{{ row.liveModules }}</td>
-                    <td class="{{ row.alertCount ? 'w' : 'fog' }}">{{ row.alertCount }}</td>
+                    {% for at in 0..(statColumns|length - 1) %}
+                        {% if statColumns|length %}
+                            <td class="{{ row.stats[at] is defined ? '' : 'fog' }}">
+                                {{- row.stats[at] is defined ? row.stats[at].value : '—' -}}
+                            </td>
+                        {% endif %}
+                    {% endfor %}
                     <td><span class="chip {{ row.isLive ? 'ok' : 'idle' }}">{{ row.isLive ? 'live' : 'awaiting setup' }}</span></td>
                 </tr>
             {% endfor %}
