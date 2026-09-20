@@ -241,6 +241,43 @@ final class ZoneImportTest extends IntegrationTestCase
     private const array A_WEST_HALF_RING = [[[-30.0, -3.6, 1200.0], [-29.5, -3.6, 1200.0], [-29.5, -2.8, 1200.0], [-30.0, -2.8, 1200.0], [-30.0, -3.6, 1200.0]]];
     private const array A_EAST_HALF_RING = [[[-29.5, -3.6, 1200.0], [-29.0, -3.6, 1200.0], [-29.0, -2.8, 1200.0], [-29.5, -2.8, 1200.0], [-29.5, -3.6, 1200.0]]];
 
+    /**
+     * A FILE THAT SHOUTS ITS NAMES DOES NOT MAKE THE PRODUCT SHOUT THEM.
+     *
+     * A shapefile's attribute table is very often upper case throughout,
+     * because that is how the tool that wrote it writes — not because anybody
+     * decided the zone is called CRATER. Imported straight, the name shouted
+     * in the register, on the plate's key, in the sidebar's menu and in the
+     * middle of every sentence that said it.
+     *
+     * A name with one lower-case letter in it was written by a person and is
+     * left exactly as it arrived, because a corrected name that is now wrong
+     * is worse than a shouting one.
+     */
+    public function testAnEntirelyUpperCaseNameIsTitleCasedAndAMixedOneIsNot(): void
+    {
+        $area = $this->anArea();
+
+        $result = $this->import($area, $this->collection([
+            $this->feature(['name' => 'CRATER'], $this->squareAt(-29.9)),
+            $this->feature(['name' => 'OL DOINYO LENGAI'], $this->squareAt(-29.7)),
+            $this->feature(['name' => 'Lerai Forest'], $this->squareAt(-29.5)),
+            $this->feature(['name' => 'NCA Highlands'], $this->squareAt(-29.3)),
+        ]));
+
+        self::assertSame(['Crater', 'Ol Doinyo Lengai', 'Lerai Forest', 'NCA Highlands'], $result->added);
+    }
+
+    /** @return list<list<list<float>>> */
+    private function squareAt(float $west): array
+    {
+        $east = $west + 0.1;
+
+        return [[
+            [$west, -3.6], [$east, -3.6], [$east, -3.5], [$west, -3.5], [$west, -3.6],
+        ]];
+    }
+
     private function import(AreaOfInterest $area, string $document, string $originalName = 'zones.geojson'): ZoneImportResult
     {
         $path = $this->aTemporaryDirectory().'/'.$originalName;

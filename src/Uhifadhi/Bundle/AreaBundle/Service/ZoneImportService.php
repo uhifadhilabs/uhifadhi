@@ -20,6 +20,7 @@ use Uhifadhi\Bundle\AreaBundle\Entity\Zone;
 use Uhifadhi\Bundle\AreaBundle\Entity\ZoneImport;
 use Uhifadhi\Bundle\AreaBundle\Exception\ZoneImportException;
 use Uhifadhi\Bundle\AreaBundle\Exception\ZoneOverlapException;
+use Uhifadhi\Bundle\AreaBundle\Model\ImportedName;
 use Uhifadhi\Bundle\AreaBundle\Model\ZoneFeaturePlan;
 use Uhifadhi\Bundle\AreaBundle\Model\ZoneImportPlan;
 use Uhifadhi\Bundle\AreaBundle\Model\ZoneImportResult;
@@ -382,7 +383,7 @@ final readonly class ZoneImportService
      */
     private function verdict(AreaOfInterest $area, array $feature, string $nameProperty, array $above): ZoneFeaturePlan
     {
-        $name = $this->propertyOf($feature, $nameProperty);
+        $name = $this->nameOf($feature, $nameProperty);
         $unusable = ZoneFeaturePlan::arriving($name, '{}', null);
 
         /*
@@ -603,6 +604,23 @@ final readonly class ZoneImportService
         $value = \is_array($properties) ? ($properties[$property] ?? null) : null;
 
         return \is_string($value) || \is_int($value) || \is_float($value) ? trim((string) $value) : '';
+    }
+
+    /**
+     * THE NAME THIS FEATURE WILL BE CALLED. A file that shouts every name —
+     * which most GIS exports do — is not an installation that decided its
+     * zones are called CRATER, so an entirely upper-case name is title-cased
+     * and everything else is left exactly as it arrived.
+     * {@see ImportedName} carries the rule and the reason.
+     *
+     * IT IS DONE HERE, at the one place a feature's name is read, so the
+     * preview, the refusals, the duplicate check and the stored zone all
+     * speak about the same name. A rule applied on the way to the database
+     * only would show the reader one name and save another.
+     */
+    private function nameOf(mixed $feature, string $property): string
+    {
+        return ImportedName::of($this->propertyOf($feature, $property));
     }
 
     /**

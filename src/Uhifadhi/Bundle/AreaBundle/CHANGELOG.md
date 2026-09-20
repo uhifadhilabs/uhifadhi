@@ -8,6 +8,11 @@
 
 Not released yet.
 
+ * a zone name that arrives ENTIRELY UPPER CASE is title-cased at import, and
+   a name with one lower-case letter in it is left exactly as it arrived: a
+   GIS export shouts because its tool writes that way, not because anybody
+   decided the zone is called CRATER — and a corrected name that is now wrong
+   is worse than a shouting one
  * ONE POSTING A PERSON (ruled): one station, one area. `PostingService::post()`
    refuses somebody who already stands anywhere and names where, so moving
    them is two acts — end the posting they have, make the one they are going
