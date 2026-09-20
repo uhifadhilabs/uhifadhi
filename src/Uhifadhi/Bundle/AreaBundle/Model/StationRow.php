@@ -57,6 +57,12 @@ final readonly class StationRow
         public ?int $elevationM,
         public ?string $locality,
         public ?\DateTimeImmutable $openedAt,
+        /**
+         * WHAT "INSIDE THIS POST" MEANS, in metres — the ring a check-in
+         * claiming this post is judged against. Null is a post with no ring,
+         * which has no inside.
+         */
+        public ?int $catchmentM = null,
     ) {
         $this->zoneHue = null === $zoneCat ? null : \sprintf('var(--cat-%d)', $zoneCat);
     }
@@ -95,6 +101,7 @@ final readonly class StationRow
             elevationM: $station->getElevationM(),
             locality: $station->getLocality(),
             openedAt: $station->getOpenedAt(),
+            catchmentM: $station->getCatchmentM(),
         );
     }
 }

@@ -120,6 +120,7 @@ final readonly class StationContentProvider implements ContentProviderInterface
                     $post->code,
                     elevationM: $post->elevationM,
                     locality: $post->locality,
+                    catchmentM: $post->catchmentM,
                 );
                 $station = $this->posts->findOneBy(['area' => $area, 'name' => $post->name]);
                 if (null === $station) {

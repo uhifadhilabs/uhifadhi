@@ -150,18 +150,18 @@ final readonly class DemoArea
     public function stations(): array
     {
         return [
-            new DemoStation('Alpha Gate', 'STN-01', 0.150, 0.240, 1180, 'Southern gate approach', posted: 5),
-            new DemoStation('Alpha Ridge', 'STN-02', 0.240, 0.240, 1465, 'Upper ridge line', posted: 3),
-            new DemoStation('Bravo Crossing', 'STN-03', 0.350, 0.240, 940, 'River crossing', posted: 3),
-            new DemoStation('Bravo Ford', 'STN-04', 0.440, 0.240, 985, 'Lower ford', posted: 2),
-            new DemoStation('Charlie Bend', 'STN-05', 0.550, 0.240, 1025, 'Eastern bend', posted: 4),
-            new DemoStation('Charlie Rise', 'STN-06', 0.640, 0.240, 1240, 'Eastern rise', posted: 2),
-            new DemoStation('Delta Camp', 'STN-07', 0.150, 0.540, 1310, 'Basin camp', posted: 3),
-            new DemoStation('Delta Outpost', 'STN-08', 0.240, 0.540, 1120, 'Basin margin', posted: 0),
-            new DemoStation('Echo Watch', 'STN-09', 0.350, 0.540, 1580, 'Escarpment lookout', posted: 4),
-            new DemoStation('Echo Gate', 'STN-10', 0.440, 0.540, 1395, 'Escarpment road', posted: 2),
-            new DemoStation('Foxtrot Post', 'STN-11', 0.550, 0.540, 870, 'Northern flats', posted: 3),
-            new DemoStation('Outer Marker', 'STN-12', 0.850, 0.850, 620, 'Beyond the scheme', posted: 0),
+            new DemoStation('Alpha Gate', 'STN-01', 0.150, 0.240, 1180, 'Southern gate approach', posted: 5, catchmentM: 1500),
+            new DemoStation('Alpha Ridge', 'STN-02', 0.240, 0.240, 1465, 'Upper ridge line', posted: 3, catchmentM: 1000),
+            new DemoStation('Bravo Crossing', 'STN-03', 0.350, 0.240, 940, 'River crossing', posted: 3, catchmentM: 1500),
+            new DemoStation('Bravo Ford', 'STN-04', 0.440, 0.240, 985, 'Lower ford', posted: 2, catchmentM: 1000),
+            new DemoStation('Charlie Bend', 'STN-05', 0.550, 0.240, 1025, 'Eastern bend', posted: 4, catchmentM: 1500),
+            new DemoStation('Charlie Rise', 'STN-06', 0.640, 0.240, 1240, 'Eastern rise', posted: 2, catchmentM: 1000),
+            new DemoStation('Delta Camp', 'STN-07', 0.150, 0.540, 1310, 'Basin camp', posted: 3, catchmentM: 1500),
+            new DemoStation('Delta Outpost', 'STN-08', 0.240, 0.540, 1120, 'Basin margin', posted: 0, catchmentM: 800),
+            new DemoStation('Echo Watch', 'STN-09', 0.350, 0.540, 1580, 'Escarpment lookout', posted: 4, catchmentM: 1000),
+            new DemoStation('Echo Gate', 'STN-10', 0.440, 0.540, 1395, 'Escarpment road', posted: 2, catchmentM: 1500),
+            new DemoStation('Foxtrot Post', 'STN-11', 0.550, 0.540, 870, 'Northern flats', posted: 3, catchmentM: 1000),
+            new DemoStation('Outer Marker', 'STN-12', 0.850, 0.850, 620, 'Beyond the scheme', posted: 0, catchmentM: 600),
         ];
     }
 

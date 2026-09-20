@@ -175,6 +175,18 @@
             <span class="tab">The point</span>
             <div class="rln"><span class="fog">Coordinates</span><span class="mono">{{ coordinates ?? '&mdash;'|raw }}</span></div>
             {% if station.locality %}<div class="rln"><span class="fog">Where</span><span class="mono">{{ station.locality }}</span></div>{% endif %}
+            {# WHAT "INSIDE THIS POST" MEANS. Stated wherever the post is read,
+               because it is the line between a day claimed here that is
+               verified and one that is not — and a post with no ring has no
+               inside, which is a fact rather than a blank. #}
+            <div class="rln"><span class="fog">Catchment</span><span class="mono">
+                {%- if station.catchmentM -%}
+                    {{ station.catchmentM >= 1000 ? (station.catchmentM / 1000)|round(2) ~ ' km' : station.catchmentM ~ ' m' }}
+                    of the station point &mdash; a check-in claiming this post is verified inside it
+                {%- else -%}
+                    no ring &mdash; a check-in claiming this post cannot be verified against it
+                {%- endif -%}
+            </span></div>
 
             {# WHAT THE MODULES PUBLISH — one row per module, through the
                station seam. The Open link is the module's own entry route,

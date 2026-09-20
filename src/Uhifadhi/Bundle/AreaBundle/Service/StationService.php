@@ -45,6 +45,18 @@ use Uhifadhi\Bundle\AreaBundle\Repository\StationRepository;
  */
 final readonly class StationService
 {
+    /**
+     * THE RING A NEW POST OPENS WITH, in metres — the design's own default,
+     * stated on the form beside the field.
+     *
+     * A DEFAULT IS NOT AN INVENTED VERDICT. The entity is right that null is
+     * a real state and that nobody may invent a radius for a post that has
+     * none; this is the other case — a post being CREATED, by somebody
+     * looking at the field with the default written next to it. What they
+     * leave alone they have agreed to.
+     */
+    public const int DEFAULT_CATCHMENT_M = 1500;
+
     public function __construct(
         private EntityManagerInterface $entityManager,
         private StationRepository $stations,
@@ -89,6 +101,7 @@ final readonly class StationService
         ?int $elevationM = null,
         ?string $locality = null,
         ?\DateTimeImmutable $openedAt = null,
+        ?int $catchmentM = self::DEFAULT_CATCHMENT_M,
     ): Station {
         $station = new Station()
             ->setArea($area)
@@ -97,7 +110,8 @@ final readonly class StationService
             ->setPoint(self::pointAt($lon, $lat))
             ->setElevationM($elevationM)
             ->setLocality(self::orNull($locality))
-            ->setOpenedAt($openedAt);
+            ->setOpenedAt($openedAt)
+            ->setCatchmentM($catchmentM);
 
         $this->entityManager->persist($station);
         $this->entityManager->flush();
@@ -134,6 +148,30 @@ final readonly class StationService
 
         $this->rederiveFor($area, 'the station moved');
         $this->entityManager->refresh($station);
+
+        return $station;
+    }
+
+    /**
+     * WHAT "INSIDE THIS POST" MEANS, in metres — the ring a check-in claiming
+     * this post is judged against.
+     *
+     * A VERB OF ITS OWN, because it is a different act from describing the
+     * place: the elevation and the locality say what a radio call would say,
+     * and this decides whether somebody standing there counts as being at
+     * their post. The two are edited on the same card and are not the same
+     * question.
+     *
+     * NULL CLEARS IT, and that is a real answer: a post with no ring has no
+     * inside, the handset says so rather than picking a radius of its own,
+     * and a day claimed there derives as unverified rather than as wrong.
+     * A ZERO OR NEGATIVE RADIUS IS NOT A SMALL RING, it is not a ring, so it
+     * clears too rather than being stored as a circle nobody can stand in.
+     */
+    public function setCatchment(Station $station, ?int $metres): Station
+    {
+        $station->setCatchmentM(null === $metres || $metres <= 0 ? null : $metres);
+        $this->entityManager->flush();
 
         return $station;
     }

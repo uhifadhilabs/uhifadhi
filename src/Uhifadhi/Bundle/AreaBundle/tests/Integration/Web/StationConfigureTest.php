@@ -505,4 +505,68 @@ final class StationConfigureTest extends WebTestCase
 
         return $service;
     }
+
+    /**
+     * THE RING IS EDITED WHERE THE POST IS CONFIGURED, and it is its own
+     * form: the row beside it says what a radio call would say, this one
+     * decides whether somebody standing there counts as being at their post.
+     *
+     * Until this existed nothing set a catchment at all, so every day
+     * claimed at a post derived UNVERIFIED and the Live tab read "verified
+     * at a post 0 of 13" with people standing at theirs. A read with no
+     * write is a feature that looks broken.
+     */
+    public function testTheCatchmentIsSetFromTheStationsOwnCard(): void
+    {
+        $this->boot();
+        $this->signIn();
+        [$area, $station] = $this->aStaffedPost();
+        $uuid = (string) $station->getUuidString();
+
+        $page = $this->body($this->section($area).'?open='.$uuid);
+        self::assertStringContainsString('name="catchment"', $page);
+        self::assertStringContainsString('default 1,500 m', $page, 'the design states the default beside the field');
+
+        $this->submit($area, '/stations/'.$uuid.'/catchment', ['catchment' => '900'], $uuid);
+
+        self::assertSame(900, $this->reread($uuid)->getCatchmentM());
+    }
+
+    /** EMPTY IS NO RING AT ALL, which is a state and not a blank. */
+    public function testAnEmptyCatchmentClearsTheRing(): void
+    {
+        $this->boot();
+        $this->signIn();
+        [$area, $station] = $this->aStaffedPost();
+        $uuid = (string) $station->getUuidString();
+
+        $this->submit($area, '/stations/'.$uuid.'/catchment', ['catchment' => ''], $uuid);
+
+        self::assertNull($this->reread($uuid)->getCatchmentM());
+    }
+
+    /** And anything that is not a radius in whole metres is refused, not stored. */
+    public function testACatchmentThatIsNotARadiusIsRefused(): void
+    {
+        $this->boot();
+        $this->signIn();
+        [$area, $station] = $this->aStaffedPost();
+        $uuid = (string) $station->getUuidString();
+        $was = $this->reread($uuid)->getCatchmentM();
+
+        $this->submit($area, '/stations/'.$uuid.'/catchment', ['catchment' => '1.5 km'], $uuid);
+
+        self::assertSame($was, $this->reread($uuid)->getCatchmentM());
+        self::assertStringContainsString('a catchment is a radius in whole metres', $this->body($this->section($area)));
+    }
+
+    /** One post, read back from the database rather than from a stale object. */
+    private function reread(string $uuid): Station
+    {
+        $this->em->clear();
+        $station = $this->stationsRepository()->findOneBy(['uuid' => $uuid]);
+        self::assertInstanceOf(Station::class, $station);
+
+        return $station;
+    }
 }

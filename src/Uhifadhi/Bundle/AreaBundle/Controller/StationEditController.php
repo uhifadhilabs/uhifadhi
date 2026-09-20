@@ -194,6 +194,36 @@ final readonly class StationEditController
     }
 
     /**
+     * WHAT "INSIDE THIS POST" MEANS — the ring a check-in claiming this post
+     * is judged against, in metres.
+     *
+     * ITS OWN FORM, because it is its own question: the row beside it says
+     * what a radio call would say, and this one decides whether somebody
+     * standing there counts as being at their post. Empty clears it, and a
+     * post with no ring has no inside — the handset says so rather than
+     * picking a radius of its own.
+     */
+    #[Route('/areas/{uuid}/stations/{station}/catchment', name: 'area_station_catchment', requirements: ['uuid' => Requirement::UUID, 'station' => Requirement::UUID], methods: ['POST'])]
+    #[IsGranted('area.edit')]
+    public function catchment(
+        Request $request,
+        #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
+        #[MapEntity(mapping: ['station' => 'uuid'])] Station $station,
+    ): Response {
+        $this->denyUnlessTokenValid($request, self::EDIT_TOKEN);
+        $this->denyUnlessTheStationIsThisAreas($area, $station);
+
+        $metres = trim($request->request->getString('catchment'));
+        if ('' !== $metres && 1 !== preg_match('/^\d{1,6}$/', $metres)) {
+            return $this->refuse($area, (string) $station->getName(), 'a catchment is a radius in whole metres', $station);
+        }
+
+        $this->stations->setCatchment($station, '' === $metres ? null : (int) $metres);
+
+        return $this->backToTheSection($area, $station);
+    }
+
+    /**
      * CLOSED, NOT DELETED. A deactivated post keeps its point and its code,
      * stays in the register behind the Active filter and can be reopened;
      * every record already made against it still points at it.

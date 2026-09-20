@@ -142,6 +142,10 @@ final readonly class StationConfigureController
             'blocks' => $blocks,
             'people' => $this->directory->people(),
             'nextCode' => $this->stationService->nextCode($area),
+            // THE DEFAULT THE FORM STATES BESIDE THE FIELD, from the one place
+            // it is decided — a number typed into the template would be a
+            // second default that drifts from the one a new post gets.
+            'defaultCatchmentM' => StationService::DEFAULT_CATCHMENT_M,
             'events' => $this->events->findByArea($area),
             'refusal' => $this->notices->takeRefusal($area),
             'outcome' => $this->notices->takeOutcome($area),

@@ -216,6 +216,20 @@
                                     <span class="zfnote">what a radio call would say</span>
                                 </form>
 
+                                {# WHAT "INSIDE THIS POST" MEANS. Its own form beside the
+                                   description, because it is its own question: the row above
+                                   says what a radio call would say, this one decides whether
+                                   somebody standing there counts as being at their post. #}
+                                <form class="zfrow" method="post" action="{{ path('area_station_catchment', {uuid: area.uuidString, station: row.uuid}) }}">
+                                    <input type="hidden" name="_token" value="{{ editToken }}">
+                                    <label class="fldlab" for="ca-{{ row.uuid }}">Catchment</label>
+                                    <input class="fld zfld-sm" id="ca-{{ row.uuid }}" name="catchment" value="{{ row.catchmentM }}"
+                                           inputmode="numeric" aria-label="Catchment radius in metres">
+                                    <button type="submit" class="btn sm">{{ ux_icon('shell:square-pen') }} Save</button>
+                                    <span class="zfnote">a check-in claiming this post is <b>verified</b> inside it
+                                        &middot; default {{ defaultCatchmentM|number_format }} m &middot; empty is no ring at all</span>
+                                </form>
+
                                 {% if row.openedAt %}
                                     <div class="zfrow">
                                         <span class="fldlab">Opened</span>

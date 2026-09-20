@@ -45,6 +45,17 @@ final readonly class DemoStation
          * which is a state, not a gap.
          */
         public int $posted = 2,
+        /**
+         * WHAT "INSIDE THIS POST" MEANS, in metres — and posts differ here
+         * too. A main gate's ground is wide and a roadside marker's is a
+         * lay-by; a demo that gave every post the same ring would make the
+         * verified/unverified reading look like a setting rather than a
+         * fact about the place.
+         *
+         * The design's own numbers: 1.5 km at the gates and the big posts,
+         * 1 km at the smaller ones.
+         */
+        public int $catchmentM = 1500,
     ) {
     }
 }

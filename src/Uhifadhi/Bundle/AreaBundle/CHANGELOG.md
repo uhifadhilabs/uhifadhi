@@ -8,6 +8,14 @@
 
 Not released yet.
 
+ * A STATION'S CATCHMENT CAN BE SET. The read side derived "verified at a
+   post" from it all along and nothing ever wrote one, so every post had no
+   ring, every day claimed at one derived UNVERIFIED, and Live read "verified
+   at a post 0 of 13" with people standing at theirs. Now: its own form on the
+   station's Configure card (`StationService::setCatchment()`), the radius
+   stated on the station record, the design's 1.5 km default on a post being
+   created, and the demo posts carrying the design's own numbers. Null is
+   still a real state — a post with no ring has no inside
  * `GET /api/areas/mine` says WHERE THE PERSON WORKS: `postedAreaId` (the area
    of their standing posting, null where they stand nowhere) and `posted: true`
    on that area's entry, so a phone opens the right ground instead of the first
