@@ -90,7 +90,7 @@ final readonly class AreaPlateService
      *
      * @param list<ZoneRow> $rows the rows {@see ZoneSetService::view()} produced, so the hues agree
      */
-    public function plate(AreaOfInterest $area, array $rows): AtlasMap
+    public function plate(AreaOfInterest $area, array $rows, bool $zoneLabels = true): AtlasMap
     {
         $named = [];
         foreach ($this->zones->zonesFor($area) as $zone) {
@@ -102,7 +102,7 @@ final readonly class AreaPlateService
             $features[] = [$row->name, $named[$row->name] ?? null, PlatePalette::category($row->cat), $row->km2];
         }
 
-        return $this->draw($area, $features, self::ZONES_GROUP);
+        return $this->draw($area, $features, self::ZONES_GROUP, $zoneLabels);
     }
 
     /**
@@ -137,7 +137,9 @@ final readonly class AreaPlateService
      */
     public function aroundStation(AreaOfInterest $area, array $rows, array $posts): AtlasMap
     {
-        return $this->withPosts($this->plate($area, $rows), $posts, true);
+        // THE STATION IS THE SUBJECT: the zones are the ground under it and keep
+        // their names for the legend, not for the imagery.
+        return $this->withPosts($this->plate($area, $rows, false), $posts, true);
     }
 
     /**
@@ -186,7 +188,8 @@ final readonly class AreaPlateService
             }
         }
 
-        $map = $this->withPosts($this->plate($area, $rows), $posts, false);
+        // THE STATIONS ARE THE SUBJECT; the zones keep their names for the legend.
+        $map = $this->withPosts($this->plate($area, $rows, false), $posts, false);
 
         // THE KEY SAYS HOW MANY STAND IN EACH ZONE, because on this page that
         // is what the colour is being counted for.
@@ -306,7 +309,7 @@ final readonly class AreaPlateService
      *
      * @param list<array{0: string, 1: string|null, 2: string, 3: int}> $features name, geometry, hue, size
      */
-    private function draw(AreaOfInterest $area, array $features, string $group): AtlasMap
+    private function draw(AreaOfInterest $area, array $features, string $group, bool $zoneLabels = true): AtlasMap
     {
         $map = $this->maps->createMap();
 
@@ -371,6 +374,7 @@ final readonly class AreaPlateService
             count: \count($collection),
             group: $group,
             rules: $rules,
+            labels: $zoneLabels,
         ));
 
         return $map;

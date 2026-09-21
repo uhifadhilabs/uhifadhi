@@ -19,6 +19,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Environment;
+use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
 use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\RosterStateEnum;
@@ -63,6 +64,15 @@ final readonly class TeamController
      * which none of this section's do.
      */
     public const array SURFACE = ['_uhifadhi_module' => 'team'];
+
+    /**
+     * THE SAME MARKER FOR A RECORD UNDER THE SECTION, whose `{uuid}` names a
+     * person or a position and never an area: the registry's route gate reads
+     * the area from `uuid` by default and would refuse the page as "an area
+     * not running the team module" — so the record names an area parameter
+     * the route does not have, and the gate finds no area to ask about.
+     */
+    public const array SURFACE_RECORD = ['_uhifadhi_module' => 'team', RegistryBundle::MODULE_ROUTE_AREA_DEFAULT => 'area'];
 
     /** The section's second tab: everybody who can sign in here. */
     public const string PEOPLE = 'team_index';

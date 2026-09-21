@@ -3483,8 +3483,17 @@ label.pm-box:focus-within i { outline: 2px solid rgb(var(--c-acc)); outline-offs
 .pms-row .v .zfrag { flex:1 1 190px;min-width:0 }
 /* THE STATION PLATE ON A PERSON'S RECORD: the design's box at the design's
    height, holding the place the area's map takes. */
-.stcard .viewer.zplate.stplate { min-height:0;height:132px;border-radius:10px;overflow:hidden;margin:2px 0 10px;background:rgb(var(--c-raised)) }
-.stcard .viewer.zplate { min-height:0;height:132px;border-radius:10px;overflow:hidden;margin:2px 0 10px }
+.stcard .viewer.zplate.stplate { min-height:0;border-radius:10px;overflow:hidden;margin:2px 0 10px;background:rgb(var(--c-raised)) }
+/* THE HEIGHT IS THE PLATE'S OWN (--map-plate-height, set where it is drawn), never a
+   fixed height on the canvas: a fixed height would hold at 330px while fullscreen
+   grows the plate, leaving the map a quarter of a black screen. */
+.stcard .rln:has(+ .stcard-foot) { border-bottom:0 } /* the row before the foot: the foot's line is the only line there */
+/* A SQUARE PLATE: as tall as the card is wide, so the ground around the station
+   reads as a place and not a strip. The square is the map body's, and it lets go
+   in fullscreen, where the atlas grows the body to the screen. */
+.stcard .map-plate > .map-body { height:auto;aspect-ratio:1 / 1 }
+.stcard .map-plate:fullscreen > .map-body, :fullscreen .stcard .map-plate > .map-body { aspect-ratio:auto }
+.stcard .viewer.zplate { min-height:0;border-radius:10px;overflow:hidden;margin:2px 0 10px }
 .stcard .viewer.zplate>svg { width:100%;height:100% }
 .stcard .rln { padding:6px 0 }
 .stcard-foot { display:flex;align-items:center;gap:10px;margin-top:10px;padding-top:10px; border-top:1px solid var(--ln);font-family:var(--font-mono);font-size:9.5px; letter-spacing:.05em;color:var(--dim) }

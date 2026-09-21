@@ -16,6 +16,7 @@ namespace Uhifadhi\Bundle\TeamBundle\Tests\Functional;
 use Symfony\Component\DomCrawler\Crawler;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
+use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\FakePersonPostings;
 
 /**
  * ONE PERSON'S RECORD, and the four things it can be asked to change.
@@ -499,6 +500,33 @@ final class MemberRecordTest extends WebTestCaseWithSchema
 
         // AND THE DOOR OUT IS CONFIGURE, in the head.
         self::assertStringContainsString('Configure', $crawler->filter('.pgact')->text());
+    }
+
+    /**
+     * WHERE THEY ARE STATIONED IS DRAWN, by whoever owns the ground: the card
+     * carries the station's plate from the seam, the station's facts under
+     * it, and the door to the station. Somebody stationed nowhere gets the
+     * empty state, with no plate at all.
+     */
+    public function testTheStationedAtCardDrawsTheGroundFromWhoeverOwnsIt(): void
+    {
+        $this->withSuccessor();
+        $grace = $this->person('Grace', 'Ndosi');
+        $this->em->flush();
+        FakePersonPostings::$stationed = [(string) $grace->getUuidString()];
+
+        try {
+            $crawler = $this->client->request('GET', '/team/'.$grace->getUuidString());
+            self::assertResponseIsSuccessful();
+            $card = $crawler->filter('.c.stcard');
+            self::assertCount(1, $card->filter('[data-fixture-plate="'.FakePersonPostings::STATION.'"]'), 'The plate the ground drew is on the card.');
+            self::assertStringContainsString('Seneto Gate Post', $card->text());
+            self::assertStringContainsString('ST-01', $card->text());
+            self::assertStringContainsString('The station', $card->filter('.stcard-foot a.ov-open')->text());
+            self::assertStringContainsString('stationed at Seneto Gate Post', $crawler->filter('p.pgsub')->text());
+        } finally {
+            FakePersonPostings::$stationed = [];
+        }
     }
 
     /** THE EMPTY STATE: holds no position, nothing granted, a door to give one — and no ledger card at all. */

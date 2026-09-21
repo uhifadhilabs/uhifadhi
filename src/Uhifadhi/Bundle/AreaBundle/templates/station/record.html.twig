@@ -15,7 +15,7 @@
    service avoids. #}
 {% extends '@Shell/page.html.twig' %}
 
-{% block title %}{{ station.name }} &middot; {{ area.name }}{% endblock %}
+{% block title %}{{ station.name }} · {{ area.name }}{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
@@ -87,7 +87,6 @@
             {# Fixed at the height the design draws it: a record's plate that changed
                height with the window would be a different page on every screen. #}
             {{ render_map(map, {
-                '--map-plate-height': '400px',
                 'role': 'img',
                 'aria-label': station.name ~ ' and the ground around it',
             }) }}

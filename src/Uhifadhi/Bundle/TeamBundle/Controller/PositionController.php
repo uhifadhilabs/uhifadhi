@@ -217,7 +217,7 @@ final readonly class PositionController
      * THE RECORD. The matrix read-only, the holders and the history beside
      * it, and one door out to the editor.
      */
-    #[Route('/team/positions/{uuid}', name: 'team_position_show', requirements: ['uuid' => Requirement::UUID], methods: ['GET'])]
+    #[Route('/team/positions/{uuid}', name: 'team_position_show', requirements: ['uuid' => Requirement::UUID], defaults: TeamController::SURFACE_RECORD, methods: ['GET'])]
     #[IsGranted(self::READ)]
     public function show(string $uuid): Response
     {
@@ -237,7 +237,7 @@ final readonly class PositionController
      * CONFIGURE. One page, no tabs: the identity, the matrix, the holders
      * read-only beside them, and retiring.
      */
-    #[Route('/team/positions/{uuid}/configure', name: 'team_position_configure', requirements: ['uuid' => Requirement::UUID], methods: ['GET'])]
+    #[Route('/team/positions/{uuid}/configure', name: 'team_position_configure', requirements: ['uuid' => Requirement::UUID], defaults: TeamController::SURFACE_RECORD, methods: ['GET'])]
     #[IsGranted(self::CONFIGURE)]
     public function configure(string $uuid): Response
     {

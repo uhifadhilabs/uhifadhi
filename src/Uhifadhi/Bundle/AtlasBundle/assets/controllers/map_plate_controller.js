@@ -641,7 +641,10 @@ export default class extends Controller {
 
         // A feature that names itself wears its name: a permanent halo label
         // over the shape, which is how a zone is read on imagery.
-        if (properties.label) {
+        // — unless the layer declines labels: where the shapes are the ground
+        // under another subject (stations on zones), their names would only
+        // collide with the subject's.
+        if (properties.label && layer.labels !== false) {
             drawnFeature.bindTooltip(properties.label, { permanent: true, direction: 'center', className: 'zone-label' });
         }
 

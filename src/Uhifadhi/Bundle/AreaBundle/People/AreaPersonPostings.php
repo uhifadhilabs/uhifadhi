@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\AreaBundle\People;
 
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Uhifadhi\Bundle\AreaBundle\Controller\StationRecordController;
 use Uhifadhi\Bundle\AreaBundle\Entity\Posting;
 use Uhifadhi\Bundle\AreaBundle\Repository\PostingRepository;
 use Uhifadhi\Contracts\People\PersonPosting;
@@ -33,6 +35,7 @@ final readonly class AreaPersonPostings implements PersonPostingProviderInterfac
 {
     public function __construct(
         private PostingRepository $postings,
+        private UrlGeneratorInterface $router,
     ) {
     }
 
@@ -49,7 +52,7 @@ final readonly class AreaPersonPostings implements PersonPostingProviderInterfac
                 continue;
             }
 
-            $line = self::describe($posting);
+            $line = $this->describe($posting);
             if (null !== $line) {
                 $byPerson[$uuid][] = $line;
             }
@@ -63,7 +66,7 @@ final readonly class AreaPersonPostings implements PersonPostingProviderInterfac
      * page. It cannot happen through the model — both are non-null columns —
      * but a reader that assumed so would be a reader that fataled to prove it.
      */
-    private static function describe(Posting $posting): ?PersonPosting
+    private function describe(Posting $posting): ?PersonPosting
     {
         $station = $posting->getStation();
         $area = $station?->getArea();
@@ -82,6 +85,7 @@ final readonly class AreaPersonPostings implements PersonPostingProviderInterfac
             zoneName: $station->getZone()?->getName(),
             since: $since,
             leader: $posting->isLeader(),
+            url: $this->router->generate(StationRecordController::ROUTE, ['uuid' => (string) $area->getUuidString(), 'station' => (string) $station->getUuidString()]),
         );
     }
 }

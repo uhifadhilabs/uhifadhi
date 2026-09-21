@@ -25,7 +25,7 @@
    station and never as a zone-level list. #}
 {% extends '@Shell/page.html.twig' %}
 
-{% block title %}{{ area.name }} &middot; configure &middot; zones{% endblock %}
+{% block title %}{{ area.name }} · configure · zones{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
@@ -64,7 +64,6 @@
                 <span class="tab">Preview<span class="src">&middot; the zones on the ground</span></span>
             {% endif %}
             {{ render_map(map, {
-                '--map-plate-height': '420px',
                 'role': 'img',
                 'aria-label': plan
                     ? 'The zones ' ~ plan.fileName ~ ' would add, drawn on ' ~ area.name

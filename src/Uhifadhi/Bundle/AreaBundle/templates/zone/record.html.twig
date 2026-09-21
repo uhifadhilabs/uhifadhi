@@ -14,7 +14,7 @@
    section's, and nothing here writes. #}
 {% extends '@Shell/page.html.twig' %}
 
-{% block title %}{{ zone.name }} &middot; {{ area.name }}{% endblock %}
+{% block title %}{{ zone.name }} · {{ area.name }}{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
@@ -86,7 +86,6 @@
         <div class="c">
             <span class="tab">{{ zone.name }} on the ground<span class="src">&middot; the whole area, its zones and its stations &middot; {{ zone.name }} lit</span></span>
             {{ render_map(map, {
-                '--map-plate-height': '400px',
                 'role': 'img',
                 'aria-label': zone.name ~ ' among the zones of ' ~ area.name,
             }) }}

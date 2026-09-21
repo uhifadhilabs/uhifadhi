@@ -4,11 +4,13 @@
 <div class="c stcard">
     <span class="tab">Stationed at<span class="src">&middot; read-only, set on the area</span></span>
     {% if stationedAt %}
-        <div class="viewer zplate stplate" role="img" aria-label="the ground around {{ stationedAt.stationName }}"></div>
+        {# THE GROUND AROUND THE STATION, drawn by whoever owns it; the design's
+           box holds the place when no package draws one. #}
+        {% if stationPlate|default(null) %}{{ stationPlate|raw }}{% else %}<div class="viewer zplate stplate" role="img" aria-label="the ground around {{ stationedAt.stationName }}"></div>{% endif %}
         <div class="rln"><span>Station</span><span><b>{{ stationedAt.stationName }}</b>{% if stationedAt.leader %} <span class="chip ok">leads</span>{% endif %}</span></div>
         <div class="rln"><span>Code</span><span class="mono">{{ stationedAt.stationCode ?? '&mdash;'|raw }}{% if stationedAt.zoneName %} &middot; {{ stationedAt.zoneName }}{% endif %} &middot; {{ stationedAt.areaName }}</span></div>
         <div class="rln"><span>Since</span><span class="mono"><time datetime="{{ stationedAt.since|date('c') }}" data-localtime-format="day">{{ stationedAt.since|date('j M Y') }}</time></span></div>
-        <div class="stcard-foot"><span class="mono d">an assignment grants nothing</span><span class="sp"></span><a class="ov-open" href="{{ path('area_station_show', {uuid: stationedAt.areaUuid, station: stationedAt.stationUuid}) }}">The station {{ ux_icon('shell:chevron-right') }}</a></div>
+        <div class="stcard-foot"><span class="mono d">an assignment grants nothing</span><span class="sp"></span>{% if stationedAt.url %}<a class="ov-open" href="{{ stationedAt.url }}">The station {{ ux_icon('shell:chevron-right') }}</a>{% endif %}</div>
     {% else %}
         {# NOT STATIONED: a fact about this person, and — for somebody who may
            make an assignment — the door to where one is made. Absent, not

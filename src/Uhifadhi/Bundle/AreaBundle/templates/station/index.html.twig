@@ -11,7 +11,7 @@
    or a code. The zone is a filter here, and a column. #}
 {% extends '@Shell/page.html.twig' %}
 
-{% block title %}{{ area.name }} &middot; stations{% endblock %}
+{% block title %}{{ area.name }} · stations{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
@@ -99,7 +99,6 @@
                and wrong for a card in a stack: this one is the height the design
                draws it, with its key below. #}
             {{ render_map(map, {
-                '--map-plate-height': '420px',
                 'role': 'img',
                 'aria-label': 'Every station of ' ~ area.name ~ ', hued by the zone it stands in',
             }) }}

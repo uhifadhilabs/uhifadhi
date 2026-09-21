@@ -82,7 +82,7 @@ final class StationRecordTest extends WebTestCase
         $this->signIn();
         [$area, $station] = $this->aStaffedPost();
 
-        self::assertStringContainsString('--map-plate-height:400px', $this->body($this->record($area, $station)));
+        self::assertStringNotContainsString('--map-plate-height:', $this->body($this->record($area, $station)));
     }
 
     /**

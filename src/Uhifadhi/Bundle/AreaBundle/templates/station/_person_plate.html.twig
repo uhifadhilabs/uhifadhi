@@ -1,0 +1,8 @@
+{# THE GROUND AROUND A STATION, on a person's record — the station record's
+   plate at the height the person's design draws it. #}
+{{ render_map(map, {
+    'class': 'viewer zplate stplate',
+    'legend': false,
+    'role': 'img',
+    'aria-label': station.name ~ ' and the ground around it',
+}) }}

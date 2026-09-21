@@ -36,7 +36,9 @@ use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\DeclaringConcernSource
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\DeclaringModuleProvider;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\DevkitContentCollector;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\FakeModuleProvider;
+use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\FakePersonPostings;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\FakeStationDirectory;
+use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\FakeStationPlates;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\FakeTopicProvider;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\GroundConcernSource;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\GuardedController;
@@ -46,6 +48,8 @@ use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\SilentModuleProvider;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\SurveyKpiProvider;
 use Uhifadhi\Contracts\Access\ConcernSourceInterface;
 use Uhifadhi\Contracts\Area\StationDirectoryInterface;
+use Uhifadhi\Contracts\People\PersonPostingProviderInterface;
+use Uhifadhi\Contracts\People\StationPlateProviderInterface;
 use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
 
 /**
@@ -326,6 +330,12 @@ final class TestKernel extends Kernel
         $container->services()
             ->set('fake.station_directory', FakeStationDirectory::class)
             ->tag(StationDirectoryInterface::TAG);
+        $container->services()
+            ->set('fake.person_postings', FakePersonPostings::class)
+            ->tag(PersonPostingProviderInterface::TAG);
+        $container->services()
+            ->set('fake.station_plates', FakeStationPlates::class)
+            ->tag(StationPlateProviderInterface::TAG);
 
         // The thing behind the firewall (see configureRoutes).
         $container->services()->set(GuardedController::class)->public();

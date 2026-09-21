@@ -288,8 +288,11 @@ final readonly class TeamNavigation implements NavigationSourceInterface
 
         $screens = array_values(array_filter([
             $this->screen('Overview', TeamSectionController::OVERVIEW),
-            $this->screen('People', TeamController::PEOPLE),
-            $this->screen('Positions', PositionController::REGISTER),
+            // A PERSON'S RECORD AND ITS CONFIGURE PAGE ARE THE PEOPLE SCREEN'S,
+            // and a position's are the register's: the tree opens the path to
+            // the screen a record belongs to, or the viewer stands nowhere.
+            $this->screen('People', TeamController::PEOPLE, ['team_member', 'team_member_configure']),
+            $this->screen('Positions', PositionController::REGISTER, ['team_position_show', 'team_position_configure']),
             $this->screen('Assignments', TeamPostingsController::POSTINGS),
             $this->screen('Roles', TeamRolesController::ROLES),
         ]));
@@ -329,7 +332,10 @@ final readonly class TeamNavigation implements NavigationSourceInterface
     }
 
     /** One screen of the section, or nothing where its address is not mounted. */
-    private function screen(string $label, string $route): ?NavItem
+    /**
+     * @param list<string> $within the routes of the pages that belong to this screen — a record, its configure page
+     */
+    private function screen(string $label, string $route, array $within = []): ?NavItem
     {
         try {
             $url = $this->urls->generate($route);
@@ -337,7 +343,7 @@ final readonly class TeamNavigation implements NavigationSourceInterface
             return null;
         }
 
-        return new NavItem(label: $label, url: $url, current: $route === $this->routeHere());
+        return new NavItem(label: $label, url: $url, current: \in_array($this->routeHere(), [$route, ...$within], true));
     }
 
     /**

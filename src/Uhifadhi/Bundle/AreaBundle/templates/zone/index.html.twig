@@ -13,7 +13,7 @@
    that changes anything is the Configure action the frame draws itself. #}
 {% extends '@Shell/page.html.twig' %}
 
-{% block title %}{{ area.name }} &middot; zones{% endblock %}
+{% block title %}{{ area.name }} · zones{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
@@ -100,7 +100,6 @@
         <div class="c">
             <span class="tab">All zones on the ground<span class="src">&middot; the whole area &middot; {{ set.count }} {{ set.count == 1 ? 'zone' : 'zones' }} &middot; {{ stationCount }} {{ stationCount == 1 ? 'station' : 'stations' }}</span></span>
             {{ render_map(map, {
-                '--map-plate-height': '420px',
                 'role': 'img',
                 'aria-label': area.name ~ ', its zones and its stations',
             }) }}

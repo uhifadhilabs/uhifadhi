@@ -32,6 +32,7 @@ use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPalette;
 use Uhifadhi\Bundle\TeamBundle\Shell\DepartmentSectionTabs;
 use Uhifadhi\Bundle\TeamBundle\Shell\TeamNavigation;
+use Uhifadhi\Bundle\TeamBundle\Shell\TeamSectionTabs;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\Area\HostArea;
 
 /**
@@ -302,6 +303,44 @@ final class TeamNavigationTest extends TestCase
         $lit = array_values(array_filter($sections[0]->items, static fn (NavItem $i): bool => $i->current));
 
         self::assertSame([], $lit, 'Neither of this bundle\'s rows is the place Performance is.');
+    }
+
+    /**
+     * A PERSON'S RECORD LIGHTS THE PEOPLE SCREEN, and a position's record the
+     * register: the tree opens the path to the screen a record belongs to,
+     * rather than leaving the viewer standing nowhere in it.
+     */
+    public function testARecordPageLightsTheScreenItBelongsTo(): void
+    {
+        foreach (['team_member' => 'People', 'team_member_configure' => 'People', 'team_position_show' => 'Positions', 'team_position_configure' => 'Positions'] as $route => $screen) {
+            $requests = new RequestStack();
+            $request = Request::create('/team/0198f0b6-0000-7000-8000-000000000000');
+            $request->attributes->set('_route', $route);
+            $request->attributes->set(ModuleFrameService::MODULE_ROUTE_ATTRIBUTE, TeamSectionTabs::SURFACE);
+            $requests->push($request);
+
+            $navigation = new TeamNavigation(
+                $this->urlsAnsweringByRoute(),
+                $this->tokenStorageWithAToken(),
+                $this->checkerAnswering(true),
+                $requests,
+                $this->departmentsNamed([]),
+                $this->paletteOver([]),
+            );
+
+            $team = null;
+            foreach (iterator_to_array($navigation->sections()) as $section) {
+                foreach ($section->items as $item) {
+                    if ('Team' === $item->label) {
+                        $team = $item;
+                    }
+                }
+            }
+            self::assertNotNull($team, 'The Team row is drawn.');
+            $lit = array_values(array_filter($team->children, static fn (NavItem $i): bool => $i->current));
+            self::assertCount(1, $lit, $route.' lights exactly one screen.');
+            self::assertSame($screen, $lit[0]->label, $route.' belongs to '.$screen.'.');
+        }
     }
 
     /** And a department's own record page, which carries no marker, still lights it. */

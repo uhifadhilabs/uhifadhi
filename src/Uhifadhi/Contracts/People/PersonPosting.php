@@ -40,6 +40,8 @@ final readonly class PersonPosting
         public ?string $zoneName,
         public \DateTimeImmutable $since,
         public bool $leader = false,
+        /** The station's own page, when the ground has one — the door a person's record opens. */
+        public ?string $url = null,
     ) {
     }
 }

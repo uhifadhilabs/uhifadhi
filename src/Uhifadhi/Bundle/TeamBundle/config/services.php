@@ -131,6 +131,7 @@ use Uhifadhi\Contracts\Kpi\CurrentPeriodInterface;
 use Uhifadhi\Contracts\People\PersonDirectoryProviderInterface;
 use Uhifadhi\Contracts\People\PersonFacetProviderInterface;
 use Uhifadhi\Contracts\People\PersonPostingProviderInterface;
+use Uhifadhi\Contracts\People\StationPlateProviderInterface;
 use Uhifadhi\Contracts\Performance\DepartmentDirectoryInterface;
 use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
 use Uhifadhi\Contracts\Settings\SettingsFigureSourceInterface;
@@ -1072,6 +1073,7 @@ return static function (ContainerConfigurator $container): void {
             // WHERE THIS PERSON WORKS, from whoever owns the ground.
             tagged_iterator(PersonPostingProviderInterface::TAG),
             service('team.posting_door'),
+            tagged_iterator(StationPlateProviderInterface::TAG),
             service('team.position_board'),
             service(DepartmentRepository::class),
             service('doctrine.orm.entity_manager'),

@@ -106,6 +106,12 @@ final class MapPlateRuntime implements RuntimeExtensionInterface
             unset($attributes[$property]);
         }
 
+        // A PLATE MAY DECLINE ITS LEGEND — a thumbnail on a record beside the
+        // full plate it stands for, where the key would be taller than the
+        // map. The layers keep their legend; this plate just does not draw it.
+        $legend = $attributes['legend'] ?? true;
+        unset($attributes['legend']);
+
         $class = $attributes['class'] ?? null;
         $attributes['class'] = \is_string($class) && '' !== $class
             ? self::CANVAS_CLASSES.' '.$class
@@ -115,7 +121,7 @@ final class MapPlateRuntime implements RuntimeExtensionInterface
             'controller' => self::CONTROLLER,
             'hook' => self::PLATE_HOOK,
             'element' => $this->renderer->renderMap($map->toUxMap(), $attributes),
-            'groups' => self::group($map->legend()),
+            'groups' => false === $legend ? [] : self::group($map->legend()),
             'filters' => $filters,
             'plateStyle' => implode(';', array_map(
                 static fn (string $property, string $value): string => $property.':'.$value,

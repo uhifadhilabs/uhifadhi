@@ -54,6 +54,7 @@ use Uhifadhi\Contracts\Access\Verb;
 use Uhifadhi\Contracts\Entity\AreaInterface;
 use Uhifadhi\Contracts\People\PersonPosting;
 use Uhifadhi\Contracts\People\PersonPostingProviderInterface;
+use Uhifadhi\Contracts\People\StationPlateProviderInterface;
 
 /**
  * ONE PERSON'S RECORD — the four fields the table has, the tier that decides
@@ -141,6 +142,12 @@ final readonly class MemberController
         private iterable $postingProviders,
         /** WHERE A POSTING IS MADE, so an unstationed record can carry a door to it. */
         private PostingDoorService $postingDoor,
+        /**
+         * WHO DRAWS THE GROUND AROUND A STATION, from whoever owns it.
+         *
+         * @var iterable<StationPlateProviderInterface>
+         */
+        private iterable $stationPlates,
         private PositionBoard $board,
         private DepartmentRepository $departments,
         private EntityManagerInterface $entityManager,
@@ -153,7 +160,7 @@ final readonly class MemberController
      * stationed, what that grants right now, and the account's history.
      * Everything that writes is on the configure page beside it.
      */
-    #[Route('/team/{uuid}', name: 'team_member', requirements: ['uuid' => Requirement::UUID], methods: ['GET'])]
+    #[Route('/team/{uuid}', name: 'team_member', requirements: ['uuid' => Requirement::UUID], defaults: TeamController::SURFACE_RECORD, methods: ['GET'])]
     #[IsGranted('directory.read')]
     public function show(string $uuid): Response
     {
@@ -171,6 +178,7 @@ final readonly class MemberController
             'byTier' => $member->getTeamRole()->canManageContent(),
             'departmentsTotal' => \count($this->departments->findAllActiveOrdered()),
             'stationedAt' => $postings[0] ?? null,
+            'stationPlate' => $this->plateFor($postings[0] ?? null),
             'postingDoor' => $this->postingDoor->url(),
             'postings' => $postings,
             'reach' => null === $position ? 0 : $this->users->countActiveHoldingAnyPosition([$position]),
@@ -184,7 +192,7 @@ final readonly class MemberController
      * the details, the sign-in and tier, the position with where it applies
      * and which departments, and the account actions in the side column.
      */
-    #[Route('/team/{uuid}/configure', name: 'team_member_configure', requirements: ['uuid' => Requirement::UUID], methods: ['GET'])]
+    #[Route('/team/{uuid}/configure', name: 'team_member_configure', requirements: ['uuid' => Requirement::UUID], defaults: TeamController::SURFACE_RECORD, methods: ['GET'])]
     #[IsGranted('directory.manage')]
     public function configure(string $uuid): Response
     {
@@ -209,6 +217,7 @@ final readonly class MemberController
             'isSelf' => $this->signedIn()?->getId() === $member->getId(),
             'mayChangeTier' => $this->authority->isUnbounded(),
             'stationedAt' => $postings[0] ?? null,
+            'stationPlate' => $this->plateFor($postings[0] ?? null),
             'postingDoor' => $this->postingDoor->url(),
             'reach' => null === $position ? 0 : $this->users->countActiveHoldingAnyPosition([$position]),
             'history' => \array_slice($history, 0, 7),
@@ -684,5 +693,21 @@ final readonly class MemberController
         }
 
         return $out;
+    }
+
+    /** THE PLATE FOR WHERE THEY ARE STATIONED — the first provider that owns the station answers. */
+    private function plateFor(?PersonPosting $posting): ?string
+    {
+        if (null === $posting) {
+            return null;
+        }
+        foreach ($this->stationPlates as $provider) {
+            $plate = $provider->plateFor($posting->stationUuid);
+            if (null !== $plate) {
+                return $plate->html;
+            }
+        }
+
+        return null;
     }
 }

@@ -299,7 +299,7 @@ return static function (ContainerConfigurator $container): void {
      * the tag; nothing in either bundle names a class in the other.
      */
     $services->set('area.person_postings', AreaPersonPostings::class)
-        ->args([service(PostingRepository::class)])
+        ->args([service(PostingRepository::class), service('router')])
         ->tag(PersonPostingProviderInterface::TAG);
 
     /*

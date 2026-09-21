@@ -392,6 +392,7 @@ final class WebKernel extends Kernel
             ->tag(ShellBundle::ORG_PAGES_TAG)
             ->public();
         $services->alias('test_public.area.stations', 'area.stations')->public();
+        $services->alias('test_public.area.station_plates', 'area.station_plates')->public();
         $services->alias('test_public.area.postings', 'area.postings')->public();
         $services->alias('test_public.area.zones', 'area.zones')->public();
         // The ledger's writer, so a test can arrange an area's composition the

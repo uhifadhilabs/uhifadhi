@@ -78,6 +78,8 @@ final readonly class GeoJsonLayer
         public ?string $tooltip = null,
         public ?FeaturePopup $popup = null,
         public ?string $featureId = null,
+        /** Whether a feature that names itself (`properties.label`) wears its name as a permanent label — off where the shapes are the ground under another subject. */
+        public bool $labels = true,
     ) {
         if (null === $features && null === $url) {
             throw new LayerException(\sprintf('The layer "%s" names no source: give it either "features" or "url".', $id));
@@ -132,6 +134,7 @@ final readonly class GeoJsonLayer
      *     tooltip: string|null,
      *     popup: array{title: string, lines: list<string>, href: string|null, linkLabel: string|null}|null,
      *     featureId: string|null,
+     *     labels: bool,
      * }
      */
     public function toArray(): array
@@ -148,6 +151,7 @@ final readonly class GeoJsonLayer
             'tooltip' => $this->tooltip,
             'popup' => $this->popup?->toArray(),
             'featureId' => $this->featureId,
+            'labels' => $this->labels,
         ];
     }
 }

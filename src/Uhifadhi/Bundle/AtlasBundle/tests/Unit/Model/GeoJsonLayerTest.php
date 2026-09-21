@@ -47,6 +47,7 @@ final class GeoJsonLayerTest extends TestCase
             'tooltip' => null,
             'popup' => null,
             'featureId' => null,
+            'labels' => true,
         ], $layer->toArray());
     }
 
@@ -73,6 +74,7 @@ final class GeoJsonLayerTest extends TestCase
             'tooltip' => null,
             'popup' => null,
             'featureId' => null,
+            'labels' => true,
         ], $layer->toArray());
     }
 
@@ -110,6 +112,19 @@ final class GeoJsonLayerTest extends TestCase
         self::assertSame('label', $payload['tooltip']);
         self::assertSame(['title' => 'title', 'lines' => [], 'href' => 'href', 'linkLabel' => null], $payload['popup']);
         self::assertSame('reference', $payload['featureId']);
+    }
+
+    /**
+     * A LAYER MAY DECLINE ITS LABELS: where its shapes are the ground under
+     * another subject, the names it carries are for the legend, not the
+     * imagery — and the controller reads that as one flag.
+     */
+    public function testALayerMayDeclineItsLabels(): void
+    {
+        $layer = new GeoJsonLayer(id: 'zones', label: 'Zones', features: self::FEATURES, labels: false);
+
+        self::assertFalse($layer->toArray()['labels']);
+        self::assertTrue(new GeoJsonLayer(id: 'zones', label: 'Zones', features: self::FEATURES)->toArray()['labels'], 'On by default: a shape that names itself wears its name.');
     }
 
     /** A base style on its own is a whole statement; rules are optional on top of it. */

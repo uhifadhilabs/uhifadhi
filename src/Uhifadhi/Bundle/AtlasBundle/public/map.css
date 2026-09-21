@@ -93,14 +93,18 @@
 .leaflet-control-zoom a:hover,
 .leaflet-control-zoom a:focus,
 .leaflet-control-zoom a:active { background: rgba(8, 13, 10, .9); color: #F5F7F3; }
-.map-chrome-host .leaflet-control-attribution,
-.map-chrome-host .leaflet-control-scale-line {
+/* ONE CLASS HEAVIER THAN LEAFLET'S OWN RULE: `.leaflet-container .leaflet-control-attribution`
+   paints a white pill with the same specificity, and whichever sheet loads last would
+   win — on a page that links leaflet after this sheet, the provider's name was white
+   on white. The extra class settles it in this sheet's favour on every page. */
+.map-canvas.map-chrome-host .leaflet-control-attribution,
+.map-canvas.map-chrome-host .leaflet-control-scale-line {
     font: 600 9px var(--font-mono); color: #eaf2ec; letter-spacing: .04em;
     background: rgba(10, 14, 11, .72); border: 1px solid rgba(234, 242, 236, .18);
     border-radius: 6px; padding: 3px 7px;
 }
-.map-chrome-host .leaflet-control-attribution a { color: #eaf2ec; }
-.map-chrome-host .leaflet-control-scale-line { border-top: 0; }
+.map-canvas.map-chrome-host .leaflet-control-attribution a { color: #eaf2ec; }
+.map-canvas.map-chrome-host .leaflet-control-scale-line { border-top: 0; }
 .map-chrome-host .leaflet-tooltip {
     font: 600 10px var(--font-mono); color: #eaf2ec; background: rgba(10, 14, 11, .88);
     border: 1px solid rgba(234, 242, 236, .18); border-radius: 6px; box-shadow: none;

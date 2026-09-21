@@ -29,6 +29,7 @@ use Uhifadhi\Bundle\AreaBundle\Controller\ZoneEditController;
 use Uhifadhi\Bundle\AreaBundle\Controller\ZoneImportController;
 use Uhifadhi\Bundle\AreaBundle\Controller\ZoneRecordController;
 use Uhifadhi\Bundle\AreaBundle\Overview\OrgOverviewContributorInterface;
+use Uhifadhi\Bundle\AreaBundle\People\AreaStationPlates;
 use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\PostingRepository;
 use Uhifadhi\Bundle\AreaBundle\Repository\StationEventRepository;
@@ -47,6 +48,7 @@ use Uhifadhi\Bundle\AreaBundle\Widget\OrgOverviewWidgets;
 use Uhifadhi\Bundle\ShellBundle\Contract\AreaShellSourceInterface;
 use Uhifadhi\Bundle\ShellBundle\Contract\NavigationSourceInterface;
 use Uhifadhi\Bundle\ShellBundle\Model\ModuleGroup;
+use Uhifadhi\Contracts\People\StationPlateProviderInterface;
 use Uhifadhi\Contracts\Shell\ConfigurationSectionsInterface;
 
 /*
@@ -263,6 +265,21 @@ return static function (ContainerConfigurator $container): void {
         ])
         ->tag('controller.service_arguments');
     $services->alias(StationRecordController::class, 'area.controller.station_record')->public();
+
+    /*
+     * THE GROUND AROUND A STATION FOR A PERSON'S RECORD — tagged by hand, read
+     * by whoever draws that record; nothing in either bundle names the other.
+     */
+    $services->set('area.station_plates', AreaStationPlates::class)
+        ->args([
+            service('twig'),
+            service(StationRepository::class),
+            service(PostingRepository::class),
+            service('area.zone_set'),
+            service('area.zone_plate'),
+        ])
+        ->tag(StationPlateProviderInterface::TAG);
+    $services->alias(AreaStationPlates::class, 'area.station_plates');
 
     /*
      * EVERY STATION IN ONE AREA — the tab. It reads; the section beside it is

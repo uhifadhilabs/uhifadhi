@@ -120,7 +120,9 @@ final class StationsTabTest extends WebTestCase
         $this->signIn();
         [$area] = $this->aStaffedPost();
 
-        self::assertStringContainsString('--map-plate-height:420px', $this->body($this->tab($area)));
+        self::assertStringNotContainsString('--map-plate-height:', $this->body($this->tab($area)));
+        // THE ZONES ARE THE GROUND UNDER THE STATIONS here, and keep their names off the imagery.
+        self::assertStringContainsString('&quot;labels&quot;:false', $this->body($this->tab($area)), 'The zones layer declines its labels on the stations plate.');
     }
 
     /** WHO LEADS IS A FILTER TOO: a post with no lead appointed is a thing to look for. */
