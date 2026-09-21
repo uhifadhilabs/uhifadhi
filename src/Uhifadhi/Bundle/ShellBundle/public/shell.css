@@ -962,11 +962,15 @@ h2.zone::after { content: ""; flex: 1; height: 1px; background: var(--c-ln2); }
     gap: 8px;
     font-family: var(--font-mono);
     font-size: 11px;
-    padding: 5px 10px;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    padding: 7px 14px 6px;
     border: 1px solid var(--ln2);
     border-radius: 99px;
-    color: rgb(var(--c-tx));
+    color: rgb(var(--c-fog));
     background: rgb(var(--c-cv));
+    text-decoration: none;
 }
 .mchip:hover { border-color: rgb(var(--c-fog)); }
 /* CHOSEN IS FILLED, NOT OUTLINED. A row of chips is scanned along its length,
