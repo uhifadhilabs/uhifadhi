@@ -148,7 +148,7 @@ final class DepartmentSectionScreensTest extends WebTestCaseWithSchema
      * THE OVERVIEW IS A COMPOSITION, not a fixed order of cells.
      *
      * What a reader comes to this tab for differs by who they are — somebody
-     * staffing the organisation, somebody wiring modules up, a director
+     * staffing the organization, somebody wiring modules up, a director
      * reading goals — and one order cannot be right for all three. So the
      * section ships directions and the reader adopts one, exactly as the team
      * roster and the area overview do.
@@ -164,7 +164,7 @@ final class DepartmentSectionScreensTest extends WebTestCaseWithSchema
         self::assertSame(
             ['kpis', 'staffing', 'scope', 'modules', 'unattached', 'vacancies', 'goals'],
             $cells,
-            'The shipped direction is every cell, in the order the organisation is read from the outside in.',
+            'The shipped direction is every cell, in the order the organization is read from the outside in.',
         );
     }
 

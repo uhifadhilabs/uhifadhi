@@ -197,7 +197,7 @@ installation that has data in it.
 
 **A column that cannot be backfilled for everyone ships nullable, and validation
 enforces it.** There is no universally correct value for "the staff number this
-organisation has not issued yet", so the database stays permissive and the rule
+organization has not issued yet", so the database stays permissive and the rule
 lives where the rule actually is. A later release tightens the column once every
 installation has been through the period where the value gets written.
 

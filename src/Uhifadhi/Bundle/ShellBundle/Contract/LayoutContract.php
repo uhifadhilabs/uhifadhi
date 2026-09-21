@@ -337,7 +337,7 @@ final class LayoutContract
         'more',
         'mdot',
 
-        // THE ORGANISATION-LEVEL MARKS. An org page is the area page one
+        // THE ORGANIZATION-LEVEL MARKS. An org page is the area page one
         // scope wider, so it borrows everything; these three exist only
         // because "which area" is a column area level does not have.
         // `.orgarea` names the area on a row (its category swatch, never a
@@ -348,7 +348,7 @@ final class LayoutContract
         'lfilt-n',
 
         // THE SCOPE CONTROL, the shell's and not a page's: every
-        // organisation-level surface the seam contributes gets this one,
+        // organization-level surface the seam contributes gets this one,
         // and a module states none of its own.
         'ov-ctl',
 
@@ -383,7 +383,7 @@ final class LayoutContract
 
         // ONE THING THAT NEEDS SOMEBODY, as a row — the queue three surfaces
         // draw from three different owners' items (an area's overview, the
-        // organisation dashboard, the settings section). It was the area
+        // organization dashboard, the settings section). It was the area
         // overview's own until the second surface needed it; the rail is the
         // urgency and it is the only thing on the row that takes a colour.
         'ao-att',

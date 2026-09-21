@@ -127,7 +127,7 @@ final class FieldDutyReadsTest extends FieldApiTestCase
     }
 
     /**
-     * A BATTERY BUDGET THE ORGANISATION OWNS. An area that works long
+     * A BATTERY BUDGET THE ORGANIZATION OWNS. An area that works long
      * patrols out of radio range says so once and every handset in it
      * reads the new figure at the next sync, with no release.
      */

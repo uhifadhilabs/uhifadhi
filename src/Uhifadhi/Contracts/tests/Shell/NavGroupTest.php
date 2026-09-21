@@ -97,6 +97,11 @@ final class NavGroupTest extends TestCase
      */
     public static function theNearMisses(): \Generator
     {
+        // DELIBERATELY THE OTHER SPELLING. The product spells it
+        // "Organization" (ruled 2026-09-21); this row exists because a near
+        // miss must be REFUSED rather than quietly making a fifth heading,
+        // so the literal here is the one the product does not use and must
+        // survive any spelling sweep.
         yield 'the British spelling' => ['Organisation'];
         yield 'the lower case' => ['system'];
         yield 'the abbreviation' => ['Org'];

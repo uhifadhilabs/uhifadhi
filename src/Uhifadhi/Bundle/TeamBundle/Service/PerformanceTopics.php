@@ -24,8 +24,8 @@ use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
  * THE HOST'S FIRST, THEN THE MODULES' IN THE ORDER SOMEBODY ARRANGED.
  * Staffing, Goals and Attention are figures every department has whatever
  * it attaches, so they lead; a module's topic follows, in the
- * organisation's own module order — or, inside an area, in that area's.
- * Alphabetical would be the dictionary's opinion about an organisation's
+ * organization's own module order — or, inside an area, in that area's.
+ * Alphabetical would be the dictionary's opinion about an organization's
  * priorities, and tag order is the order the container happened to build
  * services in.
  *
@@ -96,7 +96,7 @@ final readonly class PerformanceTopics
     }
 
     /**
-     * THE ORGANISATION'S OWN MODULE ORDER, slug to its place in it.
+     * THE ORGANIZATION'S OWN MODULE ORDER, slug to its place in it.
      *
      * @return array<string, int>
      */

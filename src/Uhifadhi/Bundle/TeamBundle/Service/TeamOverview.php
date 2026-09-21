@@ -84,7 +84,7 @@ final readonly class TeamOverview
      * the JSON column. The grants are a JSON list of strings and every engine
      * spells a containment test differently; a bundle does not get to assume
      * which database an installation runs. There are as many positions as an
-     * organisation has jobs, so the list this walks is tens of rows and the
+     * organization has jobs, so the list this walks is tens of rows and the
      * query it replaces would have been the one thing in this bundle that only
      * worked on Postgres.
      */

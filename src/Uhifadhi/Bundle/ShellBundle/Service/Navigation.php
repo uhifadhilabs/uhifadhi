@@ -54,7 +54,7 @@ final class Navigation
      *
      * AND THERE ARE FOUR PLACES, NAMED IN THE CONTRACT. A label that is not one
      * of {@see NavGroup::ORDER} is refused here, by name, with the four in the
-     * message: a near-miss ("Organisation", "Org") used to grow a fifth heading
+     * message: a near-miss ("Organization", "Org") used to grow a fifth heading
      * that nobody designed, silently, in whoever's installation had that module.
      *
      * THE GROUPS ARE DRAWN IN THE CONTRACT'S ORDER — Observatory, Organization,

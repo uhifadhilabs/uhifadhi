@@ -117,7 +117,7 @@ final class NavigationContractTest extends ContractTestCase
     }
 
     /**
-     * THE HEADINGS COME OUT IN THE CONTRACT'S ORDER — what the organisation
+     * THE HEADINGS COME OUT IN THE CONTRACT'S ORDER — what the organization
      * watches, what it is and holds, what the system raises to you, and
      * configuration last — whatever order they were registered in and whatever
      * position each contribution declared. A position is a contributing

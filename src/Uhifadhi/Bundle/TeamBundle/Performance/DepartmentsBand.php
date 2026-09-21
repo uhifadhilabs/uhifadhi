@@ -19,13 +19,13 @@ use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
 use Uhifadhi\Contracts\Performance\TopicKpi;
 
 /**
- * THE BAND ON THE DEPARTMENTS REGISTER — what the organisation's
+ * THE BAND ON THE DEPARTMENTS REGISTER — what the organization's
  * departments DID, not how many of them there are.
  *
  * IT IS NOT THE CARDS ADDED UP AND IT IS NOT A COUNT OF ROWS. The
  * register used to open with "8 departments · 6 org-wide · 2
  * area-level", which is a fact about the page rather than about the
- * organisation — a reader already sees how many cards there are. Those
+ * organization — a reader already sees how many cards there are. Those
  * counts moved to the caption under the filters, where a count of what
  * is being listed belongs, and the band now carries what the
  * departments have been doing: the modules' own figures, over the
@@ -39,7 +39,7 @@ use Uhifadhi\Contracts\Performance\TopicKpi;
  * figures and that cannot be the rule when two modules are installed:
  *
  *   THREE SLOTS FOR THE MODULES, filled a figure at a time in the
- *   organisation's own module order — round by round, so one module
+ *   organization's own module order — round by round, so one module
  *   installed fills all three from its own five (which is the design
  *   exactly), two modules take two and one, and three take one each.
  *   Then the three the host always has: the areas, the seats, the
@@ -47,7 +47,7 @@ use Uhifadhi\Contracts\Performance\TopicKpi;
  *
  * A BAND OF ONE FIGURE IS STILL A BAND. An installation running no
  * module at all shows the host's three and nothing else, which is the
- * honest reading of an organisation that measures nothing yet.
+ * honest reading of an organization that measures nothing yet.
  */
 final readonly class DepartmentsBand
 {
@@ -78,7 +78,7 @@ final readonly class DepartmentsBand
         $band[] = [
             'label' => 'Areas',
             'figure' => Figures::figure((float) $areas),
-            'caption' => 1 === $areas ? 'in the organisation' : 'in the organisation',
+            'caption' => 1 === $areas ? 'in the organization' : 'in the organization',
             'delta' => '',
             'tone' => '',
         ];

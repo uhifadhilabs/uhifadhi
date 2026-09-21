@@ -114,19 +114,19 @@ return static function (ContainerConfigurator $container): void {
     $services->alias(AreaWidgetsController::class, 'area.controller.widgets')->public();
 
     /*
-     * THE ORGANISATION DASHBOARD — `/` and its widget library.
+     * THE ORGANIZATION DASHBOARD — `/` and its widget library.
      *
      * A WIDGET SURFACE LIKE ANY OTHER: the catalogue is assembled from
      * contributors, the framework resolves the person's adopted preset over
      * it, and the controller renders. What is unusual is only the scope —
-     * the organisation rather than one area — and the readings it hands the
+     * the organization rather than one area — and the readings it hands the
      * cells are the per-area ones widened, never a second aggregate.
      */
     $services->set('area.org_catalogue', OrgOverviewCatalogue::class)
         ->args([tagged_iterator(OrgOverviewContributorInterface::TAG)]);
     $services->alias(OrgOverviewCatalogue::class, 'area.org_catalogue');
 
-    /* And the organisation's own cells, contributed the same way a module's are. */
+    /* And the organization's own cells, contributed the same way a module's are. */
     $services->set('area.org_widgets', OrgOverviewWidgets::class)
         ->args([service('area.register')])
         ->tag(OrgOverviewContributorInterface::TAG);
@@ -448,7 +448,7 @@ return static function (ContainerConfigurator $container): void {
     }
 
     /*
-     * AND HOW WIDE AN ORGANISATION-LEVEL PAGE MAY LOOK — the default the
+     * AND HOW WIDE AN ORGANIZATION-LEVEL PAGE MAY LOOK — the default the
      * core ships, because a seam whose default is "nothing" ships a control
      * that is missing on every real page. The tag is the shell's; an
      * installation without the shell simply has a tag nobody collects.

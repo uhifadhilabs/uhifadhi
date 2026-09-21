@@ -2,7 +2,7 @@
 
    Design: areas/<area>/departments.html.
 
-   THE CARDS ARE THE ORGANISATION REGISTER'S CARDS, the same partial: two
+   THE CARDS ARE THE ORGANIZATION REGISTER'S CARDS, the same partial: two
    registers of one thing are two registers that drift. What differs is
    which departments are on the page and in what order — this area's OWN
    first, then the org-wide ones it inherits, each under a heading that says
@@ -10,7 +10,7 @@
 
    IT ONLY READS. Nothing here writes: adding, renaming, scoping and
    attaching are the configure section's, and the header's two actions are
-   the way to the organisation's whole register and the way to Configure. #}
+   the way to the organization's whole register and the way to Configure. #}
 {% extends '@Shell/page.html.twig' %}
 {% import '@Team/positions/_bits.html.twig' as pm %}
 
@@ -31,7 +31,7 @@
 
 {% block shell_page_actions %}
     {# THE WAY OUT TO THE WHOLE REGISTER. An org-wide department is not this
-       area's to change, and the organisation's register is where it is. #}
+       area's to change, and the organization's register is where it is. #}
     <a class="cta" href="{{ path('team_departments') }}">{{ ux_icon('shell:building-2') }} Manage departments {{ ux_icon('shell:arrow-right') }}</a>
 {% endblock %}
 
@@ -73,7 +73,7 @@
                     ? 'clear the search'
                     : (group.key == 'own'
                         ? 'one is added in Configure, with its scope fixed to this area'
-                        : 'an org-wide department is created on the organisation’s register') }}</span>
+                        : 'an org-wide department is created on the organization’s register') }}</span>
             </div>
         {% else %}
             <div class="dcstack dcreg">

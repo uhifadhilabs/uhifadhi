@@ -24,7 +24,7 @@ namespace Uhifadhi\Contracts\Kpi;
  *    gets there.
  *  - The figures are the module's records inside the department's scope — one
  *    area for an area-level department, every area the module is switched on in
- *    for an organisation-wide one. What an "area" means to the records is the
+ *    for an organization-wide one. What an "area" means to the records is the
  *    implementation's business.
  *  - Who recorded a row decides nothing: a department attaching a module reads
  *    every record in its scope, and two departments attaching one module in one
@@ -83,7 +83,7 @@ interface DepartmentKpiProviderInterface
      *
      *  - `areaUuid` SET — the department is confined to that area, and the answer
      *    is that area's figures alone;
-     *  - `areaUuid` NULL — the department is organisation-wide, and the answer is
+     *  - `areaUuid` NULL — the department is organization-wide, and the answer is
      *    the ROLL-UP across every area the module is switched on in: summed,
      *    averaged or weighted as the KPI itself defines. THE PROVIDER DECIDES
      *    WHICH, and says so in the figure's caption, because a reader cannot tell

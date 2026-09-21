@@ -23,7 +23,7 @@ use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
  *
  * A KIND IS A LENS AND NOT A PERMISSION. It groups departments for reading,
  * grants nothing and confines nothing, which is why it is a row an
- * organisation adds rather than an enum a release adds. The tests below are
+ * organization adds rather than an enum a release adds. The tests below are
  * about the word: it is trimmed, it is not empty, and no two kinds share one.
  *
  * THE SCOPES ARE NOT A LIST and the page says so rather than hiding them —

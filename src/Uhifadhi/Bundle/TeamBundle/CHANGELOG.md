@@ -39,7 +39,7 @@ Not released yet.
    own. Contributed is the accent, the host's is the muted dot, and the
    module's NAME says which module it is. team.css is no longer exempt from
    the no-colour rule
- * the demo organisation seeds the FIELD STAFF the demo ground needs
+ * the demo organization seeds the FIELD STAFF the demo ground needs
    (`TeamContentProvider::FIELD_STAFF`), beside the six named roles: with
    somebody standing at one post at a time, six people staffed three posts of
    sixteen and left thirteen empty, which made the one post left empty ON
@@ -115,7 +115,7 @@ Not released yet.
  * `/departments/performance/settings` — what the section opens on, and the
    rules its figures are read under, with the placing's own number read from
    the one place that holds it
- * the organisation's six-figure band, on the Overview and on every record,
+ * the organization's six-figure band, on the Overview and on every record,
    picked by key from the host's own three topics
  * the briefing leads with the LEDGER and puts what changed and what to decide
    beside it as two cards of equal height — a director opens the page to see
@@ -140,7 +140,7 @@ Not released yet.
    module that publishes a topic gets a record the day it is installed
  * the sidebar unfolds Topics to the topics while a reader is inside them, a
    module's wearing its own dot
- * `/departments/performance` — the organisation's own surface, wearing the
+ * `/departments/performance` — the organization's own surface, wearing the
    AREA idiom: one header carrying the scope and the period, the Overview ·
    Topics · Briefing strip, one card a topic with its headline figure, and
    the matrix whose columns ARE the topics. Every figure on it is published

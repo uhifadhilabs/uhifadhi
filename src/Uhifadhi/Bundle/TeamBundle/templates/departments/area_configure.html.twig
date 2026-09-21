@@ -4,7 +4,7 @@
 
    THIS AREA'S OWN, WHOLE: created with the scope locked to this area,
    renamed, attached to modules, promoted with a recorded reason, deactivated.
-   The organisation-wide departments are LISTED and carry no control — a
+   The organization-wide departments are LISTED and carry no control — a
    shared object is not edited from inside one area's context, and the row
    says where it is edited instead.
 
@@ -36,8 +36,8 @@
 {% set section = path('area_departments_configure', {uuid: area.uuidString}) %}
 
 {# ADD ONE — the scope is not asked, it is stated. A department created here
-   belongs to this area; an organisation-wide one is created on the
-   organisation's register, and the hint says so rather than offering a
+   belongs to this area; an organization-wide one is created on the
+   organization's register, and the hint says so rather than offering a
    chooser that would have one wrong answer. #}
 <div class="c dpsec">
     <span class="tab">Add a department<span class="src">&middot; scope fixed to {{ area.name }}</span></span>
@@ -60,7 +60,7 @@
         </div>
         <div class="crhint">
             {{ ux_icon('shell:info') }}
-            <span>Created here it belongs to <b>{{ area.name }} only</b>. An organisation-wide department is created on the <a href="{{ path('team_departments') }}">organisation register</a>.</span>
+            <span>Created here it belongs to <b>{{ area.name }} only</b>. An organization-wide department is created on the <a href="{{ path('team_departments') }}">organization register</a>.</span>
         </div>
     </form>
 </div>
@@ -101,7 +101,7 @@
     {% if inherited is empty %}
         <div class="zdnone">
             <b>No org-wide department yet</b>
-            <span>one is created on the organisation&rsquo;s register, and every area reads it from then on</span>
+            <span>one is created on the organization&rsquo;s register, and every area reads it from then on</span>
         </div>
     {% else %}
         <div class="dprows">
@@ -114,7 +114,7 @@
                     </div>
                     <span class="dpsc">{{ ux_icon('shell:building-2') }} Org-wide</span>
                     <span class="dprm">{{ department.modules is empty ? 'no module' : department.modules|map(m => m.name)|join(', ') }}</span>
-                    <a class="softbtn" href="{{ path('team_departments') }}?focus={{ department.uuidString }}#d-{{ department.uuidString }}">Configured at the organisation {{ ux_icon('shell:arrow-right') }}</a>
+                    <a class="softbtn" href="{{ path('team_departments') }}?focus={{ department.uuidString }}#d-{{ department.uuidString }}">Configured at the organization {{ ux_icon('shell:arrow-right') }}</a>
                 </div>
             {% endfor %}
         </div>

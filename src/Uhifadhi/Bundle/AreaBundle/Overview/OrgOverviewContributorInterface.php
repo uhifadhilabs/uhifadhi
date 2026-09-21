@@ -18,7 +18,7 @@ use Uhifadhi\Bundle\ShellBundle\Widget\Model\WidgetGroup;
 use Uhifadhi\Contracts\Shell\Scope;
 
 /**
- * THE CONTRACT A MODULE PUTS CELLS ON THE ORGANISATION DASHBOARD THROUGH.
+ * THE CONTRACT A MODULE PUTS CELLS ON THE ORGANIZATION DASHBOARD THROUGH.
  *
  * `/` IS THE AREA OVERVIEW ONE SCOPE WIDER, and this interface is the area
  * one with the area taken out: same groups-are-contributors rule, same
@@ -33,7 +33,7 @@ use Uhifadhi\Contracts\Shell\Scope;
  *
  * EVERY FIGURE IS THE MODULE'S OWN PER-AREA READING ONE SCOPE WIDER. The
  * {@see Scope} is handed in for exactly that: the module answers
- * `forScope($scope)` and the organisation's answer is the areas' answers. A
+ * `forScope($scope)` and the organization's answer is the areas' answers. A
  * module that grew a second aggregate for this would have two numbers for one
  * question and no way to say which was right — which is the rule the core
  * holds itself to in `PresenceService::forScope()`.
@@ -89,7 +89,7 @@ interface OrgOverviewContributorInterface
      *
      * THE SAME VALUE OBJECT THE AREA STRIP USES, deliberately: a module that
      * publishes "Patrols out · 3" in an area publishes the same shape across
-     * the organisation, and a reader meets one kind of tile in both places.
+     * the organization, and a reader meets one kind of tile in both places.
      *
      * @return list<NowTile>
      */

@@ -21,14 +21,14 @@ use Uhifadhi\Bundle\TeamBundle\Controller\AreaDepartmentController;
  * AN AREA'S DEPARTMENTS, READ.
  *
  * THE TAB IS THE REGISTER, NARROWED TO ONE AREA. Its cards are the
- * organisation register's cards — the same partial, not a second one that
+ * organization register's cards — the same partial, not a second one that
  * would drift — and the only difference is which departments are on it and
  * in what order: the area's OWN first, then the org-wide ones it inherits,
  * under a heading that says so.
  *
  * IT ONLY READS. Adding, renaming and scoping are the configure section's,
  * which is where the header's Configure action goes; the one other action
- * is the way out to the organisation's whole register.
+ * is the way out to the organization's whole register.
  *
  * THE ROUTE IS TEAM'S, and that is the reason there is no new seam here: a
  * department already knows which area it belongs to — `Department::$area`
@@ -117,7 +117,7 @@ final class AreaDepartmentsTest extends WebTestCaseWithSchema
 
     /**
      * THE TAB WRITES NOTHING. Every control that changes a department is on
-     * the configure section or the organisation's register, and the tab
+     * the configure section or the organization's register, and the tab
      * points at both: the header's way out to the whole register, and the
      * band's way in to this area's section. (The Configure action itself is
      * the frame's, written by the area's own configure page.).

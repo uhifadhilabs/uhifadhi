@@ -10,12 +10,12 @@ Not released yet.
 
  * `Shell\NavGroup` — the four sidebar groups the shell draws, their meaning
    and their order, published as constants: Observatory (what the
-   organisation watches), Organization (what it is and holds), System (what
+   organization watches), Organization (what it is and holds), System (what
    the system raises to you) and Settings (configuration, last). A module
    joins one by constant, and anything else is refused with the four named
    rather than grown into a fifth heading
  * `Shell\OrgPagesInterface`, `Shell\OrgPage`, `Shell\Scope` and
-   `Shell\ScopeSourceInterface` — a module answers at organisation level by
+   `Shell\ScopeSourceInterface` — a module answers at organization level by
    contributing its page set, and the shell mounts it and supplies the scope
    control. Every figure is the area query one scope wider, never a second
    aggregate
@@ -102,7 +102,7 @@ Not released yet.
  * `FigurePeriod::quarter()` and `::year()` — the other two windows the
    performance page offers, CALENDAR quarters and years rather than ninety
    and three hundred and sixty-five days: a reader asking for "this quarter"
-   is asking about the quarter the organisation reports in
+   is asking about the quarter the organization reports in
  * `MatrixRow::$note` and `TopicMatrix::$bandNotes` — what a department and a
    band say about THEMSELVES, in the topic's own words: "3 positions ·
    org-wide" under a name and "each reads every area · 32 of 40 seats filled"

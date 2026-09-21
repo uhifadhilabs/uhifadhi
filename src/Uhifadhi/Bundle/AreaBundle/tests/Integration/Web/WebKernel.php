@@ -91,7 +91,7 @@ final class WebKernel extends Kernel
      * @param int          $figures   how many headline figures the stand-in module
      *                                publishes — one by default, four where a suite
      *                                proves a full row leaves no slot for the
-     *                                organisation's own filler
+     *                                organization's own filler
      * @param string       $clock     WHEN THIS KERNEL THINKS IT IS. Pinned, and a
      *                                suite may move it: which month a page is
      *                                about is read from the clock now, so a
@@ -300,7 +300,7 @@ final class WebKernel extends Kernel
             ->tag(OverviewContributorInterface::TAG);
 
         /*
-         * AND A MODULE ANSWERING AT ORGANISATION LEVEL, tagged by hand as a
+         * AND A MODULE ANSWERING AT ORGANIZATION LEVEL, tagged by hand as a
          * real module bundle has to tag it. Without one the dashboard is
          * rendered with nothing but the host's own cells, which proves the
          * host and nothing about the seam the page exists for.
@@ -367,7 +367,7 @@ final class WebKernel extends Kernel
         $services->alias('test_public.area.scopes', 'area.scopes')->public();
 
         /*
-         * A MODULE THAT ANSWERS AT ORGANISATION LEVEL, tagged by hand as a
+         * A MODULE THAT ANSWERS AT ORGANIZATION LEVEL, tagged by hand as a
          * real module bundle has to tag it. Its pages wear the shell's org
          * frame, and the control in that frame is filled by this bundle's
          * own scope source with nothing wired by a host — which is the whole
@@ -438,7 +438,7 @@ final class WebKernel extends Kernel
         $routes->add('test_module_list', '/areas/{uuid}/modules/patrols/patrols')
             ->controller('kernel::moduleEntry');
 
-        // AND THE STAND-IN MODULE'S ORGANISATION-LEVEL SCREENS, mounted by
+        // AND THE STAND-IN MODULE'S ORGANIZATION-LEVEL SCREENS, mounted by
         // the application as a real one mounts them: the module contributes
         // route NAMES and the host decides the addresses.
         $routes->add('test_org_overview', '/sightings')->controller('kernel::orgPage');

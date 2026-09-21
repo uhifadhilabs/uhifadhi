@@ -61,7 +61,7 @@ final readonly class DepartmentSectionController
     }
 
     /**
-     * SCOPED, STAFFED AND ATTACHED — the section read from the organisation
+     * SCOPED, STAFFED AND ATTACHED — the section read from the organization
      * inwards. Every figure here exists on the register, in Team or on
      * Performance already; this page owns none of them.
      */
@@ -72,7 +72,7 @@ final readonly class DepartmentSectionController
         /*
          * THE PAGE IS A COMPOSITION, not a fixed order of cells. What a reader
          * comes to this tab for differs by who they are — somebody staffing
-         * the organisation, somebody wiring modules up, a director reading
+         * the organization, somebody wiring modules up, a director reading
          * goals — and one order cannot be right for all three. So the surface
          * ships directions and the reader adopts one, exactly as Team and the
          * area overview do.

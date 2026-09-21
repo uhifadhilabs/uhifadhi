@@ -1,4 +1,4 @@
-{# THE ORGANISATION-LEVEL FRAME — what a module's org screens extend.
+{# THE ORGANIZATION-LEVEL FRAME — what a module's org screens extend.
 
    RULED: the page-level tab strip of an org page set is the SHELL'S, exactly
    as the sidebar row is. The first module to ship one wrote a base of its
@@ -8,7 +8,7 @@
    has. Both are mounted here from the one `orgPages()` declaration.
 
    THERE IS NO AREA IN IT, which is the whole difference from an area page:
-   an organisation-level screen is the area screen one scope WIDER, so the
+   an organization-level screen is the area screen one scope WIDER, so the
    trail names the module and the screen and never a place. A screen that
    needed one area would be an area screen.
 
@@ -35,7 +35,7 @@
 {% block shell_page_title %}{{ shell_org() ? shell_org().name : '' }}{% endblock %}
 
 {% block shell_page_actions %}
-    {#- THE ONE CONTROL AN ORGANISATION-LEVEL PAGE CARRIES, and it is the
+    {#- THE ONE CONTROL AN ORGANIZATION-LEVEL PAGE CARRIES, and it is the
         shell's. A module states no scope control of its own, so "which slice
         am I looking at" is asked the same way on every page in the product. -#}
     {%- set _org = shell_org() -%}

@@ -1,4 +1,4 @@
-{# WHERE EVERYBODY IS — the organisation's ground, with a marker per live
+{# WHERE EVERYBODY IS — the organization's ground, with a marker per live
    position.
 
    THE AREAS REGISTER'S PLATE PLUS THE MARKERS. Every area's boundary is drawn
@@ -13,7 +13,7 @@
 {% if map is not null %}
     <div class="c" data-w="plate">
         <span class="tab">Where everybody is<span class="src">&middot; <span class="ao-live"><i></i>live</span> &middot; <time datetime="{{ now|date('c') }}" data-localtime-format="stamp">{{ now|date('j M') }} &middot; {{ now|date('H:i') }}</time></span></span>
-        <span class="ao-by"><i></i>the organisation&rsquo;s ground &middot; module layers</span>
+        <span class="ao-by"><i></i>the organization&rsquo;s ground &middot; module layers</span>
         {{ render_map(map, {
             '--map-plate-height': 'min(58vh, 560px)',
             'role': 'img',

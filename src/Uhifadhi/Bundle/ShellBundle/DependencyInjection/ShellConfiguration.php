@@ -74,7 +74,7 @@ final class ShellConfiguration
                     ->defaultValue('Uhifadhi')->cannotBeEmpty()
                 ->end()
                 ->scalarNode('home_route')
-                    ->info('Route the brandmark links to. The shell is installed by an application and cannot know its route names; the default is the organisation dashboard the core ships, and an installation that puts something else at its front door says so here.')
+                    ->info('Route the brandmark links to. The shell is installed by an application and cannot know its route names; the default is the organization dashboard the core ships, and an installation that puts something else at its front door says so here.')
                     ->defaultValue('organisation_dashboard')->cannotBeEmpty()
                 ->end()
                 ->enumNode('default_theme')

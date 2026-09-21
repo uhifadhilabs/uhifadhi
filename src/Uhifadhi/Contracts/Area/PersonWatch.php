@@ -27,7 +27,7 @@ namespace Uhifadhi\Contracts\Area;
  * measured, so a catchment corrected next month re-reads every watch
  * that used it.
  *
- * THE WORDS ARE THE AREA'S. `statusLabel` is what the organisation
+ * THE WORDS ARE THE AREA'S. `statusLabel` is what the organization
  * calls this status — "On escort", "Court appearance" — and
  * {@see DayState} is what the platform reasons about. A surface prints
  * the label and branches on the state.

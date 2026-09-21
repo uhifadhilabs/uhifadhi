@@ -21,7 +21,7 @@ use Uhifadhi\Bundle\AreaBundle\Shell\OrgDashboardNavigation;
 use Uhifadhi\Bundle\AreaBundle\Widget\OrgOverviewWidgets;
 
 /**
- * THE ORGANISATION DASHBOARD — `/`, composed rather than authored.
+ * THE ORGANIZATION DASHBOARD — `/`, composed rather than authored.
  *
  * WHAT IS WORTH PINNING is not the markup but the composition: that the page
  * is a widget surface, that its cells come from contributors, that the five
@@ -67,7 +67,7 @@ final class OrgDashboardTest extends WebTestCase
         self::assertSame('/widgets', $door->attr('href'));
     }
 
-    /** THERE IS NO SCOPE CONTROL (ruled): the dashboard IS the organisation. */
+    /** THERE IS NO SCOPE CONTROL (ruled): the dashboard IS the organization. */
     public function testThereIsNoScopeControlOnTheDashboard(): void
     {
         $this->boot();
@@ -161,7 +161,7 @@ final class OrgDashboardTest extends WebTestCase
     }
 
     /**
-     * THE ROW IS THE MODULES', AND THE ORGANISATION ONLY FILLS IT. The
+     * THE ROW IS THE MODULES', AND THE ORGANIZATION ONLY FILLS IT. The
      * design's four figures are a module's each; the host's "Areas" tile is
      * there so a fresh installation does not show a row of one, and it takes
      * a slot no module wanted rather than the first one.
@@ -176,7 +176,7 @@ final class OrgDashboardTest extends WebTestCase
 
         self::assertCount(4, $strip);
         self::assertStringContainsString('Patrols out', $strip->eq(0)->text(), 'The module’s figure leads.');
-        self::assertStringContainsString('Areas', $strip->eq(1)->text(), 'The organisation’s fills the next slot.');
+        self::assertStringContainsString('Areas', $strip->eq(1)->text(), 'The organization’s fills the next slot.');
     }
 
     /**
@@ -281,7 +281,7 @@ final class OrgDashboardTest extends WebTestCase
         // read here rather than asserted against whichever tile leads.
         $row = implode(' | ', $strip->each(static fn (Crawler $one): string => $one->text()));
         self::assertStringContainsString('nothing measured', $row);
-        self::assertStringContainsString('no area registered', $row, 'The organisation’s own tile says why.');
+        self::assertStringContainsString('no area registered', $row, 'The organization’s own tile says why.');
         self::assertStringContainsString(
             'no module publishes this',
             $strip->last()->text(),

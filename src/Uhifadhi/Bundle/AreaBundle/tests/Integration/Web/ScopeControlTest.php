@@ -20,7 +20,7 @@ use Uhifadhi\Contracts\Shell\Scope;
 /**
  * THE SCOPE CONTROL HAS A DEFAULT, AND THE CORE SHIPS IT.
  *
- * THE DEFECT, RENDERED: the roster's organisation pages came up with no scope
+ * THE DEFECT, RENDERED: the roster's organization pages came up with no scope
  * control at all. Everything else was right — the row, the strip, the figures
  * — because the shell draws the control only when something tags a
  * {@see \Uhifadhi\Contracts\Shell\ScopeSourceInterface}, and no installation
@@ -51,7 +51,7 @@ final class ScopeControlTest extends WebTestCase
     }
 
     /**
-     * FOUR AREAS: the organisation, then the four, by name. Organisation
+     * FOUR AREAS: the organization, then the four, by name. Organization
      * first because it is the widest reading and the one an org page opens
      * on.
      */
@@ -65,7 +65,7 @@ final class ScopeControlTest extends WebTestCase
         $scopes = $this->scopes();
 
         self::assertSame(
-            ['Organisation — all areas', 'Crater', 'Northern Reserve', 'Salt Marsh', 'Western Range'],
+            ['Organization — all areas', 'Crater', 'Northern Reserve', 'Salt Marsh', 'Western Range'],
             array_map(static fn (Scope $scope): string => $scope->label, $scopes),
         );
         self::assertTrue($scopes[0]->isOrganisation());
@@ -73,7 +73,7 @@ final class ScopeControlTest extends WebTestCase
     }
 
     /**
-     * ONE AREA IS NOT A CHOICE. "The organisation" and "that area" are the
+     * ONE AREA IS NOT A CHOICE. "The organization" and "that area" are the
      * same reading, so the source offers the area alone and the shell's
      * existing rule — a control of one row is not a control — leaves the
      * action row with nothing in it.
@@ -127,7 +127,7 @@ final class ScopeControlTest extends WebTestCase
     }
 
     /**
-     * AND THE WHOLE CHAIN, RENDERED: a contributed organisation page, the
+     * AND THE WHOLE CHAIN, RENDERED: a contributed organization page, the
      * shell's own frame around it, and the control in its action row with
      * every slice this viewer may open — with nothing wired by the host.
      */
@@ -143,7 +143,7 @@ final class ScopeControlTest extends WebTestCase
 
         self::assertSame(200, $this->browser()->getResponse()->getStatusCode());
         self::assertSame(
-            ['Organisation — all areas', 'Crater', 'Northern Reserve', 'Salt Marsh', 'Western Range'],
+            ['Organization — all areas', 'Crater', 'Northern Reserve', 'Salt Marsh', 'Western Range'],
             $page->filter('.pgact form.ov-ctl option')->each(static fn (Crawler $o): string => trim($o->text())),
         );
     }

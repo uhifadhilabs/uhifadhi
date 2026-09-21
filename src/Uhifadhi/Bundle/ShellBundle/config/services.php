@@ -99,7 +99,7 @@ return static function (ContainerConfigurator $container): void {
     $services->alias(Scopes::class, 'shell.scopes');
 
     /*
-     * AND THE MODULES THAT ANSWER AT ORGANISATION LEVEL, as rows in
+     * AND THE MODULES THAT ANSWER AT ORGANIZATION LEVEL, as rows in
      * Observatory. Tagged as a nav source like any other contributor — the
      * shell collects an interface from the contracts package and names no
      * module doing it.
@@ -254,7 +254,7 @@ return static function (ContainerConfigurator $container): void {
      * below is either a tagged iterator or a locator of optional aliases.
      *
      * TWO OF THEM ARE ALIASES RATHER THAN COLLECTIONS. Which modules run in
-     * which areas, and whose organisation this is, each have exactly one
+     * which areas, and whose organization this is, each have exactly one
      * answer; two things claiming to know either would be a disagreement with
      * no way to settle it. They are looked up through a locator so that an
      * installation where nobody answers gets a screen that says so, rather

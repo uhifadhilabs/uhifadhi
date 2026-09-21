@@ -158,14 +158,14 @@ final readonly class PresenceService implements PresenceProviderInterface, LiveP
     }
 
     /**
-     * THE SAME READING, ONE SCOPE WIDER — the organisation, or one area of
+     * THE SAME READING, ONE SCOPE WIDER — the organization, or one area of
      * it.
      *
      * NOT A SECOND AGGREGATE. This walks the very loop {@see liveIn()} walks
      * and concatenates it; there is no org-level query, no second derivation
      * and no other place a live position can come from. Two code paths would
      * drift, and the day they disagreed nobody could say which was right —
-     * so the organisation's answer is the areas' answers, and a test asserts
+     * so the organization's answer is the areas' answers, and a test asserts
      * exactly that.
      *
      * EVERY POSITION KEEPS ITS OWN AREA'S CLOCK. Areas ping at different

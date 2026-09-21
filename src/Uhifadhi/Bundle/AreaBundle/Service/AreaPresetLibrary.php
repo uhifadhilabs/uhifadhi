@@ -224,7 +224,7 @@ final readonly class AreaPresetLibrary
     /**
      * HOW A REGISTER ROW BECOMES A THING ON A PLATE — the one mapping, public
      * because two surfaces draw the same areas: this library's own plate and
-     * the organisation dashboard's. Two copies would be two answers about
+     * the organization dashboard's. Two copies would be two answers about
      * which areas count as running.
      *
      * @param list<AreaRow> $rows

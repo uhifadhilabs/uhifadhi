@@ -24,7 +24,7 @@ use Uhifadhi\Bundle\AreaBundle\Repository\CheckInStatusRepository;
  * AN AREA THAT HAS CONFIGURED NOTHING STILL WORKS. The four the handset
  * already speaks are written on first use, so an installation that has
  * never opened the roster's settings has a working check-in — and an
- * organisation that wants "On escort" adds it beside them rather than
+ * organization that wants "On escort" adds it beside them rather than
  * waiting for a release.
  *
  * SEEDED ONCE AND NEVER RE-SEEDED. An area that deactivated "Unfit for

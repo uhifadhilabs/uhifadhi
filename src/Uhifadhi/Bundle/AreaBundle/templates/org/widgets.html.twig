@@ -1,9 +1,9 @@
-{# THE ORGANISATION DASHBOARD'S WIDGET LIBRARY — chrome around the shell's
+{# THE ORGANIZATION DASHBOARD'S WIDGET LIBRARY — chrome around the shell's
    shared preset component.
 
    Design: widgets.html in the design workspace.
 
-   NOTHING ORGANISATION-SHAPED HAPPENS INSIDE THAT COMPONENT: it is handed
+   NOTHING ORGANIZATION-SHAPED HAPPENS INSIDE THAT COMPONENT: it is handed
    this surface's catalogue, this surface's partial name and this surface's
    routes, and it renders the strips, the toolbar and the canvas. Arranging
    this dashboard works exactly as arranging any other in the installation,
@@ -16,7 +16,7 @@
    than as a bug. The five directions the page was drawn in are the PRESETS. #}
 {% extends '@Shell/page.html.twig' %}
 
-{% block title %}The organisation &middot; widget library{% endblock %}
+{% block title %}The organization &middot; widget library{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
@@ -33,7 +33,7 @@
     <a href="{{ urls.dashboard }}">{{ shell_brand().name|lower }}</a> / widget library
 {% endblock %}
 
-{% block shell_page_title %}The organisation &middot; widget library{% endblock %}
+{% block shell_page_title %}The organization &middot; widget library{% endblock %}
 
 {% block shell_page_subtitle %}
     What <a href="{{ urls.dashboard }}">the dashboard</a> is composed from. Adopt one of the five compositions

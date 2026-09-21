@@ -33,7 +33,7 @@
 
 {% block shell_page_actions %}
     {# THE SCOPE IS A PLACE, so every option is a link and the control needs
-       no script of ours: the organisation's page and one area's page are two
+       no script of ours: the organization's page and one area's page are two
        addresses, and either can be sent to somebody. #}
     <label class="ov-ctl">
         <span class="k">Scope</span>
@@ -45,7 +45,7 @@
             <div class="i-ddmenu">
                 <span class="i-ddhead">whose performance</span>
                 <a class="i-ddopt{{ scope.isOrganisation ? ' on' }}" href="{{ path('team_performance', {period: kind.value}) }}">
-                    <span class="i-ddopt-l">{{ organisation }}</span>
+                    <span class="i-ddopt-l">{{ organization }}</span>
                 </a>
                 {% for area in areas %}
                     <a class="i-ddopt{{ scope.areaUuid == area.uuidString ? ' on' }}"

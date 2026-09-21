@@ -29,8 +29,8 @@ use Uhifadhi\Contracts\Performance\TopicKpi;
  *
  * THE HOST'S FIRST, THEN THE MODULES' IN THE ORDER SOMEBODY ARRANGED. The
  * host's topics are figures every department has whatever it attaches, so
- * they lead; a module's follows, in the organisation's own module order.
- * Alphabetical would be the dictionary's opinion about an organisation's
+ * they lead; a module's follows, in the organization's own module order.
+ * Alphabetical would be the dictionary's opinion about an organization's
  * priorities, and tag order is the order the container happened to build
  * services in.
  *

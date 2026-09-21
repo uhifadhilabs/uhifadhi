@@ -17,8 +17,8 @@ namespace Uhifadhi\Contracts\Settings;
  * ONE THING ABOUT THE INSTALLATION THAT NEEDS SOMEBODY TO DECIDE.
  *
  * NOT THE OPERATION — the installation. A ranger who has not checked in is
- * the organisation dashboard's business; a module one release behind, three
- * areas registered and empty, an organisation with no mark set are this
+ * the organization dashboard's business; a module one release behind, three
+ * areas registered and empty, an organization with no mark set are this
  * screen's. The test is whose decision it is: an operator's, or the person
  * who owns the installation.
  *
@@ -37,7 +37,7 @@ final readonly class SettingsDecision
      * @param string      $key      stable, and what a test names this row by
      * @param string      $headline the fact, in one sentence
      * @param string      $detail   what follows from leaving it
-     * @param string      $origin   whose fact it is — "installation", "organisation"
+     * @param string      $origin   whose fact it is — "installation", "organization"
      * @param string      $subject  what it is about — a package name, "3 areas"
      * @param string      $since    when it became true, in the reader's words
      * @param string      $age      how long it has been true — "2 d", "—"

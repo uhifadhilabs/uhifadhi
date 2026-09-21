@@ -24,7 +24,7 @@ use Uhifadhi\Bundle\ShellBundle\Widget\Repository\WidgetPreferenceRepository;
  * Removing a module leaves its stored layouts behind, and that is the design
  * rather than an oversight. `composer remove` runs no migrations and
  * un-configuration touches configuration; neither has any business deleting an
- * organisation's data. And the rows are harmless where they are: every one is
+ * organization's data. And the rows are harmless where they are: every one is
  * keyed by a surface STRING, nothing reads a surface no registry claims, and
  * putting the module back gives everybody the dashboard they had.
  *

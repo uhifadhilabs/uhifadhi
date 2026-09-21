@@ -85,7 +85,7 @@ final class ShellRuntime implements RuntimeExtensionInterface
     }
 
     /**
-     * THE ORGANISATION-LEVEL FRAME — the module's own name, the screen the
+     * THE ORGANIZATION-LEVEL FRAME — the module's own name, the screen the
      * viewer is on, its sibling screens as a strip, and how wide the page is
      * looking. Null on every page that is in no module's org page set, which
      * is most of the product.

@@ -70,22 +70,22 @@ interface LivePositionsInterface
     public function liveIn(string $areaUuid, \DateTimeImmutable $asOf): LivePresence;
 
     /**
-     * THE SAME READING ONE SCOPE WIDER — the organisation, or one area of
+     * THE SAME READING ONE SCOPE WIDER — the organization, or one area of
      * it.
      *
-     * AN ORGANISATION-LEVEL PLATE IS THE AREA PLATE WITH THE AREA FILTER
+     * AN ORGANIZATION-LEVEL PLATE IS THE AREA PLATE WITH THE AREA FILTER
      * WIDENED, and this is the whole of the difference. A second method
      * that aggregated would be a second derivation of "where is everybody",
      * and the day the two disagreed nobody could say which was right — so
      * the wide answer is the narrow answers, concatenated, by construction.
      *
-     * EVERY POSITION CARRIES ITS OWN AREA'S PING INTERVAL at organisation
+     * EVERY POSITION CARRIES ITS OWN AREA'S PING INTERVAL at organization
      * scope ({@see LivePosition::$pingIntervalMinutes}), because areas ping
      * at different rates and one clock for all of them would call a
      * thirty-minute area's rangers stale beside a five-minute area's on the
      * same silence. {@see LivePresence::isStale()} reads it.
      *
-     * @param Scope              $scope the organisation, or one area of it
+     * @param Scope              $scope the organization, or one area of it
      * @param \DateTimeImmutable $asOf  the moment to answer for — passed, never taken
      *                                  from the clock, so an answer is reproducible
      */

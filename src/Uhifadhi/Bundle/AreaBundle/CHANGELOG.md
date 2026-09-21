@@ -17,11 +17,11 @@ Not released yet.
    toggles the card. An edit belongs in the open card, where the stations
    twin keeps its own.
 
- * THE DASHBOARD'S FIGURES STRIP IS THE MODULES', AND THE ORGANISATION ONLY
+ * THE DASHBOARD'S FIGURES STRIP IS THE MODULES', AND THE ORGANIZATION ONLY
    FILLS IT. With the roster, patrols, incidents and files all publishing,
    the host's "Areas" tile sat first and pushed "Open incidents" off the end
    of a four-wide row. Module figures lead, in their own priority; the
-   organisation's tile takes a slot nobody wanted and is not drawn at all
+   organization's tile takes a slot nobody wanted and is not drawn at all
    when four modules publish; a fifth figure waits in the library rather
    than growing the row. An empty slot reads "nothing measured · no module
    publishes this".
@@ -35,14 +35,14 @@ Not released yet.
    kernel pins its clock — so a month boundary is a thing a test can stand
    on rather than a date somebody has to change the server to reach.
 
- * THE ORGANISATION SEAM IS EXERCISED BY A STAND-IN MODULE in this bundle's
+ * THE ORGANIZATION SEAM IS EXERCISED BY A STAND-IN MODULE in this bundle's
    own suite: a tagged contributor whose cell is drawn from its OWN partial,
    reads its own figures under `by.<slug>`, publishes a figure into the
    four-to-a-row strip, names itself on the card and brings its own
    stylesheet. A dashboard rendered with only the host's cells proves the
    host and nothing about the seam the page exists for.
 
- * THE ORGANISATION DASHBOARD IS `/`. A widget surface composed the way an
+ * THE ORGANIZATION DASHBOARD IS `/`. A widget surface composed the way an
    area's overview is, one scope wider: five cells of its own — the figures
    strip, what needs a decision anywhere, the ground with everybody on it,
    the areas and what runs where — and every operational cell contributed
@@ -97,7 +97,7 @@ Not released yet.
    kernel pins that clock LATE on purpose: a read that still consults it is
    wrong in every run rather than only after six.
  * A LIVE READING IS ANSWERABLE ONE SCOPE WIDER: `PresenceService::forScope()`
-   and `LivePositionsInterface::forScope()` take the organisation or one
+   and `LivePositionsInterface::forScope()` take the organization or one
    area. It is NOT a second aggregate — the wide answer walks the same
    per-area loop and concatenates it, which is asserted — and every position
    carries its own area's ping interval (`LivePosition::$pingIntervalMinutes`,

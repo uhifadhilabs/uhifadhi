@@ -25,7 +25,7 @@ use Uhifadhi\Contracts\Shell\AreaNavChild;
  * page marks, so the lit row and the marked card cannot disagree.
  *
  * ORG-WIDE FIRST, THEN THE AREA'S OWN — the tree is read from the
- * organisation inwards, and the tab's page from this place outwards.
+ * organization inwards, and the tab's page from this place outwards.
  */
 #[CoversClass(DepartmentAreaNavChildren::class)]
 final class AreaDepartmentNavTest extends WebTestCaseWithSchema

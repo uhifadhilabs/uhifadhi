@@ -26,7 +26,7 @@ use Uhifadhi\Bundle\ShellBundle\Contract\StylesheetSourceInterface;
  * page returned 200. The map used to be exempt on the argument that a page
  * drawing a map knows it draws one — and that argument died the day a plate
  * became something a WIDGET draws: on a composed surface ANY cell may draw
- * one, so the organisation Overview composed a map cell onto a page that
+ * one, so the organization Overview composed a map cell onto a page that
  * linked no map sheet and the plate came apart, silently, again. "We have
  * had this problem a million times."
  *

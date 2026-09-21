@@ -146,7 +146,7 @@ final class PositionWidgets implements WidgetSurfaceInterface
                 new WidgetPreset(
                     'f',
                     'Department-first',
-                    'Makes the department the structure of the page rather than a column on it, which is the honest shape now that a position belongs to one and its name is unique only inside it; five layouts of one idea, and the page gets longer the more departments an organisation has.',
+                    'Makes the department the structure of the page rather than a column on it, which is the honest shape now that a position belongs to one and its name is unique only inside it; five layouts of one idea, and the page gets longer the more departments an organization has.',
                     ['dept_a' => 12, 'dept_b' => 12, 'dept_c' => 12, 'dept_d' => 12, 'dept_e' => 12],
                 ),
             ],

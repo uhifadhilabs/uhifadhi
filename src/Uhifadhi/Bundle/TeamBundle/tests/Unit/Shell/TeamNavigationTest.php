@@ -260,7 +260,7 @@ final class TeamNavigationTest extends TestCase
 
     /**
      * A repository answering with departments, each named and either the
-     * organisation's or one area's.
+     * organization's or one area's.
      *
      * @param array<string, string|null> $named name to the area's name, or null for org-wide
      */

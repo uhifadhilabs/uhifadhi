@@ -23,10 +23,10 @@ use Uhifadhi\Bundle\AreaBundle\Repository\CheckInStatusRepository;
  * ONE OF THE ANSWERS A RANGER MAY GIVE WHEN THEY CHECK IN — the area's
  * own word for it.
  *
- * THE WORDS ARE THE ORGANISATION'S. One park's rangers are "At post",
+ * THE WORDS ARE THE ORGANIZATION'S. One park's rangers are "At post",
  * "On escort" and "Court"; another's are "At post", "Outside the park"
  * and "Unfit". Four statuses hard-coded in a phone would make every
- * organisation speak the same four, and the first one that needed a
+ * organization speak the same four, and the first one that needed a
  * fifth would have to wait for a store release. This is the same
  * vocabulary pattern the patrol types already follow: written here,
  * delivered at the next sync, and nothing in the app hard-codes a word.

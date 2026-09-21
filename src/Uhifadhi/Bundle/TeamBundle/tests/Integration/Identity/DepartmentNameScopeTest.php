@@ -22,7 +22,7 @@ use Uhifadhi\Bundle\TeamBundle\Tests\Integration\IntegrationTestCase;
  * A DEPARTMENT NAME IS UNIQUE PER AREA, NOT ACROSS THE INSTALLATION.
  *
  * The previous release made a department name unique org-wide, on the reading
- * that there is one organisation and two departments by one name would be the
+ * that there is one organization and two departments by one name would be the
  * same department entered twice. That is right for the org-wide bucket and wrong
  * for the areas beneath it. Two protected areas each run their own Anti-Poaching
  * unit; forbidding the pair would force one of them to be renamed to something

@@ -113,7 +113,7 @@ class Station
      * with no ring has no inside, the handset says so rather than
      * picking a radius of its own, and a day claimed there derives as
      * unverified rather than as wrong. A number invented here would be a
-     * verdict the organisation never made.
+     * verdict the organization never made.
      */
     #[ORM\Column(name: 'catchment_m', nullable: true)]
     private ?int $catchmentM = null;

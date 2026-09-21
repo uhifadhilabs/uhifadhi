@@ -20,7 +20,7 @@ use Uhifadhi\Bundle\AreaBundle\Repository\ZoneRepository;
 
 /**
  * A ZONE — a named polygon subdividing one {@see AreaOfInterest}, and the
- * SPATIAL lens the way a department is the organisational one. Zones are data an
+ * SPATIAL lens the way a department is the organizational one. Zones are data an
  * admin draws or uploads, never code: modules ask generic questions of them
  * ("which zone is this point in?") and must never name one, because the names
  * are one installation's geography and nobody else's.

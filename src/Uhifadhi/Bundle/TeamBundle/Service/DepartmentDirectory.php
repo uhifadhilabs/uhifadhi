@@ -143,7 +143,7 @@ final readonly class DepartmentDirectory implements DepartmentDirectoryInterface
         return $since;
     }
 
-    /** What this row is placed among: the organisation, or its area. */
+    /** What this row is placed among: the organization, or its area. */
     private static function bandOf(Department $department): string
     {
         $area = $department->getArea();

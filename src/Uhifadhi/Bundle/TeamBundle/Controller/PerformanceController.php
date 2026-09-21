@@ -45,7 +45,7 @@ use Uhifadhi\Contracts\Performance\TopicDecisionsInterface;
 use Uhifadhi\Contracts\Performance\TopicMovementInterface;
 
 /**
- * PERFORMANCE — the organisation's own surface, wearing the area idiom.
+ * PERFORMANCE — the organization's own surface, wearing the area idiom.
  *
  * THREE TABS AND ONE SUBJECT. Overview is what changed across every
  * topic; Topics is one topic at a time, each a whole record; Briefing is
@@ -54,7 +54,7 @@ use Uhifadhi\Contracts\Performance\TopicMovementInterface;
  * this one.
  *
  * SCOPE AND PERIOD ARE IN THE ADDRESS, never in a session. A director
- * reading the organisation's August and an area manager reading
+ * reading the organization's August and an area manager reading
  * Northreach's quarter are looking at two pages, and either can be sent
  * to somebody — which a control that remembered its last state could not
  * be.
@@ -86,8 +86,8 @@ final readonly class PerformanceController
     /** How many of the raised decisions the briefing prints before it counts the rest. */
     public const int DECISIONS_SHOWN = 5;
 
-    /** What the scope picker calls the organisation, on the page and in the picker. */
-    public const string ORGANISATION = 'Organisation — all areas';
+    /** What the scope picker calls the organization, on the page and in the picker. */
+    public const string ORGANISATION = 'Organization — all areas';
 
     public function __construct(
         private Environment $twig,
@@ -316,10 +316,10 @@ final readonly class PerformanceController
         return [
             // THE SAME SIX ON EVERY SCREEN OF THE SECTION, picked by key
             // from the host's own three topics — a module never changes
-            // the organisation's own band.
+            // the organization's own band.
             'band' => $this->band->build($this->topics->forScope($scope, $period), $scope, $period),
             'scope' => $scope,
-            'organisation' => self::ORGANISATION,
+            'organization' => self::ORGANISATION,
             'areas' => $this->areas(),
             'period' => $period,
             // WHAT THE SUBLINE NAMES is what the figures were actually
@@ -380,7 +380,7 @@ final readonly class PerformanceController
         return $urls;
     }
 
-    /** The organisation, or the one area the address names. */
+    /** The organization, or the one area the address names. */
     private function scope(Request $request): PerformanceScope
     {
         $uuid = $request->query->getString('area');
@@ -394,7 +394,7 @@ final readonly class PerformanceController
             }
         }
 
-        // AN ADDRESS NAMING NO AREA IS THE ORGANISATION, not a 404: a
+        // AN ADDRESS NAMING NO AREA IS THE ORGANIZATION, not a 404: a
         // stale link to an area somebody wound down should open the page
         // it was sent from rather than a wall.
         return PerformanceScope::organisation(self::ORGANISATION);

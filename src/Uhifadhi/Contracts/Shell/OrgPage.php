@@ -14,12 +14,12 @@ declare(strict_types=1);
 namespace Uhifadhi\Contracts\Shell;
 
 /**
- * ONE SCREEN OF A MODULE'S ORGANISATION-LEVEL PAGE SET.
+ * ONE SCREEN OF A MODULE'S ORGANIZATION-LEVEL PAGE SET.
  *
  * The same shape as the module's own area tabs, because it IS the same set
  * one scope wider: Overview, Today, Week, Day board, Calendar, Live. A reader
  * who has learnt the module inside an area has learnt it across the
- * organisation.
+ * organization.
  *
  * A ROUTE NAME, NEVER A URL. The addresses belong to the application — it may
  * mount the module under a prefix — so the shell generates from the name and

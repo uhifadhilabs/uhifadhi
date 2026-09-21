@@ -21,7 +21,7 @@ use Uhifadhi\Contracts\Shell\ScopeSourceInterface;
  *
  * The shell holds no areas and no voters, so the slices arrive from here the
  * way they arrive from a real host: already narrowed to what the account may
- * open, organisation first where it is offered at all.
+ * open, organization first where it is offered at all.
  */
 final class FixtureScopeSource implements ScopeSourceInterface
 {

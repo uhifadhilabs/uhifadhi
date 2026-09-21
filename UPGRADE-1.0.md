@@ -1,5 +1,47 @@
 # UPGRADE FROM 0.x to 1.0
 
+## One spelling: "organization"
+
+**What changed.** Every word a reader can see now spells it **organization**
+(ruled 2026-09-21). The sidebar heading already did; the Settings tab beside
+it read "Organisation", the scope control read "Organisation — all areas",
+and the dashboard's own captions read "the organisation" — three spellings on
+two screens. Templates, labels, page titles, sublines, hints, docs and these
+upgrade notes are swept, and `tests/Core/OneSpellingOfOrganizationTest` fails
+the build on the other spelling in any shipped template or translation
+catalogue.
+
+**What did NOT change: identifiers.** Anything an installation or a module
+REFERENCES keeps the old spelling this release and turns over on the
+two-release rule, so nothing you wrote against breaks in the same release
+that changed the copy:
+
+| Identifier | Kind | Referenced by an installation? |
+| --- | --- | --- |
+| `organisation_dashboard` | route name | **yes** — it is the default of `shell.home_route`, and an installation may generate it |
+| `organisation_widgets`, `…_save`, `…_reset`, `…_preset`, `…_preset_copy`, `…_preset_create`, `…_preset_apply`, `…_preset_rename`, `…_preset_delete` | route names | possibly — a host may generate or override them |
+| `/settings/organisation` | URL segment (`SettingsTab::Organisation`'s value) | **yes** — people bookmark and link to it |
+| `shell.settings.organisation_identity` | service id (the alias a host sets) | **yes** — a host aliases it to publish its identity |
+| `Uhifadhi\Contracts\Settings\OrganisationIdentity`, `OrganisationIdentitySourceInterface` | contract class names | **yes** — a host implements the interface |
+| `Scope::organisation()`, `Scope::isOrganisation()` | contract methods | **yes** — modules call both |
+| `PerformanceScope::organisation()`, `isOrganisation()` | contract methods | **yes** — a module's performance topic calls them |
+| `PerformanceController::ORGANISATION` | public constant (its VALUE now reads "Organization — all areas") | unlikely, but public |
+| `TeamBundle\Performance\OrganisationBand`, service `team.performance.organisation_band` | class and service id | no |
+| `AreaBundle\Service\AreaMapService::organisation()` | method | no |
+| `OrgOverviewWidgets::SLUG` = `'organisation'` | contributor slug | no, but it keys `by.<slug>` in cell context |
+| `SettingsTab::Organisation` | enum case | no |
+
+**When they turn over,** the route names and the `/settings/organisation`
+address are the two that need a deprecation period rather than a rename: a
+route keeps its old name as an alias for one release, and the old URL
+redirects. The rest are ordinary renames once the release after this one is
+open.
+
+**Two test fixtures deliberately keep the old spelling** and must not be
+swept: `NavGroupTest` and `NavigationTest` use "Organisation" as the *near
+miss* a sidebar group must refuse — a source that typed it used to make a
+fifth heading, and the refusal is what stops that.
+
 ## One clock-fed source says what period it is
 
 **What changed.** `Uhifadhi\Contracts\Kpi\CurrentPeriodInterface` — `now()`,
@@ -38,7 +80,7 @@ kernel fail at container compile, in somebody else's suite, a long way from
 the change that caused it. A bundle declares what it needs; it never assumes
 what a kernel registered.
 
-## `/` is the organisation dashboard
+## `/` is the organization dashboard
 
 **What changed.** The core ships a dashboard at `/` — a widget surface
 composed from contributors, exactly as an area's overview is, one scope
@@ -89,7 +131,7 @@ org-level reading for. A module with nothing to say across areas says
 nothing, and loses no cells on the area page.
 
 **The figures strip is the MODULES', four to a row.** A contributor's
-`figures()` tiles fill it in their declared priority; the organisation's own
+`figures()` tiles fill it in their declared priority; the organization's own
 "Areas" tile is FILLER — it takes a slot no module wanted and never displaces
 one, because a strip that led with the host lost a module's figure off the
 end the moment four modules published. Two consequences for a module author:
@@ -107,7 +149,7 @@ name the module that would have filled it: the host knows no module.
 
 **EVERY FIGURE IS THE PER-AREA READING ONE SCOPE WIDER — never a second
 aggregate.** The `Scope` is handed in for exactly that: answer
-`forScope($scope)` and let the organisation's answer BE the areas' answers.
+`forScope($scope)` and let the organization's answer BE the areas' answers.
 The core holds itself to this (`PresenceService::forScope()`,
 `AreaOverview::attentionForScope()`) and asserts it —
 `OrgScopeIsTheSumOfAreasTest` proves the wide reading is the narrow ones
@@ -132,7 +174,7 @@ and `LivePresence::isStale()` reads it in preference to the set's.
 **Why.** A reading across areas holds positions expected at different rates.
 One interval for all of them calls a thirty-minute area's rangers stale
 beside a five-minute area's on the same silence — and then the
-organisation's stale count is not the areas' stale counts added up, which is
+organization's stale count is not the areas' stale counts added up, which is
 the property the whole widened-reading rule depends on.
 
 **What to change in a module.** Nothing: only the core implements that
@@ -172,7 +214,7 @@ this is a resource of its own rather than a line in the welcome page's.
 ## The settings section, and the route an application imports for it
 
 **What changed.** The core ships a Settings section — `/settings`, with
-**Installation**, **Modules** and **Organisation** as its tabs — and it is
+**Installation**, **Modules** and **Organization** as its tabs — and it is
 reachable only where the application asks for it, exactly like the welcome
 page and the configure page:
 
@@ -254,7 +296,7 @@ that run no module.
 
 **What changed.** The needs-attention row moved out of `area.css` into
 `shell.css` and joined `Contract\LayoutContract::COMPONENTS`. Three surfaces
-draw one — an area's overview, the organisation dashboard and the settings
+draw one — an area's overview, the organization dashboard and the settings
 section — from three different owners' items, and a copy in a second sheet
 would have been two rows that drift, whichever sheet happened to load last.
 
@@ -287,13 +329,13 @@ file it ships.
 ## The scope control has a default, and the core ships it
 
 **What changed.** `AreaBundle` ships `Shell\AreasTheViewerMayOpen`, tagged
-`shell.scope_source`: the organisation plus every area the viewer holds
+`shell.scope_source`: the organization plus every area the viewer holds
 `area.view` on, asked WITH THE AREA AS SUBJECT — the same authority
 `/api/areas/mine` asks. An installation now gets the scope control on
-organisation-level pages with nothing wired.
+organization-level pages with nothing wired.
 
 **Why.** The shell draws the control only when something tags a
-`ScopeSourceInterface`, and no installation did: the roster's organisation
+`ScopeSourceInterface`, and no installation did: the roster's organization
 pages rendered with the row, the strip and the figures right and no control
 at all. A seam whose default is "nothing" ships a feature that passes its own
 suite and is missing on every real page.
@@ -314,7 +356,7 @@ head contract (`StylesheetSourceInterface`, tag `shell.stylesheet`), beside
 
 **Why.** The old rule was "a page that draws a plate links `map.css`", and it
 held only while a page could know. A plate is now drawn by WIDGETS: on a
-composed surface any cell may draw one, and the organisation Overview
+composed surface any cell may draw one, and the organization Overview
 composed a map cell onto a page that linked no map sheet — `.map-plate`,
 `.map-legend` and `.lay .sw` had no rules, the plate came apart, the page
 returned 200 and nothing failed. The head cannot be decided by what a page
@@ -344,7 +386,7 @@ than the head's.
 
 ## Extend the shell's org base, draw no strip
 
-**What changed.** An organisation-level screen extends
+**What changed.** An organization-level screen extends
 `@Shell/org_page.html.twig`, and the shell draws the page-level tab strip —
 from the same `orgPages()` declaration the sidebar row is mounted from,
 filtered to the routes this application actually mounted, with the screen the
@@ -375,7 +417,7 @@ the shell reads the declaration itself.
 `shell_org_actions` where it has an action of its own — which lands beside
 the scope control, with Configure still last. `shell_org_trail_tail`
 overrides the trail's last segment; the trail itself names the module and the
-screen and **never an area**, because an organisation-level screen is the
+screen and **never an area**, because an organization-level screen is the
 area screen one scope wider.
 
 **Reading the frame.** `shell_org()` returns the module's name, the current
@@ -395,13 +437,13 @@ order:
 
 | Constant | Label | What it holds |
 | --- | --- | --- |
-| `NavGroup::OBSERVATORY` | Observatory | what the organisation WATCHES: Areas, Performance, a module's organisation-level pages |
+| `NavGroup::OBSERVATORY` | Observatory | what the organization WATCHES: Areas, Performance, a module's organization-level pages |
 | `NavGroup::ORGANIZATION` | Organization | what it IS AND HOLDS: Departments, Team, Files |
 | `NavGroup::SYSTEM` | System | what the system RAISES TO YOU: Alerts, Telemetry |
 | `NavGroup::SETTINGS` | Settings | configuration, and it comes last |
 
 The shell refuses a label that is not one of the four, naming them in the
-message. A near-miss — `Organisation`, `Org`, `system` — used to grow a fifth
+message. A near-miss — `Organization`, `Org`, `system` — used to grow a fifth
 heading that nobody designed, in whoever's installation had that module.
 
 **What a module does.** Name the group by constant:
@@ -421,7 +463,7 @@ can answer. A module that leaned on a low position to sit its whole group
 first no longer does.
 
 **Storage: Files moves to Organization.** Files is a standing fact about the
-organisation, not something the system raises to you, so
+organization, not something the system raises to you, so
 `FilesNavigation::SECTION` becomes `NavGroup::ORGANIZATION` — a change in
 `uhifadhi/storage-module`, in its own release. Until then Files renders under
 System as it does today; nothing breaks either way.
@@ -430,9 +472,9 @@ System as it does today; nothing breaks either way.
 row with its tabs as children, and it may grow. A module has no reason to
 file under it yet.
 
-## A module can answer at organisation level
+## A module can answer at organization level
 
-**What changed.** A module may now contribute an ORGANISATION-LEVEL page set
+**What changed.** A module may now contribute an ORGANIZATION-LEVEL page set
 — its own screens once across every area — and the shell mounts it: a row in
 Observatory after Performance, the screens as its tabs, and the scope control
 in the page's action row. The module writes no sidebar item, no tab strip and
@@ -453,12 +495,12 @@ public function orgPages(): array
 
 Route NAMES, never paths — the application mounts them, and a screen whose
 route this installation has not mounted is left out rather than drawn as a
-link to a 404. A module that has no organisation-level reading simply does
+link to a 404. A module that has no organization-level reading simply does
 not implement the interface; nothing is missing.
 
 **Every figure is the area query one scope wider.** The module's own service
-takes a `Uhifadhi\Contracts\Shell\Scope` — the organisation, or one area —
-and the area page passes one area where the org page passes the organisation.
+takes a `Uhifadhi\Contracts\Shell\Scope` — the organization, or one area —
+and the area page passes one area where the org page passes the organization.
 A module that grew a second aggregate for this would have two numbers for one
 question and no way to say which was right.
 
@@ -519,7 +561,7 @@ order:
 | --- | --- | --- |
 | Staffing | Positions · Filled · Vacant · Over threshold | **People** — a position is one post held by one person, so it was the same number and the same movement as Filled |
 | Goals | Declared · Met · Off track · No figure yet | **At risk** and **Missed** folded into one card; the fragment keeps them apart ("2 at risk · 1 missed") and the Briefing still asks about them separately |
-| Attention & output | Items raised · Unowned · Resolved · Records | **Measuring** and **Folded** became the first card's caption — they say how much of the organisation the other figures are about, which is what a caption is for |
+| Attention & output | Items raised · Unowned · Resolved · Records | **Measuring** and **Folded** became the first card's caption — they say how much of the organization the other figures are about, which is what a caption is for |
 
 **What a module topic must change.** Return four. The design named the drop
 for the two shipped module topics, and each is that module's own commit:

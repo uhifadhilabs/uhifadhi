@@ -35,7 +35,7 @@ use Uhifadhi\Contracts\Shell\NavGroup;
  *
  * IT FILES UNDER OBSERVATORY AND NOT UNDER THE ORG CHART. Performance
  * reads every area and every department: it is a way of LOOKING at the
- * organisation, which is what the Observatory heading is for, and it
+ * organization, which is what the Observatory heading is for, and it
  * sits beside Areas because the two are the same kind of question asked
  * from two ends.
  *

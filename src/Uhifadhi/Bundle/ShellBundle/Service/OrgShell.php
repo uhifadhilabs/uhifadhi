@@ -23,7 +23,7 @@ use Uhifadhi\Bundle\ShellBundle\ShellBundle;
 use Uhifadhi\Contracts\Shell\OrgPagesInterface;
 
 /**
- * THE ORGANISATION-LEVEL PAGE SETS, READ — for the sidebar that mounts them
+ * THE ORGANIZATION-LEVEL PAGE SETS, READ — for the sidebar that mounts them
  * and for the frame that draws around them.
  *
  * ONE READER, BECAUSE IT IS ONE LIST. The sidebar's screens and the page's

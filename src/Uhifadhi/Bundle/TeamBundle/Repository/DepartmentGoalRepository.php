@@ -49,7 +49,7 @@ final class DepartmentGoalRepository extends ServiceEntityRepository
     }
 
     /**
-     * EVERY GOAL IN THE ORGANISATION, for the surfaces that read across
+     * EVERY GOAL IN THE ORGANIZATION, for the surfaces that read across
      * departments — the performance page's rail and its "needs a decision".
      *
      * @return list<DepartmentGoal>

@@ -254,7 +254,7 @@
 
 /* ── Needs attention ──────────────────────────────────────────────────────── 
    THE ROW IS THE FRAME'S NOW. `.ao-att` is drawn on three surfaces by three
-   different owners — this overview, the organisation dashboard and the
+   different owners — this overview, the organization dashboard and the
    settings section — so it is defined once, in shell.css, and this sheet
    states none of it. A copy here would be a second definition that wins by
    load order on exactly the pages that load both. */

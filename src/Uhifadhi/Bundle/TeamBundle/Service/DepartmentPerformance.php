@@ -33,7 +33,7 @@ use Uhifadhi\Contracts\Kpi\DepartmentRef;
  * figure from depending on the team package: a provider is handed the id its rows
  * are filed under, the uuid a URL names, the name a plate prints, and the area an
  * area-level department is confined to — the scope, without which a provider
- * cannot know whether it is being asked about one area or the organisation.
+ * cannot know whether it is being asked about one area or the organization.
  *
  * `$now` IS PASSED IN, not read, so a period is a parameter and a page is
  * testable — the same arrangement the contract asks of every provider.

@@ -140,7 +140,7 @@ final readonly class TeamNavigation implements NavigationSourceInterface
      * DEPARTMENTS, WITH THE REGISTER'S OWN PICKER UNDER IT.
      *
      * THE REGISTER HAS NO PICKER COLUMN, so this is how a department is
-     * chosen: the organisation's own first, then each area's under its name,
+     * chosen: the organization's own first, then each area's under its name,
      * and an entry points at the register with that card FOCUSED — the same
      * one value the page marks, so the lit row in the tree and the marked
      * card on the page cannot disagree.

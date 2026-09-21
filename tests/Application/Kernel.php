@@ -210,7 +210,7 @@ final class Kernel extends BaseKernel
             ->public();
 
         // The ground's own demo content, for the same reason: a specification
-        // that seeds the shipped organisation has to reach the providers an
+        // that seeds the shipped organization has to reach the providers an
         // installation's devkit would run, not copies of them.
         $container->services()
             ->alias('test_public.area.devkit.areas', 'area.devkit.areas')

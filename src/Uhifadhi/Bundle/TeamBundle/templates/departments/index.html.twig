@@ -47,7 +47,7 @@
             <div class="i-ddmenu">
                 <span class="i-ddhead">whose figures</span>
                 <a class="i-ddopt{{ query.area ? '' : ' on' }}" href="{{ path('team_departments', query.with('area', null)) }}">
-                    <span class="i-ddopt-l">Organisation &mdash; all areas</span>
+                    <span class="i-ddopt-l">Organization &mdash; all areas</span>
                 </a>
                 {% for area in areas %}
                     <a class="i-ddopt{{ query.area == area.uuidString ? ' on' }}"
@@ -73,7 +73,7 @@
               data-scope="{{ hasAreas ? 'area' : 'org' }}"
               data-create-department
               data-uhifadhi--team-bundle--department-hint-area-value="<b>Just an area.</b> This department will belong only to the area you pick above and will not appear in the others &mdash; the safer default, and easy to widen later."
-              data-uhifadhi--team-bundle--department-hint-org-value="<b>Org-wide.</b> This department will belong to the organisation and appear in every area as an inherited department.">
+              data-uhifadhi--team-bundle--department-hint-org-value="<b>Org-wide.</b> This department will belong to the organization and appear in every area as an inherited department.">
             <input type="hidden" name="_token" value="{{ csrfToken }}">
             <input type="hidden" name="scope" value="{{ hasAreas ? 'area' : 'org' }}"
                    data-uhifadhi--team-bundle--department-target="scopeField">
@@ -114,8 +114,8 @@
                         <b>Just an area.</b> This department will belong only to the area you pick above and will not
                         appear in the others &mdash; the safer default, and easy to widen later.
                     {% else %}
-                        <b>Org-wide.</b> There are no areas yet, so a department can only be organisation-wide for now.
-                        It will belong to the organisation and appear in every area.
+                        <b>Org-wide.</b> There are no areas yet, so a department can only be organization-wide for now.
+                        It will belong to the organization and appear in every area.
                     {% endif %}
                 </span>
             </div>
@@ -124,7 +124,7 @@
         {% set anyDepartments = departments|length > 0 %}
 
         {% if anyDepartments %}
-            {# THE ORGANISATION, ONCE — the slim identity band every register
+            {# THE ORGANIZATION, ONCE — the slim identity band every register
                wears. IT CARRIES WHAT THE DEPARTMENTS DID, not how many of
                them there are: the modules' own figures through the
                performance seam, then the ground, the seats and the goals. A
@@ -241,7 +241,7 @@
 
         {# THE LOOSE POSITIONS — every position nobody has filed. Not a department:
            a position may be created before anybody decided which part of the
-           organisation owns it, and its holders read as Unassigned until one is
+           organization owns it, and its holders read as Unassigned until one is
            chosen. The register states this in words so it is never read as a
            department called "No department yet". #}
         {% if loose|length %}

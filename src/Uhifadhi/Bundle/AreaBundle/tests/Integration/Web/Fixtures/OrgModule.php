@@ -17,11 +17,11 @@ use Uhifadhi\Contracts\Shell\OrgPage;
 use Uhifadhi\Contracts\Shell\OrgPagesInterface;
 
 /**
- * A MODULE THAT ANSWERS AT ORGANISATION LEVEL — the stand-in contributor.
+ * A MODULE THAT ANSWERS AT ORGANIZATION LEVEL — the stand-in contributor.
  *
  * It impersonates nobody: it is an ordinary implementation of a published
  * interface, here because what is under test is that an installation gets
- * the scope control on a contributed organisation page WITHOUT the host
+ * the scope control on a contributed organization page WITHOUT the host
  * wiring anything. The slug is invented on purpose — a default that only
  * worked for the modules that exist today would be a hardcoded list with
  * extra steps.

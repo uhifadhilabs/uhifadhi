@@ -33,7 +33,7 @@ use Uhifadhi\Contracts\Shell\NavGroup;
  *
  * A SECTION LABEL NAMES A PLACE, NOT YOUR SECTION, and there are FOUR places:
  * {@see NavGroup::OBSERVATORY}, {@see NavGroup::ORGANIZATION},
- * {@see NavGroup::SYSTEM}, {@see NavGroup::SETTINGS} — what the organisation
+ * {@see NavGroup::SYSTEM}, {@see NavGroup::SETTINGS} — what the organization
  * watches, what it is and holds, what the system raises to you, and
  * configuration last. Join one BY CONSTANT; anything else is refused with the
  * four named, because a near-miss label used to grow a heading nobody designed.

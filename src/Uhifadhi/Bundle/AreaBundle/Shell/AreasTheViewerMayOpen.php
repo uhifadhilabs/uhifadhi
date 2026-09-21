@@ -20,11 +20,11 @@ use Uhifadhi\Contracts\Shell\Scope;
 use Uhifadhi\Contracts\Shell\ScopeSourceInterface;
 
 /**
- * HOW WIDE AN ORGANISATION-LEVEL PAGE MAY LOOK — THE DEFAULT, SHIPPED.
+ * HOW WIDE AN ORGANIZATION-LEVEL PAGE MAY LOOK — THE DEFAULT, SHIPPED.
  *
  * THE DEFECT THIS CLOSES: the shell draws the scope control only when
  * something tags a {@see ScopeSourceInterface}, and nothing did — so the
- * roster's organisation pages rendered with the row, the strip and the
+ * roster's organization pages rendered with the row, the strip and the
  * figures all correct and no control at all. A seam whose default is
  * "nothing" ships a feature that passes its own suite and is missing on
  * every page an installation actually serves. The core ships the default;
@@ -41,7 +41,7 @@ use Uhifadhi\Contracts\Shell\ScopeSourceInterface;
  * permission model's and cannot drift from it.
  *
  * ONE AREA IS NOT A CHOICE. Where the viewer may open exactly one, "the
- * organisation" and "that area" are the same reading, so only the area is
+ * organization" and "that area" are the same reading, so only the area is
  * offered — and the shell's own rule then leaves the action row empty rather
  * than drawing a control with one row in it.
  *

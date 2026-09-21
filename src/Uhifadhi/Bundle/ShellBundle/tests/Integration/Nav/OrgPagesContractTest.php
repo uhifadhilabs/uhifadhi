@@ -20,7 +20,7 @@ use Uhifadhi\Bundle\ShellBundle\Tests\Integration\Fixtures\FixtureOrgModule;
 use Uhifadhi\Contracts\Shell\OrgPage;
 
 /**
- * A MODULE THAT ANSWERS AT ORGANISATION LEVEL, MOUNTED BY THE SHELL.
+ * A MODULE THAT ANSWERS AT ORGANIZATION LEVEL, MOUNTED BY THE SHELL.
  *
  * RULED: an area module's screens are wanted ONCE across every area — who is
  * due today anywhere, every patrol out now — and that is not a second product

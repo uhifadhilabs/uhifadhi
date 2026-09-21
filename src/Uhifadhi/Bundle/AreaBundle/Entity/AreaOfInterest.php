@@ -113,7 +113,7 @@ class AreaOfInterest implements AreaInterface
     /**
      * HOW OFTEN A HANDSET ON DUTY REPORTS ITS POSITION, in minutes.
      *
-     * A BATTERY BUDGET THE ORGANISATION OWNS, and the reason it is a
+     * A BATTERY BUDGET THE ORGANIZATION OWNS, and the reason it is a
      * setting rather than a constant in the app: an area that works long
      * foot patrols out of radio range spends its battery differently from
      * one whose posts are on a road, and neither should wait for a release

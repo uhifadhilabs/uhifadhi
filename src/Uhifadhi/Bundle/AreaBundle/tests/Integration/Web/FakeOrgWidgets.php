@@ -21,7 +21,7 @@ use Uhifadhi\Bundle\ShellBundle\Widget\Model\WidgetGroup;
 use Uhifadhi\Contracts\Shell\Scope;
 
 /**
- * A MODULE PUTTING A CELL ON THE ORGANISATION DASHBOARD, playing by the
+ * A MODULE PUTTING A CELL ON THE ORGANIZATION DASHBOARD, playing by the
  * published contract and by nothing else.
  *
  * WITHOUT ONE, THE SEAM IS UNTESTED WHERE IT MATTERS. A dashboard rendered
@@ -44,7 +44,7 @@ final readonly class FakeOrgWidgets implements OrgOverviewContributorInterface, 
      * @param int $figures how many headline figures this stand-in publishes —
      *                     one by default, and four where a suite needs to
      *                     prove that a full row of module figures leaves no
-     *                     slot for the organisation's own filler
+     *                     slot for the organization's own filler
      */
     public function __construct(private string $slug, private int $figures = 1)
     {
@@ -63,8 +63,8 @@ final readonly class FakeOrgWidgets implements OrgOverviewContributorInterface, 
     /** One cell, named after the module, so two stand-ins never collide. */
     public function widgets(): array
     {
-        return [new Widget($this->slug.'_org', 'Out across the organisation', $this->slug, 6, [12, 6], true,
-            'The stand-in module’s own organisation-level cell.')];
+        return [new Widget($this->slug.'_org', 'Out across the organization', $this->slug, 6, [12, 6], true,
+            'The stand-in module’s own organization-level cell.')];
     }
 
     public function partialPattern(): string
@@ -96,6 +96,6 @@ final readonly class FakeOrgWidgets implements OrgOverviewContributorInterface, 
 
     public function context(Scope $scope, \DateTimeImmutable $now): array
     {
-        return ['out' => 3, 'walked' => 96, 'organisation' => $scope->isOrganisation()];
+        return ['out' => 3, 'walked' => 96, 'organization' => $scope->isOrganisation()];
     }
 }

@@ -26,13 +26,13 @@ namespace Uhifadhi\Contracts\Shell;
  * IT HANDS OVER STRINGS, NOT AN ACCOUNT. The shell requires no module and above
  * all not the package that defines a user, so this contract cannot traffic in a
  * UserInterface. Whoever knows who is signed in folds the account, its
- * organisation and its role into the three fields the card draws — a reading for
+ * organization and its role into the three fields the card draws — a reading for
  * a person on a page, which is the job of whichever bundle owns the account by
  * the same argument the navigation contract uses.
  *
  * WHERE THE RICHER LINE COMES FROM. A bare source that knows only a name builds
  * a badge with {@see UserBadge::fromName()} and gets derived initials and no
- * context line. The organisation-and-role line ("NCAA · operator"), a chosen
+ * context line. The organization-and-role line ("NCAA · operator"), a chosen
  * avatar, a tier label — that is team/host knowledge, and a team-aware source
  * supplies it by building the value object directly. The shell draws whatever
  * arrives and knows none of it.

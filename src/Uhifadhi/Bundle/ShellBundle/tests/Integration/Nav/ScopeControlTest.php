@@ -23,7 +23,7 @@ use Uhifadhi\Contracts\Shell\Scope;
  * HOW WIDE THE PAGE IS LOOKING — the shell's control, and the module's one
  * argument.
  *
- * RULED: the scope control is the SHELL's. Every organisation-level surface
+ * RULED: the scope control is the SHELL's. Every organization-level surface
  * the seam contributes gets the same one, a module states none of its own,
  * and no module sheet restates it — so "which slice am I looking at" is
  * asked the same way on every page in the product.
@@ -59,7 +59,7 @@ final class ScopeControlTest extends ContractTestCase
         $crawler = new Crawler($html);
 
         self::assertSame(
-            ['Organisation — all areas', 'Ngorongoro', 'Pololeti Game Reserve'],
+            ['Organization — all areas', 'Ngorongoro', 'Pololeti Game Reserve'],
             $crawler->filter('.ov-ctl option')->each(static fn (Crawler $n): string => trim($n->text())),
         );
         self::assertSame('Scope', trim($crawler->filter('.ov-ctl .k')->text()));
@@ -103,7 +103,7 @@ final class ScopeControlTest extends ContractTestCase
         self::assertSame('area-1', $this->scopes()->current()?->areaUuid, 'and the page is still drawn at their area');
     }
 
-    /** With nothing offered at all there is no scope, which is a state and not an empty organisation. */
+    /** With nothing offered at all there is no scope, which is a state and not an empty organization. */
     public function testNothingOfferedIsNoScope(): void
     {
         FixtureScopeSource::$scopes = [];
@@ -119,7 +119,7 @@ final class ScopeControlTest extends ContractTestCase
         self::assertTrue($this->scopes()->current()?->isOrganisation());
     }
 
-    /** The organisation and an area are told apart by what they name, never by a label. */
+    /** The organization and an area are told apart by what they name, never by a label. */
     public function testAScopeIsComparedByWhatItNames(): void
     {
         self::assertTrue(Scope::area('a', 'Ngorongoro')->is(Scope::area('a', 'renamed since')));

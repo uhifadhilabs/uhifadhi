@@ -57,7 +57,7 @@ final class PostingDoorServiceTest extends TestCase
     }
 
     /**
-     * THE ORGANISATION IS NOT AN AREA. It is the first row of every scope
+     * THE ORGANIZATION IS NOT AN AREA. It is the first row of every scope
      * control, and a door that counted it would send somebody who may open
      * one area to the register instead of to their own stations.
      */

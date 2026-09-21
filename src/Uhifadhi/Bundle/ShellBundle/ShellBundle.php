@@ -134,7 +134,7 @@ final class ShellBundle extends AbstractBundle
      * A THIRD RESOURCE FOR A THIRD DECISION, by the same argument the
      * configure page's is a second one: an installation may want the section
      * and not the welcome page — the ordinary case now that `/` belongs to
-     * the organisation dashboard — or neither. One file per decision keeps
+     * the organization dashboard — or neither. One file per decision keeps
      * each of them reversible in one line, and the sidebar's Settings group
      * simply does not appear where the line is missing.
      */
@@ -192,7 +192,7 @@ final class ShellBundle extends AbstractBundle
 
     /**
      * WHAT A HOST TAGS TO FILL THE SCOPE CONTROL — the slices this viewer
-     * may look at, on an organisation-level page.
+     * may look at, on an organization-level page.
      *
      * The shell draws the control and knows no areas: it holds no domain and
      * no authorization service, so the list comes from the one place that has
@@ -201,7 +201,7 @@ final class ShellBundle extends AbstractBundle
     public const string SCOPE_TAG = 'shell.scope_source';
 
     /**
-     * WHAT A MODULE TAGS TO ANSWER AT ORGANISATION LEVEL — its own page set,
+     * WHAT A MODULE TAGS TO ANSWER AT ORGANIZATION LEVEL — its own page set,
      * which the shell mounts in Observatory after Performance.
      *
      * A module writes no sidebar item, no tab strip and no scope control:

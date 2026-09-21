@@ -30,7 +30,7 @@ namespace Uhifadhi\Contracts\Kpi;
  * type.
  *
  * THE REF CARRIES THE SCOPE, and it has to. A department is either confined to
- * one area or spans the organisation, and a provider handed no scope either
+ * one area or spans the organization, and a provider handed no scope either
  * guesses or answers with every area's figures at once — which is one set of
  * labels per area on a page that draws one. So the scope travels with the ref,
  * and {@see DepartmentKpiProviderInterface::kpisFor()} states what a provider
@@ -48,7 +48,7 @@ final readonly class DepartmentRef
      * @param string|null $uuid     how a URL names it, when the caller has one
      * @param string|null $areaUuid THE AREA AN AREA-LEVEL DEPARTMENT IS CONFINED
      *                              TO, as the uuid string {@see \Uhifadhi\Contracts\Entity\AreaInterface}
-     *                              publishes. NULL MEANS ORGANISATION-WIDE — the
+     *                              publishes. NULL MEANS ORGANIZATION-WIDE — the
      *                              department has no single area, so a provider
      *                              rolls up across every area rather than
      *                              reporting them one by one

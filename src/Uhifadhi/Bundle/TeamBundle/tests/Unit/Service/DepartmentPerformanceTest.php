@@ -27,7 +27,7 @@ use Uhifadhi\Contracts\Kpi\DepartmentRef;
  * WHAT A PROVIDER IS TOLD — the ref the core hands it, asked of the objects.
  *
  * THE REF CARRIES THE SCOPE. A department is either confined to one area or
- * spans the organisation, and a provider cannot answer for the right rows unless
+ * spans the organization, and a provider cannot answer for the right rows unless
  * it is told which: handed a ref with no scope, a provider either guesses or
  * answers with every area's figures at once, and the second is what put one
  * module's labels on a page three times.

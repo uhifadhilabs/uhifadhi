@@ -26,13 +26,13 @@ use Uhifadhi\Contracts\Shell\NavGroup;
  * DASHBOARD — THE FIRST ROW OF OBSERVATORY.
  *
  * `/` IS A PAGE NOW, SO IT NEEDS A DOOR (ruled 2026-09-20). Before the
- * organisation dashboard existed, `/` was a welcome screen nobody navigated
+ * organization dashboard existed, `/` was a welcome screen nobody navigated
  * back to and the sidebar began with Areas. It begins with Dashboard now, and
  * the brandmark points at the same address — a page you can only reach by
  * clicking a logo is a page most people never reach twice.
  *
  * FIRST, AND THE NUMBER SAYS SO. Observatory reads outward: the whole
- * organisation, then its areas, then its performance, then each module's
+ * organization, then its areas, then its performance, then each module's
  * org-level reading. Position 5 puts this before the areas' 10 without
  * renumbering anything that already declared one.
  *
@@ -45,7 +45,7 @@ use Uhifadhi\Contracts\Shell\NavGroup;
  */
 final readonly class OrgDashboardNavigation implements NavigationSourceInterface
 {
-    /** What the organisation watches — and this is the whole of it. */
+    /** What the organization watches — and this is the whole of it. */
     public const string SECTION = NavGroup::OBSERVATORY;
 
     /** Before the areas (10) and everything after them. */

@@ -21,7 +21,7 @@ use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
  * THE SIX FIGURES EVERY SCREEN IN THIS SECTION OPENS WITH.
  *
  * ONE BAND, DRAWN ON EVERY SCREEN, AND THE SAME SIX EVERY TIME. It is
- * the answer to "how is the organisation doing" — asked once, printed
+ * the answer to "how is the organization doing" — asked once, printed
  * identically above the Overview and above every topic's record — so a
  * reader moving between screens is never re-reading a different six.
  *
@@ -68,7 +68,7 @@ final readonly class OrganisationBand
         $published = [];
         foreach ($topics as $topic) {
             // ONLY THE HOST'S. A module publishing a figure under one of
-            // these keys would be a module editing the organisation's
+            // these keys would be a module editing the organization's
             // own band, which is the one thing this band is not.
             if (PerformanceTopicProviderInterface::HOST !== $topic->moduleSlug()) {
                 continue;

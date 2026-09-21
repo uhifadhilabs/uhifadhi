@@ -59,7 +59,7 @@ final readonly class AreaNavigation implements NavigationSourceInterface
     /** The heading the rows file under, as the design draws it. */
     public const string SECTION = NavGroup::OBSERVATORY;
 
-    /** Above the organisation rows TeamBundle contributes at 20. */
+    /** Above the organization rows TeamBundle contributes at 20. */
     public const int POSITION = 10;
 
     /** The register: this bundle's front door, and the section's own row. */

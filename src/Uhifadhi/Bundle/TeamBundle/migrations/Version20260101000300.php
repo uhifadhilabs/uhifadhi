@@ -51,7 +51,7 @@ final class Version20260101000300 extends AbstractMigration
         SQL);
         $this->addSql('CREATE UNIQUE INDEX UNIQ_F3C4934FD17F50A6 ON team_department (uuid)');
         // Two partial indexes, not one: Postgres treats NULLs as distinct, so a
-        // plain unique over (name, area_id) would let an organisation-wide
+        // plain unique over (name, area_id) would let an organization-wide
         // department name repeat.
         $this->addSql(<<<'SQL'
             CREATE UNIQUE INDEX uniq_team_department_name_org ON team_department (name)

@@ -38,7 +38,7 @@ final readonly class DepartmentEntry
     public function __construct(
         public string $uuid,
         public string $name,
-        /** Null for an organisation-wide department. */
+        /** Null for an organization-wide department. */
         public ?string $areaUuid,
         /** "Org-wide", or the area's name — what this row is placed among. */
         public string $band,

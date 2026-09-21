@@ -23,7 +23,7 @@ use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
  * same word twice is legal and is the case the vocabulary exists to allow:
  * `Analyst` in Ecology and `Analyst` in Protection Service are two different
  * jobs with different permissions. Nothing here may merge them — the shared
- * words are NAMED instead, so an organisation can see the collision and
+ * words are NAMED instead, so an organization can see the collision and
  * decide whether it meant it.
  *
  * ONE PASS OVER THE POSITIONS, NOT ONE QUERY PER DEPARTMENT. Walking a

@@ -23,7 +23,7 @@ use Uhifadhi\Contracts\Kpi\FigurePeriod;
  *
  * A QUARTER AND A YEAR ARE CALENDAR WINDOWS, not ninety and three
  * hundred and sixty-five days. A reader asking for "this quarter" is
- * asking about the quarter the organisation reports in, and a rolling
+ * asking about the quarter the organization reports in, and a rolling
  * window would answer a question about the last ninety days instead —
  * a different number, in a period nobody closed.
  */

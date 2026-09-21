@@ -110,7 +110,7 @@ final readonly class AttentionTopic implements PerformanceTopicProviderInterface
          * COVERAGE IS A CAPTION, NOT TWO CARDS. How many departments are
          * measuring — and how many are folded because no module of
          * theirs raises or writes — used to be a plate each. They say
-         * how much of the organisation the other figures are ABOUT,
+         * how much of the organization the other figures are ABOUT,
          * which is what a caption is for; spending two of four plates on
          * them left the topic with two figures about attention and two
          * about itself.

@@ -25,12 +25,12 @@ use Uhifadhi\Contracts\Shell\AreaNavChildrenInterface;
  * THE DEPARTMENTS UNDER AN AREA IN THE SIDEBAR.
  *
  * THE AREA'S DEPARTMENTS TAB HAS NO PICKER COLUMN, so this is how one is
- * chosen — exactly as the organisation's register is picked from under its
+ * chosen — exactly as the organization's register is picked from under its
  * own row. A rung points at the tab with that card FOCUSED, which is the one
  * value the page marks, so the lit row and the marked card cannot disagree.
  *
  * ORG-WIDE FIRST, THEN THE AREA'S OWN. The tree is read from the
- * organisation inwards — what every area shares, then what this one has of
+ * organization inwards — what every area shares, then what this one has of
  * its own — and the tab's page is read the other way about, from this place
  * outwards. Both orders are the reader's position stated honestly; neither
  * is the other's order got wrong.

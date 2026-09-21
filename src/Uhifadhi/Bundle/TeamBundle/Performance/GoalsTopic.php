@@ -202,7 +202,7 @@ final readonly class GoalsTopic implements PerformanceTopicProviderInterface, To
                 if (GoalStateEnum::Missed === $state) {
                     $missed[] = new TopicDecision(
                         what: \sprintf('%s missed a declared goal this period', $name),
-                        ask: 'Decide what replaces it — a goal nobody restates is a goal the organisation has quietly dropped.',
+                        ask: 'Decide what replaces it — a goal nobody restates is a goal the organization has quietly dropped.',
                         departmentName: $name,
                         departmentMark: DepartmentMark::of($name),
                         tone: MovementTone::Bad,
@@ -234,7 +234,7 @@ final readonly class GoalsTopic implements PerformanceTopicProviderInterface, To
      * somebody declared a thing, and this period it stopped being true.
      * And a department that declared NOTHING is the other half — it
      * cannot miss a goal it never made, and a board that only counted
-     * misses would call it the best department in the organisation.
+     * misses would call it the best department in the organization.
      */
     public function movement(PerformanceScope $scope, FigurePeriod $period): ?TopicMovement
     {

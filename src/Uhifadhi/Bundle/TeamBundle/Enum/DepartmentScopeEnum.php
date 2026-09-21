@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\TeamBundle\Enum;
 
 /**
- * WHETHER A DEPARTMENT BELONGS TO THE WHOLE ORGANISATION OR TO ONE AREA.
+ * WHETHER A DEPARTMENT BELONGS TO THE WHOLE ORGANIZATION OR TO ONE AREA.
  *
  * IT IS DERIVED, NOT STORED. A department carries a nullable area and nothing
  * else: `area = null` is {@see self::Org}, `area = X` is {@see self::Area}. There
@@ -35,7 +35,7 @@ namespace Uhifadhi\Bundle\TeamBundle\Enum;
  */
 enum DepartmentScopeEnum: string
 {
-    /** No area — the department belongs to the organisation and spans every area. */
+    /** No area — the department belongs to the organization and spans every area. */
     case Org = 'org';
 
     /** One area — the department belongs to that single area. */

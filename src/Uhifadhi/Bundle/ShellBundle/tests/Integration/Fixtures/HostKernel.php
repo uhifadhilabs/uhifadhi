@@ -124,7 +124,7 @@ final class HostKernel extends TestKernel
             ->tag(ShellBundle::STYLESHEET_TAG)
             ->public();
 
-        // A MODULE THAT ANSWERS AT ORGANISATION LEVEL, tagged by hand as a
+        // A MODULE THAT ANSWERS AT ORGANIZATION LEVEL, tagged by hand as a
         // real module bundle has to tag it. The shell mounts the page set,
         // draws the Observatory row and supplies the scope control; nothing
         // module-shaped reaches the shell but an interface.

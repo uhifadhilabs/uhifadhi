@@ -28,9 +28,9 @@ namespace Uhifadhi\Contracts\Shell;
  * because a disabled option is a list of the things somebody is not allowed
  * to see.
  *
- * ORGANISATION FIRST WHERE IT IS OFFERED. It is the widest reading and the
+ * ORGANIZATION FIRST WHERE IT IS OFFERED. It is the widest reading and the
  * one an org-level page opens on, and a control whose first row was an area
- * would make the whole organisation look like one more of them.
+ * would make the whole organization look like one more of them.
  *
  * READ LIVE, NEVER CACHED — an area added today is in the control today.
  *

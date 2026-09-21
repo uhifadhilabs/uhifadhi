@@ -14,9 +14,9 @@ declare(strict_types=1);
 namespace Uhifadhi\Contracts\Shell;
 
 /**
- * HOW WIDE A PAGE IS LOOKING — the organisation, or one area of it.
+ * HOW WIDE A PAGE IS LOOKING — the organization, or one area of it.
  *
- * AN ORGANISATION-LEVEL PAGE IS THE AREA PAGE ONE SCOPE WIDER, and this is
+ * AN ORGANIZATION-LEVEL PAGE IS THE AREA PAGE ONE SCOPE WIDER, and this is
  * the whole of the difference: the module answers `forScope($scope)` where
  * the area page passes one area and the org page passes all of them. Two code
  * paths would drift, and the day they disagreed nobody would know which was
@@ -35,14 +35,14 @@ namespace Uhifadhi\Contracts\Shell;
 final readonly class Scope
 {
     private function __construct(
-        /** The area this is about, or null for the whole organisation. */
+        /** The area this is about, or null for the whole organization. */
         public ?string $areaUuid,
         /** What the control says it is, in the installation's own words. */
         public string $label,
     ) {
     }
 
-    public static function organisation(string $label = 'Organisation — all areas'): self
+    public static function organisation(string $label = 'Organization — all areas'): self
     {
         return new self(null, $label);
     }

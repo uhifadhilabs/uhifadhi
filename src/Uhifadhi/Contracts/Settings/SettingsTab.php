@@ -18,7 +18,7 @@ namespace Uhifadhi\Contracts\Settings;
  *
  * SETTINGS WEARS THE AREA IDIOM (ruled 2026-09-20), which means an overview
  * first, then the screens the section owns, and the one that EDITS the
- * organisation last. The order is published here, once, because two things
+ * organization last. The order is published here, once, because two things
  * read it — the tab strip on the page and the section's subtree in the
  * sidebar — and a strip and a sidebar row that disagreed about which screens
  * a section has would each be evidence against the other.
@@ -71,7 +71,7 @@ enum SettingsTab: string
             self::Overview => 'Overview',
             self::Installation => 'Installation',
             self::Modules => 'Modules',
-            self::Organisation => 'Organisation',
+            self::Organisation => 'Organization',
         };
     }
 
@@ -83,7 +83,7 @@ enum SettingsTab: string
     public function subtitle(): string
     {
         return match ($this) {
-            self::Overview => 'What this installation gives you, what it runs, and who it belongs to. Organisation scope — an area’s own settings are on the area, and a module’s are on that module’s Configure page.',
+            self::Overview => 'What this installation gives you, what it runs, and who it belongs to. Organization scope — an area’s own settings are on the area, and a module’s are on that module’s Configure page.',
             self::Installation => 'What is installed, at what version, which areas run it, and whether any of it needs attention. This is the page that used to be the front door.',
             self::Modules => 'The catalogue: every module this installation can run, what it does, and which areas run it.',
             self::Organisation => 'Who this installation belongs to: the name it is known by, its mark, and where in the world it is.',

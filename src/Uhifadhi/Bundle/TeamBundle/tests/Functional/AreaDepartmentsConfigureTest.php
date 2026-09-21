@@ -24,7 +24,7 @@ use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\Area\HostArea;
  * departments are added and edited, and the only place any of that happens.
  *
  * THE SCOPE IS LOCKED, not chosen: a department created here belongs to this
- * area, and an organisation-wide one is created on the organisation's
+ * area, and an organization-wide one is created on the organization's
  * register. An org-wide department is LISTED here and carries no control — a
  * shared object is not edited from one area's context.
  *
@@ -72,7 +72,7 @@ final class AreaDepartmentsConfigureTest extends WebTestCaseWithSchema
         [$crawler] = $this->section();
         $row = $crawler->filter('.dprow')->first();
 
-        self::assertStringContainsString('Configured at the organisation', $row->text());
+        self::assertStringContainsString('Configured at the organization', $row->text());
         self::assertStringContainsString('/departments', (string) $row->filter('a.softbtn')->attr('href'));
     }
 
@@ -90,7 +90,7 @@ final class AreaDepartmentsConfigureTest extends WebTestCaseWithSchema
         self::assertSame($area->getUuidString(), $made->getArea()?->getUuidString());
     }
 
-    /** Renaming from here returns here, not to the organisation's register. */
+    /** Renaming from here returns here, not to the organization's register. */
     public function testAWriteReturnsToTheSection(): void
     {
         [$crawler, $area] = $this->section();

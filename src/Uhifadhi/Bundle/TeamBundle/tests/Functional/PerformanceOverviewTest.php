@@ -20,7 +20,7 @@ use Uhifadhi\Bundle\TeamBundle\Performance\OrganisationBand;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\Area\HostArea;
 
 /**
- * `/departments/performance` — the organisation's own page.
+ * `/departments/performance` — the organization's own page.
  *
  * IT WEARS THE AREA IDIOM, which is the whole of the ruling it ports: a
  * header with the scope and the period in it, a strip of sibling
@@ -58,7 +58,7 @@ final class PerformanceOverviewTest extends WebTestCaseWithSchema
     {
         $subline = $this->page()->filter('p.pgsub')->text();
 
-        self::assertStringContainsString('Organisation', $subline);
+        self::assertStringContainsString('Organization', $subline);
         self::assertStringContainsString(new \DateTimeImmutable()->format('F Y'), $subline);
         self::assertStringContainsString(new \DateTimeImmutable('first day of last month')->format('F Y'), $subline);
     }
@@ -95,7 +95,7 @@ final class PerformanceOverviewTest extends WebTestCaseWithSchema
         self::assertSame('Month', $crawler->filter('.periodpick a.on')->text());
     }
 
-    /** The scope is a place too: the organisation, or one area, by address. */
+    /** The scope is a place too: the organization, or one area, by address. */
     public function testTheScopeIsAnAddressAndTheAreasAreItsOptions(): void
     {
         $crawler = $this->page();
@@ -350,7 +350,7 @@ final class PerformanceOverviewTest extends WebTestCaseWithSchema
                 ->filter('.factband .f .k')
                 ->each(static fn (Crawler $c): string => $c->text());
 
-            self::assertSame($expected, $band, $path.' draws the organisation\'s own band');
+            self::assertSame($expected, $band, $path.' draws the organization\'s own band');
         }
     }
 

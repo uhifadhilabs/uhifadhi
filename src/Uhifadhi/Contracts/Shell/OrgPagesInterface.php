@@ -16,16 +16,16 @@ namespace Uhifadhi\Contracts\Shell;
 use Uhifadhi\Contracts\ModuleProviderInterface;
 
 /**
- * A MODULE THAT ALSO ANSWERS AT ORGANISATION LEVEL.
+ * A MODULE THAT ALSO ANSWERS AT ORGANIZATION LEVEL.
  *
- * An area module draws the same screens for every area; the organisation
+ * An area module draws the same screens for every area; the organization
  * wants those screens ONCE, across all of them — who is due today anywhere,
  * every patrol out now, every incident open. That is not a second product
  * surface, it is the area page with the area filter widened.
  *
  * SO THE MODULE CONTRIBUTES THE PAGE SET AND THE SHELL MOUNTS IT. The module
  * writes no chrome — no sidebar item, no tab strip, no scope control — and
- * the host writes no module code: adding a second module at organisation
+ * the host writes no module code: adding a second module at organization
  * level is one more provider, not a new section.
  *
  * DECLARED BESIDE {@see ModuleProviderInterface}, never instead of it. This
@@ -35,7 +35,7 @@ use Uhifadhi\Contracts\ModuleProviderInterface;
  * EVERY FIGURE IS THE AREA QUERY ONE SCOPE WIDER, and that is the rule this
  * interface exists to make possible: the module's own service takes a
  * {@see Scope}, the area page passes one area and the org page passes the
- * organisation. A module that grew a second aggregate for this would have two
+ * organization. A module that grew a second aggregate for this would have two
  * numbers for one question and no way to say which was right.
  *
  * WHAT IT IS GATED ON is the module's own business, in its own controllers,
@@ -44,7 +44,7 @@ use Uhifadhi\Contracts\ModuleProviderInterface;
 interface OrgPagesInterface
 {
     /**
-     * The module's organisation-level screens, in the order they are read —
+     * The module's organization-level screens, in the order they are read —
      * the first is the one its sidebar row and its own name open on.
      *
      * AN EMPTY LIST IS NOT AN ANSWER: a module that has no org-level reading

@@ -738,7 +738,7 @@ h1.pg { font-family: var(--font-display); font-size: 27px; font-weight: 700; let
    select whose first option names the question has no question left to show
    once somebody has answered it. */
 /* UNSCOPED, because it is the SHELL's control now and not the performance
-   page's. Every organisation-level surface the seam contributes gets this one
+   page's. Every organization-level surface the seam contributes gets this one
    — the module states none of its own and no module sheet restates it — and a
    rule that only worked inside `.pgact` would be a control a contributed page
    could not draw. The design moved it into the house sheet for exactly this. */
@@ -1198,7 +1198,7 @@ i.livedot.none::after { animation: none; border: 0; }
     i.livedot::after { animation: none; opacity: .34; }
 }
 
-/* ==================== THE ORGANISATION-LEVEL MARKS ====================
+/* ==================== THE ORGANIZATION-LEVEL MARKS ====================
    AN ORG-LEVEL PAGE IS THE AREA PAGE ONE SCOPE WIDER, so it borrows
    everything: the tabs, the fact band, the cards, the plate, the filter
    grammar. Three marks are new, and only because "which area" is a column
@@ -1599,7 +1599,7 @@ table.tbl td.num { font-size: 12px; }
 
 /* ---- ONE THING THAT NEEDS SOMEBODY, as a row ----------------------------
    A LIST OF THESE IS A QUEUE, and three surfaces draw one: an area's
-   overview, the organisation dashboard and the settings section, each from a
+   overview, the organization dashboard and the settings section, each from a
    different owner's items. It was the area overview's until the second
    surface needed it; a copy in a second sheet would have been two rows that
    drift, and on a page that loaded both it would have been whichever sheet
@@ -2390,7 +2390,7 @@ table.tbl tr:hover .open-btn {
    line-height changed, and a pair of controls whose tops are two pixels
    apart reads as a mistake from across the room.
 
-   Two surfaces draw it — the organisation's department register and the
+   Two surfaces draw it — the organization's department register and the
    area's departments tab — so it is the shell's. */
 .ov-open {
     display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px;

@@ -23,10 +23,10 @@ use Uhifadhi\Bundle\ShellBundle\Widget\Model\WidgetPreset;
 use Uhifadhi\Contracts\Shell\Scope;
 
 /**
- * THE ORGANISATION DASHBOARD'S CATALOGUE.
+ * THE ORGANIZATION DASHBOARD'S CATALOGUE.
  *
  * `/` IS A WIDGET SURFACE, and almost nothing on it is the host's. The
- * organisation contributes five cells of its own — the figures strip, the
+ * organization contributes five cells of its own — the figures strip, the
  * queue, the ground, the areas and what runs where — and every operational
  * cell arrives from a module through
  * {@see OrgOverviewContributorInterface}. Installing a module adds its cells
@@ -43,7 +43,7 @@ use Uhifadhi\Contracts\Shell\Scope;
  * E IS THE SHIPPED DEFAULT (ruled). The compare index recommends A — the duty
  * officer's live-first screen — and the owner ruled E, everything in
  * contributor order: on an installation that has just been set up, the
- * catalogue of what the organisation CAN see is worth more than a tight
+ * catalogue of what the organization CAN see is worth more than a tight
  * reading of what it does, and somebody composing their own starts from the
  * whole.
  */
@@ -57,7 +57,7 @@ final readonly class OrgOverviewCatalogue
 
     /**
      * FOUR TO A ROW, everywhere in the product. The strip holds the first
-     * four figures the modules publish; the organisation's own tile fills a
+     * four figures the modules publish; the organization's own tile fills a
      * slot nobody wanted, and a fifth module's figure waits in the library.
      */
     public const int FIGURES = 4;
@@ -68,8 +68,8 @@ final readonly class OrgOverviewCatalogue
     }
 
     /**
-     * THE SURFACE AS THIS INSTALLATION HAS IT — the organisation's own cells,
-     * then the cells of every module that answers at organisation level.
+     * THE SURFACE AS THIS INSTALLATION HAS IT — the organization's own cells,
+     * then the cells of every module that answers at organization level.
      */
     public function catalog(): WidgetCatalog
     {
@@ -145,7 +145,7 @@ final readonly class OrgOverviewCatalogue
                 'Live first: what needs a decision, then the ground, then who is on it. The shape the person answering the radio needs — everything on it is true this minute, and nothing on it is a plan. Weakest at the question a director asks: is any of this getting better?',
                 ['kpis' => 12, 'attention' => 12, 'plate' => 12, 'areas' => 6, 'watches' => 6, 'patrols' => 12]),
             new WidgetPreset('b', 'The areas wall',
-                'The organisation is its areas: one row per area, then the ground under them. Scales to forty areas without changing shape, and the only direction in which an area that reports nothing cannot be missed. With one live area it spends its best row on three empty ones.',
+                'The organization is its areas: one row per area, then the ground under them. Scales to forty areas without changing shape, and the only direction in which an area that reports nothing cannot be missed. With one live area it spends its best row on three empty ones.',
                 ['kpis' => 12, 'areas' => 12, 'plate' => 6, 'watches' => 6, 'attention' => 12]),
             new WidgetPreset('c', 'Needs a decision first',
                 'The queue at the top, full width, and the ground under it. Reads as an inbox: the page is empty when nothing is wrong, which is the honest state of a good day. It buries the live figures a control room is opened for.',
@@ -154,7 +154,7 @@ final readonly class OrgOverviewCatalogue
                 'Outcomes over operations: goals off track, the areas, the term failures. The only direction that answers "is this getting better", and the one to leave on a wall in a management meeting. It cannot answer "where is everybody" at all.',
                 ['kpis' => 12, 'goals' => 6, 'areas' => 6, 'incidents' => 6, 'modules' => 6]),
             new WidgetPreset('e', 'Everything',
-                'Every contributed cell, in contributor order, nothing left out. The honest catalogue of what the organisation can see, and the place to start when composing your own. Too long to read at a glance, which is what the other four are for.',
+                'Every contributed cell, in contributor order, nothing left out. The honest catalogue of what the organization can see, and the place to start when composing your own. Too long to read at a glance, which is what the other four are for.',
                 ['kpis' => 12, 'attention' => 12, 'plate' => 12, 'areas' => 6, 'watches' => 6, 'patrols' => 6, 'incidents' => 6, 'goals' => 6, 'files' => 6, 'modules' => 12]),
         ];
     }
@@ -230,7 +230,7 @@ final readonly class OrgOverviewCatalogue
          * THE ROW IS THE MODULES', AND THE HOST ONLY FILLS IT.
          *
          * The design's strip is four module figures — on duty, patrols out,
-         * open incidents, files kept — and no tile of the organisation's own.
+         * open incidents, files kept — and no tile of the organization's own.
          * The host's "Areas" tile exists because a row of one on a fresh
          * installation says nothing, so it is FILLER: it takes a slot no
          * module wanted and never displaces one. With four modules
@@ -249,7 +249,7 @@ final readonly class OrgOverviewCatalogue
     /**
      * HOW MANY CELLS EACH MODULE PUTS ON THIS PAGE, by slug — the question
      * "what does installing this module actually add here" is about, so the
-     * organisation's own cells are left out.
+     * organization's own cells are left out.
      *
      * @return array<string, int>
      */
@@ -296,7 +296,7 @@ final readonly class OrgOverviewCatalogue
 
     /**
      * THE CELLS THE LIBRARY OFFERS, so a caller can tell a contributed cell
-     * from one of the organisation's own without knowing any module.
+     * from one of the organization's own without knowing any module.
      *
      * @return array<string, string> cell id => the slug that contributed it
      */

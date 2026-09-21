@@ -26,7 +26,7 @@ use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentKindRepository;
  * IT IS A LENS OVER THE REGISTER AND NOTHING ELSE. A kind grants no permission,
  * confines nothing to an area and changes no figure: it orders and bands a
  * list. That is the whole of it, and it is written here rather than as a PHP
- * enum precisely because a tenth organisation wanting an eleventh kind should
+ * enum precisely because a tenth organization wanting an eleventh kind should
  * add a row and not a release.
  *
  * A DEPARTMENT WITHOUT A KIND IS LEGAL and reads as unkinded. Removing a kind

@@ -16,7 +16,7 @@ namespace Uhifadhi\Bundle\AreaBundle\Enum;
 /**
  * WHAT A CHECK-IN STATUS *MEANS*, as against what it is called.
  *
- * THE WORDS ARE THE ORGANISATION'S AND THE MEANINGS ARE THE PLATFORM'S.
+ * THE WORDS ARE THE ORGANIZATION'S AND THE MEANINGS ARE THE PLATFORM'S.
  * An area writes its own statuses — "At post", "On escort", "Court
  * appearance", "Sick" — and every one of them is one of these four
  * kinds. The label is what a ranger taps; the kind is what the product

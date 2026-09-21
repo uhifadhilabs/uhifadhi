@@ -79,8 +79,8 @@ final class SettingsSectionTest extends ShellKernelTestCase
     {
         $crawler = $this->get($this->address($tab));
 
-        self::assertSame('organisation scope', trim($crawler->filter('div.pgact span.chip.acc')->text()));
-        self::assertCount(0, $crawler->filter('div.pgact .ov-ctl'), 'The dashboard is the organisation; there is nothing to widen.');
+        self::assertSame('organization scope', trim($crawler->filter('div.pgact span.chip.acc')->text()));
+        self::assertCount(0, $crawler->filter('div.pgact .ov-ctl'), 'The dashboard is the organization; there is nothing to widen.');
     }
 
     /**
@@ -226,7 +226,7 @@ final class SettingsSectionTest extends ShellKernelTestCase
     /**
      * THE FIRST SCREEN SAYS WHAT THIS INSTALLATION GIVES YOU — the page the
      * front door's welcome used to be, kept somewhere a reader can come back
-     * to now that `/` is the organisation dashboard (ruled 2026-09-20).
+     * to now that `/` is the organization dashboard (ruled 2026-09-20).
      */
     public function testTheFirstScreenSaysWhatTheInstallationGivesYou(): void
     {

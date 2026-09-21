@@ -54,14 +54,14 @@
     <h2 class="zone">The topics this installation carries</h2>
 
     <div class="c">
-        <span class="tab">Topics<span class="src">&middot; the host's own, then a module's in the order the organisation arranged them</span></span>
+        <span class="tab">Topics<span class="src">&middot; the host's own, then a module's in the order the organization arranged them</span></span>
         {% for topic in topics %}
             <div class="rln">
                 <span>{{ topic.title }}</span>
                 <span class="mono d">{{ topic.publisher }}</span>
             </div>
         {% else %}
-            <p class="perf-empty">This installation publishes no topics at all, which is not the same as an organisation with nothing to report.</p>
+            <p class="perf-empty">This installation publishes no topics at all, which is not the same as an organization with nothing to report.</p>
         {% endfor %}
     </div>
 {% endblock %}

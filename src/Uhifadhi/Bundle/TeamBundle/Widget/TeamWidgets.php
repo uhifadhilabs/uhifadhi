@@ -96,7 +96,7 @@ final class TeamWidgets implements WidgetSurfaceInterface
                 new WidgetPreset(
                     'roster_a',
                     'The table',
-                    'One dense sortable table with search, tier chips and a position filter — the only direction that still works at three hundred people, and the only one in which nothing about the shape of the organisation is visible.',
+                    'One dense sortable table with search, tier chips and a position filter — the only direction that still works at three hundred people, and the only one in which nothing about the shape of the organization is visible.',
                     ['kpis' => 12, 'roster_a' => 12, 'tiers' => 12],
                 ),
                 new WidgetPreset(
@@ -108,13 +108,13 @@ final class TeamWidgets implements WidgetSurfaceInterface
                 new WidgetPreset(
                     'roster_f',
                     'The org chart',
-                    'Bands by the axis an organisation of this shape actually has, so the roster sorts evenly where tier now sorts 1 + 1 + 10, and tier survives as a column rather than being lost; a department is reached through a position, so anybody holding none falls into an Unassigned band that has to be explained every time somebody new reads the page.',
+                    'Bands by the axis an organization of this shape actually has, so the roster sorts evenly where tier now sorts 1 + 1 + 10, and tier survives as a column rather than being lost; a department is reached through a position, so anybody holding none falls into an Unassigned band that has to be explained every time somebody new reads the page.',
                     ['kpis' => 12, 'roster_f' => 12, 'tiers' => 12],
                 ),
                 new WidgetPreset(
                     'roster_c',
                     'Person cards',
-                    'A card each carries the face, the tier, the position and what that position actually grants all at once, which is exactly what you want while an organisation is still being assembled; past about forty people it becomes a very long scroll.',
+                    'A card each carries the face, the tier, the position and what that position actually grants all at once, which is exactly what you want while an organization is still being assembled; past about forty people it becomes a very long scroll.',
                     ['kpis' => 12, 'roster_c' => 12, 'tiers' => 12],
                 ),
                 new WidgetPreset(
@@ -126,7 +126,7 @@ final class TeamWidgets implements WidgetSurfaceInterface
                 new WidgetPreset(
                     'roster_e',
                     'Attention first',
-                    'Everything needing a human decision is above everything that does not, which is the right shape for an installation somebody opens once a week; in a settled organisation it spends the top of the page saying that nothing is wrong.',
+                    'Everything needing a human decision is above everything that does not, which is the right shape for an installation somebody opens once a week; in a settled organization it spends the top of the page saying that nothing is wrong.',
                     ['kpis' => 12, 'roster_e' => 12, 'tiers' => 12],
                 ),
             ],

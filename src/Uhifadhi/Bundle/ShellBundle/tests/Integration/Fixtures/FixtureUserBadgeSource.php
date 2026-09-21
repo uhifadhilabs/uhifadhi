@@ -18,7 +18,7 @@ use Uhifadhi\Contracts\Shell\UserBadgeSourceInterface;
 
 /**
  * A host's answer to "who does the top bar name". A real one resolves the
- * signed-in account and folds its organisation and role into the context line;
+ * signed-in account and folds its organization and role into the context line;
  * that it can be replaced by one static is the registry working — and that it
  * returns null by default is the shell's charter, that a host with no viewer to
  * name is a working installation.

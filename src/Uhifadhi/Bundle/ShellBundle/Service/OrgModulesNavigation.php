@@ -20,7 +20,7 @@ use Uhifadhi\Contracts\Shell\NavGroup;
 use Uhifadhi\Contracts\Shell\OrgPagesInterface;
 
 /**
- * A MODULE THAT ANSWERS AT ORGANISATION LEVEL GETS A ROW IN OBSERVATORY.
+ * A MODULE THAT ANSWERS AT ORGANIZATION LEVEL GETS A ROW IN OBSERVATORY.
  *
  * ONE MORE PROVIDER, NOT A NEW SECTION. A module contributes its org-level
  * page set through {@see OrgPagesInterface} and the shell mounts it: the
@@ -36,7 +36,7 @@ use Uhifadhi\Contracts\Shell\OrgPagesInterface;
  * what "installed" means here.
  *
  * AFTER PERFORMANCE, IN MODULE ORDER. Observatory reads outward: the areas,
- * the organisation's own performance, then each module's organisation
+ * the organization's own performance, then each module's organization
  * reading, in the order the modules declare — which is the order they are
  * drawn in everywhere else.
  *

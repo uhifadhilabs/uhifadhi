@@ -45,7 +45,7 @@ final readonly class OrganisationIdentity
         public ?string $country = null,
     ) {
         if ('' === trim($name)) {
-            throw new \InvalidArgumentException('An organisation is known by its name: it cannot be empty.');
+            throw new \InvalidArgumentException('An organization is known by its name: it cannot be empty.');
         }
     }
 

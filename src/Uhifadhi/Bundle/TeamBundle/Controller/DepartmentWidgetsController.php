@@ -42,7 +42,7 @@ use Uhifadhi\Bundle\TeamBundle\Widget\DepartmentWidgets;
  * catalogue and turns a 204 into a redirect with a sentence, so the plain-form
  * path works with no JavaScript at all.
  *
- * ORG-WIDE, SO NO AREA UUID. Departments are the organisation's own chart —
+ * ORG-WIDE, SO NO AREA UUID. Departments are the organization's own chart —
  * an area-level department is still one row of one register — so there is no
  * per-area version of this page to lay out differently, and every framework
  * call passes null for the area.

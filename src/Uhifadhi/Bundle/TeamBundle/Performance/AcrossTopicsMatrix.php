@@ -24,13 +24,13 @@ use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
 use Uhifadhi\Contracts\Performance\TopicMatrix;
 
 /**
- * DEPARTMENTS ACROSS THE TOPICS — the organisation's own matrix, and
+ * DEPARTMENTS ACROSS THE TOPICS — the organization's own matrix, and
  * the only one whose columns are topics rather than figures.
  *
  * IT ANSWERS A DIFFERENT QUESTION FROM A TOPIC'S OWN MATRIX. A topic's
  * matrix says how each department is doing at patrols; this one says
  * where each department is reading at all, which is what somebody
- * opening the organisation's page wants before any of the rest means
+ * opening the organization's page wants before any of the rest means
  * anything. The same renderer draws both, because it is the same grammar
  * — one cell a department, the placing inside one column and one band.
  *
@@ -46,7 +46,7 @@ use Uhifadhi\Contracts\Performance\TopicMatrix;
  *
  * EVERY DEPARTMENT IS A ROW. A department a topic does not cover is the
  * honest dash in that topic's column — it attached nothing of the kind,
- * so it was never asked — and not a row missing from the organisation's
+ * so it was never asked — and not a row missing from the organization's
  * own list.
  */
 final readonly class AcrossTopicsMatrix

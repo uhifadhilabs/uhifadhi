@@ -25,12 +25,12 @@ use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Contracts\Entity\AreaInterface;
 
 /**
- * A part of the organisation that owns positions — Ecology, Protection Service,
+ * A part of the organization that owns positions — Ecology, Protection Service,
  * Administration.
  *
  * THIS BUNDLE OWNS IT. Treating a department as an organizational lens owned
  * elsewhere makes a position's name unique across the whole installation, which
- * is wrong about the organisations this product is for. Ecology has an Analyst
+ * is wrong about the organizations this product is for. Ecology has an Analyst
  * and Protection Service has an Analyst: two different jobs, different
  * permission sets, one word between them. A model that forbids the pair forces
  * one of them to be renamed to something nobody in the building says out
@@ -56,7 +56,7 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
  * it never changes what anybody may do.
  *
  * IT CARRIES A SCOPE, AND THE SCOPE IS AN AREA OR THE ABSENCE OF ONE. A
- * department belongs either to the whole organisation ({@see $area} is null —
+ * department belongs either to the whole organization ({@see $area} is null —
  * org-level, spanning every area) or to one area ({@see $area} is set —
  * area-level, belonging to that area alone). The scope is DERIVED from the
  * nullable area and never stored beside it ({@see getScope()}), because a stored
@@ -114,7 +114,7 @@ class Department
     private ?string $name = null;
 
     /**
-     * THE AREA THIS DEPARTMENT BELONGS TO, OR NULL FOR THE WHOLE ORGANISATION —
+     * THE AREA THIS DEPARTMENT BELONGS TO, OR NULL FOR THE WHOLE ORGANIZATION —
      * the one fact the scope is read from. Nullable by construction: the null is
      * org-level, a real state and not an unfinished field.
      *

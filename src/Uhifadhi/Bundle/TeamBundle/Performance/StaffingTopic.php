@@ -138,7 +138,7 @@ final readonly class StaffingTopic implements PerformanceTopicProviderInterface,
              *
              * A POST WHOSE DAY NOBODY WROTE DOWN IS NOT COUNTED and the
              * caption says how many those are: it may well be the oldest
-             * vacancy in the organisation, and counting it either way
+             * vacancy in the organization, and counting it either way
              * would be a guess.
              */
             $this->vacancies($departments, $period),
@@ -152,7 +152,7 @@ final readonly class StaffingTopic implements PerformanceTopicProviderInterface,
      * THE ASK IS "FILL IT OR CLOSE IT", and that is the whole reason
      * this is a decision rather than a figure. A post empty for
      * seventy-four days is either work nobody is doing or a post the
-     * organisation no longer needs, and the figure cannot tell you
+     * organization no longer needs, and the figure cannot tell you
      * which — a person has to.
      *
      * NO NEW QUERY. These are the same positions the over-threshold
@@ -274,7 +274,7 @@ final readonly class StaffingTopic implements PerformanceTopicProviderInterface,
                     new ChartSeries('Filled', $filled),
                     new ChartSeries('Vacant', $vacant),
                 ],
-                caption: 'What the organisation held, period by period — from the periods it wrote down.',
+                caption: 'What the organization held, period by period — from the periods it wrote down.',
             ),
         ];
     }
@@ -436,7 +436,7 @@ final readonly class StaffingTopic implements PerformanceTopicProviderInterface,
     }
 
     /**
-     * THE DEPARTMENTS THIS SCOPE HOLDS: every one for the organisation, and
+     * THE DEPARTMENTS THIS SCOPE HOLDS: every one for the organization, and
      * for an area the ones that read it — its own and the org-wide ones,
      * which is what "reads this area" means everywhere else in the product.
      *

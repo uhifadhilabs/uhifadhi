@@ -23,7 +23,7 @@ use Uhifadhi\Bundle\TeamBundle\Repository\PositionTitleRepository;
  *
  * A TITLE GRANTS NOTHING. It is not a position and it is not a permission set:
  * it is the vocabulary a position is written with, so that two departments
- * spelling the same job two ways is a thing an organisation can stop doing.
+ * spelling the same job two ways is a thing an organization can stop doing.
  * What a position may DO is the matrix, on Positions.
  *
  * IT IS SHARED ON PURPOSE, and that is the whole reason it is a row rather

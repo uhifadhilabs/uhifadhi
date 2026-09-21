@@ -29,7 +29,7 @@ use Uhifadhi\Bundle\TeamBundle\Tests\Integration\IntegrationTestCase;
  * to be unique.
  *
  * A name is unique WITHIN a scope: two areas may each run an Anti-Poaching
- * unit, and the organisation-wide ones each stand alone. Which of those the
+ * unit, and the organization-wide ones each stand alone. Which of those the
  * schema believes is a question only the schema can answer, so it is asked here.
  * The audit line a scope change leaves is asked here too, because a trail that
  * is only in memory is not a trail.

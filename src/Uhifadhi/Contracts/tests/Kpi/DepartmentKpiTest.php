@@ -149,7 +149,7 @@ final class DepartmentKpiTest extends TestCase
         self::assertSame('0191f2c2-0000-7000-8000-0000000000aa', $ref->areaUuid);
     }
 
-    /** NO AREA MEANS ORGANISATION-WIDE — one roll-up across every area, not one set per area. */
+    /** NO AREA MEANS ORGANIZATION-WIDE — one roll-up across every area, not one set per area. */
     public function testAnOrgWideRefNamesNoArea(): void
     {
         self::assertNull(new DepartmentRef(id: 7, name: 'Ecology')->areaUuid);

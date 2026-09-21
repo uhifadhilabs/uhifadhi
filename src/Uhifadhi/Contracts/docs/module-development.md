@@ -119,7 +119,7 @@ publish there would be teaching you to squat a namespace that is not yours.
 
 The first-party modules use the composer vendor `uhifadhi/` (`uhifadhi/patrol-module`,
 `uhifadhi/devkit-module`, …); the repositories they are published from live under
-`github.com/uhifadhilabs`. A composer vendor and a GitHub organisation are separate
+`github.com/uhifadhilabs`. A composer vendor and a GitHub organization are separate
 namespaces and need not match — yours need match neither.
 
 **The PHP namespace does follow the composer vendor, though**, and first-party code spells it out:
@@ -129,7 +129,7 @@ vendor `uhifadhi` ↔ namespace `Uhifadhi\<Domain>\` ↔ class `Uhifadhi<Domain>
 is the one shape that differs, because a monorepo has a tier a single-bundle package does not: its
 bundles sit under `Uhifadhi\Bundle\`, and their class names carry no vendor prefix — `RegistryBundle`,
 not `UhifadhiRegistryBundle`. Yours is a single-bundle package, so use the first form. The GitHub
-organisation is in neither chain — `UhifadhiLabs\…` names nothing.
+organization is in neither chain — `UhifadhiLabs\…` names nothing.
 
 **And the application is `App\`.** A project created from the
 [uhifadhi skeleton](https://github.com/uhifadhilabs/skeleton) is a stock Symfony application with
@@ -809,7 +809,7 @@ final readonly class SightingsNavigation implements NavigationSourceInterface
         }
 
         // THE GROUP IS ONE OF FOUR, AND IT IS A CONSTANT. Observatory is what
-        // the organisation watches, Organization what it is and holds, System
+        // the organization watches, Organization what it is and holds, System
         // what the system raises to you, Settings configuration, last. A label
         // that is not one of them is refused.
         yield new NavSection(NavGroup::OBSERVATORY, [
@@ -1442,7 +1442,7 @@ area selector wins by load order and drifts every other surface, which the sheet
 
 ### Publishing a topic on the performance page
 
-The organisation's performance page is not a table of your columns against
+The organization's performance page is not a table of your columns against
 everybody's departments — that board lied about half its cells, because a
 department that never attached your module is not a row of empty ones. Your
 module publishes **a topic**: five headline figures, two or three charts, and a
@@ -1464,7 +1464,7 @@ final readonly class PatrolPerformanceTopic implements PerformanceTopicProviderI
 Adding a module adds a topic and touches nothing else: no host column changes,
 no department row changes, no shared list to edit. The host's own topics —
 Staffing, Goals, Attention — are producers of exactly this shape and are
-rendered first; module topics follow **in the order the organisation arranged
+rendered first; module topics follow **in the order the organization arranged
 its modules**, never alphabetically.
 
 **Your rows come from the directory, not from a query.** Enumerating departments
@@ -1507,7 +1507,7 @@ this platform states:
   is worse, and more positions is neither — `ColumnPolarity::None` is never
   tinted and its movement is never coloured.
 - **Scope and period are asked, not assumed.** Answer for the scope you are
-  handed, or you will draw the organisation's figures on one area's page.
+  handed, or you will draw the organization's figures on one area's page.
 
 **The shades are not yours, and neither is the table.** You publish figures and
 say which way is good; where a department stands among the others is worked out
@@ -1548,7 +1548,7 @@ The host draws the boundary, because it made the placing inside it; what the
 boundary MEANS is a sentence about your figures. A row or a band that says
 nothing simply carries its name.
 
-**If one of your five is a count of records, say so.** The organisation's page
+**If one of your five is a count of records, say so.** The organization's page
 adds up "records written, by department" across every topic that writes any,
 and it cannot tell which of your five that is — your label is your own word,
 and may be "cases", "sightings" or "patrols logged". Mark it:
@@ -1616,7 +1616,7 @@ shipping its own flow bar is two flows that drift, and one shipping none renders
 blue underlined links. Write these and the area's stylesheet dresses them:
 
 The needs-attention row is no longer one of them. `.ao-att` is drawn on three surfaces now — this
-overview, the organisation dashboard and the settings section — so it moved into the shell's own
+overview, the organization dashboard and the settings section — so it moved into the shell's own
 sheet and is listed with the frame's components in `Contract\LayoutContract::COMPONENTS`. Nothing
 about the markup changed, and a cell already writing it keeps working wherever it is drawn.
 
@@ -1699,7 +1699,7 @@ Three rules that keep these contribution points honest:
 
 **Figures follow scope, not people.** A provider is called only for a department that attaches its
 module, and it answers with every record the module holds inside the ref's scope: an area-level
-department's area, or every area for an organisation-wide one. Who recorded a record, whether that
+department's area, or every area for an organization-wide one. Who recorded a record, whether that
 person holds a position today, and when anyone joined decide nothing. Two departments that attach
 one module in one area read the same figures, and no surface adds them together. A breakdown by
 position or by person may sit inside a widget; it never gates a figure.
@@ -1714,7 +1714,7 @@ The scope is on the ref, and it is the whole of the instruction:
 | `DepartmentRef::$areaUuid` | The department | What you return |
 |---|---|---|
 | a uuid string | is confined to that area | that area's figures, and no other area's |
-| `null` | is organisation-wide | the **roll-up** across every area your module is switched on in |
+| `null` | is organization-wide | the **roll-up** across every area your module is switched on in |
 
 How a roll-up combines is the KPI's own business — a count sums, a share is averaged or weighted by
 whatever denominator the figure means — so **you decide, and you say which in the figure's

@@ -24,7 +24,7 @@ use PHPUnit\Framework\TestCase;
  * up with its real frame is neither: `invalidateSize({pan: false})` fires
  * `resize`, and the `fitBounds` that follows very often lands on the zoom and
  * the centre it was already at, so Leaflet moves nothing. The labels stay
- * pinned to pixels of a frame that no longer exists — on the organisation's
+ * pinned to pixels of a frame that no longer exists — on the organization's
  * roster plate, composed onto a widget grid that narrows it after the map is
  * built, at NEGATIVE x, outside the plate — while the boundary underneath
  * them is drawn correctly, because a path is projected from coordinates on

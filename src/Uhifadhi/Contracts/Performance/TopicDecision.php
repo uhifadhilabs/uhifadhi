@@ -28,8 +28,8 @@ namespace Uhifadhi\Contracts\Performance;
  *
  * IT NAMES A DEPARTMENT, because a decision nobody owns is the kind
  * that waits. Where a topic genuinely cannot name one — a figure about
- * the organisation itself — the mark and the name are empty and the
- * row simply reads as the organisation's.
+ * the organization itself — the mark and the name are empty and the
+ * row simply reads as the organization's.
  */
 final readonly class TopicDecision
 {
@@ -38,7 +38,7 @@ final readonly class TopicDecision
         public string $what,
         /** What somebody is being asked to do about it. */
         public string $ask,
-        /** Whose it is. Empty where the decision belongs to the organisation. */
+        /** Whose it is. Empty where the decision belongs to the organization. */
         public string $departmentName = '',
         /** The two letters every surface draws a department by. */
         public string $departmentMark = '',

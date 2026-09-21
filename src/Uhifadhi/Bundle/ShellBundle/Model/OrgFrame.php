@@ -17,12 +17,12 @@ use Uhifadhi\Contracts\Shell\OrgPage;
 use Uhifadhi\Contracts\Shell\Scope;
 
 /**
- * EVERYTHING THE ORG BASE DRAWS AROUND AN ORGANISATION-LEVEL SCREEN, read
+ * EVERYTHING THE ORG BASE DRAWS AROUND AN ORGANIZATION-LEVEL SCREEN, read
  * once, on the render, for the page the request is on.
  *
  * ONE OBJECT AND ONE TWIG CALL, rather than four: the frame's trail, title,
  * strip and scope control all answer the same question — which module's
- * organisation-level set is this, and how wide is it looking — and a
+ * organization-level set is this, and how wide is it looking — and a
  * template that asked it four times could be given four different answers by
  * a later change.
  */

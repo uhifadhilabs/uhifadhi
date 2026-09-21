@@ -116,12 +116,12 @@ final readonly class AreaOverview
     }
 
     /**
-     * THE SAME QUEUE ONE SCOPE WIDER — the organisation, or one area of it.
+     * THE SAME QUEUE ONE SCOPE WIDER — the organization, or one area of it.
      *
      * NOT A SECOND AGGREGATE. This walks the very loop {@see attentionFor()}
      * walks, once per area, and sorts the result by the same rule; there is
      * no org-level provider call and no other place an item can come from.
-     * The organisation's queue IS the areas' queues, which is what lets a
+     * The organization's queue IS the areas' queues, which is what lets a
      * test assert it by construction rather than by hoping two derivations
      * agree.
      *

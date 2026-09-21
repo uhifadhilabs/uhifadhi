@@ -55,7 +55,7 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
         self::assertContains('Areas', $band);
         self::assertContains('Seats filled', $band);
         self::assertContains('Goals', $band);
-        self::assertNotContains('Departments', $band, 'a count of the cards is not a figure about the organisation');
+        self::assertNotContains('Departments', $band, 'a count of the cards is not a figure about the organization');
 
         // AND THE COUNTS ARE UNDER THE FILTERS, where a count of what is
         // being listed belongs.
@@ -77,7 +77,7 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
         );
 
         // A NARROWED REGISTER NARROWS THE BAND: a page that filtered its
-        // rows to one area and kept the organisation's figures would be
+        // rows to one area and kept the organization's figures would be
         // contradicting its own filter.
         $north = $this->north;
         self::assertNotNull($north, 'the register was seeded with an area');
@@ -92,7 +92,7 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
 
     /**
      * THE TWO SCOPES ARE DRAWN APART, ORG-WIDE FIRST. The register is read
-     * from the organisation inwards: an org-wide department is one every area
+     * from the organization inwards: an org-wide department is one every area
      * inherits, which is the thing a reader has to know before the rest of
      * the list means anything. Each area's own follow, under its name.
      */
@@ -140,7 +140,7 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
 
     /**
      * EVERY CARD STATES ITS SCOPE beside its name: the area's name for an
-     * area-level department, "Org-wide" for one the organisation owns.
+     * area-level department, "Org-wide" for one the organization owns.
      */
     public function testEachCardCarriesItsScope(): void
     {

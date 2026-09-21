@@ -45,11 +45,11 @@ final class AtlasChartTest extends TestCase
             [new ChartSeries('Coverage', [58.0, 61.0])],
             target: 60.0,
             unit: '%',
-        ), 'Coverage, twelve periods', 'What the organisation covered.');
+        ), 'Coverage, twelve periods', 'What the organization covered.');
 
         self::assertStringContainsString('class="chart-plate"', $html);
         self::assertStringContainsString('Coverage, twelve periods', $html);
-        self::assertStringContainsString('What the organisation covered.', $html);
+        self::assertStringContainsString('What the organization covered.', $html);
         // The library's own controller, mounted on its own element.
         self::assertStringContainsString('symfony--ux-chartjs--chart', $html);
         self::assertStringContainsString('&quot;type&quot;:&quot;line&quot;', $html);

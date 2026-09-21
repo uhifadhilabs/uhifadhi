@@ -19,7 +19,7 @@ use Doctrine\Migrations\AbstractMigration;
 /**
  * THE POSITION TITLE — what a position may be called.
  *
- * EXPAND ONLY, AND NOTHING IS BACKFILLED. A title is a word the organisation
+ * EXPAND ONLY, AND NOTHING IS BACKFILLED. A title is a word the organization
  * offers; minting one per existing position would fill the list with whatever
  * somebody typed into a register, including the two spellings the vocabulary
  * exists to stop. The list starts empty, which is a legal state the screen

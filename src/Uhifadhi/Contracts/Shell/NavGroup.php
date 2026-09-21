@@ -19,17 +19,17 @@ namespace Uhifadhi\Contracts\Shell;
  * A group is a PLACE in the sidebar, not a thing a module owns, and there are
  * exactly four of them. They are named here, in the order they are drawn, so
  * that a module joins one by CONSTANT instead of by retyping a string: a
- * near-miss label ("Organisation", "system", "Org") used to make a fifth
+ * near-miss label ("Organization", "system", "Org") used to make a fifth
  * heading rather than an error, and a sidebar with two Systems in it answers
  * "where am I" with a lie.
  *
  * WHAT EACH GROUP HOLDS — the meaning, written where the constants are,
  * because a module author choosing between them reads this and nothing else:
  *
- *   OBSERVATORY   what the organisation WATCHES. Areas and everything under
- *                 them, Performance, and a module's organisation-level page
+ *   OBSERVATORY   what the organization WATCHES. Areas and everything under
+ *                 them, Performance, and a module's organization-level page
  *                 set. If it is a reading of the work, it belongs here.
- *   ORGANIZATION  what the organisation IS AND HOLDS. Departments, Team,
+ *   ORGANIZATION  what the organization IS AND HOLDS. Departments, Team,
  *                 Files. Not readings — the standing facts about the body
  *                 doing the work.
  *   SYSTEM        what the system RAISES TO YOU. Alerts, Telemetry. Rows that
@@ -50,7 +50,7 @@ namespace Uhifadhi\Contracts\Shell;
  */
 final class NavGroup
 {
-    /** What the organisation watches. */
+    /** What the organization watches. */
     public const string OBSERVATORY = 'Observatory';
 
     /** What it is and holds. */

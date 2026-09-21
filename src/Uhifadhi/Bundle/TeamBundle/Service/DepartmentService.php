@@ -32,7 +32,7 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
  * or ORG-LEVEL, spanning every area, and the scope is derived from the nullable
  * area on the entity rather than stored twice. A name is unique WITHIN its
  * scope and nowhere else: two areas may each run an Anti-Poaching unit, and the
- * organisation-wide ones each stand alone.
+ * organization-wide ones each stand alone.
  *
  * A DEPARTMENT GRANTS NOTHING DIRECTLY. Filing a position into one changes
  * where its work is read; confining one to an area changes where its people's
@@ -65,7 +65,7 @@ final readonly class DepartmentService
     }
 
     /**
-     * An area makes it area-level; its absence makes it organisation-wide.
+     * An area makes it area-level; its absence makes it organization-wide.
      *
      * @throws NameNotUniqueException when that scope already runs a department of the name
      */

@@ -33,7 +33,7 @@ namespace Uhifadhi\Contracts;
  *
  * IT CARRIES NO HOLDERS AND NO ROLE. Declaring a permission hands
  * nobody anything: the matrix gains a row, and who ticks it is the
- * organisation's business.
+ * organization's business.
  *
  * A reusable bundle is not autoconfigured, so the tag goes on by hand:
  *

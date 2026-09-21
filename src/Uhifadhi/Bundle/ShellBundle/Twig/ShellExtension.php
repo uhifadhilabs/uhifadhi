@@ -43,7 +43,7 @@ final class ShellExtension extends AbstractExtension
             // an area's screens, a module's data places, or, on a configure
             // page, that surface's configure sections in their place.
             new TwigFunction('shell_tabs', [ShellRuntime::class, 'tabs']),
-            // The organisation-level frame: which module's page set this
+            // The organization-level frame: which module's page set this
             // request is inside, its screens as a strip, and how wide the
             // page is looking. Null anywhere else in the product.
             new TwigFunction('shell_org', [ShellRuntime::class, 'org']),

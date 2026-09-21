@@ -25,7 +25,7 @@ use Uhifadhi\Bundle\TeamBundle\Service\UserService;
 use Uhifadhi\Contracts\Devkit\ContentProviderInterface;
 
 /**
- * A SMALL ORGANISATION TO LOOK AT — three departments, four positions and six
+ * A SMALL ORGANIZATION TO LOOK AT — three departments, four positions and six
  * people, so a developer's first screen is a populated one.
  *
  * IT GOES THROUGH THE SAME SERVICES THE SCREENS DO, and that is the whole
@@ -37,7 +37,7 @@ use Uhifadhi\Contracts\Devkit\ContentProviderInterface;
  *
  * IT SEEDS ONCE. An installation that already answers to any of the addresses
  * below is left exactly as it is: re-running a demo seeder is a developer
- * repeating a command, not an instruction to enter this organisation twice —
+ * repeating a command, not an instruction to enter this organization twice —
  * and a department name is unique org-wide, so the second attempt is refused
  * rather than duplicated, taking every slice seeded after this one down with it.
  *
@@ -46,7 +46,7 @@ use Uhifadhi\Contracts\Devkit\ContentProviderInterface;
  * ever asks anything of.
  *
  * NOBODY HERE HAS AN AREA. This bundle knows about people and never about
- * areas, so the departments it seeds are organisation-wide and it depends on no
+ * areas, so the departments it seeds are organization-wide and it depends on no
  * other content. A demo installation that also has areas confines them from the
  * screen, which is the same act an operator would perform.
  *
@@ -136,7 +136,7 @@ final readonly class TeamContentProvider implements ContentProviderInterface
 
     public function description(): string
     {
-        return 'A small organisation: departments, the positions filed under them, and the people who hold them.';
+        return 'A small organization: departments, the positions filed under them, and the people who hold them.';
     }
 
     public function dependsOn(): array
@@ -181,7 +181,7 @@ final readonly class TeamContentProvider implements ContentProviderInterface
      *
      * The six above are the roles a reader has to see — the super admin, the
      * one who may administer, the analyst, the person holding nothing. These
-     * are the body of the organisation, and without them the demo ground
+     * are the body of the organization, and without them the demo ground
      * seeds with three posts staffed and thirteen empty, which makes the one
      * deliberately empty post say nothing at all.
      *
@@ -211,7 +211,7 @@ final readonly class TeamContentProvider implements ContentProviderInterface
      *
      * THE FIGURES ARE THE STAFFING ONES the host answers for, walked
      * backwards from what is true now: a department that holds four seats
-     * today held three or four last spring, which is how an organisation
+     * today held three or four last spring, which is how an organization
      * actually moves. Nothing here is a module's — a module publishes its
      * own history through its own snapshot.
      *

@@ -40,7 +40,7 @@ use Uhifadhi\Contracts\Settings\SettingsStepSourceInterface;
  * THE SECTION KNOWS THE INSTALLATION AND NOTHING IN IT. What it can read for
  * itself is Composer's runtime metadata — the packages on disk and their
  * versions — and that is the whole of its own knowledge. Areas, people, what
- * is kept, which modules run where, whose organisation this is: every one of
+ * is kept, which modules run where, whose organization this is: every one of
  * those arrives through a contract, from the bundle that owns the fact, which
  * is why this class names no module and asks no repository.
  *
@@ -395,7 +395,7 @@ final class SettingsReading
      *
      * THE FALLBACK IS THE WORDMARK IT WAS SHIPPED WITH, and every other field
      * says it is not set — which is the page telling somebody exactly what
-     * there is to do rather than inventing an organisation nobody named.
+     * there is to do rather than inventing an organization nobody named.
      */
     public function identity(): OrganisationIdentity
     {

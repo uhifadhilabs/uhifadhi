@@ -28,8 +28,8 @@ use Uhifadhi\Contracts\Area\LivePosition;
 use Uhifadhi\Contracts\Shell\Scope;
 
 /**
- * AN ORGANISATION FIGURE IS THE SUM OVER THE AREAS — asserted, because it is
- * the rule the whole organisation dashboard rests on.
+ * AN ORGANIZATION FIGURE IS THE SUM OVER THE AREAS — asserted, because it is
+ * the rule the whole organization dashboard rests on.
  *
  * EVERY FIGURE IS THE PER-AREA SERVICE WIDENED, NEVER A SECOND AGGREGATE
  * (ruled). Two derivations of one question drift, and the day they disagree
@@ -38,7 +38,7 @@ use Uhifadhi\Contracts\Shell\Scope;
  * rather than merely intended.
  *
  * IT IS NOT A TEST OF ARITHMETIC. Summing two numbers that happened to match
- * would prove nothing; what is asserted is that the organisation's answer is
+ * would prove nothing; what is asserted is that the organization's answer is
  * exactly the areas' answers, position for position, at one instant.
  */
 #[CoversClass(PresenceService::class)]
@@ -64,7 +64,7 @@ final class OrgScopeIsTheSumOfAreasTest extends IntegrationTestCase
         self::assertSame(
             self::names($perArea),
             self::names($organisation->positions),
-            'The organisation is its areas, and nothing else.',
+            'The organization is its areas, and nothing else.',
         );
     }
 
@@ -87,7 +87,7 @@ final class OrgScopeIsTheSumOfAreasTest extends IntegrationTestCase
      * EVERY POSITION KEEPS ITS OWN AREA'S CLOCK, which is what makes the sum
      * honest: areas ping at different rates, and one interval for all of them
      * would call a slow area's rangers stale beside a fast area's on exactly
-     * the same silence — so the organisation's stale count would not be the
+     * the same silence — so the organization's stale count would not be the
      * areas' stale counts added up.
      */
     public function testStalenessIsJudgedByEachAreasOwnInterval(): void
@@ -104,7 +104,7 @@ final class OrgScopeIsTheSumOfAreasTest extends IntegrationTestCase
         self::assertSame(
             1,
             $this->presence()->forScope(Scope::organisation(), $asOf)->staleCount(),
-            'The organisation’s stale count is the areas’ stale counts, not a re-judgement of them.',
+            'The organization’s stale count is the areas’ stale counts, not a re-judgement of them.',
         );
     }
 

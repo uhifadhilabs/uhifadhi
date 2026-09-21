@@ -17,7 +17,7 @@ namespace Uhifadhi\Contracts\Settings;
  * WHOEVER KNOWS WHOSE INSTALLATION THIS IS ANSWERS HERE.
  *
  * AN ALIAS, NOT A TAGGED COLLECTION: an installation belongs to one
- * organisation, and two sources answering would be two names on one export.
+ * organization, and two sources answering would be two names on one export.
  *
  *     $services->alias('shell.settings.organisation_identity', App\Settings\OurIdentity::class);
  *

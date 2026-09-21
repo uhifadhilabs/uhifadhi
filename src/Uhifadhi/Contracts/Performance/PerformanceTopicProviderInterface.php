@@ -36,11 +36,11 @@ use Uhifadhi\Contracts\Kpi\FigurePeriod;
  * THE ORDER IS RULED: the host's topics first, then the module topics in
  * the ORDER THE AREA RUNS THEM — the order its Modules tab lists them in,
  * which is the order somebody arranged. Alphabetical would be the
- * dictionary's opinion about an organisation's priorities.
+ * dictionary's opinion about an organization's priorities.
  *
  * SCOPE AND PERIOD ARE ASKED, NEVER ASSUMED. A topic is drawn for the
- * whole organisation or for one area, over a month, a quarter or a year,
- * and a provider that ignored either would put the organisation's figures
+ * whole organization or for one area, over a month, a quarter or a year,
+ * and a provider that ignored either would put the organization's figures
  * on an area's page — the one mistake a director cannot see from the page.
  *
  * NULL IS NEVER NOUGHT. A figure nobody published is null and every

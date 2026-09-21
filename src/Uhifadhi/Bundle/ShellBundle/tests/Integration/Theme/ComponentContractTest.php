@@ -111,7 +111,7 @@ final class ComponentContractTest extends ContractTestCase
             'more',
             'mdot',
 
-            // THE ORGANISATION-LEVEL MARKS. An org page is the area page one
+            // THE ORGANIZATION-LEVEL MARKS. An org page is the area page one
             // scope wider, so it borrows everything; these three exist only
             // because "which area" is a column area level does not have.
             // `.orgarea` names the area on a row (its category swatch, never a
@@ -122,7 +122,7 @@ final class ComponentContractTest extends ContractTestCase
             'lfilt-n',
 
             // THE SCOPE CONTROL, the shell's and not a page's: every
-            // organisation-level surface the seam contributes gets this one,
+            // organization-level surface the seam contributes gets this one,
             // and a module states none of its own.
             'ov-ctl',
 
@@ -449,7 +449,7 @@ final class ComponentContractTest extends ContractTestCase
         $declarations = [
             // A LABELLED CONTROL IS A COLUMN: caption above, box below.
             // UNSCOPED NOW: the scope control is the shell's, so a contributed
-            // organisation-level page can draw one outside `.pgact` too.
+            // organization-level page can draw one outside `.pgact` too.
             '.ov-ctl' => ['display' => 'flex', 'flex-direction' => 'column', 'gap' => '4px'],
             // AND THE SEGMENTED GROUP AND THE CHIP BESIDE IT are the row's
             // own height, like everything else in it.

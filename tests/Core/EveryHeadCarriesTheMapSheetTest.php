@@ -26,7 +26,7 @@ use Uhifadhi\Core\Tests\Application\Kernel;
  * million times." The rule used to be that a page which draws a plate links
  * `map.css`, and it held while a page could know. Then the plate became
  * something a WIDGET draws — on a composed surface ANY cell may draw one —
- * and the organisation Overview composed a map cell onto a page that linked
+ * and the organization Overview composed a map cell onto a page that linked
  * no map sheet: `.map-plate`, `.map-legend` and `.lay .sw` had no rules at
  * all, the plate came apart, and nothing failed anywhere. The page returned
  * 200 and the test suite was green.

@@ -72,7 +72,7 @@ final class ComponentSheetsTest extends TestCase
      * THE DEFECT THIS CLOSES, and it had recurred for a year: "a page that
      * draws a map links map.css" held only while a page could know. A plate
      * is now drawn by a WIDGET — any cell of a composed surface may draw one
-     * — so the organisation Overview composed a map cell onto a page that
+     * — so the organization Overview composed a map cell onto a page that
      * linked no map sheet, `.map-plate`, `.map-legend` and `.lay .sw` had no
      * rules, and the plate came apart with no error anywhere. The head
      * cannot be decided by what a page happens to compose, so the sheet

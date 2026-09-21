@@ -120,10 +120,10 @@
             {{ di.icon_org() }}
             {% if isArea %}
                 <div><b>Area-level lens &mdash; confined to {{ area.name }}.</b> Everything on this page is already
-                    scoped to this one area. Managed at the organisation; inside {{ area.name }} it appears inherited.</div>
+                    scoped to this one area. Managed at the organization; inside {{ area.name }} it appears inherited.</div>
             {% else %}
                 <div><b>Org-level lens &mdash; reads across every area.</b> This department has no single area, so its
-                    view aggregates the whole organisation. Its scope can be confined to one area from
+                    view aggregates the whole organization. Its scope can be confined to one area from
                     <a href="{{ path('team_departments') }}">the manager</a> &mdash; the change is audited.</div>
             {% endif %}
         </div>

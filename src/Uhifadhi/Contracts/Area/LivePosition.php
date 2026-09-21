@@ -34,7 +34,7 @@ namespace Uhifadhi\Contracts\Area;
  *
  * THE INTERVAL IS HERE, THOUGH, AND IT HAS TO BE. How often a handset
  * was told to ping is the AREA's, and a reading one scope wider holds
- * positions from several areas at once: an organisation-level plate
+ * positions from several areas at once: an organization-level plate
  * given one interval for all of them would paint the rangers of a
  * thirty-minute area amber beside the rangers of a five-minute one, on
  * the same silence. So a position carries the interval it was expected

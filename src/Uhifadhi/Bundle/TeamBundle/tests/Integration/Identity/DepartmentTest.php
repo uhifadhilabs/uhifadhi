@@ -24,7 +24,7 @@ use Uhifadhi\Bundle\TeamBundle\Tests\Integration\IntegrationTestCase;
  *
  * The previous release argued the opposite: a department was called an
  * organizational lens another module owns, and a position's name was therefore
- * unique across the whole installation. That was wrong about the organisations
+ * unique across the whole installation. That was wrong about the organizations
  * this product is for. Two departments really do carry the same post — Ecology
  * has an Analyst and Protection Service has an Analyst, and they are two
  * different jobs with different permission sets that happen to share a word. A

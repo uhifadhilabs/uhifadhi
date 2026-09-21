@@ -84,7 +84,7 @@ final readonly class FigurePeriod
      * windows the performance page offers.
      *
      * A CALENDAR QUARTER AND NOT NINETY DAYS. A reader asking for "this
-     * quarter" is asking about the quarter the organisation reports in;
+     * quarter" is asking about the quarter the organization reports in;
      * a rolling window would answer a different question with a number
      * that looks like the answer to this one.
      */

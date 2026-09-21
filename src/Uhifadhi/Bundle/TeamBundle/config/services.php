@@ -167,7 +167,7 @@ use Uhifadhi\Contracts\Shell\ModuleTabsInterface;
  *   team.overview               the roster's counts and its attention rows
  *   team.widget_surface.*       the roster and the matrix, as dashboard surfaces
  *   team.command.create_user    the first administrator, made from the console
- *   team.devkit.content         the demo organisation devkit seeds in a dev install
+ *   team.devkit.content         the demo organization devkit seeds in a dev install
  *   team.controller.security    the sign-in screen
  *   team.controller.team        the roster
  *   team.controller.team_widgets  its widget library
@@ -346,7 +346,7 @@ return static function (ContainerConfigurator $container): void {
     }
 
     /*
-     * A SMALL ORGANISATION TO LOOK AT, offered the same way and collected by
+     * A SMALL ORGANIZATION TO LOOK AT, offered the same way and collected by
      * the same absent tool. It writes through this bundle's own services, so
      * the content it leaves is content somebody could have built by clicking.
      */
@@ -542,7 +542,7 @@ return static function (ContainerConfigurator $container): void {
         ->args([service('team.performance.matrix_placing')]);
 
     /*
-     * AND THE TWO THINGS THE ORGANISATION'S OWN PAGE IS MADE OF: one
+     * AND THE TWO THINGS THE ORGANIZATION'S OWN PAGE IS MADE OF: one
      * card a topic, and one matrix whose columns ARE the topics. Both
      * are built from what the topics publish and never from a query of
      * their own, which is why a module that publishes a topic reaches
@@ -554,7 +554,7 @@ return static function (ContainerConfigurator $container): void {
     /*
      * AND THE SIX FIGURES EVERY SCREEN OF THE SECTION OPENS WITH, picked
      * by key from the host's own three topics — ruled, and a module
-     * never changes the organisation's own band.
+     * never changes the organization's own band.
      */
     $services->set('team.performance.organisation_band', OrganisationBand::class);
     $services->alias(OrganisationBand::class, 'team.performance.organisation_band');
@@ -599,7 +599,7 @@ return static function (ContainerConfigurator $container): void {
     if (interface_exists(NavigationSourceInterface::class)) {
         /*
          * PERFORMANCE FILES UNDER OBSERVATORY, beside Areas — a way of
-         * LOOKING at the organisation rather than a corner of the org
+         * LOOKING at the organization rather than a corner of the org
          * chart. Its own source, because a section label is a place in
          * the sidebar and the shell merges two contributors to one
          * heading; keeping it separate keeps the two trees out of each
@@ -747,7 +747,7 @@ return static function (ContainerConfigurator $container): void {
 
     /*
      * AND WHAT COLLECTS THEM: the host's topics first, then a module's in
-     * the order the organisation arranged its modules.
+     * the order the organization arranged its modules.
      */
     $services->set('team.performance_topics', PerformanceTopics::class)
         ->args([
@@ -1051,7 +1051,7 @@ return static function (ContainerConfigurator $container): void {
     $services->alias(DepartmentController::class, 'team.controller.department')->public();
 
     /*
-     * PERFORMANCE — the organisation's own surface, and the only page in
+     * PERFORMANCE — the organization's own surface, and the only page in
      * the product whose every figure belongs to somebody else. It reads
      * the topic collector, the department directory and nothing of its
      * own; the one decision it makes about another party's figures —

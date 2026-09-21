@@ -48,14 +48,14 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
  * this bundle simply has a shorter strip. No new seam buys anything here.
  *
  * THE TAB READS AND THE SECTION WRITES, which is the same split every area
- * surface makes. The tab's cards are the organisation register's cards —
+ * surface makes. The tab's cards are the organization register's cards —
  * the same partial — because two registers of one thing are two registers
  * that drift.
  *
  * THE AREA'S OWN COME FIRST, then the org-wide ones it inherits. On the
- * organisation's register the order is the other way about, and both are
+ * organization's register the order is the other way about, and both are
  * read outwards from where the reader is standing: there, from the
- * organisation into its areas; here, from this place into what it shares.
+ * organization into its areas; here, from this place into what it shares.
  */
 final readonly class AreaDepartmentController
 {
@@ -100,7 +100,7 @@ final readonly class AreaDepartmentController
                 [
                     'key' => 'org',
                     'label' => 'Org-wide · read this area too',
-                    'note' => 'Belong to the organisation · every area reads them',
+                    'note' => 'Belong to the organization · every area reads them',
                     'departments' => $inherited,
                 ],
             ],
@@ -113,7 +113,7 @@ final readonly class AreaDepartmentController
             ...$reading,
             // THE BAND'S SECOND FACT IS ABOUT THIS AREA'S OWN DEPARTMENTS.
             // An org-wide department's positions belong to the
-            // organisation, and counting them here would make every area
+            // organization, and counting them here would make every area
             // report the same number as its own.
             ...self::staffing($own, $reading['owned'], $reading['holders']),
         ]));

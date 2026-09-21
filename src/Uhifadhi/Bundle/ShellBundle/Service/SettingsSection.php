@@ -24,7 +24,7 @@ use Uhifadhi\Contracts\Settings\SettingsTab;
  *
  * THE SECTION WEARS THE AREA IDIOM (ruled 2026-09-20): a head that is the same
  * on every tab, a strip of the screens it owns, and the tab that EDITS the
- * organisation last. So its strip is built exactly the way an area's is, from
+ * organization last. So its strip is built exactly the way an area's is, from
  * one declaration — {@see SettingsTab} — which is also what the sidebar's
  * subtree is built from. Two readings of one list; a strip and a sidebar row
  * cannot disagree about which screens the section has.
@@ -51,7 +51,7 @@ final class SettingsSection
     public const string TITLE = 'Settings';
 
     /** The one thing in the action row: this section reads the whole installation. */
-    public const string SCOPE = 'organisation scope';
+    public const string SCOPE = 'organization scope';
 
     public function __construct(
         private readonly UrlGeneratorInterface $urls,

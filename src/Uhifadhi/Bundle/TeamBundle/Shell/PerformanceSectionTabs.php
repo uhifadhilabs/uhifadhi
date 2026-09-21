@@ -66,8 +66,8 @@ final readonly class PerformanceSectionTabs implements ModuleTabsInterface
          * THE READING TRAVELS WITH THE READER. Moving from the Overview
          * to Topics is a change of SCREEN and never of subject, so the
          * scope, the window and the comparison ride on every tab — a
-         * strip that dropped them would answer "the organisation's
-         * August" with "the organisation's this month" halfway through
+         * strip that dropped them would answer "the organization's
+         * August" with "the organization's this month" halfway through
          * somebody's reading, and nothing on the page would say why.
          *
          * THE SECTION CARRIES THEM AND NOT THE SHELL, because which of

@@ -215,7 +215,7 @@ final readonly class DepartmentController
 
         // THE BAND READS THE PAGE'S OWN SCOPE AND WINDOW. A reader who
         // narrowed the register to one area is asking about that area,
-        // and a band that answered for the organisation would be the
+        // and a band that answered for the organization would be the
         // page contradicting its own filter.
         $bandScope = $this->bandScope($query, $areas);
         $periodKind = PeriodKind::fromRequest($request->query->getString('period'));
@@ -223,7 +223,7 @@ final readonly class DepartmentController
 
         return new Response($this->twig->render('@Team/departments/index.html.twig', [
             // ORG-WIDE FIRST, THEN AREA-LEVEL: the register is read from the
-            // organisation inwards, and an org-wide department is one every
+            // organization inwards, and an org-wide department is one every
             // area inherits — the thing a reader has to know before the rest
             // of the list means anything.
             'groups' => $this->register($query, $areas),
@@ -290,7 +290,7 @@ final readonly class DepartmentController
     }
 
     /**
-     * WHOSE FIGURES THE BAND SHOWS: the organisation's, or the one area
+     * WHOSE FIGURES THE BAND SHOWS: the organization's, or the one area
      * the register has been narrowed to.
      *
      * @param list<AreaInterface> $areas
@@ -336,7 +336,7 @@ final readonly class DepartmentController
             $groups[] = [
                 'key' => 'org',
                 'label' => 'Org-wide',
-                'note' => 'Belong to the organisation · each reads every area',
+                'note' => 'Belong to the organization · each reads every area',
                 'departments' => $query->matching($this->departments->findOrgLevelOrdered()),
             ];
         }
@@ -545,13 +545,13 @@ final readonly class DepartmentController
             // run an Anti-Poaching unit — the way a position name repeats across
             // departments.
             return $this->back($request, null === $area
-                ? \sprintf('There is already an organisation-wide department called “%s”. A name may repeat from one area to another, but the organisation-wide ones each stand alone.', $name)
+                ? \sprintf('There is already an organization-wide department called “%s”. A name may repeat from one area to another, but the organization-wide ones each stand alone.', $name)
                 : \sprintf('%s already has a department called “%s”. Another area may share the name, but not this one twice.', (string) $area->getName(), $name),
                 'error');
         }
 
         return $this->back($request, null === $department->getArea()
-            ? \sprintf('“%s” exists, organisation-wide. It owns no positions yet, and it grants nobody anything — a department is where work is filed, never what permits it.', $name)
+            ? \sprintf('“%s” exists, organization-wide. It owns no positions yet, and it grants nobody anything — a department is where work is filed, never what permits it.', $name)
             : \sprintf('“%s” exists, confined to %s. It owns no positions yet, and it grants nobody anything.', $name, (string) $department->getArea()->getName()));
     }
 
@@ -601,7 +601,7 @@ final readonly class DepartmentController
         // org-wide authority, confining or moving re-scopes people. An area-X
         // admin may not; only a tier or an org-level holder may.
         if (!$this->authority->isUnbounded()) {
-            throw new AccessDeniedException('Changing a department’s scope is an organisation-wide act; an area administrator may not.');
+            throw new AccessDeniedException('Changing a department’s scope is an organization-wide act; an area administrator may not.');
         }
 
         $reason = trim((string) $request->request->get('reason'));
@@ -1049,7 +1049,7 @@ final readonly class DepartmentController
             return;
         }
 
-        throw new AccessDeniedException('An area administrator may create area-level departments in their own area only — not an organisation-wide one, and not in another area.');
+        throw new AccessDeniedException('An area administrator may create area-level departments in their own area only — not an organization-wide one, and not in another area.');
     }
 
     private function signedIn(): ?User
@@ -1076,10 +1076,10 @@ final readonly class DepartmentController
     /**
      * WHERE A WRITE GOES BACK TO, when the door was not the register.
      *
-     * The same write is offered on the organisation's register and in an
+     * The same write is offered on the organization's register and in an
      * area's configure section, and a person is returned to the page they
      * pressed the button on — otherwise editing one area's department throws
-     * the reader out to the organisation.
+     * the reader out to the organization.
      *
      * ONLY A PATH ON THIS SITE. The value is posted, so it is the visitor's;
      * anything but a single leading slash — an absolute URL, a

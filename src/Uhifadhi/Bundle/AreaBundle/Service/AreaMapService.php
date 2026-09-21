@@ -134,7 +134,7 @@ final readonly class AreaMapService
     }
 
     /**
-     * THE ORGANISATION'S PLATE — every area's ground, with everybody on it.
+     * THE ORGANIZATION'S PLATE — every area's ground, with everybody on it.
      *
      * IT IS THE NETWORK MAP PLUS THE MARKERS, and nothing else: the
      * boundaries, the live/quiet split and the per-area pins are already

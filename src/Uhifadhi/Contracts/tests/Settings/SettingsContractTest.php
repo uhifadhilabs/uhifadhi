@@ -134,7 +134,7 @@ final class SettingsContractTest extends TestCase
         self::assertNull(new OrganisationIdentity('Anywhere', timeZone: 'Nowhere/Nothing')->utcOffset($at), 'A zone PHP does not know.');
     }
 
-    /** An organisation is known by its name; there is no nameless one to draw. */
+    /** An organization is known by its name; there is no nameless one to draw. */
     public function testAnOrganisationWithoutANameIsRefused(): void
     {
         $this->expectException(\InvalidArgumentException::class);
@@ -146,7 +146,7 @@ final class SettingsContractTest extends TestCase
      * THE TAB SET IS AN ORDER, and it is published because TWO renderers read
      * it — the page's strip and the sidebar's subtree. The overview is first
      * because the section wears the area idiom, and the screen that EDITS the
-     * organisation is last.
+     * organization is last.
      */
     public function testTheScreensAreDeclaredInTheOrderTheSectionIsRead(): void
     {

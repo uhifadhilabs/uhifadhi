@@ -51,7 +51,7 @@ final class TeamConfiguration
 {
     /**
      * What the card says when a deployment has not said anything else. It
-     * describes the PRODUCT, never an organisation: a default naming somebody's
+     * describes the PRODUCT, never an organization: a default naming somebody's
      * authority would be a lie on every other installation.
      */
     /** What an email calls this installation when a deployment has not said. */

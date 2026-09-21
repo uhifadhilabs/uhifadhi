@@ -24,12 +24,12 @@ use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\DevkitContentCollector
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\IntegrationTestCase;
 
 /**
- * THE DEMO ORGANISATION, SEEDED THROUGH THE COLLECTOR THAT WILL SEED IT.
+ * THE DEMO ORGANIZATION, SEEDED THROUGH THE COLLECTOR THAT WILL SEED IT.
  *
  * The bundle offers content; devkit collects it in a dev install and runs it.
  * The collector standing in here does the same much, so what is proved is the
  * arrangement rather than a method call: the provider is reachable through the
- * tag, its dependencies are satisfiable, and running it leaves an organisation
+ * tag, its dependencies are satisfiable, and running it leaves an organization
  * somebody could have built from the screens.
  */
 #[CoversClass(TeamContentProvider::class)]
@@ -55,7 +55,7 @@ final class DemoOrganisationTest extends IntegrationTestCase
         self::assertCount(4, $this->service(PositionRepository::class)->findAllOrdered());
         // THE SIX NAMED ROLES AND THE FIELD STAFF BEHIND THEM. The six are
         // the roles a reader has to see; the rest are the body of the
-        // organisation, and without them the demo GROUND seeds with three
+        // organization, and without them the demo GROUND seeds with three
         // posts staffed and thirteen empty — see TeamContentProvider's own
         // note on why the number is what it is.
         self::assertCount(6 + TeamContentProvider::FIELD_STAFF, $this->service(UserRepository::class)->findAllByName());
@@ -63,7 +63,7 @@ final class DemoOrganisationTest extends IntegrationTestCase
 
     /**
      * SEEDING TWICE IS SEEDING ONCE. A developer running the demo seeder again
-     * is repeating a command, not asking for a second organisation — and the
+     * is repeating a command, not asking for a second organization — and the
      * slices seeded after this one only run if this one does not refuse.
      */
     public function testSeedingTwiceLeavesTheOrganisationTheFirstRunLeft(): void
@@ -80,7 +80,7 @@ final class DemoOrganisationTest extends IntegrationTestCase
     }
 
     /**
-     * SOMEBODY CAN ADMINISTER IT. A demo organisation whose every account is
+     * SOMEBODY CAN ADMINISTER IT. A demo organization whose every account is
      * Staff is a demo nobody can open the team screens from.
      */
     public function testSomebodySeededCanAdministerTheTeam(): void
@@ -111,7 +111,7 @@ final class DemoOrganisationTest extends IntegrationTestCase
 
     /**
      * A PERSON WITH NO POSITION IS A STATE THE ROSTER HAS TO DRAW, so the demo
-     * organisation has one.
+     * organization has one.
      */
     public function testSomebodyIsSeededWithNoPositionAtAll(): void
     {

@@ -19,7 +19,7 @@ use Doctrine\Migrations\AbstractMigration;
 /**
  * THE DEPARTMENT KIND — a way of grouping departments for reading.
  *
- * EXPAND ONLY, AND NOTHING IS BACKFILLED. A kind is a word the organisation
+ * EXPAND ONLY, AND NOTHING IS BACKFILLED. A kind is a word the organization
  * chooses; inventing three on an installation's behalf would put words in the
  * register that nobody in the building says. Every existing department stays
  * unkinded, which is a legal state the register draws, and the first kind is

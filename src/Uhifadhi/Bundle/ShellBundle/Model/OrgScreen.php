@@ -16,7 +16,7 @@ namespace Uhifadhi\Bundle\ShellBundle\Model;
 use Uhifadhi\Contracts\Shell\OrgPage;
 
 /**
- * ONE SCREEN OF A MODULE'S ORGANISATION-LEVEL SET, AS MOUNTED — the module's
+ * ONE SCREEN OF A MODULE'S ORGANIZATION-LEVEL SET, AS MOUNTED — the module's
  * declaration plus the two things only the application can say: the address
  * the route resolved to, and whether this is the screen the viewer is on.
  *

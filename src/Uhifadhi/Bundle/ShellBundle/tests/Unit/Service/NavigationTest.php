@@ -73,6 +73,10 @@ final class NavigationTest extends TestCase
      */
     public function testAnUnknownGroupIsRefusedWithTheFourNamed(): void
     {
+        // DELIBERATELY THE OTHER SPELLING — the near miss this refusal
+        // exists for. The product spells it "Organization"; a source that
+        // typed the British form used to make a FIFTH heading, and a sidebar
+        // with two Organizations in it answers "where am I" with a lie.
         $navigation = new Navigation([
             self::source(new NavSection('Organisation', [new NavItem(label: 'Team', url: '/team')])),
         ]);

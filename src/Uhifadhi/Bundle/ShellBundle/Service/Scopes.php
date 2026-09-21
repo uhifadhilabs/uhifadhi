@@ -73,7 +73,7 @@ final readonly class Scopes
      * first one offered.
      *
      * NULL WHERE NOTHING IS OFFERED AT ALL, which is a real state and not an
-     * empty organisation: an installation with no areas, or an account that
+     * empty organization: an installation with no areas, or an account that
      * may see none, has nothing to scope and the page says so rather than
      * drawing a control with no rows in it.
      */

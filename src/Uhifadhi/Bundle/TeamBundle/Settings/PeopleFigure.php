@@ -22,7 +22,7 @@ use Uhifadhi\Contracts\Settings\SettingsFigureSourceInterface;
  * ACTIVE, BECAUSE THAT IS THE NUMBER EVERY OTHER FIGURE IS ABOUT. A closed
  * account still has records attached to it and still appears in a history; it
  * does not appear on a watch, in a patrol or in a queue, so a headline count
- * that included it would over-state the organisation the rest of the product
+ * that included it would over-state the organization the rest of the product
  * is reporting on.
  *
  * AND THE CAPTION IS WHERE THEY WORK, because that is what somebody setting

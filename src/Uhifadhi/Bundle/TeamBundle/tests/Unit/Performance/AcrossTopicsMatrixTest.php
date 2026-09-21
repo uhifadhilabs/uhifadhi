@@ -34,7 +34,7 @@ use Uhifadhi\Contracts\Performance\TopicMatrix;
  *
  * A TOPIC'S MATRIX ANSWERS "how is this department doing at patrols";
  * this one answers "where is this department reading at all", which is
- * the question the organisation's page opens with. It is built from the
+ * the question the organization's page opens with. It is built from the
  * topics rather than from a query of its own, so a module that publishes
  * a topic appears here the same day and the host writes no column.
  *
@@ -95,7 +95,7 @@ final class AcrossTopicsMatrixTest extends TestCase
 
     /**
      * EVERY DEPARTMENT IS A ROW, in the directory's order and its own
-     * band — the overview is the organisation's list, not the list of
+     * band — the overview is the organization's list, not the list of
      * departments that happen to measure something.
      */
     public function testEveryDepartmentIsARowInItsOwnBand(): void

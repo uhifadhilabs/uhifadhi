@@ -24,7 +24,7 @@ use Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceInterface;
  *
  * The section's first tab was a fixed page: a band, a strip of figures and six
  * cells in a fixed order, the same for everybody. But what a reader comes to
- * this tab FOR differs by who they are — somebody staffing the organisation
+ * this tab FOR differs by who they are — somebody staffing the organization
  * wants the vacancies and the filled-by-department bars; somebody wiring
  * modules up wants the matrix counts and the departments reading nothing; a
  * director wants the goals. One order cannot be right for all three, and the
@@ -52,7 +52,7 @@ final class DepartmentWidgets implements WidgetSurfaceInterface
     /** What the composition this bundle ships with is CALLED when it leads the strip. */
     public const string DEFAULT_LABEL = 'The whole reading';
 
-    public const string DEFAULT_DESCRIPTION = 'Every cell the section publishes, in the order the organisation is read from the outside in: the figures, how each department is staffed and scoped, what it reads, and what is waiting on somebody.';
+    public const string DEFAULT_DESCRIPTION = 'Every cell the section publishes, in the order the organization is read from the outside in: the figures, how each department is staffed and scoped, what it reads, and what is waiting on somebody.';
 
     public function catalog(): WidgetCatalog
     {
@@ -61,7 +61,7 @@ final class DepartmentWidgets implements WidgetSurfaceInterface
             [
                 new WidgetGroup(
                     'shape',
-                    'The shape of the organisation',
+                    'The shape of the organization',
                     'How the departments are staffed, where each one is read and what each one reads. These describe the establishment rather than judging it, and any composition can carry any of them.',
                 ),
                 new WidgetGroup(
@@ -108,7 +108,7 @@ final class DepartmentWidgets implements WidgetSurfaceInterface
                 new WidgetPreset(
                     'asks',
                     'What is waiting',
-                    'Only the three cells that name somebody who has to do something, at full width with the figures above them. Nothing on it describes the organisation, so it is a working list and not a briefing.',
+                    'Only the three cells that name somebody who has to do something, at full width with the figures above them. Nothing on it describes the organization, so it is a working list and not a briefing.',
                     ['kpis' => 12, 'unattached' => 12, 'vacancies' => 12, 'goals' => 12],
                 ),
             ],

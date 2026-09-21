@@ -23,7 +23,7 @@ use Uhifadhi\Contracts\Settings\ModuleMatrixSourceInterface;
  * THIS IS THE ONE FAILURE MODE AN INSTALLATION CANNOT SEE FROM ANYWHERE ELSE.
  * A registered area with every module off is absent from every figure and
  * every queue in the product — not because anything is broken, but because
- * there is nothing installed in it to contribute one. The whole organisation
+ * there is nothing installed in it to contribute one. The whole organization
  * then reads as smaller and quieter than it is, and nothing says why. So the
  * area bundle raises it twice, where each reading is looked for: as a health
  * CHECK on the installation screen, and as a DECISION in the section's queue.

@@ -565,7 +565,7 @@ abstract class VocabularyConformanceTestCase extends TestCase
      * did not. Then the plate stopped being something a page asks for and
      * became something a WIDGET draws — any cell of a composed surface may
      * draw one — and "a page that draws a plate links map.css" stopped being
-     * a rule anybody could keep: the organisation Overview composed a map
+     * a rule anybody could keep: the organization Overview composed a map
      * cell onto a page that linked no map sheet, and the plate came apart
      * with no error anywhere. The head cannot be decided by what a page
      * happens to compose.

@@ -37,7 +37,7 @@ use Uhifadhi\Contracts\Entity\UserInterface as ModuleUserInterface;
 use Uhifadhi\Contracts\Shell\Scope;
 
 /**
- * THE ORGANISATION DASHBOARD — what `/` is.
+ * THE ORGANIZATION DASHBOARD — what `/` is.
  *
  * IT IS THE AREA OVERVIEW ONE SCOPE WIDER, and it is composed the same way:
  * a widget surface whose cells arrive from contributors, a grid the host
@@ -45,7 +45,7 @@ use Uhifadhi\Contracts\Shell\Scope;
  * five cells; every operational figure on the page belongs to a module.
  *
  * THERE IS NO SCOPE CONTROL ON THIS SURFACE (ruled). The dashboard IS the
- * organisation, so a dropdown here would have one setting for ever; scope
+ * organization, so a dropdown here would have one setting for ever; scope
  * belongs to the Observatory pages that can be read at more than one.
  *
  * AN INSTALLATION WITH NO AREAS STILL DRAWS A PAGE. The figures keep their

@@ -21,7 +21,7 @@ use Uhifadhi\Bundle\ShellBundle\Widget\Model\WidgetGroup;
 use Uhifadhi\Contracts\Shell\Scope;
 
 /**
- * THE ORGANISATION'S OWN CELLS ON ITS DASHBOARD — and it contributes them
+ * THE ORGANIZATION'S OWN CELLS ON ITS DASHBOARD — and it contributes them
  * the same way a module does.
  *
  * THE PAGE OWNS THE SURFACE AND WRITES NO WIDGET MARKUP, exactly as the area
@@ -29,7 +29,7 @@ use Uhifadhi\Contracts\Shell\Scope;
  * through a contract, the page would have two ways of putting a card on one
  * grid and only one of them would be open to extension.
  *
- * FIVE CELLS ARE THE ORGANISATION'S BY RIGHT. The figures strip (which other
+ * FIVE CELLS ARE THE ORGANIZATION'S BY RIGHT. The figures strip (which other
  * contributors fill), what needs a decision anywhere, the ground with
  * everybody on it, the areas themselves, and what runs where.
  *
@@ -43,7 +43,7 @@ use Uhifadhi\Contracts\Shell\Scope;
  */
 final readonly class OrgOverviewWidgets implements OrgOverviewContributorInterface
 {
-    /** The organisation's own "module" slug — it is always asked. */
+    /** The organization's own "module" slug — it is always asked. */
     public const string SLUG = 'organisation';
 
     public const string KPIS = 'kpis';
@@ -65,7 +65,7 @@ final readonly class OrgOverviewWidgets implements OrgOverviewContributorInterfa
     {
         return new WidgetGroup(
             'host',
-            'The organisation itself',
+            'The organization itself',
             'The figures strip, what needs a decision anywhere, the ground with everybody on it, the areas and what runs in them. Two of these render parts CONTRIBUTED by the modules rather than a list the host wrote, which is why the strip has a duty figure on it and the host knows nothing about rosters.',
         );
     }
@@ -73,18 +73,18 @@ final readonly class OrgOverviewWidgets implements OrgOverviewContributorInterfa
     public function widgets(): array
     {
         return [
-            new Widget(self::KPIS, 'The organisation right now', 'host', 12, [12], true,
+            new Widget(self::KPIS, 'The organization right now', 'host', 12, [12], true,
                 'Four figures, one per contributor. A module that contributes no figure adds no tile, and the strip is still four wide.'),
             new Widget(self::ATTENTION, 'Needs a decision', 'host', 12, [12], true,
-                'Every ranger, patrol, incident and area that needs somebody to act, anywhere in the organisation, sorted by urgency rather than by module.'),
+                'Every ranger, patrol, incident and area that needs somebody to act, anywhere in the organization, sorted by urgency rather than by module.'),
             // TWELVE OR SIX: the areas wall puts the ground beside the
             // watches, which is the only composition that asks a plate to
             // read at half width.
             new Widget(self::PLATE, 'Where everybody is', 'host', 12, [12, 6], true,
-                'The organisation’s ground with a marker per live position. Only areas that report draw anything, and the caption says how many of them there are.'),
+                'The organization’s ground with a marker per live position. Only areas that report draw anything, and the caption says how many of them there are.'),
             new Widget(self::AREAS, 'The areas', 'host', 6, [12, 6], true,
                 'One row per area: what it runs, how much ground it holds, and whether it has been set up at all.'),
-            new Widget(self::MODULES, 'Modules across the organisation', 'host', 6, [12, 6], false,
+            new Widget(self::MODULES, 'Modules across the organization', 'host', 6, [12, 6], false,
                 'Which modules are installed and which areas run them. The register lives in Settings; this is the reading of it.'),
         ];
     }
@@ -98,7 +98,7 @@ final readonly class OrgOverviewWidgets implements OrgOverviewContributorInterfa
      * THE ONE FIGURE THE PAGE MAY STATE ITSELF — how many areas there are,
      * and how many of them report at all.
      *
-     * It is the organisation's own because it is the length of a list this
+     * It is the organization's own because it is the length of a list this
      * page already draws, which is the same argument that puts the attention
      * count on the area's strip. Everything else on the row is a module's.
      */

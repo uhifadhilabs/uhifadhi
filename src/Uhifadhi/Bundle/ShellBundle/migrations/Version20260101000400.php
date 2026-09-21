@@ -54,7 +54,7 @@ final class Version20260101000400 extends AbstractMigration
         SQL);
         // Two partial indexes, not one: Postgres treats NULLs as distinct, so a
         // single unique over a nullable area_uuid would not constrain the
-        // organisation-wide row at all.
+        // organization-wide row at all.
         $this->addSql(<<<'SQL'
             CREATE UNIQUE INDEX uniq_widget_pref_surface_user_area ON widget_preference (surface, user_id, area_uuid)
             WHERE

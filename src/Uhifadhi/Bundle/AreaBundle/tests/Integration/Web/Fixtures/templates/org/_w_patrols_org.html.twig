@@ -1,4 +1,4 @@
-{# A CONTRIBUTED CELL ON THE ORGANISATION DASHBOARD, written the way the
+{# A CONTRIBUTED CELL ON THE ORGANIZATION DASHBOARD, written the way the
    contract documents one: rendered with `with_context: false`, everything in
    ONE map, this module's own figures under `by.patrols`. It reads nothing
    else, which is what makes it a test of the host rather than of itself.
@@ -7,7 +7,7 @@
    the day the module is uninstalled its disappearance reads as the system
    working rather than as a bug. #}
 <div class="c" data-w="patrols_org">
-    <span class="tab">Out across the organisation<span class="src">&middot; {{ by.patrols.out }} open</span></span>
+    <span class="tab">Out across the organization<span class="src">&middot; {{ by.patrols.out }} open</span></span>
     <span class="ao-by patrols"><i></i>patrols</span>
-    <div class="use">{{ by.patrols.walked }} km walked today{{ by.patrols.organisation ? ', everywhere' : '' }}.</div>
+    <div class="use">{{ by.patrols.walked }} km walked today{{ by.patrols.organization ? ', everywhere' : '' }}.</div>
 </div>

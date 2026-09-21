@@ -41,7 +41,7 @@ final class SidebarRowTest extends WebTestCaseWithSchema
 {
     /**
      * THREE ROWS AND TWO HEADINGS. Performance files under Observatory
-     * because it is a way of LOOKING at the organisation; the org chart's
+     * because it is a way of LOOKING at the organization; the org chart's
      * own two rows sit under Organization, in that order, and each row is
      * gated on the same permission as the screen behind it.
      */

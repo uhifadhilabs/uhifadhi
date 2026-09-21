@@ -8,7 +8,7 @@
 
 Not released yet.
 
- * THE BRANDMARK'S DEFAULT DESTINATION IS THE ORGANISATION DASHBOARD.
+ * THE BRANDMARK'S DEFAULT DESTINATION IS THE ORGANIZATION DASHBOARD.
    `shell.home_route` now defaults to `organisation_dashboard`, the page the
    core ships at `/`; an installation that puts something else at its front
    door says so in one line, as before.
@@ -22,7 +22,7 @@ Not released yet.
    /favicon.ico`, which is a log nobody reads and a real error lost in it
 
  * THE SETTINGS SECTION, in the area idiom: `/settings` with Installation,
-   Modules and Organisation as its tabs, one head on every screen and a
+   Modules and Organization as its tabs, one head on every screen and a
    subline per screen, shipped as a third route resource
    (`ShellBundle::SETTINGS_ROUTES`) an application imports in one line. Its
    door is the sidebar's last group, holding one row whose children are the
@@ -34,7 +34,7 @@ Not released yet.
    row saying so rather than a 500 on the one screen that reports trouble
  * ITS FIRST SCREEN SAYS WHAT THIS INSTALLATION GIVES YOU — the welcome
    page's content, kept somewhere a reader can come back to now that `/` is
-   the organisation dashboard. The parts of the core are READ from each
+   the organization dashboard. The parts of the core are READ from each
    one's own manifest, what a module adds comes off the same matrix the
    tables do, and the set-up checklist is assembled from
    `shell.settings_step`: every row states WHERE this installation is rather
@@ -47,7 +47,7 @@ Not released yet.
    beside it, so the installation screen quotes each package rather than the
    shell describing any of them
 
- * THE SHELL MOUNTS A MODULE'S ORGANISATION-LEVEL PAGES: a row in
+ * THE SHELL MOUNTS A MODULE'S ORGANIZATION-LEVEL PAGES: a row in
    Observatory after Performance per module tagged `shell.org_pages`, its
    screens as the tabs under it, and the scope control (`shell.scope_source`,
    `?area=`) in the action row. `.ov-ctl` is unscoped — it is the shell's

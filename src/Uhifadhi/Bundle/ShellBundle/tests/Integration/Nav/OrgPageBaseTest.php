@@ -25,7 +25,7 @@ use Uhifadhi\Contracts\Shell\OrgPage;
 use Uhifadhi\Contracts\Shell\Scope;
 
 /**
- * THE ORG BASE — the page frame an organisation-level screen extends.
+ * THE ORG BASE — the page frame an organization-level screen extends.
  *
  * RULED: the page-level tab strip of an org page set is the SHELL'S, exactly
  * as the sidebar row is. The first module to ship one wrote its own base —
@@ -38,7 +38,7 @@ use Uhifadhi\Contracts\Shell\Scope;
  * mounted — and a module's org page fills a body and nothing else.
  *
  * NO AREA ANYWHERE IN IT, which is the whole difference from the area frame:
- * an organisation-level screen is the area screen one scope WIDER, so naming
+ * an organization-level screen is the area screen one scope WIDER, so naming
  * an area in its trail would be naming the one thing it is not about.
  */
 final class OrgPageBaseTest extends ContractTestCase
@@ -120,7 +120,7 @@ final class OrgPageBaseTest extends ContractTestCase
     }
 
     /**
-     * THE ONE CONTROL AN ORGANISATION-LEVEL PAGE CARRIES, in the action row,
+     * THE ONE CONTROL AN ORGANIZATION-LEVEL PAGE CARRIES, in the action row,
      * and it is the shell's own component. A module states no scope control.
      */
     public function testTheScopeControlIsInTheActionRow(): void
@@ -136,14 +136,14 @@ final class OrgPageBaseTest extends ContractTestCase
 
         self::assertCount(1, $page->filter('.pgact form.ov-ctl select'));
         self::assertSame(
-            ['Organisation — all areas', 'Crater'],
+            ['Organization — all areas', 'Crater'],
             $page->filter('.pgact form.ov-ctl option')->each(static fn (Crawler $o): string => trim($o->text())),
         );
     }
 
     /**
      * NO AREA IN THE TRAIL. The stand-in host is standing in an area — it
-     * says so on every other page — and an organisation-level screen still
+     * says so on every other page — and an organization-level screen still
      * names none, because it is about all of them.
      */
     public function testTheTrailNamesTheModuleAndNoArea(): void

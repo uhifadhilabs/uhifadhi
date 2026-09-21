@@ -17,7 +17,7 @@ use Uhifadhi\Contracts\Shell\OrgPage;
 use Uhifadhi\Contracts\Shell\OrgPagesInterface;
 
 /**
- * A MODULE THAT ANSWERS AT ORGANISATION LEVEL — the stand-in contributor.
+ * A MODULE THAT ANSWERS AT ORGANIZATION LEVEL — the stand-in contributor.
  *
  * NOT A STUB: it impersonates nobody. It is an ordinary implementation of a
  * published interface, written here because the shell mounts org-level page

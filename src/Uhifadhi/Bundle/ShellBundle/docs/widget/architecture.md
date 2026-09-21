@@ -86,7 +86,7 @@ widget has nowhere to be declared, which is the answer.
 
 **Removing a module leaves its stored layouts behind, on purpose.**
 `composer remove` runs no migrations and un-configuration touches configuration;
-neither has any business deleting an organisation's data.
+neither has any business deleting an organization's data.
 
 And the rows are harmless where they are. Every one is keyed by a surface
 **string**, nothing reads a surface no registry claims, and putting the module
