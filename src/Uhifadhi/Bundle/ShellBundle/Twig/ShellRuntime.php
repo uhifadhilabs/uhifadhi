@@ -14,6 +14,9 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\ShellBundle\Twig;
 
 use Symfony\Component\Routing\RouterInterface;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Component\Security\Core\Authentication\Token\SwitchUserToken;
+use Symfony\Component\Security\Core\User\UserInterface;
 use Twig\Extension\RuntimeExtensionInterface;
 use Uhifadhi\Bundle\ShellBundle\Frame\Model\ConfigureAction;
 use Uhifadhi\Bundle\ShellBundle\Frame\Service\ModuleFrameService;
@@ -48,7 +51,45 @@ final class ShellRuntime implements RuntimeExtensionInterface
         private readonly RouterInterface $router,
         private readonly string $brandName,
         private readonly string $homeRoute,
+        /** Absent on an installation with no security at all; then nobody is ever impersonated. */
+        private readonly ?TokenStorageInterface $tokens = null,
     ) {
+    }
+
+    /**
+     * WHOSE SESSION THIS REALLY IS, while an administrator has borrowed one:
+     * the borrowed account's name and the real one's. Null on an ordinary
+     * session, and null where the installation has no security — the band
+     * that reads this is then simply absent, never an error.
+     *
+     * @return array{borrowed: string, real: string}|null
+     */
+    public function impersonation(): ?array
+    {
+        $token = $this->tokens?->getToken();
+        if (!$token instanceof SwitchUserToken) {
+            return null;
+        }
+
+        return [
+            'borrowed' => self::nameOf($token->getUser()),
+            'real' => self::nameOf($token->getOriginalToken()->getUser()),
+        ];
+    }
+
+    private static function nameOf(?UserInterface $user): string
+    {
+        if (null === $user) {
+            return 'somebody';
+        }
+        if (method_exists($user, 'getFullName')) {
+            $name = $user->getFullName();
+            if (\is_string($name) && '' !== $name) {
+                return $name;
+            }
+        }
+
+        return $user->getUserIdentifier();
     }
 
     /**

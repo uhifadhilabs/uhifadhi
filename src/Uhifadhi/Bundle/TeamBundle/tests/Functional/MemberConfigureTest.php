@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\TeamBundle\Tests\Functional;
 
 use Symfony\Component\DomCrawler\Crawler;
+use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Contracts\Access\ScopeKind;
@@ -214,6 +215,33 @@ final class MemberConfigureTest extends WebTestCaseWithSchema
         self::assertSelectorTextContains('.flashes', 'Sarah Kimaro');
     }
 
+    /**
+     * WHILE A SESSION IS BORROWED, EVERY PAGE WEARS THE BAND: whose session it
+     * is, whose it really is, and the one exit — which lands on the dashboard.
+     * Nobody else ever sees it.
+     */
+    public function testABorrowedSessionWearsTheBandWithItsExitOnEveryPage(): void
+    {
+        $this->signedInAdministrator();
+        $grace = $this->person('Grace', 'Ndosi');
+        $grace->setPosition($this->position('Reader', [TeamConcerns::DIRECTORY.'.read']));
+        $this->place($grace);
+        $this->em->flush();
+
+        self::assertCount(0, $this->client->request('GET', '/team')->filter('.impband'), 'No band on an ordinary session.');
+
+        $this->client->request('GET', '/team?_switch_user='.urlencode((string) $grace->getEmail()));
+        $this->client->followRedirect();
+        $crawler = $this->client->request('GET', '/team');
+        self::assertResponseIsSuccessful();
+
+        $band = $crawler->filter('.impband');
+        self::assertCount(1, $band);
+        self::assertStringContainsString('Signed in as Grace Ndosi', preg_replace('/\s+/', ' ', $band->text()) ?? '');
+        self::assertStringContainsString('you are Naomi Kileo', preg_replace('/\s+/', ' ', $band->text()) ?? '');
+        self::assertSame('/?_switch_user=_exit', $band->filter('a.impx')->attr('href'));
+    }
+
     /** THE DETAILS CARD SAVES THE FOUR COLUMNS and comes back to this page. */
     public function testTheDetailsCardSavesAndReturnsHere(): void
     {
@@ -248,6 +276,10 @@ final class MemberConfigureTest extends WebTestCaseWithSchema
         self::assertStringStartsWith('Account', trim($card->filter('.tab')->text()));
         self::assertCount(1, $card->filter('.mb-drow button.softbtn.danger:contains("Deactivate")'));
         self::assertCount(1, $card->filter('.mb-drow a.softbtn.warn:contains("Switch")'));
+        // THE SWITCH LANDS ON THE DASHBOARD, a page every account reaches — never on the
+        // team page where it was made, which would answer the borrowed account with a refusal.
+        $switch = (string) $card->filter('.mb-drow a.softbtn.warn')->attr('href');
+        self::assertStringStartsWith('/?_switch_user=', $switch);
         self::assertCount(1, $card->filter('.mb-drow button.softbtn:contains("Send")'));
     }
 }

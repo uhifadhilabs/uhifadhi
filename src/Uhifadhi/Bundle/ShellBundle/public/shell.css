@@ -391,6 +391,27 @@ body::before {
    Without this the cluster sits at the window edge while the grid is centred,
    and that contract reads as a "cut grid". Written as `.topbar > .tb-right` so it
    out-ranks the margin-left:auto it replaces. */
+/* THE IMPERSONATION BAND (design: nav.css .impband) — under the 56px top bar and
+   sticky with it, accent-tinted, one exit. */
+.impband {
+    position: sticky; top: 56px; z-index: 24; display: flex; align-items: center; gap: 10px;
+    padding: 7px 22px; font-size: 12px; line-height: 1.4; color: rgb(var(--c-tx));
+    background: color-mix(in srgb, rgb(var(--c-acc)) 13%, rgb(var(--c-cv)));
+    border-bottom: 1px solid color-mix(in srgb, rgb(var(--c-acc)) 40%, transparent);
+}
+.impband svg { width: 15px; height: 15px; flex: none; color: rgb(var(--c-acc)); }
+.impband b { font-weight: 600; }
+.impband .who { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.impband .who em { font-style: normal; color: rgb(var(--c-fog)); }
+.impx {
+    margin-left: auto; flex: none; display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+    text-decoration: none; color: rgb(var(--c-accT)); background: rgb(var(--c-acc));
+    border: 1px solid rgb(var(--c-acc)); border-radius: 7px; padding: 4px 11px;
+}
+.impx:hover { filter: brightness(1.06); text-decoration: none; }
+.impx svg { width: 13px; height: 13px; color: inherit; }
+
 .topbar {
     display: flex; align-items: center; height: 56px; padding: 0; border-bottom: 1px solid var(--c-ln);
     background: color-mix(in srgb, rgb(var(--c-cv)) 85%, transparent); backdrop-filter: blur(10px);

@@ -80,7 +80,8 @@ final class BlockContractTest extends ContractTestCase
              * are sockets for the HOST — the thing that knows who is signed in,
              * what an area is, and whether this response is an impersonation.
              */
-            'shell_banner',         // host: impersonation, maintenance, outage.
+            'shell_banner',         // host: maintenance, outage — above the top bar.
+            'shell_impersonation',  // host: the impersonation band under the top bar, with its exit.
             'shell_sidebar',        // host: replace the entire aside. Rarely.
             'shell_sidebar_brand',  // host: the mark and the wordmark.
             'shell_sidebar_nav',    // host: overridable, but see spec 2 — the

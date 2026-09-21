@@ -33,7 +33,8 @@ whether this response is an impersonation.
 
 | Socket | Filled by |
 |---|---|
-| `shell_banner` | host — impersonation, maintenance, outage |
+| `shell_banner` | host — maintenance, outage (above the top bar) |
+| `shell_impersonation` | host — the impersonation band under the top bar: whose session, whose it really is, the exit |
 | `shell_sidebar` | host — replace the whole aside (rare) |
 | `shell_sidebar_brand` | host — the mark and the wordmark |
 | `shell_sidebar_nav` | host — overriding this opts out of the navigation contract |

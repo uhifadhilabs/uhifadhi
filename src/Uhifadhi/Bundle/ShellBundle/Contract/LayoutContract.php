@@ -88,6 +88,7 @@ final class LayoutContract
 
         // The shell — the host's furniture. A module fills none of these.
         'shell_banner',
+        'shell_impersonation',
         'shell_sidebar',
         'shell_sidebar_brand',
         'shell_sidebar_nav',

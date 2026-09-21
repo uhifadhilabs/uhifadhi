@@ -184,6 +184,8 @@ final class TestKernel extends Kernel
                         'path' => 'team_logout',
                         'target' => 'team_login',
                     ],
+                    // Impersonation, as the installation's own security.yaml has it.
+                    'switch_user' => true,
                     // A rule the ladder below admits on a remembered token is
                     // only honestly exercised by a firewall that can issue one.
                     'remember_me' => [

@@ -337,6 +337,7 @@ return static function (ContainerConfigurator $container): void {
             service('router'),
             '%shell.brand_name%',
             '%shell.home_route%',
+            service('security.token_storage')->nullOnInvalid(),
         ])
         ->tag('twig.runtime');
 };

@@ -122,6 +122,23 @@
                     </header>
                 {% endblock %}
 
+                {# THE IMPERSONATION BAND — on every page while an administrator
+                   has borrowed a session, under the top bar and sticky with it:
+                   whose session this is, whose it really is, and the one way
+                   out. It exists only on a switched token; nobody else ever
+                   sees a trace of it. #}
+                {% block shell_impersonation %}
+                    {%- set _imp = shell_impersonation() -%}
+                    {%- if _imp -%}
+                        {%- set _home = shell_brand().url -%}
+                        <div class="impband" role="status">
+                            {{ ux_icon('shell:eye', {width: 15, height: 15}) }}
+                            <span class="who">Signed in as <b>{{ _imp.borrowed }}</b> <em>&middot; you are {{ _imp.real }}</em></span>
+                            <a class="impx" href="{{ _home }}?_switch_user=_exit">{{ ux_icon('shell:power', {width: 13, height: 13}) }} Exit</a>
+                        </div>
+                    {%- endif -%}
+                {% endblock %}
+
                 {# THE COMPATIBILITY SOCKET, named for compatibility rather than for
                    clarity and kept on purpose: every host page and every module
                    bundle already fills it. Renaming it would break five
