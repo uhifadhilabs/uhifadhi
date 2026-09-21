@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
+use Uhifadhi\Bundle\AreaBundle\Access\AreaConcerns;
 use Uhifadhi\Bundle\AreaBundle\Access\AreaPermissions;
 use Uhifadhi\Bundle\AreaBundle\Devkit\AreaContentProvider;
 use Uhifadhi\Bundle\AreaBundle\Devkit\StationContentProvider;
@@ -73,6 +74,7 @@ use Uhifadhi\Bundle\AreaBundle\Widget\AreaOverviewWidgets;
 use Uhifadhi\Bundle\AtlasBundle\Map\MapBuilderInterface;
 use Uhifadhi\Bundle\RegistryBundle\Repository\AreaModuleRepository;
 use Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceInterface;
+use Uhifadhi\Contracts\Access\ConcernSourceInterface;
 use Uhifadhi\Contracts\Area\LivePositionsInterface;
 use Uhifadhi\Contracts\Area\PresenceProviderInterface;
 use Uhifadhi\Contracts\Area\StationDirectoryInterface;
@@ -514,6 +516,15 @@ return static function (ContainerConfigurator $container): void {
      * instant never is.
      */
     $services->alias(LivePositionsInterface::class, 'area.presence');
+
+    /*
+     * WHAT THE GROUND SAYS THERE IS TO HAVE A PERMISSION ABOUT — areas,
+     * zones, stations and assignments. Tagged by hand, as a reusable
+     * bundle's services must be; the core declares its concerns through the
+     * same seam a module uses.
+     */
+    $services->set('area.access.concerns', AreaConcerns::class)
+        ->tag(ConcernSourceInterface::TAG);
 
     $services->set('area.permissions', AreaPermissions::class)
         ->tag(PermissionDeclarationInterface::TAG);

@@ -18,6 +18,7 @@ use Uhifadhi\Bundle\RegistryBundle\Event\ModuleInstalledEvent;
 use Uhifadhi\Bundle\RegistryBundle\Repository\AreaModuleRepository;
 use Uhifadhi\Bundle\ShellBundle\Contract\NavigationSourceInterface;
 use Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceInterface;
+use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
 use Uhifadhi\Bundle\TeamBundle\Api\State\MeProvider;
 use Uhifadhi\Bundle\TeamBundle\ArgumentResolver\AreaValueResolver;
 use Uhifadhi\Bundle\TeamBundle\Command\CreateUserCommand;
@@ -117,6 +118,7 @@ use Uhifadhi\Bundle\TeamBundle\Twig\MatrixRuntime;
 use Uhifadhi\Bundle\TeamBundle\Widget\DepartmentWidgets;
 use Uhifadhi\Bundle\TeamBundle\Widget\PositionWidgets;
 use Uhifadhi\Bundle\TeamBundle\Widget\TeamWidgets;
+use Uhifadhi\Contracts\Access\ConcernSourceInterface;
 use Uhifadhi\Contracts\Area\StationDirectoryInterface;
 use Uhifadhi\Contracts\Kpi\CurrentPeriodInterface;
 use Uhifadhi\Contracts\People\PersonDirectoryProviderInterface;
@@ -467,6 +469,15 @@ return static function (ContainerConfigurator $container): void {
             service('team.permissions'),
         ])
         ->tag('api_platform.state_provider', ['key' => MeProvider::class]);
+
+    /*
+     * WHAT THE TEAM SAYS THERE IS TO HAVE A PERMISSION ABOUT. The tag goes on
+     * by hand because a reusable bundle is not autoconfigured, and the core
+     * declares its concerns through the same seam a module uses — there is no
+     * privileged list in the middle of the product.
+     */
+    $services->set('team.access.concerns', TeamConcerns::class)
+        ->tag(ConcernSourceInterface::TAG);
 
     /*
      * THE CATALOGUE, reading the module providers LIVE from the container in

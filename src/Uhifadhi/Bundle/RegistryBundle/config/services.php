@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
 use Psr\Container\ContainerInterface;
+use Uhifadhi\Bundle\RegistryBundle\Access\RegistryConcerns;
 use Uhifadhi\Bundle\RegistryBundle\EventListener\ParkedModuleListener;
 use Uhifadhi\Bundle\RegistryBundle\EventListener\RegistrySyncListener;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
@@ -29,6 +30,7 @@ use Uhifadhi\Bundle\RegistryBundle\Service\ProviderCatalogueMapper;
 use Uhifadhi\Bundle\RegistryBundle\Service\RegistrySyncService;
 use Uhifadhi\Bundle\RegistryBundle\Settings\CatalogueFigure;
 use Uhifadhi\Bundle\RegistryBundle\Version\DependencyOrderComparator;
+use Uhifadhi\Contracts\Access\ConcernSourceInterface;
 use Uhifadhi\Contracts\Settings\SettingsFigureSourceInterface;
 
 /*
@@ -106,6 +108,14 @@ return static function (ContainerConfigurator $container): void {
 
     $services->set('registry.area_module_ledger', AreaModuleLedger::class)
         ->args([service('registry.catalogue'), service(AreaModuleRepository::class)]);
+
+    /*
+     * THE ONE CONCERN THE CATALOGUE OWNS: which modules an area runs. Tagged
+     * by hand, with the CONTRACT's constant, because a reusable bundle is not
+     * autoconfigured and this bundle names no sibling bundle.
+     */
+    $services->set('registry.access.concerns', RegistryConcerns::class)
+        ->tag(ConcernSourceInterface::TAG);
 
     /*
      * HOW MANY MODULES THIS INSTALLATION RUNS, for the settings section's
