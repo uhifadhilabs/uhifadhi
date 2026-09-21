@@ -3426,6 +3426,12 @@ label.pm-box:focus-within i { outline: 2px solid rgb(var(--c-acc)); outline-offs
 .pmw { font-family:var(--font-mono);font-size:9px;font-weight:700; letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--ln2);border-radius:999px; padding:0 11px;height:24px;box-sizing:border-box;display:inline-flex;align-items:center;gap:5px; background:none;color:var(--dim);cursor:pointer;line-height:1 }
 .pmw:hover { color:var(--tx);border-color:var(--fog) }
 .pmw.on { color:var(--accT);background:var(--acc);border-color:var(--acc) }
+
+/* THE PILL IS A LABEL OVER A HIDDEN BOX: it reads pressed from the box's own
+   state, so the design's toggle posts as a plain form and needs no script. */
+.pmw > input[type="checkbox"] { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
+.pmw:has(> input:checked) { color:var(--accT);background:var(--acc);border-color:var(--acc) }
+.pmw:has(> input:not(:checked)) { color:var(--dim);background:none;border-color:var(--ln2) }
 .pmb { display:inline-flex;align-items:center;gap:6px;border:1px solid var(--ln2);border-radius:7px; padding:3px 9px 3px 7px;cursor:pointer;background:none }
 .pmb input { accent-color:var(--acc);width:13px;height:13px;margin:0 }
 .pmb span { font-family:var(--font-mono);font-size:9.5px;letter-spacing:.06em; color:var(--dim) }

@@ -11,7 +11,7 @@
    | Configure action, last in the row  | control | the shell frame            | done   |
    | section tab strip (.atabs)         | chrome  | shell                      | done   |
    | create card (.dcadd) name + seats  | control | POST team_position_create  | done   |
-   | create card: allowed kinds         | control | POST team_position_create  | done   |
+   | create card: allowed kinds         | —       | not in the design's add row: the kinds a position allows are set on its configure page | n/a |
    | "The tiers" (.pmx-above, three)    | chrome  | static                     | done   |
    | scope filter row (.rgbar .rgf x5)  | control | ?kind=                     | done   |
    | "by name · n positions · n people  |         |                            |        |
@@ -84,17 +84,6 @@
                     <span class="crlab">Seats</span>
                     <input type="number" name="seats" class="fld" value="1" min="1" style="width:92px" aria-label="Seats">
                     <span class="zfrag">Blank is unlimited</span>
-                </div>
-                <div class="crfield">
-                    <span class="crlab">Allows</span>
-                    <span class="pmk-chips">
-                        {% for kind in placeableKinds %}
-                            <label class="pmb">
-                                <input type="checkbox" name="allows[]" value="{{ kind.value }}"{{ kind.value == 'area' ? ' checked' : '' }} aria-label="Allows {{ kind.value }}">
-                                <span>{{ kind.value }}</span>
-                            </label>
-                        {% endfor %}
-                    </span>
                 </div>
                 <button class="cta" type="submit">{{ ux_icon('shell:plus', {width: 15, height: 15}) }} Add position</button>
             </div>

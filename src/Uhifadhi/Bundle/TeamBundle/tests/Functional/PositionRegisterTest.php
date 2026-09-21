@@ -164,7 +164,7 @@ final class PositionRegisterTest extends WebTestCaseWithSchema
         $crawler = $this->client->request('GET', '/team/positions');
 
         self::assertSame(
-            ['Surveys', 'Team'],
+            ['Team', 'Surveys'],
             $crawler->filter('.dcard .rggrid-k')->each(static fn (Crawler $c): string => $c->text()),
         );
         self::assertStringContainsString('Personal details', $crawler->filter('.dcard .rgchip.sens')->text());
@@ -257,15 +257,19 @@ final class PositionRegisterTest extends WebTestCaseWithSchema
     }
 
     /**
-     * THE CREATE CARD IS A POSITION'S THREE FACTS — no department, because a
-     * position belongs to none, and its name is unique for the organization.
+     * THE CREATE CARD IS A POSITION'S TWO FACTS — a name and a seat count, as
+     * the design draws it. No department, because a position belongs to none;
+     * no allowed kinds either, those are set on the record's configure page,
+     * so a new position keeps the entity's default until somebody goes there.
      */
-    public function testTheCreateCardWritesTheNameTheSeatsAndTheKindsItAllows(): void
+    public function testTheCreateCardWritesTheNameAndTheSeats(): void
     {
         $this->administrator();
         $crawler = $this->client->request('GET', '/team/positions');
 
         self::assertCount(0, $crawler->filter('#add select[name="department"]'));
+        self::assertCount(0, $crawler->filter('#add input[name="allows[]"]'), 'The kinds a position allows are not on the add row.');
+        self::assertSame(['name', 'seats'], $crawler->filter('#add .crlab')->each(static fn ($l): string => strtolower(trim($l->text()))));
 
         $form = $crawler->filter('#add form')->form();
         $form['name'] = 'Sergeant';

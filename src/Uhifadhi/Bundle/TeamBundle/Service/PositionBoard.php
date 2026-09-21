@@ -99,6 +99,16 @@ final readonly class PositionBoard
             $groups[] = new GrantGroup($declarer, $module, $rows);
         }
 
+        // THE CORE'S GROUPS FIRST, the widest first among them, then every
+        // module's in the order the installation loaded them — the order the
+        // design draws: what the platform itself asks about before what a
+        // module added. The sort is stable, so nothing else moves.
+        usort($groups, static fn (GrantGroup $a, GrantGroup $b): int => match (true) {
+            $a->isCore() && $b->isCore() => $b->total() <=> $a->total(),
+            $a->isCore() !== $b->isCore() => $b->isCore() <=> $a->isCore(),
+            default => 0,
+        });
+
         return new PositionCard(
             position: $position,
             groups: $groups,

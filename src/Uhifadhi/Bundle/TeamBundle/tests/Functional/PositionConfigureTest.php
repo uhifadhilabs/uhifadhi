@@ -470,4 +470,27 @@ final class PositionConfigureTest extends WebTestCaseWithSchema
 
         return $fresh;
     }
+
+    /**
+     * THE IDENTITY CARD IS THE DESIGN'S: the kinds it allows are pressed
+     * pills over real boxes, and its footer states "no changes · reaches N
+     * holders", with Discard beside Save.
+     */
+    public function testTheIdentityCardWearsPillsAndTheDesignsFooter(): void
+    {
+        $this->administrator();
+        $position = $this->position('Sergeant');
+        $this->em->flush();
+        $crawler = $this->client->request('GET', $this->configure($position));
+
+        $pills = $crawler->filter('.pms-row label.pmw');
+        self::assertCount(2, $pills, 'organization and area, nothing else');
+        self::assertCount(2, $pills->filter('input[type="checkbox"][name="allows[]"]'));
+        self::assertCount(0, $crawler->filter('.pms-row label.pmb'));
+
+        $foot = $crawler->filter('.pms-row ~ .staddrow, .staddrow')->first();
+        self::assertStringStartsWith('no changes', trim($foot->filter('.chg')->text()));
+        self::assertStringContainsString('reaches', $foot->filter('.chg .to')->text());
+        self::assertSame(['Discard', 'Save the identity'], $foot->filter('button')->each(static fn (Crawler $b): string => trim($b->text())));
+    }
 }

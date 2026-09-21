@@ -274,11 +274,14 @@ final readonly class PositionController
 
         try {
             $position = $this->positionWrites->create($name);
+            // THE ADD ROW IS A NAME AND A SEAT COUNT, as the design draws it;
+            // what the position allows is set on its configure page, so a new
+            // one keeps the entity's own default until somebody goes there.
             $this->positionWrites->setIdentity(
                 $position,
                 $name,
                 $this->seatsFrom($request),
-                $this->kindsFrom($request),
+                $position->getAllowedKinds(),
             );
         } catch (NameNotUniqueException) {
             // The index would have said this in SQL. The person who typed the

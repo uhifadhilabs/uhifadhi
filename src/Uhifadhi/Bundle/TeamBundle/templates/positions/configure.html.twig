@@ -96,21 +96,26 @@
                     <div class="pms-row">
                         <span class="k">allows</span>
                         <span class="v">
+                            {#- THE DESIGN'S PRESSED PILL, carrying a real box: the pill is the
+                                label, the box is hidden, and the sheet paints `on` from the box's
+                                own state so the pill toggles with no script and posts as a form. -#}
                             {% for kind in placeableKinds %}
-                                <label class="pmb">
+                                <label class="pmw{{ card.position.allows(kind) ? ' on' : '' }}">
                                     <input type="checkbox" name="allows[]" value="{{ kind.value }}"{{ card.position.allows(kind) ? ' checked' : '' }} aria-label="Allows {{ kind.value }}">
-                                    <span>{{ kind.value }}</span>
+                                    {{- kind.value -}}
                                 </label>
                             {% endfor %}
                             <span class="zfrag">own is declared per module</span>
                         </span>
                     </div>
+                    {%- set seated = card.holders|filter(h => h.where != 'the whole organization')|length -%}
                     <div class="staddrow">
                         <span class="chg">
-                            <b>identity</b>
-                            <span class="to">reaches <b>{{ card.seatsFilled }}</b> holder{{ card.seatsFilled == 1 ? '' : 's' }}</span>
+                            <b>no changes</b>
+                            <span class="to">reaches <b>{{ card.seatsFilled }}</b> holder{{ card.seatsFilled == 1 ? '' : 's' }}{% if seated %} &middot; {{ seated }} seated in an area{% endif %}</span>
                         </span>
                         <span class="sp"></span>
+                        <button type="reset" class="btn">Discard</button>
                         <button type="submit" class="cta" name="seatMode" value="{{ card.seats is null ? 'unlimited' : (card.seats == 1 ? 'one' : 'number') }}">Save the identity</button>
                     </div>
                 </form>

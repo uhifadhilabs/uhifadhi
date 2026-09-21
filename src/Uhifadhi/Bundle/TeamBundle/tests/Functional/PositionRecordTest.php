@@ -87,6 +87,28 @@ final class PositionRecordTest extends WebTestCaseWithSchema
         self::assertGreaterThanOrEqual(2, $groups->count());
         self::assertStringContainsString('declared by the surveys module', $crawler->html());
         self::assertStringContainsString('declared by the core', $crawler->html());
+
+        // THE CORE'S FOLDS COME FIRST, widest first, and a module's after them.
+        $folds = $groups->each(static fn (Crawler $g): array => [
+            trim($g->filter('summary b')->first()->text()),
+            $g->filter('summary .pmx-by.core')->count() > 0,
+            $g->filter('.pmk-row')->count(),
+        ]);
+        $lastCore = -1;
+        $firstModule = \count($folds);
+        $coreWidths = [];
+        foreach ($folds as $i => [$name, $core, $width]) {
+            if ($core) {
+                $lastCore = max($lastCore, $i);
+                $coreWidths[] = $width;
+            } else {
+                $firstModule = min($firstModule, $i);
+            }
+        }
+        self::assertLessThan($firstModule, $lastCore, implode(' · ', array_column($folds, 0)));
+        $sorted = $coreWidths;
+        rsort($sorted);
+        self::assertSame($sorted, $coreWidths, 'The widest core group leads.');
     }
 
     /**
