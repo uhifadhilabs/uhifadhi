@@ -30,7 +30,15 @@ use Uhifadhi\Contracts\Access\Verb;
  * the half of it that is about a person stays shut.
  *
  * ADMINISTERING THE TEAM IS NOT A SEVENTH VERB. It is these concerns with
- * configure and delete on them.
+ * manage and configure on them.
+ *
+ * THERE IS NO DELETE HERE, AND THAT IS THE MODEL RATHER THAN AN OMISSION.
+ * Nothing in this bundle destroys anything: a person who leaves is
+ * deactivated so that everything they recorded keeps its author, and a
+ * department that winds down is deactivated so its scope history stays on the
+ * ledger. A declared delete nothing enforces would be a box an administrator
+ * could tick that took nothing away, and the build test that walks the router
+ * refuses it.
  *
  * THEY OFFER ORGANIZATION OR DEPARTMENT, department here meaning that
  * department's own members - never an area, because a person is not ground.
@@ -56,7 +64,7 @@ final readonly class TeamConcerns implements ConcernSourceInterface
             key: self::DIRECTORY,
             label: 'Directory',
             description: 'Who is on the team: their name, their position and where they are placed.',
-            verbs: [Verb::Read, Verb::Manage, Verb::Export],
+            verbs: [Verb::Read, Verb::Manage],
             scopeKinds: $people,
         );
 
@@ -64,7 +72,7 @@ final readonly class TeamConcerns implements ConcernSourceInterface
             key: self::PERSONAL_DETAILS,
             label: 'Personal details',
             description: 'A person\'s contact details, sign-in and employment - distinct from knowing they are on the team.',
-            verbs: [Verb::Read, Verb::Manage, Verb::Delete],
+            verbs: [Verb::Read, Verb::Manage],
             scopeKinds: $people,
             sensitive: true,
         );
@@ -73,7 +81,7 @@ final readonly class TeamConcerns implements ConcernSourceInterface
             key: self::POSITIONS,
             label: 'Positions',
             description: 'The positions the organization has written, what each one grants, and who holds it.',
-            verbs: [Verb::Read, Verb::Configure, Verb::Delete],
+            verbs: [Verb::Read, Verb::Configure],
             scopeKinds: $people,
         );
 
@@ -81,7 +89,7 @@ final readonly class TeamConcerns implements ConcernSourceInterface
             key: self::DEPARTMENTS,
             label: 'Departments',
             description: 'The departments the organization is arranged into, and the modules each one runs.',
-            verbs: [Verb::Read, Verb::Configure, Verb::Delete],
+            verbs: [Verb::Read, Verb::Configure],
             scopeKinds: $people,
         );
     }

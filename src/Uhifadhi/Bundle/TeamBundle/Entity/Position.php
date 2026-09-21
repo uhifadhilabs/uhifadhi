@@ -18,9 +18,12 @@ use Doctrine\ORM\Mapping as ORM;
 use Uhifadhi\Bundle\TeamBundle\Entity\Trait\TimestampableTrait;
 use Uhifadhi\Bundle\TeamBundle\Entity\Trait\UuidTrait;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
+use Uhifadhi\Bundle\TeamBundle\Exception\UnknownGrantException;
 use Uhifadhi\Bundle\TeamBundle\Exception\UnknownPermissionException;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
+use Uhifadhi\Contracts\Access\Grant;
 use Uhifadhi\Contracts\Access\ScopeKind;
+use Uhifadhi\Contracts\Access\Verb;
 
 /**
  * WHAT HOLDING IT GRANTS - the concerns and verbs, and which kinds of
@@ -99,10 +102,29 @@ class Position
      * The granted permissions, stored as plain strings - core values and
      * module-declared ones alike, in the order they were granted.
      *
+     * SUPERSEDED BY {@see $grants}, AND STILL READ FOR ONE RELEASE. The
+     * (concern, verb) pairs are what a check asks about now; this column is
+     * kept while the gates are moved over, because dropping it in the same
+     * release that stopped writing it would take every existing grant with
+     * it. It goes in the release after the last gate moves.
+     *
      * @var list<string>
      */
     #[ORM\Column(type: Types::JSON)]
     private array $permissions = [];
+
+    /**
+     * THE (CONCERN, VERB) PAIRS IT GRANTS, in the order they were granted,
+     * each written the one way {@see Grant} spells a pair.
+     *
+     * PLAIN STRINGS RATHER THAN PARSED VALUES, because a pair whose module
+     * has been uninstalled has to survive being stored, read back and revoked
+     * without anything being able to resolve it.
+     *
+     * @var list<string>
+     */
+    #[ORM\Column(type: Types::JSON, options: ['default' => '[]'])]
+    private array $grants = [];
 
     /**
      * THE DAY THIS POST FELL EMPTY, and null while somebody stands in it.
@@ -277,6 +299,68 @@ class Position
     public function hasPermissionValue(string $value): bool
     {
         return \in_array($value, $this->permissions, true);
+    }
+
+    /**
+     * THE RAW GRANTED PAIRS - the only reading surface, because it is the
+     * only one that can tell the truth. A parsed accessor drops every pair
+     * whose module has been uninstalled on the floor, and those are exactly
+     * the ones an administrator needs to see in order to revoke them.
+     *
+     * @return list<string>
+     */
+    public function getGrantValues(): array
+    {
+        return $this->grants;
+    }
+
+    /**
+     * THE ONLY WRITE PATH FOR PAIRS, AND IT VALIDATES.
+     *
+     * The live catalogue is a REQUIRED second argument rather than something
+     * this entity fetches, because an entity that reached for a service to
+     * validate itself would be an entity you cannot construct in a test - and
+     * because making it required is what stops the unvalidated call from
+     * existing at all.
+     *
+     * WHAT IS ACCEPTED is the live catalogue UNION the pairs this position
+     * already holds. The catalogue half makes an unknown NEW pair fail
+     * loudly; the already-held half is prune-not-purge, because editing a
+     * position is not a migration and a module uninstalled last week must not
+     * have its grants silently stripped by an unrelated save.
+     *
+     * @param list<string> $values    what the position should hold after this call
+     * @param list<string> $catalogue every pair this installation currently declares
+     *
+     * @throws UnknownGrantException when a submitted pair is neither declared nor already held
+     */
+    public function setGrantValues(array $values, array $catalogue): static
+    {
+        $accepted = [...$catalogue, ...$this->grants];
+
+        $unknown = array_values(array_unique(array_filter(
+            $values,
+            static fn (string $value): bool => !\in_array($value, $accepted, true),
+        )));
+
+        if ([] !== $unknown) {
+            throw new UnknownGrantException($unknown);
+        }
+
+        $this->grants = array_values(array_unique($values));
+
+        return $this;
+    }
+
+    public function hasGrant(Grant $grant): bool
+    {
+        return \in_array((string) $grant, $this->grants, true);
+    }
+
+    /** The first of the three questions a check asks: does the position grant it? */
+    public function grantsVerbOn(string $concern, Verb $verb): bool
+    {
+        return $this->hasGrant(Grant::of($concern, $verb));
     }
 
     /** A convenience for the one caller that genuinely holds an enum case: core code and its tests. */

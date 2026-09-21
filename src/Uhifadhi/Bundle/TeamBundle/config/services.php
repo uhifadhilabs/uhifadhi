@@ -18,6 +18,7 @@ use Uhifadhi\Bundle\RegistryBundle\Event\ModuleInstalledEvent;
 use Uhifadhi\Bundle\RegistryBundle\Repository\AreaModuleRepository;
 use Uhifadhi\Bundle\ShellBundle\Contract\NavigationSourceInterface;
 use Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceInterface;
+use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
 use Uhifadhi\Bundle\TeamBundle\Api\State\MeProvider;
 use Uhifadhi\Bundle\TeamBundle\ArgumentResolver\AreaValueResolver;
@@ -70,6 +71,7 @@ use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Security\ActiveUserChecker;
 use Uhifadhi\Bundle\TeamBundle\Security\ApiTokenAuthenticator;
 use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
+use Uhifadhi\Bundle\TeamBundle\Security\GrantVoter;
 use Uhifadhi\Bundle\TeamBundle\Security\PermissionVoter;
 use Uhifadhi\Bundle\TeamBundle\Service\ApiTokenManager;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentDirectory;
@@ -505,6 +507,32 @@ return static function (ContainerConfigurator $container): void {
      */
     $services->set('team.permission_voter', PermissionVoter::class)
         ->args([service('team.permissions')])
+        ->tag('security.voter');
+
+    /*
+     * EVERYTHING THERE IS TO HAVE A PERMISSION ABOUT, folded together from
+     * whoever declared it. The tagged iterator is the seam: the core's own
+     * bundles arrive through it exactly as a module does, so there is no
+     * privileged list in the middle of the product.
+     */
+    $services->set('team.access.catalogue', ConcernCatalogue::class)
+        ->args([tagged_iterator(ConcernSourceInterface::TAG)]);
+    $services->alias(ConcernCatalogue::class, 'team.access.catalogue');
+
+    /*
+     * THE CHECK ITSELF — the three questions, fail-closed. Tagged by hand
+     * like every other service here: a voter that missed this tag would deny
+     * nothing and grant nothing, which looks exactly like a permission model
+     * that does not work.
+     *
+     * IT RUNS BESIDE THE OLD ONE FOR ONE RELEASE. The two answer different
+     * attributes — this one only pairs it can parse and the catalogue
+     * declares, the other only the flat values its own catalogue knows — so
+     * neither can overrule the other, and the gates move over a controller at
+     * a time rather than in one unreviewable sweep.
+     */
+    $services->set('team.access.voter', GrantVoter::class)
+        ->args([service('team.access.catalogue'), service(DepartmentRepository::class)])
         ->tag('security.voter');
 
     /*

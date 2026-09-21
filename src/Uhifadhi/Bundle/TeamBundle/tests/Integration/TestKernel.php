@@ -32,6 +32,7 @@ use Uhifadhi\Bundle\ShellBundle\ShellBundle;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Security\ApiTokenAuthenticator;
 use Uhifadhi\Bundle\TeamBundle\TeamBundle;
+use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\DeclaringConcernSource;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\DeclaringModuleProvider;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\DevkitContentCollector;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\FakeModuleProvider;
@@ -42,6 +43,7 @@ use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\RosterKpiProvider;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\ShellPageController;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\SilentModuleProvider;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\SurveyKpiProvider;
+use Uhifadhi\Contracts\Access\ConcernSourceInterface;
 use Uhifadhi\Contracts\Area\StationDirectoryInterface;
 use Uhifadhi\Contracts\Performance\PerformanceTopicProviderInterface;
 
@@ -253,6 +255,14 @@ final class TestKernel extends Kernel
             ->set(DeclaringModuleProvider::class)
             ->tag('uhifadhi.module');
 
+        // The same module saying what there is to have a permission ABOUT.
+        // Without a module-owned concern in the kernel, the third question a
+        // check asks — does the placement cover the department — has nothing
+        // to be about, and only two of the three could be exercised.
+        $container->services()
+            ->set(DeclaringConcernSource::class)
+            ->tag(ConcernSourceInterface::TAG);
+
         // And one that declares NOTHING, which is what most modules do. The
         // matrix has to draw it rather than skip it, so the catalogue has to
         // know it is there.
@@ -361,6 +371,9 @@ final class TestKernel extends Kernel
             \Uhifadhi\Bundle\TeamBundle\Service\PerformanceTopics::class => 'team.performance_topics',
             \Uhifadhi\Bundle\TeamBundle\Service\PositionVacancy::class => 'team.position_vacancy',
             \Uhifadhi\Bundle\TeamBundle\Service\StaffingFigures::class => 'team.staffing_figures',
+            \Uhifadhi\Bundle\TeamBundle\Service\DepartmentMembership::class => 'team.department_membership',
+            \Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue::class => 'team.access.catalogue',
+            \Uhifadhi\Bundle\TeamBundle\Security\GrantVoter::class => 'team.access.voter',
             \Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository::class => \Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository::class,
             \Uhifadhi\Bundle\TeamBundle\Repository\DepartmentGoalRepository::class => \Uhifadhi\Bundle\TeamBundle\Repository\DepartmentGoalRepository::class,
             \Uhifadhi\Bundle\TeamBundle\Service\DepartmentDirectory::class => 'team.department_directory',
