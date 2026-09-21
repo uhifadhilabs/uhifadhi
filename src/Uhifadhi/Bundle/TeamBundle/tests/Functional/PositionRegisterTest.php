@@ -58,6 +58,25 @@ final class PositionRegisterTest extends WebTestCaseWithSchema
     }
 
     /**
+     * EXACTLY ONE CONFIGURE ENTRY, AND THE FRAME WRITES IT. This page typed
+     * its own as well, so the header drew the word twice — which is the whole
+     * reason the frame owns the entry: "exactly one per surface" cannot be
+     * true if every page may add one.
+     */
+    public function testTheHeaderDrawsOneConfigureEntryAndTheFrameOwnsIt(): void
+    {
+        $this->administrator();
+        $crawler = $this->client->request('GET', '/team/positions');
+        $actions = $crawler->filter('.pghead .pgact a');
+
+        self::assertSame(
+            ['Add a position', 'Configure'],
+            $actions->each(static fn (Crawler $c): string => trim($c->text())),
+        );
+        self::assertSame('Configure', trim($actions->last()->text()), 'Configure is last in the row, always.');
+    }
+
+    /**
      * GATED ON READING THE REGISTER — `positions.read`. A Staff member with
      * no position holds nothing at all and is refused.
      */

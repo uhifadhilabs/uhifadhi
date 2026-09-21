@@ -16,6 +16,7 @@ namespace Uhifadhi\Core\Tests\Core;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use Uhifadhi\Bundle\AreaBundle\Devkit\DemoArea;
 use Uhifadhi\Bundle\AreaBundle\Service\PostingService;
+use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
 use Uhifadhi\Contracts\Devkit\ContentProviderInterface;
 
 /**
@@ -172,6 +173,56 @@ final class DemoContentSeedsUnderTheRulesTest extends MigrationsTestCase
 
         self::assertGreaterThan(0, $people);
         self::assertLessThanOrEqual($people, $posted, 'the demo never posts more people than it has');
+    }
+
+    /**
+     * EVERY DEMO POSITION GRANTS SOMETHING, AND ONE OF THEM IS UNHELD.
+     *
+     * The register draws one card per position with its concern chips in the
+     * body; the demo once wrote four positions and gave three of them
+     * nothing, so the first screen a developer opens read "grants nothing"
+     * four times and taught the register to say nothing at all. The unheld
+     * one is the other half: retiring is refused while anybody holds a
+     * position, so a ground where every position is held never draws the
+     * offer.
+     *
+     * THE PAIRS ARE CHECKED AGAINST THE CATALOGUE, not against a list here.
+     * A seeded pair nothing declares would be a position the configure screen
+     * could not have produced, which is the one thing a seeder must never be.
+     */
+    public function testEveryDemoPositionGrantsSomethingAndOneStandsEmpty(): void
+    {
+        $this->seedTheDemoOrganisation();
+
+        $catalogue = static::getContainer()->get('test_public.'.ConcernCatalogue::class);
+        self::assertInstanceOf(ConcernCatalogue::class, $catalogue);
+        $declared = $catalogue->pairs();
+
+        $rows = $this->connection->fetchAllAssociative(
+            'SELECT p.name, p.grants,'
+            .' (SELECT COUNT(*) FROM team_user u WHERE u.position_id = p.id) AS holders'
+            .' FROM team_position p ORDER BY p.name',
+        );
+
+        self::assertNotSame([], $rows);
+
+        $unheld = 0;
+        foreach ($rows as $row) {
+            $name = (string) (\is_scalar($row['name']) ? $row['name'] : '');
+            /** @var list<string> $grants */
+            $grants = json_decode((string) (\is_scalar($row['grants']) ? $row['grants'] : '[]'), true, 512, \JSON_THROW_ON_ERROR);
+
+            self::assertNotSame([], $grants, \sprintf('the demo position "%s" grants nothing', $name));
+            foreach ($grants as $pair) {
+                self::assertContains($pair, $declared, \sprintf('"%s" holds a pair nothing declares: %s', $name, $pair));
+            }
+
+            if (0 === (int) (is_numeric($row['holders']) ? $row['holders'] : 0)) {
+                ++$unheld;
+            }
+        }
+
+        self::assertGreaterThan(0, $unheld, 'no demo position stands empty, so retiring is never offered');
     }
 
     /** One count, as an int — the driver answers a string and phpstan is right to say so. */

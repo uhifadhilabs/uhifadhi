@@ -48,13 +48,21 @@
                     <th></th>
                 </tr>
                 {% for row in rows %}
+                    {# ONE COLUMN, ONE LABEL. The headings come from the first
+                       live area, and an area running fewer modules contributes
+                       fewer figures — so a row fills the columns it can answer
+                       for and says nothing in the rest. Read positionally, the
+                       same row printed its numbers under somebody else's
+                       heading, and under strict variables took the page down
+                       asking for an index it does not have. #}
+                    {% set figures = row.statsByLabel %}
                     <tr data-row data-href="{{ path('area_show', {uuid: row.area.uuidString}) }}"
                         data-name="{{ row.area.name|lower }}"
                         data-live="{{ row.isLive ? '1' : '0' }}"
                         data-alerts="{{ row.hasAlerts ? '1' : '0' }}"
                         data-modules="{{ row.liveModules }}"
                         data-activity="{{ row.activityRank }}"
-                        {% for stat in row.stats %}data-s{{ loop.index0 }}="{{ stat.value }}" {% endfor %}>
+                        {% for label in statColumns %}data-s{{ loop.index0 }}="{{ figures[label]|default('') }}" {% endfor %}>
                         <td>
                             <div class="reg-id">
                                 <div class="thumb{{ row.thumbnail.hasBoundary ? '' : ' none' }}"{% if row.thumbnail.hasBoundary %} style="background-image:url('{{ row.thumbnail.imageUrl }}')"{% endif %}></div>
@@ -71,7 +79,7 @@
                         {% if row.isLive %}
                             <td class="num">{{ row.liveModules }}</td>
                             {% for label in statColumns %}
-                                <td class="num">{{ row.stats[loop.index0] ? row.stats[loop.index0].value : '&mdash;'|raw }}</td>
+                                <td class="num">{% if figures[label] is defined %}{{ figures[label] }}{% else %}&mdash;{% endif %}</td>
                             {% endfor %}
                             {# "6 min ago" is a duration, not a wall-clock: it reads the same in every
                                zone, so it is NOT a `<time>` the frame would rewrite into an absolute

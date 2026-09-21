@@ -22,7 +22,7 @@
    | Actions card: Retire (destructive, refused| control | POST team_position_retire   | done   |
    |   while held, naming the count)           |         |                             |        |
    | per-concern scope CHECKBOXES in the matrix| control | —                           | NOT PORTED: a position's allowed kinds are ONE fact, stated on the Identity card; there is nothing on the model to vary them per concern. The chips are read-only, as on the record. Named in the round's report as needing a verdict. |
-   | Fold all / Open all                       | control | <details>                   | absent rather than inert (see show.html.twig) |
+   | Fold all / Open all                       | control | folds_controller.js         | done   |
    | the notes section                         | —       | —                           | excluded: design notes are not product |
 
    THE HOLDERS ARE BESIDE THE EDITOR. Read-only, because a person is given a
@@ -116,13 +116,11 @@
                 </form>
             </div>
 
-            <div class="c">
+            <div class="c" data-controller="uhifadhi--team-bundle--folds">
                 <span class="tab">What it grants<span class="src">&middot; a box per declared verb &middot; {{ card.concernsGranted }} of {{ card.concernsDeclared }} concerns</span></span>
                 <form method="post" action="{{ path('team_position_permissions', {uuid: card.uuid}) }}">
                     <input type="hidden" name="_token" value="{{ csrfToken }}">
-                    <div class="pmbar">
-                        <span class="pmbar-n"><b>{{ card.concernsGranted }} of {{ card.concernsDeclared }} concerns</b> &middot; {{ card.groups|length }} group{{ card.groups|length == 1 ? '' : 's' }} &middot; the six verbs, fixed</span>
-                    </div>
+                    {{ mx.bar(card) }}
                     {{ mx.edit(card, grantable) }}
                     {{ mx.orphans(orphans) }}
                     {# ONE BAR. The change preview is the bar's own LEFT TEXT —

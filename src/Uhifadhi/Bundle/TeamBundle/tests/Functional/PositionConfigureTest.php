@@ -320,6 +320,49 @@ final class PositionConfigureTest extends WebTestCaseWithSchema
     }
 
     /**
+     * THE ACTIONS CARD IS ALWAYS DRAWN, and what it offers is the only thing
+     * that changes. A sweep of the demo ground found no button named Retire
+     * and read that as a missing card; every demo position was held, so every
+     * one of them was correctly showing the refusal instead. Both states are
+     * asserted here so the next reading of that page needs no guessing.
+     */
+    public function testTheActionsCardIsPresentWhoeverHoldsThePosition(): void
+    {
+        $this->administrator();
+        $held = $this->position('Sergeant');
+        $this->person('Joseph', 'Mollel')->setPosition($held);
+        $free = $this->position('Ranger');
+        $this->em->flush();
+
+        $onHeld = $this->client->request('GET', $this->configure($held));
+        self::assertSame('Retire this position', $onHeld->filter('.mb-danger .dt b')->text());
+        self::assertCount(0, $onHeld->filter('.mb-danger button'), 'Held: refused in place, no button.');
+
+        $onFree = $this->client->request('GET', $this->configure($free));
+        self::assertSame('Retire this position', $onFree->filter('.mb-danger .dt b')->text());
+        self::assertSame('Retire', trim($onFree->filter('.mb-danger button')->text()));
+    }
+
+    /** The two fold shortcuts the design draws over the matrix, wired. */
+    public function testTheMatrixCarriesTheTwoFoldShortcuts(): void
+    {
+        $this->administrator();
+        $sergeant = $this->position('Sergeant');
+        $this->em->flush();
+
+        $crawler = $this->client->request('GET', $this->configure($sergeant));
+
+        self::assertSame(
+            ['Fold all', 'Open all'],
+            $crawler->filter('.pmbar-acts button')->each(static fn (Crawler $c): string => $c->text()),
+        );
+        self::assertCount(
+            $crawler->filter('details.pmf.pmfg')->count(),
+            $crawler->filter('details[data-uhifadhi--team-bundle--folds-target="fold"]'),
+        );
+    }
+
+    /**
      * RETIRING IS REFUSED WHILE ANYBODY HOLDS IT, in place and naming the
      * count — not a control that looks operable and then fails.
      */

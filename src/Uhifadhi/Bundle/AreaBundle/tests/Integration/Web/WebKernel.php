@@ -269,6 +269,15 @@ final class WebKernel extends Kernel
         $services->set('test.now_tiles.patrols', FakeNowTiles::class)
             ->args(['patrols'])
             ->tag('uhifadhi.overview.now_tile');
+        /*
+         * AND ONE MORE FIGURE FROM A SECOND MODULE, contributed only where
+         * `incidents` is switched on — so an installation's two live areas
+         * are UNALIKE, which is the shape the register's operational columns
+         * have to survive and the shape that broke it.
+         */
+        $services->set('test.now_tiles.incidents', FakeSecondNowTile::class)
+            ->args(['incidents'])
+            ->tag('uhifadhi.overview.now_tile');
         $services->set('test.attention.patrols', FakeAttention::class)
             ->args(['patrols', $this->attention])
             ->tag('uhifadhi.overview.attention');

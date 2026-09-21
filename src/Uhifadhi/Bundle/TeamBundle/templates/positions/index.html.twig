@@ -8,7 +8,7 @@
    | h1 "Team" + subline                | chrome  | shell                      | done   |
    | "Add a position" cta -> #add       | control | anchor                     | done   |
    | Widget library door                | control | —                          | retired: the surface is a redirect for one release |
-   | Configure action, last in the row  | control | team_configure             | done   |
+   | Configure action, last in the row  | control | the shell frame            | done   |
    | section tab strip (.atabs)         | chrome  | shell                      | done   |
    | create card (.dcadd) name + seats  | control | POST team_position_create  | done   |
    | create card: allowed kinds         | control | POST team_position_create  | done   |
@@ -54,8 +54,9 @@
        not open a second form: it jumps to the create card that is already open
        at the top of the page, the way a configure page states a setting. #}
     {% if door('positions.configure') %}<a class="cta" href="#add">{{ ux_icon('shell:plus', {width: 15, height: 15}) }} Add a position</a>{% endif %}
-    {# ONE CONFIGURE ACTION, ALWAYS LAST IN THE ROW. #}
-    {% if door('positions.configure') %}<a class="tgl w-act" href="{{ path('team_configure') }}">{{ ux_icon('shell:settings', {width: 15, height: 15}) }} Configure</a>{% endif %}
+    {# AND NO CONFIGURE ENTRY HERE. The frame writes exactly one, last in the
+       row, on every surface in the product — a page that types its own draws
+       the word twice, which is what this one did. #}
 {% endblock %}
 
 {% block shell_page %}

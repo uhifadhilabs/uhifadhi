@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Devkit;
 
+use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Entity\Placement;
@@ -24,12 +25,14 @@ use Uhifadhi\Bundle\TeamBundle\Service\PerformanceHistory;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionService;
 use Uhifadhi\Bundle\TeamBundle\Service\StaffingFigures;
 use Uhifadhi\Bundle\TeamBundle\Service\UserService;
-use Uhifadhi\Contracts\Access\Verb;
 use Uhifadhi\Contracts\Devkit\ContentProviderInterface;
 
 /**
- * A SMALL ORGANIZATION TO LOOK AT — three departments, four positions and six
+ * A SMALL ORGANIZATION TO LOOK AT — three departments, five positions and six
  * people, so a developer's first screen is a populated one.
+ *
+ * THE POSITIONS GRANT SOMETHING, which is not decoration: a register where
+ * every card reads "grants nothing" is a register that has never been read.
  *
  * IT GOES THROUGH THE SAME SERVICES THE SCREENS DO, and that is the whole
  * discipline of it. Demo content written straight to the tables is demo content
@@ -84,6 +87,56 @@ final readonly class TeamContentProvider implements ContentProviderInterface
     ];
 
     /**
+     * WHAT EACH POSITION IS ALLOWED TO DO, and it is the point of the slice.
+     *
+     * A DEMO ORGANIZATION WHERE EVERY CARD READS "grants nothing" teaches the
+     * register to say nothing. These are the pairs a park would actually
+     * write: a coordinator administers the team, a head ranger runs the
+     * ground and its assignments, a ranger reads it and books on for duty, an
+     * analyst reads widely and exports, a sergeant stands between the two
+     * field ones.
+     *
+     * THE PAIRS OUTSIDE THIS BUNDLE ARE WRITTEN AS STRINGS ON PURPOSE. Only
+     * the team's own concerns are this bundle's to name in code: the area and
+     * registry bundles depend on team, not the other way round, so importing
+     * their catalogues here would invert the graph. {@see grant()} asks the
+     * running catalogue what this installation actually declares and seeds the
+     * intersection, which is exactly the set the configure screen would offer
+     * — so an installation without one of those bundles seeds a smaller
+     * organization rather than a failed one.
+     *
+     * @var array<string, list<string>>
+     */
+    private const array GRANTS = [
+        'coordinator' => [
+            TeamConcerns::DIRECTORY.'.read', TeamConcerns::DIRECTORY.'.manage',
+            TeamConcerns::PERSONAL_DETAILS.'.read',
+            TeamConcerns::POSITIONS.'.read', TeamConcerns::POSITIONS.'.configure',
+            TeamConcerns::DEPARTMENTS.'.read', TeamConcerns::DEPARTMENTS.'.configure',
+            'modules.read',
+            'areas.read', 'stations.read', 'stations.configure', 'assignments.manage',
+        ],
+        'head_ranger' => [
+            TeamConcerns::DIRECTORY.'.read',
+            'areas.read', 'zones.read', 'stations.read', 'stations.configure',
+            'assignments.manage', 'duty.record',
+        ],
+        'ranger' => [
+            TeamConcerns::DIRECTORY.'.read',
+            'areas.read', 'zones.read', 'stations.read', 'duty.record',
+        ],
+        'analyst' => [
+            TeamConcerns::DIRECTORY.'.read',
+            'modules.read',
+            'areas.read', 'zones.read', 'zones.export',
+        ],
+        'sergeant' => [
+            TeamConcerns::DIRECTORY.'.read',
+            'areas.read', 'stations.read', 'assignments.manage', 'duty.record',
+        ],
+    ];
+
+    /**
      * THE FIELD STAFF THE DEMO GROUND NEEDS, and the number is not arbitrary.
      *
      * The demo ground is two areas of twelve posts each, two posts in each
@@ -124,6 +177,7 @@ final readonly class TeamContentProvider implements ContentProviderInterface
         private UserRepository $roster,
         private StaffingFigures $staffing,
         private PerformanceHistory $history,
+        private ConcernCatalogue $catalogue,
     ) {
     }
 
@@ -163,18 +217,19 @@ final readonly class TeamContentProvider implements ContentProviderInterface
         $coordinator = $this->positions->create('Coordinator');
         // ADMINISTERING THE TEAM, in pairs: writing the positions and the
         // departments, and reading the people they are about.
-        $this->positions->setGrants($coordinator, [
-            TeamConcerns::DIRECTORY.'.'.Verb::Read->value,
-            TeamConcerns::DIRECTORY.'.'.Verb::Manage->value,
-            TeamConcerns::POSITIONS.'.'.Verb::Read->value,
-            TeamConcerns::POSITIONS.'.'.Verb::Configure->value,
-            TeamConcerns::DEPARTMENTS.'.'.Verb::Read->value,
-            TeamConcerns::DEPARTMENTS.'.'.Verb::Configure->value,
-        ]);
+        $this->grant($coordinator, self::GRANTS['coordinator']);
 
         $headRanger = $this->positions->create('Head Ranger');
         $ranger = $this->positions->create('Ranger');
         $analyst = $this->positions->create('Analyst');
+        // A POSITION NOBODY HOLDS, and the register has to draw one: it is the
+        // only state in which retiring is offered rather than refused.
+        $sergeant = $this->positions->create('Sergeant');
+
+        $this->grant($headRanger, self::GRANTS['head_ranger']);
+        $this->grant($ranger, self::GRANTS['ranger']);
+        $this->grant($analyst, self::GRANTS['analyst']);
+        $this->grant($sergeant, self::GRANTS['sergeant']);
 
         $this->person(self::ACCOUNTS['coordinator'], 'Amara', 'Okonkwo', TeamRoleEnum::SuperAdmin, $coordinator, [$operations]);
         $this->person(self::ACCOUNTS['head_ranger'], 'Desta', 'Haile', TeamRoleEnum::Admin, $headRanger, [$protection]);
@@ -206,6 +261,26 @@ final readonly class TeamContentProvider implements ContentProviderInterface
      * looks like: one position, many people, which is also the case the
      * positions screen is built to show.
      */
+    /**
+     * WHAT THIS INSTALLATION WILL ACTUALLY HAVE OF A PROFILE.
+     *
+     * The intersection, in the catalogue's own order, so the seeded position
+     * is one the configure screen could have produced click by click. A pair
+     * nothing declares is not an error and not a silent loss either: it is a
+     * module that is not installed here, and the position is simply smaller.
+     *
+     * @param list<string> $wanted each written `<concern>.<verb>`
+     */
+    private function grant(Position $position, array $wanted): void
+    {
+        $declared = $this->catalogue->pairs();
+
+        $this->positions->setGrants(
+            $position,
+            array_values(array_filter($declared, static fn (string $pair): bool => \in_array($pair, $wanted, true))),
+        );
+    }
+
     private function fieldStaff(Position $ranger, Department $protection): void
     {
         for ($n = 0; $n < self::FIELD_STAFF; ++$n) {

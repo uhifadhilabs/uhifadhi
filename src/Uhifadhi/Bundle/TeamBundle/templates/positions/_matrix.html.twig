@@ -14,6 +14,9 @@
    | concern name (.pmx-cn b)               | data    | GrantRow::label              | done   |
    | sensitive mark (.pmx-sens)             | data    | GrantRow::sensitive          | done   |
    | verb chip / box (.pmc / .pmb)          | data    | GrantRow::cells              | done   |
+   | bar: "n of m concerns · n groups ·      |         |                              |        |
+   |   the six verbs, fixed" (.pmbar-n)     | data    | PositionCard                 | done   |
+   | bar: Fold all / Open all (.pmbar-acts) | control | folds_controller.js          | done   |
    | scope chips (.pmx-sc .pmx-sk)          | data    | GrantRow::scopeKinds         | done   |
    | own's own words (.pmx-sk.own)          | data    | GrantRow::ownWords           | done   |
    | ungranted row (— , [data-ungranted])   | state   | GrantRow::isGranted()        | done   |
@@ -25,6 +28,24 @@
    the declared ones and no others, so a loop over it cannot draw a cell that
    would mean nothing — which is the ruling, enforced by the shape of the data
    rather than by a condition somebody has to remember to write. #}
+
+{# THE BAR ABOVE THE FOLDS, one macro because the record and the configure
+   page draw the same sentence and the same two shortcuts, and a second copy
+   would drift on whichever page was edited second.
+
+   THE TWO SHORTCUTS ARE A CONTROLLER, NOT MARKUP. The folds are native
+   <details>, so every group still opens and closes without script; these open
+   or close all of them at once and are therefore drawn only inside the element
+   the controller is attached to. #}
+{% macro bar(card) %}
+    <div class="pmbar">
+        <span class="pmbar-n"><b>{{ card.concernsGranted }} of {{ card.concernsDeclared }} concerns</b> &middot; {{ card.groups|length }} group{{ card.groups|length == 1 ? '' : 's' }} &middot; the six verbs, fixed</span>
+        <span class="pmbar-acts">
+            <button type="button" class="tgl w-act" data-action="uhifadhi--team-bundle--folds#foldAll">Fold all</button>
+            <button type="button" class="tgl w-act" data-action="uhifadhi--team-bundle--folds#openAll">Open all</button>
+        </span>
+    </div>
+{% endmacro %}
 
 {# THE SCOPE KINDS, READ-ONLY EVERYWHERE. A position is defined once for the
    organization and where it applies is the holder's, so these state what the
@@ -75,7 +96,8 @@
 {% macro read(card) %}
     {% import _self as mx %}
     {% for group in card.groups %}
-        <details class="pmf pmfg"{{ loop.first ? ' open' : '' }}>
+        <details class="pmf pmfg"{{ loop.first ? ' open' : '' }}
+                 data-uhifadhi--team-bundle--folds-target="fold">
             {{ mx.group_head(group, false) }}
             <div class="pmf-b">
                 {% for row in group.rows %}
@@ -106,7 +128,8 @@
     {% for group in card.groups %}
         <details class="pmf pmfg"{{ loop.first ? ' open' : '' }}
                  data-controller="uhifadhi--team-bundle--grants"
-                 data-uhifadhi--team-bundle--grants-target="group">
+                 data-uhifadhi--team-bundle--grants-target="group"
+                 data-uhifadhi--team-bundle--folds-target="fold">
             {{ mx.group_head(group, true) }}
             <div class="pmf-b">
                 {% for row in group.rows %}
@@ -144,7 +167,7 @@
    them. #}
 {% macro orphans(orphans) %}
     {% if orphans is not empty %}
-        <details class="pmf pmfg">
+        <details class="pmf pmfg" data-uhifadhi--team-bundle--folds-target="fold">
             <summary>
                 <span class="pmf-car">{{ ux_icon('shell:chevron-down') }}</span>
                 <b>Declared by nothing installed</b>

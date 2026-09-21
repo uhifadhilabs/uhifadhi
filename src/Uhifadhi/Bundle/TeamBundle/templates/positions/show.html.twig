@@ -15,7 +15,7 @@
    | band door "Edit the grants →"           | control | team_position_configure      | done   |
    | .recgrid, two columns                   | chrome  | shell                        | done   |
    | "What it grants" card + .pmbar          | chrome  | _matrix.html.twig            | done   |
-   | Fold all / Open all                     | control | <details> per fold           | done*  |
+   | Fold all / Open all                     | control | folds_controller.js          | done   |
    | the folds, read-only                    | data    | _matrix.read()               | done   |
    | orphaned grants                         | state   | PositionBoard::orphans()     | done   |
    | card foot "n groups · n sensitive" +    |         |                              |        |
@@ -25,16 +25,20 @@
    | Holders foot "n seats free"             | data    | PositionCard::seatsFree      | done   |
    | History card, latest 8 of n             | data    | PositionHistory              | done   |
    | the notes section                       | —       | —                            | excluded: design notes are not product |
-   *the two buttons are a browser behaviour over native <details> and need
-    script; they are absent rather than drawn inert — a control that looks
-    operable and is not is worse than no control. Named in the round's report.
+   THE FOLDS THEMSELVES NEED NO SCRIPT — they are native <details>. The two
+   shortcuts above them do, and they are a Stimulus controller on the card, so
+   every one of them is a control that works rather than a control that looks
+   operable.
 
    NO TAB STRIP, and no uuid on the page: a record carries no section tabs,
    and an identifier nobody types is not a fact a reader needs. #}
 {% extends '@Shell/page.html.twig' %}
 {% import '@Team/positions/_matrix.html.twig' as mx %}
 
-{% block title %}{{ card.name }} &middot; positions{% endblock %}
+{# THE SEPARATOR IS THE CHARACTER, NOT THE ENTITY. This block is CAPTURED
+   into a string and handed to shell_title(), which escapes it, so `&middot;`
+   would reach the browser tab as the six letters somebody typed. #}
+{% block title %}{{ card.name }} · positions{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
@@ -55,7 +59,7 @@
             <p class="pgsub">
                 <span>{{ card.seatsFilled }} holder{{ card.seatsFilled == 1 ? '' : 's' }}</span> &middot;
                 <span>{% if card.seats is null %}unlimited seats{% else %}{{ card.seatsFilled }} of {{ card.seats }} seats{% endif %}</span> &middot;
-                <span>{{ card.allowedKinds|length == 2 ? 'placed in one area or across the organization' : 'placed ' ~ (card.allowedKinds|first).reach }}</span>
+                <span>{{ card.placedWhere }}</span>
                 {%- if card.position.isRetired %} &middot; <span>retired</span>{% endif -%}
             </p>
         </div>
@@ -81,11 +85,9 @@
 
     <div class="recgrid">
         <div class="col">
-            <div class="c">
+            <div class="c" data-controller="uhifadhi--team-bundle--folds">
                 <span class="tab">What it grants<span class="src">&middot; {{ card.concernsGranted }} of {{ card.concernsDeclared }} concerns &middot; read-only</span></span>
-                <div class="pmbar">
-                    <span class="pmbar-n"><b>{{ card.concernsGranted }} of {{ card.concernsDeclared }} concerns</b> &middot; {{ card.groups|length }} group{{ card.groups|length == 1 ? '' : 's' }} &middot; the six verbs, fixed</span>
-                </div>
+                {{ mx.bar(card) }}
                 {{ mx.read(card) }}
                 {{ mx.orphans(orphans) }}
                 <div class="pcard-foot">

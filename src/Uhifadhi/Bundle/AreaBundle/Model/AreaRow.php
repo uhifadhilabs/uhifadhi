@@ -67,6 +67,31 @@ final readonly class AreaRow
         return $this->liveModules > 0;
     }
 
+    /**
+     * THE SAME FIGURES, KEYED BY WHAT THEY MEASURE — how a TABLE has to read
+     * them, because a table has columns and a card does not.
+     *
+     * THE REGISTER DRAWS ONE COLUMN PER FIGURE, headed from the first live
+     * area, and every other row fills those columns. Read by POSITION that is
+     * wrong twice over: an area running fewer modules has fewer figures, so
+     * the row either prints its numbers under somebody else's headings or —
+     * with strict variables, which is how the product runs — asks for an index
+     * that is not there and takes the whole page down with it. Neither is a
+     * rendering of the truth, and the truth is that a column is a LABEL: an
+     * area that contributes nothing for it has nothing to say there.
+     *
+     * @return array<string, string> the figure's label => its value
+     */
+    public function statsByLabel(): array
+    {
+        $byLabel = [];
+        foreach ($this->stats as $stat) {
+            $byLabel[$stat->label] = $stat->value;
+        }
+
+        return $byLabel;
+    }
+
     /** Whether this area is asking for attention — the card flags it, the pill counts it. */
     public function hasAlerts(): bool
     {

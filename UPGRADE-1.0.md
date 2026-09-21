@@ -117,13 +117,24 @@ library — so `doctrine:migrations:diff` on this platform emits the bare
 generate a migration removing it. `tests/Core/MigrationsCoverSchemaTest` is
 what holds the two together.
 
-### A new Stimulus controller
+### Two new Stimulus controllers
 
 `uhifadhi--team-bundle--grants` (`assets/controllers/grants_controller.js`),
 lazy: the configure page's per-module **grant all / none** and the save bar's
 **change preview**. It writes nothing — the matrix saves by hand with no
 JavaScript at all — and it leaves a disabled box alone, because a disabled box
 is a pair beyond a bounded administrator's own position.
+
+`uhifadhi--team-bundle--folds` (`assets/controllers/folds_controller.js`),
+lazy: the grants matrix's **Fold all / Open all**, on the position record and
+on the configure page. The folds are native `<details>` and still open one at
+a time with no JavaScript; this is only the pair of shortcuts over them.
+
+**Both arrive through `assets/controllers.json`**, which Flex writes on
+install. An installation upgrading in place — or one whose `controllers.json`
+predates a controller — adds the entry itself, or re-runs
+`composer recipes:install uhifadhi/uhifadhi --force -v`; a controller a host
+never enables is a file nobody loads, and the button is drawn and dead.
 
 ## A department is a placement, not an owner
 

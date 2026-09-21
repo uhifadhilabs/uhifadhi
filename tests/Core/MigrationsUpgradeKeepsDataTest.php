@@ -50,7 +50,7 @@ final class MigrationsUpgradeKeepsDataTest extends MigrationsTestCase
 
         self::assertSame(6 + TeamContentProvider::FIELD_STAFF, $this->countPeople());
         self::assertSame(3, $this->countIn('team_department'));
-        self::assertSame(4, $this->countIn('team_position'));
+        self::assertSame(5, $this->countIn('team_position'));
 
         // What an installation taking a new core does. Nothing is outstanding,
         // so nothing runs — and nothing may be lost by asking.
@@ -59,7 +59,7 @@ final class MigrationsUpgradeKeepsDataTest extends MigrationsTestCase
 
         self::assertSame(6 + TeamContentProvider::FIELD_STAFF, $this->countPeople());
         self::assertSame(3, $this->countIn('team_department'));
-        self::assertSame(4, $this->countIn('team_position'));
+        self::assertSame(5, $this->countIn('team_position'));
     }
 
     public function testTheWholeHistoryUnwindsToNothingAndComesBack(): void

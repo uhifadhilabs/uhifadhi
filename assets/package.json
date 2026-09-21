@@ -40,6 +40,12 @@
                 "fetch": "lazy",
                 "enabled": true
             },
+            "folds": {
+                "main": "../src/Uhifadhi/Bundle/TeamBundle/assets/controllers/folds_controller.js",
+                "name": "uhifadhi--team-bundle--folds",
+                "fetch": "lazy",
+                "enabled": true
+            },
             "permission-group": {
                 "main": "../src/Uhifadhi/Bundle/TeamBundle/assets/controllers/permission_group_controller.js",
                 "name": "uhifadhi--team-bundle--permission-group",

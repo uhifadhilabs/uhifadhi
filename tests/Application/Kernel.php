@@ -98,6 +98,15 @@ final class Kernel extends BaseKernel
             'handle_all_throwables' => true,
             'php_errors' => ['log' => true],
             'session' => ['storage_factory_id' => 'session.storage.factory.mock_file'],
+            // THE ASSET SIDE A FLEX-INSTALLED APPLICATION HAS. The shell's
+            // document links its own stylesheet through asset() and renders
+            // the application's importmap, so a specification that renders a
+            // PAGE rather than an API document needs both. Flex writes exactly
+            // this pair — an `assets/` directory mapped at the root and an
+            // `importmap.php` beside it — and this application is an
+            // installation.
+            'assets' => [],
+            'asset_mapper' => ['paths' => [__DIR__.'/assets' => '']],
         ]);
 
         // WHAT A DEPLOYMENT SETS, AND WHY IT IS HERE. With on-demand fetching

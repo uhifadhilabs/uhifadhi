@@ -149,20 +149,36 @@ abstract class WebTestCase extends KernelTestCase
     protected function aLiveArea(string $name = 'Northern Conservation Reserve'): AreaOfInterest
     {
         $area = $this->anArea($name);
-        $this->em->persist(new Module()
-            ->setSlug('patrols')
-            ->setName('Patrols')
-            ->setCategory(ModuleCategory::Pressure)
-            ->setStatus(ModuleStatus::Live)
-            ->setDataSource('GPS field tracks')
-            ->setPosition(0));
-        $this->em->flush();
+        $this->switchOn($area, 'patrols', 'Patrols');
+
+        return $area;
+    }
+
+    /**
+     * ONE MORE MODULE ON ONE AREA — how an installation's areas come to be
+     * unalike, and the only way a suite can say what a register does with a
+     * row that has nothing to answer in somebody else's column.
+     *
+     * THE CATALOGUE ROW IS UPSERTED because the catalogue is the
+     * installation's and an area is switched on INTO it: a second area
+     * running the same module is a second ledger entry, not a second module.
+     */
+    protected function switchOn(AreaOfInterest $area, string $slug, string $name): void
+    {
+        if (null === $this->em->getRepository(Module::class)->findOneBy(['slug' => $slug])) {
+            $this->em->persist(new Module()
+                ->setSlug($slug)
+                ->setName($name)
+                ->setCategory(ModuleCategory::Pressure)
+                ->setStatus(ModuleStatus::Live)
+                ->setDataSource('GPS field tracks')
+                ->setPosition(0));
+            $this->em->flush();
+        }
 
         /** @var AreaModuleService $modules */
         $modules = static::getContainer()->get('test_public.registry.area_modules');
-        $modules->install($area, 'patrols');
-
-        return $area;
+        $modules->install($area, $slug);
     }
 
     private ?KernelBrowser $browser = null;

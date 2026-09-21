@@ -16,6 +16,7 @@ namespace Uhifadhi\Bundle\TeamBundle\Tests\Functional;
 use Symfony\Component\DomCrawler\Crawler;
 use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
+use Uhifadhi\Contracts\Access\ScopeKind;
 
 /**
  * THE POSITION RECORD — the matrix, read-only, on the station record's
@@ -248,6 +249,65 @@ final class PositionRecordTest extends WebTestCaseWithSchema
         // holding it gained in June sits under it.
         self::assertStringContainsString('Position created', $rows->eq(0)->text());
         self::assertStringContainsString('Joseph Mollel given this position', $crawler->filter('.hlist')->text());
+    }
+
+    /**
+     * THE SUBLINE SAYS WHERE A HOLDER MAY STAND, and it once said what a
+     * scope reaches: an organization-only position read "placed Everything.",
+     * which is a sentence about grants printed where the placement belongs.
+     */
+    public function testTheSublineNamesThePlacementAndNotAScopesReach(): void
+    {
+        $this->administrator();
+        $sergeant = $this->position('Sergeant', [], [ScopeKind::Organization]);
+        $this->em->flush();
+
+        $crawler = $this->client->request('GET', '/team/positions/'.$sergeant->getUuidString());
+        $subline = $crawler->filter('.dpthead .pgsub')->text();
+
+        self::assertStringContainsString('placed across the organization', $subline);
+        self::assertStringNotContainsString('Everything', $subline);
+    }
+
+    /**
+     * THE BROWSER TAB IS TEXT, NOT MARKUP. The title block is captured into a
+     * string and escaped by the shell, so an HTML entity written in it reaches
+     * the tab as the letters somebody typed.
+     */
+    public function testTheTabTitleCarriesNoUnrenderedEntity(): void
+    {
+        $this->administrator();
+        $sergeant = $this->position('Sergeant');
+        $this->em->flush();
+
+        $crawler = $this->client->request('GET', '/team/positions/'.$sergeant->getUuidString());
+        $title = $crawler->filter('title')->text();
+
+        self::assertSame('Sergeant · positions — Uhifadhi', $title);
+        self::assertStringNotContainsString('middot', $title);
+    }
+
+    /**
+     * FOLD ALL AND OPEN ALL ARE DRAWN AND WIRED. They were left out of the
+     * first round as "a browser behaviour we cannot draw"; they are two
+     * buttons over native folds and the design draws them.
+     */
+    public function testTheMatrixCarriesTheTwoFoldShortcuts(): void
+    {
+        $this->administrator();
+        $sergeant = $this->position('Sergeant', ['surveys.read']);
+        $this->em->flush();
+
+        $crawler = $this->client->request('GET', '/team/positions/'.$sergeant->getUuidString());
+
+        self::assertSame(
+            ['Fold all', 'Open all'],
+            $crawler->filter('.pmbar-acts button')->each(static fn (Crawler $c): string => $c->text()),
+        );
+        self::assertCount(
+            $crawler->filter('details.pmf.pmfg')->count(),
+            $crawler->filter('details[data-uhifadhi--team-bundle--folds-target="fold"]'),
+        );
     }
 
     public function testItIsGatedOnReadingThePositionsRegister(): void

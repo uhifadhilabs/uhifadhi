@@ -108,6 +108,34 @@ final readonly class PositionCard
         return $this->position->getAllowedKinds();
     }
 
+    /**
+     * WHERE A HOLDER OF THIS POSITION MAY BE PLACED, as the record's subline
+     * says it — a phrase, not a definition.
+     *
+     * The kinds themselves publish {@see ScopeKind::reach()}, which explains
+     * what a scope MEANS when a concern is granted at it ("Everything.") and
+     * is the right sentence in the grants matrix and the wrong one here: a
+     * subline saying "placed Everything." is the reach of a scope printed
+     * where the placement belongs. So the phrase is composed here, in the
+     * reading the three position screens share, and the enum keeps its own
+     * words for its own job.
+     */
+    public function placedWhere(): string
+    {
+        $kinds = $this->allowedKinds();
+        $organization = \in_array(ScopeKind::Organization, $kinds, true);
+        $area = \in_array(ScopeKind::Area, $kinds, true);
+
+        return match (true) {
+            $organization && $area => 'placed in one area or across the organization',
+            $organization => 'placed across the organization',
+            $area => 'placed in one area',
+            // A POSITION THAT ALLOWS NEITHER CANNOT BE GIVEN TO ANYBODY, and
+            // saying so is more use than an empty fragment.
+            default => 'placed nowhere — it allows no kind of placement',
+        };
+    }
+
     /** @return list<GrantGroup> the groups this position holds something in */
     public function grantedGroups(): array
     {
