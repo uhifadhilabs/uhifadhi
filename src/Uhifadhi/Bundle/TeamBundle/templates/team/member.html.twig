@@ -256,13 +256,13 @@
     </div>
 
     {# POSTINGS — ONE FACT, TWO DOORS: the station page and this page. Read-only
-       here, because a posting is made on the station, in the area. #}
+       here, because an assignment is made on the station, in the area. #}
     <div class="c">
-        <span class="tab">Postings<span class="src">&middot; {{ postings|length }} &middot; read-only, made in the area</span></span>
-        {# READ-ONLY HERE, AND STILL A DOOR. A posting is made on the station,
+        <span class="tab">Assignments<span class="src">&middot; {{ postings|length }} &middot; read-only, made in the area</span></span>
+        {# READ-ONLY HERE, AND STILL A DOOR. An assignment is made on the station,
            in the area that owns the ground — so this card names that page and
            goes to it, rather than naming it and leaving the reader to look.
-           Gated on `area.edit`, which is what making a posting costs, and
+           Gated on `area.edit`, which is what making an assignment costs, and
            absent rather than disabled: a door that closes in somebody's face
            is worse than no door.
 
@@ -272,9 +272,9 @@
         {% if postings is empty %}
             <div class="mb-empty" style="margin-top:14px">
                 {{ bits.icon_warn() }}
-                <span><b>Not posted to a station.</b> Office-based staff hold no posting.</span>
+                <span><b>Not stationed anywhere.</b> Office-based staff hold no assignment.</span>
                 {% if postingDoor and door('area.edit') %}
-                    <a class="more" href="{{ postingDoor }}">Post them at a station &rarr;</a>
+                    <a class="more" href="{{ postingDoor }}">Station them &rarr;</a>
                 {% endif %}
             </div>
         {% else %}

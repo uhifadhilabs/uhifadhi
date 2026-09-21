@@ -1,7 +1,7 @@
 {# TEAM · OVERVIEW — the section's first tab.
 
    WHO IS ON THIS INSTALLATION, WHAT EACH OF THEM MAY DO, AND WHERE THEY ARE
-   POSTED. Every figure here is owned somewhere else — by the register, by
+   STATIONED. Every figure here is owned somewhere else — by the register, by
    Positions, by the station in the area — and this page reads them and writes
    none of them, which is why it carries no control that changes anybody.
 
@@ -24,7 +24,7 @@
 {% endblock %}
 
 {% block shell_page_title %}Team{% endblock %}
-{% block shell_page_subtitle %}Who is on this installation, what each of them may do, and where they are posted.{% endblock %}
+{% block shell_page_subtitle %}Who is on this installation, what each of them may do, and where they are stationed.{% endblock %}
 
 {% block shell_page_actions %}
     <a class="cta" href="{{ path('team_invite') }}">{{ ux_icon('shell:plus', {width: 15, height: 15}) }} Add somebody</a>
@@ -97,11 +97,11 @@
 
     <div class="grid g2">
         <div class="c">
-            <span class="tab">Postings by area<span class="src">&middot; {{ postings }} &middot; made in the area, read here</span></span>
+            <span class="tab">Assignments by area<span class="src">&middot; {{ postings }} &middot; made in the area, read here</span></span>
             {# A POSTING IS THE AREA'S, NOT TEAM'S: made on a station, read here
                across every area at once. An area with no station has none, and
                keeps its column — the nought is the reading. #}
-            <svg class="ch" viewBox="0 0 640 140" width="640" height="140" role="img" aria-label="Postings by area">
+            <svg class="ch" viewBox="0 0 640 140" width="640" height="140" role="img" aria-label="Assignments by area">
                 {% for tick in postingsAxis %}
                     {% set y = 10 + loop.index0 * 56 %}
                     <line class="grid" x1="30" y1="{{ y }}" x2="636" y2="{{ y }}"/>
@@ -121,14 +121,14 @@
         </div>
 
         <div class="c">
-            <span class="tab">Stations with nobody posted<span class="src">&middot; {{ emptyStationsTotal }} of {{ stations }} &middot; needs attention</span></span>
-            {# A STATION WITH NOBODY POSTED IS A NORMAL STATE, not an error: it
+            <span class="tab">Stations with nobody stationed<span class="src">&middot; {{ emptyStationsTotal }} of {{ stations }} &middot; needs attention</span></span>
+            {# A STATION WITH NOBODY STATIONED IS A NORMAL STATE, not an error: it
                is drawn so the figure above can be read without opening the
                area. #}
             {% for line in emptyStations %}
                 <div class="rln"><span>{{ line.label }}</span><span class="mono d">{{ line.note }}</span></div>
             {% else %}
-                <div class="rln"><span class="d">Somebody is posted at every station.</span></div>
+                <div class="rln"><span class="d">Somebody is stationed at every station.</span></div>
             {% endfor %}
             <div class="sxmore"><span>{{ emptyStations|length }} of {{ emptyStationsTotal }} shown</span><span class="sp"></span><a href="{{ path('team_postings') }}?posted=no">Postings &rarr;</a></div>
         </div>

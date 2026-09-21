@@ -43,7 +43,7 @@ final class PostingDoorTest extends WebTestCaseWithSchema
         $crawler = $this->client->request('GET', '/team/'.$grace->getUuidString());
 
         self::assertResponseIsSuccessful();
-        self::assertStringContainsString('Post them at a station', $crawler->filter('.mb-empty')->text());
+        self::assertStringContainsString('Station them', $crawler->filter('.mb-empty')->text());
         self::assertSame('/areas', $crawler->filter('.mb-empty a.more')->attr('href'), 'With no one area to send them to, the register is where they choose.');
     }
 
@@ -75,7 +75,7 @@ final class PostingDoorTest extends WebTestCaseWithSchema
         $crawler = $this->client->request('GET', '/team/'.$grace->getUuidString());
 
         self::assertResponseIsSuccessful();
-        self::assertStringContainsString('Not posted to a station', $crawler->filter('.mb-empty')->text());
+        self::assertStringContainsString('Not stationed anywhere', $crawler->filter('.mb-empty')->text());
         self::assertCount(0, $crawler->filter('.mb-empty a.more'));
     }
 
@@ -92,7 +92,7 @@ final class PostingDoorTest extends WebTestCaseWithSchema
 
         $card = $this->client->request('GET', '/team/'.$grace->getUuidString())->filter('.mb-empty')->text();
 
-        self::assertStringContainsString('Office-based staff hold no posting', $card);
+        self::assertStringContainsString('Office-based staff hold no assignment', $card);
         self::assertStringNotContainsString('Nullable', $card);
     }
 }

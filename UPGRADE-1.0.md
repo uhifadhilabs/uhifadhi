@@ -111,6 +111,168 @@ on the member and invite screens are a flat list in the template variable
 ask `DepartmentMembership`. If your module's own screens grouped positions under
 departments, they group under nothing now — the name is unique.
 
+## One word for a station, and one for being at it
+
+**What changed** (ruled 2026-09-20). "Post", "posted to" and "posting" meant
+the place, the act and the placement all at once, so every screen had to be
+read twice. Three words now, each meaning one thing:
+
+| The idea | The word | In a sentence |
+| --- | --- | --- |
+| the place | **station** | "Seneto Gate is a station" |
+| a person's placement there | **stationed at** | "3 rangers stationed at Seneto Gate" |
+| the placement as a noun | **assignment** | "End the assignment" |
+
+Every user-facing word in the core is swept: page titles, tab captions, table
+headings, empty states, flashes, hints and the station event log ("T. Ndosi
+stationed here", "J. Mollel's assignment ended"). `CheckInStatusKind::AtPost`
+now reads **"at a station"**.
+
+**Park-given names are untouched.** A station called "Seneto Gate Post" keeps
+its name — it is a proper noun the organization chose, not the product's word
+for the idea, and the sweep deliberately leaves such names alone.
+
+**Identifiers have NOT moved,** and that is the two-release rule rather than an
+oversight: anything an installation, a module or the handset references keeps
+its old spelling this release so nothing written against it breaks in the same
+release that changed the copy.
+
+| Identifier | Kind | Referenced outside the core? |
+| --- | --- | --- |
+| `team_postings` | route name | possibly — an installation may generate it |
+| `area_posting_end`, `area_posting_lead` | route names | possibly |
+| `/postings/{uuid}/lead`, `/postings/{uuid}/end`, `/stations/{uuid}/postings` | URL segments | **yes** — people bookmark and link to them |
+| `area.postings` | service id | possibly, by a module reading the board |
+| `Entity\Posting` | entity and table `posting` | **yes** — a module may join it |
+| `PostingQuery`, `PostingRow`, `PostingStation`, `PostingBoard`, `PostingService`, `PostingDoorService`, `PostingException` | class names | possibly |
+| `StationEventKind::Posted`, `::PostingEnded` | enum cases (stored values) | **yes** — stored in `station_event` |
+| `CheckInStatusKind::AtPost` | enum case (stored value `at_post`) | **yes** — the handset sends it |
+| `posted` | sort key and filter value in station/zone URLs | **yes** — a bookmarked filter |
+
+**When they turn over.** The stored enum values (`at_post`, the station-event
+kinds) and the URL segments need a release that accepts both spellings before
+one is dropped; the roster module owns the `at_post` → `at_station` move on the
+handset's side. Class and service names are ordinary renames once the release
+after this one is open.
+
+## Every gate names a (concern, verb) pair
+
+**What changed.** A permission used to be a flat value — `area.view`,
+`team.manage`. It is now a **pair**: the concern it is about and the verb being
+done to it, written `<concern>.<verb>`, with the verb the segment after the
+**last** dot so a concern key may carry hyphens (`personal-details.read`).
+Routes, doors and stored grants all spell it that way, which is what lets the
+build tests hold the three together.
+
+**Both voters run for one release.** `GrantVoter` answers pairs;
+`PermissionVoter` still answers the old flat values. Neither can overrule the
+other — each only recognises attributes the other does not — so gates move over
+a package at a time instead of in one unreviewable sweep. `Position` likewise
+carries **both** columns: `grants` (pairs) beside `permissions` (the old
+values), the latter backfilled into the former by
+`Version20260921002000`. `permissions`, `PermissionEnum`, `PermissionCatalogue`,
+`PermissionVoter` and `ModulePermission` all go in the release after the last
+gate moves.
+
+### The mapping, site by site
+
+Scan this: it is the whole of what changed about who can do what. Nobody gains
+a power here, and the two places a distinction was **lost** are called out.
+
+| Old value | Where | New pair |
+| --- | --- | --- |
+| `area.view` | `AreaController::index`, `::show`; `AreaWidgetsController` (all) ; `OrgDashboardController` (all) | `areas.read` |
+| `area.view` | `ZoneController::index`; `ZoneConfigureController::configure` | `zones.read` |
+| `area.view` | `ZoneConfigureController::export` | `zones.export` |
+| `area.view` | `StationsController::index`; `StationConfigureController::configure` | `stations.read` |
+| `area.edit` | `AreaController::settings`; `AreaEditController::edit`, `::replaceBoundary` | `areas.configure` |
+| `area.create` | `AreaCreateController::new` | `areas.configure` |
+| `area.delete` | *(no route enforced it)* | `areas.configure` in the backfill |
+| `area.edit` | `ZoneEditController::rename`, `::ring`; `ZoneImportController::preview`, `::confirm` | `zones.configure` |
+| `area.edit` | `ZoneEditController::remove`, `::clear` | `zones.delete` |
+| `area.edit` | `StationEditController::add`, `::rename`, `::describe`, `::move`, `::catchment`, `::activity` | `stations.configure` |
+| `area.edit` | `StationEditController::post`, `::end`, `::lead` | `assignments.manage` |
+| `module.view` | `AreaModulesController::grid` | `modules.read` |
+| `module.create` | `AreaModulesController::customize`, `::install`, `::reorder`, `::uninstall` | `modules.configure` |
+| `duty.checkin` | the handset's check-in endpoints | `duty.record` |
+| `team.manage` | `MemberController::show`; `InviteController::show`; `TeamController::index`; `TeamRolesController::index`; `TeamSectionController::overview`; `TeamWidgetsController` (all); `TeamPostingsController::index` | `directory.read` |
+| `team.manage` | `MemberController::update`, `::position`, `::deactivate`, `::reactivate`, `::tier`; `InviteController::create`, `::invite` | `directory.manage` |
+| `team.manage` | `MemberController::resendInvitation`, `::sendResetLink` | `personal-details.manage` |
+| — | the member record's contact/sign-in block (a door) | `personal-details.read` |
+| `team.manage` | `PositionController::index`; `PositionWidgetsController` (all) | `positions.read` |
+| `team.manage` | `PositionController::create`, `::rename`, `::permissions`; `TeamConfigureController::settings`, `::vocabulary`, `::createTitle`, `::renameTitle` | `positions.configure` |
+| `team.manage` | `DepartmentController::index`, `::show`; `DepartmentSectionController::overview`, `::modules`; `DepartmentWidgetsController` (all); `AreaDepartmentController::tab`, `::configure`; `PerformanceController` (all) | `departments.read` |
+| `team.manage` | `DepartmentController::create`, `::rename`, `::changeScope`, `::toggleModule`, `::declareGoal`, `::withdrawGoal`, `::deactivate`, `::reactivate`; `DepartmentConfigureController` (all); `PerformanceConfigureController::settings` | `departments.configure` |
+
+**Two judgements worth disagreeing with, if you do.**
+
+- **The three area values collapse into `areas.configure`.** Identity, boundary
+  and settings are plainly configuration; creating an area and deleting one are
+  neither field facts nor settings, and the six verbs give nothing that fits
+  them better. An installation that deliberately gave somebody `area.view` and
+  `area.create` while withholding `area.edit` will find that distinction gone —
+  **re-read those positions.** It also means `area.create`'s old status as the
+  one inherently global permission is no longer expressible.
+- **`TeamPostingsController::index` is `directory.read`, not
+  `assignments.read`.** Who is stationed where is the ground's concern, declared
+  by the area bundle — and a Team page must not gate on a concern that vanishes
+  when the ground package is absent. `AreaDepartmentController` moved from
+  `area.view` to `departments.read` for the same reason.
+
+**`team.manage` fans out to eight pairs in the backfill,** deliberately
+generously: everybody who could administer the team keeps being able to, and an
+organization that wants the finer grain now has the rows to take away. Guessing
+which half of team administration each holder was meant to have would lock
+somebody out of a page they used yesterday.
+
+### A verb is declared where something enforces it
+
+The declarations were trimmed to what routes and doors actually gate. There is
+no `areas.delete` because nothing deletes an area; no `positions.delete` or
+`departments.delete` because this bundle **deactivates and never destroys**; no
+`directory.export` because nothing exports the roster yet. A declared power
+nothing enforces is a box an administrator can tick that changes nothing, and
+`tests/Core/EveryRouteNamesItsPairTest` fails the build in both directions —
+on a route naming an undeclared pair, and on a declared pair nothing enforces.
+**Declare the verb in the same change that ships the thing enforcing it.**
+
+### Doors go through one helper
+
+A door — a link, a button, a section leading somewhere a permission guards — is
+written `{% if door('zones.configure', area) %}`, never `is_granted`. Both take
+the same string; the difference is that `door()` is enumerable, which is what
+lets a test walk every door and hold it against the routes.
+`tests/Core/EveryDoorGoesThroughTheHelperTest` refuses `is_granted(` in any
+shipped template. In PHP, inject `Uhifadhi\Bundle\TeamBundle\Access\Door`.
+
+### What a module must do
+
+Declare concerns through `ConcernSourceInterface` (tag
+`uhifadhi.access.concerns`, applied by hand), gate routes on pairs, draw doors
+with `door()`, and extend
+`Uhifadhi\Bundle\TeamBundle\Test\AccessConformanceTestCase` in its own CI —
+it holds the same rules the core holds itself to: one declaration per key, a
+sentence on every concern, a module concern naming its module, `own` carrying
+the module's own words, sensitive concerns named explicitly, and every door
+through the helper.
+
+### Two rulings recorded here so they are not re-litigated
+
+- **`Position::allowedKinds` offers `Organization` and `Area` only, and that is
+  correct.** A placement is made at the organization or at named areas — that is
+  what a placement *is*. `Department` is the placement's **other dimension**,
+  asked separately and not gated by the position; `Own` is a scope a **concern**
+  offers, not a way of placing somebody. Allowing either as a placement kind
+  would mean nothing, so the setter refuses them.
+- **The department-first position widgets are kept, flattened, pending a design
+  verdict.** `positions/_w_dept_a`, `_w_dept_b`, `_w_dept_c`, `_w_dept_e`, the
+  rail in `_w_matrix_b` and `team/_w_roster_d` were five layouts of one idea:
+  make the department the structure of the page rather than a column on it.
+  **That premise is gone** — a position belongs to no department. They are
+  flattened so they stay correct and are marked in the widget catalogue as
+  "premise changed — redesign or delete pending a design verdict". They are not
+  deleted, because which of them still earns its place is a design decision.
+
 ## The access vocabulary: concerns, six verbs, four scopes
 
 **What changed.** `Uhifadhi\Contracts\Access` publishes the vocabulary every

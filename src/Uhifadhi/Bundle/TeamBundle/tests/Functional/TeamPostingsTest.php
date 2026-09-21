@@ -79,7 +79,7 @@ final class TeamPostingsTest extends WebTestCaseWithSchema
         $this->ground();
 
         self::assertStringContainsString(
-            'Nobody is posted here',
+            'Nobody is stationed here',
             $this->visit('/team/postings')->filter('table.tbl tbody')->text(),
         );
     }

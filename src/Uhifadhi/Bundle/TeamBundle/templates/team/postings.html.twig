@@ -1,6 +1,6 @@
-{# TEAM · POSTINGS — who is posted to which station, across every area.
+{# TEAM · ASSIGNMENTS — who is stationed at which station, across every area.
 
-   IT WRITES NOTHING. A posting is made on the station, in the area that owns
+   IT WRITES NOTHING. An assignment is made on the station, in the area that owns
    the ground; this reads it. The one control that leaves the page goes there.
 
    THE HEADER IS THE SECTION'S, NOT THIS TAB'S. The title is "Team" on every
@@ -9,7 +9,7 @@
    and the Configure action are written by it. #}
 {% extends '@Shell/page.html.twig' %}
 
-{% block title %}Team &mdash; Postings{% endblock %}
+{% block title %}Team &mdash; Assignments{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
@@ -17,11 +17,11 @@
 {% endblock %}
 
 {% block shell_breadcrumbs %}
-    <a href="{{ path('team_index') }}">uhifadhi</a> / <a href="{{ path('team_index') }}">team</a> / postings
+    <a href="{{ path('team_index') }}">uhifadhi</a> / <a href="{{ path('team_index') }}">team</a> / assignments
 {% endblock %}
 
 {% block shell_page_title %}Team{% endblock %}
-{% block shell_page_subtitle %}Who is posted to which station, across every area &mdash; read-only, made in the area.{% endblock %}
+{% block shell_page_subtitle %}Who is stationed at which station, across every area &mdash; read-only, made in the area.{% endblock %}
 
 {% block shell_page_actions %}
     {% if stationsUrl %}<a class="tgl w-act" href="{{ stationsUrl }}">Stations on the area</a>{% endif %}
@@ -39,7 +39,7 @@
     </div>
 
     <div class="c">
-        <span class="tab">Who is posted where<span class="src">&middot; {{ postings }} &middot; read-only, made in the area</span></span>
+        <span class="tab">Who is stationed where<span class="src">&middot; {{ postings }} &middot; read-only, made in the area</span></span>
 
         {# THE HOUSE FILTER BAR: grouped dropdowns with live counts, then the
            search. Every option is a link, so the address is the state. #}
@@ -91,10 +91,10 @@
                         <td style="text-align:right">{% if station.url %}<a class="open-btn" href="{{ station.url }}">The station</a>{% endif %}</td>
                     </tr>
                 {% else %}
-                    {# NOBODY POSTED IS A NORMAL STATE, not an error, and it is
+                    {# NOBODY STATIONED IS A NORMAL STATE, not an error, and it is
                        drawn so the figure above can be read without opening
                        the area. #}
-                    <tr><td colspan="4"><span class="mono d">Nobody is posted here &mdash; a normal state, not an error</span></td></tr>
+                    <tr><td colspan="4"><span class="mono d">Nobody is stationed here &mdash; a normal state, not an error</span></td></tr>
                 {% endfor %}
             {% else %}
                 <tr><td colspan="4"><span class="mono d">{{ query.isFiltered() ? 'No posting answers that.' : 'No station has been recorded on this installation yet.' }}</span></td></tr>
@@ -107,7 +107,7 @@
         <div class="sxfoot">
             <span>Made on the station, in the area &mdash; Team reads it, never writes it.</span>
             <span class="sp"></span>
-            {% if stationsUrl %}<a class="tgl" href="{{ stationsUrl }}">Post somebody</a>{% endif %}
+            {% if stationsUrl %}<a class="tgl" href="{{ stationsUrl }}">Station somebody</a>{% endif %}
         </div>
     </div>
 {% endblock %}
