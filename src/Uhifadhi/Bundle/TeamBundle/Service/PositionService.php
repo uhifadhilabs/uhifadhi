@@ -18,7 +18,11 @@ use Doctrine\ORM\EntityManagerInterface;
 use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Exception\NameNotUniqueException;
+use Uhifadhi\Bundle\TeamBundle\Exception\PositionHeldException;
+use Uhifadhi\Bundle\TeamBundle\Exception\SeatsBelowHoldersException;
 use Uhifadhi\Bundle\TeamBundle\Exception\UnknownGrantException;
+use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
+use Uhifadhi\Contracts\Access\ScopeKind;
 
 /**
  * WHAT A POSITION IS, AND WHAT IT GRANTS — the only writes that shape either.
@@ -56,6 +60,7 @@ final readonly class PositionService
     public function __construct(
         private EntityManagerInterface $entityManager,
         private ConcernCatalogue $catalogue,
+        private UserRepository $users,
     ) {
     }
 
@@ -101,6 +106,60 @@ final readonly class PositionService
     public function setGrants(Position $position, array $pairs): void
     {
         $position->setGrantValues($pairs, $this->catalogue->pairs());
+
+        $this->entityManager->flush();
+    }
+
+    /**
+     * WHAT A POSITION IS, IN ONE WRITE — the three facts the identity card
+     * states, saved together because they are refused together.
+     *
+     * THE SEAT COUNT CANNOT FALL BELOW THE PEOPLE ALREADY IN IT. Choosing
+     * which two of six holders lose their seat is not a decision a product
+     * may make, so the write is refused and the floor is named.
+     *
+     * @param list<ScopeKind> $allowedKinds
+     *
+     * @throws NameNotUniqueException      when the organization already has the name
+     * @throws SeatsBelowHoldersException  when the count is below the holders
+     * @throws \InvalidArgumentException   when the kinds are not a placement's kinds
+     */
+    public function setIdentity(Position $position, string $name, ?int $seatCount, array $allowedKinds): void
+    {
+        $holders = \count($this->users->findActiveHolders($position));
+        if (null !== $seatCount && $seatCount < $holders) {
+            throw new SeatsBelowHoldersException($position, $seatCount, $holders);
+        }
+
+        $position->setName($name)->setSeatCount($seatCount)->setAllowedKinds($allowedKinds);
+
+        $this->flush($name);
+    }
+
+    /**
+     * CLOSING A POSITION. We do not delete things: the row stays, everything
+     * it granted keeps its history, and it can come back.
+     *
+     * REFUSED WHILE ANYBODY HOLDS IT, and the refusal names the count.
+     *
+     * @throws PositionHeldException when somebody still holds it
+     */
+    public function retire(Position $position, ?\DateTimeImmutable $now = null): void
+    {
+        $holders = \count($this->users->findActiveHolders($position));
+        if ($holders > 0) {
+            throw new PositionHeldException($position, $holders);
+        }
+
+        $position->retire($now ?? new \DateTimeImmutable());
+
+        $this->entityManager->flush();
+    }
+
+    /** Reopening a retired position; it is assignable again the moment the stamp is cleared. */
+    public function reinstate(Position $position): void
+    {
+        $position->reinstate();
 
         $this->entityManager->flush();
     }

@@ -10,7 +10,6 @@ declare(strict_types=1);
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-
 namespace Uhifadhi\Bundle\TeamBundle\Controller;
 
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -21,66 +20,77 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\Requirement\Requirement;
-use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Uid\Uuid;
 use Twig\Environment;
-use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService;
 use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Exception\NameNotUniqueException;
+use Uhifadhi\Bundle\TeamBundle\Exception\PositionHeldException;
+use Uhifadhi\Bundle\TeamBundle\Exception\SeatsBelowHoldersException;
 use Uhifadhi\Bundle\TeamBundle\Exception\UnknownGrantException;
-use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
+use Uhifadhi\Bundle\TeamBundle\Model\PositionCard;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
-use Uhifadhi\Bundle\TeamBundle\Service\DepartmentMembership;
+use Uhifadhi\Bundle\TeamBundle\Service\PositionBoard;
+use Uhifadhi\Bundle\TeamBundle\Service\PositionHistory;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionService;
-use Uhifadhi\Bundle\TeamBundle\Widget\PositionWidgets;
-use Uhifadhi\Contracts\Access\Grant;
+use Uhifadhi\Contracts\Access\ScopeKind;
 use Uhifadhi\Contracts\Access\Verb;
-use Uhifadhi\Contracts\Entity\UserInterface as ModuleUserInterface;
 
 /**
- * POSITIONS AND GRANTS — the heart of this bundle.
+ * POSITIONS AND GRANTS — the heart of this bundle, as three screens.
  *
  * A POSITION IS THE ONLY THING THAT GRANTS A STAFF MEMBER ANY CAPABILITY AT
- * ALL, and this is where one is composed. A position belongs to no
- * department, and its name is unique across the whole organization: there is
- * one Analyst, and where each holder works is written on their own record.
+ * ALL. A position belongs to no department, and its name is unique across
+ * the whole organization: there is one Sergeant, and where each holder works
+ * is written on their own record.
+ *
+ * THE THREE SCREENS, AND WHY THEY ARE THREE.
+ *
+ *   THE REGISTER is one collapsible card per position, on the department
+ *   register's idiom: seats and holders in the head, the concern chips
+ *   grouped by declaring module in the body, the verb summary and the holder
+ *   avatars in the foot. It is a PREVIEW and never an editor.
+ *
+ *   THE RECORD wears the station record's skeleton — header, fact band, one
+ *   `.recgrid` of cards — and carries the matrix READ-ONLY, with the holders
+ *   and the history beside it. No tabs, and no uuid on the page: an
+ *   identifier nobody types is not a fact a reader needs.
+ *
+ *   CONFIGURE mirrors the record: the same skeleton, the same split, ONE
+ *   page. Everything a position can be changed to is on it — the identity,
+ *   the matrix, and retiring it — with the holders beside the editor,
+ *   because changing what this position grants changes what those people may
+ *   do.
  *
  * A GRANT IS A (CONCERN, VERB) PAIR, AND THE MATRIX IS DRAWN FROM THE
- * DECLARATIONS. It used to read a flat catalogue of permission values grouped
- * under an invented umbrella and write `setPermissionValues()`; the ruled
- * model replaced that with one group per DECLARER, a row per CONCERN and a
- * column per VERB, and a cell drawn only where the concern declares that verb
- * — so there is never a checkbox that would mean nothing, and no list of
- * permissions is maintained by hand in the middle of the product.
+ * DECLARATIONS. One group per DECLARER, a row per CONCERN, a box only where
+ * the concern declares the verb — so there is never a checkbox that would
+ * mean nothing, and no list of permissions is maintained by hand in the
+ * middle of the product.
  *
- * ADMINISTERING THE TEAM IS ITSELF TWO OF THE CELLS. `positions.configure`
- * and `departments.configure` — which is why the page that confers them is
- * gated on the first of them.
+ * WHAT THERE IS TO GRANT IS NOT FIXED. The team's concerns are this
+ * bundle's; the rest arrive when a module is installed and leave when it is
+ * removed. So the screens hand every rendering the honest state that
+ * outlives a module: an ORPHANED GRANT — still held, declared by nothing,
+ * drawn muted and still revocable.
  *
- * WHAT THERE IS TO GRANT IS NOT FIXED, and the page has to make that visible.
- * The team's four concerns are this bundle's and will always be there; the
- * rest arrive when a module is installed and leave when it is removed. So the
- * page hands every rendering the honest state that outlives a module: an
- * ORPHANED GRANT — still held by a position, declared by nothing, drawn muted
- * and still revocable. The difference between "you no longer have this" and
- * "you cannot see that you still have this" is the whole of the
- * prune-not-purge ruling.
+ * POSITIONS ARE RETIRED, NEVER DELETED, and retiring is refused while
+ * anybody holds it.
  */
 final readonly class PositionController
 {
-    /** The section's third tab: the matrix a position's grant is edited on. */
+    /** The section's third tab: the register. */
     public const string REGISTER = 'team_positions';
 
     /**
-     * THE TWO PAIRS THIS SCREEN IS ABOUT, and they are not the same pair.
+     * THE TWO PAIRS THESE SCREENS ARE ABOUT, and they are not the same pair.
      * Reading the register is `positions.read`; composing what a position
      * grants is `positions.configure`, which is administering the team.
      */
@@ -89,39 +99,97 @@ final readonly class PositionController
 
     public const string CSRF_ID = 'team_position';
 
+    /** How many lines of a position's history a bounded card shows. */
+    private const int HISTORY_SHOWN = 8;
+
     public function __construct(
         private Environment $twig,
         private PositionRepository $positions,
-        private DepartmentRepository $departments,
-        private DepartmentMembership $membership,
         private UserRepository $users,
         private ConcernCatalogue $catalogue,
+        private PositionBoard $board,
+        private PositionHistory $historian,
         private PositionService $positionWrites,
         private CsrfTokenManagerInterface $csrf,
         private UrlGeneratorInterface $router,
-        private TokenStorageInterface $tokens,
-        private WidgetService $widgets,
         private AreaAuthority $authority,
     ) {
     }
 
+    /**
+     * THE REGISTER. One card per position, filtered by the scope kinds a
+     * position allows — a segmented row rather than a dropdown, because
+     * there are five one-click choices and burying five of those in a panel
+     * is worse than showing them.
+     */
     #[Route('/team/positions', name: self::REGISTER, defaults: TeamController::SURFACE, methods: ['GET'])]
     #[IsGranted(self::READ)]
     public function index(Request $request): Response
     {
-        $catalog = new PositionWidgets()->catalog();
+        $kind = ScopeKind::tryFrom(trim((string) $request->query->get('kind')));
+        $cards = $this->board->register();
 
         return new Response($this->twig->render('@Team/positions/index.html.twig', [
-            'widgets' => $this->widgets->resolve($catalog, $this->signedIn()),
-            ...$this->widgetContext($request),
+            'cards' => $cards,
+            'shown' => null === $kind ? $cards : array_values(array_filter(
+                $cards,
+                static fn (PositionCard $card): bool => \in_array($kind, $card->allowedKinds(), true),
+            )),
+            'kind' => $kind,
+            'kinds' => [ScopeKind::Organization, ScopeKind::Area, ScopeKind::Department, ScopeKind::Own],
+            'holding' => $this->users->countActiveHoldingAnyPosition($this->positions->findAllOrdered()),
+            'declared' => \count($this->catalogue->all()),
+            'csrfToken' => $this->csrf->getToken(self::CSRF_ID)->getValue(),
         ]));
     }
 
     /**
-     * CREATING ONE IS A NAME, and the name is the whole of it. A position
-     * belongs to no department, so there is nothing to file it under and the
-     * name is unique across the whole organization: there is one Sergeant,
-     * not one per department.
+     * THE RECORD. The matrix read-only, the holders and the history beside
+     * it, and one door out to the editor.
+     */
+    #[Route('/team/positions/{uuid}', name: 'team_position_show', requirements: ['uuid' => Requirement::UUID], methods: ['GET'])]
+    #[IsGranted(self::READ)]
+    public function show(string $uuid): Response
+    {
+        $position = $this->position($uuid);
+        $card = $this->board->card($position);
+        $history = $this->historian->of($position, $card->holders);
+
+        return new Response($this->twig->render('@Team/positions/show.html.twig', [
+            'card' => $card,
+            'history' => \array_slice($history, 0, self::HISTORY_SHOWN),
+            'historyTotal' => \count($history),
+            'orphans' => $this->board->orphans($position),
+        ]));
+    }
+
+    /**
+     * CONFIGURE. One page, no tabs: the identity, the matrix, the holders
+     * read-only beside them, and retiring.
+     */
+    #[Route('/team/positions/{uuid}/configure', name: 'team_position_configure', requirements: ['uuid' => Requirement::UUID], methods: ['GET'])]
+    #[IsGranted(self::CONFIGURE)]
+    public function configure(string $uuid): Response
+    {
+        $position = $this->position($uuid);
+        $card = $this->board->card($position);
+
+        return new Response($this->twig->render('@Team/positions/configure.html.twig', [
+            'card' => $card,
+            'orphans' => $this->board->orphans($position),
+            // §5.6(c): what the signed-in administrator may confer — null when
+            // unbounded (everything grantable), a list of pairs for a bounded
+            // (area-X) one. The matrix draws the cells outside it disabled.
+            'grantable' => $this->authority->grantableGrants(),
+            'placeableKinds' => [ScopeKind::Organization, ScopeKind::Area],
+            'csrfToken' => $this->csrf->getToken(self::CSRF_ID)->getValue(),
+        ]));
+    }
+
+    /**
+     * CREATING ONE IS A NAME, A SEAT COUNT AND THE KINDS OF PLACEMENT IT
+     * ALLOWS. A position belongs to no department, so there is nothing to
+     * file it under and the name is unique across the whole organization.
      */
     #[Route('/team/positions', name: 'team_position_create', methods: ['POST'])]
     #[IsGranted(self::CONFIGURE)]
@@ -136,6 +204,12 @@ final readonly class PositionController
 
         try {
             $position = $this->positionWrites->create($name);
+            $this->positionWrites->setIdentity(
+                $position,
+                $name,
+                $this->seatsFrom($request),
+                $this->kindsFrom($request),
+            );
         } catch (NameNotUniqueException) {
             // The index would have said this in SQL. The person who typed the
             // name wants the sentence — and the sentence says ORGANIZATION,
@@ -145,9 +219,38 @@ final readonly class PositionController
                 'This organization already has a position called “%s”. A position belongs to no department, so its name is unique across the whole organization — rename one of them.',
                 $name,
             ), 'error');
+        } catch (\InvalidArgumentException $refusal) {
+            return $this->back($request, $refusal->getMessage(), 'error');
         }
 
         return $this->back($request, \sprintf('“%s” exists. It grants nothing until you tick something.', (string) $position->getName()));
+    }
+
+    /**
+     * THE IDENTITY SAVE — the name, the seats and the kinds of placement,
+     * written together because they are refused together.
+     */
+    #[Route('/team/positions/{uuid}/identity', name: 'team_position_identity', requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]
+    #[IsGranted(self::CONFIGURE)]
+    public function identity(Request $request, string $uuid): Response
+    {
+        $position = $this->position($uuid);
+        $this->assertCsrf($request);
+
+        $name = trim((string) $request->request->get('name'));
+        if ('' === $name) {
+            return $this->back($request, 'A position needs a name.', 'error', $position);
+        }
+
+        try {
+            $this->positionWrites->setIdentity($position, $name, $this->seatsFrom($request), $this->kindsFrom($request));
+        } catch (NameNotUniqueException) {
+            return $this->back($request, \sprintf('This organization already has a position called “%s”.', $name), 'error', $position);
+        } catch (SeatsBelowHoldersException|\InvalidArgumentException $refusal) {
+            return $this->back($request, $refusal->getMessage(), 'error', $position);
+        }
+
+        return $this->back($request, 'Saved.', 'success', $position);
     }
 
     /**
@@ -158,10 +261,6 @@ final readonly class PositionController
      * revoked — except for the orphans, which the template draws as ticked
      * boxes of their own precisely so that a save that does not touch them
      * keeps them. Editing a position is not a migration.
-     *
-     * THE FIELD IS `grants[]`. It was `permissions[]`, posting flat values;
-     * the ruling made a grant a pair, and renaming the field is what stops an
-     * old form — or an old test — from quietly writing the wrong thing.
      */
     #[Route('/team/positions/{uuid}/permissions', name: 'team_position_permissions', requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]
     #[IsGranted(self::CONFIGURE)]
@@ -202,6 +301,40 @@ final readonly class PositionController
         ), 'success', $position);
     }
 
+    /**
+     * CLOSING A POSITION. We do not delete things: the row stays, everything
+     * it granted keeps its history, and it can come back. Refused while
+     * anybody holds it, and the refusal names the count.
+     */
+    #[Route('/team/positions/{uuid}/retire', name: 'team_position_retire', requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]
+    #[IsGranted(self::CONFIGURE)]
+    public function retire(Request $request, string $uuid): Response
+    {
+        $position = $this->position($uuid);
+        $this->assertCsrf($request);
+
+        if ($position->isRetired()) {
+            $this->positionWrites->reinstate($position);
+
+            return $this->back($request, \sprintf('“%s” is open again, and can be given to somebody.', (string) $position->getName()), 'success', $position);
+        }
+
+        try {
+            $this->positionWrites->retire($position);
+        } catch (PositionHeldException $refusal) {
+            return $this->back($request, $refusal->getMessage(), 'error', $position);
+        }
+
+        return $this->back($request, \sprintf('“%s” is retired. The record is kept and it can be reinstated.', (string) $position->getName()), 'success', $position);
+    }
+
+    /**
+     * RENAMING ON ITS OWN, kept for one release. The identity save writes the
+     * name with the seats and the kinds; an installation that generated this
+     * route name still reaches somewhere that works.
+     *
+     * @deprecated since 1.0, to be removed in 1.1 — post the identity instead
+     */
     #[Route('/team/positions/{uuid}/rename', name: 'team_position_rename', requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]
     #[IsGranted(self::CONFIGURE)]
     public function rename(Request $request, string $uuid): Response
@@ -224,111 +357,46 @@ final readonly class PositionController
     }
 
     /**
-     * EVERY FACT ANY OF THE THIRTEEN WIDGETS MIGHT WANT, gathered once — the
-     * same context the widget library previews on, so what somebody arranges
-     * there is exactly what they get here.
-     *
-     * @return array<string, mixed>
+     * THE SEAT COUNT AS THE FORM STATES IT: one, a number, or unlimited.
+     * Unlimited is null, and the number is only read when the form says the
+     * answer is a number — so switching to unlimited does not have to blank
+     * the field the reader was just typing in.
      */
-    public function widgetContext(Request $request): array
+    private function seatsFrom(Request $request): ?int
     {
-        $positions = $this->positions->findAllOrdered();
-
-        // WHICH POSITION THE CHECKLIST IS SHOWING. Direction B edits exactly one
-        // at a time and says which; the id is in the URL, so the choice is
-        // shareable and survives the save's redirect.
-        $selectedUuid = trim((string) $request->query->get('position'));
-        $selected = '' !== $selectedUuid && Uuid::isValid($selectedUuid)
-            ? $this->positions->findOneByUuid(Uuid::fromString($selectedUuid))
-            : null;
-        $selected ??= $positions[0] ?? null;
-
-        $holders = [];
-        foreach ($positions as $position) {
-            $holders[$position->getUuidString() ?? ''] = $this->users->countActiveHoldingAnyPosition([$position]);
+        $mode = trim((string) $request->request->get('seatMode', 'number'));
+        if ('unlimited' === $mode) {
+            return null;
         }
 
-        $grouped = $this->catalogue->grouped();
-        $groupPairs = [];
-        foreach ($grouped as $declarer => $concerns) {
-            $groupPairs[$declarer] = [];
-            foreach ($concerns as $concern) {
-                foreach (Verb::cases() as $verb) {
-                    if ($concern->supports($verb)) {
-                        $groupPairs[$declarer][] = (string) Grant::of($concern->key(), $verb);
-                    }
-                }
-            }
+        if ('one' === $mode) {
+            return 1;
         }
 
-        $departments = $this->departments->findAllOrdered();
-        $byDepartment = [];
-        foreach ($departments as $department) {
-            $byDepartment[$department->getUuidString() ?? ''] = $this->membership->positionsIn($department);
-        }
+        $seats = $request->request->get('seats');
 
-        return [
-            // THE MATRIX'S OWN THREE FACTS, and nothing derived from them in
-            // a template: every concern, the same concerns grouped under
-            // whoever declared them, and the six verbs in their fixed order.
-            // A rendering asks the concern whether it supports a verb, so a
-            // cell exists only where the declaration put one.
-            'concerns' => $this->catalogue->all(),
-            'grouped' => $grouped,
-            'verbs' => Verb::cases(),
-            'pairs' => $this->catalogue->pairs(),
-            // THE PAIRS EACH GROUP OFFERS, counted once here rather than in
-            // every rendering: a Twig `set` inside a loop does not survive
-            // the loop, so a template that tried to total a group would have
-            // to be clever about it, and clever is where they drift apart.
-            'groupPairs' => $groupPairs,
-            'positions' => $positions,
-            'departments' => $departments,
-            // A DEPARTMENT'S POSITIONS ARE THE ONES ITS MEMBERS HOLD. A
-            // position belongs to nobody, so a widget that reads by
-            // department reads the derivation rather than a column that no
-            // longer exists.
-            'positionsByDepartment' => $byDepartment,
-            'selected' => $selected,
-            'holders' => $holders,
-            'orphans' => $this->orphans($positions),
-            // §5.6(c): what the signed-in administrator may confer — null when
-            // unbounded (everything grantable), a list of pairs for a bounded
-            // (area-X) one. The matrix draws the cells outside it disabled,
-            // with the guard note.
-            'grantable' => $this->authority->grantableGrants(),
-            'people' => $this->users->findAllByName(),
-            'soleSuperAdmin' => 1 === $this->users->countActiveSuperAdmins(),
-            'csrfToken' => $this->csrf->getToken(self::CSRF_ID)->getValue(),
-        ];
+        return is_numeric($seats) ? (int) $seats : null;
     }
 
     /**
-     * PAIRS NOTHING INSTALLED DECLARES ANY MORE, and which positions still
-     * hold them.
+     * WHICH KINDS OF PLACEMENT THE POSITION ALLOWS — organization and area
+     * only, because that is what a placement is. Department is the
+     * placement's other dimension and `own` is a scope a concern offers; the
+     * entity refuses either, and the form never offers them.
      *
-     * They stay in the JSON and stop resolving — pruned, not purged — because
-     * removing them on the module's way out would silently rewrite what an
-     * administrator granted. Drawing them muted is how somebody finds out.
-     *
-     * @param list<Position> $positions
-     *
-     * @return array<string, list<Position>> pair => the positions still holding it
+     * @return list<ScopeKind>
      */
-    private function orphans(array $positions): array
+    private function kindsFrom(Request $request): array
     {
-        $declared = $this->catalogue->pairs();
-        $orphans = [];
+        $posted = array_map(
+            static fn (mixed $v): string => \is_string($v) ? $v : '',
+            (array) $request->request->all('allows'),
+        );
 
-        foreach ($positions as $position) {
-            foreach ($position->getGrantValues() as $pair) {
-                if (!\in_array($pair, $declared, true)) {
-                    $orphans[$pair][] = $position;
-                }
-            }
-        }
-
-        return $orphans;
+        return array_values(array_filter(array_map(
+            static fn (string $value): ?ScopeKind => ScopeKind::tryFrom($value),
+            $posted,
+        )));
     }
 
     /**
@@ -376,13 +444,6 @@ final readonly class PositionController
             ?? throw new NotFoundHttpException('No such position on this installation.');
     }
 
-    private function signedIn(): ?ModuleUserInterface
-    {
-        $user = $this->tokens->getToken()?->getUser();
-
-        return $user instanceof ModuleUserInterface ? $user : null;
-    }
-
     private function assertCsrf(Request $request): void
     {
         if (!$this->csrf->isTokenValid(new CsrfToken(self::CSRF_ID, (string) $request->request->get('_token')))) {
@@ -390,6 +451,12 @@ final readonly class PositionController
         }
     }
 
+    /**
+     * BACK TO WHERE THE EDIT WAS MADE. A write about one position goes back
+     * to that position's configure page, so the sentence is read beside the
+     * thing it is about; a write with no position — creating one — goes to
+     * the register.
+     */
     private function back(Request $request, string $message, string $kind = 'success', ?Position $position = null): RedirectResponse
     {
         $session = $request->hasSession() ? $request->getSession() : null;
@@ -397,11 +464,8 @@ final readonly class PositionController
             $session->getFlashBag()->add($kind, $message);
         }
 
-        // Back to the position that was being edited, so the checklist is still
-        // showing what the sentence is about.
-        return new RedirectResponse($this->router->generate(
-            'team_positions',
-            null !== $position ? ['position' => $position->getUuidString()] : [],
-        ));
+        return new RedirectResponse(null === $position
+            ? $this->router->generate(self::REGISTER)
+            : $this->router->generate('team_position_configure', ['uuid' => $position->getUuidString()]));
     }
 }

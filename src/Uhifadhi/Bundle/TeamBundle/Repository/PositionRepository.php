@@ -81,4 +81,28 @@ final class PositionRepository extends ServiceEntityRepository
 
         return $positions;
     }
+
+    /**
+     * THE POSITIONS SOMEBODY MAY BE GIVEN — every one that has not been
+     * retired, by name.
+     *
+     * A RETIRED POSITION IS ABSENT FROM A PICKER AND PRESENT IN THE
+     * REGISTER. It is not deleted, so the register draws it greyed and an
+     * administrator can find the name and reinstate it; but offering it in
+     * the list of things to hand somebody would be offering a thing that is
+     * closed.
+     *
+     * @return list<Position>
+     */
+    public function findAssignable(): array
+    {
+        /** @var list<Position> $positions */
+        $positions = $this->createQueryBuilder('p')
+            ->andWhere('p.retiredAt IS NULL')
+            ->orderBy('p.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        return $positions;
+    }
 }

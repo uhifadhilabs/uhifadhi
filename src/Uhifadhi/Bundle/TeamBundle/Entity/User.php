@@ -332,6 +332,31 @@ class User implements ModuleUserInterface, PasswordAuthenticatedUserInterface, U
     }
 
     /**
+     * THE DAY THIS PERSON WAS GIVEN THE POSITION THEY HOLD, and null while
+     * they hold none.
+     *
+     * A POSITION'S HOLDERS ARE READ WITH THEIR DATES — "J. Mollel ·
+     * Ngorongoro · since 12 Jun 2026" — and the date is a fact about the
+     * holding rather than about the person or the position, so it lives on
+     * the row that joins them. Null on an existing holder is "unknown", the
+     * honest answer for a holding written before the day was recorded.
+     */
+    #[ORM\Column(name: 'position_since', type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $positionSince = null;
+
+    public function getPositionSince(): ?\DateTimeImmutable
+    {
+        return $this->positionSince;
+    }
+
+    public function setPositionSince(?\DateTimeImmutable $positionSince): static
+    {
+        $this->positionSince = $positionSince;
+
+        return $this;
+    }
+
+    /**
      * WHERE THIS PERSON IS PLACED - the ground and the departments, and the
      * second half of every permission check.
      *

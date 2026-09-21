@@ -138,6 +138,19 @@ class Position
     #[ORM\Column(name: 'vacant_since', type: 'datetime_immutable', nullable: true)]
     private ?\DateTimeImmutable $vacantSince = null;
 
+    /**
+     * THE DAY THIS POSITION WAS RETIRED, and null while it is in use.
+     *
+     * POSITIONS ARE RETIRED, NEVER DELETED. Everything a position granted
+     * keeps its history, the holders it had keep theirs, and the row can
+     * come back — so closing one is a stamp rather than a DELETE. A retired
+     * position cannot be assigned, is absent from the picker, and is drawn
+     * greyed in the register rather than hidden: an administrator looking
+     * for a name that is "already taken" has to be able to find it.
+     */
+    #[ORM\Column(name: 'retired_at', type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $retiredAt = null;
+
     /** Reserved: a position whose label is fixed. Unused today. */
     #[ORM\Column]
     private bool $locked = false;
@@ -155,6 +168,32 @@ class Position
     public function setVacantSince(?\DateTimeImmutable $vacantSince): static
     {
         $this->vacantSince = $vacantSince;
+
+        return $this;
+    }
+
+    public function getRetiredAt(): ?\DateTimeImmutable
+    {
+        return $this->retiredAt;
+    }
+
+    public function isRetired(): bool
+    {
+        return null !== $this->retiredAt;
+    }
+
+    /** Closing a position, which is a stamp — the row and its history stay. */
+    public function retire(\DateTimeImmutable $when): static
+    {
+        $this->retiredAt = $when;
+
+        return $this;
+    }
+
+    /** Reopening one. A retired position is assignable again the moment the stamp is cleared. */
+    public function reinstate(): static
+    {
+        $this->retiredAt = null;
 
         return $this;
     }

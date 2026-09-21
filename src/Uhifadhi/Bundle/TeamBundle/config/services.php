@@ -911,6 +911,7 @@ return static function (ContainerConfigurator $container): void {
         ->args([
             service('doctrine.orm.entity_manager'),
             service('team.access.catalogue'),
+            service(UserRepository::class),
         ]);
 
     /*
@@ -1383,14 +1384,12 @@ return static function (ContainerConfigurator $container): void {
         ->tag('controller.service_arguments');
     $services->alias(AreaDepartmentController::class, 'team.controller.area_department')->public();
 
+    /*
+     * RETIRED, AND STILL ROUTED. The matrix widget surface is a redirect to
+     * the register for one release; it needs nothing but the router.
+     */
     $services->set('team.controller.position_widgets', PositionWidgetsController::class)
-        ->args([
-            service('twig'),
-            service('router'),
-            service('shell.widget.service'),
-            service('shell.widget.endpoint'),
-            service('team.controller.position'),
-        ])
+        ->args([service('router')])
         ->tag('controller.service_arguments');
     $services->alias(PositionWidgetsController::class, 'team.controller.position_widgets')->public();
 

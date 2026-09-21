@@ -24,6 +24,7 @@ use Uhifadhi\Bundle\TeamBundle\Exception\EmailAlreadyUsedException;
 use Uhifadhi\Bundle\TeamBundle\Exception\LastSuperAdminException;
 use Uhifadhi\Bundle\TeamBundle\Exception\PasswordTooShortException;
 use Uhifadhi\Bundle\TeamBundle\Exception\PositionFullException;
+use Uhifadhi\Bundle\TeamBundle\Exception\PositionRetiredException;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 
 /**
@@ -242,10 +243,23 @@ final readonly class UserService
         $was = $user->getPosition();
 
         if (null !== $position && $was !== $position) {
+            // A RETIRED POSITION CANNOT BE GIVEN TO ANYBODY. It is absent
+            // from every picker, so reaching here means a stale form or a
+            // crafted post, and either way the answer is the same one.
+            if ($position->isRetired()) {
+                throw new PositionRetiredException($position);
+            }
+
             $this->assertHasASeat($position);
         }
 
         $user->setPosition($position);
+        // THE DAY THE HOLDING STARTED, stamped only when the holding
+        // actually changes — re-saving a form that names the position they
+        // already hold must not reset the date a reader trusts.
+        if ($was !== $position) {
+            $user->setPositionSince(null === $position ? null : new \DateTimeImmutable());
+        }
         $this->entityManager->flush();
 
         // WHICH POSTS ARE EMPTY HAS JUST CHANGED, on both sides: the one

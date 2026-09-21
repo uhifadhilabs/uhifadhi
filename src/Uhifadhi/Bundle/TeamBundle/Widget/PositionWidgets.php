@@ -51,6 +51,13 @@ use Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceInterface;
  * rendering and no counts, which is why the KPI-at-the-top rule has nothing to
  * say about it.
  */
+/**
+ * @deprecated since 1.0, to be removed in 1.1 — the positions register is no
+ *             longer a widget canvas. One collapsible card per position is
+ *             the ruled register, and the matrix lives once, on the position
+ *             record. This catalogue, its seven presets and the
+ *             `positions/_w_*` partials go in the next release.
+ */
 final class PositionWidgets implements WidgetSurfaceInterface
 {
     /**

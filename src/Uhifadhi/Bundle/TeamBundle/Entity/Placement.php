@@ -271,6 +271,32 @@ class Placement
     }
 
     /**
+     * THE GROUND, IN ONE FRAGMENT — what a holders list and a person's row
+     * say about where somebody stands.
+     *
+     * Beside {@see self::departmentsLabel()} because the two are read
+     * together and a surface that spelled either itself would spell it
+     * differently from the next one.
+     */
+    public function groundLabel(): string
+    {
+        if ($this->wholeOrganization) {
+            return 'the whole organization';
+        }
+
+        $names = array_values(array_map(
+            static fn (AreaInterface $a): string => (string) $a->getName(),
+            $this->areas->toArray(),
+        ));
+
+        return match (\count($names)) {
+            0 => 'nowhere',
+            1 => $names[0],
+            default => \sprintf('%s +%d', $names[0], \count($names) - 1),
+        };
+    }
+
+    /**
      * WHETHER IT REACHES ANYTHING AT ALL. A placement whose ground is nowhere
      * and whose departments are none is a row that grants its holder nothing,
      * and a surface says so in those words rather than drawing an empty list.

@@ -10,216 +10,112 @@ declare(strict_types=1);
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-
 namespace Uhifadhi\Bundle\TeamBundle\Controller;
 
 use Symfony\Component\HttpFoundation\RedirectResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\Session\FlashBagAwareSessionInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\Requirement\Requirement;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Symfony\Component\Uid\Uuid;
-use Twig\Environment;
-use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetEndpoint;
-use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService;
-use Uhifadhi\Bundle\TeamBundle\Widget\PositionWidgets;
 
 /**
- * THE WIDGET LIBRARY for the permission-matrix surface.
+ * THE MATRIX WIDGET LIBRARY, RETIRED — every route answers a redirect to the
+ * positions register, for one release.
  *
- * THE PAGE IS CHROME; everything inside it is the shell's shared widget preset
- * component, handed this surface's catalogue, this surface's partial name and
- * this surface's routes. There are no team-specific widget mechanics anywhere,
- * which is the whole point of riding the framework: adopting a direction here
- * works exactly as it does on every other surface in the installation.
+ * WHY IT IS GONE. The register was a widget canvas: thirteen widgets and
+ * seven presets, five of which were five renderings of one matrix and five
+ * more of which made the department the structure of the page. The ruled
+ * register is one collapsible card per position, and the matrix itself lives
+ * once, on the position record. A surface whose whole content has been
+ * replaced has nothing left to arrange.
  *
- * EVERY WRITE IS ANSWERED BY {@see WidgetEndpoint}. This controller validates
- * nothing itself, mints no token and chooses no status code — it names the
- * catalogue and turns a 204 into a redirect with a sentence, so the plain-form
- * path works with no JavaScript at all.
+ * WHY IT IS A REDIRECT AND NOT A DELETION. Deleting a shipped route 404s
+ * every bookmark and every link an installation wrote against it, in the same
+ * release that changed the page. So the names stay for one release and go to
+ * the page that replaced them; {@see \Uhifadhi\Bundle\TeamBundle\Widget\PositionWidgets},
+ * its seven presets and the `positions/_w_*` partials are deleted in the next
+ * one.
  *
- * GATED ON READING THE REGISTER, NOT ON CONFIGURING IT. Arranging your own
- * widgets changes what YOU see of a page you may already open, and nothing
- * about what anybody may do — so it asks the same pair the register asks. It
- * used to name the flat `team.manage`, which conflated looking at the matrix
- * with composing what a position grants.
- *
- * ORG-WIDE, SO NO AREA UUID. Positions belong to the installation rather than
- * to any one area, so there is no per-area version of this page to lay out
- * differently and every framework call passes null for the area.
+ * @deprecated since 1.0, to be removed in 1.1. The positions register is
+ *             `team_positions`; what a position grants is edited on
+ *             `team_position_configure`.
  */
 final readonly class PositionWidgetsController
 {
-    /** A structurally valid uuid that addresses nothing — see {@see urls()}. */
-    private const string PLACEHOLDER_UUID = '00000000-0000-4000-8000-000000000000';
-
-    public function __construct(
-        private Environment $twig,
-        private UrlGeneratorInterface $router,
-        private WidgetService $widgets,
-        private WidgetEndpoint $endpoint,
-        private PositionController $positions,
-    ) {
+    public function __construct(private UrlGeneratorInterface $router)
+    {
     }
 
     #[Route('/team/positions/widgets', name: 'team_position_widgets', methods: ['GET'])]
     #[IsGranted(PositionController::READ)]
-    public function library(Request $request): Response
+    public function library(): Response
     {
-        $catalog = new PositionWidgets()->catalog();
-        $user = $this->endpoint->user();
-
-        return new Response($this->twig->render('@Team/widgets/positions.html.twig', [
-            'catalog' => $catalog,
-            'builtins' => $catalog->builtins(),
-            'customPresets' => $this->widgets->customPresets($catalog, $user),
-            'active' => $this->widgets->activeRef($catalog, $user),
-            'widgets' => $this->widgets->resolve($catalog, $user),
-            'partial' => '@Team/positions/_w_%s.html.twig',
-            // EVERY PARTIAL RENDERS THE REAL WIDGET ON REAL DATA, at full size.
-            // The picture of a widget IS the widget, so what you arrange is
-            // exactly what you get.
-            'widgetContext' => $this->positions->widgetContext($request),
-            'urls' => $this->urls(),
-            'csrfToken' => $this->endpoint->csrfToken($catalog),
-        ]));
+        return $this->register();
     }
 
     #[Route('/team/positions/widgets/save', name: 'team_position_widgets_save', methods: ['POST'])]
     #[IsGranted(PositionController::READ)]
-    public function save(Request $request): Response
+    public function save(): Response
     {
-        return $this->endpoint->save($request, new PositionWidgets()->catalog());
+        return $this->register();
     }
 
     #[Route('/team/positions/widgets/reset', name: 'team_position_widgets_reset', methods: ['POST'])]
     #[IsGranted(PositionController::READ)]
-    public function reset(Request $request): Response
+    public function reset(): Response
     {
-        return $this->afterWrite(
-            $request,
-            $this->endpoint->reset($request, new PositionWidgets()->catalog()),
-            'Your matrix is back to the direction this bundle ships with.',
-        );
+        return $this->register();
     }
 
     #[Route('/team/positions/widgets/preset/{presetId}', name: 'team_position_widgets_preset', requirements: ['presetId' => '[a-z0-9_-]+'], methods: ['POST'])]
     #[IsGranted(PositionController::READ)]
-    public function applyPreset(Request $request, string $presetId): Response
+    public function applyPreset(): Response
     {
-        $catalog = new PositionWidgets()->catalog();
-        // A design the surface does not ship is refused by the endpoint; naming
-        // it in the flash is only for the case where it IS shipped.
-        $adopted = $catalog->preset($presetId);
-
-        return $this->afterWrite(
-            $request,
-            $this->endpoint->applyPreset($request, $catalog, $presetId),
-            \sprintf('Your matrix now follows “%s”.', null !== $adopted ? $adopted->label : $presetId),
-        );
+        return $this->register();
     }
 
     #[Route('/team/positions/widgets/preset/{presetId}/copy', name: 'team_position_widgets_preset_copy', requirements: ['presetId' => '[a-z0-9_-]+'], methods: ['POST'], priority: 1)]
     #[IsGranted(PositionController::READ)]
-    public function copyPreset(Request $request, string $presetId): Response
+    public function copyPreset(): Response
     {
-        return $this->afterWrite(
-            $request,
-            $this->endpoint->copyPreset($request, new PositionWidgets()->catalog(), $presetId),
-            'Copied — the copy is yours to edit, and the design it came from is untouched.',
-        );
+        return $this->register();
     }
 
     #[Route('/team/positions/widgets/presets', name: 'team_position_widgets_preset_create', methods: ['POST'])]
     #[IsGranted(PositionController::READ)]
-    public function createPreset(Request $request): Response
+    public function createPreset(): Response
     {
-        return $this->afterWrite(
-            $request,
-            $this->endpoint->createCustomPreset($request, new PositionWidgets()->catalog()),
-            'Saved — this arrangement is now one of your own designs.',
-        );
+        return $this->register();
     }
 
     #[Route('/team/positions/widgets/presets/{presetUuid}/apply', name: 'team_position_widgets_preset_apply', requirements: ['presetUuid' => Requirement::UUID], methods: ['POST'])]
     #[IsGranted(PositionController::READ)]
-    public function applyCustomPreset(Request $request, string $presetUuid): Response
+    public function applyCustomPreset(): Response
     {
-        return $this->afterWrite(
-            $request,
-            $this->endpoint->applyCustomPreset($request, new PositionWidgets()->catalog(), Uuid::fromString($presetUuid)),
-            'Your design is on.',
-        );
+        return $this->register();
     }
 
     #[Route('/team/positions/widgets/presets/{presetUuid}/rename', name: 'team_position_widgets_preset_rename', requirements: ['presetUuid' => Requirement::UUID], methods: ['POST'])]
     #[IsGranted(PositionController::READ)]
-    public function renameCustomPreset(Request $request, string $presetUuid): Response
+    public function renameCustomPreset(): Response
     {
-        return $this->afterWrite(
-            $request,
-            $this->endpoint->renameCustomPreset($request, new PositionWidgets()->catalog(), Uuid::fromString($presetUuid)),
-            'Renamed.',
-        );
+        return $this->register();
     }
 
     #[Route('/team/positions/widgets/presets/{presetUuid}/delete', name: 'team_position_widgets_preset_delete', requirements: ['presetUuid' => Requirement::UUID], methods: ['POST'])]
     #[IsGranted(PositionController::READ)]
-    public function deleteCustomPreset(Request $request, string $presetUuid): Response
+    public function deleteCustomPreset(): Response
     {
-        return $this->afterWrite(
-            $request,
-            $this->endpoint->deleteCustomPreset($request, new PositionWidgets()->catalog(), Uuid::fromString($presetUuid)),
-            'Design deleted. Your matrix is back on the direction this bundle ships with.',
-        );
+        return $this->register();
     }
 
     /**
-     * The library's action URLs, with two PLACEHOLDERS the browser substitutes:
-     * `__ID__` for a built-in preset's id, and a uuid for a saved one.
-     *
-     * THE PLACEHOLDER UUID HAS TO BE A VALID UUID. The routes constrain it with
-     * Requirement::UUID, and a router asked to generate a URL from a value the
-     * route refuses THROWS — so the obvious nil uuid takes the whole page down
-     * at render time rather than at click time. It is a v4-shaped nil instead:
-     * structurally valid, and addressing nothing.
-     *
-     * @return array<string, string>
+     * 302 rather than 301: a permanent redirect is cached by the browser, and
+     * this one is withdrawn next release rather than kept forever.
      */
-    private function urls(): array
+    private function register(): RedirectResponse
     {
-        return [
-            'save' => $this->router->generate('team_position_widgets_save'),
-            'reset' => $this->router->generate('team_position_widgets_reset'),
-            'preset' => $this->router->generate('team_position_widgets_preset', ['presetId' => '__ID__']),
-            'copy' => $this->router->generate('team_position_widgets_preset_copy', ['presetId' => '__ID__']),
-            'presets' => $this->router->generate('team_position_widgets_preset_create'),
-            'apply' => $this->router->generate('team_position_widgets_preset_apply', ['presetUuid' => self::PLACEHOLDER_UUID]),
-            'rename' => $this->router->generate('team_position_widgets_preset_rename', ['presetUuid' => self::PLACEHOLDER_UUID]),
-            'delete' => $this->router->generate('team_position_widgets_preset_delete', ['presetUuid' => self::PLACEHOLDER_UUID]),
-            'dashboard' => $this->router->generate('team_positions'),
-        ];
-    }
-
-    /**
-     * A refused write is returned as it came (the library's fetch() reads the
-     * status and the message); a successful one says so and goes back to the
-     * library, so the plain-form path works with no JavaScript at all.
-     */
-    private function afterWrite(Request $request, Response $response, string $flash): Response
-    {
-        if (Response::HTTP_NO_CONTENT !== $response->getStatusCode()) {
-            return $response;
-        }
-
-        $session = $request->hasSession() ? $request->getSession() : null;
-        if ($session instanceof FlashBagAwareSessionInterface) {
-            $session->getFlashBag()->add('success', $flash);
-        }
-
-        return new RedirectResponse($this->router->generate('team_position_widgets'));
+        return new RedirectResponse($this->router->generate('team_positions'));
     }
 }
