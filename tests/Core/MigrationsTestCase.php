@@ -111,7 +111,9 @@ abstract class MigrationsTestCase extends KernelTestCase
     }
 
     /**
-     * @param array<string, bool|string> $arguments
+     * @param array<string, bool|string|list<string>> $arguments a list where the
+     *                                                           command takes an array argument, as
+     *                                                           `migrations:execute` does for its versions
      */
     protected function console(string $command, array $arguments = []): string
     {

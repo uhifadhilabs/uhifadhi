@@ -340,6 +340,38 @@ a power here, and the two places a distinction was **lost** are called out.
 | `team.manage` | `DepartmentController::index`, `::show`; `DepartmentSectionController::overview`, `::modules`; `DepartmentWidgetsController` (all); `AreaDepartmentController::tab`, `::configure`; `PerformanceController` (all) | `departments.read` |
 | `team.manage` | `DepartmentController::create`, `::rename`, `::changeScope`, `::toggleModule`, `::declareGoal`, `::withdrawGoal`, `::deactivate`, `::reactivate`; `DepartmentConfigureController` (all); `PerformanceConfigureController::settings` | `departments.configure` |
 
+### And the modules' own values, carried across generically
+
+`TeamBundle\Migrations\Version20260921004000`. The table above is the CORE's
+values; a module's — `patrols.record`, `incidents.manage`, `roster.plan`,
+`observation-kinds.configure` — were stored in the same column and are the
+core's to carry, because `team_position.grants` is the core's table and a
+module cannot write a migration against a column it does not own. Without
+this, an installation upgrades and goes dark on every module at once.
+
+It names no module, and cannot: the core does not know which are installed.
+It translates by SHAPE, over the values that are actually in the rows.
+
+| Old value | New pairs |
+| --- | --- |
+| `<slug>.<verb>` (anything not in the table above) | `<slug>.<verb>` unchanged, **and** `<slug>.read` |
+
+**Why `<slug>.read` comes with it.** Reading is a declared power now and was
+not one before: somebody who could record a patrol could obviously see the
+patrols, and under the new model that is a pair they were never given. Without
+this line the screen they recorded from yesterday refuses them.
+
+The slug is everything before the **last** dot, so a concern key may carry
+hyphens. The migration **only adds** — nothing is removed from `grants`,
+`permissions` is untouched, and running it twice writes what running it once
+wrote. A value whose module has since been uninstalled is carried across as an
+**orphaned grant**, which the position screens draw muted and revocable rather
+than dropping.
+
+**What a module's own upgrade note should say:** re-tick only for the new
+`configure` / `export` pairs your module declares and the old values did not
+distinguish. Everything a position could already do, it can still do.
+
 **Two judgements worth disagreeing with, if you do.**
 
 - **The three area values collapse into `areas.configure`.** Identity, boundary
