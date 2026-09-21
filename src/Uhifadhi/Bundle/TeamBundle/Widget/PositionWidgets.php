@@ -81,7 +81,7 @@ final class PositionWidgets implements WidgetSurfaceInterface
                 new WidgetGroup(
                     'deptfirst',
                     'Department-first — the department as the organising axis',
-                    'Five directions that make DEPARTMENT the structure rather than a column: banded tables, department chips, a card per department, fully qualified names, and a department rail. A position belongs to a department and its name is unique only inside it, so “Ecology / Analyst” is how a position is named.',
+                    'Five directions that made DEPARTMENT the structure of the page rather than a column on it. THE PREMISE CHANGED: a position belongs to no department and its name is unique across the organization, so what these read by department is now derived from where their holders are placed. Flattened to stay correct; redesign or delete pending a design verdict.',
                 ),
             ],
             [
@@ -146,7 +146,7 @@ final class PositionWidgets implements WidgetSurfaceInterface
                 new WidgetPreset(
                     'f',
                     'Department-first',
-                    'Makes the department the structure of the page rather than a column on it, which is the honest shape now that a position belongs to one and its name is unique only inside it; five layouts of one idea, and the page gets longer the more departments an organization has.',
+                    'Made the department the structure of the page rather than a column on it, back when a position belonged to one. THE PREMISE CHANGED and these are flattened to stay correct; five layouts of one idea, awaiting a design verdict on whether any of them still earns its place.',
                     ['dept_a' => 12, 'dept_b' => 12, 'dept_c' => 12, 'dept_d' => 12, 'dept_e' => 12],
                 ),
             ],

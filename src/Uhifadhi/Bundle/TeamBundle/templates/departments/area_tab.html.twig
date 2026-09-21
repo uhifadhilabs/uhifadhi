@@ -42,7 +42,10 @@
    this tab is about. #}
 <div class="factband">
     <span class="f"><span class="k">Departments</span><span class="v">{{ ownCount + orgCount }}<em>{{ ownCount }} of this area, {{ orgCount }} org-wide</em></span></span>
-    <span class="f"><span class="k">Own positions</span><span class="v">{{ positionCount }}<em>{{ filled }} of {{ positionCount }} filled</em></span></span>
+    {# TWO FACTS, NOT A RATIO. A department's positions are derived from the
+       people placed in it, so every one of them is held and "M of N filled"
+       could only ever print "N of N". #}
+    <span class="f"><span class="k">Own people</span><span class="v">{{ people }}<em>{{ positionCount }} position{{ positionCount == 1 ? '' : 's' }}</em></span></span>
     <span class="sp"></span>
     <a class="more" href="{{ path('area_departments_configure', {uuid: area.uuidString}) }}">Configure departments &rarr;</a>
 </div>

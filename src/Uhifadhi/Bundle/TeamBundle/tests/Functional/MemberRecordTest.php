@@ -479,6 +479,51 @@ final class MemberRecordTest extends WebTestCaseWithSchema
     }
 
     /**
+     * A FULL POST REFUSES AT THE DOOR, AND THE REFUSAL NAMES THE HOLDER.
+     *
+     * The seat count is enforced in the service so that no door can forget to
+     * ask; what THIS holds is that the door reads the refusal back as a
+     * sentence rather than letting it out as a 500. The message is the whole
+     * point of the exception — "that position is full" is not actionable and
+     * "Joseph Mollel holds it" is, because the administrator's next move is to
+     * end that holding or pick another position and they cannot choose without
+     * the name.
+     */
+    public function testAFullPositionIsRefusedAndTheRefusalNamesWhoHoldsIt(): void
+    {
+        $this->withSuccessor();
+        $head = $this->position('Head of Protection', ['area.view']);
+        $head->setSeatCount(1);
+        $joseph = $this->person('Joseph', 'Mollel');
+        $joseph->setPosition($head);
+        $frank = $this->person('Frank', 'Massawe');
+        $this->em->flush();
+
+        $token = $this->tokenFrom('/team/'.$frank->getUuidString());
+        $this->client->request('POST', '/team/'.$frank->getUuidString().'/position', [
+            '_token' => $token, 'position' => $head->getUuidString(),
+        ]);
+
+        // A REDIRECT AND NOT A CRASH. Asserting the flash alone would pass on
+        // a page that had already fallen over on the way to rendering it.
+        self::assertTrue($this->client->getResponse()->isRedirect());
+        $crawler = $this->client->followRedirect();
+        self::assertResponseIsSuccessful();
+
+        $html = $crawler->html();
+        self::assertStringContainsString('Head of Protection', $html);
+        self::assertStringContainsString('Joseph Mollel', $html);
+        self::assertStringContainsString('one seat', $html);
+
+        // AND NOBODY WAS SEATED. A refusal that still wrote would be worse
+        // than no refusal, because the page would say it had not.
+        $this->em->clear();
+        $stored = $this->em->getRepository(User::class)->findOneBy(['email' => 'f.massawe@example.test']);
+        self::assertInstanceOf(User::class, $stored);
+        self::assertNull($stored->getPosition(), 'the refused assignment left Frank holding nothing.');
+    }
+
+    /**
      * A DEACTIVATED HOLDER DOES NOT OCCUPY A SEAT. Somebody who has left is
      * kept on the roster rather than deleted, and a singular post whose only
      * holder left is a post that stands empty — a seat count that counted

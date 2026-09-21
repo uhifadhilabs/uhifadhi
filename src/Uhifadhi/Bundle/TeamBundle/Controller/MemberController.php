@@ -33,6 +33,7 @@ use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Exception\LastSuperAdminException;
+use Uhifadhi\Bundle\TeamBundle\Exception\PositionFullException;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
@@ -76,12 +77,14 @@ use Uhifadhi\Contracts\People\PersonPostingProviderInterface;
  * A tier or org-level holder is unbounded and touches anyone. {@see AreaAuthority}
  * computes the boundary; {@see assertMayAssign()} refuses anything past it (a 403).
  *
- * MANAGING THE PERSON THEMSELVES IS AREA-SCOPED TOO (same ruling). Editing the
- * record, deactivating and reactivating are refused when the person is seated
- * OUTSIDE the administrator's authority — a position filed under an org-level
- * department, or another area's. Somebody with no position, or seated in the
- * admin's own area, stays manageable; {@see assertMayManage()} draws that line
- * (a 403), the person-record twin of {@see assertMayAssign()}.
+ * MANAGING THE PERSON THEMSELVES IS AREA-SCOPED TOO. Editing the record,
+ * deactivating and reactivating are refused when the person is PLACED outside
+ * the administrator's ground. It is the person's placement that decides it,
+ * not their position: a position carries no ground of its own, so which one
+ * somebody holds says nothing about whose boundary touching them crosses.
+ * Somebody placed nowhere is beyond a bounded administrator too, because the
+ * model fails closed. {@see assertMayManage()} draws that line (a 403), the
+ * person-record twin of {@see assertMayAssign()}.
  *
  * EVERY WRITE IS A POST AND EVERY POST IS CSRF-CHECKED.
  */
@@ -326,12 +329,25 @@ final readonly class MemberController
             return $this->back($request, $member, 'That position no longer exists.', 'error');
         }
 
-        // §5.6(a): a bounded administrator may reassign only among positions
-        // their authority reaches — the one held now and the one moved to must
-        // both be in their own area.
+        // A bounded administrator may work only on somebody placed inside
+        // their own ground — the position itself carries none.
         $this->assertMayAssign($member);
 
-        $this->accounts->assignPosition($member, $position);
+        /*
+         * A FULL POSITION REFUSES, AND THE REFUSAL IS A SENTENCE RATHER THAN
+         * A CRASH. The seat count is enforced in the service, because a
+         * second door that forgot to ask would quietly seat one person too
+         * many; what the door owes is the reading of it. The exception's
+         * message already names the post and whoever stands in it, which is
+         * the only thing that makes the refusal actionable — the
+         * administrator's next move is to end that holding or pick another
+         * position, and they cannot choose without the name.
+         */
+        try {
+            $this->accounts->assignPosition($member, $position);
+        } catch (PositionFullException $refusal) {
+            return $this->back($request, $member, $refusal->getMessage(), 'error');
+        }
 
         return $this->back($request, $member, \sprintf('%s now holds %s.', $member->getFullName(), (string) $position->getName()));
     }
@@ -425,24 +441,19 @@ final readonly class MemberController
      * REFUSE AN OUT-OF-AUTHORITY ASSIGNMENT (§5.6(a)). A tier or org-level
      * administrator is unbounded and may assign anyone anywhere; a bounded
      * (area-X) administrator may reassign only among positions their authority
-     * reaches — the one the person holds now and the one they are moving to must
-     * both be within their area. Assigning into an org-level or another area's
-     * position, or touching a person already filed outside the area, widens or
-     * reaches past the administrator's own boundary, which is escalation.
-     */
-    /**
-     * REFUSE MANAGING A PERSON SEATED OUTSIDE THE AUTHORITY (§5.6, the person
-     * side). A tier or org-level administrator is unbounded and may edit,
-     * deactivate and reactivate anyone; a bounded (area-X) administrator may do
-     * so only to somebody their authority reaches — a person whose current
-     * position is filed under an area-level department in their own area.
+     * reaches — the one the person holds now and the one they are moving to must.
+     * /**
+     * REFUSE MANAGING A PERSON PLACED OUTSIDE THE AUTHORITY. A tier or an
+     * organization-wide administrator is unbounded and may edit, deactivate
+     * and reactivate anyone; a bounded (area-X) administrator may do so only
+     * to somebody whose placement lies inside their own ground.
      *
-     * A person with NO position is nobody's to fence: they hold no authority
-     * anywhere, so they stay manageable (the same way an empty position pick is
-     * never out-of-authority). A person seated in another area, or under an
-     * org-level department, is past the administrator's boundary, and touching
-     * their record reaches past it — which is escalation, refused with a 403,
-     * exactly as {@see assertMayAssign()} refuses the assignment half.
+     * A PERSON PLACED NOWHERE IS BEYOND A BOUNDED ADMINISTRATOR, and that is
+     * the model failing closed rather than an oversight: an unplaced person
+     * lies in no area, so there is no area in which a bounded administrator
+     * could be said to reach them. Somebody unbounded places them first.
+     * {@see AreaAuthority::reachesPerson()} computes the boundary; this is
+     * the 403 behind it, the person-record twin of {@see assertMayAssign()}.
      */
     private function assertMayManage(User $member): void
     {

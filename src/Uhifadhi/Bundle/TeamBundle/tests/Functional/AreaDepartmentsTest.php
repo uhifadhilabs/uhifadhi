@@ -80,21 +80,22 @@ final class AreaDepartmentsTest extends WebTestCaseWithSchema
     }
 
     /**
-     * OWN POSITIONS COUNTS POSITIONS, BOTH HALVES OF IT.
+     * THE CELL IS TWO FACTS ABOUT THIS AREA'S OWN DEPARTMENTS: how many
+     * people, and how many positions they hold between them.
      *
-     * The cell read "5 · 6 of 5 filled", which cannot be true of anything:
-     * one half counted the positions of every department that reads the
-     * area and the other summed each department's HEADCOUNT — a person may
-     * hold a position in two departments, and a position may be held by
-     * several people. The fact is about THIS AREA'S OWN departments, and a
-     * position is filled when somebody holds it.
+     * IT USED TO READ "M OF N FILLED" and no longer can. A department's
+     * positions are derived from the people placed in it, so a position is
+     * on the list because somebody holds it and "filled" is true of all of
+     * them by construction — the ratio could only ever print "N of N".
      *
-     * TWO PEOPLE IN ONE POSITION IS STILL ONE POSITION, which is the half of
-     * the old arithmetic that can still go wrong: three people placed here
-     * hold two positions between them, and a cell that summed headcount
-     * would read "3 of 2".
+     * BOTH NUMBERS ARE COUNTED ONCE, which is the arithmetic that can still
+     * go wrong and the reason this test exists. Three people placed here
+     * hold TWO positions between them, so a cell that counted a position per
+     * holder would read 3; and the Ecologist placed across the organization
+     * belongs to Ecology, which is not this area's own, so a cell that
+     * counted every department reading the area would read 4 people.
      */
-    public function testOwnPositionsCountsThisAreasOwnPositionsAndHowManyAreHeld(): void
+    public function testTheOwnPeopleCellCountsThisAreasPeopleAndTheirPositionsOnce(): void
     {
         $this->administrator();
         $north = $this->area('Northern Reserve');
@@ -119,8 +120,10 @@ final class AreaDepartmentsTest extends WebTestCaseWithSchema
         $band = $this->client->request('GET', '/areas/'.$north->getUuidString().'/departments')
             ->filter('.factband')->text();
 
-        self::assertStringContainsString('Own positions', $band);
-        self::assertStringContainsString('2 of 2 filled', $band);
+        self::assertStringContainsString('Own people', $band);
+        self::assertStringContainsString('3', $band);
+        self::assertStringContainsString('2 positions', $band);
+        self::assertStringNotContainsString('filled', $band, 'the ratio is gone: every derived position is held, so it could only print "N of N".');
     }
 
     /**

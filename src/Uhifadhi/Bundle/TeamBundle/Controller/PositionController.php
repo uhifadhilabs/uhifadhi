@@ -38,8 +38,8 @@ use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
-use Uhifadhi\Bundle\TeamBundle\Service\PermissionCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentMembership;
+use Uhifadhi\Bundle\TeamBundle\Service\PermissionCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionService;
 use Uhifadhi\Bundle\TeamBundle\Widget\PositionWidgets;
 use Uhifadhi\Contracts\Entity\UserInterface as ModuleUserInterface;
@@ -101,8 +101,10 @@ final readonly class PositionController
     }
 
     /**
-     * CREATING ONE IS TWO FIELDS, AND THE DEPARTMENT IS THE FIRST OF THEM. The
-     * name is unique inside that department and nowhere else.
+     * CREATING ONE IS A NAME, and the name is the whole of it. A position
+     * belongs to no department, so there is nothing to file it under and the
+     * name is unique across the whole organization: there is one Sergeant,
+     * not one per department.
      */
     #[Route('/team/positions', name: 'team_position_create', methods: ['POST'])]
     #[IsGranted(PermissionEnum::TeamManage->value)]

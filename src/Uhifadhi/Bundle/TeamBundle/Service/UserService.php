@@ -72,6 +72,7 @@ final readonly class UserService
      *
      * @throws EmailAlreadyUsedException when an account already answers to the address
      * @throws PasswordTooShortException when the password is under the one rule
+     * @throws PositionFullException     when the position has no seat left
      */
     public function create(
         string $email,
@@ -84,6 +85,14 @@ final readonly class UserService
     ): User {
         if (mb_strlen($password) < User::PASSWORD_MIN_LENGTH) {
             throw new PasswordTooShortException();
+        }
+
+        // SEATING SOMEBODY AT BIRTH IS SEATING THEM. A door that created
+        // people into a full post while the record page refused would be two
+        // answers to one question, and the creating door is the one nobody
+        // would think to check.
+        if (null !== $position) {
+            $this->assertHasASeat($position);
         }
 
         $email = self::normalise($email);
@@ -121,9 +130,17 @@ final readonly class UserService
      * verification token addresses it.
      *
      * @throws EmailAlreadyUsedException when an account already answers to the address
+     * @throws PositionFullException     when the position has no seat left
      */
     public function invite(string $email, ?Position $position, ?User $invitedBy): User
     {
+        // AN INVITATION TAKES THE SEAT, because the account exists the moment
+        // it is sent: the roster shows who is expected, and a post that reads
+        // as free until somebody accepts is a post two people can be promised.
+        if (null !== $position) {
+            $this->assertHasASeat($position);
+        }
+
         $email = self::normalise($email);
 
         $user = new User()

@@ -44,14 +44,14 @@ final class PositionVacancyTest extends IntegrationTestCase
     /** A position is born empty, and the day it was born is the day it fell vacant. */
     public function testAPositionIsVacantFromTheDayItIsCreated(): void
     {
-        $ranger = $this->positions()->create('Ranger', null);
+        $ranger = $this->positions()->create('Ranger');
 
         self::assertNotNull($ranger->getVacantSince());
     }
 
     public function testSeatingSomebodyClearsTheDay(): void
     {
-        $ranger = $this->positions()->create('Ranger', null);
+        $ranger = $this->positions()->create('Ranger');
         $this->accounts()->assignPosition($this->person(), $ranger);
 
         self::assertNull($ranger->getVacantSince());
@@ -60,7 +60,7 @@ final class PositionVacancyTest extends IntegrationTestCase
     /** And unseating them starts it again, from today rather than from before. */
     public function testUnseatingTheLastHolderStartsTheDayAgain(): void
     {
-        $ranger = $this->positions()->create('Ranger', null);
+        $ranger = $this->positions()->create('Ranger');
         $person = $this->person();
         $this->accounts()->assignPosition($person, $ranger);
         $this->accounts()->assignPosition($person, null);
@@ -73,7 +73,7 @@ final class PositionVacancyTest extends IntegrationTestCase
     /** A post two people share is still held when one of them leaves. */
     public function testAPostSomebodyElseStillHoldsIsNotVacant(): void
     {
-        $ranger = $this->positions()->create('Ranger', null);
+        $ranger = $this->positions()->create('Ranger');
         $first = $this->person('a.mollel@example.test');
         $second = $this->person('j.ngowi@example.test');
         $this->accounts()->assignPosition($first, $ranger);
@@ -87,7 +87,7 @@ final class PositionVacancyTest extends IntegrationTestCase
     /** Deactivating the only holder empties the post as surely as unseating them. */
     public function testDeactivatingTheLastHolderMakesItVacant(): void
     {
-        $ranger = $this->positions()->create('Ranger', null);
+        $ranger = $this->positions()->create('Ranger');
         $person = $this->person();
         $this->accounts()->assignPosition($person, $ranger);
 
@@ -99,7 +99,7 @@ final class PositionVacancyTest extends IntegrationTestCase
     /** And bringing them back fills it again. */
     public function testReactivatingTheHolderFillsItAgain(): void
     {
-        $ranger = $this->positions()->create('Ranger', null);
+        $ranger = $this->positions()->create('Ranger');
         $person = $this->person();
         $this->accounts()->assignPosition($person, $ranger);
         $this->accounts()->deactivate($person);
@@ -112,13 +112,13 @@ final class PositionVacancyTest extends IntegrationTestCase
     /** How long, in days — and null where nobody wrote the day down. */
     public function testItSaysHowManyDaysAPostHasStoodEmpty(): void
     {
-        $ranger = $this->positions()->create('Ranger', null);
+        $ranger = $this->positions()->create('Ranger');
         $ranger->setVacantSince(new \DateTimeImmutable('-96 days'));
         $this->em->flush();
 
         self::assertSame(96, $this->vacancy()->daysVacant($ranger));
 
-        $unknown = $this->positions()->create('Warden', null);
+        $unknown = $this->positions()->create('Warden');
         $unknown->setVacantSince(null);
         $this->em->flush();
 
@@ -128,9 +128,9 @@ final class PositionVacancyTest extends IntegrationTestCase
     /** How many posts have stood empty longer than the installation allows. */
     public function testItCountsThePostsOverTheThreshold(): void
     {
-        $long = $this->positions()->create('Ranger', null);
+        $long = $this->positions()->create('Ranger');
         $long->setVacantSince(new \DateTimeImmutable('-96 days'));
-        $short = $this->positions()->create('Warden', null);
+        $short = $this->positions()->create('Warden');
         $short->setVacantSince(new \DateTimeImmutable('-3 days'));
         $this->em->flush();
 

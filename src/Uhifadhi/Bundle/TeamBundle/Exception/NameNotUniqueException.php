@@ -16,12 +16,12 @@ namespace Uhifadhi\Bundle\TeamBundle\Exception;
 /**
  * The name is already taken WHERE IT WOULD HAVE BEEN WRITTEN.
  *
- * A position's name is unique inside its department and nowhere else, and a
- * department's inside its scope and nowhere else — two areas may each run an
- * Anti-Poaching unit, and *Ecology / Analyst* and *Protection Service / Analyst*
- * are two different jobs that share a word. So the clash is never about the name
- * alone, and the sentence that reports it has to name the place: the screens
- * word it, this only says that it happened.
+ * WHERE THAT IS DIFFERS BY WHAT IS BEING NAMED, which is why this says only
+ * that the clash happened and leaves the sentence to the screen. A POSITION's
+ * name is unique across the whole organization — it belongs to no department,
+ * so there is one Sergeant and nowhere narrower for the name to be unique in.
+ * A DEPARTMENT's is unique inside its scope and nowhere else, because two
+ * areas may each run an Anti-Poaching unit.
  *
  * The database index is what actually refuses. This is that refusal, carried out
  * of the storage layer so a caller catches a fact about the org chart rather

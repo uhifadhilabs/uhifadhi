@@ -16,9 +16,9 @@
 
 {% block shell_page_title %}Team{% endblock %}
 
-{# ONE LINE: what THIS tab is for. That a position belongs to a department and
-   that its name is unique only inside it are the model, stated on the
-   section's configure page rather than shouted at the top of every visit. #}
+{# ONE LINE: what THIS tab is for. That a position belongs to no department
+   and that its name is unique across the organization are the model, stated
+   on the section's configure page rather than shouted at every visit. #}
 {% block shell_page_subtitle %}What each position may do.{% endblock %}
 
 {% block shell_page_actions %}
@@ -32,10 +32,10 @@
 {% block shell_page %}
     {{ include('@Team/team/_scope_banner.html.twig') }}
 
-    {# ALWAYS OPEN, THE HOUSE CREATE CARD. A position belongs to a department
-       and its name is unique only inside it, so the department is the FIRST
-       field — a name typed before the department is a name unique against
-       nothing. #}
+    {# ALWAYS OPEN, THE HOUSE CREATE CARD. A position belongs to no department
+       and its name is unique across the organization, so the name is the only
+       field there is — where each holder works is written on their own
+       record, not here. #}
     <div class="dcadd" id="add">
         <div class="dcaddhd">
             {{ ux_icon('shell:plus', {width: 15, height: 15}) }}

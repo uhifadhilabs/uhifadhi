@@ -24,9 +24,9 @@ use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
-use Uhifadhi\Contracts\Access\ScopeKind;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\Area\HostArea;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\TestKernel;
+use Uhifadhi\Contracts\Access\ScopeKind;
 
 /**
  * A browser and a real database, with the schema rebuilt per test, plus the

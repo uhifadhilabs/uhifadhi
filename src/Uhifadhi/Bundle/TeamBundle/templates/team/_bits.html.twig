@@ -51,12 +51,14 @@
     <a class="tm-mail" href="mailto:{{ user.email }}">{{ user.email }}</a>
 {% endmacro %}
 
-{# THE THREE-LINE POSITION CELL: the qualified name, then what it grants, then
-   the administrator mark if the position carries team.manage.
+{# THE THREE-LINE POSITION CELL: the name, then what it grants, then the
+   administrator mark if the position carries team.manage.
 
-   IT IS NEVER A BARE NAME. Two departments may own the word "Analyst", so
-   "Analyst" is not a shorter way of saying the same thing — it is a different
-   and ambiguous thing.
+   THE NAME IS THE WHOLE OF IT. It used to be written department-first,
+   because two departments could each own the word "Analyst" and a bare name
+   was ambiguous by construction. A position belongs to no department now and
+   its name is unique across the organization, so there is one Analyst and the
+   word disambiguates itself.
 
    AND IT IS NOT A COUNT FOR THE TWO TOP TIERS. A Super Admin's position may
    hold eight permissions and they decide nothing for that person: the voter

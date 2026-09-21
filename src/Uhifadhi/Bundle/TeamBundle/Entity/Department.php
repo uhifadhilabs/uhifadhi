@@ -74,15 +74,14 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
  * re-scopes everything under it — so the transition leaves a record the current
  * state could never reconstruct.
  *
- * THE SCOPE IS ALSO AUTHORITY. An area-level department is the unit that
- * confines a Staff member's authority, and the area-aware
- * {@see \Uhifadhi\Bundle\TeamBundle\Security\PermissionVoter} reads exactly this chain:
- * `authority-area(person) = person.position.department.scope`, org-level (null)
- * meaning every area. So confining a department, or promoting one, now moves the
- * authority of everyone filed under it — which is what makes the scope-change
- * audit ({@see changeScopeTo()}) load-bearing rather than cosmetic. A department
- * still GRANTS nothing directly: capability arrives through a position's
- * permissions; the department only says WHERE those permissions reach.
+ * THE SCOPE IS NOT AUTHORITY, AND THAT IS THE RULING. A department used to
+ * confine a Staff member's authority — the voter read
+ * `person.position.department.scope` — which made somebody's reach a property
+ * of their job title. Reach is recorded against the PERSON now
+ * ({@see Placement}), so a department is where somebody is placed and nothing
+ * more: it grants nothing, and confining or promoting one moves nobody's
+ * authority. The scope-change audit ({@see changeScopeTo()}) still matters,
+ * because the scope says which area's ground the department works in.
  */
 #[ORM\Entity(repositoryClass: DepartmentRepository::class)]
 #[ORM\Table(name: 'team_department')]
@@ -177,15 +176,15 @@ class Department
      *
      * "This unit was folded into another last year" and "this unit never
      * existed" are different facts, and a DELETE makes them one operation — it
-     * would take a scope-change history off the ledger and strand the positions
-     * filed under it. So a department that is no longer run is DEACTIVATED, not
+     * would take a scope-change history off the ledger and strand the people
+     * placed in it. So a department that is no longer run is DEACTIVATED, not
      * removed: the flag goes false, {@see $deactivatedAt} records when, the row
      * stays in the register greyed under an inactive treatment, and
      * {@see reactivate()} is one click. This is the standing fleet rule
      * (deactivate, never delete), the same one {@see User} keeps.
      *
-     * Deactivation HIDES a department from the pickers — the create/confine area
-     * pickers and the position move control — so nothing new is filed into a
+     * Deactivation HIDES a department from the pickers — the create/confine
+     * area pickers and the placement editor — so nobody new is placed into a
      * unit that is winding down; it never removes what is already there, and it
      * never gates data. The footprint ("N positions hold this") is shown before
      * the act and INFORMS, never guards: the administrator may proceed.
@@ -385,8 +384,8 @@ class Department
 
     /**
      * The way a department winds down. Not a delete, and there is no delete:
-     * its scope history stays on the ledger, the positions filed under it keep
-     * their filing, and {@see reactivate()} is one click. Idempotent — a
+     * its scope history stays on the ledger, the people placed in it stay
+     * placed, and {@see reactivate()} is one click. Idempotent — a
      * department already inactive keeps the moment it first went so, because the
      * "when" of a deactivation is when it happened, not the last time somebody
      * pressed the button.

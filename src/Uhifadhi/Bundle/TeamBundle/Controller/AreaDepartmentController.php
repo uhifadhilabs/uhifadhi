@@ -117,7 +117,7 @@ final readonly class AreaDepartmentController
             // An org-wide department's positions belong to the
             // organization, and counting them here would make every area
             // report the same number as its own.
-            ...self::staffing($own, $reading['owned'], $reading['holders']),
+            ...$this->staffing($own),
         ]));
     }
 
@@ -197,34 +197,49 @@ final readonly class AreaDepartmentController
     }
 
     /**
-     * HOW MANY POSITIONS THESE DEPARTMENTS OWN, AND HOW MANY ARE FILLED.
+     * HOW MANY PEOPLE WORK IN THESE DEPARTMENTS, AND HOW MANY POSITIONS THEY
+     * HOLD BETWEEN THEM.
      *
-     * BOTH HALVES COUNT POSITIONS, which is the only way "M of N filled" can
-     * be read. Summing each department's HEADCOUNT against a count of
-     * positions compared two different things and printed "6 of 5 filled" —
-     * a person may hold positions in two departments, and a position may be
-     * held by several people. A position is filled when somebody holds it.
+     * IT NO LONGER READS "M OF N FILLED", and that is the ruling rather than
+     * a simplification. A department's positions are DERIVED from the people
+     * placed in it — a position is on the list because somebody there holds
+     * it — so every derived position is held by construction and "M of N"
+     * could only ever print "N of N". A figure that cannot vary is a figure
+     * that says nothing, and a reader who has learnt it means something
+     * elsewhere would read it as meaning something here.
      *
-     * @param list<Department>                                                 $departments
-     * @param array<string, int>                                               $holders     position uuid to how many hold it
-     * @param array<string, list<\Uhifadhi\Bundle\TeamBundle\Entity\Position>> $owned
+     * SO THE TWO NUMBERS ARE TWO FACTS: how many people, and how many
+     * distinct positions. They are deliberately not a ratio — a person holds
+     * one position and a position is held by many, so neither divides into
+     * the other.
      *
-     * @return array{positionCount: int, filled: int}
+     * EACH IS COUNTED ONCE ACROSS THE WHOLE SET. Somebody placed in two of
+     * these departments is one person, and a position held in two of them is
+     * one position; summing per department and adding the totals would count
+     * both twice, which is the bug the previous reckoning of this cell
+     * existed to avoid.
+     *
+     * @param list<Department> $departments
+     *
+     * @return array{people: int, positionCount: int}
      */
-    private static function staffing(array $departments, array $owned, array $holders): array
+    private function staffing(array $departments): array
     {
-        $positions = 0;
-        $filled = 0;
+        $people = [];
+        $positions = [];
+
         foreach ($departments as $department) {
-            foreach ($owned[$department->getUuidString() ?? ''] ?? [] as $position) {
-                ++$positions;
-                if (($holders[$position->getUuidString() ?? ''] ?? 0) > 0) {
-                    ++$filled;
+            foreach ($this->membership->membersOf($department) as $member) {
+                $people[(int) $member->getId()] = true;
+
+                $position = $member->getPosition();
+                if (null !== $position) {
+                    $positions[(int) $position->getId()] = true;
                 }
             }
         }
 
-        return ['positionCount' => $positions, 'filled' => $filled];
+        return ['people' => \count($people), 'positionCount' => \count($positions)];
     }
 
     /**

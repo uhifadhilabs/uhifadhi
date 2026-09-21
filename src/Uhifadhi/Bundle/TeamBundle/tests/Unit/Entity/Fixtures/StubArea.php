@@ -26,9 +26,9 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
 final readonly class StubArea implements AreaInterface
 {
     public function __construct(
-        private int $id,
-        private string $uuid,
-        private string $name = 'An area',
+        private ?int $id,
+        private ?string $uuid,
+        private ?string $name = 'An area',
     ) {
     }
 

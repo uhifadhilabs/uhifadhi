@@ -29,6 +29,7 @@ use Twig\Environment;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
+use Uhifadhi\Bundle\TeamBundle\Exception\PositionFullException;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Service\Mail;
@@ -122,14 +123,21 @@ final readonly class InviteController
             return $this->back($request, \sprintf('A password must be at least %d characters.', User::PASSWORD_MIN_LENGTH), 'error');
         }
 
-        $user = $this->accounts->create(
-            $email,
-            (string) $request->request->get('firstName'),
-            (string) $request->request->get('lastName'),
-            $password,
-            position: $this->assignablePosition((string) $request->request->get('position')),
-            rangerCode: trim((string) $request->request->get('rangerCode')),
-        );
+        // A FULL POSITION REFUSES HERE TOO, and the refusal names the holder.
+        // The account is not created: seating is part of adding somebody, and
+        // half-adding them would leave a person nobody meant to make.
+        try {
+            $user = $this->accounts->create(
+                $email,
+                (string) $request->request->get('firstName'),
+                (string) $request->request->get('lastName'),
+                $password,
+                position: $this->assignablePosition((string) $request->request->get('position')),
+                rangerCode: trim((string) $request->request->get('rangerCode')),
+            );
+        } catch (PositionFullException $refusal) {
+            return $this->back($request, $refusal->getMessage(), 'error');
+        }
 
         return $this->toMember($request, $user, \sprintf('%s exists and can sign in now. The password is hashed and the product cannot show it again, so hand it over before you close this.', $user->getFullName()));
     }
@@ -156,13 +164,20 @@ final readonly class InviteController
             return $this->back($request, \sprintf('An account with the email %s already exists.', $email), 'error');
         }
 
-        $user = $this->accounts->invite(
-            $email,
-            $this->assignablePosition((string) $request->request->get('position')),
-            // RULED IN, so the roster can say who invited somebody and when
-            // rather than only that they have not arrived.
-            $this->signedIn(),
-        );
+        // AN INVITATION TAKES THE SEAT, so a full position refuses before the
+        // letter goes out: a post two people have been promised is worse than
+        // an invitation somebody has to send again.
+        try {
+            $user = $this->accounts->invite(
+                $email,
+                $this->assignablePosition((string) $request->request->get('position')),
+                // RULED IN, so the roster can say who invited somebody and when
+                // rather than only that they have not arrived.
+                $this->signedIn(),
+            );
+        } catch (PositionFullException $refusal) {
+            return $this->back($request, $refusal->getMessage(), 'error');
+        }
 
         $this->mail->sendInvitation($user, $this->router->generate(
             'team_invite_accept',

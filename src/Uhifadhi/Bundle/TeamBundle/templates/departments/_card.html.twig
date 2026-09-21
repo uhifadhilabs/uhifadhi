@@ -4,8 +4,12 @@
 
    THREE LEGIBLE REGIONS, and the house's own split: a banded HEADER with the
    mark, the name, the scope and what it reads; a BODY that opens to the
-   positions filed under it; and a banded FOOTER where the operations that
+   positions its members hold; and a banded FOOTER where the operations that
    change the department live — separate work, visibly separate.
+
+   A DEPARTMENT OWNS NO POSITION. It is where somebody is placed, so the
+   positions on the card are derived: the distinct ones held by the people
+   placed here.
 
    OPEN AND FOCUSED ARE TWO DIFFERENT THINGS. Open is told by the body being
    there and the chevron having turned. FOCUSED is the card the sidebar's lit
@@ -73,7 +77,7 @@
                     {% endfor %}
                     <a class="poscard add" href="{{ path('team_positions') }}">
                         <span class="t">{{ ux_icon('shell:plus') }} Add position</span>
-                        <span class="d">in {{ department.name }} &middot; inherits its scope</span>
+                        <span class="d">named once, across the organization</span>
                     </a>
                 </div>
             </div>
@@ -164,7 +168,7 @@
                                     {{ stimulus_controller('confirm-modal') }}
                                     data-action="click->confirm-modal#ask"
                                     data-confirm-modal-title-value="Deactivate “{{ department.name }}”?"
-                                    data-confirm-modal-message-value="{% if positions|length %}{{ positions|length }} position{{ positions|length == 1 ? '' : 's' }} ({{ filled }} {{ filled == 1 ? 'person' : 'people' }}) stay filed under it and keep what they grant.{% else %}Nothing is filed under it — an empty footprint.{% endif %} It is hidden from the pickers and greyed in the register; nothing is deleted, and it is one click from coming back."
+                                    data-confirm-modal-message-value="{% if positions|length %}{{ positions|length }} position{{ positions|length == 1 ? '' : 's' }} ({{ filled }} {{ filled == 1 ? 'person' : 'people' }}) are held here and keep what they grant.{% else %}Nobody is placed here — an empty footprint.{% endif %} It is hidden from the pickers and greyed in the register; nothing is deleted, and it is one click from coming back."
                                     data-confirm-modal-confirm-label-value="Deactivate anyway"
                                     data-confirm-modal-danger-value="true">Deactivate anyway</button>
                         </form>
