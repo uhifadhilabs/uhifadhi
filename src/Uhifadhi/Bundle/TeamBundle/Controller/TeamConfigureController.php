@@ -26,7 +26,7 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Uid\Uuid;
 use Twig\Environment;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
+use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Exception\DuplicatePositionTitleException;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
@@ -34,6 +34,7 @@ use Uhifadhi\Bundle\TeamBundle\Repository\PositionTitleRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionTitleService;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionVocabulary;
+use Uhifadhi\Contracts\Access\Verb;
 
 /**
  * HOW THE TEAM SECTION IS SET UP — its two configure screens of its own.
@@ -94,7 +95,7 @@ final readonly class TeamConfigureController
      * still had to leave to act on.
      */
     #[Route('/team/configure', name: self::SETTINGS, defaults: TeamController::SURFACE, methods: ['GET'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted(PositionController::CONFIGURE)]
     public function settings(): Response
     {
         $people = $this->users->findAllByName();
@@ -109,7 +110,12 @@ final readonly class TeamConfigureController
                 ++$mayAdminister;
                 continue;
             }
-            if (true === $person->getPosition()?->hasPermission(PermissionEnum::TeamManage)) {
+            // WHO ADMINISTERS THE TEAM, in the terms the model now uses:
+            // somebody whose position confers the positions register. It read
+            // the flat `team.manage` until administering the team stopped
+            // being a seventh verb and became these concerns with configure
+            // on them.
+            if (true === $person->getPosition()?->grantsVerbOn(TeamConcerns::POSITIONS, Verb::Configure)) {
                 ++$mayAdminister;
             }
         }
@@ -134,7 +140,7 @@ final readonly class TeamConfigureController
      * two different jobs. Nothing on this screen may merge them.
      */
     #[Route('/team/configure/positions', name: self::VOCABULARY, defaults: TeamController::SURFACE, methods: ['GET'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted(PositionController::CONFIGURE)]
     public function vocabulary(): Response
     {
         return new Response($this->twig->render('@Team/team/configure_positions.html.twig', [
@@ -147,7 +153,7 @@ final readonly class TeamConfigureController
     }
 
     #[Route('/team/configure/positions/titles', name: self::TITLE_CREATE, methods: ['POST'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted(PositionController::CONFIGURE)]
     public function createTitle(Request $request): RedirectResponse
     {
         $this->guard($request);
@@ -167,7 +173,7 @@ final readonly class TeamConfigureController
     }
 
     #[Route('/team/configure/positions/titles/{uuid}/rename', name: self::TITLE_RENAME, requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted(PositionController::CONFIGURE)]
     public function renameTitle(Request $request, string $uuid): RedirectResponse
     {
         $this->guard($request);

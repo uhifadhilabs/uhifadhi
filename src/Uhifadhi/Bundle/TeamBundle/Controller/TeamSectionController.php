@@ -17,7 +17,6 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Environment;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Service\TeamSectionOverview;
 
 /**
@@ -44,7 +43,7 @@ final readonly class TeamSectionController
     }
 
     #[Route('/team/overview', name: self::OVERVIEW, defaults: TeamController::SURFACE, methods: ['GET'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('directory.read')]
     public function overview(): Response
     {
         return new Response($this->twig->render('@Team/team/overview.html.twig', $this->overview->read()));

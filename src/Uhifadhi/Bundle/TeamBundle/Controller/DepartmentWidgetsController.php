@@ -25,7 +25,6 @@ use Symfony\Component\Uid\Uuid;
 use Twig\Environment;
 use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetEndpoint;
 use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Widget\DepartmentWidgets;
 
 /**
@@ -65,7 +64,7 @@ final readonly class DepartmentWidgetsController
     }
 
     #[Route('/departments/widgets', name: self::ROUTE, methods: ['GET'], priority: 2)]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('departments.read')]
     public function library(Request $request): Response
     {
         $catalog = new DepartmentWidgets()->catalog();
@@ -88,14 +87,14 @@ final readonly class DepartmentWidgetsController
     }
 
     #[Route('/departments/widgets/save', name: 'department_widgets_save', methods: ['POST'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('departments.read')]
     public function save(Request $request): Response
     {
         return $this->endpoint->save($request, new DepartmentWidgets()->catalog());
     }
 
     #[Route('/departments/widgets/reset', name: 'department_widgets_reset', methods: ['POST'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('departments.read')]
     public function reset(Request $request): Response
     {
         return $this->afterWrite(
@@ -106,7 +105,7 @@ final readonly class DepartmentWidgetsController
     }
 
     #[Route('/departments/widgets/preset/{presetId}', name: 'department_widgets_preset', requirements: ['presetId' => '[a-z0-9_-]+'], methods: ['POST'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('departments.read')]
     public function applyPreset(Request $request, string $presetId): Response
     {
         $catalog = new DepartmentWidgets()->catalog();
@@ -122,7 +121,7 @@ final readonly class DepartmentWidgetsController
     }
 
     #[Route('/departments/widgets/preset/{presetId}/copy', name: 'department_widgets_preset_copy', requirements: ['presetId' => '[a-z0-9_-]+'], methods: ['POST'], priority: 1)]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('departments.read')]
     public function copyPreset(Request $request, string $presetId): Response
     {
         return $this->afterWrite(
@@ -133,7 +132,7 @@ final readonly class DepartmentWidgetsController
     }
 
     #[Route('/departments/widgets/presets', name: 'department_widgets_preset_create', methods: ['POST'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('departments.read')]
     public function createPreset(Request $request): Response
     {
         return $this->afterWrite(
@@ -144,7 +143,7 @@ final readonly class DepartmentWidgetsController
     }
 
     #[Route('/departments/widgets/presets/{presetUuid}/apply', name: 'department_widgets_preset_apply', requirements: ['presetUuid' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('departments.read')]
     public function applyCustomPreset(Request $request, string $presetUuid): Response
     {
         return $this->afterWrite(
@@ -155,7 +154,7 @@ final readonly class DepartmentWidgetsController
     }
 
     #[Route('/departments/widgets/presets/{presetUuid}/rename', name: 'department_widgets_preset_rename', requirements: ['presetUuid' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('departments.read')]
     public function renameCustomPreset(Request $request, string $presetUuid): Response
     {
         return $this->afterWrite(
@@ -166,7 +165,7 @@ final readonly class DepartmentWidgetsController
     }
 
     #[Route('/departments/widgets/presets/{presetUuid}/delete', name: 'department_widgets_preset_delete', requirements: ['presetUuid' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('departments.read')]
     public function deleteCustomPreset(Request $request, string $presetUuid): Response
     {
         return $this->afterWrite(

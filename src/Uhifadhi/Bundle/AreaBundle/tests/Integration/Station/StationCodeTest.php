@@ -45,11 +45,11 @@ final class StationCodeTest extends IntegrationTestCase
         $second = $this->anArea('Second Reserve');
 
         $this->stations()->add($first, 'Seneto Gate Post', -29.75, -3.2);
-        $next = $this->stations()->add($first, 'Lerai Ranger Post', -29.8, -3.2);
+        $next = $this->stations()->add($first, 'Lerai Ranger Station', -29.8, -3.2);
         $elsewhere = $this->stations()->add($second, 'Munge Camp', -29.6, -3.2);
 
         self::assertSame('ST-02', $next->getCode());
-        self::assertSame('ST-01', $elsewhere->getCode(), 'Each area numbers its own posts.');
+        self::assertSame('ST-01', $elsewhere->getCode(), 'Each area numbers its own stations.');
     }
 
     /** A code somebody typed is theirs, and the sequence follows it rather than fighting it. */
@@ -58,7 +58,7 @@ final class StationCodeTest extends IntegrationTestCase
         $area = $this->anArea();
 
         $given = $this->stations()->add($area, 'Seneto Gate Post', -29.75, -3.2, 'ST-07');
-        $next = $this->stations()->add($area, 'Lerai Ranger Post', -29.8, -3.2);
+        $next = $this->stations()->add($area, 'Lerai Ranger Station', -29.8, -3.2);
 
         self::assertSame('ST-07', $given->getCode());
         self::assertSame('ST-08', $next->getCode());

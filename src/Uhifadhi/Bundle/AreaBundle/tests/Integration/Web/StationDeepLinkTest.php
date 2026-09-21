@@ -54,7 +54,7 @@ final class StationDeepLinkTest extends WebTestCase
 
         $url = $this->section($area).'?open='.$ninth->getUuidString();
 
-        self::assertSame(['Post 09'], $this->listed($url), 'Page two holds the one row after the first eight.');
+        self::assertSame(['Station 09'], $this->listed($url), 'Page two holds the one row after the first eight.');
         self::assertMatchesRegularExpression(
             '#<details class="zcard on focusline"\s+open>#',
             $this->body($url),
@@ -72,8 +72,8 @@ final class StationDeepLinkTest extends WebTestCase
         $listed = $this->listed($this->section($area));
 
         self::assertCount(8, $listed, 'A page of the register is eight rows.');
-        self::assertSame('Post 01', $listed[0]);
-        self::assertNotContains('Post 09', $listed);
+        self::assertSame('Station 01', $listed[0]);
+        self::assertNotContains('Station 09', $listed);
     }
 
     /**
@@ -86,7 +86,7 @@ final class StationDeepLinkTest extends WebTestCase
         $this->signIn();
         [$area] = $this->nineStations();
 
-        self::assertSame(['Post 09'], $this->listed($this->section($area).'?page=2'));
+        self::assertSame(['Station 09'], $this->listed($this->section($area).'?page=2'));
     }
 
     /**
@@ -102,7 +102,7 @@ final class StationDeepLinkTest extends WebTestCase
 
         $url = $this->section($area).'?sort=zone&open='.$ninth->getUuidString();
 
-        self::assertContains('Post 09', $this->listed($url), 'Whatever the order puts it on, that page answers.');
+        self::assertContains('Station 09', $this->listed($url), 'Whatever the order puts it on, that page answers.');
         self::assertStringContainsString('open>', $this->body($url));
     }
 
@@ -119,7 +119,7 @@ final class StationDeepLinkTest extends WebTestCase
 
         $url = $this->section($area).'?open='.$closed->getUuidString();
 
-        self::assertContains('Post 03', $this->listed($url), 'The closed card the link named is drawn.');
+        self::assertContains('Station 03', $this->listed($url), 'The closed card the link named is drawn.');
         self::assertStringContainsString('open>', $this->body($url));
     }
 
@@ -152,7 +152,7 @@ final class StationDeepLinkTest extends WebTestCase
 
         $listed = $this->listed($this->section($area).'?active=yes&open='.$closed->getUuidString());
 
-        self::assertNotContains('Post 03', $listed, 'They asked for the active ones.');
+        self::assertNotContains('Station 03', $listed, 'They asked for the active ones.');
     }
 
     // ---------------------------------------------------------------- fixtures
@@ -170,7 +170,7 @@ final class StationDeepLinkTest extends WebTestCase
 
         $closed = null;
         for ($n = 1; $n <= 3; ++$n) {
-            $station = $stations->add($area, \sprintf('Post %02d', $n), -29.75 + ($n / 100), -3.2, \sprintf('ST-%02d', $n));
+            $station = $stations->add($area, \sprintf('Station %02d', $n), -29.75 + ($n / 100), -3.2, \sprintf('ST-%02d', $n));
             if (3 === $n) {
                 $closed = $station;
                 $station->setActive(false);
@@ -194,7 +194,7 @@ final class StationDeepLinkTest extends WebTestCase
 
         $ninth = null;
         for ($n = 1; $n <= self::STATIONS; ++$n) {
-            $station = $stations->add($area, \sprintf('Post %02d', $n), -29.75 + ($n / 100), -3.2, \sprintf('ST-%02d', $n));
+            $station = $stations->add($area, \sprintf('Station %02d', $n), -29.75 + ($n / 100), -3.2, \sprintf('ST-%02d', $n));
             if (self::STATIONS === $n) {
                 $ninth = $station;
             }

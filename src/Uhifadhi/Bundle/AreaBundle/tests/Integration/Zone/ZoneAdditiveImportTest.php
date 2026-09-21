@@ -194,8 +194,8 @@ final class ZoneAdditiveImportTest extends IntegrationTestCase
             'type' => 'FeatureCollection',
             'features' => [
                 $this->feature(['Name' => 'Western Sector'], self::A_WEST_HALF_RING),
-                ['type' => 'Feature', 'properties' => ['Name' => 'A post'], 'geometry' => ['type' => 'Point', 'coordinates' => [-29.8, -3.2]]],
-                ['type' => 'Feature', 'properties' => ['Name' => 'Another post'], 'geometry' => ['type' => 'Point', 'coordinates' => [-29.7, -3.2]]],
+                ['type' => 'Feature', 'properties' => ['Name' => 'A station'], 'geometry' => ['type' => 'Point', 'coordinates' => [-29.8, -3.2]]],
+                ['type' => 'Feature', 'properties' => ['Name' => 'Another station'], 'geometry' => ['type' => 'Point', 'coordinates' => [-29.7, -3.2]]],
                 ['type' => 'Feature', 'properties' => ['Name' => 'A track'], 'geometry' => ['type' => 'LineString', 'coordinates' => [[-29.8, -3.2], [-29.6, -3.1]]]],
             ],
         ], \JSON_THROW_ON_ERROR));

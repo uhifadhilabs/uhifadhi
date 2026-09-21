@@ -18,11 +18,11 @@
    design's state switcher is a design tool and has no counterpart here.
 
    AN OPEN CARD'S BODY is what the modules publish about that ground over a
-   rolling window, then the posts standing on it — one card per post, with who
+   rolling window, then the stations standing on it — one card per station, with who
    is there and the way through to its record — and a footer strip stating how
-   many of the zone's posts were drawn. A zone has no people of its own: it
+   many of the zone's stations were drawn. A zone has no people of its own: it
    has the ground its stations stand on, which is why the people are read per
-   post and never as a zone-level list. #}
+   station and never as a zone-level list. #}
 {% extends '@Shell/page.html.twig' %}
 
 {% block title %}{{ area.name }} &middot; configure &middot; zones{% endblock %}
@@ -139,7 +139,7 @@
                                     {% if row.shareOfArea is not null %}<span class="f"><b>{{ row.shareOfArea }}</b>%</span>{% endif %}
                                     {% if covered %}<span class="f"><b>{{ covered.display }}</b>{{ covered.unit }} covered</span>{% endif %}
                                     <span class="f">{% if posts %}<b>{{ posts }}</b> st{% else %}no station{% endif %}</span>
-                                    <span class="f">{% if people %}<b>{{ people }}</b> posted{% else %}nobody posted{% endif %}</span>
+                                    <span class="f">{% if people %}<b>{{ people }}</b> stationed{% else %}nobody stationed{% endif %}</span>
                                 </span>
                             </summary>
 
@@ -177,10 +177,10 @@
                                     </div>
                                 {% endif %}
 
-                                {# THE POSTS ON THIS GROUND. A zone has no people of its own — it has
+                                {# THE STATIONS ON THIS GROUND. A zone has no people of its own — it has
                                    the ground its stations stand on — so the people are read here per
-                                   post and never as a zone-level list. Manage people NAVIGATES to
-                                   the post's own record, which is the surface that edits postings. #}
+                                   station and never as a zone-level list. Manage people NAVIGATES to
+                                   the station's own record, which is the surface that edits assignments. #}
                                 <div class="stgroup">
                                     <div class="stgh">
                                         <span class="zsw" data-cat="{{ row.cat }}"></span>
@@ -193,8 +193,8 @@
                                     </div>
                                     {% if stationCards is empty %}
                                         <div class="stcard none">
-                                            <b>No post stands in this zone</b>
-                                            <span class="stnone">ordinary &middot; a post is recorded in the Stations section</span>
+                                            <b>No station stands in this zone</b>
+                                            <span class="stnone">ordinary &middot; a station is recorded in the Stations section</span>
                                         </div>
                                     {% else %}
                                         <div class="stcards">
@@ -217,13 +217,13 @@
                                                         <span class="stcardlead">
                                                             {%- if card.leaderName %}{{ card.leaderName }} leads &middot; {{ card.posted }} posted
                                                             {%- elseif card.posted %}{{ card.posted }} posted &middot; no lead appointed
-                                                            {%- else %}nobody posted yet{% endif -%}
+                                                            {%- else %}nobody stationed yet{% endif -%}
                                                         </span>
                                                     </div>
                                                     <div class="stcardfoot">
                                                         <span class="mono d">in {{ row.name }}</span>
                                                         <a class="btn sm" href="{{ path('area_station_show', {uuid: area.uuidString, station: card.uuid}) }}"
-                                                           title="{{ card.name }} &middot; posted people">Manage people &rarr;</a>
+                                                           title="{{ card.name }} &middot; stationed people">Manage people &rarr;</a>
                                                     </div>
                                                 </div>
                                             {% endfor %}
@@ -251,7 +251,7 @@
                                        confirm-modal controller, never the browser's own dialog and
                                        never a page state of this module's invention. The button is
                                        the form's own submit, so an installation that ships no
-                                       controller still posts, with the token, and loses nothing but
+                                       controller still stations, with the token, and loses nothing but
                                        the question. #}
                                     <form method="post" action="{{ path('area_zone_remove', {uuid: area.uuidString, zone: row.uuid}) }}">
                                         <input type="hidden" name="_token" value="{{ removeToken }}">
@@ -268,7 +268,7 @@
                     {% endfor %}
                 </div>
             {% endif %}
-            <div class="use">A person is posted to a <b>station</b>, never to a zone.</div>
+            <div class="use">A person is stationed at a <b>station</b>, never to a zone.</div>
         </div>
     </div>
 

@@ -16,9 +16,8 @@
     </div>
     <div class="c kpi">
         <span class="tab">Grantable</span>
-        <b class="disp">{{ catalogue|length }}</b>
-        {% set core = catalogue|filter(p => p.isCore)|length %}
-        <span class="sub">{{ core }} the host&rsquo;s &middot; {{ catalogue|length - core }} from installed modules</span>
+        <b class="disp">{{ pairs|length }}</b>
+        <span class="sub">{{ concerns|length }} concern{{ concerns|length == 1 ? '' : 's' }} &middot; declared by {{ grouped|length }} package{{ grouped|length == 1 ? '' : 's' }}</span>
     </div>
     {# THE ONE THERE IS ONLY ONE OF, when that is true. Not a count for its own
        sake: it is the installation's single point of failure, and the matrix is

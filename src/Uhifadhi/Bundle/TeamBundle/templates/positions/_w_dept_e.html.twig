@@ -36,7 +36,7 @@
                                     <tr>
                                         <td><b>{{ position.name }}</b></td>
                                         <td>{{ holders[position.uuidString]|default(0) }}</td>
-                                        <td>{{ position.permissionValues|length }}</td>
+                                        <td>{{ position.grantValues|length }}</td>
                                         <td class="tm-acts"><a class="open-btn" href="{{ path('team_positions', {position: position.uuidString}) }}">Edit</a></td>
                                     </tr>
                                 {% else %}

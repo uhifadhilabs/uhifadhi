@@ -29,7 +29,7 @@ use Uhifadhi\Contracts\Entity\UserInterface;
  * Answers `GET /api/areas/mine`: builds a field client's offline cache.
  *
  * "MINE" IS THE PLATFORM'S OWN AUTHORITY QUESTION, ASKED ONCE PER AREA, and not a
- * query written for this endpoint. An area is in the answer when `area.view` is
+ * query written for this endpoint. An area is in the answer when `areas.read` is
  * granted FOR THAT AREA — the same question every area screen asks — so the
  * narrowing is the permission model's and can never drift from it: a tier holds
  * every area, an org-level position holds every area, and somebody whose
@@ -44,17 +44,17 @@ use Uhifadhi\Contracts\Entity\UserInterface;
  * areas" failure, and a client that met a 403 here would stop syncing instead of
  * showing an empty picker.
  *
- * THE PERMISSION IS WRITTEN AS A STRING, as every gated screen in this bundle
- * writes it: the catalogue values are the platform's published vocabulary, and an
- * enum constant would make the package that owns the account a hard dependency of
- * owning ground.
+ * THE PAIR IS WRITTEN AS A STRING, as every gated screen in this bundle writes
+ * it: concern and verb are the platform's published vocabulary, and an enum
+ * constant from elsewhere would make the package that owns the account a hard
+ * dependency of owning ground.
  *
  * @implements ProviderInterface<AreasMine>
  */
 final readonly class AreasMineProvider implements ProviderInterface
 {
-    /** Seeing an area and everything recorded inside it — the platform's own value. */
-    private const string PERMISSION = 'area.view';
+    /** Seeing an area and everything recorded inside it — the Areas concern, read. */
+    private const string PERMISSION = 'areas.read';
 
     /**
      * Roughly 55 m on the ground. A client caches the boundary on a phone and

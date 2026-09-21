@@ -15,9 +15,10 @@ namespace Uhifadhi\Bundle\TeamBundle\Service;
 
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
+use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Exception\NameNotUniqueException;
-use Uhifadhi\Bundle\TeamBundle\Exception\UnknownPermissionException;
+use Uhifadhi\Bundle\TeamBundle\Exception\UnknownGrantException;
 
 /**
  * WHAT A POSITION IS, AND WHAT IT GRANTS — the only writes that shape either.
@@ -27,13 +28,22 @@ use Uhifadhi\Bundle\TeamBundle\Exception\UnknownPermissionException;
  * organization, because a position belongs to no department — and its GRANT.
  * Both are written here.
  *
- * THE GRANT IS VALIDATED AGAINST THE CATALOGUE, ALWAYS. The list of permissions
- * is not fixed — seven are this bundle's and the rest arrive and leave with the
- * modules that declare them — so what may be written is asked of the catalogue
- * rather than assumed. A value nothing provides is refused rather than stored,
- * and a value a position ALREADY holds that nothing provides any more is left
- * exactly where it is: pruned, not purged. Removing it on the module's way out
- * would silently rewrite what an administrator granted.
+ * A GRANT IS A (CONCERN, VERB) PAIR. It used to be a flat permission value
+ * validated against the flat permission catalogue; the ruled model replaced
+ * that with `<concern>.<verb>` pairs declared by whoever enforces them, so
+ * this writes {@see Position::setGrantValues()} against
+ * {@see ConcernCatalogue::pairs()} and the flat write is gone from here. The
+ * flat catalogue is still shipped for the gates that have not moved yet, and
+ * nothing on this class reads it.
+ *
+ * THE GRANT IS VALIDATED AGAINST THE CATALOGUE, ALWAYS. What there is to have
+ * a permission about is not fixed — the team's four concerns are this
+ * bundle's and the rest arrive and leave with the modules that declare them —
+ * so what may be written is asked of the catalogue rather than assumed. A
+ * pair nothing declares is refused rather than stored, and a pair a position
+ * ALREADY holds that nothing declares any more is left exactly where it is:
+ * pruned, not purged. Removing it on the module's way out would silently
+ * rewrite what an administrator granted.
  *
  * IT DECIDES NOTHING ABOUT WHO IS ASKING. Whether the administrator on the
  * other end may confer this permission is an area-scope question about the
@@ -45,7 +55,7 @@ final readonly class PositionService
 {
     public function __construct(
         private EntityManagerInterface $entityManager,
-        private PermissionCatalogue $catalogue,
+        private ConcernCatalogue $catalogue,
     ) {
     }
 
@@ -84,13 +94,13 @@ final readonly class PositionService
      * revoked — the matrix posts only what is ticked — so this is a set, never
      * an addition.
      *
-     * @param list<string> $values
+     * @param list<string> $pairs each written `<concern>.<verb>`
      *
-     * @throws UnknownPermissionException when a value no installed module provides is granted
+     * @throws UnknownGrantException when a pair nothing installed declares is granted
      */
-    public function setPermissions(Position $position, array $values): void
+    public function setGrants(Position $position, array $pairs): void
     {
-        $position->setPermissionValues($values, $this->catalogue->values());
+        $position->setGrantValues($pairs, $this->catalogue->pairs());
 
         $this->entityManager->flush();
     }

@@ -62,8 +62,11 @@ use Uhifadhi\Contracts\Kpi\StationRef;
  * zone would make the zone the only way in; a name or a code is how an
  * operator actually arrives.
  *
- * READING IS GATED ON `area.view`, WRITING ON `area.edit` — the split every
- * area surface makes.
+ * READING IS GATED ON `stations.read` AND SETTING A STATION UP ON
+ * `stations.configure`, while putting somebody at one costs
+ * `assignments.manage` — the split every area surface makes, and one more,
+ * because who is stationed where is a different trust from what the stations
+ * are.
  */
 final readonly class StationConfigureController
 {
@@ -91,7 +94,7 @@ final readonly class StationConfigureController
     }
 
     #[Route('/areas/{uuid}/stations/settings', name: self::ROUTE, requirements: ['uuid' => Requirement::UUID], methods: ['GET'])]
-    #[IsGranted('area.view')]
+    #[IsGranted('stations.read')]
     public function configure(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,

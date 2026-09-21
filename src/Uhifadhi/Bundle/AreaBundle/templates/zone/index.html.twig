@@ -38,7 +38,7 @@
         {%- if set.count > 0 -%}{{ set.count }}<em>presence-driven</em>{%- else -%}&mdash;<em>none yet</em>{%- endif -%}
     </span></span>
     <span class="f"><span class="k">Stations</span><span class="v">
-        {%- if stationCount > 0 -%}{{ stationCount }}<em>{{ staffed }} posted</em>{%- else -%}&mdash;<em>none yet</em>{%- endif -%}
+        {%- if stationCount > 0 -%}{{ stationCount }}<em>{{ staffed }} stationed</em>{%- else -%}&mdash;<em>none yet</em>{%- endif -%}
     </span></span>
     {% if area.iucnCategory %}<span class="f"><span class="k">IUCN</span><span class="v">{{ area.iucnCategory }}</span></span>{% endif %}
     {% if area.establishedYear %}<span class="f"><span class="k">Established</span><span class="v">{{ area.establishedYear }}</span></span>{% endif %}
@@ -59,10 +59,10 @@
     <div class="c kpi">
         <span class="tab">Stations</span>
         <b class="disp">{{ stationCount }}</b>
-        <span class="sub">{{ staffed }} posted</span>
+        <span class="sub">{{ staffed }} stationed</span>
     </div>
     <div class="c kpi">
-        <span class="tab">People posted</span>
+        <span class="tab">People stationed</span>
         <b class="disp">{{ peopleTotal }}</b>
         <span class="sub">across {{ staffed }} {{ staffed == 1 ? 'station' : 'stations' }}</span>
     </div>
@@ -189,7 +189,7 @@
                 label: 'order', all: 'order', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\StationQuery::SORT'),
                 chosen: query.sort == 'name' ? null : query.sort,
                 options: [
-                    {value: 'posted', label: 'most posted', count: 0, cat: null},
+                    {value: 'posted', label: 'most stationed', count: 0, cat: null},
                     {value: 'zone', label: 'by zone', count: 0, cat: null},
                 ],
                 query: query,
@@ -207,7 +207,7 @@
             <div class="zdnone">
                 <span class="stpin hollow"></span>
                 <b>{{ query.isFiltered ? 'No station matches' : 'No station in this area' }}</b>
-                <span>{{ query.isFiltered ? 'clear the search, or widen a filter' : 'a station is a named point — a gate, a post, a camp' }}</span>
+                <span>{{ query.isFiltered ? 'clear the search, or widen a filter' : 'a station is a named point — a gate, a station, a camp' }}</span>
             </div>
         {% else %}
             {{ include('@Area/zone/_stations.html.twig', {rows: register.rows, area: area, withZone: true}) }}
@@ -220,7 +220,7 @@
         <p class="zpicknote">A station&rsquo;s zone is read from its point &middot; it follows the boundary it falls inside</p>
     </div>
 
-    {# EVERYBODY WORKING OUT OF ONE OF THOSE POSTS. A zone has no people of its
+    {# EVERYBODY WORKING OUT OF ONE OF THOSE STATIONS. A zone has no people of its
        own; it has the ground its stations stand on. #}
     <div class="c">
         <span class="tab">People working out of the area<span class="src">&middot; {{ peopleMatching }} of {{ peopleTotal }}</span></span>
@@ -237,7 +237,7 @@
             <div class="zdnone">
                 <span class="tav hollow"></span>
                 <b>{{ peopleSearch ? 'Nobody matches' : 'Nobody works out of this area yet' }}</b>
-                <span>{{ peopleSearch ? 'clear the search' : 'somebody is posted to a station, never to a zone' }}</span>
+                <span>{{ peopleSearch ? 'clear the search' : 'somebody is stationed at a station, never to a zone' }}</span>
             </div>
         {% else %}
             <div class="plist">

@@ -230,7 +230,7 @@ asks nothing. `GET /api/areas/mine` is that cache:
 ```
 
 **"Mine" is the platform's own authority question, asked once per area.** An area
-is in the answer when `area.view` is granted *for that area* — the same question
+is in the answer when `areas.read` is granted *for that area* — the same question
 every screen here asks — so a tier and an org-level position are handed every
 area, somebody whose department is confined to one area is handed that one, and an
 account that may see nothing is handed an **empty list rather than a 403**: a
@@ -322,25 +322,35 @@ remove.
 
 | Screen | Route | Gate |
 |---|---|---|
-| The register — every area | `area_index` · `/areas` | `area.view` |
-| The register's widget library | `area_widgets` · `/areas/widgets` | `area.view` |
-| Create an area | `area_new` · `GET,POST /areas/new` | `area.create` |
-| One area's overview | `area_show` · `/areas/{uuid}` | `area.view` |
-| Its module grid | `area_modules` · `/areas/{uuid}/modules` | `module.view` |
-| Its module shop | `area_module_customize` · `/areas/{uuid}/modules/customize` | `module.create` |
-| Its zones | `area_zones` · `/areas/{uuid}/zones` | `area.view` |
-| Its settings | `area_settings` · `/areas/{uuid}/settings` | `area.edit` |
-| Edit its identity or boundary | `area_edit` · `GET,POST /areas/{uuid}/edit` | `area.edit` |
+| The register — every area | `area_index` · `/areas` | `areas.read` |
+| The register's widget library | `area_widgets` · `/areas/widgets` | `areas.read` |
+| Create an area | `area_new` · `GET,POST /areas/new` | `areas.configure` |
+| One area's overview | `area_show` · `/areas/{uuid}` | `areas.read` |
+| Its module grid | `area_modules` · `/areas/{uuid}/modules` | `modules.read` |
+| Its module shop | `area_module_customize` · `/areas/{uuid}/modules/customize` | `modules.configure` |
+| Its zones | `area_zones` · `/areas/{uuid}/zones` | `zones.read` |
+| Its stations | `area_stations` · `/areas/{uuid}/stations` | `stations.read` |
+| Its settings | `area_settings` · `/areas/{uuid}/settings` | `areas.configure` |
+| Edit its identity or boundary | `area_edit` · `GET,POST /areas/{uuid}/edit` | `areas.configure` |
 
-Three POST addresses sit under the shop and carry the same `module.create` gate
-plus a CSRF token scoped to the area: `area_module_install`,
+Three POST addresses sit under the shop and carry the same `modules.configure`
+gate plus a CSRF token scoped to the area: `area_module_install`,
 `area_module_uninstall` and `area_module_reorder`.
 
-**Gated on the platform's permission strings and on nothing else.**
-`area.view`, `area.create`, `area.edit`, `area.delete`, `module.view` and
-`module.create` are in the catalogue TeamBundle ships, and its voter answers them
-at runtime. This bundle names them and depends on Team for nothing, so an
-installation may answer them with something else without touching a screen.
+The writes behind the zones and stations pages carry the verb that matches what
+they do rather than the verb that opened the page: renaming a zone or redrawing
+its ring is `zones.configure`, removing one or clearing them all is
+`zones.delete`, downloading the GeoJSON is `zones.export`, setting a station up
+is `stations.configure`, and posting somebody to one, ending a posting or
+naming a lead is `assignments.manage`. Reporting a day from a handset is
+`duty.record`.
+
+**Gated on concern and verb, and on nothing else.** `areas`, `zones`,
+`stations`, `assignments` and `duty` are declared by this bundle in
+`Access/AreaConcerns.php`; `modules` is the registry's. Whichever module an
+installation trusts with grants answers the pairs at runtime. This bundle names
+them and depends on Team for nothing, so an installation may answer them with
+something else without touching a screen.
 
 **Addressed by UUID.** Every route carries the uuid requirement, so `/areas/2`
 is a 404 rather than a sequential key anybody can walk.
@@ -353,7 +363,7 @@ a non-existent `twig` service would have failed at compile time.
 
 ### Creating an area
 
-A name and a **GeoJSON** boundary, gated on `area.create` — and the button on
+A name and a **GeoJSON** boundary, gated on `areas.configure` — and the button on
 the register carries the same gate, because a control that opens onto a refusal
 is a worse answer than no control.
 
@@ -370,7 +380,7 @@ insert, with the whole boundary in hand.
 A refusal is **the same page with a sentence on it and a 422** — never a
 redirect and never an error page. The typed name survives it.
 
-**Every write carries a CSRF token.** `area.create` answers *who* may create an
+**Every write carries a CSRF token.** `areas.configure` answers *who* may create an
 area; the token answers whether *this page* asked, and a permission is no
 defence against a form on somebody else's site posting here with the viewer's
 own cookie.

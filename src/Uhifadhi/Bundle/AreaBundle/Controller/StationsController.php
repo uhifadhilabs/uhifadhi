@@ -88,7 +88,7 @@ final readonly class StationsController
     }
 
     #[Route('/areas/{uuid}/stations', name: self::ROUTE, requirements: ['uuid' => Requirement::UUID], methods: ['GET'])]
-    #[IsGranted('area.view')]
+    #[IsGranted('stations.read')]
     public function index(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,

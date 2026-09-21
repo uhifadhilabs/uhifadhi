@@ -27,7 +27,6 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Uid\Uuid;
 use Twig\Environment;
 use Uhifadhi\Bundle\TeamBundle\Enum\DepartmentScopeEnum;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Exception\DuplicateDepartmentKindException;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentGoalRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentKindRepository;
@@ -79,7 +78,7 @@ final readonly class DepartmentConfigureController
     }
 
     #[Route('/departments/configure', name: self::SETTINGS, defaults: DepartmentController::SURFACE, methods: ['GET'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('departments.configure')]
     public function settings(): Response
     {
         return new Response($this->twig->render('@Team/departments/configure.html.twig', [
@@ -95,7 +94,7 @@ final readonly class DepartmentConfigureController
      * and the goal kinds are contributed by the modules that can measure them.
      */
     #[Route('/departments/configure/lists', name: self::LISTS, defaults: DepartmentController::SURFACE, methods: ['GET'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('departments.configure')]
     public function lists(): Response
     {
         $departments = $this->departments->findAllActiveOrdered();
@@ -138,7 +137,7 @@ final readonly class DepartmentConfigureController
     }
 
     #[Route('/departments/configure/lists/kinds', name: self::KIND_CREATE, methods: ['POST'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('departments.configure')]
     public function createKind(Request $request): RedirectResponse
     {
         $this->guard($request);
@@ -158,7 +157,7 @@ final readonly class DepartmentConfigureController
     }
 
     #[Route('/departments/configure/lists/kinds/{uuid}/rename', name: self::KIND_RENAME, requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('departments.configure')]
     public function renameKind(Request $request, string $uuid): RedirectResponse
     {
         $this->guard($request);

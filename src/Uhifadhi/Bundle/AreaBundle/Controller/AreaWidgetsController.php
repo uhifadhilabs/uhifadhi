@@ -49,8 +49,8 @@ use Uhifadhi\Contracts\Entity\UserInterface as ModuleUserInterface;
  * and chooses no status code: it names the catalogue and turns a 204 into a
  * redirect with a sentence, so the plain-form path works with no JavaScript.
  *
- * GATED ON `area.view` — reading which layouts the landing can wear is for anyone
- * who may see the register at all.
+ * GATED ON `areas.read` — reading which layouts the landing can wear is for
+ * anyone who may see the register at all.
  */
 final readonly class AreaWidgetsController
 {
@@ -69,7 +69,7 @@ final readonly class AreaWidgetsController
      * never shadow it; `/areas/{uuid}` cannot, since "widgets" is not a UUID.
      */
     #[Route('/areas/widgets', name: 'area_widgets', methods: ['GET'], priority: 1)]
-    #[IsGranted('area.view')]
+    #[IsGranted('areas.read')]
     public function index(): Response
     {
         $catalog = new AreaIndexWidgets()->catalog();
@@ -84,7 +84,7 @@ final readonly class AreaWidgetsController
 
     /** Adopt one of the five as the landing. */
     #[Route('/areas/widgets/preset/{presetId}', name: 'area_widgets_preset', requirements: ['presetId' => '[a-z0-9_-]+'], methods: ['POST'], priority: 1)]
-    #[IsGranted('area.view')]
+    #[IsGranted('areas.read')]
     public function applyPreset(Request $request, string $presetId): Response
     {
         $catalog = new AreaIndexWidgets()->catalog();
@@ -101,7 +101,7 @@ final readonly class AreaWidgetsController
 
     /** Back to the layout this surface ships with. */
     #[Route('/areas/widgets/reset', name: 'area_widgets_reset', methods: ['POST'], priority: 1)]
-    #[IsGranted('area.view')]
+    #[IsGranted('areas.read')]
     public function reset(Request $request): Response
     {
         $catalog = new AreaIndexWidgets()->catalog();

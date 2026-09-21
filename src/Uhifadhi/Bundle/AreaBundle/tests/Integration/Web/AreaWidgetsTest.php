@@ -200,7 +200,7 @@ final class AreaWidgetsTest extends WebTestCase
         self::assertStringNotContainsString('World_Imagery', $body);
     }
 
-    /** THE LIBRARY IS REFUSED to somebody without area.view — refused, not emptied. */
+    /** THE LIBRARY IS REFUSED to somebody without areas.read — refused, not emptied. */
     public function testTheLibraryIsRefusedWithoutAreaView(): void
     {
         $this->boot([]);

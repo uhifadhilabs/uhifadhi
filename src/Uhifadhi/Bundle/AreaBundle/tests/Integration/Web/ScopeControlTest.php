@@ -32,7 +32,7 @@ use Uhifadhi\Contracts\Shell\Scope;
  * gets the control with no wiring, and a host that wants a different list
  * still replaces the source.
  *
- * THE SAME AUTHORITY AS `/api/areas/mine`, asked the same way — `area.view`
+ * THE SAME AUTHORITY AS `/api/areas/mine`, asked the same way — `areas.read`
  * WITH THE AREA AS SUBJECT. Asking without it would answer "does this person
  * have authority anywhere", which would offer somebody a slice they cannot
  * open.

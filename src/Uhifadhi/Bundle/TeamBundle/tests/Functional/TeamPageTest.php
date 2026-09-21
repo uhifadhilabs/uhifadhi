@@ -17,6 +17,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Entity\Placement;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
@@ -123,13 +124,29 @@ final class TeamPageTest extends WebTestCase
     }
 
     /**
-     * THE GATE IS A PERMISSION, NOT A TIER. A Staff member whose position
-     * carries team.manage administers the team — that is the whole of what
-     * retiring the Manager tier bought.
+     * GRANT (CONCERN, VERB) PAIRS ON A POSITION. This suite's own fixture
+     * writes the old flat values, so a test that needs the pair a route now
+     * names writes it here, validated against the live catalogue exactly as
+     * the positions page validates a save.
+     *
+     * @param list<string> $pairs
      */
-    public function testAStaffMemberHoldingTeamManageReachesThePage(): void
+    private function grant(Position $position, array $pairs): Position
     {
-        $senior = $this->position('Senior Ranger', [PermissionEnum::TeamManage]);
+        $catalogue = static::getContainer()->get('test_public.'.ConcernCatalogue::class);
+        \assert($catalogue instanceof ConcernCatalogue);
+
+        return $position->setGrantValues($pairs, $catalogue->pairs());
+    }
+
+    /**
+     * THE GATE IS A PAIR, NOT A TIER. A Staff member whose position carries
+     * `directory.read` reads the team — that is the whole of what retiring
+     * the Manager tier bought.
+     */
+    public function testAStaffMemberHoldingDirectoryReadReachesThePage(): void
+    {
+        $senior = $this->grant($this->position('Senior Ranger'), ['directory.read']);
         $grace = $this->person('Grace', 'Ndosi')->setPosition($senior);
         // A PERMISSION IS ONLY HELD SOMEWHERE. The position says what Grace
         // may do and the placement says where; the model fails closed, so

@@ -38,8 +38,29 @@ abstract class WebTestCase extends KernelTestCase
 {
     protected EntityManagerInterface $em;
 
-    /** Everything the platform's catalogue holds for an area — the ordinary admin. */
-    protected const array ALL_AREA_PERMISSIONS = ['area.view', 'area.create', 'area.edit', 'area.delete'];
+    /**
+     * EVERY PAIR THE GROUND'S CONCERNS OFFER — the ordinary admin. Spelt out
+     * rather than read from the catalogue, because a suite that asked the
+     * declaration what it declares would pass however the declaration drifted.
+     *
+     * @see \Uhifadhi\Bundle\AreaBundle\Access\AreaConcerns
+     */
+    protected const array ALL_AREA_PERMISSIONS = [
+        'areas.read', 'areas.configure',
+        'zones.read', 'zones.configure', 'zones.delete', 'zones.export',
+        'stations.read', 'stations.configure',
+        'assignments.read', 'assignments.manage',
+        'duty.read', 'duty.record',
+    ];
+
+    /**
+     * THE READING HALF OF THEM: somebody who may look at every part of the
+     * ground and change none of it. This is what proves a write is refused
+     * without also proving the page went dark.
+     */
+    protected const array READ_ONLY_AREA_PERMISSIONS = [
+        'areas.read', 'zones.read', 'stations.read', 'assignments.read', 'duty.read',
+    ];
 
     /** @param list<string> $grants */
     /**

@@ -1,14 +1,19 @@
 {# THE MATRIX'S SHARED VOCABULARY.
 
-   THE FIVE RENDERINGS TAKE THEIR MARKS FROM HERE for the reason the surface
-   itself exists: they are five renderings of ONE array, and five copies of "how
-   a permission row is drawn" is five places for them to start disagreeing about
-   it. The design app unrolls them because a static page has no other way to be
-   looked at.
+   THE RENDERINGS TAKE THEIR MARKS FROM HERE for the reason the surface itself
+   exists: they are several renderings of ONE declaration, and several copies of
+   "how a concern is drawn" is several places for them to start disagreeing
+   about it. The design app unrolls them because a static page has no other way
+   to be looked at.
 
-   THE THREE HONEST STATES live here too — a module that declares nothing, a
-   value whose module is not installed, and an orphaned grant — because every
-   direction has to draw all three and none of them may draw them differently. #}
+   IT USED TO DRAW A FLAT PERMISSION VALUE PER ROW, under an umbrella the
+   catalogue invented. The ruling replaced that with the shape the declarations
+   already have: ONE GROUP PER DECLARER, a ROW PER CONCERN, a COLUMN PER VERB,
+   and a CELL ONLY WHERE THE CONCERN DECLARES THAT VERB — so there is never a
+   checkbox that would mean nothing.
+
+   THE STATE THAT OUTLIVES A MODULE lives here too — the ORPHANED GRANT — because
+   every direction has to draw it and none of them may draw it differently. #}
 
 {% macro icon_tick() %}<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>{% endmacro %}
 {% macro icon_info() %}<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>{% endmacro %}
@@ -17,21 +22,16 @@
 {% macro icon_save() %}<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"/><path d="M7 3v4a1 1 0 0 0 1 1h7"/></svg>{% endmacro %}
 {% macro icon_warn() %}<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>{% endmacro %}
 
-{# The umbrella heading, wearing its CONTRIBUTOR. Core rows say "the host";
-   everything else names the module that brought them, in that module's own
-   words, so this page never invents a name for somebody else's bundle. #}
-{% macro umbrella_head(umbrella, permissions, moduleNames, held) %}
-    {% import _self as pm %}
-    {%- set source = permissions[0].source -%}
-    {%- set core = permissions[0].isCore -%}
-    {%- set on = permissions|filter(p => p.value in held)|length -%}
-    <div class="pm-umb{{ core ? '' : ' pm-mod pm-mod-' ~ source }}">
-        <b>{{ umbrella }}</b>
-        {% if core %}
-            <span class="pm-by core"><i></i>the host</span>
-        {% else %}
-            <span class="pm-by {{ source }}"><i></i>{{ moduleNames[source]|default(source) }}</span>
-        {% endif %}
+{# THE GROUP HEADING, WEARING ITS DECLARER. Whoever enforces a concern declares
+   it, and the heading says so in that package's own words — so an administrator
+   reading a row can see which package gave it to them, and which package
+   removing would take it away. This page never invents a name for somebody
+   else's bundle: the word printed is the one `declaredBy()` returned. #}
+{% macro group_head(declarer, pairs, held) %}
+    {%- set on = pairs|filter(p => p in held)|length -%}
+    <div class="pm-umb">
+        <b>{{ declarer }}</b>
+        <span class="pm-by"><i></i>declared by {{ declarer }}</span>
         {# SELECT ALL, AS A PROGRESSIVE ENHANCEMENT. The design draws the count
            as a button that ticks the whole group; it ships DISABLED and the
            Stimulus controller's connect() is what makes it live, so it is a
@@ -41,62 +41,89 @@
            saves. See assets/controllers/permission_group_controller.js. #}
         <button type="button" class="pm-all" style="margin-left:auto" disabled
                 data-uhifadhi--team-bundle--permission-group-target="all"
-                data-action="uhifadhi--team-bundle--permission-group#toggle"><span class="a">all</span> <span class="c">{{ on }} of {{ permissions|length }}</span></button>
+                data-action="uhifadhi--team-bundle--permission-group#toggle"><span class="a">all</span> <span class="c">{{ on }} of {{ pairs|length }}</span></button>
     </div>
 {% endmacro %}
 
-{# ONE PERMISSION, AS A CHECKBOX ROW, with its sentence under its name — the
-   whole point of a description being required. A label wrapping a real
-   checkbox, so the matrix works with no JavaScript and posts what is ticked. #}
-{% macro row(permission, held, grantable = null) %}
-    {% import _self as pm %}
-    {%- set on = permission.value in held -%}
-    {%- set destructive = permission.value ends with '.delete' -%}
-    {%- set elevated = permission.value == 'team.manage' -%}
-    {# §5.6(c): a bounded administrator may grant only what their own position
-       holds. `grantable` is that list (null = unbounded, everything grantable);
-       a row outside it is drawn disabled, so the fence is visible. A grant the
-       position already holds beyond the admin's reach stays ticked-but-frozen —
-       the controller keeps it, the admin cannot touch it. #}
-    {%- set can = grantable is null or permission.value in grantable -%}
-    <label class="pm-row{{ on ? ' on' : '' }}{{ destructive ? ' destructive' : '' }}{{ elevated ? ' elevated' : '' }}{{ can ? '' : ' pm-locked' }}"
-           {%- if not can %} title="Beyond your authority &mdash; your own position does not hold {{ permission.value }}"{% endif %}>
-        <input type="checkbox" name="permissions[]" value="{{ permission.value }}"{{ on ? ' checked' : '' }}{{ can ? '' : ' disabled' }} class="pm-check"
-               data-uhifadhi--team-bundle--permission-group-target="box">
-        <span class="pm-tick">{{ pm.icon_tick() }}</span>
-        <span class="pm-t">
-            <b>{{ permission.label }}</b>
-            <span class="perm">{{ permission.value }}</span>
-            <em>{{ permission.description }}</em>
-        </span>
-        <span></span>
-    </label>
+{# THE SIX VERBS, AS THE COLUMN HEADS. Fixed in the contracts so a module
+   cannot invent a seventh, and drawn in every group in the same order — a
+   matrix whose columns differ per group is a matrix nobody can read across.
+   Each head carries its own sentence, because the person handing the power
+   over is the one who needs to know what "manage" covers. #}
+{% macro verb_heads(verbs) %}
+    <tr>
+        <th class="pm-rowh"><span class="lbl" style="margin:0">concern</span></th>
+        {% for verb in verbs %}
+            <th class="pm-verbh" title="{{ verb.meaning }}">{{ verb.label }}</th>
+        {% endfor %}
+    </tr>
 {% endmacro %}
 
-{# AN INSTALLED MODULE THAT DECLARES NOTHING. Drawn, not skipped: hiding it
-   would read as "that module is not installed", which is a different and wrong
-   fact. #}
-{% macro silent_module(slug, name) %}
-    {% import _self as pm %}
-    <div class="pm-group pm-mod pm-mod-{{ slug }}">
-        <div class="pm-umb pm-mod pm-mod-{{ slug }}">
-            <b>{{ name }}</b>
-            <span class="pm-by {{ slug }}"><i></i>{{ slug }}-module</span>
-        </div>
-        <div style="padding:12px 13px">
-            <span class="pm-nobody">{{ pm.icon_info() }} Installed, and it declares no permissions. Nothing to grant, and nothing missing.</span>
-        </div>
+{# THE ROW'S NAME: the concern's label, the key a route and a grant name it by,
+   and the one sentence that says what it is about — the whole point of a
+   description being required at declaration.
+
+   A SENSITIVE CONCERN IS MARKED. It is a fact about a person or about a case
+   that an organization may reasonably want withheld without withholding the
+   page it sits on, and an administrator ticking `manage` on it should be told
+   that before the click rather than after. #}
+{% macro concern_name(concern) %}
+    <div class="pm-name">
+        <b>{{ concern.label }}{% if concern.isSensitive %}<span class="pm-sens">sensitive</span>{% endif %}</b>
+        <span class="perm">{{ concern.key }}</span>
+        <em>{{ concern.description }}</em>
     </div>
 {% endmacro %}
 
-{# AN ORPHANED GRANT — still in a position's JSON, provided by nothing.
+{# ONE CELL. A CONCERN AND A VERB, TOGETHER — and nothing at all where the
+   concern does not declare the verb, because a box that would mean nothing is
+   worse than a gap a reader can see.
 
-   PRUNE, NOT PURGE. Uninstalling a module leaves the grants behind and stops
+   §5.6(c): a bounded administrator may grant only what their own position
+   holds. `grantable` is that list of pairs (null = unbounded, everything
+   grantable); a cell outside it is drawn disabled, so the fence is visible. A
+   pair the position already holds beyond the admin's reach stays
+   ticked-but-frozen — the controller keeps it, the admin cannot touch it. #}
+{% macro cell(concern, verb, held, grantable = null, editable = true) %}
+    {% import _self as pm %}
+    {%- if not concern.supports(verb) -%}
+        <td class="pm-nocell"><span aria-hidden="true">&middot;</span><span class="vh">{{ concern.label }} declares no {{ verb.label|lower }}</span></td>
+    {%- else -%}
+        {%- set pair = concern.key ~ '.' ~ verb.value -%}
+        {%- set on = pair in held -%}
+        {%- set can = grantable is null or pair in grantable -%}
+        <td>
+            {%- if editable -%}
+                <label class="pm-box{{ on ? ' on' : '' }}{{ can ? '' : ' pm-locked' }}"
+                       title="{{ pair }}{{ can ? '' : ' — beyond your authority: your own position does not hold it' }}">
+                    <input type="checkbox" class="pm-check" name="grants[]" value="{{ pair }}"{{ on ? ' checked' : '' }}{{ can ? ' ' : ' disabled' }}
+                           data-uhifadhi--team-bundle--permission-group-target="box"
+                           aria-label="{{ concern.label }} — {{ verb.label }}">
+                    <i>{{ pm.icon_tick() }}</i>
+                </label>
+            {%- else -%}
+                <span class="pm-box pm-ro{{ on ? ' on' : '' }}" title="{{ pair }}"><i>{{ pm.icon_tick() }}</i></span>
+            {%- endif -%}
+        </td>
+    {%- endif -%}
+{% endmacro %}
+
+{# A POSITION THAT GRANTS NOTHING SAYS SO IN THOSE WORDS. It is the model's
+   zero rather than a fault or a blank screen: somebody holding it can sign in
+   and reach nothing behind it. #}
+{% macro grants_nothing() %}
+    {% import _self as pm %}
+    <p class="pm-nobody">{{ pm.icon_info() }} This position grants nothing. Somebody holding it can sign in and reach no page behind it &mdash; tick a cell to change that.</p>
+{% endmacro %}
+
+{# AN ORPHANED GRANT — still in a position's JSON, declared by nothing.
+
+   PRUNE, NOT PURGE. Uninstalling a module leaves the pairs behind and stops
    them resolving; removing them would have silently rewritten what somebody
    granted. So they are drawn MUTED and ticked, and unticking one still works,
    because it is a grant rather than a fixture.
 
-   THE HIDDEN FIELD IS LOAD-BEARING: it is what makes a save that does not touch
+   THE TICKED BOX IS LOAD-BEARING: it is what makes a save that does not touch
    the orphan keep it, since the form posts only what is ticked. #}
 {% macro orphans(values, held) %}
     {% import _self as pm %}
@@ -104,17 +131,17 @@
     {% if mine|length %}
         <div class="pm-group pm-mod-orphan">
             <div class="pm-umb pm-mod-orphan">
-                <b>No longer provided</b>
+                <b>No longer declared</b>
                 <span class="pm-by next"><i></i>nothing installed declares these</span>
             </div>
             {% for value in mine %}
                 <label class="pm-row on muted">
-                    <input type="checkbox" name="permissions[]" value="{{ value }}" checked class="pm-check">
+                    <input type="checkbox" name="grants[]" value="{{ value }}" checked class="pm-check">
                     <span class="pm-tick">{{ pm.icon_tick() }}</span>
                     <span class="pm-t">
                         <b><span class="pm-orphname">no longer described</span></b>
                         <span class="perm">{{ value }}</span>
-                        <em>This position still holds it and <b>no installed module provides it</b> &mdash; the
+                        <em>This position still holds it and <b>no installed module declares it</b> &mdash; the
                         bundle that declared it has been removed. It is kept rather than deleted, because
                         uninstalling a module must not silently rewrite what somebody granted. It resolves to
                         nothing today, and it will start working again if that module comes back. Untick it to

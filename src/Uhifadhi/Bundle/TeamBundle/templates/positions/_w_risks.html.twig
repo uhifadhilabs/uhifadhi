@@ -22,9 +22,9 @@
             <div class="tm-attrow w standing">
                 {{ pm.icon_warn() }}
                 <div class="at">
-                    <b>{{ orphans|length }} grant{{ orphans|length == 1 ? '' : 's' }} no installed module provides</b>
+                    <b>{{ orphans|length }} grant{{ orphans|length == 1 ? '' : 's' }} nothing installed declares</b>
                     <p>A bundle that declared {% for value in orphans|keys %}<span class="perm">{{ value }}</span>{% endfor %}
-                    has been removed, and positions still hold the values. They resolve to nothing today and would
+                    has been removed, and positions still hold the pairs. They resolve to nothing today and would
                     start working again if the module came back &mdash; which is why they were pruned rather than
                     purged. Untick one on its position to take it away for good.</p>
                 </div>
@@ -34,7 +34,7 @@
             <div class="okline">
                 {{ pm.icon_info() }}
                 <span>Neither standing risk applies: more than one Super Admin can sign in, and every grant on
-                every position is provided by something installed.</span>
+                every position is declared by something installed.</span>
             </div>
         {% endif %}
     </div>

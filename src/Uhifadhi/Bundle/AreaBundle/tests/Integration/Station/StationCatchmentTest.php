@@ -24,7 +24,7 @@ use Uhifadhi\Bundle\AreaBundle\Tests\Integration\IntegrationTestCase;
  * THE READ SIDE HAS BEEN THERE ALL ALONG: a check-in inside the ring derives
  * as verified and one outside it as unverified. Nothing SET the ring, so
  * every post had none, every day claimed at one derived unverified, and the
- * Live tab read "verified at a post 0 of 13" with fifteen people standing at
+ * Live tab read "verified at a station 0 of 13" with fifteen people standing at
  * theirs. A read with no write is a feature that looks broken.
  *
  * NULL STAYS A REAL STATE. A post with no ring has no inside: the handset
@@ -66,7 +66,7 @@ final class StationCatchmentTest extends IntegrationTestCase
 
     public function testTheRingIsChangedThroughTheService(): void
     {
-        $station = $this->stations()->add($this->anArea(), 'Lerai Ranger Post', -29.7, -3.2);
+        $station = $this->stations()->add($this->anArea(), 'Lerai Ranger Station', -29.7, -3.2);
 
         $this->stations()->setCatchment($station, 1000);
 

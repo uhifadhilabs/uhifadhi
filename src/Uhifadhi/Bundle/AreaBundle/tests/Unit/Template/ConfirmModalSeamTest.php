@@ -118,7 +118,7 @@ final class ConfirmModalSeamTest extends TestCase
     private static function formPostingTo(string $template, string $route): string
     {
         $start = strpos($template, "path('".$route."'");
-        self::assertIsInt($start, \sprintf('Nothing in the template posts to %s.', $route));
+        self::assertIsInt($start, \sprintf('Nothing in the template stations to %s.', $route));
 
         $end = strpos($template, '</form>', $start);
         self::assertIsInt($end);

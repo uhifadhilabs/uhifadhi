@@ -68,7 +68,7 @@ final readonly class ZoneEditController
     }
 
     #[Route('/areas/{uuid}/zones/{zone}/rename', name: 'area_zone_rename', requirements: ['uuid' => Requirement::UUID, 'zone' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted('area.edit')]
+    #[IsGranted('zones.configure')]
     public function rename(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
@@ -101,7 +101,7 @@ final readonly class ZoneEditController
      * is how a state is kept.
      */
     #[Route('/areas/{uuid}/zones/{zone}/ring', name: 'area_zone_ring', requirements: ['uuid' => Requirement::UUID, 'zone' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted('area.edit')]
+    #[IsGranted('zones.configure')]
     public function ring(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
@@ -134,7 +134,7 @@ final readonly class ZoneEditController
      * often only partly zoned. No station, person or record is deleted with it.
      */
     #[Route('/areas/{uuid}/zones/{zone}/remove', name: 'area_zone_remove', requirements: ['uuid' => Requirement::UUID, 'zone' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted('area.edit')]
+    #[IsGranted('zones.delete')]
     public function remove(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
@@ -149,7 +149,7 @@ final readonly class ZoneEditController
     }
 
     #[Route('/areas/{uuid}/zones/clear', name: 'area_zones_clear', requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted('area.edit')]
+    #[IsGranted('zones.delete')]
     public function clear(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,

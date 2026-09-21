@@ -16,10 +16,16 @@ namespace Uhifadhi\Bundle\TeamBundle\Tests\Functional;
 use Uhifadhi\Bundle\TeamBundle\TeamBundle;
 
 /**
- * SELECT ALL, PER UMBRELLA — AND ONLY WHERE THERE IS JAVASCRIPT TO DO IT.
+ * SELECT ALL, PER DECLARER GROUP — AND ONLY WHERE THERE IS JAVASCRIPT TO DO IT.
  *
- * The design draws the umbrella's count as a button: "all · 1 of 4", pressed to
- * tick or untick that module's whole group. It is a convenience over the rows
+ * IT USED TO SAY "PER UMBRELLA". An umbrella was a word the flat catalogue
+ * invented to file permission values under; the ruled model groups the matrix
+ * by WHO DECLARED the concern, so the scope of the control is one declarer's
+ * bounded group. The behaviour is unchanged and so is every assertion about
+ * it — only what a group IS has moved.
+ *
+ * The design draws the group's count as a button: "all · 1 of 4", pressed to
+ * tick or untick that package's whole group. It is a convenience over the rows
  * that are already there, so it is shipped the only way a convenience may be
  * shipped on a screen that also has to work without JavaScript: as a
  * PROGRESSIVE ENHANCEMENT.
@@ -54,17 +60,17 @@ final class SelectAllPerUmbrellaTest extends WebTestCaseWithSchema
     private const string IDENTIFIER = 'uhifadhi--team-bundle--permission-group';
 
     /**
-     * EVERY UMBRELLA GROUP IS A CONTROLLER SCOPE, and the boxes inside it are
-     * its targets. The button is in the group's heading and the rows are its
-     * siblings, so the scope is the group — not the heading, which cannot reach
-     * a single checkbox.
+     * EVERY DECLARER GROUP IS A CONTROLLER SCOPE, and the cells inside it are
+     * its targets. The button is in the group's heading and the grid is
+     * inside the same bounded group, so the scope is the group — not the
+     * heading, which cannot reach a single checkbox.
      */
-    public function testEachUmbrellaGroupIsAScopeWhoseBoxesAreItsTargets(): void
+    public function testEachDeclarerGroupIsAScopeWhoseBoxesAreItsTargets(): void
     {
         $crawler = $this->matrix();
 
         $groups = $crawler->filter('[data-pm="b"] .pm-group[data-controller="'.self::IDENTIFIER.'"]');
-        self::assertGreaterThanOrEqual(4, $groups->count(), 'The umbrella groups are not controller scopes.');
+        self::assertGreaterThanOrEqual(2, $groups->count(), 'The declarer groups are not controller scopes.');
 
         $boxes = $crawler->filter('[data-pm="b"] .pm-group .pm-check[data-'.self::IDENTIFIER.'-target="box"]');
         self::assertGreaterThan(0, $boxes->count(), 'The checkboxes are not the controller\'s targets.');
@@ -80,7 +86,7 @@ final class SelectAllPerUmbrellaTest extends WebTestCaseWithSchema
         $crawler = $this->matrix();
 
         $buttons = $crawler->filter('[data-pm="b"] button.pm-all');
-        self::assertGreaterThanOrEqual(4, $buttons->count(), 'The umbrella count is not the design\'s button.');
+        self::assertGreaterThanOrEqual(2, $buttons->count(), 'The group count is not the design\'s button.');
 
         foreach ($buttons->each(static fn ($node): array => [$node->attr('data-action'), $node->attr('type')]) as $pair) {
             self::assertSame(self::IDENTIFIER.'#toggle', $pair[0]);
@@ -111,7 +117,7 @@ final class SelectAllPerUmbrellaTest extends WebTestCaseWithSchema
     }
 
     /**
-     * AND THE MATRIX IS UNCHANGED WITHOUT IT: the rows are still checkboxes in
+     * AND THE MATRIX IS UNCHANGED WITHOUT IT: the cells are still checkboxes in
      * the form, and a save still saves. This is the assertion that makes the
      * word "enhancement" true rather than aspirational.
      */
@@ -125,9 +131,9 @@ final class SelectAllPerUmbrellaTest extends WebTestCaseWithSchema
         $form = $crawler->filter('form.pane')->selectButton('Save')->form();
 
         /** @var list<\Symfony\Component\DomCrawler\Field\ChoiceFormField> $boxes */
-        $boxes = $form['permissions'];
+        $boxes = $form['grants'];
         foreach ($boxes as $box) {
-            if (['area.view'] === $box->availableOptionValues()) {
+            if (['directory.read'] === $box->availableOptionValues()) {
                 $box->tick();
             }
         }
@@ -137,7 +143,7 @@ final class SelectAllPerUmbrellaTest extends WebTestCaseWithSchema
         $this->em->clear();
         $stored = $this->em->getRepository(\Uhifadhi\Bundle\TeamBundle\Entity\Position::class)->findOneBy(['name' => 'Ranger']);
         self::assertNotNull($stored);
-        self::assertSame(['area.view'], $stored->getPermissionValues());
+        self::assertSame(['directory.read'], $stored->getGrantValues());
     }
 
     /** IT WRITES NOTHING — the toggle touches boxes and never posts. */
@@ -194,7 +200,7 @@ final class SelectAllPerUmbrellaTest extends WebTestCaseWithSchema
         self::assertIsArray($symfony);
         $controllers = $symfony['controllers'] ?? null;
         self::assertIsArray($controllers);
-        // The permission matrix's select-all ships beside the department
+        // The grants matrix's select-all ships beside the department
         // surfaces' controller (the register's scope toggle and the lens's
         // tabs) and the performance matrix's in-band sort; all three are lazy,
         // host-mapped Stimulus controllers this package declares.
@@ -215,7 +221,7 @@ final class SelectAllPerUmbrellaTest extends WebTestCaseWithSchema
     private function matrix(): \Symfony\Component\DomCrawler\Crawler
     {
         $this->administrator();
-        $ranger = $this->position('Ranger', ['area.view']);
+        $ranger = $this->position('Ranger', ['directory.read']);
         $this->em->flush();
 
         return $this->client->request('GET', '/team/positions?position='.$ranger->getUuidString());

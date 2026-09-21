@@ -3212,3 +3212,59 @@ form.dpf > .k { flex-basis: 100%; }
    is the gap above it. */
 .mb-grants { margin-top: 20px; }
 .mb-eff2 { margin-top: 7px; }
+
+/* ============ THE MATRIX IS A CONCERN × VERB GRID (ruled) ================
+   A grant is a (concern, verb) pair, so the shipped editor's row is a concern
+   and its columns are the six verbs. The marks are the ones the grid already
+   had — `.pm-grid`, `.pm-rowh`, `.pm-box`, `.pm-name` — and only what an
+   EDITABLE cell adds is here.
+   ======================================================================== */
+
+/* THE CELL IS A LABEL AND THE CHECKBOX IS REAL, for the same reason `.pm-row`
+   is: the design drew a box, and a drawn box that posts nothing is a drawn box.
+   The input carries the state and submits it; the `<i>` is what a person sees.
+   Without this the browser draws its own checkbox NEXT TO the drawn one.
+   `:has()` mirrors the tick the moment it is clicked; `.on` is the same state
+   rendered server-side, so the cell is correct with JavaScript off and with
+   the stylesheet's :has() unsupported. */
+label.pm-box { position: relative; }
+label.pm-box > .pm-check {
+    position: absolute; width: 1px; height: 1px; margin: 0; padding: 0;
+    opacity: 0; pointer-events: none; appearance: none;
+}
+label.pm-box:has(> .pm-check:checked) i {
+    background: rgb(var(--c-acc)); border-color: rgb(var(--c-acc)); color: rgb(var(--c-accT));
+}
+label.pm-box:has(> .pm-check:checked) svg { display: block; }
+label.pm-box:focus-within i { outline: 2px solid rgb(var(--c-acc)); outline-offset: 2px; }
+
+/* NO CELL WHERE THE CONCERN DECLARES NO VERB. A gap a reader can see, rather
+   than a checkbox that would mean nothing — and a word for a screen reader,
+   because "nothing here" is a fact and not an absence. */
+.pm-nocell { text-align: center; color: rgb(var(--c-fog)); }
+.vh {
+    position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip-path: inset(50%); white-space: nowrap;
+}
+
+/* THE COLUMN HEAD CARRIES ITS VERB'S SENTENCE in `title`; it is narrow on
+   purpose, because six of them share the width the positions used to have. */
+.pm-verbh { text-align: center; white-space: nowrap; }
+
+/* §5.6(c) — THE NO-WIDER-THAN-SELF FENCE, in a cell. The same mark `.pm-row`
+   wears: muted, un-hoverable, a lock cursor — a control that reads as off
+   rather than merely unticked. */
+.pm-box.pm-locked { opacity: .5; cursor: not-allowed; }
+.pm-box.pm-locked:hover { background: transparent; }
+.pm-box.pm-locked i { border-style: dashed; }
+
+/* A SENSITIVE CONCERN IS MARKED, and it is marked like the destructive verb
+   was: a fact about the row rather than a property of a layout, so it reads
+   the same in every direction that draws it. */
+.pm-sens {
+    margin-left: 9px; vertical-align: 1px;
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 8.5px; font-weight: 700;
+    letter-spacing: .1em; text-transform: uppercase; color: rgb(var(--c-warn));
+    border: 1px dashed color-mix(in srgb, rgb(var(--c-warn)) 45%, transparent);
+    border-radius: 5px; padding: 3px 6px 2px; white-space: nowrap; display: inline-block;
+}

@@ -46,7 +46,7 @@ final class ZoneStationServiceTest extends IntegrationTestCase
         $east = $this->aZone($area, 'East', self::A_EAST_HALF);
 
         $seneto = $this->aStation($area, 'Seneto Gate Post', -29.75);
-        $this->aStation($area, 'Lerai Ranger Post', -29.8);
+        $this->aStation($area, 'Lerai Ranger Station', -29.8);
         $this->aStation($area, 'Munge Camp', -29.25);
         $this->postings()->post($seneto, $this->aPerson('J. Mollel'), PostingSource::WrittenHere);
         $this->postings()->post($seneto, $this->aPerson('T. Ndosi'), PostingSource::FromTheirPage);
@@ -64,7 +64,7 @@ final class ZoneStationServiceTest extends IntegrationTestCase
     {
         $area = $this->anArea();
         $west = $this->aZone($area, 'West', self::A_WEST_HALF);
-        $this->aStation($area, 'Eastern Post', -29.25);
+        $this->aStation($area, 'Eastern Station', -29.25);
 
         self::assertSame(0, $this->service()->staffing($area)->stationsIn((string) $west->getUuidString()));
     }

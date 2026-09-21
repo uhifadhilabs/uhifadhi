@@ -50,11 +50,12 @@ use Uhifadhi\Contracts\Shell\ConfigurationSection;
  * reusable-bundle rule, because a bundle installed by other projects must not
  * reach into a container through a base class. See config/services.php.
  *
- * GATED ON THE PLATFORM'S OWN PERMISSION STRINGS — `area.view`, `area.edit` —
- * and on nothing else. The strings are in the catalogue TeamBundle ships,
- * and team's voter answers them at runtime; this bundle names them and does not
- * depend on team, which is what lets an installation swap the answering module
- * without touching a screen.
+ * GATED ON CONCERN AND VERB — `areas.read` to open a screen, `areas.configure`
+ * to change what it shows — and on nothing else. The pairs are declared by
+ * {@see \Uhifadhi\Bundle\AreaBundle\Access\AreaConcerns} and answered at runtime
+ * by whichever module an installation trusts with grants; this bundle names them
+ * and does not depend on that module, which is what lets an installation swap
+ * the answering one without touching a screen.
  *
  * ADDRESSED BY UUID. Every route takes `{uuid}` with the uuid requirement, so
  * `/areas/2` is a 404 rather than a sequential key anybody can walk.
@@ -89,9 +90,9 @@ final readonly class AreaController
     /**
      * THE REGISTER — every area this installation manages.
      *
-     * Not gated on `area.create`: reading which areas exist is for anybody who
-     * may see an area at all, and the create affordance inside the page is what
-     * carries the stricter permission.
+     * Not gated on `areas.configure`: reading which areas exist is for anybody
+     * who may see an area at all, and the create affordance inside the page is
+     * what carries the stricter verb.
      *
      * IT IS A WIDGET SURFACE, and its five layouts are alternatives rather than
      * additions, so the page draws the ONE the person adopted in the library —
@@ -100,7 +101,7 @@ final readonly class AreaController
      * defect this resolve() call exists to close.
      */
     #[Route('/areas', name: 'area_index', methods: ['GET'])]
-    #[IsGranted('area.view')]
+    #[IsGranted('areas.read')]
     public function index(): Response
     {
         $catalog = new AreaIndexWidgets()->catalog();
@@ -121,7 +122,7 @@ final readonly class AreaController
      * the honest-absent state for everything nobody contributed.
      */
     #[Route('/areas/{uuid}', name: 'area_show', requirements: ['uuid' => Requirement::UUID], methods: ['GET'])]
-    #[IsGranted('area.view')]
+    #[IsGranted('areas.read')]
     public function show(
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
     ): Response {
@@ -341,12 +342,12 @@ final readonly class AreaController
      * form posts through, and in whatever an installation typed into its own
      * links — and 301 is what tells all three where it went for good.
      *
-     * THE PERMISSION IS UNCHANGED. `area.edit` was the gate on the screen and it
-     * is the gate on the redirect, so a viewer who could not read it before
-     * still cannot be bounced into it.
+     * THE GATE IS THE SCREEN'S. `areas.configure` was what the settings screen
+     * cost and it is what the redirect costs, so a viewer who could not open it
+     * before still cannot be bounced into it.
      */
     #[Route('/areas/{uuid}/settings', name: 'area_settings', requirements: ['uuid' => Requirement::UUID], methods: ['GET'])]
-    #[IsGranted('area.edit')]
+    #[IsGranted('areas.configure')]
     public function settings(
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
     ): Response {

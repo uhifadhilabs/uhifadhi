@@ -19,7 +19,7 @@
                     <a class="pm-deptrow" href="{{ path('team_positions', {position: position.uuidString}) }}">
                         <b>{{ position.name }}</b>
                         <span class="rh">{% if held %}{{ held }} holder{{ held == 1 ? '' : 's' }}{% else %}<span class="pm-held0">nobody yet</span>{% endif %}
-                        &middot; {{ position.permissionValues|length }} permission{{ position.permissionValues|length == 1 ? '' : 's' }}</span>
+                        &middot; grants {{ position.grantValues|length }}</span>
                     </a>
                 {% endfor %}
             </div>

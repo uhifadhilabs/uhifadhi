@@ -14,16 +14,17 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\TeamBundle\Security;
 
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
+use Uhifadhi\Contracts\Access\Verb;
 use Uhifadhi\Contracts\Entity\AreaInterface;
 
 /**
  * WHAT THE SIGNED-IN ADMINISTRATOR'S REACH IS — the read side of area-scoped
- * `team.manage`.
+ * team administration.
  *
- * The voter answers "may this person do X here?" for a single permission. This
+ * The voter answers "may this person do X here?" for a single pair. This
  * answers the coarser structural question the department writes need: is the
  * administrator UNBOUNDED (a tier, or somebody placed across the whole
  * organization — able to mint org departments, change scope, touch any area),
@@ -45,6 +46,17 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
  */
 final readonly class AreaAuthority
 {
+    /**
+     * CONFERRING TEAM ADMINISTRATION IS THE ONE THING A BOUNDED ADMINISTRATOR
+     * MAY NEVER DO. These two pairs are what "administers the team" means:
+     * writing the positions and writing the departments. Handing either on
+     * mints another administrator, which is an organization-wide act.
+     */
+    private const array TEAM_ADMINISTRATION = [
+        TeamConcerns::POSITIONS.'.'.Verb::Configure->value,
+        TeamConcerns::DEPARTMENTS.'.'.Verb::Configure->value,
+    ];
+
     public function __construct(
         private TokenStorageInterface $tokens,
     ) {
@@ -171,43 +183,48 @@ final readonly class AreaAuthority
     }
 
     /**
-     * THE PERMISSIONS THIS ADMINISTRATOR MAY CONFER on a position (the
-     * no-escalation half). `null` means UNBOUNDED — a tier or an
-     * organization-wide holder, who may grant anything the catalogue offers.
+     * THE PAIRS THIS ADMINISTRATOR MAY CONFER on a position (the no-escalation
+     * half). `null` means UNBOUNDED — a tier or an organization-wide holder,
+     * who may grant anything the catalogue declares.
      *
      * A bounded (area-X) administrator may grant only what their OWN position
-     * holds — granting a permission they do not themselves have widens power past
-     * their boundary — and NEVER `team.manage`, even though they hold it:
-     * conferring team administration mints another administrator, an org-wide act
-     * reserved to the unbounded. So the fence the area-admin design draws ("you
-     * can grant only what your own position holds") is this list, and everything
-     * outside it is drawn disabled and refused server-side.
+     * holds — granting something they do not themselves have widens power past
+     * their boundary — and NEVER TEAM ADMINISTRATION, even though they hold it:
+     * conferring it mints another administrator, an org-wide act reserved to
+     * the unbounded. So the fence the area-admin design draws ("you can grant
+     * only what your own position holds") is this list, and everything outside
+     * it is drawn disabled and refused server-side.
      *
-     * @return list<string>|null the grantable values, or null when unbounded
+     * IT USED TO READ A FLAT `PermissionEnum` AND EXCLUDE `team.manage`. A
+     * permission is a (concern, verb) pair now, and administering the team is
+     * not a seventh verb — it is the team's own concerns with configure on
+     * them, which is why two pairs are excluded here rather than one value.
+     *
+     * @return list<string>|null the grantable pairs, or null when unbounded
      */
-    public function grantablePermissions(): ?array
+    public function grantableGrants(): ?array
     {
         if ($this->isUnbounded()) {
             return null;
         }
 
-        $held = $this->actor()?->getPosition()?->getPermissionValues() ?? [];
+        $held = $this->actor()?->getPosition()?->getGrantValues() ?? [];
 
         return array_values(array_filter(
             $held,
-            static fn (string $value): bool => PermissionEnum::TeamManage->value !== $value,
+            static fn (string $pair): bool => !\in_array($pair, self::TEAM_ADMINISTRATION, true),
         ));
     }
 
     /**
-     * Whether this administrator may confer a single permission — the per-row
+     * Whether this administrator may confer a single pair — the per-cell
      * question the matrix asks to decide whether a box is enabled, and the
      * controller asks to refuse a crafted grant past the boundary.
      */
-    public function mayGrant(string $permission): bool
+    public function mayGrantPair(string $pair): bool
     {
-        $grantable = $this->grantablePermissions();
+        $grantable = $this->grantableGrants();
 
-        return null === $grantable || \in_array($permission, $grantable, true);
+        return null === $grantable || \in_array($pair, $grantable, true);
     }
 }

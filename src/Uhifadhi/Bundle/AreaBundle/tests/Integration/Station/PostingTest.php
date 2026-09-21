@@ -105,7 +105,7 @@ final class PostingTest extends IntegrationTestCase
         $this->postings()->post($station, $person, PostingSource::WrittenHere);
 
         $this->expectException(PostingException::class);
-        $this->expectExceptionMessageMatches('/already posted/');
+        $this->expectExceptionMessageMatches('/already stationed/');
 
         $this->postings()->post($station, $person, PostingSource::WrittenHere);
     }
@@ -122,7 +122,7 @@ final class PostingTest extends IntegrationTestCase
     {
         $area = $this->anArea();
         $first = $this->stations()->add($area, 'Seneto Gate Post', -29.75, -3.2);
-        $second = $this->stations()->add($area, 'Lerai Ranger Post', -29.7, -3.2);
+        $second = $this->stations()->add($area, 'Lerai Ranger Station', -29.7, -3.2);
         $person = $this->aPerson('J. Mollel');
         $this->postings()->post($first, $person, PostingSource::WrittenHere);
 
@@ -138,7 +138,7 @@ final class PostingTest extends IntegrationTestCase
     public function testSomebodyStandingInOneAreaIsNotPostedInAnother(): void
     {
         $north = $this->stations()->add($this->anArea('Northern Reserve'), 'Seneto Gate Post', -29.75, -3.2);
-        $south = $this->stations()->add($this->anArea('Southern Reserve'), 'Endulen Ranger Post', -29.6, -3.4);
+        $south = $this->stations()->add($this->anArea('Southern Reserve'), 'Endulen Ranger Station', -29.6, -3.4);
         $person = $this->aPerson('A. Sanka');
         $this->postings()->post($north, $person, PostingSource::WrittenHere);
 
@@ -156,7 +156,7 @@ final class PostingTest extends IntegrationTestCase
     {
         $area = $this->anArea();
         $first = $this->stations()->add($area, 'Seneto Gate Post', -29.75, -3.2);
-        $second = $this->stations()->add($area, 'Lerai Ranger Post', -29.7, -3.2);
+        $second = $this->stations()->add($area, 'Lerai Ranger Station', -29.7, -3.2);
         $person = $this->aPerson('M. Kisanga');
         $this->postings()->end($this->postings()->post($first, $person, PostingSource::WrittenHere));
 
@@ -219,7 +219,7 @@ final class PostingTest extends IntegrationTestCase
     {
         $area = $this->anArea();
         $first = $this->stations()->add($area, 'Seneto Gate Post', -29.75, -3.2);
-        $second = $this->stations()->add($area, 'Lerai Ranger Post', -29.7, -3.2);
+        $second = $this->stations()->add($area, 'Lerai Ranger Station', -29.7, -3.2);
 
         $a = $this->postings()->post($first, $this->aPerson('J. Mollel'), PostingSource::WrittenHere);
         $b = $this->postings()->post($second, $this->aPerson('A. Sanka'), PostingSource::WrittenHere);

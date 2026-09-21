@@ -16,7 +16,6 @@ namespace Uhifadhi\Bundle\TeamBundle\Tests\Functional;
 use Symfony\Component\DomCrawler\Crawler;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentScopeChangeRepository;
 
@@ -751,7 +750,7 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
         $this->administrator();
         $ng = $this->area('Northern Reserve');
         $wetland = $this->areaDepartment('Wetland Management', $ng);
-        $position = $this->position('Wetland Ecologist', [PermissionEnum::AreaView->value]);
+        $position = $this->position('Wetland Ecologist', ['surveys.read']);
         $zawadi = $this->person('Zawadi', 'Kimaro', TeamRoleEnum::Staff);
         $zawadi->setPosition($position);
         // THE FOOTPRINT IS THE PEOPLE PLACED IN IT, so the notice only has
@@ -774,7 +773,7 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
         $this->administrator();
         $ng = $this->area('Northern Reserve');
         $ecology = $this->department('Ecology');
-        $position = $this->position('Analyst', [PermissionEnum::AreaView->value]);
+        $position = $this->position('Analyst', ['surveys.read']);
         $zawadi = $this->person('Zawadi', 'Kimaro', TeamRoleEnum::Staff);
         $zawadi->setPosition($position);
         $this->place($zawadi, null, [$ecology]);
@@ -895,7 +894,7 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
     public function testAColleagueWithoutTeamManageIsRefused(): void
     {
         $ranger = $this->person('Juma', 'Mwakalinga', TeamRoleEnum::Staff);
-        $ranger->setPosition($this->position('Ranger', [PermissionEnum::AreaView->value]));
+        $ranger->setPosition($this->position('Ranger', ['surveys.read']));
         $this->em->flush();
         $this->client->loginUser($ranger);
 
@@ -973,7 +972,7 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
     {
         $this->areaDepartment('Warden Office', $area);
         $admin = $this->person('Amina', 'Salehe', TeamRoleEnum::Staff);
-        $admin->setPosition($this->position('Warden', [PermissionEnum::TeamManage->value]));
+        $admin->setPosition($this->administratorPosition('Warden'));
         $this->place($admin, [$area]);
         $this->em->flush();
         $this->client->loginUser($admin);
@@ -1013,5 +1012,25 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
         $repo = static::getContainer()->get('test_public.'.DepartmentScopeChangeRepository::class);
 
         return $repo;
+    }
+
+    /**
+     * WHAT ADMINISTERING THE TEAM IS, WRITTEN AS PAIRS. `team.manage` was one
+     * flat value; it is eight (concern, verb) pairs now, and these are the
+     * eight the upgrade backfills it into, so a fixture that used to say
+     * "this person administers the team" still says exactly that.
+     */
+    private function administratorPosition(string $name): Position
+    {
+        return $this->position($name, [
+            'directory.read',
+            'directory.manage',
+            'personal-details.read',
+            'personal-details.manage',
+            'positions.read',
+            'positions.configure',
+            'departments.read',
+            'departments.configure',
+        ]);
     }
 }

@@ -77,7 +77,7 @@ final class ModuleOrderSourceListTest extends TestCase
         self::assertMatchesRegularExpression(
             '/persist\(\) \{.*?this\.order\(\)\.forEach/s',
             self::controller(),
-            'The reorder route is posted an order from somewhere else.',
+            'The reorder route is stationed an order from somewhere else.',
         );
     }
 

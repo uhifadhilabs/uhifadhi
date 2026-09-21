@@ -19,6 +19,7 @@ use Uhifadhi\Bundle\RegistryBundle\Repository\AreaModuleRepository;
 use Uhifadhi\Bundle\ShellBundle\Contract\NavigationSourceInterface;
 use Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceInterface;
 use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
+use Uhifadhi\Bundle\TeamBundle\Access\Door;
 use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
 use Uhifadhi\Bundle\TeamBundle\Api\State\MeProvider;
 use Uhifadhi\Bundle\TeamBundle\ArgumentResolver\AreaValueResolver;
@@ -116,6 +117,7 @@ use Uhifadhi\Bundle\TeamBundle\Shell\TeamSectionConfiguration;
 use Uhifadhi\Bundle\TeamBundle\Shell\TeamSectionTabs;
 use Uhifadhi\Bundle\TeamBundle\Shell\UserBadgeSource;
 use Uhifadhi\Bundle\TeamBundle\Twig\AreaScopeExtension;
+use Uhifadhi\Bundle\TeamBundle\Twig\DoorExtension;
 use Uhifadhi\Bundle\TeamBundle\Twig\MatrixExtension;
 use Uhifadhi\Bundle\TeamBundle\Twig\MatrixRuntime;
 use Uhifadhi\Bundle\TeamBundle\Widget\DepartmentWidgets;
@@ -568,6 +570,22 @@ return static function (ContainerConfigurator $container): void {
         ->tag('twig.extension');
 
     /*
+     * THE ONE HELPER EVERY DRAWN CONTROL ASKS. A door is a link, a button or
+     * a section leading somewhere a permission guards, and drawing one the
+     * reader cannot walk through is the small daily dishonesty of an
+     * administrative product. Going through one named function rather than
+     * `is_granted` is what lets a conformance test walk every door and hold
+     * it against the routes.
+     */
+    $services->set('team.access.door', Door::class)
+        ->args([service('security.authorization_checker')]);
+    $services->alias(Door::class, 'team.access.door');
+
+    $services->set('team.twig.door', DoorExtension::class)
+        ->args([service('team.access.door')])
+        ->tag('twig.extension');
+
+    /*
      * THE TOPIC MATRIX, AND THE ONE PLACE ITS SHADES ARE DECIDED.
      *
      * A provider publishes figures and says which way is good; where a
@@ -892,7 +910,7 @@ return static function (ContainerConfigurator $container): void {
     $services->set('team.positions', PositionService::class)
         ->args([
             service('doctrine.orm.entity_manager'),
-            service('team.permissions'),
+            service('team.access.catalogue'),
         ]);
 
     /*
@@ -1020,7 +1038,7 @@ return static function (ContainerConfigurator $container): void {
             service('twig'),
             service(UserRepository::class),
             service(PositionRepository::class),
-            service('team.permissions'),
+            service('team.access.catalogue'),
             service('team.super_admin_invariant'),
             service('team.accounts'),
             service('security.csrf.token_manager'),
@@ -1057,7 +1075,7 @@ return static function (ContainerConfigurator $container): void {
             service(DepartmentRepository::class),
             service('team.department_membership'),
             service(UserRepository::class),
-            service('team.permissions'),
+            service('team.access.catalogue'),
             service('team.positions'),
             service('security.csrf.token_manager'),
             service('router'),

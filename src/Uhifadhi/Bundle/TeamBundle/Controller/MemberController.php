@@ -28,9 +28,9 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Uid\Uuid;
 use Twig\Environment;
+use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Exception\LastSuperAdminException;
 use Uhifadhi\Bundle\TeamBundle\Exception\PositionFullException;
@@ -40,10 +40,10 @@ use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
 use Uhifadhi\Bundle\TeamBundle\Service\Mail;
 use Uhifadhi\Bundle\TeamBundle\Service\MemberHistory;
 use Uhifadhi\Bundle\TeamBundle\Service\PasswordResetService;
-use Uhifadhi\Bundle\TeamBundle\Service\PermissionCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Service\PostingDoorService;
 use Uhifadhi\Bundle\TeamBundle\Service\SuperAdminInvariant;
 use Uhifadhi\Bundle\TeamBundle\Service\UserService;
+use Uhifadhi\Contracts\Access\Grant;
 use Uhifadhi\Contracts\People\PersonPosting;
 use Uhifadhi\Contracts\People\PersonPostingProviderInterface;
 
@@ -70,7 +70,7 @@ use Uhifadhi\Contracts\People\PersonPostingProviderInterface;
  * would mean giving them a position of their own.
  *
  * ASSIGNING A POSITION IS AREA-SCOPED
- * . `#[IsGranted(team.manage)]` is the coarse gate; the
+ * . `#[IsGranted('directory.manage')]` is the coarse gate; the
  * position write REFINES it. A bounded (area-X) administrator may reassign only
  * among positions their authority reaches — the one the person holds now and the
  * one they move to must both be in their area — and the picker offers only those.
@@ -109,7 +109,11 @@ final readonly class MemberController
         private Environment $twig,
         private UserRepository $users,
         private PositionRepository $positions,
-        private PermissionCatalogue $catalogue,
+        /**
+         * EVERYTHING THERE IS TO HAVE A PERMISSION ABOUT in this
+         * installation, which is what the effective-grants ledger walks.
+         */
+        private ConcernCatalogue $concerns,
         private SuperAdminInvariant $invariant,
         private UserService $accounts,
         private CsrfTokenManagerInterface $csrf,
@@ -136,7 +140,7 @@ final readonly class MemberController
     }
 
     #[Route('/team/{uuid}', name: 'team_member', requirements: ['uuid' => Requirement::UUID], methods: ['GET'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('directory.read')]
     public function show(string $uuid): Response
     {
         $member = $this->member($uuid);
@@ -202,7 +206,7 @@ final readonly class MemberController
      * would be a reset that undoes a deactivation.
      */
     #[Route('/team/{uuid}/reset-link', name: self::RESET_LINK, requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('personal-details.manage')]
     public function sendResetLink(Request $request, string $uuid): RedirectResponse
     {
         $member = $this->member($uuid);
@@ -235,7 +239,7 @@ final readonly class MemberController
      * theirs, and the way back in is a password reset.
      */
     #[Route('/team/{uuid}/invite-again', name: self::INVITE_AGAIN, requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('personal-details.manage')]
     public function resendInvitation(Request $request, string $uuid): RedirectResponse
     {
         $member = $this->member($uuid);
@@ -258,18 +262,25 @@ final readonly class MemberController
     }
 
     #[Route('/team/{uuid}', name: 'team_member_update', requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('directory.manage')]
     public function update(Request $request, string $uuid): Response
     {
         $member = $this->member($uuid);
         $this->assertCsrf($request);
         $this->assertMayManage($member);
 
+        /*
+         * THE ADDRESS IS ONLY WRITTEN BY SOMEBODY WHO MAY READ IT. The page
+         * omits the email field for a reader without `personal-details.read`,
+         * so the field simply does not arrive, and a form that never showed
+         * the address must not be able to blank it. Falling back to the stored
+         * one is the honest reading of a submission that said nothing about it.
+         */
         $this->accounts->updateRecord(
             $member,
             (string) $request->request->get('firstName'),
             (string) $request->request->get('lastName'),
-            (string) $request->request->get('email'),
+            (string) $request->request->get('email', $member->getEmail()),
             trim((string) $request->request->get('rangerCode')),
         );
 
@@ -277,7 +288,7 @@ final readonly class MemberController
     }
 
     #[Route('/team/{uuid}/tier', name: 'team_member_tier', requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('directory.manage')]
     public function tier(Request $request, string $uuid): Response
     {
         $member = $this->member($uuid);
@@ -306,7 +317,7 @@ final readonly class MemberController
     }
 
     #[Route('/team/{uuid}/position', name: 'team_member_position', requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('directory.manage')]
     public function position(Request $request, string $uuid): Response
     {
         $member = $this->member($uuid);
@@ -358,7 +369,7 @@ final readonly class MemberController
      * click.
      */
     #[Route('/team/{uuid}/deactivate', name: 'team_member_deactivate', requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('directory.manage')]
     public function deactivate(Request $request, string $uuid): Response
     {
         $member = $this->member($uuid);
@@ -375,7 +386,7 @@ final readonly class MemberController
     }
 
     #[Route('/team/{uuid}/reactivate', name: 'team_member_reactivate', requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('directory.manage')]
     public function reactivate(Request $request, string $uuid): Response
     {
         $member = $this->member($uuid);
@@ -388,38 +399,50 @@ final readonly class MemberController
     }
 
     /**
-     * EVERY CATALOGUE ROW, WITH THE REASON. "by tier" for the two levels above
-     * the matrix, "by position" for what the position grants, "not held"
-     * otherwise — and, at the end, the ORPHANS: values this position still
-     * holds that no installed module provides any more. They are shown rather
-     * than hidden, because the difference between "you no longer have this" and
-     * "you cannot see that you still have this" is the whole of the
+     * EVERY PAIR THE INSTALLATION DECLARES, WITH THE REASON. One column of
+     * rows, never three: the concern and the verb read together as one thing
+     * a person may do, because that is what a grant is. "by tier" for the two
+     * levels above the matrix, "by position" for what the position grants,
+     * "not held" otherwise - and, at the end, the ORPHANS: pairs this position
+     * still holds that no installed module declares any more. They are shown
+     * rather than hidden, because the difference between "you no longer have
+     * this" and "you cannot see that you still have this" is the whole of the
      * prune-not-purge ruling.
+     *
+     * THE LABELS ARE THE PRODUCT'S WORDS AND THE PAIR IS THE MACHINE'S. Both
+     * are printed: the row is for a human, and the pair is what a route, a
+     * door and a test all name. An orphan has no label to print, so it says
+     * so in place of one.
      *
      * @return list<array{value: string, label: string, description: ?string, held: bool, why: string}>
      */
     private function effective(User $member): array
     {
         $byTier = $member->getTeamRole()->canManageContent();
-        $held = $member->getPosition()?->getPermissionValues() ?? [];
+        $position = $member->getPosition();
+        $held = $position?->getGrantValues() ?? [];
 
         $rows = [];
-        foreach ($this->catalogue->all() as $permission) {
-            $has = $byTier || \in_array($permission->value, $held, true);
-            $rows[] = [
-                'value' => $permission->value,
-                'label' => $permission->label(),
-                'description' => $permission->description,
-                'held' => $has,
-                'why' => $has ? ($byTier ? 'by tier' : 'by position') : 'not held',
-            ];
+        $declared = [];
+        foreach ($this->concerns->all() as $concern) {
+            foreach ($concern->verbs() as $verb) {
+                $pair = (string) Grant::of($concern->key(), $verb);
+                $declared[] = $pair;
+                $has = $byTier || \in_array($pair, $held, true);
+                $rows[] = [
+                    'value' => $pair,
+                    'label' => $concern->label().' &middot; '.$verb->label(),
+                    'description' => $concern->description(),
+                    'held' => $has,
+                    'why' => $has ? ($byTier ? 'by tier' : 'by position') : 'not held',
+                ];
+            }
         }
 
-        $known = $this->catalogue->values();
-        foreach ($held as $value) {
-            if (!\in_array($value, $known, true)) {
+        foreach ($held as $pair) {
+            if (!\in_array($pair, $declared, true)) {
                 $rows[] = [
-                    'value' => $value,
+                    'value' => $pair,
                     'label' => 'no longer described',
                     'description' => null,
                     'held' => true,

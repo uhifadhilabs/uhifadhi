@@ -22,7 +22,6 @@ use Uhifadhi\Bundle\RegistryBundle\Service\ModuleCatalogue;
 use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetEndpoint;
 use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentSectionOverview;
 use Uhifadhi\Bundle\TeamBundle\Widget\DepartmentWidgets;
@@ -66,7 +65,7 @@ final readonly class DepartmentSectionController
      * Performance already; this page owns none of them.
      */
     #[Route('/departments/overview', name: self::OVERVIEW, defaults: DepartmentController::SURFACE, methods: ['GET'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('departments.read')]
     public function overview(): Response
     {
         /*
@@ -107,7 +106,7 @@ final readonly class DepartmentSectionController
      * department reads, who reads a module — are both one glance.
      */
     #[Route('/departments/modules', name: self::MODULES, defaults: DepartmentController::SURFACE, methods: ['GET'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('departments.read')]
     public function modules(): Response
     {
         $modules = $this->catalogue->all();

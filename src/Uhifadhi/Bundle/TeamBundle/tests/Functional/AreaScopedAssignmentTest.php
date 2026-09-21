@@ -14,8 +14,8 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\TeamBundle\Tests\Functional;
 
 use Symfony\Component\DomCrawler\Crawler;
+use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\Area\HostArea;
 
@@ -50,7 +50,7 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
     {
         $north = $this->area('Northern Reserve');
         $this->areaAdminIn($north);
-        $ranger = $this->position('Ranger', [PermissionEnum::AreaView->value]);
+        $ranger = $this->position('Ranger', ['surveys.read']);
         $grace = $this->person('Grace', 'Ndosi');
         $this->place($grace, [$north]);
         $this->em->flush();
@@ -73,7 +73,7 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
         $north = $this->area('Northern Reserve');
         $west = $this->area('Western Reserve');
         $this->areaAdminIn($north);
-        $ranger = $this->position('Ranger', [PermissionEnum::AreaView->value]);
+        $ranger = $this->position('Ranger', ['surveys.read']);
         $grace = $this->person('Grace', 'Ndosi');
         $this->place($grace, [$west]);
         $this->em->flush();
@@ -99,7 +99,7 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
         $north = $this->area('Northern Reserve');
         $west = $this->area('Western Reserve');
         $this->areaAdminIn($north);
-        $ranger = $this->position('Ranger', [PermissionEnum::AreaView->value]);
+        $ranger = $this->position('Ranger', ['surveys.read']);
         $grace = $this->person('Grace', 'Ndosi');
         $this->place($grace, [$north, $west]);
         $this->em->flush();
@@ -117,7 +117,7 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
     {
         $north = $this->area('Northern Reserve');
         $this->areaAdminIn($north);
-        $ranger = $this->position('Ranger', [PermissionEnum::AreaView->value]);
+        $ranger = $this->position('Ranger', ['surveys.read']);
         $grace = $this->person('Grace', 'Ndosi');
         $this->place($grace);
         $this->em->flush();
@@ -140,7 +140,7 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
     {
         $north = $this->area('Northern Reserve');
         $this->areaAdminIn($north);
-        $ranger = $this->position('Ranger', [PermissionEnum::AreaView->value]);
+        $ranger = $this->position('Ranger', ['surveys.read']);
         $grace = $this->person('Grace', 'Ndosi');
         $this->em->flush();
 
@@ -159,7 +159,7 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
     {
         $north = $this->area('Northern Reserve');
         $this->areaAdminIn($north);
-        $ranger = $this->position('Ranger', [PermissionEnum::AreaView->value]);
+        $ranger = $this->position('Ranger', ['surveys.read']);
         $grace = $this->person('Grace', 'Ndosi')->setPosition($ranger);
         $this->place($grace, [$north]);
         $this->em->flush();
@@ -180,7 +180,7 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
         $north = $this->area('Northern Reserve');
         $west = $this->area('Western Reserve');
         $this->areaAdminIn($north);
-        $ranger = $this->position('Ranger', [PermissionEnum::AreaView->value]);
+        $ranger = $this->position('Ranger', ['surveys.read']);
         $grace = $this->person('Grace', 'Ndosi')->setPosition($ranger);
         $this->place($grace, [$west]);
         $this->em->flush();
@@ -205,9 +205,9 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
     {
         $north = $this->area('Northern Reserve');
         $this->areaAdminIn($north);
-        $this->position('Ranger', [PermissionEnum::AreaView->value]);
-        $this->position('Scout', [PermissionEnum::AreaView->value]);
-        $this->position('Analyst', [PermissionEnum::AreaView->value]);
+        $this->position('Ranger', ['surveys.read']);
+        $this->position('Scout', ['surveys.read']);
+        $this->position('Analyst', ['surveys.read']);
         $grace = $this->person('Grace', 'Ndosi');
         $this->place($grace, [$north]);
         $this->em->flush();
@@ -232,7 +232,7 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
     {
         $north = $this->area('Northern Reserve');
         $this->areaAdminIn($north);
-        $analyst = $this->position('Analyst', [PermissionEnum::AreaView->value]);
+        $analyst = $this->position('Analyst', ['surveys.read']);
         $this->em->flush();
 
         $token = $this->tokenFrom('/team/invite');
@@ -287,9 +287,9 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
     {
         $north = $this->area('Northern Reserve');
         $this->areaAdminIn($north);
-        $this->position('Ranger', [PermissionEnum::AreaView->value]);
-        $this->position('Scout', [PermissionEnum::AreaView->value]);
-        $this->position('Analyst', [PermissionEnum::AreaView->value]);
+        $this->position('Ranger', ['surveys.read']);
+        $this->position('Scout', ['surveys.read']);
+        $this->position('Analyst', ['surveys.read']);
         $this->em->flush();
 
         $crawler = $this->client->request('GET', '/team/invite');
@@ -308,9 +308,9 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
     {
         $west = $this->area('Western Reserve');
         $orgAdmin = $this->person('Amina', 'Salehe', TeamRoleEnum::Staff);
-        $orgAdmin->setPosition($this->position('Coordinator', [PermissionEnum::TeamManage->value]));
+        $orgAdmin->setPosition($this->administratorPosition('Coordinator'));
         $this->place($orgAdmin);
-        $ranger = $this->position('Ranger', [PermissionEnum::AreaView->value]);
+        $ranger = $this->position('Ranger', ['surveys.read']);
         $grace = $this->person('Grace', 'Ndosi');
         $this->place($grace, [$west]);
         $this->em->flush();
@@ -330,9 +330,9 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
     public function testAnOrganizationWideHolderAssignsAnUnplacedPerson(): void
     {
         $orgAdmin = $this->person('Amina', 'Salehe', TeamRoleEnum::Staff);
-        $orgAdmin->setPosition($this->position('Coordinator', [PermissionEnum::TeamManage->value]));
+        $orgAdmin->setPosition($this->administratorPosition('Coordinator'));
         $this->place($orgAdmin);
-        $ranger = $this->position('Ranger', [PermissionEnum::AreaView->value]);
+        $ranger = $this->position('Ranger', ['surveys.read']);
         $grace = $this->person('Grace', 'Ndosi');
         $this->em->flush();
         $this->client->loginUser($orgAdmin);
@@ -355,7 +355,7 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
     private function areaAdminIn(HostArea $area): User
     {
         $admin = $this->person('Naomi', 'Kileo', TeamRoleEnum::Staff);
-        $admin->setPosition($this->position('Warden', [PermissionEnum::TeamManage->value]));
+        $admin->setPosition($this->administratorPosition('Warden'));
         $this->place($admin, [$area]);
         $this->em->flush();
         $this->client->loginUser($admin);
@@ -372,5 +372,25 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
     {
         return $crawler->filter('select[name="position"] option')
             ->each(static fn (Crawler $c): string => trim($c->text()));
+    }
+
+    /**
+     * WHAT ADMINISTERING THE TEAM IS, WRITTEN AS PAIRS. `team.manage` was one
+     * flat value; it is eight (concern, verb) pairs now, and these are the
+     * eight the upgrade backfills it into, so a fixture that used to say
+     * "this person administers the team" still says exactly that.
+     */
+    private function administratorPosition(string $name): Position
+    {
+        return $this->position($name, [
+            'directory.read',
+            'directory.manage',
+            'personal-details.read',
+            'personal-details.manage',
+            'positions.read',
+            'positions.configure',
+            'departments.read',
+            'departments.configure',
+        ]);
     }
 }

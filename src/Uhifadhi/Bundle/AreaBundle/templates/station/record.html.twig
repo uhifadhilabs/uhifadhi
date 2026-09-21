@@ -1,4 +1,4 @@
-{# ONE POST, READ.
+{# ONE STATION, READ.
 
    Design: areas/<area>/stations/detail.html.
 
@@ -10,7 +10,7 @@
    area's configure page, where the Stations section edits the record.
 
    THE PLATE IS THE ATLAS'S, and it is the same plate the zones pages draw:
-   same hues, same key, same contract, with the posts and the rings added.
+   same hues, same key, same contract, with the stations and the rings added.
    The same ground rendered two ways on two pages is the defect one plate
    service avoids. #}
 {% extends '@Shell/page.html.twig' %}
@@ -35,7 +35,7 @@
 
 {% block shell_page_subtitle %}
     {%- if station.code %}{{ station.code }} &middot; {% endif -%}
-    {{ zone ? zone.name : 'no zone' }} &middot; {{ posted }} posted
+    {{ zone ? zone.name : 'no zone' }} &middot; {{ posted }} stationed
     {%- if not station.active %} &middot; closed{% endif -%}
 {% endblock %}
 
@@ -51,20 +51,20 @@
 
 {# THE IDENTITY BAND, the same .factband every area tab wears.
 
-   ON DUTY IS THE ROSTER'S and no module publishes it yet, so the Posted fact
+   ON DUTY IS THE ROSTER'S and no module publishes it yet, so the Stationed fact
    states the number it knows and says nothing it does not. The qualifier
    arrives through PostingDutyProviderInterface when the roster rework lands. #}
 <div class="factband stband">
     <span class="f"><span class="k">Zone</span><span class="v">{{ zone ? zone.name : '&mdash;'|raw }}<em>{{ zone ? 'derived' : 'unzoned' }}</em></span></span>
     {% if station.code %}<span class="f"><span class="k">Code</span><span class="v">{{ station.code }}</span></span>{% endif %}
-    <span class="f"><span class="k">Posted</span><span class="v">{{ posted }}</span></span>
+    <span class="f"><span class="k">Stationed</span><span class="v">{{ posted }}</span></span>
     <span class="f"><span class="k">Lead</span><span class="v">{{ leader ? leader.name : '&mdash;'|raw }}</span></span>
     {% if station.elevationM %}
         <span class="f"><span class="k">Elevation</span><span class="v">{{ station.elevationM|number_format }} m{% if station.locality %}<em>{{ station.locality }}</em>{% endif %}</span></span>
     {% endif %}
     {# OPEN OR CLOSED IS ALWAYS A FACT, whether or not anybody wrote down the
        day it started: a cell that vanished with the date would take the state
-       of the post with it. #}
+       of the station with it. #}
     <span class="f"><span class="k">Opened</span><span class="v">
         {%- if station.openedAt -%}
             <time datetime="{{ station.openedAt|date('c') }}" data-localtime-format="day">{{ station.openedAt|date('j M Y') }}</time>
@@ -80,7 +80,7 @@
 <div class="recgrid">
     <div class="col">
         <div class="c">
-            <span class="tab">The ground around the post<span class="src">
+            <span class="tab">The ground around the station<span class="src">
                 {%- if station.code %}&middot; {{ station.code }} {% endif -%}
                 {%- if station.elevationM %}&middot; {{ station.elevationM|number_format }} m{% endif -%}
             </span></span>
@@ -94,7 +94,7 @@
         </div>
 
         <div class="c stpostings">
-            <span class="tab">Who is posted here<span class="src">&middot; {{ posted }} {{ posted == 1 ? 'person' : 'people' }}
+            <span class="tab">Who is stationed here<span class="src">&middot; {{ posted }} {{ posted == 1 ? 'person' : 'people' }}
                 {%- if leader %} &middot; led by {{ leader.name }}{% endif -%}
             </span></span>
 
@@ -130,29 +130,32 @@
                 <form class="lsearch" method="get" action="{{ here }}">
                     {{ ux_icon('shell:search') }}
                     <input class="fld" type="search" name="q" value="{{ query.search }}" placeholder="Search&hellip;"
-                           aria-label="Search the people posted here">
+                           aria-label="Search the people stationed here">
                     {% for k, v in query.with('q', null) %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
                 </form>
             </div>
 
             {% if rows is empty %}
                 {# AN EMPTY STATE THAT NAMES A PAGE OWES A DOOR TO IT. This one
-                   said postings are made on the area's configure page and left
+                   said assignments are made on the area's configure page and left
                    the reader to find it — the owner could not, which is the
                    whole defect. The door goes to the same address the header's
                    own control opens, with this station already open, so
-                   arriving and posting somebody is one click and not a search.
+                   arriving and assignment somebody is one click and not a search.
 
-                   GATED ON WHAT THE PAGE BEHIND IT IS GATED ON, and absent
-                   rather than disabled: a door closing in somebody's face is
-                   worse than no door. #}
+                   GATED ON WHAT THE DOOR IS FOR, not on what the page behind it
+                   costs to open: assignment somebody is `assignments.manage`, which
+                   is what the write at the far end of this journey asks for, and
+                   somebody who may only read the stations would arrive at a page
+                   with no form on it. Absent rather than disabled: a door closing
+                   in somebody's face is worse than no door. #}
                 <div class="zempty stpplnone">
-                    <b class="zeh">{{ query.isFiltered ? 'Nobody matches' : 'Nobody is posted here' }}</b>
-                    <p class="zeb">{% if query.isFiltered %}No posting here answers these filters. Clear one, or search another name.{% else %}A post with nobody at it is a normal state, not an error. Postings are made on the area&rsquo;s configure page.{% endif %}</p>
+                    <b class="zeh">{{ query.isFiltered ? 'Nobody matches' : 'Nobody is stationed here' }}</b>
+                    <p class="zeb">{% if query.isFiltered %}No assignment here answers these filters. Clear one, or search another name.{% else %}A station with nobody at it is a normal state, not an error. Assignments are made on the area&rsquo;s configure page.{% endif %}</p>
                     {% if query.isFiltered %}
                         <span class="zea"><a class="btn sm" href="{{ here }}">Clear the filters</a></span>
-                    {% elseif is_granted('area.edit') %}
-                        <span class="zea"><a class="btn sm" href="{{ path('area_stations_configure', {uuid: area.uuidString}) }}?open={{ station.uuidString }}">Post somebody &rarr;</a></span>
+                    {% elseif door('assignments.manage') %}
+                        <span class="zea"><a class="btn sm" href="{{ path('area_stations_configure', {uuid: area.uuidString}) }}?open={{ station.uuidString }}">Station somebody &rarr;</a></span>
                     {% endif %}
                 </div>
             {% else %}
@@ -171,7 +174,7 @@
             {% endif %}
         </div>
 
-        {# WHAT THE MODULES PUT ON THIS POST. The station is the area's and
+        {# WHAT THE MODULES PUT ON THIS STATION. The station is the area's and
            the watch is the roster's, so a band like "Watch and presence" is
            CONTRIBUTED and arrives after the area's own cards. With no such
            module installed the column simply ends here — the area draws no
@@ -186,16 +189,16 @@
             <span class="tab">The point</span>
             <div class="rln"><span class="fog">Coordinates</span><span class="mono">{{ coordinates ?? '&mdash;'|raw }}</span></div>
             {% if station.locality %}<div class="rln"><span class="fog">Where</span><span class="mono">{{ station.locality }}</span></div>{% endif %}
-            {# WHAT "INSIDE THIS POST" MEANS. Stated wherever the post is read,
+            {# WHAT "INSIDE THIS STATION" MEANS. Stated wherever the station is read,
                because it is the line between a day claimed here that is
-               verified and one that is not — and a post with no ring has no
+               verified and one that is not — and a station with no ring has no
                inside, which is a fact rather than a blank. #}
             <div class="rln"><span class="fog">Catchment</span><span class="mono">
                 {%- if station.catchmentM -%}
                     {{ station.catchmentM >= 1000 ? (station.catchmentM / 1000)|round(2) ~ ' km' : station.catchmentM ~ ' m' }}
-                    of the station point &mdash; a check-in claiming this post is verified inside it
+                    of the station point &mdash; a check-in claiming this station is verified inside it
                 {%- else -%}
-                    no ring &mdash; a check-in claiming this post cannot be verified against it
+                    no ring &mdash; a check-in claiming this station cannot be verified against it
                 {%- endif -%}
             </span></div>
 
@@ -204,7 +207,7 @@
                which the core resolves; no figure carries a URL. #}
             <div class="stsep">What the modules publish<span>{{ dockPeriod.label }}</span></div>
             {% if dock is empty %}
-                <div class="use">No module publishes figures for this post yet.</div>
+                <div class="use">No module publishes figures for this station yet.</div>
             {% else %}
                 <div class="stdock">
                     {% for figure in dock %}
@@ -222,7 +225,7 @@
         <div class="c stlogcard">
             <span class="tab">What happened here<span class="src">&middot; {{ eventCount }} {{ eventCount == 1 ? 'line' : 'lines' }}</span></span>
             {% if events is empty %}
-                <div class="use">Nothing has happened at this post yet. Every move, posting and closure writes one line here.</div>
+                <div class="use">Nothing has happened at this station yet. Every move, assignment and closure writes one line here.</div>
             {% else %}
                 <div class="zhist stlog zhistcap">
                     {% for event in events %}

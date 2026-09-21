@@ -25,7 +25,6 @@ use Symfony\Component\Uid\Uuid;
 use Twig\Environment;
 use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetEndpoint;
 use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Widget\PositionWidgets;
 
 /**
@@ -41,6 +40,12 @@ use Uhifadhi\Bundle\TeamBundle\Widget\PositionWidgets;
  * nothing itself, mints no token and chooses no status code — it names the
  * catalogue and turns a 204 into a redirect with a sentence, so the plain-form
  * path works with no JavaScript at all.
+ *
+ * GATED ON READING THE REGISTER, NOT ON CONFIGURING IT. Arranging your own
+ * widgets changes what YOU see of a page you may already open, and nothing
+ * about what anybody may do — so it asks the same pair the register asks. It
+ * used to name the flat `team.manage`, which conflated looking at the matrix
+ * with composing what a position grants.
  *
  * ORG-WIDE, SO NO AREA UUID. Positions belong to the installation rather than
  * to any one area, so there is no per-area version of this page to lay out
@@ -61,7 +66,7 @@ final readonly class PositionWidgetsController
     }
 
     #[Route('/team/positions/widgets', name: 'team_position_widgets', methods: ['GET'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted(PositionController::READ)]
     public function library(Request $request): Response
     {
         $catalog = new PositionWidgets()->catalog();
@@ -84,14 +89,14 @@ final readonly class PositionWidgetsController
     }
 
     #[Route('/team/positions/widgets/save', name: 'team_position_widgets_save', methods: ['POST'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted(PositionController::READ)]
     public function save(Request $request): Response
     {
         return $this->endpoint->save($request, new PositionWidgets()->catalog());
     }
 
     #[Route('/team/positions/widgets/reset', name: 'team_position_widgets_reset', methods: ['POST'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted(PositionController::READ)]
     public function reset(Request $request): Response
     {
         return $this->afterWrite(
@@ -102,7 +107,7 @@ final readonly class PositionWidgetsController
     }
 
     #[Route('/team/positions/widgets/preset/{presetId}', name: 'team_position_widgets_preset', requirements: ['presetId' => '[a-z0-9_-]+'], methods: ['POST'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted(PositionController::READ)]
     public function applyPreset(Request $request, string $presetId): Response
     {
         $catalog = new PositionWidgets()->catalog();
@@ -118,7 +123,7 @@ final readonly class PositionWidgetsController
     }
 
     #[Route('/team/positions/widgets/preset/{presetId}/copy', name: 'team_position_widgets_preset_copy', requirements: ['presetId' => '[a-z0-9_-]+'], methods: ['POST'], priority: 1)]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted(PositionController::READ)]
     public function copyPreset(Request $request, string $presetId): Response
     {
         return $this->afterWrite(
@@ -129,7 +134,7 @@ final readonly class PositionWidgetsController
     }
 
     #[Route('/team/positions/widgets/presets', name: 'team_position_widgets_preset_create', methods: ['POST'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted(PositionController::READ)]
     public function createPreset(Request $request): Response
     {
         return $this->afterWrite(
@@ -140,7 +145,7 @@ final readonly class PositionWidgetsController
     }
 
     #[Route('/team/positions/widgets/presets/{presetUuid}/apply', name: 'team_position_widgets_preset_apply', requirements: ['presetUuid' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted(PositionController::READ)]
     public function applyCustomPreset(Request $request, string $presetUuid): Response
     {
         return $this->afterWrite(
@@ -151,7 +156,7 @@ final readonly class PositionWidgetsController
     }
 
     #[Route('/team/positions/widgets/presets/{presetUuid}/rename', name: 'team_position_widgets_preset_rename', requirements: ['presetUuid' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted(PositionController::READ)]
     public function renameCustomPreset(Request $request, string $presetUuid): Response
     {
         return $this->afterWrite(
@@ -162,7 +167,7 @@ final readonly class PositionWidgetsController
     }
 
     #[Route('/team/positions/widgets/presets/{presetUuid}/delete', name: 'team_position_widgets_preset_delete', requirements: ['presetUuid' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted(PositionController::READ)]
     public function deleteCustomPreset(Request $request, string $presetUuid): Response
     {
         return $this->afterWrite(

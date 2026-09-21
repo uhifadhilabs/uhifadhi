@@ -65,7 +65,7 @@
         the moment it is not &mdash; including its tiles inside this page&rsquo;s own strip and its items inside its
         attention list.</div>
 
-    {% if is_granted('module.view') %}
+    {% if door('modules.read') %}
         <a class="open-btn" href="{{ path('area_modules', {uuid: area.uuidString}) }}" style="margin-top:8px">Add a module to this area &rarr;</a>
     {% endif %}
 </div>

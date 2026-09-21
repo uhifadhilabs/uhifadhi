@@ -27,7 +27,7 @@ use Uhifadhi\Bundle\AreaBundle\Service\BoundaryImport;
  * Every case here goes through the HTTP layer with a real upload and a real
  * PostGIS insert, because the interesting failures are all at the joins: a file
  * that is not GeoJSON, a document with no polygon in it, a viewer without
- * `area.create`.
+ * `areas.configure`.
  */
 #[CoversClass(AreaCreateController::class)]
 #[CoversClass(AreaCreator::class)]
@@ -65,7 +65,7 @@ final class AreaCreateTest extends WebTestCase
      */
     public function testTheRegisterHidesTheButtonFromSomebodyWhoMayNotCreate(): void
     {
-        $this->boot(['area.view']);
+        $this->boot(self::READ_ONLY_AREA_PERMISSIONS);
         $this->signIn();
 
         self::assertStringNotContainsString('href="/areas/new"', $this->body('/areas'));
@@ -73,7 +73,7 @@ final class AreaCreateTest extends WebTestCase
 
     public function testTheScreenIsClosedToSomebodyWhoMayNotCreate(): void
     {
-        $this->boot(['area.view']);
+        $this->boot(self::READ_ONLY_AREA_PERMISSIONS);
         $this->signIn();
 
         self::assertSame(403, $this->get('/areas/new')->getStatusCode());
@@ -321,7 +321,7 @@ final class AreaCreateTest extends WebTestCase
 
     public function testCreatingIsClosedToSomebodyWhoMayNotCreate(): void
     {
-        $this->boot(['area.view']);
+        $this->boot(self::READ_ONLY_AREA_PERMISSIONS);
         $this->signIn();
 
         self::assertSame(403, $this->post('Northern Reserve', self::A_POLYGON, 'northern.geojson')->getStatusCode());

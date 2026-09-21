@@ -22,7 +22,6 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Environment;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Performance\AcrossTopicsMatrix;
 use Uhifadhi\Bundle\TeamBundle\Performance\ChartBridge;
 use Uhifadhi\Bundle\TeamBundle\Performance\Comparison;
@@ -64,8 +63,8 @@ use Uhifadhi\Contracts\Performance\TopicMovementInterface;
  * makes about somebody else's figures — where a department stands — is
  * made once, in {@see \Uhifadhi\Bundle\TeamBundle\Performance\MatrixPlacing}.
  *
- * GATED ON `team.manage`, the same permission the departments register
- * is gated on: this page reads every department's figures, so it is the
+ * GATED ON `departments.read`, the same pair the departments register is
+ * gated on: this page reads every department's figures, so it is the
  * org chart's surface and not a public one.
  */
 final readonly class PerformanceController
@@ -114,7 +113,7 @@ final readonly class PerformanceController
     }
 
     #[Route('/departments/performance', name: self::ROUTE, defaults: self::SURFACE, methods: ['GET'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('departments.read')]
     public function overview(Request $request): Response
     {
         [$kind, $compare, $period] = $this->reading($request);
@@ -153,7 +152,7 @@ final readonly class PerformanceController
      * page would be five pages nobody scrolls to the bottom of.
      */
     #[Route('/departments/performance/topics', name: self::TOPICS_ROUTE, defaults: self::SURFACE, methods: ['GET'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('departments.read')]
     public function topics(Request $request): Response
     {
         [$kind, $compare, $period] = $this->reading($request);
@@ -184,7 +183,7 @@ final readonly class PerformanceController
      * a record the day it is installed and the host writes nothing.
      */
     #[Route('/departments/performance/topics/{key}', name: self::TOPIC_ROUTE, requirements: ['key' => '[a-z0-9_.-]+'], methods: ['GET'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('departments.read')]
     public function topic(Request $request, string $key): Response
     {
         [$kind, $compare, $period] = $this->reading($request);
@@ -230,7 +229,7 @@ final readonly class PerformanceController
      * grammar every matrix is drawn in.
      */
     #[Route('/departments/performance/briefing', name: self::BRIEFING_ROUTE, defaults: self::SURFACE, methods: ['GET'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('departments.read')]
     public function briefing(Request $request): Response
     {
         [$kind, $compare, $period] = $this->reading($request);

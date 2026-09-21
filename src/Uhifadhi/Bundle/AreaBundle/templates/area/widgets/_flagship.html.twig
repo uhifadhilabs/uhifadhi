@@ -16,7 +16,7 @@
             <h1 class="pg">Areas</h1>
             <p class="pgsub">{{ include('@Area/area/widgets/_subtitle.html.twig', {view: 'flagship'}) }}</p>
         </div>
-        {% if is_granted('area.create') %}
+        {% if door('areas.configure') %}
             <div class="pgact"><a class="cta" href="{{ path('area_new') }}">{{ ux_icon('shell:plus') }} New area</a></div>
         {% endif %}
     </div>
@@ -104,7 +104,7 @@
             </span>
         </a>
     {% endfor %}
-    {% if is_granted('area.create') %}
+    {% if door('areas.configure') %}
         <a class="ax-scard add" href="{{ path('area_new') }}">{{ ux_icon('shell:plus') }}<span>New area</span></a>
     {% endif %}
 </div>

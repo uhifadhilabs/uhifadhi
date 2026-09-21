@@ -17,7 +17,7 @@ use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\DomCrawler\Form;
 use Uhifadhi\Bundle\RegistryBundle\Entity\Module;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
+use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 
 /**
@@ -271,7 +271,7 @@ final class DepartmentModuleAttachmentTest extends WebTestCaseWithSchema
         $token = $this->tokenFrom('/departments/'.$department->getUuidString());
 
         $ranger = $this->person('Juma', 'Mwakalinga', TeamRoleEnum::Staff);
-        $ranger->setPosition($this->position('Ranger', [PermissionEnum::AreaView->value]));
+        $ranger->setPosition($this->position('Ranger', ['surveys.read']));
         $this->em->flush();
         $this->client->loginUser($ranger);
 
@@ -303,7 +303,7 @@ final class DepartmentModuleAttachmentTest extends WebTestCaseWithSchema
         $ecology = $this->department('Ecology');
         $office = $this->areaDepartment('Warden Office', $north);
         $admin = $this->person('Amina', 'Salehe', TeamRoleEnum::Staff);
-        $admin->setPosition($this->position('Warden', [PermissionEnum::TeamManage->value]));
+        $admin->setPosition($this->administratorPosition('Warden'));
         // THE BOUNDARY IS THE PLACEMENT, not the department of their position:
         // this administrator is placed in the north and nowhere else.
         $this->place($admin, [$north]);
@@ -411,5 +411,25 @@ final class DepartmentModuleAttachmentTest extends WebTestCaseWithSchema
         sort($values);
 
         return $values;
+    }
+
+    /**
+     * WHAT ADMINISTERING THE TEAM IS, WRITTEN AS PAIRS. `team.manage` was one
+     * flat value; it is eight (concern, verb) pairs now, and these are the
+     * eight the upgrade backfills it into, so a fixture that used to say
+     * "this person administers the team" still says exactly that.
+     */
+    private function administratorPosition(string $name): Position
+    {
+        return $this->position($name, [
+            'directory.read',
+            'directory.manage',
+            'personal-details.read',
+            'personal-details.manage',
+            'positions.read',
+            'positions.configure',
+            'departments.read',
+            'departments.configure',
+        ]);
     }
 }

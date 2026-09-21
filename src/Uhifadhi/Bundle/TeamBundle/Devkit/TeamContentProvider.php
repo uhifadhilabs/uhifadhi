@@ -13,10 +13,10 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Devkit;
 
+use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Entity\Placement;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentService;
@@ -24,6 +24,7 @@ use Uhifadhi\Bundle\TeamBundle\Service\PerformanceHistory;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionService;
 use Uhifadhi\Bundle\TeamBundle\Service\StaffingFigures;
 use Uhifadhi\Bundle\TeamBundle\Service\UserService;
+use Uhifadhi\Contracts\Access\Verb;
 use Uhifadhi\Contracts\Devkit\ContentProviderInterface;
 
 /**
@@ -160,7 +161,16 @@ final readonly class TeamContentProvider implements ContentProviderInterface
         // organization, and where its holders work is written against each of
         // them below.
         $coordinator = $this->positions->create('Coordinator');
-        $this->positions->setPermissions($coordinator, [PermissionEnum::TeamManage->value]);
+        // ADMINISTERING THE TEAM, in pairs: writing the positions and the
+        // departments, and reading the people they are about.
+        $this->positions->setGrants($coordinator, [
+            TeamConcerns::DIRECTORY.'.'.Verb::Read->value,
+            TeamConcerns::DIRECTORY.'.'.Verb::Manage->value,
+            TeamConcerns::POSITIONS.'.'.Verb::Read->value,
+            TeamConcerns::POSITIONS.'.'.Verb::Configure->value,
+            TeamConcerns::DEPARTMENTS.'.'.Verb::Read->value,
+            TeamConcerns::DEPARTMENTS.'.'.Verb::Configure->value,
+        ]);
 
         $headRanger = $this->positions->create('Head Ranger');
         $ranger = $this->positions->create('Ranger');

@@ -226,7 +226,7 @@ final class ZoneConfigureTest extends WebTestCase
     /** Reading how an area is divided is a lens; changing it is an edit of the area. */
     public function testAViewerWhoMayNotEditIsRefusedEveryWriteAndStillSeesThePage(): void
     {
-        $this->boot(['area.view']);
+        $this->boot(self::READ_ONLY_AREA_PERMISSIONS);
         $this->signIn();
         $area = $this->anArea();
         $this->aZone($area, 'Western Sector', self::A_WEST_HALF);
@@ -253,7 +253,7 @@ final class ZoneConfigureTest extends WebTestCase
         $body = $this->body($this->section($area));
 
         self::assertMatchesRegularExpression('#<b>1</b> st#', $body);
-        self::assertMatchesRegularExpression('#<b>2</b> posted#', $body);
+        self::assertMatchesRegularExpression('#<b>2</b> stationed#', $body);
     }
 
     /** Nought is stated in words, because "0 st" reads as a measurement. */
@@ -267,7 +267,7 @@ final class ZoneConfigureTest extends WebTestCase
         $body = $this->body($this->section($area));
 
         self::assertStringContainsString('no station', $body);
-        self::assertStringContainsString('nobody posted', $body);
+        self::assertStringContainsString('nobody stationed', $body);
     }
 
     public function testAnOpenZoneCardDrawsAStationCardForEachPostInIt(): void
@@ -297,7 +297,7 @@ final class ZoneConfigureTest extends WebTestCase
 
         $body = $this->body($this->section($area).'?open='.$zone->getUuidString());
 
-        self::assertStringContainsString('No post stands in this zone', $body);
+        self::assertStringContainsString('No station stands in this zone', $body);
         self::assertStringNotContainsString('Manage people', $body);
     }
 
@@ -404,7 +404,7 @@ final class ZoneConfigureTest extends WebTestCase
         self::assertMatchesRegularExpression(
             '#<form[^>]*action="[^"]*'.preg_quote($action, '#').'[^"]*"#',
             $body,
-            \sprintf('The page carries no form posting to "%s".', $action),
+            \sprintf('The page carries no form assignment to "%s".', $action),
         );
 
         preg_match(

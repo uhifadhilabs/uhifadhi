@@ -31,7 +31,7 @@ final class PostingException extends \RuntimeException
 {
     public static function alreadyPosted(string $person, string $station): self
     {
-        return new self(\sprintf('%s is already posted to %s.', $person, $station));
+        return new self(\sprintf('%s is already stationed at %s.', $person, $station));
     }
 
     /**

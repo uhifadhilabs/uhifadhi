@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\TeamBundle\Tests\Functional;
 
 use Symfony\Component\DomCrawler\Crawler;
+use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 
@@ -141,7 +142,7 @@ final class TeamRolesTest extends WebTestCaseWithSchema
     private function installation(): void
     {
         $administration = $this->department('Administration');
-        $warden = $this->position('Warden', [PermissionEnum::TeamManage->value]);
+        $warden = $this->administratorPosition('Warden');
         $ranger = $this->position('Ranger');
 
         $this->person('Salum', 'Mwaipopo', TeamRoleEnum::Admin)->setPosition($warden);
@@ -163,5 +164,35 @@ final class TeamRolesTest extends WebTestCaseWithSchema
         self::assertResponseIsSuccessful();
 
         return $crawler;
+    }
+
+    /**
+     * WHAT ADMINISTERING THE TEAM IS, WRITTEN AS PAIRS. `team.manage` was one
+     * flat value; it is eight (concern, verb) pairs now, and these are the
+     * eight the upgrade backfills it into, so a fixture that used to say
+     * "this person administers the team" still says exactly that.
+     *
+     * IT STILL CARRIES THE FLAT VALUE TOO, because this page has not moved:
+     * the roles table counts the old catalogue's values, so a position that
+     * did not carry `team.manage` would be counted as administering nothing
+     * for a reason that has nothing to do with what it grants.
+     */
+    private function administratorPosition(string $name): Position
+    {
+        $position = $this->position($name, [
+            'directory.read',
+            'directory.manage',
+            'personal-details.read',
+            'personal-details.manage',
+            'positions.read',
+            'positions.configure',
+            'departments.read',
+            'departments.configure',
+        ]);
+
+        return $position->setPermissionValues(
+            [PermissionEnum::TeamManage->value],
+            array_map(static fn (PermissionEnum $p): string => $p->value, PermissionEnum::all()),
+        );
     }
 }

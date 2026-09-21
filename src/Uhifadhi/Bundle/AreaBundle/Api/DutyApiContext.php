@@ -17,9 +17,10 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
-use Uhifadhi\Bundle\AreaBundle\Access\AreaPermissions;
+use Uhifadhi\Bundle\AreaBundle\Access\AreaConcerns;
 use Uhifadhi\Bundle\AreaBundle\Entity\AreaOfInterest;
 use Uhifadhi\Bundle\AreaBundle\Repository\AreaOfInterestRepository;
+use Uhifadhi\Contracts\Access\Verb;
 use Uhifadhi\Contracts\Entity\UserInterface;
 
 /**
@@ -37,6 +38,20 @@ use Uhifadhi\Contracts\Entity\UserInterface;
  */
 final readonly class DutyApiContext
 {
+    /**
+     * THE PAIR THE GATE ASKS FOR. Reporting a day is the Duty concern with the
+     * Record verb, spelt from the declaration itself so that what the bundle
+     * says it enforces and what it actually asks cannot drift apart.
+     *
+     * THE TOKEN'S PAYLOAD IS NOT THIS. A handset still reads `duty.checkin`
+     * off the token it was issued — {@see \Uhifadhi\Bundle\AreaBundle\Access\AreaPermissions::CHECK_IN}
+     * — because that value is a wire contract with an app that cannot be
+     * upgraded on the afternoon the server is. The gate moves to the pair now;
+     * the payload follows a release later, once no phone in the field is still
+     * reading the old word.
+     */
+    private const string CHECK_IN = AreaConcerns::DUTY.'.'.Verb::Record->value;
+
     public function __construct(
         private RequestStack $requestStack,
         private TokenStorageInterface $tokens,
@@ -57,7 +72,7 @@ final readonly class DutyApiContext
             throw DutyApiException::unauthorized();
         }
 
-        if (!$this->authorization->isGranted(AreaPermissions::CHECK_IN)) {
+        if (!$this->authorization->isGranted(self::CHECK_IN)) {
             throw DutyApiException::forbidden();
         }
 

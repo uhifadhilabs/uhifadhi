@@ -1,5 +1,5 @@
-{# PM·E — THE EFFECTIVE LEDGER. One person, every permission, and THE REASON on
-   every row: by tier, by position, or not held.
+{# PM·E — THE EFFECTIVE LEDGER. One person, every declared grant, and THE
+   REASON on every row: by tier, by position, or not held.
 
    The only direction that answers "why can this person not do that", and the
    only one that shows the two things the model is most often misread about —
@@ -11,7 +11,7 @@
 
 <div class="c" data-pm="e">
     <span class="tab">The effective ledger<span class="src">&middot; one person, and the reason on every row</span></span>
-    <p class="use" style="margin-top:2px">Every permission this installation has, against one person, with
+    <p class="use" style="margin-top:2px">Every grant this installation declares, against one person, with
     <b>why</b> beside it. This is where the tier bypass stops being folklore: for somebody above the matrix every
     row reads <i>by tier</i> and their position decides nothing at all.</p>
 
@@ -33,7 +33,7 @@
     {% set who = chosenWho ? chosenWho : people|first %}
     {% if who %}
         {% set byTier = who.teamRole.canManageContent %}
-        {% set held = who.position ? who.position.permissionValues : [] %}
+        {% set held = who.position ? who.position.grantValues : [] %}
 
         <div class="pm-subject">
             <b>{{ who.fullName }}</b>
@@ -60,26 +60,30 @@
         {% endif %}
 
         <div class="pm-eff">
-            {% for permission in catalogue %}
-                {% set has = byTier or permission.value in held %}
-                <div class="pm-effrow{{ has ? '' : ' off' }}">
-                    <span class="lhs">
-                        <b>{{ permission.label }}</b>
-                        <span class="perm">{{ permission.value }}</span>
-                        <span class="pm-desc">{{ permission.description }}</span>
-                    </span>
-                    <span class="pm-why {{ has ? (byTier ? 'tier' : 'pos') : 'no' }}">{{ has ? (byTier ? 'by tier' : 'by position') : 'not held' }}</span>
-                </div>
+            {% for concern in concerns %}
+                {% for verb in verbs %}
+                    {% if concern.supports(verb) %}
+                        {% set pair = concern.key ~ '.' ~ verb.value %}
+                        {% set has = byTier or pair in held %}
+                        <div class="pm-effrow{{ has ? '' : ' off' }}">
+                            <span class="lhs">
+                                <b>{{ concern.label }} &middot; {{ verb.label }}{% if concern.isSensitive %}<span class="pm-sens">sensitive</span>{% endif %}</b>
+                                <span class="perm">{{ pair }}</span>
+                                <span class="pm-desc">{{ concern.description }}</span>
+                            </span>
+                            <span class="pm-why {{ has ? (byTier ? 'tier' : 'pos') : 'no' }}">{{ has ? (byTier ? 'by tier' : 'by position') : 'not held' }}</span>
+                        </div>
+                    {% endif %}
+                {% endfor %}
             {% endfor %}
             {# The inline `for … if` was removed in Twig 3; the filter is the
                replacement, and it is clearer about what is being dropped. #}
-            {% set knownValues = catalogue|map(p => p.value) %}
-            {% for value in held|filter(v => v not in knownValues) %}
+            {% for value in held|filter(v => v not in pairs) %}
                 <div class="pm-effrow off">
                     <span class="lhs">
                         <b><span class="pm-orphname">no longer described</span></b>
                         <span class="perm">{{ value }}</span>
-                        <span class="pm-desc">Held by the position and provided by nothing installed &mdash; it resolves to nothing.</span>
+                        <span class="pm-desc">Held by the position and declared by nothing installed &mdash; it resolves to nothing.</span>
                     </span>
                     <span class="pm-why no">orphaned</span>
                 </div>

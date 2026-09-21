@@ -57,8 +57,10 @@ use Uhifadhi\Bundle\AreaBundle\Service\BoundaryImport;
  * is what tells a caller — Turbo, a screen reader, a test — that the submission
  * did not take. A 200 here is how a form comes to look like it worked.
  *
- * GATED ON `area.create`, the platform's own string, answered by whichever
- * module an installation trusts to answer it. See {@see AreaController}.
+ * GATED ON `areas.configure` — the Areas concern with the Configure verb, since
+ * bringing an area into existence is setting up what this installation runs on.
+ * Answered by whichever module an installation trusts with grants.
+ * See {@see AreaController}.
  */
 final readonly class AreaCreateController
 {
@@ -77,7 +79,7 @@ final readonly class AreaCreateController
      * two never compete however they are ordered.
      */
     #[Route('/areas/new', name: 'area_new', methods: ['GET', 'POST'])]
-    #[IsGranted('area.create')]
+    #[IsGranted('areas.configure')]
     public function new(Request $request): Response
     {
         if (!$request->isMethod('POST')) {
@@ -89,7 +91,7 @@ final readonly class AreaCreateController
          * consequential write on this bundle's screens, and it was the one POST
          * here without a token while the module shop's three all carried one —
          * an inconsistency inside a single bundle, which is the shape a hole
-         * usually comes in. `area.create` answers WHO may create; this answers
+         * usually comes in. `areas.configure` answers WHO may create; this answers
          * whether THIS page asked, and a permission is no defence against a form
          * on somebody else's site posting here with the viewer's own cookie.
          */

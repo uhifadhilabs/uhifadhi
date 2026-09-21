@@ -58,7 +58,7 @@ final class ZonesTableTest extends WebTestCase
         $row = $this->rowHtml($this->tab($area), 'Crater');
 
         self::assertMatchesRegularExpression('#<td class="num"><b>[\d,]+</b></td>#', $row, 'the extent is a number');
-        self::assertStringContainsString('<b>1</b>', $row, 'the post standing on it is counted');
+        self::assertStringContainsString('<b>1</b>', $row, 'the station standing on it is counted');
     }
 
     /**
@@ -100,7 +100,7 @@ final class ZonesTableTest extends WebTestCase
             $this->rowsOf($this->tab($area).'?order=extent'),
         );
         // AND BY POSTS, most first.
-        $this->stations()->add($area, 'Eyasi Post', -29.2, -3.5);
+        $this->stations()->add($area, 'Eyasi Station', -29.2, -3.5);
         self::assertSame('Eyasi', $this->rowsOf($this->tab($area).'?order=stations')[0]);
     }
 

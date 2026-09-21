@@ -176,7 +176,7 @@ final class ZoneRecordTest extends WebTestCase
         $this->boot();
         $this->signIn();
         [$area, $zone] = $this->aWorkedZone();
-        $this->stations()->add($area, 'Lerai Ranger Post', -29.8, -3.2);
+        $this->stations()->add($area, 'Lerai Ranger Station', -29.8, -3.2);
 
         self::assertSame(['Seneto Gate Post'], $this->listed($this->record($area, $zone).'?q=seneto'));
         self::assertCount(2, $this->listed($this->record($area, $zone)));

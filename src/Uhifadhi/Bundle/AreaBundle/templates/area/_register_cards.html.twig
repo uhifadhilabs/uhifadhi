@@ -93,7 +93,7 @@
                 </div>
             </a>
         {% endfor %}
-        {% if is_granted('area.create') %}
+        {% if door('areas.configure') %}
             <a class="ax-card ax-addcard" data-tail href="{{ path('area_new') }}">
                 <span class="ax-addmk">{{ ux_icon('shell:plus') }}</span>
                 <span class="t">New area</span>

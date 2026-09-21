@@ -47,7 +47,7 @@ final class StationRecordTest extends WebTestCase
 
         self::assertStringContainsString('Seneto Gate Post', $body);
         self::assertStringContainsString('ST-01', $body);
-        self::assertStringContainsString('Who is posted here', $body);
+        self::assertStringContainsString('Who is stationed here', $body);
         self::assertStringContainsString('What happened here', $body);
         // The plate is the atlas's, wearing the house contract.
         self::assertStringContainsString('map-plate', $body);
@@ -130,7 +130,7 @@ final class StationRecordTest extends WebTestCase
         $this->boot();
         $this->signIn();
         $area = $this->anArea();
-        $station = $this->stations()->add($area, 'Eastern Post', -29.25, -3.2);
+        $station = $this->stations()->add($area, 'Eastern Station', -29.25, -3.2);
 
         self::assertStringContainsString('unzoned', $this->body($this->record($area, $station)));
     }
@@ -188,7 +188,7 @@ final class StationRecordTest extends WebTestCase
 
         $body = $this->body($this->record($area, $station));
 
-        self::assertStringContainsString('Nobody is posted here', $body);
+        self::assertStringContainsString('Nobody is stationed here', $body);
         self::assertStringNotContainsString('Clear the filters', $body);
     }
 
@@ -205,7 +205,7 @@ final class StationRecordTest extends WebTestCase
         $body = $this->body($this->record($area, $station));
 
         self::assertStringContainsString('What the modules publish', $body);
-        self::assertStringContainsString('No module publishes figures for this post yet.', $body);
+        self::assertStringContainsString('No module publishes figures for this station yet.', $body);
     }
 
     /**
@@ -248,7 +248,7 @@ final class StationRecordTest extends WebTestCase
 
         self::assertLessThan(
             strpos($body, 'id="watch"'),
-            strpos($body, 'Who is posted here'),
+            strpos($body, 'Who is stationed here'),
             'the area draws its own cards first and the contributed bands after them',
         );
     }

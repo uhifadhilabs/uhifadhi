@@ -15,7 +15,6 @@ namespace Uhifadhi\Bundle\TeamBundle\Tests\Functional;
 
 use Symfony\Component\DomCrawler\Crawler;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 
 /**
@@ -389,7 +388,7 @@ final class MemberRecordTest extends WebTestCaseWithSchema
     public function testTheEffectiveLedgerSaysWhyOnEveryRow(): void
     {
         $this->withSuccessor();
-        $ranger = $this->position('Ranger', ['area.view']);
+        $ranger = $this->position('Ranger', ['surveys.read']);
         $grace = $this->person('Grace', 'Ndosi');
         $grace->setPosition($ranger);
         $this->em->flush();
@@ -398,9 +397,9 @@ final class MemberRecordTest extends WebTestCaseWithSchema
 
         self::assertStringContainsString('by position', $crawler->filter('.pm-eff')->text());
         self::assertStringContainsString('not held', $crawler->filter('.pm-eff')->text());
-        // BOTH NAMES ON EVERY ROW: the catalogue's label and the machine value
-        // the voter checks.
-        self::assertStringContainsString(PermissionEnum::AreaView->value, $crawler->filter('.pm-eff')->text());
+        // BOTH NAMES ON EVERY ROW: the product's words for the concern and
+        // the verb, and the pair the voter actually checks.
+        self::assertStringContainsString('surveys.read', $crawler->filter('.pm-eff')->text());
     }
 
     public function testATierAboveTheMatrixReadsByTierOnEveryRow(): void
@@ -417,7 +416,7 @@ final class MemberRecordTest extends WebTestCaseWithSchema
     public function testAssigningAPositionWritesIt(): void
     {
         $this->withSuccessor();
-        $ranger = $this->position('Ranger', ['area.view']);
+        $ranger = $this->position('Ranger', ['surveys.read']);
         $frank = $this->person('Frank', 'Massawe');
         $this->em->flush();
 
@@ -442,7 +441,7 @@ final class MemberRecordTest extends WebTestCaseWithSchema
     public function testThePositionPickerIsOneFlatListWithNoDepartmentGroups(): void
     {
         $this->withSuccessor();
-        $this->position('Ranger', ['area.view']);
+        $this->position('Ranger', ['surveys.read']);
         $this->position('Analyst');
         $frank = $this->person('Frank', 'Massawe');
         $this->em->flush();
@@ -465,7 +464,7 @@ final class MemberRecordTest extends WebTestCaseWithSchema
     public function testTheFlashNamesTheBarePosition(): void
     {
         $this->withSuccessor();
-        $ranger = $this->position('Ranger', ['area.view']);
+        $ranger = $this->position('Ranger', ['surveys.read']);
         $frank = $this->person('Frank', 'Massawe');
         $this->em->flush();
 
@@ -492,7 +491,7 @@ final class MemberRecordTest extends WebTestCaseWithSchema
     public function testAFullPositionIsRefusedAndTheRefusalNamesWhoHoldsIt(): void
     {
         $this->withSuccessor();
-        $head = $this->position('Head of Protection', ['area.view']);
+        $head = $this->position('Head of Protection', ['surveys.read']);
         $head->setSeatCount(1);
         $joseph = $this->person('Joseph', 'Mollel');
         $joseph->setPosition($head);
@@ -533,7 +532,7 @@ final class MemberRecordTest extends WebTestCaseWithSchema
     public function testSomebodyWhoHasLeftFreesTheSeatTheyHeld(): void
     {
         $this->withSuccessor();
-        $head = $this->position('Head of Protection', ['area.view']);
+        $head = $this->position('Head of Protection', ['surveys.read']);
         $head->setSeatCount(1);
         $joseph = $this->person('Joseph', 'Mollel');
         $joseph->setPosition($head);
@@ -556,7 +555,7 @@ final class MemberRecordTest extends WebTestCaseWithSchema
     public function testTakingThePositionAwayIsARealChoice(): void
     {
         $this->withSuccessor();
-        $ranger = $this->position('Ranger', ['area.view']);
+        $ranger = $this->position('Ranger', ['surveys.read']);
         $grace = $this->person('Grace', 'Ndosi');
         $grace->setPosition($ranger);
         $this->em->flush();
@@ -592,17 +591,71 @@ final class MemberRecordTest extends WebTestCaseWithSchema
         self::assertSame('g.ndosi@example.test', $stored->getEmail(), 'The entity folds the email itself.');
     }
 
+    /**
+     * PERSONAL DETAILS ARE THEIR OWN CONCERN, AND THE PAGE PROVES IT. Somebody
+     * holding `directory.read` and NOT `personal-details.read` may know that
+     * Grace is on the team, what she is called and what position she holds,
+     * and may not read how to reach her or what her account is doing. The
+     * page stays open and the half of it that is about the person shuts,
+     * which is the whole reason the two were declared separately.
+     */
+    public function testAReaderWithoutPersonalDetailsSeesThePersonAndNotTheirContactDetails(): void
+    {
+        $this->person('Naomi', 'Kileo', TeamRoleEnum::SuperAdmin);
+        $colleague = $this->person('Asha', 'Mollel');
+        $colleague->setPosition($this->position('Duty Officer', ['directory.read']));
+        // A grant is only held somewhere, so the reader is placed across the
+        // organization: what shuts the contact block is the missing pair and
+        // nothing about where they stand.
+        $this->place($colleague);
+
+        $grace = $this->person('Grace', 'Ndosi');
+        $grace->setPosition($this->position('Ranger', ['surveys.read']));
+        $this->em->flush();
+        $address = (string) $grace->getEmail();
+        $this->client->loginUser($colleague);
+
+        $crawler = $this->client->request('GET', '/team/'.$grace->getUuidString());
+
+        self::assertResponseIsSuccessful();
+        self::assertSame('Grace Ndosi', $crawler->filter('h1.pg')->text());
+        self::assertStringContainsString('Ranger', $crawler->filter('.mb-band')->text(), 'Who they are and what they do is the directory.');
+
+        self::assertStringNotContainsString($address, $crawler->html(), 'The address is a contact detail and this reader may not read one.');
+        self::assertStringNotContainsString('sign-in state', $crawler->html(), 'And neither is what their account is doing.');
+        self::assertCount(0, $crawler->filter('input[name="email"]'), 'Nor written, which would print it just the same.');
+    }
+
+    /**
+     * AND THE SAME PAGE, READ BY SOMEBODY WHO HOLDS BOTH, carries all of it —
+     * so the assertions above are about the missing pair and not about a card
+     * that stopped rendering for everybody.
+     */
+    public function testAReaderHoldingPersonalDetailsSeesTheContactDetails(): void
+    {
+        $this->withSuccessor();
+        $grace = $this->person('Grace', 'Ndosi');
+        $this->em->flush();
+        $address = (string) $grace->getEmail();
+
+        $crawler = $this->client->request('GET', '/team/'.$grace->getUuidString());
+
+        self::assertStringContainsString($address, $crawler->html());
+        self::assertStringContainsString('sign-in state', $crawler->html());
+        self::assertCount(1, $crawler->filter('input[name="email"]'));
+    }
+
     /** Impersonation is offered to a Super Admin only; for anybody else, absent. */
     public function testSwitchUserIsAbsentForAnAdministratorWhoIsNotASuperAdmin(): void
     {
         $this->person('Naomi', 'Kileo', TeamRoleEnum::SuperAdmin);
-        $senior = $this->position('Senior Ranger', ['team.manage']);
+        $senior = $this->position('Senior Ranger', ['directory.read']);
         $grace = $this->person('Grace', 'Ndosi');
         $grace->setPosition($senior);
         // THE POSITION GRANTS AND THE PLACEMENT REACHES, and the model fails
-        // closed: somebody holding team.manage with nowhere to exercise it
-        // reaches no ground at all, so the administrator in this scene is
-        // placed across the organization before they administer anything.
+        // closed: somebody holding `directory.read` with nowhere to exercise
+        // it reaches no ground at all, so the administrator in this scene is
+        // placed across the organization before they read anything.
         $this->place($grace);
         $target = $this->person('Zawadi', 'Naisenya');
         $this->em->flush();

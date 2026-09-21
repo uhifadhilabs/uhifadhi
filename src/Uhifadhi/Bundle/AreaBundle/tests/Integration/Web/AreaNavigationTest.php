@@ -42,7 +42,7 @@ final class AreaNavigationTest extends WebTestCase
      *
      * @var list<string>
      */
-    private const array WITH_MODULES = [...self::ALL_AREA_PERMISSIONS, 'module.view'];
+    private const array WITH_MODULES = [...self::ALL_AREA_PERMISSIONS, 'modules.read'];
 
     /** @param list<string> $grants */
     private function navAt(string $path, array $grants = self::ALL_AREA_PERMISSIONS): AreaNavigation
@@ -177,7 +177,7 @@ final class AreaNavigationTest extends WebTestCase
     }
 
     /**
-     * ABSENT, NEVER HIDDEN. Somebody without `area.view` gets no section at all,
+     * ABSENT, NEVER HIDDEN. Somebody without `areas.read` gets no section at all,
      * rather than a section whose rows all close in their face.
      */
     public function testSomebodyWhoMayNotSeeAnAreaGetsNoSectionAtAll(): void

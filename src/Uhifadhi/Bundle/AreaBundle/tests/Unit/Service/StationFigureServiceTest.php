@@ -34,7 +34,7 @@ use Uhifadhi\Contracts\Kpi\StationRef;
  * module and not a line in the core.
  *
  * AN EMPTY ANSWER IS THE HONEST ONE. Until a module implements the seam, the
- * dock reads "no module publishes figures for this post" rather than four
+ * dock reads "no module publishes figures for this station" rather than four
  * rows of naughts, and this is where that state is decided.
  */
 #[CoversClass(StationFigureService::class)]

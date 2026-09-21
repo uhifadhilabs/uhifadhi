@@ -36,7 +36,7 @@ use Uhifadhi\Bundle\TeamBundle\Entity\Position;
  * destructive control ahead of its ruling is how the ruling gets made by
  * accident.
  *
- * THE HEADER LIVES INSIDE THE PERMISSIONS FORM, and forms do not nest. The
+ * THE HEADER LIVES INSIDE THE GRANTS FORM, and forms do not nest. The
  * rename form is a sibling of it and the header's controls join it by `form=`,
  * which is what that attribute is for: two independent writes on one pane, and
  * neither can post the other's fields.
@@ -84,16 +84,16 @@ final class PositionRenameTest extends WebTestCaseWithSchema
 
     /**
      * THE TWO FORMS ON THE PANE STAY SEPARATE. Renaming may not carry the
-     * permission boxes along with it, and saving permissions may not carry the
+     * grant cells along with it, and saving the grant may not carry the
      * name — the `form=` association is the whole mechanism and a nested form
      * would silently break it.
      */
-    public function testRenamingDoesNotTouchThePermissionsAndSavingDoesNotTouchTheName(): void
+    public function testRenamingDoesNotTouchTheGrantAndSavingDoesNotTouchTheName(): void
     {
         $crawler = $this->matrix();
 
         $rename = $crawler->filter('[data-pm="b"]')->selectButton('Rename')->form();
-        self::assertArrayNotHasKey('permissions', $rename->getPhpValues(), 'The rename posts the matrix with it.');
+        self::assertArrayNotHasKey('grants', $rename->getPhpValues(), 'The rename posts the matrix with it.');
 
         $save = $crawler->filter('form.pane')->selectButton('Save')->form();
         self::assertArrayNotHasKey('name', $save->getPhpValues(), 'The save posts the name with it.');
@@ -104,13 +104,13 @@ final class PositionRenameTest extends WebTestCaseWithSchema
         $this->em->clear();
         $stored = $this->em->getRepository(Position::class)->findOneBy(['name' => 'Senior Ranger']);
         self::assertInstanceOf(Position::class, $stored);
-        self::assertSame(['area.view'], $stored->getPermissionValues(), 'A rename revoked a permission.');
+        self::assertSame(['directory.read'], $stored->getGrantValues(), 'A rename revoked a grant.');
     }
 
     private function matrix(): \Symfony\Component\DomCrawler\Crawler
     {
         $this->administrator();
-        $ranger = $this->position('Ranger', ['area.view']);
+        $ranger = $this->position('Ranger', ['directory.read']);
         $this->em->flush();
 
         return $this->client->request('GET', '/team/positions?position='.$ranger->getUuidString());

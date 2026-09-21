@@ -51,7 +51,7 @@ final class StationConfigureTest extends WebTestCase
         self::assertStringContainsString('Seneto Gate Post', $body);
         self::assertStringContainsString('ST-01', $body);
         self::assertStringContainsString('Western Sector', $body);
-        self::assertStringContainsString('2 posted', $body);
+        self::assertStringContainsString('2 stationed', $body);
         // The plate is the atlas's, wearing the house contract.
         self::assertStringContainsString('map-plate', $body);
         self::assertStringContainsString('map-legend', $body);
@@ -244,12 +244,12 @@ final class StationConfigureTest extends WebTestCase
         $this->signIn();
         $area = $this->anArea();
         for ($i = 1; $i <= 9; ++$i) {
-            $this->stations()->add($area, \sprintf('Post %02d', $i), -29.75, -3.2);
+            $this->stations()->add($area, \sprintf('Station %02d', $i), -29.75, -3.2);
         }
 
         self::assertStringContainsString('1&ndash;8 of 9 stations', $this->body($this->section($area)));
         self::assertCount(8, $this->listed($this->section($area)));
-        self::assertSame(['Post 09'], $this->listed($this->section($area).'?page=2'));
+        self::assertSame(['Station 09'], $this->listed($this->section($area).'?page=2'));
     }
 
     /**
@@ -264,11 +264,11 @@ final class StationConfigureTest extends WebTestCase
 
         $body = $this->body($this->section($area).'?open='.$station->getUuidString());
 
-        self::assertStringContainsString('Posted here', $body);
+        self::assertStringContainsString('Stationed here', $body);
         self::assertStringContainsString('J. Mollel', $body);
         self::assertStringContainsString('Leads', $body);
         self::assertStringContainsString('Appoint leader', $body);
-        self::assertStringContainsString('Post to this station', $body);
+        self::assertStringContainsString('Station somebody here', $body);
         self::assertStringContainsString('derived', $body);
     }
 
@@ -344,7 +344,7 @@ final class StationConfigureTest extends WebTestCase
     /** Reading how an area is set up is a lens; changing it is an edit. */
     public function testAViewerWhoMayNotEditIsRefusedEveryWriteAndStillSeesTheSection(): void
     {
-        $this->boot(['area.view']);
+        $this->boot(self::READ_ONLY_AREA_PERMISSIONS);
         $this->signIn();
         $area = $this->anArea();
 

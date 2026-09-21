@@ -27,7 +27,7 @@ use Uhifadhi\Contracts\Area\PostedStation;
 /**
  * THE STATION-SHAPED READ, ACROSS EVERY AREA AT ONCE.
  *
- * A postings board asks "who is at this post", and the person-shaped seam
+ * A postings board asks "who is at this station", and the person-shaped seam
  * cannot answer it: assembled from people, the list loses every station nobody
  * stands at — which is the one reading the board exists for.
  */
@@ -40,7 +40,7 @@ final class StationDirectoryTest extends IntegrationTestCase
         $ngorongoro = $this->anArea('Ngorongoro');
         $pololeti = $this->anArea('Pololeti');
         $this->stations()->add($ngorongoro, 'Seneto Gate Post', -29.75, -3.2, 'ST-01');
-        $this->stations()->add($pololeti, 'Mkwaju Post', -29.5, -3.4, 'ST-02');
+        $this->stations()->add($pololeti, 'Mkwaju Station', -29.5, -3.4, 'ST-02');
 
         self::assertSame(
             ['Ngorongoro/ST-01', 'Pololeti/ST-02'],
@@ -89,7 +89,7 @@ final class StationDirectoryTest extends IntegrationTestCase
     /** A post on ground that belongs to no zone is legal, and says so. */
     public function testAStationOnNoZoneReportsNoZone(): void
     {
-        $this->stations()->add($this->anArea(), 'Lemagrut Roadside Post', -29.75, -3.2, 'ST-12');
+        $this->stations()->add($this->anArea(), 'Lemagrut Roadside Station', -29.75, -3.2, 'ST-12');
 
         self::assertNull($this->directory()->stations()[0]->zoneName);
     }

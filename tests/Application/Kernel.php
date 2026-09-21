@@ -22,6 +22,7 @@ use Symfony\Component\HttpKernel\Kernel as BaseKernel;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Uhifadhi\Bundle\ShellBundle\ShellBundle;
+use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Security\ApiTokenAuthenticator;
 use Uhifadhi\Contracts\Roster\WatchProviderInterface;
@@ -207,6 +208,15 @@ final class Kernel extends BaseKernel
         // second copy built by hand.
         $container->services()
             ->alias('test_public.team.devkit.content', 'team.devkit.content')
+            ->public();
+
+        // WHAT THIS INSTALLATION SAYS THERE IS TO HAVE A PERMISSION ABOUT.
+        // The build tests that hold routes, doors and declarations together
+        // read the catalogue an installation actually compiles, rather than
+        // a list assembled in the test — which would only ever agree with
+        // itself.
+        $container->services()
+            ->alias('test_public.'.ConcernCatalogue::class, 'team.access.catalogue')
             ->public();
 
         // The ground's own demo content, for the same reason: a specification

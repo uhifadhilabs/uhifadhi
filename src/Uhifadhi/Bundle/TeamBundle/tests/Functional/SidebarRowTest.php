@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Tests\Functional;
 
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 
 /**
@@ -185,7 +184,7 @@ final class SidebarRowTest extends WebTestCaseWithSchema
     public function testAColleagueWithoutTeamManageSeesNoRow(): void
     {
         $ranger = $this->person('Juma', 'Mwakalinga', TeamRoleEnum::Staff);
-        $ranger->setPosition($this->position('Ranger', [PermissionEnum::AreaView->value]));
+        $ranger->setPosition($this->position('Ranger', ['surveys.read']));
         $this->em->flush();
         $this->client->loginUser($ranger);
 

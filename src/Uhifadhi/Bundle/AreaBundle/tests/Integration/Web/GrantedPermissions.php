@@ -20,15 +20,16 @@ use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
 /**
  * THE VOTER THE TEAM BUNDLE WOULD BE.
  *
- * These screens are gated on `area.view`, `area.create`, `area.edit`,
- * `area.delete`, `module.view` and `module.create` — strings in the platform's
- * permission catalogue, answered
- * in a real installation by TeamBundle's voter. Team is NOT a dependency of
- * this bundle and must not become one: what this bundle owes is that its screens
- * ASK the question, and what somebody else answers is somebody else's suite.
+ * These screens are gated on CONCERN AND VERB — `areas.read`,
+ * `zones.configure`, `assignments.manage`, `modules.read` and the rest — pairs
+ * declared by {@see \Uhifadhi\Bundle\AreaBundle\Access\AreaConcerns} and by the
+ * registry, answered in a real installation by TeamBundle's grant voter. Team is
+ * NOT a dependency of this bundle and must not become one: what this bundle owes
+ * is that its screens ASK the question, and what somebody else answers is
+ * somebody else's suite.
  *
  * So the suite ships the smallest thing that answers: a voter holding a list of
- * granted strings. A test that wants to prove a screen closes gives it fewer.
+ * granted pairs. A test that wants to prove a screen closes gives it fewer.
  */
 final readonly class GrantedPermissions implements VoterInterface
 {
@@ -54,13 +55,21 @@ final readonly class GrantedPermissions implements VoterInterface
     }
 
     /**
-     * THE STRINGS THIS SUITE ANSWERS FOR. Two umbrellas, because the area
-     * screens ask about two things: the area itself, and the modules composed
-     * onto it. Anything else — a role, another module's permission — is somebody
-     * else's question and gets an abstention, never a refusal.
+     * THE CONCERNS THIS SUITE ANSWERS FOR: the five this bundle declares, plus
+     * the modules composed onto an area, which the registry declares and these
+     * screens ask about. Anything else — a role, another module's concern — is
+     * somebody else's question and gets an abstention, never a refusal.
      */
+    private const array OURS = ['areas.', 'zones.', 'stations.', 'assignments.', 'duty.', 'modules.'];
+
     private function ours(string $attribute): bool
     {
-        return str_starts_with($attribute, 'area.') || str_starts_with($attribute, 'module.');
+        foreach (self::OURS as $concern) {
+            if (str_starts_with($attribute, $concern)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

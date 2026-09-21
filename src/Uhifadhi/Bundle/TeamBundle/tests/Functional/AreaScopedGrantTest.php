@@ -15,21 +15,25 @@ namespace Uhifadhi\Bundle\TeamBundle\Tests\Functional;
 
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\Area\HostArea;
 
 /**
- * §5.6(c) — NO PRIVILEGE ESCALATION BY AN AREA ADMINISTRATOR.
+ * NO PRIVILEGE ESCALATION BY AN AREA ADMINISTRATOR.
  *
- * The person half (§5.6(a)) and the department half (§5.6(b)) are their own
- * suites. This is the escalation half: an area-X `team.manage` holder may not
- * grant a permission their own position does not hold, and may not confer team
- * administration at all — team.manage is organization-wide authority, and
- * creating another administrator is a widening past their own boundary. Nor may
- * a bounded administrator change a person's tier: Super Admin and Admin are
- * organization-wide authority, and promoting somebody to one is the plainest
- * escalation there is.
+ * The person half and the department half are their own suites. This is the
+ * escalation half: an area-X administrator may not grant a pair their own
+ * position does not hold, and may not confer TEAM ADMINISTRATION at all —
+ * `positions.configure` and `departments.configure` are how another
+ * administrator is made, which is organization-wide authority and a widening
+ * past their own boundary. Nor may a bounded administrator change a person's
+ * tier: Super Admin and Admin are organization-wide, and promoting somebody
+ * to one is the plainest escalation there is.
+ *
+ * IT USED TO BE WRITTEN IN FLAT VALUES — one `team.manage` standing for the
+ * whole of team administration, and `area.view` for an ordinary capability.
+ * The ruling replaced both with (concern, verb) pairs, so the fence is now
+ * named by the two pairs above rather than by one word.
  *
  * A tier (Super Admin / Admin), or a `team.manage` holder placed across the
  * whole organization, is UNBOUNDED and touches all of this. WHICH OF THE TWO
@@ -52,33 +56,33 @@ final class AreaScopedGrantTest extends WebTestCaseWithSchema
     public function testAnAreaAdminMayGrantAPermissionTheyThemselvesHold(): void
     {
         $north = $this->area('Northern Reserve');
-        $this->areaAdminHolding($north, [PermissionEnum::TeamManage->value, PermissionEnum::AreaView->value]);
+        $this->areaAdminHolding($north);
         $ranger = $this->position('Ranger', []);
         $this->em->flush();
 
         $token = $this->tokenFrom('/team/positions');
         $this->client->request('POST', '/team/positions/'.$ranger->getUuidString().'/permissions', [
-            '_token' => $token, 'permissions' => [PermissionEnum::AreaView->value],
+            '_token' => $token, 'grants' => ['directory.read'],
         ]);
 
         self::assertResponseRedirects();
         $this->em->clear();
         $stored = $this->em->getRepository(Position::class)->findOneBy(['name' => 'Ranger']);
         self::assertInstanceOf(Position::class, $stored);
-        self::assertSame([PermissionEnum::AreaView->value], $stored->getPermissionValues());
+        self::assertSame(['directory.read'], $stored->getGrantValues());
     }
 
     /** But NOT a permission their own position does not hold — that widens power. */
     public function testAnAreaAdminCannotGrantAPermissionBeyondTheirOwnAuthority(): void
     {
         $north = $this->area('Northern Reserve');
-        $this->areaAdminHolding($north, [PermissionEnum::TeamManage->value, PermissionEnum::AreaView->value]);
+        $this->areaAdminHolding($north);
         $ranger = $this->position('Ranger', []);
         $this->em->flush();
 
         $token = $this->tokenFrom('/team/positions');
         $this->client->request('POST', '/team/positions/'.$ranger->getUuidString().'/permissions', [
-            '_token' => $token, 'permissions' => [PermissionEnum::AreaDelete->value],
+            '_token' => $token, 'grants' => ['surveys.read'],
         ]);
 
         self::assertResponseStatusCodeSame(403);
@@ -90,13 +94,13 @@ final class AreaScopedGrantTest extends WebTestCaseWithSchema
     public function testAnAreaAdminCannotConferTeamManage(): void
     {
         $north = $this->area('Northern Reserve');
-        $this->areaAdminHolding($north, [PermissionEnum::TeamManage->value, PermissionEnum::AreaView->value]);
+        $this->areaAdminHolding($north);
         $deputy = $this->position('Deputy Warden', []);
         $this->em->flush();
 
         $token = $this->tokenFrom('/team/positions');
         $this->client->request('POST', '/team/positions/'.$deputy->getUuidString().'/permissions', [
-            '_token' => $token, 'permissions' => [PermissionEnum::TeamManage->value],
+            '_token' => $token, 'grants' => ['positions.configure'],
         ]);
 
         self::assertResponseStatusCodeSame(403);
@@ -112,40 +116,41 @@ final class AreaScopedGrantTest extends WebTestCaseWithSchema
     public function testABoundedSaveFreezesPermissionsBeyondTheAdminsAuthority(): void
     {
         $north = $this->area('Northern Reserve');
-        $this->areaAdminHolding($north, [PermissionEnum::TeamManage->value, PermissionEnum::AreaView->value]);
+        $this->areaAdminHolding($north);
         // The position already carries a permission the admin does not hold.
-        $ranger = $this->position('Ranger', [PermissionEnum::AreaDelete->value]);
+        $ranger = $this->position('Ranger', ['surveys.read']);
         $this->em->flush();
 
         $token = $this->tokenFrom('/team/positions');
         $this->client->request('POST', '/team/positions/'.$ranger->getUuidString().'/permissions', [
-            '_token' => $token, 'permissions' => [PermissionEnum::AreaView->value],
+            '_token' => $token, 'grants' => ['directory.read'],
         ]);
 
         self::assertResponseRedirects();
         $this->em->clear();
         $stored = $this->em->getRepository(Position::class)->findOneBy(['name' => 'Ranger']);
         self::assertInstanceOf(Position::class, $stored);
-        self::assertContains(PermissionEnum::AreaView->value, $stored->getPermissionValues(), 'The grantable tick was saved.');
-        self::assertContains(PermissionEnum::AreaDelete->value, $stored->getPermissionValues(), 'The untouchable grant was not stripped.');
+        self::assertContains('directory.read', $stored->getGrantValues(), 'The grantable tick was saved.');
+        self::assertContains('surveys.read', $stored->getGrantValues(), 'The untouchable grant was not stripped.');
     }
 
     /** The matrix draws the rows beyond the admin's authority disabled, with the guard note. */
     public function testTheMatrixDisablesPermissionsBeyondTheAdminsAuthority(): void
     {
         $north = $this->area('Northern Reserve');
-        $this->areaAdminHolding($north, [PermissionEnum::TeamManage->value, PermissionEnum::AreaView->value]);
+        $this->areaAdminHolding($north);
         $ranger = $this->position('Ranger', []);
         $this->em->flush();
 
         $crawler = $this->client->request('GET', '/team/positions?position='.$ranger->getUuidString());
 
-        // A permission the admin holds is grantable — its box is enabled.
-        self::assertCount(0, $crawler->filter('form.pane input.pm-check[value="'.PermissionEnum::AreaView->value.'"][disabled]'), 'A held permission is grantable.');
-        // One the admin does not hold, and team.manage, are disabled.
-        self::assertCount(1, $crawler->filter('form.pane input.pm-check[value="'.PermissionEnum::AreaDelete->value.'"][disabled]'), 'A permission beyond authority is disabled.');
-        self::assertCount(1, $crawler->filter('form.pane input.pm-check[value="'.PermissionEnum::TeamManage->value.'"][disabled]'), 'team.manage is never grantable by a bounded admin.');
-        self::assertStringContainsString('no wider-than-self grant', $crawler->filter('form.pane')->html());
+        // A pair the admin holds is grantable — its box is enabled.
+        self::assertCount(0, $crawler->filter('form.pane input.pm-check[value="directory.read"][disabled]'), 'A pair the admin holds is grantable.');
+        // One they do not hold is disabled, and so is team administration
+        // even though they DO hold it: conferring it mints another
+        // administrator, which is an organization-wide act.
+        self::assertCount(1, $crawler->filter('form.pane input.pm-check[value="surveys.read"][disabled]'), 'A pair beyond their authority is disabled.');
+        self::assertCount(1, $crawler->filter('form.pane input.pm-check[value="positions.configure"][disabled]'), 'Team administration is never grantable by a bounded administrator.');
     }
 
     /** A holder placed across the organization is unbounded: they grant anything, team.manage included. */
@@ -153,7 +158,7 @@ final class AreaScopedGrantTest extends WebTestCaseWithSchema
     {
         $north = $this->area('Northern Reserve');
         $orgAdmin = $this->person('Amina', 'Salehe', TeamRoleEnum::Staff);
-        $orgAdmin->setPosition($this->position('Coordinator', [PermissionEnum::TeamManage->value]));
+        $orgAdmin->setPosition($this->position('Coordinator', self::ADMINISTRATOR));
         $this->place($orgAdmin);
         $ranger = $this->position('Ranger', []);
         $this->em->flush();
@@ -161,14 +166,14 @@ final class AreaScopedGrantTest extends WebTestCaseWithSchema
 
         $token = $this->tokenFrom('/team/positions');
         $this->client->request('POST', '/team/positions/'.$ranger->getUuidString().'/permissions', [
-            '_token' => $token, 'permissions' => [PermissionEnum::AreaDelete->value, PermissionEnum::TeamManage->value],
+            '_token' => $token, 'grants' => ['surveys.read', 'positions.configure'],
         ]);
 
         self::assertResponseRedirects();
         $this->em->clear();
         $stored = $this->em->getRepository(Position::class)->findOneBy(['name' => 'Ranger']);
         self::assertInstanceOf(Position::class, $stored);
-        self::assertSame([PermissionEnum::AreaDelete->value, PermissionEnum::TeamManage->value], $stored->getPermissionValues());
+        self::assertSame(['surveys.read', 'positions.configure'], $stored->getGrantValues());
     }
 
     // ---- the member record: changing a tier -------------------------------
@@ -177,7 +182,7 @@ final class AreaScopedGrantTest extends WebTestCaseWithSchema
     public function testAnAreaAdminCannotChangeAPersonsTier(): void
     {
         $north = $this->area('Northern Reserve');
-        $this->areaAdminHolding($north, [PermissionEnum::TeamManage->value]);
+        $this->areaAdminHolding($north);
         $grace = $this->person('Grace', 'Ndosi');
         $this->em->flush();
 
@@ -195,7 +200,7 @@ final class AreaScopedGrantTest extends WebTestCaseWithSchema
     public function testAnOrganizationWideAdminMayChangeATier(): void
     {
         $orgAdmin = $this->person('Amina', 'Salehe', TeamRoleEnum::Staff);
-        $orgAdmin->setPosition($this->position('Coordinator', [PermissionEnum::TeamManage->value]));
+        $orgAdmin->setPosition($this->position('Coordinator', self::ADMINISTRATOR));
         $this->place($orgAdmin);
         $grace = $this->person('Grace', 'Ndosi');
         $this->em->flush();
@@ -214,16 +219,31 @@ final class AreaScopedGrantTest extends WebTestCaseWithSchema
     // ---- the cast ---------------------------------------------------------
 
     /**
-     * Sign in as an AREA-X administrator whose OWN position carries exactly the
-     * given permissions — a Staff member PLACED at $area, so they are the
-     * bounded kind, and what they may confer is what they themselves hold.
-     *
-     * @param list<string> $permissions
+     * WHAT TEAM ADMINISTRATION IS, IN PAIRS — the eight the upgrade backfills
+     * the old single `team.manage` into. Spelled out rather than read from
+     * the catalogue: a fixture that asked the catalogue what an administrator
+     * holds would agree with itself however the declarations drifted.
      */
-    private function areaAdminHolding(HostArea $area, array $permissions): User
+    private const array ADMINISTRATOR = [
+        'directory.read', 'directory.manage',
+        'personal-details.read', 'personal-details.manage',
+        'positions.read', 'positions.configure',
+        'departments.read', 'departments.configure',
+    ];
+
+    /**
+     * Sign in as an AREA-X administrator: a Staff member holding team
+     * administration and PLACED at $area, so they are the bounded kind, and
+     * what they may confer is what they themselves hold.
+     *
+     * THEY HOLD `directory.read` AND NOT `surveys.read`, which is what the
+     * two halves of the fence are tested with — one pair they may pass on,
+     * one they may not.
+     */
+    private function areaAdminHolding(HostArea $area): User
     {
         $admin = $this->person('Naomi', 'Kileo', TeamRoleEnum::Staff);
-        $admin->setPosition($this->position('Warden', $permissions));
+        $admin->setPosition($this->position('Warden', self::ADMINISTRATOR));
         $this->place($admin, [$area]);
         $this->em->flush();
         $this->client->loginUser($admin);

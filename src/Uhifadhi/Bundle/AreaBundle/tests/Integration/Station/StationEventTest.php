@@ -155,7 +155,7 @@ final class StationEventTest extends IntegrationTestCase
 
         $line = $this->lineOfKind($station, StationEventKind::Posted);
         self::assertNotNull($line);
-        self::assertSame('T. Ndosi posted here', $line->getHeadline());
+        self::assertSame('T. Ndosi stationed here', $line->getHeadline());
         self::assertSame('by n.kileo · from their own page', $line->getDetail());
     }
 
@@ -168,7 +168,7 @@ final class StationEventTest extends IntegrationTestCase
         $this->postings()->end($posting, null, 'a.mchome');
 
         self::assertSame('J. Mollel leads here', $this->lineOfKind($station, StationEventKind::LeaderAppointed)?->getHeadline());
-        self::assertSame('J. Mollel’s posting ended', $this->lineOfKind($station, StationEventKind::PostingEnded)?->getHeadline());
+        self::assertSame('J. Mollel’s assignment ended', $this->lineOfKind($station, StationEventKind::PostingEnded)?->getHeadline());
     }
 
     public function testClosingAndReopeningAPostAreBothLines(): void

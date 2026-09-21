@@ -363,6 +363,12 @@ final class WebKernel extends Kernel
             ->tag('security.voter')
             ->public();
 
+        // And the `door()` helper the templates ask with, standing in for
+        // TeamBundle's extension for the same reason the voter does.
+        $services->set(DoorFunction::class)
+            ->args([new Reference('security.authorization_checker')])
+            ->tag('twig.extension');
+
         $services->alias('test_public.area.shell_source', 'area.shell_source')->public();
         $services->alias('test_public.area.scopes', 'area.scopes')->public();
 

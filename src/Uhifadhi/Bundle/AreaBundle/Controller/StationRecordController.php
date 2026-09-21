@@ -85,7 +85,7 @@ final readonly class StationRecordController
         requirements: ['uuid' => Requirement::UUID, 'station' => Requirement::UUID],
         methods: ['GET'],
     )]
-    #[IsGranted('area.view')]
+    #[IsGranted('stations.read')]
     public function show(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,

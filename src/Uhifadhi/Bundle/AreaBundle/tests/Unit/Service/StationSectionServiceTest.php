@@ -177,7 +177,7 @@ final class StationSectionServiceTest extends TestCase
         return new StationSectionService($contributors)->collect(
             [
                 new StationRef(self::SENETO, '01a0-area', 'Seneto Gate Post'),
-                new StationRef(self::LERAI, '01a0-area', 'Lerai Ranger Post'),
+                new StationRef(self::LERAI, '01a0-area', 'Lerai Ranger Station'),
             ],
             StationSurface::Record,
             static fn (string $slug): bool => \in_array($slug, $running, true),

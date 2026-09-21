@@ -85,7 +85,13 @@ final readonly class AreaConcerns implements ConcernSourceInterface
             key: self::ASSIGNMENTS,
             label: 'Assignments',
             description: 'Who is stationed where: assigning somebody to a station, appointing a lead, and ending an assignment.',
-            verbs: [Verb::Read, Verb::Manage],
+            // NO READ, because nothing reads assignments as a thing of their
+            // own: the station's record shows who stands there under
+            // `stations.read`, and the team's board shows where its people
+            // are under `directory.read`. Declaring one would be a row an
+            // administrator could tick that took nothing away and gave
+            // nothing. It arrives with the first screen that needs it.
+            verbs: [Verb::Manage],
             scopeKinds: $ground,
         );
 
@@ -99,7 +105,13 @@ final readonly class AreaConcerns implements ConcernSourceInterface
             key: self::DUTY,
             label: 'Duty',
             description: 'Report the day from a handset - the status, the station and the positions that go with it.',
-            verbs: [Verb::Read, Verb::Record],
+            // ONE VERB, because the handset's reads and its writes are one
+            // permission today: the endpoints that hand a ranger their
+            // roster and their stations ask the same question the check-in
+            // does, since a phone that cannot report a day has no use for
+            // either. Splitting them is a change to the handset, not to a
+            // declaration.
+            verbs: [Verb::Record],
             scopeKinds: $ground,
         );
     }

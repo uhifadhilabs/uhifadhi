@@ -36,7 +36,12 @@
     <div class="mb-id">
         <h2>{{ member.fullName }}</h2>
         <div class="mb-idrow">
-            <span class="em">{{ member.email }}</span>
+            {# THE ADDRESS IS A CONTACT DETAIL, so it stands or falls with the
+               rest of them: `personal-details.read`, not `directory.read`. A
+               colleague who may see that somebody is on the team sees their
+               name, their tier and their position here, and no way to reach
+               them. #}
+            {% if door('personal-details.read') %}<span class="em">{{ member.email }}</span>{% endif %}
             {{ bits.tier_pill(member.teamRole) }}
             {% if member.rangerCode %}<span class="mb-code">{{ member.rangerCode|upper }}</span>{% endif %}
             {% if member.position %}
@@ -65,6 +70,12 @@
    rail beside it. #}
 <div class="mb-wrap">
 <div class="mb-col">
+    {# THE SIGN-IN STATE IS THE SENSITIVE HALF OF THE RECORD. Whether somebody
+       has ever signed in, who invited them and when, and the controls that mail
+       them a link are facts about the person rather than about the team, so the
+       whole card is gated on `personal-details.read`. The page itself stays open
+       on `directory.read`: a reader still sees who this is. #}
+    {% if door('personal-details.read') %}
     <div class="c">
         <span class="tab">The account<span class="src">&middot; sign-in state</span></span>
 
@@ -111,6 +122,7 @@
             </div>
         {% endif %}
     </div>
+    {% endif %}
 
         <div class="c">
         <span class="tab">The record<span class="src">&middot; the columns team_user has</span></span>
@@ -127,11 +139,18 @@
                 <input class="fld" name="lastName" value="{{ member.lastName }}" required maxlength="100">
                 <p class="hint">Required &middot; <code>100</code></p>
             </div>
+            {# THE SAME DETAIL, WRITTEN RATHER THAN READ. Rendering the input
+               would print the address to somebody who may not read it, so the
+               field is absent without `personal-details.read` — and the update
+               keeps the stored address when the field does not arrive, so a
+               save from this page cannot blank what the page never showed. #}
+            {% if door('personal-details.read') %}
             <div class="mb-f">
                 <span class="lbl">email</span>
                 <input class="fld" name="email" type="email" value="{{ member.email }}" required maxlength="180">
                 <p class="hint">Sign-in identifier &middot; unique &middot; lowercased on save</p>
             </div>
+            {% endif %}
             <div class="mb-f">
                 <span class="lbl">ranger code</span>
                 <input class="fld" name="rangerCode" value="{{ member.rangerCode }}" maxlength="32">
@@ -254,7 +273,7 @@
             <div class="mb-empty" style="margin-top:14px">
                 {{ bits.icon_warn() }}
                 <span><b>Not posted to a station.</b> Office-based staff hold no posting.</span>
-                {% if postingDoor and is_granted('area.edit') %}
+                {% if postingDoor and door('area.edit') %}
                     <a class="more" href="{{ postingDoor }}">Post them at a station &rarr;</a>
                 {% endif %}
             </div>
@@ -303,7 +322,12 @@
         <span class="tab">Account actions<span class="src">&middot; three</span></span>
 
         <div class="mb-danger">
-            {% if member.isActive %}
+            {# MAILING SOMEBODY A LINK TO THEIR OWN ACCOUNT IS A PERSONAL
+               DETAIL BEING ACTED ON, so the control is absent for a reader
+               who may not touch one — the route refuses it on
+               `personal-details.manage`, and a screen does not offer an
+               action it will then refuse. #}
+            {% if member.isActive and door('personal-details.manage') %}
                 <div class="mb-drow">
                     <div class="dt"><b>Send a password-reset link</b>
                     <em>Writes a token, mails a link &middot; does not change the password</em></div>

@@ -32,7 +32,7 @@ use Uhifadhi\Bundle\AreaBundle\Service\BoundaryImport;
  * {@see BoundaryImport} as a new area and asks for an explicit confirmation
  * first. Every case here goes through the HTTP layer, because the interesting
  * failures — a blank name, a file that is not GeoJSON, a replace nobody
- * confirmed, a viewer without `area.edit` — are all at the joins.
+ * confirmed, a viewer without `areas.configure` — are all at the joins.
  */
 #[CoversClass(AreaEditController::class)]
 #[CoversClass(AreaIdentity::class)]
@@ -433,14 +433,14 @@ final class AreaEditTest extends WebTestCase
     /** @return iterable<string, array{list<string>}> */
     public static function closedDoors(): iterable
     {
-        yield 'the edit screen needs area.edit' => [['area.view']];
+        yield 'the edit screen needs areas.configure' => [self::READ_ONLY_AREA_PERMISSIONS];
     }
 
     /**
      * @param list<string> $grants
      */
     #[\PHPUnit\Framework\Attributes\DataProvider('closedDoors')]
-    public function testTheEditScreenIsRefusedToSomebodyWithoutAreaEdit(array $grants): void
+    public function testTheEditScreenIsRefusedToSomebodyWhoMayNotConfigureAreas(array $grants): void
     {
         $this->boot($grants);
         $this->signIn();

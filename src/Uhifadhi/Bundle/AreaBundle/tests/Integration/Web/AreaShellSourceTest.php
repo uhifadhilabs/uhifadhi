@@ -103,7 +103,7 @@ final class AreaShellSourceTest extends WebTestCase
      */
     public function testAGatedTabIsWithheldFromSomebodyWhoDoesNotHoldIt(): void
     {
-        $source = $this->sourceAt('/areas/{uuid}', grants: ['area.view']);
+        $source = $this->sourceAt('/areas/{uuid}', grants: ['areas.read']);
 
         self::assertNotContains('Modules', $this->labels($source));
     }
@@ -115,7 +115,7 @@ final class AreaShellSourceTest extends WebTestCase
      */
     public function testZonesIsReadableByAnybodyWhoCanReachTheArea(): void
     {
-        self::assertContains('Zones', $this->labels($this->sourceAt('/areas/{uuid}', grants: ['area.view'])));
+        self::assertContains('Zones', $this->labels($this->sourceAt('/areas/{uuid}', grants: ['areas.read'])));
     }
 
     /**

@@ -34,7 +34,7 @@ use Uhifadhi\Contracts\Area\UnverifiedReason;
 /**
  * HOW A DAY READS — derived on every read, and stored nowhere.
  *
- * THE CLAIM AND THE PROOF ARE TWO RECORDS. A ranger says "at post"; the
+ * THE CLAIM AND THE PROOF ARE TWO RECORDS. A ranger says "at station"; the
  * pings say where the phone was; the post says what inside means. This
  * is where the three meet, and the answer is computed at the moment of
  * asking — so a catchment corrected next month re-derives every day
@@ -125,7 +125,7 @@ final class PresenceTest extends IntegrationTestCase
         self::assertSame(
             DayState::AtPostVerified,
             $this->today($area)->state,
-            'the same day, read again against a corrected post',
+            'the same day, read again against a corrected station',
         );
     }
 

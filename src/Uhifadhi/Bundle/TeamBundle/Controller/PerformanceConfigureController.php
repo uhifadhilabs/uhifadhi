@@ -17,7 +17,6 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Environment;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Performance\Comparison;
 use Uhifadhi\Bundle\TeamBundle\Performance\MatrixPlacing;
 use Uhifadhi\Bundle\TeamBundle\Performance\PeriodKind;
@@ -69,7 +68,7 @@ final readonly class PerformanceConfigureController
     }
 
     #[Route('/departments/performance/settings', name: self::SETTINGS, defaults: PerformanceController::SURFACE, methods: ['GET'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('departments.configure')]
     public function settings(): Response
     {
         $period = PeriodKind::Month->period(RequiredPeriod::of($this->periods)->now());

@@ -18,11 +18,11 @@ use Doctrine\ORM\Tools\SchemaTool;
 use Psr\Cache\CacheItemPoolInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Entity\Placement;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\Area\HostArea;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\TestKernel;
@@ -36,8 +36,8 @@ use Uhifadhi\Contracts\Access\ScopeKind;
  * sign-in template's own placeholder uses, so it is provably nobody's. Three of
  * these people are load-bearing and appear in every suite that seeds them:
  * somebody with no position (the model's zero), a position nobody holds, and a
- * Staff member who administers the team because their position carries
- * team.manage.
+ * Staff member who administers the team because their position grants
+ * `positions.configure`.
  */
 abstract class WebTestCaseWithSchema extends WebTestCase
 {
@@ -143,16 +143,28 @@ abstract class WebTestCaseWithSchema extends WebTestCase
      * is gone from the signature rather than ignored, so a suite written
      * against the old model fails loudly instead of quietly filing nothing.
      *
-     * @param list<string>    $permissions
-     * @param list<ScopeKind> $allows      which kinds of placement it offers
+     * IT GRANTS PAIRS. The second argument used to be a list of flat
+     * permission values written through `setPermissionValues()`; a grant is a
+     * `<concern>.<verb>` pair now, so the same argument carries pairs and the
+     * write is the validated pair one. The shape of the call is unchanged on
+     * purpose — every suite in this package seeds a position through it — so
+     * what a suite changes is the strings, not the line.
+     *
+     * THE CATALOGUE IS THE RUNNING ONE, read from the container rather than
+     * spelled here: a helper that validated against its own hand-written list
+     * would let a suite seed something the installation does not declare, and
+     * the refusal that matters is the installation's.
+     *
+     * @param list<string>    $grants each written `<concern>.<verb>`
+     * @param list<ScopeKind> $allows which kinds of placement it offers
      */
-    protected function position(string $name, array $permissions = [], array $allows = [ScopeKind::Organization, ScopeKind::Area]): Position
+    protected function position(string $name, array $grants = [], array $allows = [ScopeKind::Organization, ScopeKind::Area]): Position
     {
+        $catalogue = static::getContainer()->get('test_public.'.ConcernCatalogue::class);
+        \assert($catalogue instanceof ConcernCatalogue);
+
         $position = (new Position())->setName($name)->setAllowedKinds($allows);
-        $position->setPermissionValues(
-            $permissions,
-            [...array_map(static fn (PermissionEnum $p): string => $p->value, PermissionEnum::all()), 'surveys.record'],
-        );
+        $position->setGrantValues($grants, $catalogue->pairs());
         $this->em->persist($position);
 
         return $position;

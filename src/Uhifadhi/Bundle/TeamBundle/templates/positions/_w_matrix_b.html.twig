@@ -1,25 +1,29 @@
 {# PM·B — ONE POSITION AT A TIME. THE SHIPPED DIRECTION.
 
-   A rail of every position beside one position's permissions. The SAFEST
-   EDITOR there is: you are always demonstrably changing exactly one position,
-   and the pane's header says which and how many people it reaches. The cost is
-   real — comparing two positions costs two clicks and there is no view of the
-   whole.
+   A rail of every position beside one position's grant. The SAFEST EDITOR
+   there is: you are always demonstrably changing exactly one position, and the
+   pane's header says which and how many people it reaches. The cost is real —
+   comparing two positions costs two clicks and there is no view of the whole.
 
    B SHIPS SELECTED on the fresh-installation argument rather than the populated
    one: on day one there are no positions, and B is the only direction whose
    empty state is a single control that makes the first one. The grid opens on
    nothing at all.
 
-   THE COUNT IS IN THE HEADER, NOT IN A CONFIRMATION AFTERWARDS. Every box
+   THE CHECKLIST BECAME A MATRIX. It used to be a flat list of permission rows
+   under an invented umbrella; the ruling made a grant a (concern, verb) pair,
+   so the pane now draws one group per DECLARER, a row per CONCERN and the six
+   verbs as columns — and a cell only where the concern declares that verb.
+
+   THE COUNT IS IN THE HEADER, NOT IN A CONFIRMATION AFTERWARDS. Every cell
    ticked here is granted to everybody holding the position at once, and
    unticking one takes it from all of them — which is the point of a position,
    and it should be known before the click rather than after. #}
 {% import '@Team/positions/_bits.html.twig' as pm %}
 
 <div class="c" data-pm="b">
-    <span class="tab">One position at a time<span class="src">&middot; the rail and the checklist</span></span>
-    <p class="use" style="margin-top:2px">A rail of every position beside one position&rsquo;s permissions. The
+    <span class="tab">One position at a time<span class="src">&middot; the rail and the matrix</span></span>
+    <p class="use" style="margin-top:2px">A rail of every position beside one position&rsquo;s grant. The
     <b>safest editor</b>: you are always demonstrably changing exactly one position, and the pane says which and
     how many people it reaches. You cannot compare two positions without clicking twice.</p>
 
@@ -37,10 +41,8 @@
         </div>
     {% else %}
         <div class="split">
-            {# THE RAIL, one flat list. It used to be banded by department,
-               because a bare "Analyst" appearing twice was two jobs a reader
-               could not tell apart; a name is unique across the organization
-               now, so there is one of each. #}
+            {# THE RAIL, one flat list. A name is unique across the
+               organization, so there is one of each. #}
             <div class="dept-rail">
                 <span class="lbl">positions &middot; {{ positions|length }}</span>
                     {% for position in positions %}
@@ -53,7 +55,7 @@
                             <span class="rh">
                                 {%- if held == 0 -%}<span class="pm-held0">nobody yet</span>
                                 {%- else -%}{{ held }} holder{{ held == 1 ? '' : 's' }}{% endif %}
-                                &middot; {{ position.permissionValues|length }} permission{{ position.permissionValues|length == 1 ? '' : 's' }}
+                                &middot; grants {{ position.grantValues|length }}
                             </span>
                         </a>
                     {% endfor %}
@@ -61,10 +63,10 @@
 
             <div class="panes">
                 {% if selected %}
-                    {% set held = selected.permissionValues %}
+                    {% set held = selected.grantValues %}
                     {% set reaches = holders[selected.uuidString]|default(0) %}
                     {# RENAME IS A SECOND, SEPARATE WRITE ON THE SAME PANE, and
-                       forms do not nest — so it is a sibling of the permissions
+                       forms do not nest — so it is a sibling of the grants
                        form and the header's controls join it by `form=`, which
                        is exactly what that attribute is for. Neither form can
                        post the other's fields.
@@ -98,48 +100,61 @@
                             </span>
                         </div>
 
-                        <p class="use" style="margin:-4px 0 14px">Every box ticked here is granted to
+                        <p class="use" style="margin:-4px 0 14px">Every cell ticked here is granted to
                         <b>{{ reaches == 1 ? 'the one person' : 'all ' ~ reaches ~ ' people' }}</b> holding this
                         position at once, and unticking one takes it from all of them &mdash; which is the point
                         of a position, and the reason the count is in the header rather than in a confirmation
                         afterwards.</p>
 
                         {# §5.6(c): a bounded (area-X) administrator sees the fence.
-                           You can grant only what your own position holds; a
-                           permission beyond your authority is drawn disabled, so
-                           the boundary is visible rather than a silent refusal. #}
+                           You can grant only what your own position holds; a cell
+                           beyond your authority is drawn disabled, so the boundary
+                           is visible rather than a silent refusal. #}
                         {% if grantable is not null %}
                             <p class="pm-guard use" style="margin:-4px 0 14px">You can grant only what <b>your own</b>
-                            position holds &mdash; a permission beyond your authority is shown disabled, so the fence is
+                            position holds &mdash; a cell beyond your authority is shown disabled, so the fence is
                             visible. <span class="pm-guardnote">guard: no wider-than-self grant</span></p>
                         {% endif %}
 
+                        {# THE MODEL'S ZERO, IN WORDS. A blank matrix and a
+                           position that grants nothing look identical, and
+                           only one of them is a fact worth saying. #}
+                        {% if held is empty %}
+                            {{ pm.grants_nothing() }}
+                        {% endif %}
+
                         <div class="pm-list">
-                            {# PER-MODULE GROUPS, CLEARLY BOUNDED. One umbrella is
-                               ONE bounded group with its rows inside it, carrying
-                               its module's own colour on a 3px left edge — so a
-                               reader can see where one module's permissions end
-                               and the next module's begin at arm's length. #}
-                            {% for umbrella, permissions in grouped %}
-                                {# THE GROUP IS THE SCOPE, not the heading: the
-                                   select-all button is in the heading and the
-                                   boxes are its siblings, so only the bounded
-                                   group can see both. #}
-                                <div class="pm-group {{ permissions[0].isCore ? 'pm-core' : 'pm-mod pm-mod-' ~ permissions[0].source }}"
+                            {# ONE GROUP PER DECLARER, CLEARLY BOUNDED — so a
+                               reader can see where the team's concerns end and
+                               a module's begin at arm's length.
+
+                               THE GROUP IS THE SCOPE, not the heading: the
+                               select-all button is in the heading and the
+                               boxes are inside the same bounded group, so only
+                               the group can see both. #}
+                            {% for declarer, concerns in grouped %}
+                                <div class="pm-group"
                                      data-controller="uhifadhi--team-bundle--permission-group">
-                                    {{ pm.umbrella_head(umbrella, permissions, moduleNames, held) }}
-                                    {% for permission in permissions %}
-                                        {{ pm.row(permission, held, grantable) }}
-                                    {% endfor %}
+                                    {{ pm.group_head(declarer, groupPairs[declarer]|default([]), held) }}
+                                    <div class="pm-scroll">
+                                        <table class="tbl pm-grid">
+                                            <thead>{{ pm.verb_heads(verbs) }}</thead>
+                                            <tbody>
+                                                {% for concern in concerns %}
+                                                    <tr>
+                                                        <td class="pm-rowh">{{ pm.concern_name(concern) }}</td>
+                                                        {% for verb in verbs %}
+                                                            {{ pm.cell(concern, verb, held, grantable) }}
+                                                        {% endfor %}
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             {% endfor %}
 
-                            {# The modules that are here and have nothing to grant. #}
-                            {% for slug in silentModules %}
-                                {{ pm.silent_module(slug, moduleNames[slug]|default(slug)) }}
-                            {% endfor %}
-
-                            {# And what nothing installed provides any more. #}
+                            {# And what nothing installed declares any more. #}
                             {{ pm.orphans(orphans|keys, held) }}
                         </div>
 
@@ -152,7 +167,7 @@
                            IT IS HONEST ABOUT HAVING CHANGED NOTHING. A bar that
                            always says "unsaved changes" is a bar nobody reads. #}
                         <div class="pm-save clean">
-                            <span class="txt">Saved. This position holds <b>{{ held|length }} of the {{ catalogue|length }} permissions</b> the catalogue offers here.</span>
+                            <span class="txt">Saved. This position holds <b>{{ held|length }} of the {{ pairs|length }} grants</b> this installation declares.</span>
                             <span class="acts">
                                 <a class="softbtn" href="{{ path('team_positions', {position: selected.uuidString}) }}">Discard</a>
                                 <button class="cta" type="submit">{{ pm.icon_save() }} Save</button>

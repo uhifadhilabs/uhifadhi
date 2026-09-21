@@ -63,9 +63,9 @@ use Uhifadhi\Bundle\AreaBundle\Service\ZoneOverlapService;
  * with none offers to ADD one, has nothing to preview and needs no confirmation
  * because there is nothing to supersede.
  *
- * A PLAIN CLASS, extending nothing, gated on `area.edit` — the platform's own
- * permission string, answered by whichever module an installation trusts. See
- * {@see AreaController}.
+ * A PLAIN CLASS, extending nothing, gated on `areas.configure` — the Areas
+ * concern with the Configure verb, answered by whichever module an installation
+ * trusts with grants. See {@see AreaController}.
  */
 final readonly class AreaEditController
 {
@@ -92,7 +92,7 @@ final readonly class AreaEditController
      * values are the lead.
      */
     #[Route('/areas/{uuid}/edit', name: 'area_edit', requirements: ['uuid' => Requirement::UUID], methods: ['GET', 'POST'])]
-    #[IsGranted('area.edit')]
+    #[IsGranted('areas.configure')]
     public function edit(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
@@ -123,7 +123,7 @@ final readonly class AreaEditController
      * confirmation.
      */
     #[Route('/areas/{uuid}/boundary/replace', name: 'area_boundary_replace', requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted('area.edit')]
+    #[IsGranted('areas.configure')]
     public function replaceBoundary(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,

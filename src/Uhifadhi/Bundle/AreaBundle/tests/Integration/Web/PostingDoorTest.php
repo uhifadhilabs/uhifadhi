@@ -47,32 +47,33 @@ final class PostingDoorTest extends WebTestCase
 
         $body = $this->body($this->record($area, $station));
 
-        self::assertStringContainsString('Nobody is posted here', $body);
+        self::assertStringContainsString('Nobody is stationed here', $body);
         self::assertStringContainsString(
             '/areas/'.$area->getUuidString().'/stations/settings?open='.$station->getUuidString(),
             $body,
             'The empty state opens the configure page on this very station.',
         );
-        self::assertStringContainsString('Post somebody', $body);
+        self::assertStringContainsString('Station somebody', $body);
     }
 
     /**
      * AND IT IS ABSENT, NOT DISABLED, for somebody who may READ the area and
-     * not write to it. Posting costs `area.edit`, not the `area.view` that
-     * opens the configure page, so a reader who may look gets the page and
-     * not the door — a greyed control is a list of what somebody is not
-     * trusted with, and an offer that refuses is worse than no offer.
+     * not write to it. Posting costs `assignments.manage`, not the
+     * `stations.read` that opens the configure page, so a reader who may look
+     * gets the page and not the door — a greyed control is a list of what
+     * somebody is not trusted with, and an offer that refuses is worse than no
+     * offer.
      */
     public function testTheDoorIsAbsentForSomebodyWhoMayReadButNotWrite(): void
     {
-        $this->boot(['area.view']);
+        $this->boot(self::READ_ONLY_AREA_PERMISSIONS);
         $this->signIn();
         [$area, $station] = $this->anEmptyPost();
 
         $body = $this->body($this->record($area, $station));
 
-        self::assertStringContainsString('Nobody is posted here', $body, 'The page still reads.');
-        self::assertStringNotContainsString('Post somebody', $body);
+        self::assertStringContainsString('Nobody is stationed here', $body, 'The page still reads.');
+        self::assertStringNotContainsString('Station somebody', $body);
     }
 
     /** And the fragment states the fact rather than lecturing about it. */
@@ -83,7 +84,7 @@ final class PostingDoorTest extends WebTestCase
         [$area, $station] = $this->anEmptyPost();
 
         self::assertStringNotContainsString(
-            'somebody is posted from the area',
+            'somebody is stationed from the area',
             $this->body($this->record($area, $station)),
         );
     }
@@ -102,7 +103,7 @@ final class PostingDoorTest extends WebTestCase
 
         self::assertMatchesRegularExpression('#<details class="zcard[^"]*"\s*>#', $body, 'A card nobody named is closed.');
         self::assertStringContainsString('<summary class="zc-hd">', $body);
-        self::assertStringContainsString('post somebody inside', $body, 'The closed summary says what is in there.');
+        self::assertStringContainsString('station somebody inside', $body, 'The closed summary says what is in there.');
     }
 
     /**
@@ -119,7 +120,7 @@ final class PostingDoorTest extends WebTestCase
         $body = $this->body($this->section($area).'?open='.$station->getUuidString());
 
         self::assertStringContainsString('open>', $body, 'The named card is rendered open.');
-        self::assertStringNotContainsString('post somebody inside', $body, 'An open card is not inviting you inside it.');
+        self::assertStringNotContainsString('station somebody inside', $body, 'An open card is not inviting you inside it.');
     }
 
     /**
@@ -134,7 +135,7 @@ final class PostingDoorTest extends WebTestCase
 
         $body = $this->body($this->section($area));
 
-        self::assertStringContainsString('Post someone', $body, 'The posting control is in the closed card, ready to be revealed.');
+        self::assertStringContainsString('Station someone', $body, 'The assignment control is in the closed card, ready to be revealed.');
         self::assertStringContainsString('/stations/'.$station->getUuidString().'/rename', $body);
     }
 

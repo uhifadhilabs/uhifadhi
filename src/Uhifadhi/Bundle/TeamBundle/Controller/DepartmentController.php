@@ -34,7 +34,6 @@ use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\GoalDirectionEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\GoalStateEnum;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Exception\MissingScopeChangeReasonException;
 use Uhifadhi\Bundle\TeamBundle\Exception\NameNotUniqueException;
 use Uhifadhi\Bundle\TeamBundle\Model\DepartmentQuery;
@@ -79,10 +78,11 @@ use Uhifadhi\Contracts\Performance\PerformanceScope;
  * changes where its people's authority reaches; neither is itself a grant.
  * Capability arrives through a position's permissions, composed one screen over.
  *
- * team.manage IS AREA-SCOPED, so `#[IsGranted(team.manage)]` on every route
- * here is the coarse gate,
+ * departments.read AND departments.configure ARE AREA-SCOPED, so the pair on
+ * each route here — read for the register and the record, configure for every
+ * write — is the coarse gate,
  * and the controller REFINES it against the escalation ruling: an area-X admin
- * (a team.manage holder confined to one area) may create, rename and deactivate
+ * (a departments.configure holder confined to one area) may create, rename and deactivate
  * area-level departments in X, but may NOT mint an org-level department, change
  * any department's scope, or reach an org-level or other-area department — each
  * of those widens power past their own boundary. {@see AreaAuthority} computes
@@ -174,7 +174,7 @@ final readonly class DepartmentController
      * sibling of Team under Organization, not a screen inside the roster.
      */
     #[Route('/departments', name: self::REGISTER, defaults: self::SURFACE, methods: ['GET'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('departments.read')]
     public function index(Request $request): Response
     {
         $departments = $this->departments->findAllOrdered();
@@ -391,7 +391,7 @@ final readonly class DepartmentController
      * not have.
      */
     #[Route('/departments/{uuid}', name: self::RECORD, requirements: ['uuid' => Requirement::UUID], methods: ['GET'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('departments.read')]
     public function show(string $uuid): Response
     {
         $department = $this->department($uuid);
@@ -451,7 +451,7 @@ final readonly class DepartmentController
      * departments their authority reaches and no others.
      */
     #[Route('/departments/{uuid}/modules/{slug}/toggle', name: 'team_department_module_toggle', requirements: ['uuid' => Requirement::UUID, 'slug' => '[a-z0-9-]+'], methods: ['POST'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('departments.configure')]
     public function toggleModule(Request $request, string $uuid, string $slug): Response
     {
         $department = $this->department($uuid);
@@ -490,7 +490,7 @@ final readonly class DepartmentController
      * takes only a name; an area-level one takes the area the picker enumerated.
      */
     #[Route('/departments', name: 'team_department_create', methods: ['POST'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('departments.configure')]
     public function create(Request $request): Response
     {
         $this->assertCsrf($request);
@@ -541,7 +541,7 @@ final readonly class DepartmentController
     }
 
     #[Route('/departments/{uuid}/rename', name: 'team_department_rename', requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('departments.configure')]
     public function rename(Request $request, string $uuid): Response
     {
         $department = $this->department($uuid);
@@ -576,7 +576,7 @@ final readonly class DepartmentController
      * is the signed-in administrator, resolved from the token.
      */
     #[Route('/departments/{uuid}/scope', name: 'team_department_scope', requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('departments.configure')]
     public function changeScope(Request $request, string $uuid): Response
     {
         $department = $this->department($uuid);
@@ -666,7 +666,7 @@ final readonly class DepartmentController
      * same department-management one every other write here carries.
      */
     #[Route('/departments/{uuid}/goals', name: 'team_department_goal_declare', requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('departments.configure')]
     public function declareGoal(Request $request, string $uuid): Response
     {
         $department = $this->department($uuid);
@@ -714,7 +714,7 @@ final readonly class DepartmentController
      * page would be read as a miss.
      */
     #[Route('/departments/{uuid}/goals/{goal}/withdraw', name: 'team_department_goal_withdraw', requirements: ['uuid' => Requirement::UUID, 'goal' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('departments.configure')]
     public function withdrawGoal(Request $request, string $uuid, string $goal): Response
     {
         $department = $this->department($uuid);
@@ -751,7 +751,7 @@ final readonly class DepartmentController
     }
 
     #[Route('/departments/{uuid}/deactivate', name: 'team_department_deactivate', requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('departments.configure')]
     public function deactivate(Request $request, string $uuid): Response
     {
         $department = $this->department($uuid);
@@ -777,7 +777,7 @@ final readonly class DepartmentController
      * availability strands nothing, the same way promoting a scope does not.
      */
     #[Route('/departments/{uuid}/reactivate', name: 'team_department_reactivate', requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('departments.configure')]
     public function reactivate(Request $request, string $uuid): Response
     {
         $department = $this->department($uuid);

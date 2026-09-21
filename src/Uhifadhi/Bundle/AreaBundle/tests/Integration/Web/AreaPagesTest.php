@@ -550,10 +550,10 @@ final class AreaPagesTest extends WebTestCase
     /** @return iterable<string, array{string, list<string>}> */
     public static function closedDoors(): iterable
     {
-        yield 'the register needs area.view' => ['/areas', []];
-        yield 'an overview needs area.view' => ['/areas/{uuid}', []];
-        yield 'zones need area.view' => ['/areas/{uuid}/zones', []];
-        yield 'the settings redirect needs area.edit' => ['/areas/{uuid}/settings', ['area.view']];
+        yield 'the register needs areas.read' => ['/areas', []];
+        yield 'an overview needs areas.read' => ['/areas/{uuid}', []];
+        yield 'zones need zones.read' => ['/areas/{uuid}/zones', []];
+        yield 'the settings redirect needs areas.configure' => ['/areas/{uuid}/settings', self::READ_ONLY_AREA_PERMISSIONS];
     }
 
     /**

@@ -100,7 +100,7 @@ final class InviteAndRecoveryTest extends WebTestCaseWithSchema
     public function testCreatingSomebodyWithAPasswordWorksWithNothingConfigured(): void
     {
         $this->administrator();
-        $ranger = $this->position('Ranger', ['area.view']);
+        $ranger = $this->position('Ranger', ['surveys.read']);
         $this->em->flush();
 
         $token = $this->tokenFrom('/team/invite');
@@ -143,7 +143,7 @@ final class InviteAndRecoveryTest extends WebTestCaseWithSchema
     public function testThePositionPickersAreOneFlatListWithNoDepartmentGroups(): void
     {
         $this->administrator();
-        $this->position('Ranger', ['area.view']);
+        $this->position('Ranger', ['surveys.read']);
         $this->position('Analyst');
         $this->em->flush();
 

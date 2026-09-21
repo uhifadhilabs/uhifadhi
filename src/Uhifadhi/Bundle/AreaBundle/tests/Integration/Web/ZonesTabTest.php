@@ -46,7 +46,7 @@ final class ZonesTabTest extends WebTestCase
 
         $body = $this->body($this->tab($area));
 
-        self::assertStringContainsString('People posted', $body);
+        self::assertStringContainsString('People stationed', $body);
         // The ground, wearing the house map contract.
         self::assertStringContainsString('map-plate', $body);
         self::assertStringContainsString('map-legend', $body);

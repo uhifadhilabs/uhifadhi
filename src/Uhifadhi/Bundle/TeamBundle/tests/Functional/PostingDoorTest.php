@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Tests\Functional;
 
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 
 /**
@@ -56,8 +55,14 @@ final class PostingDoorTest extends WebTestCaseWithSchema
     {
         $manager = $this->person('Asha', 'Mollel', TeamRoleEnum::Staff);
         $manager->setPosition($this->position('Team lead', [
-            PermissionEnum::TeamManage->value,
-            PermissionEnum::AreaView->value,
+            'directory.read',
+            'directory.manage',
+            'personal-details.read',
+            'personal-details.manage',
+            'positions.read',
+            'positions.configure',
+            'departments.read',
+            'departments.configure',
         ]));
         // Placed across the organization, so nothing about WHERE they stand
         // is what closes the door — it is closed because the position grants

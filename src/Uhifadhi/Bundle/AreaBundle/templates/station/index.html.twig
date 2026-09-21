@@ -1,8 +1,8 @@
-{# EVERY STATION IN ONE AREA — where each one stands and who is posted to it.
+{# EVERY STATION IN ONE AREA — where each one stands and who is stationed at it.
 
    Design: areas/<area>/stations/index.html.
 
-   A TAB, NOT A CONFIGURE SCREEN. It reads; adding, moving and staffing a post
+   A TAB, NOT A CONFIGURE SCREEN. It reads; adding, moving and staffing a station
    is the Stations section's job, and the Configure action the frame draws is
    the way there.
 
@@ -24,7 +24,7 @@
 
 {% block shell_page_title %}{{ area.name }}{% endblock %}
 
-{% block shell_page_subtitle %}Every station in this area, where it stands and who is posted to it. Adding and editing one is Configure&rsquo;s job.{% endblock %}
+{% block shell_page_subtitle %}Every station in this area, where it stands and who is stationed at it. Adding and editing one is Configure&rsquo;s job.{% endblock %}
 
 {% block shell_page %}
 {% set here = path('area_stations', {uuid: area.uuidString}) %}
@@ -36,7 +36,7 @@
         {%- if zoneCount > 0 -%}{{ zoneCount }}<em>presence-driven</em>{%- else -%}&mdash;<em>none yet</em>{%- endif -%}
     </span></span>
     <span class="f"><span class="k">Stations</span><span class="v">
-        {%- if stationCount > 0 -%}{{ stationCount }}<em>{{ staffed }} posted</em>{%- else -%}&mdash;<em>none yet</em>{%- endif -%}
+        {%- if stationCount > 0 -%}{{ stationCount }}<em>{{ staffed }} stationed</em>{%- else -%}&mdash;<em>none yet</em>{%- endif -%}
     </span></span>
     {% if area.iucnCategory %}<span class="f"><span class="k">IUCN</span><span class="v">{{ area.iucnCategory }}</span></span>{% endif %}
     {% if area.establishedYear %}<span class="f"><span class="k">Established</span><span class="v">{{ area.establishedYear }}</span></span>{% endif %}
@@ -55,7 +55,7 @@
    it is the list. #}
 <div class="grid kstrip">
     <div class="c kpi">
-        <span class="tab">People posted</span>
+        <span class="tab">People stationed</span>
         <b class="disp">{{ peopleTotal }}</b>
         <span class="sub">across {{ staffed }} {{ staffed == 1 ? 'station' : 'stations' }}</span>
     </div>
@@ -76,7 +76,7 @@
             <div class="c kpi">
                 <span class="tab">From the modules</span>
                 <b class="disp">&mdash;</b>
-                <span class="sub">no module publishes figures for these posts</span>
+                <span class="sub">no module publishes figures for these stations</span>
             </div>
         {% endfor %}
     {% endif %}
@@ -86,7 +86,7 @@
     {% if stationCount == 0 %}
         <div class="c zempty">
             <b class="zeh">No station in this area yet</b>
-            <p class="zeb">A station is a named point &mdash; a gate, a post, a camp. The first one is added in Configure; its zone is read from wherever it is put.</p>
+            <p class="zeb">A station is a named point &mdash; a gate, a station, a camp. The first one is added in Configure; its zone is read from wherever it is put.</p>
             <span class="zea"><a class="btn sm" href="{{ path('area_stations_configure', {uuid: area.uuidString}) }}">Configure stations {{ ux_icon('shell:arrow-right') }}</a></span>
         </div>
     {% else %}
@@ -130,7 +130,7 @@
                     label: 'order', all: 'order', key: constant('Uhifadhi\\Bundle\\AreaBundle\\Model\\StationQuery::SORT'),
                     chosen: query.sort == 'name' ? null : query.sort,
                     options: [
-                        {value: 'posted', label: 'most posted', count: 0, cat: null},
+                        {value: 'posted', label: 'most stationed', count: 0, cat: null},
                         {value: 'zone', label: 'by zone', count: 0, cat: null},
                     ],
                     query: query,
@@ -160,11 +160,11 @@
             {% endif %}
         </div>
 
-        {# THE PEOPLE POSTED, bounded by a page like the table above it. #}
+        {# THE PEOPLE STATIONED, bounded by a page like the table above it. #}
         <div class="c">
-            <span class="tab">Posted people<span class="src">&middot; {{ peopleTotal }} &middot; across {{ staffed }} {{ staffed == 1 ? 'station' : 'stations' }}</span></span>
+            <span class="tab">Stationed people<span class="src">&middot; {{ peopleTotal }} &middot; across {{ staffed }} {{ staffed == 1 ? 'station' : 'stations' }}</span></span>
             {% if people is empty %}
-                <div class="use">Nobody is posted in this area yet. Somebody is posted to a <b>station</b>, in the Stations section &mdash; never to a zone.</div>
+                <div class="use">Nobody is stationed in this area yet. Somebody is stationed at a <b>station</b>, in the Stations section &mdash; never to a zone.</div>
             {% else %}
                 <div class="plist">
                     {% for person in people %}

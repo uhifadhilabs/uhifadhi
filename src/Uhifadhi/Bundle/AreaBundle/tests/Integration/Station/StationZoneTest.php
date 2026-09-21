@@ -73,7 +73,7 @@ final class StationZoneTest extends IntegrationTestCase
         $area = $this->anArea();
         $this->aZone($area, 'West', self::A_WEST_HALF);
 
-        $station = $this->stations()->add($area, 'Eastern Post', self::EAST_LON, self::LAT);
+        $station = $this->stations()->add($area, 'Eastern Station', self::EAST_LON, self::LAT);
 
         self::assertNull($station->getZone());
     }
@@ -118,7 +118,7 @@ final class StationZoneTest extends IntegrationTestCase
     {
         $area = $this->anArea();
         $zone = $this->aZone($area, 'West', self::A_WEST_HALF);
-        $station = $this->stations()->add($area, 'Eastern Post', self::EAST_LON, self::LAT);
+        $station = $this->stations()->add($area, 'Eastern Station', self::EAST_LON, self::LAT);
         self::assertNull($station->getZone());
 
         $this->zones()->replaceGeometry($zone, self::AN_EAST_HALF);
@@ -150,7 +150,7 @@ final class StationZoneTest extends IntegrationTestCase
         $west = $this->aZone($area, 'West', self::A_WEST_HALF);
         $this->aZone($area, 'East', self::AN_EAST_HALF);
         $inWest = $this->stations()->add($area, 'Seneto Gate Post', self::WEST_LON, self::LAT);
-        $inEast = $this->stations()->add($area, 'Eastern Post', self::EAST_LON, self::LAT);
+        $inEast = $this->stations()->add($area, 'Eastern Station', self::EAST_LON, self::LAT);
 
         $this->zones()->remove($west);
         $this->stations()->rederiveFor($area);
@@ -173,7 +173,7 @@ final class StationZoneTest extends IntegrationTestCase
         $this->aZone($area, 'West', self::A_WEST_HALF);
         $this->aZone($area, 'East', self::AN_EAST_HALF);
 
-        $station = $this->stations()->add($area, 'Border Post', -29.5, self::LAT);
+        $station = $this->stations()->add($area, 'Border Station', -29.5, self::LAT);
 
         self::assertSame('East', $station->getZone()?->getName());
         $this->stations()->rederiveFor($area);

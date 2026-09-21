@@ -18,7 +18,6 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Environment;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Model\PostingQuery;
 use Uhifadhi\Bundle\TeamBundle\Service\PostingBoard;
 
@@ -48,7 +47,7 @@ final readonly class TeamPostingsController
     }
 
     #[Route('/team/postings', name: self::POSTINGS, defaults: TeamController::SURFACE, methods: ['GET'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('directory.read')]
     public function index(Request $request): Response
     {
         $query = PostingQuery::from($request);

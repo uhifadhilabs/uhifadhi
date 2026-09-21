@@ -16,20 +16,24 @@ namespace Uhifadhi\Bundle\TeamBundle\Tests\Functional;
 use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\DomCrawler\Field\ChoiceFormField;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 
 /**
- * THE PERMISSION MATRIX, RENDERED AND SAVED.
+ * THE GRANTS MATRIX, RENDERED AND SAVED.
  *
- * What is asserted here is what makes this matrix different from every other
- * permission matrix, and what a template can get wrong about it:
+ * IT USED TO BE A LIST OF FLAT PERMISSION VALUES under an umbrella the
+ * catalogue invented. A grant is a (concern, verb) pair now, so the screen is
+ * a matrix in the literal sense: one group per DECLARER, a row per CONCERN,
+ * the six verbs as columns, and a cell only where the concern declares the
+ * verb. What is asserted here is what a template can get that wrong about:
  *
- *   · the per-module groups are CLEARLY BOUNDED and each names its contributor;
- *   · every row carries the sentence that says what holding it does;
- *   · an installed module that declares nothing is DRAWN, not skipped;
+ *   · the groups are CLEARLY BOUNDED and each names who declared it;
+ *   · every row carries the sentence that says what the concern is about;
+ *   · the columns are the six verbs, and there is NO CELL where a concern
+ *     declares no verb — a checkbox that would mean nothing;
+ *   · a position that grants nothing says so in those words;
  *   · an orphaned grant is drawn muted and SURVIVES a save that does not touch
  *     it, because editing a position is not a migration;
- *   · a module-declared permission round-trips through the save.
+ *   · a module-declared pair round-trips through the save.
  *
  * THE CREATE FORM USED TO ASK FOR A DEPARTMENT FIRST and the name was unique
  * inside it; the ruling took the department off the position, so the form asks
@@ -72,8 +76,12 @@ final class PositionMatrixTest extends WebTestCaseWithSchema
         );
     }
 
-    /** Gated on the permission it grants — a Staff member without it is refused. */
-    public function testItIsGatedOnTeamManage(): void
+    /**
+     * GATED ON READING THE REGISTER — `positions.read`, not the flat
+     * `team.manage` it used to name. A Staff member with no position holds
+     * nothing at all and is refused.
+     */
+    public function testItIsGatedOnReadingThePositionsRegister(): void
     {
         $frank = $this->person('Frank', 'Massawe');
         $this->em->flush();
@@ -99,25 +107,71 @@ final class PositionMatrixTest extends WebTestCaseWithSchema
     }
 
     /**
-     * EVERY UMBRELLA IS ONE BOUNDED GROUP WEARING ITS CONTRIBUTOR — the PM·C
-     * finding, applied to the direction that ships. A reader has to be able to
-     * see where one module's permissions end and the next module's begin.
+     * ONE GROUP PER DECLARER, BOUNDED AND WEARING THE PACKAGE THAT DECLARED
+     * IT. Whoever enforces a concern declares it, so a reader has to be able
+     * to see where the team's concerns end and a module's begin — and which
+     * package removing would take a group away.
      */
-    public function testEachUmbrellaIsABoundedGroupNamingWhoBroughtIt(): void
+    public function testEachDeclarerIsABoundedGroupNamingWhoDeclaredIt(): void
     {
         $this->administrator();
-        $this->position('Ranger', ['area.view']);
+        $this->position('Ranger', ['surveys.read']);
         $this->em->flush();
 
         $crawler = $this->client->request('GET', '/team/positions');
 
-        // Three core umbrellas plus the one a module declared.
+        // The team's own concerns, and the ones the surveys fixture declares.
         $groups = $crawler->filter('[data-pm="b"] .pm-group');
-        self::assertGreaterThanOrEqual(4, $groups->count());
+        self::assertGreaterThanOrEqual(2, $groups->count());
 
-        self::assertStringContainsString('the host', $crawler->filter('[data-pm="b"] .pm-by.core')->first()->text());
-        // The module's own name, from its own provider — never a word this page invented.
-        self::assertStringContainsString('Surveys', $crawler->filter('[data-pm="b"] .pm-by.surveys')->first()->text());
+        $declarers = $crawler->filter('[data-pm="b"] .pm-umb > b')->each(static fn (Crawler $c): string => $c->text());
+        self::assertContains('Team', $declarers);
+        // The declaring package's own word, from its own declaration — never
+        // a word this page invented.
+        self::assertContains('Surveys', $declarers);
+    }
+
+    /**
+     * THE SIX VERBS ARE THE COLUMNS, in their fixed order, in every group —
+     * a matrix whose columns differ per group is one nobody can read across.
+     */
+    public function testTheColumnsAreTheSixVerbsInEveryGroup(): void
+    {
+        $this->administrator();
+        $this->position('Ranger', []);
+        $this->em->flush();
+
+        $crawler = $this->client->request('GET', '/team/positions');
+
+        $tables = $crawler->filter('[data-pm="b"] .pm-group table.pm-grid');
+        self::assertGreaterThanOrEqual(2, $tables->count());
+
+        foreach ($tables as $table) {
+            $heads = new Crawler($table)->filter('thead th.pm-verbh')->each(static fn (Crawler $c): string => $c->text());
+            self::assertSame(['Read', 'Record', 'Manage', 'Configure', 'Delete', 'Export'], $heads);
+        }
+    }
+
+    /**
+     * NO CELL WHERE THE CONCERN DECLARES NO VERB. Positions supports read and
+     * configure and nothing else, so there is no box an administrator could
+     * tick that would mean nothing — and the four gaps are drawn as gaps.
+     */
+    public function testThereIsNoCheckboxWhereAConcernDeclaresNoVerb(): void
+    {
+        $this->administrator();
+        $this->position('Ranger', []);
+        $this->em->flush();
+
+        $crawler = $this->client->request('GET', '/team/positions');
+
+        foreach (['positions.read', 'positions.configure'] as $declared) {
+            self::assertCount(1, $crawler->filter('[data-pm="b"] input.pm-check[value="'.$declared.'"]'), $declared.' is declared and has no cell.');
+        }
+
+        foreach (['positions.record', 'positions.manage', 'positions.delete', 'positions.export'] as $never) {
+            self::assertCount(0, $crawler->filter('[data-pm="b"] input.pm-check[value="'.$never.'"]'), $never.' is a box that would mean nothing.');
+        }
     }
 
     /** THE DESCRIPTION IS PRINTED UNDER THE NAME. That is the whole of the ruling. */
@@ -130,21 +184,23 @@ final class PositionMatrixTest extends WebTestCaseWithSchema
         $crawler = $this->client->request('GET', '/team/positions');
 
         self::assertStringContainsString(
-            PermissionEnum::TeamManage->description(),
+            'The positions the organization has written, what each one grants, and who holds it.',
             $crawler->filter('[data-pm="b"]')->html(),
         );
-        // And the module's own sentence reaches the page unchanged.
+        // And the declaring module's own sentence reaches the page unchanged.
         self::assertStringContainsString(
-            'Enter a survey from the field and attach its counts to an area.',
+            'The surveys this module records and the figures it publishes.',
             $crawler->filter('[data-pm="b"]')->html(),
         );
     }
 
     /**
-     * AN INSTALLED MODULE THAT DECLARES NOTHING IS DRAWN. Hiding it would read
-     * as "that module is not installed", which is a different and wrong fact.
+     * A SENSITIVE CONCERN IS MARKED. Personal details are a fact about a
+     * person an organization may reasonably want withheld without withholding
+     * the page they sit on, and an administrator should be told that before
+     * the click rather than after.
      */
-    public function testAModuleThatDeclaresNothingIsStillOnThePage(): void
+    public function testASensitiveConcernIsMarkedAsOne(): void
     {
         $this->administrator();
         $this->position('Ranger', []);
@@ -152,11 +208,26 @@ final class PositionMatrixTest extends WebTestCaseWithSchema
 
         $crawler = $this->client->request('GET', '/team/positions');
 
-        self::assertStringContainsString('Installed, and it declares no permissions', $crawler->html());
-        self::assertStringContainsString('Roster', $crawler->filter('.pm-mod-roster')->first()->text());
+        self::assertGreaterThan(0, $crawler->filter('[data-pm="b"] .pm-sens')->count(), 'Nothing on the matrix is marked sensitive.');
     }
 
-    public function testTickingABoxGrantsItAndTheFlashSaysWhoItReaches(): void
+    /**
+     * A POSITION THAT GRANTS NOTHING SAYS SO IN THOSE WORDS. A blank matrix
+     * and a position that grants nothing look identical, and only one of them
+     * is a fact worth saying.
+     */
+    public function testAPositionThatGrantsNothingSaysSo(): void
+    {
+        $this->administrator();
+        $ranger = $this->position('Ranger', []);
+        $this->em->flush();
+
+        $crawler = $this->client->request('GET', '/team/positions?position='.$ranger->getUuidString());
+
+        self::assertStringContainsString('This position grants nothing', $crawler->html());
+    }
+
+    public function testTickingACellGrantsItAndTheFlashSaysWhoItReaches(): void
     {
         $naomi = $this->administrator();
         $ranger = $this->position('Ranger', []);
@@ -167,14 +238,14 @@ final class PositionMatrixTest extends WebTestCaseWithSchema
         $token = $this->tokenFrom('/team/positions');
         $this->client->request('POST', '/team/positions/'.$ranger->getUuidString().'/permissions', [
             '_token' => $token,
-            'permissions' => ['area.view', 'team.manage'],
+            'grants' => ['directory.read', 'positions.configure'],
         ]);
 
         self::assertResponseRedirects();
         $this->em->clear();
         $stored = $this->em->getRepository(Position::class)->findOneBy(['name' => 'Ranger']);
         self::assertInstanceOf(Position::class, $stored);
-        self::assertSame(['area.view', 'team.manage'], $stored->getPermissionValues());
+        self::assertSame(['directory.read', 'positions.configure'], $stored->getGrantValues());
 
         $crawler = $this->client->followRedirect();
         self::assertStringContainsString('reaches 1 person', $crawler->html());
@@ -192,7 +263,7 @@ final class PositionMatrixTest extends WebTestCaseWithSchema
      * unusable because the button was not reachable. A test that never asks
      * the page for its own form cannot see that.
      */
-    public function testTickingABoxAndPressingSaveOnTheRenderedPageGrantsIt(): void
+    public function testTickingACellAndPressingSaveOnTheRenderedPageGrantsIt(): void
     {
         $this->administrator();
         $ranger = $this->position('Ranger', []);
@@ -205,9 +276,9 @@ final class PositionMatrixTest extends WebTestCaseWithSchema
         $form = $crawler->filter('form.pane')->selectButton('Save')->form();
 
         /** @var list<ChoiceFormField> $boxes */
-        $boxes = $form['permissions'];
+        $boxes = $form['grants'];
         foreach ($boxes as $box) {
-            if (['area.view'] === $box->availableOptionValues()) {
+            if (['directory.read'] === $box->availableOptionValues()) {
                 $box->tick();
             }
         }
@@ -219,19 +290,19 @@ final class PositionMatrixTest extends WebTestCaseWithSchema
         $this->em->clear();
         $stored = $this->em->getRepository(Position::class)->findOneBy(['name' => 'Ranger']);
         self::assertInstanceOf(Position::class, $stored);
-        self::assertSame(['area.view'], $stored->getPermissionValues(), 'The tick did not survive the save.');
+        self::assertSame(['directory.read'], $stored->getGrantValues(), 'The tick did not survive the save.');
 
         // And it comes back ticked, so a reload shows what was granted.
         $reloaded = $this->client->request('GET', $url);
         self::assertCount(
             1,
-            $reloaded->filter('input.pm-check[value="area.view"][checked]'),
+            $reloaded->filter('input.pm-check[value="directory.read"][checked]'),
             'The saved grant is not drawn as held when the page is reloaded.',
         );
     }
 
-    /** A MODULE-DECLARED PERMISSION ROUND-TRIPS, which an enum-typed write could not do. */
-    public function testAModuleDeclaredPermissionRoundTripsThroughTheSave(): void
+    /** A MODULE-DECLARED PAIR ROUND-TRIPS, which an enum-typed write could not do. */
+    public function testAModuleDeclaredPairRoundTripsThroughTheSave(): void
     {
         $this->administrator();
         $ranger = $this->position('Ranger', []);
@@ -240,13 +311,13 @@ final class PositionMatrixTest extends WebTestCaseWithSchema
         $token = $this->tokenFrom('/team/positions');
         $this->client->request('POST', '/team/positions/'.$ranger->getUuidString().'/permissions', [
             '_token' => $token,
-            'permissions' => ['surveys.record'],
+            'grants' => ['surveys.record'],
         ]);
 
         $this->em->clear();
         $stored = $this->em->getRepository(Position::class)->findOneBy(['name' => 'Ranger']);
         self::assertInstanceOf(Position::class, $stored);
-        self::assertSame(['surveys.record'], $stored->getPermissionValues(), 'A module\'s permission is not silently dropped.');
+        self::assertSame(['surveys.record'], $stored->getGrantValues(), 'A module\'s grant is not silently dropped.');
     }
 
     /**
@@ -258,28 +329,28 @@ final class PositionMatrixTest extends WebTestCaseWithSchema
         $this->administrator();
         $botanist = new Position()->setName('Botanist');
         // How it got there: the module was installed at the time.
-        $botanist->setPermissionValues(['vegetation.survey'], ['vegetation.survey']);
+        $botanist->setGrantValues(['vegetation.record'], ['vegetation.record']);
         $this->em->persist($botanist);
         $this->em->flush();
 
         $crawler = $this->client->request('GET', '/team/positions?position='.$botanist->getUuidString());
 
         self::assertStringContainsString('no longer described', $crawler->html());
-        self::assertStringContainsString('vegetation.survey', $crawler->html());
-        self::assertStringContainsString('no installed module provides it', $crawler->html());
+        self::assertStringContainsString('vegetation.record', $crawler->html());
+        self::assertStringContainsString('no installed module declares it', $crawler->html());
 
         // The form posts it back, so an unrelated save keeps it.
         $token = $this->tokenFrom('/team/positions?position='.$botanist->getUuidString());
         $this->client->request('POST', '/team/positions/'.$botanist->getUuidString().'/permissions', [
             '_token' => $token,
-            'permissions' => ['vegetation.survey', 'area.view'],
+            'grants' => ['vegetation.record', 'directory.read'],
         ]);
 
         $this->em->clear();
         $stored = $this->em->getRepository(Position::class)->findOneBy(['name' => 'Botanist']);
         self::assertInstanceOf(Position::class, $stored);
-        self::assertContains('vegetation.survey', $stored->getPermissionValues());
-        self::assertContains('area.view', $stored->getPermissionValues());
+        self::assertContains('vegetation.record', $stored->getGrantValues());
+        self::assertContains('directory.read', $stored->getGrantValues());
     }
 
     /** And it can still be taken away: it is a grant, not a fixture. */
@@ -287,20 +358,20 @@ final class PositionMatrixTest extends WebTestCaseWithSchema
     {
         $this->administrator();
         $botanist = new Position()->setName('Botanist');
-        $botanist->setPermissionValues(['vegetation.survey'], ['vegetation.survey']);
+        $botanist->setGrantValues(['vegetation.record'], ['vegetation.record']);
         $this->em->persist($botanist);
         $this->em->flush();
 
         $token = $this->tokenFrom('/team/positions?position='.$botanist->getUuidString());
         $this->client->request('POST', '/team/positions/'.$botanist->getUuidString().'/permissions', [
             '_token' => $token,
-            'permissions' => [],
+            'grants' => [],
         ]);
 
         $this->em->clear();
         $stored = $this->em->getRepository(Position::class)->findOneBy(['name' => 'Botanist']);
         self::assertInstanceOf(Position::class, $stored);
-        self::assertSame([], $stored->getPermissionValues());
+        self::assertSame([], $stored->getGrantValues());
     }
 
     /**
@@ -360,6 +431,30 @@ final class PositionMatrixTest extends WebTestCaseWithSchema
         }
     }
 
+    /**
+     * EVERY DIRECTION STILL DRAWS. The five renderings are five readings of
+     * ONE declaration, and the library is the only page that opens all of
+     * them at once — so a direction that stopped compiling when the matrix
+     * moved to pairs is caught here rather than by whoever adopts it.
+     */
+    public function testEveryDirectionRendersInTheLibrary(): void
+    {
+        $this->administrator();
+        $this->position('Ranger', ['directory.read', 'surveys.read']);
+        $this->em->flush();
+
+        $crawler = $this->client->request('GET', '/team/positions/widgets');
+
+        self::assertResponseIsSuccessful();
+        foreach (['a', 'b', 'c', 'd', 'e', 'cat'] as $direction) {
+            self::assertGreaterThan(
+                0,
+                $crawler->filter('[data-pm="'.$direction.'"]')->count(),
+                'Direction '.$direction.' does not render.',
+            );
+        }
+    }
+
     /** A write with no token is refused rather than performed. */
     public function testASaveWithoutACsrfTokenIsRefused(): void
     {
@@ -368,7 +463,7 @@ final class PositionMatrixTest extends WebTestCaseWithSchema
         $this->em->flush();
 
         $this->client->request('POST', '/team/positions/'.$ranger->getUuidString().'/permissions', [
-            'permissions' => ['area.view'],
+            'grants' => ['directory.read'],
         ]);
 
         self::assertResponseStatusCodeSame(404);

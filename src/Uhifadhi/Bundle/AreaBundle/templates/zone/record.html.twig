@@ -61,9 +61,9 @@
     </span></span>
     <span class="f"><span class="k">Stations</span><span class="v">
         {{- stationCount ?: '&mdash;'|raw }}<em>
-        {%- if stationCount == 0 %}none{% elseif stationCount == 1 %}one post{% else %}posts{% endif -%}
+        {%- if stationCount == 0 %}none{% elseif stationCount == 1 %}one station{% else %}stations{% endif -%}
         </em></span></span>
-    <span class="f"><span class="k">People</span><span class="v">{{ peopleTotal ?: '&mdash;'|raw }}<em>posted</em></span></span>
+    <span class="f"><span class="k">People</span><span class="v">{{ peopleTotal ?: '&mdash;'|raw }}<em>stationed</em></span></span>
     {% for fact in figures %}
         {# THE MODULE IS THE LABEL AND THE PERIOD IS THE UNIT — the month in
            three letters, as the design writes it ("aug"). A band is a line of
@@ -109,7 +109,7 @@
                 <div class="zdnone">
                     <span class="stpin hollow"></span>
                     <b>{{ stationCount ? 'No station matches' : 'No station in ' ~ zone.name }}</b>
-                    <span>{{ stationCount ? 'clear the search' : 'zones are presence-driven — ground nobody works may hold no post' }}</span>
+                    <span>{{ stationCount ? 'clear the search' : 'zones are presence-driven — ground nobody works may hold no station' }}</span>
                 </div>
             {% else %}
                 {# NO ZONE COLUMN: every row of one zone would answer it the same. #}
@@ -143,7 +143,7 @@
                 <div class="zdnone">
                     <span class="tav hollow"></span>
                     <b>{{ peopleTotal ? 'Nobody matches' : 'Nobody works out of ' ~ zone.name }}</b>
-                    <span>{{ peopleTotal ? 'clear the search' : (stationCount ? 'a post with nobody at it is a normal state' : 'no station to be posted to') }}</span>
+                    <span>{{ peopleTotal ? 'clear the search' : (stationCount ? 'a station with nobody at it is a normal state' : 'no station to be stationed at') }}</span>
                 </div>
             {% else %}
                 <div class="plist">

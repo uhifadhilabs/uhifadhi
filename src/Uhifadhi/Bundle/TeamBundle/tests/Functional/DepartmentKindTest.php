@@ -15,7 +15,7 @@ namespace Uhifadhi\Bundle\TeamBundle\Tests\Functional;
 
 use Symfony\Component\DomCrawler\Crawler;
 use Uhifadhi\Bundle\TeamBundle\Entity\DepartmentKind;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
+use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 
 /**
@@ -115,7 +115,7 @@ final class DepartmentKindTest extends WebTestCaseWithSchema
     private function lists(): Crawler
     {
         $admin = $this->person('Naomi', 'Kileo', TeamRoleEnum::Admin);
-        $admin->setPosition($this->position('Warden', [PermissionEnum::TeamManage->value]));
+        $admin->setPosition($this->administratorPosition('Warden'));
         $this->em->flush();
         $this->client->loginUser($admin);
 
@@ -140,5 +140,25 @@ final class DepartmentKindTest extends WebTestCaseWithSchema
         $this->client->request('POST', $path, $fields + ['_token' => $token]);
         self::assertResponseRedirects('/departments/configure/lists');
         $this->em->clear();
+    }
+
+    /**
+     * WHAT ADMINISTERING THE TEAM IS, WRITTEN AS PAIRS. `team.manage` was one
+     * flat value; it is eight (concern, verb) pairs now, and these are the
+     * eight the upgrade backfills it into, so a fixture that used to say
+     * "this person administers the team" still says exactly that.
+     */
+    private function administratorPosition(string $name): Position
+    {
+        return $this->position($name, [
+            'directory.read',
+            'directory.manage',
+            'personal-details.read',
+            'personal-details.manage',
+            'positions.read',
+            'positions.configure',
+            'departments.read',
+            'departments.configure',
+        ]);
     }
 }

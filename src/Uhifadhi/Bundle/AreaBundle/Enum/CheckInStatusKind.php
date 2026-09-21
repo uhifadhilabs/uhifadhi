@@ -83,7 +83,7 @@ enum CheckInStatusKind: string
     public function label(): string
     {
         return match ($this) {
-            self::AtPost => 'at a post',
+            self::AtPost => 'at a station',
             self::WorkingElsewhere => 'working elsewhere',
             self::NotWorking => 'not working',
             self::Special => 'special assignment',

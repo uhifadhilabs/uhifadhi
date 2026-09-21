@@ -15,7 +15,6 @@ namespace Uhifadhi\Bundle\TeamBundle\Tests\Functional;
 
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\Area\HostArea;
 
@@ -149,7 +148,7 @@ final class AreaScopedPositionTest extends WebTestCaseWithSchema
     public function testAnOrganizationWideAdminCreatesAPositionTheSameWay(): void
     {
         $orgAdmin = $this->person('Amina', 'Salehe', TeamRoleEnum::Staff);
-        $orgAdmin->setPosition($this->position('Coordinator', [PermissionEnum::TeamManage->value]));
+        $orgAdmin->setPosition($this->administratorPosition('Coordinator'));
         $this->place($orgAdmin);
         $this->em->flush();
         $this->client->loginUser($orgAdmin);
@@ -188,11 +187,31 @@ final class AreaScopedPositionTest extends WebTestCaseWithSchema
     private function areaAdminIn(HostArea $area): User
     {
         $admin = $this->person('Naomi', 'Kileo', TeamRoleEnum::Staff);
-        $admin->setPosition($this->position('Warden', [PermissionEnum::TeamManage->value]));
+        $admin->setPosition($this->administratorPosition('Warden'));
         $this->place($admin, [$area]);
         $this->em->flush();
         $this->client->loginUser($admin);
 
         return $admin;
+    }
+
+    /**
+     * WHAT ADMINISTERING THE TEAM IS, WRITTEN AS PAIRS. `team.manage` was one
+     * flat value; it is eight (concern, verb) pairs now, and these are the
+     * eight the upgrade backfills it into, so a fixture that used to say
+     * "this person administers the team" still says exactly that.
+     */
+    private function administratorPosition(string $name): Position
+    {
+        return $this->position($name, [
+            'directory.read',
+            'directory.manage',
+            'personal-details.read',
+            'personal-details.manage',
+            'positions.read',
+            'positions.configure',
+            'departments.read',
+            'departments.configure',
+        ]);
     }
 }

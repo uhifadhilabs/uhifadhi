@@ -47,8 +47,8 @@ use Uhifadhi\Bundle\ShellBundle\Model\NavItem;
 #[CoversClass(AreaNavigation::class)]
 final class AreaModulesTest extends WebTestCase
 {
-    /** Everything an ordinary admin holds, plus the module strings this screen asks for. */
-    private const array ALL = ['area.view', 'area.create', 'area.edit', 'area.delete', 'module.view', 'module.create'];
+    /** Everything an ordinary admin holds, plus the module pairs this screen asks for. */
+    private const array ALL = [...self::ALL_AREA_PERMISSIONS, 'modules.read', 'modules.configure'];
 
     public function testTheGridShowsWhatTheAreaHasSwitchedOn(): void
     {
@@ -148,9 +148,9 @@ final class AreaModulesTest extends WebTestCase
     }
 
     /** The tab is absent, not greyed, for somebody who may not see modules. */
-    public function testTheModulesTabIsAbsentWithoutModuleView(): void
+    public function testTheModulesTabIsAbsentWithoutModulesRead(): void
     {
-        $this->boot(['area.view', 'area.edit']);
+        $this->boot(self::ALL_AREA_PERMISSIONS);
         $this->signIn();
         $area = $this->anArea();
         $this->aCatalogue();
@@ -158,9 +158,9 @@ final class AreaModulesTest extends WebTestCase
         self::assertStringNotContainsString($this->modulesPath($area), $this->body('/areas/'.$area->getUuidString()));
     }
 
-    public function testTheGridIsClosedWithoutModuleView(): void
+    public function testTheGridIsClosedWithoutModulesRead(): void
     {
-        $this->boot(['area.view']);
+        $this->boot(self::READ_ONLY_AREA_PERMISSIONS);
         $this->signIn();
         $area = $this->anArea();
         $this->aCatalogue();
@@ -217,7 +217,7 @@ final class AreaModulesTest extends WebTestCase
     /** The grid's Customize button is hidden from somebody who may only look. */
     public function testTheCustomizeAffordanceCarriesItsPermission(): void
     {
-        $this->boot(['area.view', 'module.view']);
+        $this->boot([...self::ALL_AREA_PERMISSIONS, 'modules.read']);
         $this->signIn();
         $area = $this->anArea();
         $this->aCatalogue();
@@ -225,9 +225,9 @@ final class AreaModulesTest extends WebTestCase
         self::assertStringNotContainsString('/customize', $this->body($this->modulesPath($area)));
     }
 
-    public function testTheShopIsClosedWithoutModuleCreate(): void
+    public function testTheShopIsClosedWithoutModulesConfigure(): void
     {
-        $this->boot(['area.view', 'module.view']);
+        $this->boot([...self::ALL_AREA_PERMISSIONS, 'modules.read']);
         $this->signIn();
         $area = $this->anArea();
         $this->aCatalogue();
@@ -324,9 +324,9 @@ final class AreaModulesTest extends WebTestCase
     }
 
     /** A write without the permission is refused, and nothing moves. */
-    public function testTogglingIsClosedWithoutModuleCreate(): void
+    public function testTogglingIsClosedWithoutModulesConfigure(): void
     {
-        $this->boot(['area.view', 'module.view']);
+        $this->boot([...self::ALL_AREA_PERMISSIONS, 'modules.read']);
         $this->signIn();
         $area = $this->anArea();
         $this->aCatalogue();

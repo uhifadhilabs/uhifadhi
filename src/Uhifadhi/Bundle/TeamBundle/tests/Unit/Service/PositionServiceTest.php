@@ -18,11 +18,11 @@ use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
+use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Exception\NameNotUniqueException;
-use Uhifadhi\Bundle\TeamBundle\Exception\UnknownPermissionException;
-use Uhifadhi\Bundle\TeamBundle\Service\PermissionCatalogue;
+use Uhifadhi\Bundle\TeamBundle\Exception\UnknownGrantException;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionService;
 use Uhifadhi\Contracts\Access\ScopeKind;
 
@@ -38,10 +38,15 @@ use Uhifadhi\Contracts\Access\ScopeKind;
  * it offers — are specified here beside the service that shapes it, because
  * they are refusals rather than storage and no database can see them.
  *
+ * A GRANT IS A (CONCERN, VERB) PAIR. The service used to take flat permission
+ * values and write `setPermissionValues()`; the ruling replaced that with
+ * pairs validated against what the installation DECLARES, so the suite asks
+ * for pairs and the refusal is about a pair nobody declared.
+ *
  * The catalogue here is a real one with no modules installed, which is the
- * state of a fresh installation: this bundle's own seven and nothing else. That
- * is exactly the state in which "a value nothing provides is refused" has to
- * hold.
+ * state of a fresh installation: this bundle's own four concerns and nothing
+ * else. That is exactly the state in which "a pair nothing declares is
+ * refused" has to hold.
  */
 #[CoversClass(PositionService::class)]
 #[CoversClass(Position::class)]
@@ -63,7 +68,7 @@ final class PositionServiceTest extends TestCase
      */
     public function testASecondPositionOfTheSameNameAnywhereIsRefused(): void
     {
-        $service = new PositionService(self::entityManagerThatRefusesTheSecondWrite(), new PermissionCatalogue());
+        $service = new PositionService(self::entityManagerThatRefusesTheSecondWrite(), self::catalogue());
         $service->create('Analyst');
 
         $this->expectException(NameNotUniqueException::class);
@@ -76,24 +81,24 @@ final class PositionServiceTest extends TestCase
     {
         $position = self::service()->create('Analyst');
 
-        self::assertSame([], $position->getPermissionValues());
+        self::assertSame([], $position->getGrantValues());
         self::assertNotNull($position->getVacantSince());
     }
 
     public function testRenamingChangesOnlyTheName(): void
     {
         $position = self::service()->create('Analyst');
-        self::service()->setPermissions($position, [PermissionEnum::TeamManage->value]);
+        self::service()->setGrants($position, [self::CONFIGURE_POSITIONS]);
 
         self::service()->rename($position, 'Senior Analyst');
 
         self::assertSame('Senior Analyst', $position->getName());
-        self::assertSame([PermissionEnum::TeamManage->value], $position->getPermissionValues());
+        self::assertSame([self::CONFIGURE_POSITIONS], $position->getGrantValues());
     }
 
     public function testRenamingOntoANameTheOrganizationAlreadyUsesIsRefused(): void
     {
-        $service = new PositionService(self::entityManagerThatRefusesTheSecondWrite(), new PermissionCatalogue());
+        $service = new PositionService(self::entityManagerThatRefusesTheSecondWrite(), self::catalogue());
         $position = $service->create('Analyst');
 
         $this->expectException(NameNotUniqueException::class);
@@ -105,20 +110,35 @@ final class PositionServiceTest extends TestCase
     {
         $position = self::service()->create('Analyst');
 
-        self::service()->setPermissions($position, [PermissionEnum::TeamManage->value]);
-        self::assertSame([PermissionEnum::TeamManage->value], $position->getPermissionValues());
+        self::service()->setGrants($position, [self::CONFIGURE_POSITIONS]);
+        self::assertSame([self::CONFIGURE_POSITIONS], $position->getGrantValues());
 
-        self::service()->setPermissions($position, []);
-        self::assertSame([], $position->getPermissionValues());
+        self::service()->setGrants($position, []);
+        self::assertSame([], $position->getGrantValues());
     }
 
-    public function testAValueNoInstalledModuleProvidesIsRefusedRatherThanStored(): void
+    public function testAPairNoInstalledModuleDeclaresIsRefusedRatherThanStored(): void
     {
         $position = self::service()->create('Analyst');
 
-        $this->expectException(UnknownPermissionException::class);
+        $this->expectException(UnknownGrantException::class);
 
-        self::service()->setPermissions($position, ['sightings.record']);
+        self::service()->setGrants($position, ['sightings.record']);
+    }
+
+    /**
+     * AND A PAIR WHOSE CONCERN IS DECLARED BUT WHOSE VERB IS NOT. Positions
+     * supports read and configure; a `positions.delete` nothing declares is a
+     * grant that would mean nothing, and the write refuses it for the same
+     * reason the matrix draws no cell for it.
+     */
+    public function testAVerbTheConcernDoesNotDeclareIsRefusedToo(): void
+    {
+        $position = self::service()->create('Analyst');
+
+        $this->expectException(UnknownGrantException::class);
+
+        self::service()->setGrants($position, [TeamConcerns::POSITIONS.'.delete']);
     }
 
     // ─── HOW MANY MAY HOLD IT ────────────────────────────────────────────
@@ -196,12 +216,22 @@ final class PositionServiceTest extends TestCase
         new Position()->setAllowedKinds([ScopeKind::Own]);
     }
 
+    /** The pair this suite grants: composing what a position grants. */
+    private const string CONFIGURE_POSITIONS = TeamConcerns::POSITIONS.'.configure';
+
     private static function service(): PositionService
     {
-        return new PositionService(
-            self::createStub(EntityManagerInterface::class),
-            new PermissionCatalogue(),
-        );
+        return new PositionService(self::createStub(EntityManagerInterface::class), self::catalogue());
+    }
+
+    /**
+     * A FRESH INSTALLATION: the team's own declaration and no module. The
+     * catalogue walks its sources rather than holding a list, so this is the
+     * real one with one real source in it.
+     */
+    private static function catalogue(): ConcernCatalogue
+    {
+        return new ConcernCatalogue([new TeamConcerns()]);
     }
 
     /**

@@ -21,7 +21,7 @@
                         <tr>
                             <td><b>{{ position.name }}</b></td>
                             <td>{% if held %}{{ held }}{% else %}<span class="pm-held0">nobody yet</span>{% endif %}</td>
-                            <td>{% for value in position.permissionValues %}<span class="perm">{{ value }}</span>{% else %}<span class="perm none">nothing</span>{% endfor %}</td>
+                            <td>{% for value in position.grantValues %}<span class="perm">{{ value }}</span>{% else %}<span class="perm none">nothing</span>{% endfor %}</td>
                             <td class="tm-acts"><a class="open-btn" href="{{ path('team_positions', {position: position.uuidString}) }}">Edit</a></td>
                         </tr>
                     {% endfor %}

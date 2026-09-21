@@ -54,11 +54,11 @@ use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleService;
  * which URLs: that needs the area, the viewer and the ledger, none of which a
  * layout has. See {@see AreaComposition}.
  *
- * TWO PERMISSIONS, AND THE MAPPING IS DELIBERATE. `module.view` to see the grid;
- * `module.create` — the catalogue's "Modules / Add" — to reach the shop and to
- * move anything in it. A catalogue string rather than a role, because composing
- * an area is exactly the capability that permission describes and a role is not
- * grantable to a position.
+ * TWO PAIRS, AND THE MAPPING IS DELIBERATE. `modules.read` to see the grid;
+ * `modules.configure` to reach the shop and to move anything in it, because
+ * switching a module on for an area is setting what that area runs on. A concern
+ * and a verb rather than a role, because composing an area is exactly what that
+ * pair describes and a role is not grantable to a position.
  *
  * EVERY WRITE IS A POST WITH A TOKEN, and every write goes through the registry's
  * {@see AreaModuleService} rather than touching a row: the rule that a pinned
@@ -67,10 +67,10 @@ use Uhifadhi\Bundle\RegistryBundle\Service\AreaModuleService;
 final readonly class AreaModulesController
 {
     /** Seeing the catalogue on an area. */
-    public const string VIEW = 'module.view';
+    public const string VIEW = 'modules.read';
 
     /** Composing it: switching a module on or off, and setting the order. */
-    public const string COMPOSE = 'module.create';
+    public const string COMPOSE = 'modules.configure';
 
     public function __construct(
         private Environment $twig,

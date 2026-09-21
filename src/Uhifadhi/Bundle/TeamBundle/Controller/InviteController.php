@@ -28,7 +28,6 @@ use Symfony\Component\Uid\Uuid;
 use Twig\Environment;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Exception\PositionFullException;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
@@ -88,7 +87,7 @@ final readonly class InviteController
     }
 
     #[Route('/team/invite', name: 'team_invite', methods: ['GET'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('directory.read')]
     public function show(): Response
     {
         return new Response($this->twig->render('@Team/team/invite.html.twig', [
@@ -105,7 +104,7 @@ final readonly class InviteController
 
     /** THE PATH THAT NEEDS NOTHING FROM THE DEPLOYMENT. */
     #[Route('/team', name: 'team_member_create', methods: ['POST'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('directory.manage')]
     public function create(Request $request): Response
     {
         $this->assertCsrf($request, self::CSRF_CREATE);
@@ -144,7 +143,7 @@ final readonly class InviteController
 
     /** THE PATH THAT NEEDS A MAILER, and says so when there is none. */
     #[Route('/team/invite', name: 'team_invite_send', methods: ['POST'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('directory.manage')]
     public function invite(Request $request): Response
     {
         $this->assertCsrf($request, self::CSRF_INVITE);

@@ -42,7 +42,7 @@ use Uhifadhi\Contracts\Shell\NavGroup;
  * in one and not the other.
  *
  * GATING IS THIS CLASS'S JOB, not the shell's — the shell holds no authorization
- * service and asks nothing about the viewer. A viewer without `area.view` gets
+ * service and asks nothing about the viewer. A viewer without `areas.read` gets
  * no section at all, rather than a section whose rows all close in their face.
  *
  * ROUTE-TOLERANT. The addresses are mounted by the APPLICATION, so generating
@@ -98,7 +98,7 @@ final readonly class AreaNavigation implements NavigationSourceInterface
             return;
         }
 
-        if (!$this->authorization->isGranted('area.view')) {
+        if (!$this->authorization->isGranted('areas.read')) {
             return;
         }
 

@@ -88,7 +88,7 @@ final readonly class OrgDashboardController
     }
 
     #[Route('/', name: self::ROUTE, methods: ['GET'])]
-    #[IsGranted('area.view')]
+    #[IsGranted('areas.read')]
     public function dashboard(): Response
     {
         // ONE MOMENT FOR THE WHOLE PAGE, handed to every cell, so two figures
@@ -113,7 +113,7 @@ final readonly class OrgDashboardController
     }
 
     #[Route('/widgets', name: self::WIDGETS_ROUTE, methods: ['GET'])]
-    #[IsGranted('area.view')]
+    #[IsGranted('areas.read')]
     public function library(): Response
     {
         $now = new \DateTimeImmutable();
@@ -142,14 +142,14 @@ final readonly class OrgDashboardController
     }
 
     #[Route('/widgets/save', name: 'organisation_widgets_save', methods: ['POST'])]
-    #[IsGranted('area.view')]
+    #[IsGranted('areas.read')]
     public function save(Request $request): Response
     {
         return $this->endpoint->save($request, $this->catalogue->catalog());
     }
 
     #[Route('/widgets/reset', name: 'organisation_widgets_reset', methods: ['POST'])]
-    #[IsGranted('area.view')]
+    #[IsGranted('areas.read')]
     public function reset(Request $request): Response
     {
         $catalog = $this->catalogue->catalog();
@@ -163,7 +163,7 @@ final readonly class OrgDashboardController
     }
 
     #[Route('/widgets/preset/{presetId}', name: 'organisation_widgets_preset', requirements: ['presetId' => '[a-z0-9_-]+'], methods: ['POST'])]
-    #[IsGranted('area.view')]
+    #[IsGranted('areas.read')]
     public function applyPreset(Request $request, string $presetId): Response
     {
         $catalog = $this->catalogue->catalog();
@@ -177,7 +177,7 @@ final readonly class OrgDashboardController
     }
 
     #[Route('/widgets/preset/{presetId}/copy', name: 'organisation_widgets_preset_copy', requirements: ['presetId' => '[a-z0-9_-]+'], methods: ['POST'], priority: 1)]
-    #[IsGranted('area.view')]
+    #[IsGranted('areas.read')]
     public function copyPreset(Request $request, string $presetId): Response
     {
         return $this->afterWrite(
@@ -188,7 +188,7 @@ final readonly class OrgDashboardController
     }
 
     #[Route('/widgets/presets', name: 'organisation_widgets_preset_create', methods: ['POST'])]
-    #[IsGranted('area.view')]
+    #[IsGranted('areas.read')]
     public function createPreset(Request $request): Response
     {
         return $this->afterWrite(
@@ -199,7 +199,7 @@ final readonly class OrgDashboardController
     }
 
     #[Route('/widgets/presets/{presetUuid}/apply', name: 'organisation_widgets_preset_apply', requirements: ['presetUuid' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted('area.view')]
+    #[IsGranted('areas.read')]
     public function applyCustomPreset(Request $request, string $presetUuid): Response
     {
         return $this->afterWrite(
@@ -210,7 +210,7 @@ final readonly class OrgDashboardController
     }
 
     #[Route('/widgets/presets/{presetUuid}/rename', name: 'organisation_widgets_preset_rename', requirements: ['presetUuid' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted('area.view')]
+    #[IsGranted('areas.read')]
     public function renameCustomPreset(Request $request, string $presetUuid): Response
     {
         return $this->afterWrite(
@@ -221,7 +221,7 @@ final readonly class OrgDashboardController
     }
 
     #[Route('/widgets/presets/{presetUuid}/delete', name: 'organisation_widgets_preset_delete', requirements: ['presetUuid' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted('area.view')]
+    #[IsGranted('areas.read')]
     public function deleteCustomPreset(Request $request, string $presetUuid): Response
     {
         return $this->afterWrite(

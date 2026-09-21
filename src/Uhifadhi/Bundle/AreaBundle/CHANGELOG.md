@@ -110,8 +110,9 @@ Not released yet.
    same matrix the Installation tab's tables are.
  * A POSTING HAS A DOOR TO WHERE IT IS MADE. A post with nobody at it named
    the area's configure page and left the reader to find it; the empty state
-   now opens that page on this very station, gated on `area.edit` — what
-   posting somebody costs, not the `area.view` that merely opens the page.
+   now opens that page on this very station, gated on `assignments.manage`
+   — what posting somebody costs, not the `stations.read` that merely opens
+   the page.
  * A STATION CARD OPENS IN THE BROWSER. The stations register is a native
    `<details>`: opening a card used to be a NAVIGATION (`?open=<uuid>`, a
    round trip to reveal markup the page could have carried). The whole head

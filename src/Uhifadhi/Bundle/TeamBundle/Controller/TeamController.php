@@ -34,11 +34,11 @@ use Uhifadhi\Contracts\Entity\UserInterface as ModuleUserInterface;
 /**
  * THE TEAM PAGE — everybody who can sign in to this installation.
  *
- * GATED ON `team.manage`, not on a tier. That is the whole of what retiring the
- * Manager tier bought: the question "may this person administer the team" is
- * asked of the permission catalogue, so a Staff member whose position carries
- * the row gets in and a tier nobody granted does not decide it. Super Admin and
- * Admin pass the same check, because the voter grants them everything by tier.
+ * GATED ON `directory.read`, not on a tier. Reading who is on the team is what
+ * a colleague needs, and it is asked of the concern catalogue rather than of a
+ * rank: a Staff member whose position carries the cell gets in and a tier
+ * nobody granted does not decide it. Super Admin and Admin pass the same check,
+ * because the voter grants them everything by tier.
  *
  * IT IS A WIDGET SURFACE. The body is the person's own resolved layout, so this
  * controller's job is to gather every fact ANY of the nine widgets might want
@@ -79,7 +79,7 @@ final readonly class TeamController
     }
 
     #[Route('/team', name: self::PEOPLE, defaults: self::SURFACE, methods: ['GET'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
+    #[IsGranted('directory.read')]
     public function index(Request $request): Response
     {
         $catalog = new TeamWidgets()->catalog();

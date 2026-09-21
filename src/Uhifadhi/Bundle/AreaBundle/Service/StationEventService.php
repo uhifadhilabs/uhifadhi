@@ -87,7 +87,7 @@ final readonly class StationEventService
 
     public function posted(Station $station, string $person, PostingSource $source, ?string $actor): void
     {
-        $this->write($station, StationEventKind::Posted, \sprintf('%s posted here', $person), implode(' · ', array_filter([
+        $this->write($station, StationEventKind::Posted, \sprintf('%s stationed here', $person), implode(' · ', array_filter([
             null === $actor ? null : 'by '.$actor,
             PostingSource::FromTheirPage === $source ? 'from their own page' : 'from this page',
         ])), $actor);
@@ -95,7 +95,7 @@ final readonly class StationEventService
 
     public function postingEnded(Station $station, string $person, ?string $actor): void
     {
-        $this->write($station, StationEventKind::PostingEnded, \sprintf('%s’s posting ended', $person), self::by($actor), $actor);
+        $this->write($station, StationEventKind::PostingEnded, \sprintf('%s’s assignment ended', $person), self::by($actor), $actor);
     }
 
     public function leaderAppointed(Station $station, string $person, ?string $actor): void

@@ -34,7 +34,7 @@ use Uhifadhi\Contracts\Shell\ScopeSourceInterface;
  * areas and no voters; this holds both, and it is already the package that
  * answers the same question for the handset.
  *
- * THE SAME AUTHORITY AS `/api/areas/mine`, ASKED THE SAME WAY: `area.view`
+ * THE SAME AUTHORITY AS `/api/areas/mine`, ASKED THE SAME WAY: `areas.read`
  * with the AREA AS SUBJECT. Asked without one, the question becomes "does
  * this person have authority anywhere", which is much weaker and would offer
  * somebody a slice they cannot open. The narrowing is therefore the
@@ -50,8 +50,8 @@ use Uhifadhi\Contracts\Shell\ScopeSourceInterface;
  */
 final readonly class AreasTheViewerMayOpen implements ScopeSourceInterface
 {
-    /** Seeing an area and everything recorded inside it — the platform's own value. */
-    private const string PERMISSION = 'area.view';
+    /** Seeing an area and everything recorded inside it — the Areas concern, read. */
+    private const string PERMISSION = 'areas.read';
 
     public function __construct(
         private AreaOfInterestRepository $areas,

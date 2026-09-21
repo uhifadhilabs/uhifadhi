@@ -46,7 +46,7 @@ final class StationsTabTest extends WebTestCase
         $body = $this->body($this->tab($area));
 
         self::assertStringContainsString('Leaders appointed', $body);
-        self::assertStringContainsString('People posted', $body);
+        self::assertStringContainsString('People stationed', $body);
         self::assertStringContainsString('Seneto Gate Post', $body);
         self::assertStringContainsString('ST-01', $body);
         self::assertStringContainsString('Western Sector', $body);
@@ -65,7 +65,7 @@ final class StationsTabTest extends WebTestCase
 
         $body = $this->body($this->tab($area));
 
-        self::assertStringContainsString('Posted people', $body);
+        self::assertStringContainsString('Stationed people', $body);
         self::assertStringContainsString('J. Mollel', $body);
         self::assertStringContainsString('Leads', $body);
     }
@@ -105,7 +105,7 @@ final class StationsTabTest extends WebTestCase
         $body = $this->body($this->tab($area));
 
         self::assertSame(4, substr_count($body, 'class="c kpi"'));
-        self::assertStringContainsString('no module publishes figures for these posts', $body);
+        self::assertStringContainsString('no module publishes figures for these stations', $body);
     }
 
     /**
@@ -158,11 +158,11 @@ final class StationsTabTest extends WebTestCase
         $this->signIn();
         $area = $this->anArea();
         for ($i = 1; $i <= 9; ++$i) {
-            $this->stations()->add($area, \sprintf('Post %02d', $i), -29.75, -3.2);
+            $this->stations()->add($area, \sprintf('Station %02d', $i), -29.75, -3.2);
         }
 
         self::assertCount(8, $this->listed($this->tab($area)));
-        self::assertSame(['Post 09'], $this->listed($this->tab($area).'?page=2'));
+        self::assertSame(['Station 09'], $this->listed($this->tab($area).'?page=2'));
     }
 
     /** An area with no post says what a station is rather than drawing an empty table. */

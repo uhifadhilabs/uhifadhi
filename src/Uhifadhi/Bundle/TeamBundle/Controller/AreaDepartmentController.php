@@ -25,7 +25,6 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Environment;
 use Uhifadhi\Bundle\RegistryBundle\Service\ModuleCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Model\DepartmentMark;
 use Uhifadhi\Bundle\TeamBundle\Model\DepartmentQuery;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
@@ -79,7 +78,7 @@ final readonly class AreaDepartmentController
     }
 
     #[Route('/areas/{uuid}/departments', name: self::TAB, requirements: ['uuid' => Requirement::UUID], methods: ['GET'])]
-    #[IsGranted(PermissionEnum::AreaView->value)]
+    #[IsGranted('departments.read')]
     public function tab(Request $request, string $uuid): Response
     {
         $area = $this->areaByUuid($uuid);
@@ -125,12 +124,15 @@ final readonly class AreaDepartmentController
      * THE DEPARTMENTS SECTION OF THE AREA'S CONFIGURE PAGE — the only place
      * this area's departments are added and edited.
      *
-     * READING IS GATED ON `area.view`, as every area surface is; each WRITE
+     * READING IS GATED ON `departments.read`, the pair the departments register
+     * itself reads under — this is a departments page that happens to be reached
+     * through an area, and it must not gate on a concern the ground package
+     * declares, because that concern is absent when the ground package is; each WRITE
      * is the register's own route and carries the register's own gate, so
      * nothing is permitted here that is not permitted there.
      */
     #[Route('/areas/{uuid}/departments/settings', name: self::SECTION, requirements: ['uuid' => Requirement::UUID], methods: ['GET'])]
-    #[IsGranted(PermissionEnum::AreaView->value)]
+    #[IsGranted('departments.read')]
     public function configure(string $uuid): Response
     {
         $area = $this->areaByUuid($uuid);

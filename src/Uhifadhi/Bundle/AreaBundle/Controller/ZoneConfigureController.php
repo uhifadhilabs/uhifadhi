@@ -58,10 +58,11 @@ use Uhifadhi\Contracts\Kpi\ZoneRef;
  * not be read puts its refusal there. One card, and the area decides which of it
  * is drawn.
  *
- * READING IS GATED ON `area.view`, WRITING ON `area.edit` — the same split the
- * Zones tab makes, for the same reason: how an area is divided is a lens and
- * explains nothing to somebody who may not look through it, while changing the
- * division is an edit of the area itself.
+ * READING IS GATED ON `zones.read`, WRITING ON `zones.configure`, CARRYING THE
+ * FILE OUT ON `zones.export` — the same splits the Zones tab makes, for the same
+ * reason: how an area is divided is a lens and explains nothing to somebody who
+ * may not look through it, changing the division is configuring the ground, and
+ * downloading the GeoJSON is taking it out of the building.
  */
 final readonly class ZoneConfigureController
 {
@@ -112,7 +113,7 @@ final readonly class ZoneConfigureController
     }
 
     #[Route('/areas/{uuid}/zones/settings', name: self::ROUTE, requirements: ['uuid' => Requirement::UUID], methods: ['GET'])]
-    #[IsGranted('area.view')]
+    #[IsGranted('zones.read')]
     public function configure(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
@@ -211,7 +212,7 @@ final readonly class ZoneConfigureController
      * exist.
      */
     #[Route('/areas/{uuid}/zones/export.geojson', name: 'area_zones_export', requirements: ['uuid' => Requirement::UUID], methods: ['GET'])]
-    #[IsGranted('area.view')]
+    #[IsGranted('zones.export')]
     public function export(
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
     ): Response {

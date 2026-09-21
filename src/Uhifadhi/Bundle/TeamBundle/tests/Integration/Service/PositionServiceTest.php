@@ -14,8 +14,8 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\TeamBundle\Tests\Integration\Service;
 
 use PHPUnit\Framework\Attributes\CoversClass;
+use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Exception\NameNotUniqueException;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionService;
@@ -84,13 +84,15 @@ final class PositionServiceTest extends IntegrationTestCase
         $this->positions()->rename($moving, 'Ranger');
     }
 
+    /** A grant is a (concern, verb) pair, and the JSON column holds it as written. */
     public function testAGrantIsStoredAndReadBack(): void
     {
         $position = $this->positions()->create('Analyst');
+        $pair = TeamConcerns::POSITIONS.'.configure';
 
-        $this->positions()->setPermissions($position, [PermissionEnum::TeamManage->value]);
+        $this->positions()->setGrants($position, [$pair]);
 
-        self::assertSame([PermissionEnum::TeamManage->value], $this->stored()->findAllOrdered()[0]->getPermissionValues());
+        self::assertSame([$pair], $this->stored()->findAllOrdered()[0]->getGrantValues());
     }
 
     /**

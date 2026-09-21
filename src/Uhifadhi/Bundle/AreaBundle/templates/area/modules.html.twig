@@ -42,9 +42,10 @@
 {% block shell_page_subtitle %}Every module switched on for this area &mdash; one card, one page. Open a card to view it; edit or run its data from there.{% endblock %}
 
 {% block shell_page_actions %}
-    {# THE AFFORDANCE CARRIES THE PERMISSION. Composing an area is `module.create`
-       — see AreaModulesController for why that string and not a role. #}
-    {% if is_granted('module.create') %}
+    {# THE AFFORDANCE CARRIES THE PERMISSION. Composing an area is
+       `modules.configure` — see AreaModulesController for why that pair and not
+       a role. #}
+    {% if door('modules.configure') %}
         <a class="cta" href="{{ path('area_module_customize', {uuid: area.uuidString}) }}">{{ ux_icon('shell:sliders-horizontal') }} Customize</a>
     {% endif %}
 {% endblock %}
@@ -52,7 +53,7 @@
 {% block shell_page %}
     {{ include('@Shell/_module_grid.html.twig', {groups: groups}, with_context: false) }}
 
-    {% if is_granted('module.create') %}
+    {% if door('modules.configure') %}
         {# THE HONEST ADD AFFORDANCE — the shop, not a dead plus, and it says how
            many modules are actually waiting in it rather than implying there is
            always something to add. #}

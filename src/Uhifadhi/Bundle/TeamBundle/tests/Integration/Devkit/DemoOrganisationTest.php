@@ -18,7 +18,6 @@ use Uhifadhi\Bundle\TeamBundle\Devkit\TeamContentProvider;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
@@ -106,10 +105,14 @@ final class DemoOrganisationTest extends IntegrationTestCase
 
         $granted = [];
         foreach ($this->service(PositionRepository::class)->findAllOrdered() as $position) {
-            $granted = [...$granted, ...$position->getPermissionValues()];
+            $granted = [...$granted, ...$position->getGrantValues()];
         }
 
-        self::assertContains(PermissionEnum::TeamManage->value, $granted);
+        // THE DEMO MAKES SOMEBODY WHO CAN ADMINISTER THE TEAM, because an
+        // installation whose seeded organization has nobody able to write a
+        // position is one a reader cannot get started in.
+        self::assertContains('positions.configure', $granted);
+        self::assertContains('departments.configure', $granted);
     }
 
     /**
