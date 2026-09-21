@@ -170,7 +170,10 @@ final readonly class TeamNavigation implements NavigationSourceInterface
             return null;
         }
 
-        if (!$this->viewerIsInTheSection()) {
+        // THE TREE OPENS ON A DEPARTMENT'S OWN PAGES TOO — its record and its
+        // configure page are places inside the section, and a reader standing
+        // on one sees the path that led there, as they do for a person.
+        if (!$this->viewerIsInDepartments()) {
             return $row;
         }
 
@@ -398,10 +401,21 @@ final readonly class TeamNavigation implements NavigationSourceInterface
         return false;
     }
 
-    /** Whether the register is drawn with this department's card marked. */
+    /**
+     * Whether this department is where the reader is: the register drawn
+     * with its row marked, or the department's own record or configure page.
+     */
     private function viewerIsFocusedOn(string $uuid): bool
     {
-        return $uuid === $this->requests->getCurrentRequest()?->query->get(DepartmentQuery::FOCUS);
+        $request = $this->requests->getCurrentRequest();
+        if (null === $request) {
+            return false;
+        }
+        if ($uuid === $request->query->get(DepartmentQuery::FOCUS)) {
+            return true;
+        }
+
+        return str_starts_with($this->routeHere(), 'team_department_') && $uuid === $request->attributes->get('uuid');
     }
 
     /**

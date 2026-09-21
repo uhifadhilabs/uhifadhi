@@ -46,29 +46,22 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
 {
     /**
      * THE BAND CARRIES WHAT THE DEPARTMENTS DID, not how many of them
-     * there are. A reader can already see how many cards are on the
-     * page; what they cannot see is what those departments have been
-     * doing, which is what the performance seam knows.
+     * there are; the count of what is listed is said at the end of the
+     * filter row, where a count of what is being listed belongs.
      */
-    public function testTheBandCarriesTheFiguresAndTheCountsMoveUnderTheFilters(): void
+    public function testTheBandCarriesTheFiguresAndTheFilterRowSaysWhatIsShown(): void
     {
         $crawler = $this->screen();
 
         $band = $crawler->filter('.factband .f .k')->each(static fn (Crawler $c): string => $c->text());
 
-        // The host's three are always there; a module's figures lead them
-        // where the installation runs any.
         self::assertContains('Areas', $band);
         self::assertContains('Seats filled', $band);
         self::assertContains('Goals', $band);
-        self::assertNotContains('Departments', $band, 'a count of the cards is not a figure about the organization');
+        self::assertNotContains('Departments', $band, 'a count of the rows is not a figure about the organization');
 
-        // AND THE COUNTS ARE UNDER THE FILTERS, where a count of what is
-        // being listed belongs.
-        $caption = $crawler->filter('.dcfil .cnt')->text();
-        self::assertStringContainsString('departments', $caption);
-        self::assertStringContainsString('org-wide', $caption);
-        self::assertStringContainsString('positions', $caption);
+        self::assertSame('showing 3 of 3', trim(preg_replace('/\s+/', ' ', $crawler->filter('.lfilt .tm-shown')->text()) ?? ''));
+        self::assertSame('showing 1 of 3', trim(preg_replace('/\s+/', ' ', $this->client->request('GET', '/departments?q=wetland')->filter('.lfilt .tm-shown')->text()) ?? ''));
     }
 
     /** The register wears the same two controls the performance section does. */
@@ -88,7 +81,7 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
         $north = $this->north;
         self::assertNotNull($north, 'the register was seeded with an area');
 
-        $narrowed = $this->client->request('GET', '/departments?scope=area&area='.$north->getUuidString());
+        $narrowed = $this->client->request('GET', '/departments?placement='.$north->getUuidString());
 
         self::assertResponseIsSuccessful();
         self::assertStringContainsString('Northern Reserve', $narrowed->filter('.pgact .i-ddval')->text());
@@ -97,21 +90,10 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
     // ---- the register lists both scope groups, area-first -----------------
 
     /**
-     * THE TWO SCOPES ARE DRAWN APART, ORG-WIDE FIRST. The register is read
-     * from the organization inwards: an org-wide department is one every area
-     * inherits, which is the thing a reader has to know before the rest of
-     * the list means anything. Each area's own follow, under its name.
+     * A DEPARTMENT'S ROW WEARS ITS OWN HUE, and it is the same category the
+     * sidebar's dot reads: the row carries an index and never a colour.
      */
-    /**
-     * A DEPARTMENT'S CARD WEARS ITS OWN HUE, and it is the same category the
-     * sidebar's dot reads.
-     *
-     * THE CARD CARRIES AN INDEX AND NEVER A COLOUR — the shell resolves it,
-     * which is the only way one department reads the same in both palettes
-     * and again on imagery. The mark was accent-tinted for every ACTIVE
-     * department before this, which left all nine identical.
-     */
-    public function testEachDepartmentsCardCarriesItsOwnCategory(): void
+    public function testEachDepartmentsRowCarriesItsOwnCategory(): void
     {
         $this->administrator();
         $this->department('Ecology');
@@ -121,77 +103,91 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
         $crawler = $this->client->request('GET', '/departments');
         self::assertResponseIsSuccessful();
 
-        $cats = $crawler->filter('article.dcard')->each(
-            static fn (Crawler $c): ?string => $c->attr('data-cat'),
-        );
-
-        self::assertSame(['1', '2'], $cats);
-        self::assertCount(0, $crawler->filter('.ov-mk.on'), 'the mark is no longer accent-tinted for every active department');
-    }
-
-    public function testTheRegisterGroupsOrgWideFirstThenEachAreasOwn(): void
-    {
-        $crawler = $this->screen();
-
-        $headings = $crawler->filter('[data-dp] .deptgroup .gh')->each(static fn (Crawler $c): string => $c->text());
-
-        self::assertContains('Org-wide', $headings);
-        self::assertContains('Northern Reserve', $headings);
-
-        self::assertLessThan(
-            array_search('Northern Reserve', $headings, true),
-            array_search('Org-wide', $headings, true),
-        );
+        self::assertSame(['1', '2'], $crawler->filter('tr.drow')->each(static fn (Crawler $c): ?string => $c->attr('data-cat')));
+        self::assertCount(2, $crawler->filter('tr.drow .dmark'));
     }
 
     /**
-     * EVERY CARD STATES ITS SCOPE beside its name: the area's name for an
-     * area-level department, "Org-wide" for one the organization owns.
+     * ONE TABLE, SORTED BY NAME ON ARRIVAL (ruled 2026-09-22): no groups,
+     * no cards — every department is a row, and the rows are in name order
+     * until a header is asked for another.
      */
-    public function testEachCardCarriesItsScope(): void
+    public function testTheRegisterIsOneTableSortedByNameOnArrival(): void
     {
         $crawler = $this->screen();
 
-        self::assertSame('Northern Reserve', $this->row($crawler, 'Wetland Management')->filter('.ov-sc')->text());
-        self::assertSame('Org-wide', $this->row($crawler, 'Ecology')->filter('.ov-sc')->text());
+        self::assertCount(1, $crawler->filter('[data-dp] table.tbl.dreg'));
+        self::assertCount(0, $crawler->filter('[data-dp] .dcard, [data-dp] details.nvsec'));
+        self::assertSame(['Ecology', 'Protection Service', 'Wetland Management'], $this->named($crawler));
+        self::assertSame('Department', $crawler->filter('th.sorted a')->text());
     }
 
     /**
-     * AN AREA-LEVEL DEPARTMENT SITS UNDER ITS AREA'S HEADING, which is where
-     * its scope is read from — the card states it too, and the two cannot
-     * disagree because both are the same association.
+     * EVERY HEADER SORTS EXACTLY ONE THING, and it is a link: the sorted
+     * column says so, clicking it turns the direction over, and the address
+     * carries both — a sorted register is a link somebody can send.
      */
-    public function testAnAreaLevelDepartmentSitsUnderItsAreasHeading(): void
+    public function testEveryHeaderSortsItsOneColumnThroughTheAddress(): void
     {
         $crawler = $this->screen();
-
-        $section = $crawler->filter('[data-dp] details.nvsec')
-            ->reduce(static fn (Crawler $c): bool => 'Northern Reserve' === $c->filter('.gh')->text())
-            ->first();
 
         self::assertSame(
-            ['Wetland Management'],
-            $section->filter('.dcard .ov-nm')->each(static fn (Crawler $c): string => $c->text()),
+            ['Department', 'Modules', 'Positions', 'Seats', 'Goals'],
+            $crawler->filter('thead th a')->each(static fn (Crawler $c): string => $c->text()),
         );
+
+        $byPositions = $crawler->filter('thead th a')->reduce(static fn (Crawler $c): bool => 'Positions' === $c->text())->first();
+        self::assertStringContainsString('sort=positions', (string) $byPositions->attr('href'));
+
+        $sorted = $this->client->request('GET', '/departments?sort=positions');
+        self::assertSame('ascending', $sorted->filter('th.sorted')->attr('aria-sort'));
+        self::assertStringContainsString('dir=desc', (string) $sorted->filter('th.sorted a')->attr('href'), 'the sorted header turns over');
+
+        $reversed = $this->client->request('GET', '/departments?sort=name&dir=desc');
+        self::assertSame(['Wetland Management', 'Protection Service', 'Ecology'], $this->named($reversed));
+        self::assertSame('descending', $reversed->filter('th.sorted')->attr('aria-sort'));
     }
 
     /**
-     * THE PILLS ARE THE CREATE CHOOSER'S OWN WORDS, in the same order, and
-     * every one of them is a link: the address is the state, so a filtered
-     * register can be sent to somebody.
+     * THE NAME CELL IS TWO LINES: the department over its placement — the
+     * area's name for an area-level department, "org-wide" for one the
+     * organization owns.
      */
-    public function testTheScopePillsFilterTheRegisterOffTheAddress(): void
+    public function testEachRowStatesItsPlacementUnderTheName(): void
+    {
+        $crawler = $this->screen();
+
+        self::assertStringContainsString('Northern Reserve', $this->row($crawler, 'Wetland Management')->filter('.sub')->text());
+        self::assertStringContainsString('org-wide', $this->row($crawler, 'Ecology')->filter('.sub')->text());
+    }
+
+    /**
+     * THE PLACEMENT DROPDOWN FILTERS THE REGISTER OFF THE ADDRESS — org-wide,
+     * or one area by its uuid — and every option is a link with the count of
+     * what picking it would leave.
+     */
+    public function testThePlacementFilterReadsTheAddress(): void
+    {
+        $crawler = $this->screen();
+
+        self::assertSame(['Ecology', 'Protection Service'], $this->named($this->client->request('GET', '/departments?placement=org')));
+        self::assertSame(['Wetland Management'], $this->named($this->client->request('GET', '/departments?placement='.$this->uuidOf('__area:Northern Reserve'))));
+
+        $options = $crawler->filter('.lfilt .i-dd')->first()->filter('.i-ddopt');
+        self::assertSame(['all placements', 'Org-wide', 'Northern Reserve'], $options->each(static fn (Crawler $c): string => trim($c->filter('.i-ddopt-l')->text())));
+        self::assertSame(['2', '1'], $options->filter('.i-ddopt-n')->each(static fn (Crawler $c): string => trim($c->text())));
+    }
+
+    /** The module, goals and seats dropdowns filter the same way. */
+    public function testTheModuleGoalsAndSeatsFiltersReadTheAddress(): void
     {
         $this->screen();
 
-        self::assertSame(
-            ['Ecology', 'Protection Service'],
-            $this->named($this->client->request('GET', '/departments?scope=org')),
-        );
-        self::assertSame(
-            ['Wetland Management'],
-            $this->named($this->client->request('GET', '/departments?scope=area')),
-        );
+        self::assertSame(['Ecology', 'Protection Service', 'Wetland Management'], $this->named($this->client->request('GET', '/departments?module=none')));
+        self::assertSame([], $this->named($this->client->request('GET', '/departments?goals=some')));
+        self::assertSame(['Ecology', 'Protection Service', 'Wetland Management'], $this->named($this->client->request('GET', '/departments?goals=none')));
+        // Unlimited seats are never vacant.
+        self::assertSame([], $this->named($this->client->request('GET', '/departments?seats=vacant')));
     }
 
     /** And the search reads the name, which is what somebody types. */
@@ -202,143 +198,73 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
         self::assertSame(['Wetland Management'], $this->named($this->client->request('GET', '/departments?q=wetland')));
     }
 
-    /**
-     * A GROUP THE SEARCH EMPTIES STAYS, because a heading that vanished would
-     * make the register look shorter than it is; a group the FILTER excludes
-     * goes, because a heading counting nothing is noise.
-     */
-    public function testASearchEmptiesAGroupAndAFilterRemovesIt(): void
+    /** An empty answer is a row that says so, and it says why. */
+    public function testAnEmptyRegisterSaysSo(): void
     {
         $this->screen();
 
-        $searched = $this->client->request('GET', '/departments?q=wetland');
-        self::assertCount(2, $searched->filter('[data-dp] details.nvsec'));
-
-        $filtered = $this->client->request('GET', '/departments?scope=org');
-        self::assertCount(1, $filtered->filter('[data-dp] details.nvsec'));
+        $empty = $this->client->request('GET', '/departments?q=nothing-is-called-this');
+        self::assertCount(0, $empty->filter('tr.drow'));
+        self::assertStringContainsString('No department matches', $empty->filter('tr.dempty')->text());
+        self::assertStringContainsString('widen a filter', $empty->filter('tr.dempty')->text());
     }
 
     /**
-     * THE FOCUSED CARD IS THE ONE THE SIDEBAR POINTS AT, and it is marked
-     * apart from the open one: focus is a line down the edge, open is a body.
+     * THE FOCUSED ROW IS THE ONE THE SIDEBAR POINTS AT, marked by the one
+     * left line a row may wear, and addressable by its anchor.
      */
-    public function testTheFocusedDepartmentIsMarkedAndIsNotTheOpenOne(): void
+    public function testTheFocusedDepartmentIsMarked(): void
     {
         $this->screen();
-        $crawler = $this->client->request('GET', '/departments?focus='.$this->uuidOf('Ecology'));
-
-        $card = $this->row($crawler, 'Ecology');
-        self::assertStringContainsString('dcfocus', (string) $card->attr('class'));
-        self::assertStringNotContainsString('dcard on', (string) $card->attr('class'));
-    }
-
-    /** An open card draws the positions filed under it, and the way to add one. */
-    public function testAnOpenCardDrawsThePositionsFiledUnderIt(): void
-    {
-        $this->screen();
-        $crawler = $this->client->request('GET', '/departments?open='.$this->uuidOf('Ecology'));
-
-        $card = $this->row($crawler, 'Ecology');
-        self::assertStringContainsString('Positions in Ecology', $card->text());
-        self::assertStringContainsString('Add position', $card->text());
-    }
-
-    /**
-     * A CARD IS OPENED BY A LABELLED BUTTON, not by a caret in the corner.
-     *
-     * RULED 2026-09-20. A bare chevron top-left says nothing about what it
-     * does and nothing about the state it is in; the control now sits in the
-     * header's action cluster beside Open, reads EXPAND when the card is
-     * shut and COLLAPSE when it is open, and carries the state in
-     * `aria-expanded` as well as in the word. It is a STATE VERB and never a
-     * count: "3 positions" on a button tells you what is inside, not what
-     * pressing it does, and it changes under you when somebody files a
-     * position.
-     */
-    public function testACardIsOpenedByALabelledButtonBesideOpen(): void
-    {
-        $crawler = $this->screen();
         $uuid = $this->uuidOf('Ecology');
+        $crawler = $this->client->request('GET', '/departments?focus='.$uuid);
 
-        $shut = $this->row($crawler, 'Ecology')->filter('.dc-act .ovx.xdisc');
-        // The word is written once and SHOUTED by the sheet, as every mono
-        // label in the product is — the markup carries the sentence case.
-        self::assertSame('Expand', trim($shut->filter('.t')->text()));
-        self::assertSame('false', $shut->attr('aria-expanded'));
-        self::assertStringContainsString('Ecology', (string) $shut->attr('aria-label'));
-
-        $open = $this->row($this->client->request('GET', '/departments?open='.$uuid), 'Ecology')
-            ->filter('.dc-act .ovx.xdisc');
-        self::assertSame('Collapse', trim($open->filter('.t')->text()));
-        self::assertSame('true', $open->attr('aria-expanded'));
-    }
-
-    /** And the old caret is gone from the header's left. */
-    public function testTheBareCaretIsGoneFromTheCardsCorner(): void
-    {
-        $card = $this->row($this->screen(), 'Ecology');
-
-        self::assertCount(0, $card->filter('.dc-hd > .ovx'));
-        self::assertCount(1, $card->filter('.dc-act .ovx.xdisc'));
+        $row = $this->row($crawler, 'Ecology');
+        self::assertStringContainsString('dcfocus', (string) $row->attr('class'));
+        self::assertSame('d-'.$uuid, $row->attr('id'));
+        self::assertCount(1, $crawler->filter('tr.dcfocus'));
     }
 
     /**
-     * THE FOOTER IS ONE LINE UNTIL IT IS ASKED FOR MORE.
-     *
-     * A COLLAPSED CARD IS A ROW IN A LIST, and a register of nine of them is
-     * read by running down the names. A footer that drew the confine form,
-     * the rename field and the deactivate button open made every collapsed
-     * card a hundred pixels taller than the design's and turned the list into
-     * a stack of forms. So the strip states the scope and offers two
-     * disclosures; both are `<details>`, so they open with no script of ours.
+     * A ROW CARRIES ONE DOOR. The three operations that change a department
+     * live on its configure page, reached from the record — the shape a
+     * person and a position already have.
      */
-    public function testTheFooterIsOneLineWithItsFormsBehindDisclosures(): void
+    public function testARowCarriesOneDoorAndNoForm(): void
     {
         $crawler = $this->screen();
-        $card = $this->row($crawler, 'Ecology');
+        $row = $this->row($crawler, 'Ecology');
 
-        // One line in the strip, and the two ways to more.
-        self::assertCount(1, $card->filter('.dc-foot > .dc-line'));
-        self::assertCount(2, $card->filter('.dc-foot details'));
-
-        // Both closed on arrival: nothing in the footer is open by default.
-        self::assertSame(
-            [null, null],
-            $card->filter('.dc-foot details')->each(static fn (Crawler $c): ?string => $c->attr('open')),
-            'A footer disclosure is open before anybody asked.',
-        );
-
-        // And the strip says what the scope IS without being opened.
-        self::assertStringContainsString('every area reads it', $card->filter('.dc-foot > .dc-line')->text());
+        self::assertCount(0, $row->filter('form'));
+        self::assertSame('/departments/'.$this->uuidOf('Ecology'), $row->filter('a.open-btn')->attr('href'));
     }
 
-    /** The forms are still there, and still post where they posted. */
-    public function testTheDisclosuresHoldTheSameThreeOperations(): void
+    /** The configure page holds the same three operations, posting where they posted. */
+    public function testTheConfigurePageHoldsTheThreeOperations(): void
     {
-        $crawler = $this->screen();
-        $card = $this->row($crawler, 'Ecology');
+        $this->screen();
+        $page = $this->configureOf('Ecology');
 
-        self::assertCount(1, $card->filter('.dc-foot details form[action$="/scope"]'));
-        self::assertCount(1, $card->filter('.dc-foot details form[action$="/rename"]'));
-        self::assertCount(1, $card->filter('.dc-foot details form[action$="/deactivate"]'));
+        self::assertCount(1, $page->filter('form[action$="/scope"]'));
+        self::assertCount(1, $page->filter('form[action$="/rename"]'));
+        self::assertCount(1, $page->filter('form[action$="/deactivate"]'));
+        self::assertCount(0, $page->filter('form[action$="/reactivate"]'));
     }
 
-    /**
-     * THE BODY OPENS WITH NO SCRIPT EITHER: the chevron is a link and which
-     * card is open is in the address, so an opened card is a link somebody
-     * can send.
-     */
-    public function testTheBodyOpensByTheAddressAndNotByAScript(): void
+    /** And the record wears the door to it, in the header row. */
+    public function testTheRecordWearsTheConfigureDoor(): void
     {
-        $crawler = $this->screen();
+        $this->screen();
         $uuid = $this->uuidOf('Ecology');
+        $crawler = $this->client->request('GET', '/departments/'.$uuid);
 
-        $chevron = $this->row($crawler, 'Ecology')->filter('.dc-hd a.ovx');
-        self::assertStringContainsString('open='.$uuid, (string) $chevron->attr('href'));
-        self::assertSame('false', $chevron->attr('aria-expanded'));
+        self::assertSame('/departments/'.$uuid.'/configure', $crawler->filter('.pgact a.tgl')->attr('href'));
 
-        $opened = $this->client->request('GET', '/departments?open='.$uuid);
-        self::assertSame('true', $this->row($opened, 'Ecology')->filter('.dc-hd a.ovx')->attr('aria-expanded'));
+        // AND THE TREE OPENS TO IT: a department's own pages are places in
+        // the section, so the sidebar shows the path and lights the department.
+        self::assertSame('Ecology', trim($crawler->filter('nav.nav .ntree .nts.on')->text()));
+        $configure = $this->client->request('GET', '/departments/'.$uuid.'/configure');
+        self::assertSame('Ecology', trim($configure->filter('nav.nav .ntree .nts.on')->text()));
     }
 
     /**
@@ -348,16 +274,16 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
      */
     private function named(Crawler $crawler): array
     {
-        return $crawler->filter('[data-dp] .dcard .ov-nm')->each(static fn (Crawler $c): string => $c->text());
+        return $crawler->filter('[data-dp] tr.drow .ov-nm')->each(static fn (Crawler $c): string => $c->text());
     }
 
     // ---- every department opens to its lens -------------------------------
 
     /**
-     * EVERY DEPARTMENT IS OPENABLE — the name and the Lens action both point at
+     * EVERY DEPARTMENT IS OPENABLE — the name and the Open door both point at
      * the department's own page, area-level or org-level alike.
      */
-    public function testEveryRowOpensItsDepartmentThroughNameAndLens(): void
+    public function testEveryRowOpensItsDepartmentThroughNameAndDoor(): void
     {
         $crawler = $this->screen();
 
@@ -365,8 +291,8 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
             $row = $this->row($crawler, $name);
             $show = '/departments/'.$this->uuidOf($name);
 
-            self::assertSame($show, $row->filter('.ov-nm')->attr('href'), $name.' name links to its lens');
-            self::assertSame($show, $row->filter('.dc-act .ov-open')->attr('href'), $name.' Open action links to its lens');
+            self::assertSame($show, $row->filter('.ov-nm')->attr('href'), $name.' name links to its record');
+            self::assertSame($show, $row->filter('a.open-btn')->attr('href'), $name.' Open links to its record');
         }
     }
 
@@ -590,12 +516,12 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
     {
         $crawler = $this->screen();
 
-        $form = $this->row($crawler, 'Ecology')->filter('form[action$="/scope"]')->selectButton('Confine to area')->form();
+        $form = $this->configureOf('Ecology')->filter('form[action$="/scope"]')->selectButton('Confine to area')->form();
         $form['area'] = (string) $this->uuidOf('__area:Northern Reserve');
         $form['reason'] = 'Ecology now works only in the north.';
         $this->client->submit($form);
 
-        self::assertResponseRedirects('/departments');
+        self::assertResponseRedirects('/departments/'.$this->uuidOf('Ecology').'/configure');
 
         $this->em->clear();
         $ecology = $this->em->getRepository(Department::class)->findOneBy(['name' => 'Ecology']);
@@ -614,11 +540,11 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
     {
         $crawler = $this->screen();
 
-        $form = $this->row($crawler, 'Wetland Management')->filter('form[action$="/scope"]')->selectButton('Promote to org-wide')->form();
+        $form = $this->configureOf('Wetland Management')->filter('form[action$="/scope"]')->selectButton('Promote to org-wide')->form();
         $form['reason'] = 'Its remit is now the whole park.';
         $this->client->submit($form);
 
-        self::assertResponseRedirects('/departments');
+        self::assertResponseRedirects('/departments/'.$this->uuidOf('Wetland Management').'/configure');
 
         $this->em->clear();
         $wetland = $this->em->getRepository(Department::class)->findOneBy(['name' => 'Wetland Management']);
@@ -635,7 +561,7 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
     {
         $crawler = $this->screen();
 
-        $form = $this->row($crawler, 'Wetland Management')->filter('form[action$="/scope"]')->selectButton('Promote to org-wide')->form();
+        $form = $this->configureOf('Wetland Management')->filter('form[action$="/scope"]')->selectButton('Promote to org-wide')->form();
         $form['reason'] = '   ';
         $this->client->submit($form);
 
@@ -655,11 +581,12 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
     {
         $crawler = $this->screen();
 
-        $form = $this->row($crawler, 'Ecology')->filter('form[action$="/rename"]')->selectButton('Rename')->form();
+        $uuid = $this->uuidOf('Ecology');
+        $form = $this->configureOf('Ecology')->filter('form[action$="/rename"]')->selectButton('Rename')->form();
         $form['name'] = 'Ecology & Research';
         $this->client->submit($form);
 
-        self::assertResponseRedirects('/departments');
+        self::assertResponseRedirects('/departments/'.$uuid.'/configure');
 
         $this->em->clear();
         self::assertNull($this->em->getRepository(Department::class)->findOneBy(['name' => 'Ecology']));
@@ -671,9 +598,9 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
     /** DELETE is never drawn; DEACTIVATE is — the standing fleet rule. */
     public function testTheScreenDeactivatesButNeverDeletesADepartment(): void
     {
-        $crawler = $this->screen();
+        $this->screen();
 
-        $page = $crawler->filter('[data-dp]')->text();
+        $page = $this->configureOf('Ecology')->filter('[data-dp-configure]')->text();
         self::assertStringNotContainsString('Delete', $page);
         self::assertStringContainsString('Deactivate', $page);
     }
@@ -687,12 +614,14 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
     {
         $crawler = $this->screen();
 
-        $form = $this->row($crawler, 'Ecology')->filter('form[action$="/deactivate"]')->selectButton('Deactivate anyway')->form();
+        $form = $this->configureOf('Ecology')->filter('form[action$="/deactivate"]')->selectButton('Deactivate anyway')->form();
         $this->client->submit($form);
 
-        self::assertResponseRedirects('/departments');
+        self::assertResponseRedirects('/departments/'.$this->uuidOf('Ecology').'/configure');
         $crawler = $this->client->followRedirect();
         self::assertStringContainsString('deactivated', $crawler->filter('[data-shell-flash]')->text());
+        self::assertCount(1, $crawler->filter('form[action$="/reactivate"]'), 'the configure page now offers the way back');
+        $crawler = $this->client->request('GET', '/departments');
 
         $this->em->clear();
         $ecology = $this->em->getRepository(Department::class)->findOneBy(['name' => 'Ecology']);
@@ -718,12 +647,11 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
     public function testReactivatingADepartmentBringsItBack(): void
     {
         $crawler = $this->screen();
-        $this->client->submit($this->row($crawler, 'Ecology')->filter('form[action$="/deactivate"]')->selectButton('Deactivate anyway')->form());
+        $this->client->submit($this->configureOf('Ecology')->filter('form[action$="/deactivate"]')->selectButton('Deactivate anyway')->form());
 
-        $crawler = $this->client->request('GET', '/departments');
-        $this->client->submit($this->row($crawler, 'Ecology')->filter('form[action$="/reactivate"]')->selectButton('Reactivate')->form());
+        $this->client->submit($this->configureOf('Ecology')->filter('form[action$="/reactivate"]')->selectButton('Reactivate')->form());
 
-        self::assertResponseRedirects('/departments');
+        self::assertResponseRedirects('/departments/'.$this->uuidOf('Ecology').'/configure');
 
         $this->em->clear();
         $ecology = $this->em->getRepository(Department::class)->findOneBy(['name' => 'Ecology']);
@@ -759,7 +687,7 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
         $this->em->flush();
 
         $crawler = $this->client->request('GET', '/departments');
-        $form = $this->row($crawler, 'Wetland Management')->filter('form[action$="/scope"]')->selectButton('Promote to org-wide')->form();
+        $form = $this->configureOf('Wetland Management')->filter('form[action$="/scope"]')->selectButton('Promote to org-wide')->form();
         $form['reason'] = 'Its remit is now the whole park.';
         $this->client->submit($form);
 
@@ -780,7 +708,7 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
         $this->em->flush();
 
         $crawler = $this->client->request('GET', '/departments');
-        $form = $this->row($crawler, 'Ecology')->filter('form[action$="/scope"]')->selectButton('Confine to area')->form();
+        $form = $this->configureOf('Ecology')->filter('form[action$="/scope"]')->selectButton('Confine to area')->form();
         $form['area'] = (string) $ng->getUuidString();
         $form['reason'] = 'Ecology now works only in the north.';
         $this->client->submit($form);
@@ -794,7 +722,7 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
     {
         $crawler = $this->screen();
 
-        $form = $this->row($crawler, 'Wetland Management')->filter('form[action$="/scope"]');
+        $form = $this->configureOf('Wetland Management')->filter('form[action$="/scope"]');
         self::assertStringContainsStringIgnoringCase('every area', $form->text());
     }
 
@@ -862,7 +790,7 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
 
         // Their own area-level department — even so, scope change is unbounded.
         $crawler = $this->client->request('GET', '/departments');
-        $form = $this->row($crawler, 'Warden Office')->filter('form[action$="/scope"]')->selectButton('Promote to org-wide')->form();
+        $form = $this->configureOf('Warden Office')->filter('form[action$="/scope"]')->selectButton('Promote to org-wide')->form();
         $form['reason'] = 'trying to widen';
         $this->client->submit($form);
 
@@ -879,8 +807,8 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
 
         // Own area department: allowed.
         $crawler = $this->client->request('GET', '/departments');
-        $this->client->submit($this->row($crawler, 'Warden Office')->filter('form[action$="/deactivate"]')->selectButton('Deactivate anyway')->form());
-        self::assertResponseRedirects('/departments');
+        $this->client->submit($this->configureOf('Warden Office')->filter('form[action$="/deactivate"]')->selectButton('Deactivate anyway')->form());
+        self::assertResponseRedirects('/departments/'.$this->uuidOf('Warden Office').'/configure');
 
         // Org department: refused.
         $this->client->request('POST', '/departments/'.$ecology->getUuidString().'/deactivate', [
@@ -984,9 +912,18 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
 
     private function row(Crawler $crawler, string $name): Crawler
     {
-        return $crawler->filter('[data-dp] .dcard')
+        return $crawler->filter('[data-dp] tr.drow')
             ->reduce(static fn (Crawler $c): bool => $name === $c->filter('.ov-nm')->text())
             ->first();
+    }
+
+    /** The department's configure page, where it is changed. */
+    private function configureOf(string $name): Crawler
+    {
+        $crawler = $this->client->request('GET', '/departments/'.$this->uuidOf($name).'/configure');
+        self::assertResponseIsSuccessful();
+
+        return $crawler;
     }
 
     /** The uuid of a department by name — or, for "__area:Name", of an area. */

@@ -1,0 +1,136 @@
+{# A DEPARTMENT'S CONFIGURE PAGE — where it is changed.
+
+   Design: departments/configure-department.html. The same shape a person and
+   a position have: the record's head, a "The record" door back, and one card
+   per operation. Three operations, and only three: RENAME; SCOPE — confine an
+   org-wide department to one area, or promote an area's department to
+   org-wide, a reason required because authority moves with it; and DEACTIVATE,
+   never delete — a department is an organizational fact that is wound down,
+   not erased. Every write returns here. #}
+{% extends '@Shell/page.html.twig' %}
+{% import '@Team/departments/_bits.html.twig' as di %}
+
+{% set area = department.area %}
+{% set uuid = department.uuidString %}
+{% set filled = headcount %}
+
+{% block title %}{{ department.name }} · configure{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {{ include('@Team/_stylesheets.html.twig') }}
+{% endblock %}
+
+{% block shell_page_tabs %}{% endblock %}
+
+{% block shell_breadcrumbs %}
+    <a href="{{ path('team_index') }}">uhifadhi</a> /
+    <a href="{{ path('team_departments') }}">departments</a> /
+    <a href="{{ path('team_department_show', {uuid: uuid}) }}">{{ department.name|lower }}</a> / configure
+{% endblock %}
+
+{% block shell_page_head %}
+    <div class="dpthead">
+        <span class="mark">{{ mark }}</span>
+        <div>
+            <h1 class="pg">{{ department.name }}</h1>
+            <p class="pgsub"><span>Configure</span> &middot; <span>name</span> &middot; <span>scope</span> &middot; <span>active</span></p>
+        </div>
+    </div>
+    <div class="pgact w-pgact">
+        <a class="tgl w-act" href="{{ path('team_department_show', {uuid: uuid}) }}">{{ ux_icon('shell:chevron-left', {width: 15, height: 15}) }} The record</a>
+    </div>
+{% endblock %}
+
+{% block shell_page %}
+{{ include('@Team/team/_scope_banner.html.twig') }}
+<div class="recgrid" data-dp-configure>
+    <div class="col">
+        {# NAME #}
+        <div class="c">
+            <span class="tab">Name<span class="src">&middot; what the register calls it</span></span>
+            <form method="post" action="{{ path('team_department_rename', {uuid: uuid}) }}">
+                <input type="hidden" name="_token" value="{{ csrfToken }}">
+                <input type="hidden" name="_return" value="{{ returnTo }}">
+                <div class="crgrid">
+                    <div class="crfield grow"><span class="crlab">Name</span>
+                        <input class="fld" type="text" name="name" value="{{ department.name }}" maxlength="120" aria-label="Rename {{ department.name }}" required>
+                        <span class="zfrag">Required &middot; 120 &middot; unique among org-wide departments</span></div>
+                </div>
+                <div class="staddrow">
+                    <span class="sp"></span>
+                    <button type="reset" class="btn">Discard</button>
+                    <button type="submit" class="cta">Rename</button>
+                </div>
+            </form>
+        </div>
+
+        {# SCOPE — the audited change. #}
+        <div class="c">
+            <span class="tab">Scope<span class="src">&middot; {{ area ? area.name ~ ' — the other areas do not see it' : 'org-wide — every area reads it' }}</span></span>
+            <form method="post" action="{{ path('team_department_scope', {uuid: uuid}) }}">
+                <input type="hidden" name="_token" value="{{ csrfToken }}">
+                <input type="hidden" name="_return" value="{{ returnTo }}">
+                {% if area %}
+                    <input type="hidden" name="scope" value="org">
+                    <div class="crgrid">
+                        <div class="crfield grow"><span class="crlab">Reason &middot; required</span>
+                            <input class="fld" type="text" name="reason" placeholder="Why promote {{ department.name }}?" aria-label="Reason for promoting {{ department.name }}" required></div>
+                    </div>
+                    <p class="sbn">Its {{ positions|length }} position{{ positions|length == 1 ? '' : 's' }} and the {{ filled }} {{ filled == 1 ? 'person' : 'people' }} in them widen to <b>every area</b>, which grants what they hold everywhere.</p>
+                    <div class="staddrow">
+                        <span class="sp"></span>
+                        <button type="submit" class="cta">Promote to org-wide</button>
+                    </div>
+                {% else %}
+                    <input type="hidden" name="scope" value="area">
+                    <div class="crgrid">
+                        <div class="crfield"><span class="crlab">Confine to</span>
+                            <select class="fld" name="area" aria-label="Confine {{ department.name }} to area">
+                                {% for option in areas %}<option value="{{ option.uuidString }}">{{ option.name }}</option>{% endfor %}
+                            </select></div>
+                        <div class="crfield grow"><span class="crlab">Reason &middot; required</span>
+                            <input class="fld" type="text" name="reason" placeholder="Why confine {{ department.name }}?" aria-label="Reason for confining {{ department.name }}" required></div>
+                    </div>
+                    <p class="sbn">Its {{ positions|length }} position{{ positions|length == 1 ? '' : 's' }}, the {{ filled }} {{ filled == 1 ? 'person' : 'people' }} in them and its figures narrow to that area; the other areas stop inheriting it.</p>
+                    <div class="staddrow">
+                        <span class="sp"></span>
+                        <button type="submit" class="softbtn danger">Confine to area</button>
+                    </div>
+                {% endif %}
+            </form>
+        </div>
+
+        {# ACTIVE — deactivate, never delete. #}
+        <div class="c">
+            <span class="tab">Active<span class="src">&middot; {{ department.active ? 'in the pickers and the register' : 'deactivated — hidden from the pickers, greyed in the register' }}</span></span>
+            {% if department.active %}
+                <p class="sbn">{% if positions|length %}{{ positions|length }} position{{ positions|length == 1 ? '' : 's' }} ({{ filled }} {{ filled == 1 ? 'person' : 'people' }}) are held here and keep what they grant.{% else %}Nobody is placed here &mdash; an empty footprint.{% endif %} Nothing is deleted, and it is one click from coming back.</p>
+                <form method="post" action="{{ path('team_department_deactivate', {uuid: uuid}) }}" data-deactivate>
+                    <input type="hidden" name="_token" value="{{ csrfToken }}">
+                    <input type="hidden" name="_return" value="{{ returnTo }}">
+                    <div class="staddrow">
+                        <span class="sp"></span>
+                        <button class="softbtn danger" type="submit"
+                                {{ stimulus_controller('confirm-modal') }}
+                                data-action="click->confirm-modal#ask"
+                                data-confirm-modal-title-value="Deactivate “{{ department.name }}”?"
+                                data-confirm-modal-message-value="{% if positions|length %}{{ positions|length }} position{{ positions|length == 1 ? '' : 's' }} ({{ filled }} {{ filled == 1 ? 'person' : 'people' }}) are held here and keep what they grant.{% else %}Nobody is placed here — an empty footprint.{% endif %} It is hidden from the pickers and greyed in the register; nothing is deleted, and it is one click from coming back."
+                                data-confirm-modal-confirm-label-value="Deactivate anyway"
+                                data-confirm-modal-danger-value="true">Deactivate anyway</button>
+                    </div>
+                </form>
+            {% else %}
+                <form method="post" action="{{ path('team_department_reactivate', {uuid: uuid}) }}">
+                    <input type="hidden" name="_token" value="{{ csrfToken }}">
+                    <input type="hidden" name="_return" value="{{ returnTo }}">
+                    <div class="staddrow">
+                        <span class="sp"></span>
+                        <button class="cta" type="submit">Reactivate</button>
+                    </div>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

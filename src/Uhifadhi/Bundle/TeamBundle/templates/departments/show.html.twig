@@ -107,6 +107,11 @@
                 shapes emphasis &mdash; never access.</p>
         </div>
     </div>
+    {# THE ONE PAGE ACTION — where the department is changed, per the rule
+       that a record wears its Configure door in the header row. #}
+    <div class="pgact w-pgact">
+        <a class="tgl w-act" href="{{ path('team_department_configure', {uuid: department.uuidString}) }}">{{ ux_icon('shell:settings', {width: 15, height: 15}) }} Configure</a>
+    </div>
 {% endblock %}
 
 {% block shell_page %}

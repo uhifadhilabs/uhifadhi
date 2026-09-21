@@ -1,16 +1,12 @@
-{# DEPARTMENTS — the area-aware manager (the register).
+{# DEPARTMENTS — the register.
 
    PORTED from the canonical design DesignsProjects/uhifadhi-web/departments/
-   index.html: area-linked departments first, grouped under their area's name,
-   then org-wide; an explicit SCOPE column on every row; create per-area (the
-   picker enumerates the installation's areas through the contract) OR per-org,
-   area-first because it is the correctable choice; and the audited scope change
-   — confine to an area, or promote to org-wide, a reason required. Every row
-   opens the department's own lens through its name and its Lens action.
-
-   DEACTIVATE is drawn as the design's per-row danger action: it flips the
-   department's active flag (deactivate, never delete), the footprint informs
-   without guarding, and a deactivated row reads greyed with a Reactivate action.
+   index.html (ruled 2026-09-22): the create form, the organization's identity
+   band, then ONE TABLE on the People-table idiom — grouped dropdown filters,
+   a search, sortable headers, a two-line name cell and one fact per column.
+   A row carries one door, Open; a department is changed on its own configure
+   page (rename, scope, deactivate — never delete), the shape a person and a
+   position already have.
 
    WHAT THE DESIGN DRAWS THAT IS THE RICH-LENS FOLLOW-UP, and so not here yet:
    the Widgets button in the header (the department's widget board). #}
@@ -46,12 +42,16 @@
             </summary>
             <div class="i-ddmenu">
                 <span class="i-ddhead">whose figures</span>
-                <a class="i-ddopt{{ query.area ? '' : ' on' }}" href="{{ path('team_departments', query.with('area', null)) }}">
+                {# THE SCOPE IS THE PLACEMENT FILTER seen from the band's side:
+                   narrowing the figures to one area lists that area's
+                   departments, and the two cannot disagree because they are
+                   one parameter. #}
+                <a class="i-ddopt{{ query.placement ? '' : ' on' }}" href="{{ path('team_departments', query.with('placement', null)) }}">
                     <span class="i-ddopt-l">Organization &mdash; all areas</span>
                 </a>
                 {% for area in areas %}
-                    <a class="i-ddopt{{ query.area == area.uuidString ? ' on' }}"
-                       href="{{ path('team_departments', query.with('area', area.uuidString)) }}">
+                    <a class="i-ddopt{{ query.placement == area.uuidString ? ' on' }}"
+                       href="{{ path('team_departments', query.with('placement', area.uuidString)) }}">
                         <span class="i-ddopt-l">{{ area.name }}</span>
                     </a>
                 {% endfor %}
@@ -146,86 +146,91 @@
                 <a class="more" href="{{ path('team_performance') }}">Performance &rarr;</a>
             </div>
 
-            {# FIND AND FILTER — the pills are the create chooser's own two
-               words in the same order, and picking Area-level reveals the
-               picker that narrows it further. Every one of them is a link:
-               the address is the state. #}
-            <div class="ov-find dcfind">
+            {# THE REGISTER IS ONE TABLE (ruled 2026-09-22, design departments/
+               index.html): the People table's idiom — four grouped dropdowns,
+               a search, what is shown — with a TWO-LINE NAME CELL (the
+               department over its placement and kind) and ONE FACT PER
+               COLUMN, so every header sorts exactly one thing. Every option
+               and every header is a link: the address is the state. #}
+            <div class="lfilt">
+                {{ include('@Team/_partial/_filter.html.twig', {
+                    key: constant('Uhifadhi\\Bundle\\TeamBundle\\Model\\DepartmentQuery::PLACEMENT'),
+                    label: 'placement', all: 'all placements', chosen: query.placement, options: placementOptions, query: query,
+                }, with_context: false) }}
+                {{ include('@Team/_partial/_filter.html.twig', {
+                    key: constant('Uhifadhi\\Bundle\\TeamBundle\\Model\\DepartmentQuery::MODULE'),
+                    label: 'module', all: 'any module', chosen: query.module, options: moduleOptions, query: query,
+                }, with_context: false) }}
+                {{ include('@Team/_partial/_filter.html.twig', {
+                    key: constant('Uhifadhi\\Bundle\\TeamBundle\\Model\\DepartmentQuery::GOALS'),
+                    label: 'goals', all: 'any goals', chosen: query.goals, options: goalsOptions, query: query,
+                }, with_context: false) }}
+                {{ include('@Team/_partial/_filter.html.twig', {
+                    key: constant('Uhifadhi\\Bundle\\TeamBundle\\Model\\DepartmentQuery::SEATS'),
+                    label: 'seats', all: 'any seats', chosen: query.seats, options: seatsOptions, query: query,
+                }, with_context: false) }}
                 <form class="lsearch" method="get" action="{{ path('team_departments') }}">
-                    {{ ux_icon('shell:search') }}
-                    <input class="fld" type="search" name="q" value="{{ query.search }}" placeholder="Find a department&hellip;"
-                           aria-label="Find a department">
-                    {% for k, v in query.with('q', null) %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
-                </form>
-                <div class="dcfil">
-                    {% for pill in [
-                        {'value': 'all', 'label': 'All', 'n': counts.all},
-                        {'value': 'org', 'label': 'Org-wide', 'n': counts.org},
-                        {'value': 'area', 'label': 'Area-level', 'n': counts.area},
-                    ] %}
-                        <a class="dcpill{{ query.scope == pill.value ? ' on' : '' }}"
-                           href="{{ path('team_departments', query.with('scope', pill.value == 'all' ? null : pill.value)) }}">{{ pill.label }} <span class="n">{{ pill.n }}</span></a>
+                    {% for field, value in query.with(constant('Uhifadhi\\Bundle\\TeamBundle\\Model\\DepartmentQuery::SEARCH'), null) %}
+                        <input type="hidden" name="{{ field }}" value="{{ value }}">
                     {% endfor %}
-                    {% if query.scope == 'area' and areas|length %}
-                        <span class="dcarea">
-                            <span class="k">Area</span>
-                            <select aria-label="Narrow to one area" onchange="location = this.value">
-                                <option value="{{ path('team_departments', query.with('area', null)) }}"{{ query.area ? '' : ' selected' }}>All areas</option>
-                                {% for option in areas %}
-                                    <option value="{{ path('team_departments', query.with('area', option.uuidString)) }}"{{ query.area == option.uuidString ? ' selected' : '' }}>{{ option.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </span>
-                    {% endif %}
-                    <span class="sp"></span>
-                    {# WHAT IS BEING LISTED, under the thing listing it — where the
-                       register's own counts belong, now that the band carries what
-                       the departments DID rather than how many there are. #}
-                    <span class="cnt">{{ counts.all }} departments &middot; {{ counts.org }} org-wide &middot; {{ counts.area }} area-level
-                        &middot; {{ positionCount }} positions</span>
-                </div>
+                    {{ ux_icon('shell:search', {width: 14, height: 14}) }}
+                    <input class="fld" type="search" name="{{ constant('Uhifadhi\\Bundle\\TeamBundle\\Model\\DepartmentQuery::SEARCH') }}"
+                           value="{{ query.search }}" placeholder="Find a department&hellip;" aria-label="Find a department">
+                </form>
+                {# WHAT IS SHOWN, said at the end of the row: a filtered list
+                   that does not state its filter is a list somebody will
+                   read as the whole register. #}
+                <span class="tm-shown">showing <b>{{ rows|length }}</b> of {{ total }}</span>
             </div>
 
-            {# ONE SECTION PER GROUP, foldable at its heading — a `<details>`,
-               so it folds with no script of ours. #}
-            {% set here = path('team_departments', query.with('focus', query.focus)) %}
-            {% for group in groups %}
-                <details class="nvsec" open>
-                    <summary class="deptgroup nvgrp">
-                        <span class="nvfold">{{ ux_icon('shell:chevron-right') }}</span>
-                        <span class="gh">{{ group.label }}</span>
-                        <span class="gc">{{ group.departments|length }}</span>
-                        <span class="gnote">{{ group.note }}</span>
-                        <span class="gl"></span>
-                    </summary>
-                    {% if group.departments is empty %}
-                        <div class="zdnone">
-                            <b>Nothing in {{ group.label }} matches</b>
-                            <span>{{ query.isFiltered ? 'clear the search, or widen the filter' : 'no department has this scope yet' }}</span>
-                        </div>
-                    {% else %}
-                        <div class="dcstack dcreg">
-                            {% for department in group.departments %}
-                                {{ include('@Team/departments/_card.html.twig', {
-                                    department: department,
-                                    positions: owned[department.uuidString]|default([]),
-                                    people: headcount[department.uuidString]|default(0),
-                                    figures: figures[department.uuidString]|default([]),
-                                    modules: department.modules,
-                                    holders: holders,
-                                    areas: areas,
-                                    mark: marks[department.uuidString]|default('—'),
-                                    cat: cats[department.uuidString]|default(null),
-                                    open: openDepartment == department.uuidString,
-                                    focused: query.focus == department.uuidString,
-                                    here: here,
-                                    csrfToken: csrfToken,
-                                }, with_context: false) }}
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-                </details>
-            {% endfor %}
+            <table class="tbl dreg">
+                <thead><tr>
+                    {% for column, label in columns %}
+                        {% set sorted = query.sort == column %}
+                        <th{{ sorted ? ' class="sorted"' }} aria-sort="{{ sorted ? (query.direction == 'desc' ? 'descending' : 'ascending') : 'none' }}">
+                            <a href="{{ path('team_departments', query.sortedBy(column)) }}">{{ label }}</a>
+                        </th>
+                    {% endfor %}
+                    <th></th>
+                </tr></thead>
+                <tbody>
+                {% for row in rows %}
+                    {% set show = path('team_department_show', {uuid: row.uuid}) %}
+                    <tr id="d-{{ row.uuid }}" class="drow{{ row.active ? '' : ' dcinactive' }}{{ query.focus == row.uuid ? ' dcfocus' : '' }}"
+                        data-department="{{ row.uuid }}"{% if row.category %} data-cat="{{ row.category }}"{% endif %}>
+                        <td>
+                            <div class="who">
+                                <span class="dmark" aria-hidden="true"></span>
+                                <div>
+                                    <a class="ov-nm" href="{{ show }}">{{ row.name }}</a>
+                                    {% if not row.active %}<span class="chip stoff">inactive</span>{% endif %}
+                                    <div class="sub">{{ row.area ? row.area.name : 'org-wide' }}{% if row.kind %} &middot; {{ row.kind }}{% endif %}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {% for name in row.modules %}<span class="chip">{{ name }}</span>{% else %}<span class="mono d">none</span>{% endfor %}
+                        </td>
+                        <td class="num">{{ row.positions }}</td>
+                        <td>
+                            {% if row.seats is null %}
+                                <span class="mono">{{ row.filled }}</span><span class="mono d"> / unlimited</span>
+                            {% else %}
+                                <span class="mono">{{ row.filled }}</span><span class="mono d"> / {{ row.seats }}</span>
+                                {% if row.vacant %} <span class="chip warn">{{ row.vacant }} vacant</span>{% endif %}
+                            {% endif %}
+                        </td>
+                        <td><span class="mono d">{{ row.goals ? row.goals ~ (row.goals == 1 ? ' goal' : ' goals') : 'no goal set' }}</span></td>
+                        <td class="act"><a class="open-btn" href="{{ show }}">Open</a></td>
+                    </tr>
+                {% else %}
+                    <tr class="dempty"><td colspan="6">
+                        <b>No department matches</b>
+                        <span>{{ query.isFiltered ? 'clear the search, or widen a filter' : 'file one with the form above' }}</span>
+                    </td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
         {% else %}
             <div class="pm-first">
                 {{ pm.icon_plus() }}

@@ -3510,3 +3510,23 @@ label.pm-box:focus-within i { outline: 2px solid rgb(var(--c-acc)); outline-offs
 /* THE SAVE BAR FOLLOWS THE LAST FOLD at the fold's own rhythm — it is not a
    card, so it takes no card gap. */
 .staddrow.sticky { margin-top: 10px; }
+
+/* ---- THE DEPARTMENTS REGISTER, ONE TABLE (ruled 2026-09-22) -------------
+   The People table's idiom with a TWO-LINE NAME CELL — the department over
+   its placement and kind — and one fact per column. The department's hue
+   is the same category the sidebar's dot reads, resolved by the shell from
+   `data-cat` on the row; the mark is a square dot, never a colour word. */
+table.tbl.dreg td { vertical-align: middle; }
+table.tbl.dreg tr.drow { cursor: default; }
+table.tbl.dreg .who { display: flex; align-items: center; gap: 10px; }
+table.tbl.dreg .dmark { width: 8px; height: 8px; border-radius: 3px; background: var(--cat); flex: none; }
+table.tbl.dreg .sub { font-size: 11px; color: rgb(var(--c-dim)); margin-top: 2px; }
+table.tbl.dreg .ov-nm { font-weight: 600; }
+table.tbl.dreg td.act { text-align: right; white-space: nowrap; }
+table.tbl.dreg .chip + .chip { margin-left: 4px; }
+/* FOCUS IS THE SIDEBAR'S MARK on a row — the one left line a card may wear. */
+table.tbl.dreg tr.dcfocus td:first-child { box-shadow: inset 2px 0 0 rgb(var(--c-acc)); }
+table.tbl.dreg tr.dcinactive td { opacity: .55; }
+table.tbl.dreg tr.dempty td { padding: 22px 10px; color: rgb(var(--c-fog)); }
+table.tbl.dreg tr.dempty b { display: block; color: rgb(var(--c-tx)); }
+table.tbl.dreg tr.dempty:hover td { background: none; }

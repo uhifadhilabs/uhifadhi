@@ -37,6 +37,7 @@ use Uhifadhi\Bundle\TeamBundle\Enum\GoalStateEnum;
 use Uhifadhi\Bundle\TeamBundle\Exception\MissingScopeChangeReasonException;
 use Uhifadhi\Bundle\TeamBundle\Exception\NameNotUniqueException;
 use Uhifadhi\Bundle\TeamBundle\Model\DepartmentQuery;
+use Uhifadhi\Bundle\TeamBundle\Model\DepartmentRow;
 use Uhifadhi\Bundle\TeamBundle\Performance\DepartmentsBand;
 use Uhifadhi\Bundle\TeamBundle\Performance\PeriodKind;
 use Uhifadhi\Bundle\TeamBundle\Performance\RequiredPeriod;
@@ -178,34 +179,14 @@ final readonly class DepartmentController
     public function index(Request $request): Response
     {
         $departments = $this->departments->findAllOrdered();
-
-        /*
-         * A DEPARTMENT'S POSITIONS ARE THE ONES ITS MEMBERS HOLD. A position
-         * belongs to nobody, so there is no owning side to read and no
-         * department column to group by: the placement is the fact, and the
-         * membership derives it in one place so no two screens disagree.
-         */
-        $owned = [];
-        foreach ($departments as $department) {
-            $owned[$department->getUuidString() ?? ''] = $this->membership->positionsIn($department);
-        }
-
-        // HEADCOUNT IS REACHED THROUGH THE POSITIONS. A department holds nobody
-        // directly, and a count that pretended otherwise would be the first place
-        // this page lied about the model.
-        $headcount = [];
-        $figures = [];
-        foreach ($departments as $department) {
-            $key = $department->getUuidString() ?? '';
-            $headcount[$key] = $this->users->countActiveHoldingAnyPosition($owned[$key] ?? []);
-            // WHAT A DEPARTMENT IS WORTH READING IS ITS ATTACHED MODULES', asked
-            // through the seam. A department that attaches nothing shows nothing
-            // and the card says so, rather than drawing a row of noughts.
-            $figures[$key] = $this->performance->kpisFor($department);
-        }
-
         $query = DepartmentQuery::from($request);
         $areas = $this->areas();
+
+        // ONE TABLE (ruled 2026-09-22). Every row's facts are computed once,
+        // the dropdowns count the whole set, the filter and the sort read
+        // the rows — so the counts, the table and the address never disagree.
+        $rows = $this->rows($departments);
+        $listed = $query->order(array_values(array_filter($rows, $query->matches(...))));
 
         // THE BAND READS THE PAGE'S OWN SCOPE AND WINDOW. A reader who
         // narrowed the register to one area is asking about that area,
@@ -216,38 +197,29 @@ final readonly class DepartmentController
         $bandPeriod = $periodKind->period(RequiredPeriod::of($this->periods)->now());
 
         return new Response($this->twig->render('@Team/departments/index.html.twig', [
-            // ORG-WIDE FIRST, THEN AREA-LEVEL: the register is read from the
-            // organization inwards, and an org-wide department is one every
-            // area inherits — the thing a reader has to know before the rest
-            // of the list means anything.
-            'groups' => $this->register($query, $areas),
+            'rows' => $listed,
+            'total' => \count($rows),
             'query' => $query,
-            'counts' => self::scopeCounts($departments),
             'areas' => $areas,
-            'areaGroups' => $this->areaGroups(),
-            'orgDepartments' => $this->departments->findOrgLevelOrdered(),
             'departments' => $departments,
-            // The move control and the confine picker file INTO a department, so
-            // they offer only the active ones; the register above draws the
-            // inactive rows greyed from the all-inclusive groups.
-            'owned' => $owned,
-            'headcount' => $headcount,
-            'figures' => $figures,
-            'holders' => $this->holders(),
-            'marks' => $this->marks($departments),
-            // A DEPARTMENT NAMES A CATEGORY AND NEVER A COLOUR: the card
-            // carries the index and the shell resolves it to the hue, which
-            // is the only way one department reads the same in both palettes.
-            'cats' => $this->palette->indexes(),
-            'openDepartment' => self::openOf($request),
-            'positionCount' => array_sum(array_map(\count(...), $owned)),
+            'placementOptions' => $this->placementOptions($rows, $areas),
+            'moduleOptions' => $this->moduleOptions($rows),
+            'goalsOptions' => [
+                ['value' => DepartmentQuery::GOALS_SOME, 'label' => 'Has goals', 'count' => \count(array_filter($rows, static fn (DepartmentRow $r): bool => $r->goals > 0))],
+                ['value' => DepartmentQuery::GOALS_NONE, 'label' => 'None set', 'count' => \count(array_filter($rows, static fn (DepartmentRow $r): bool => 0 === $r->goals))],
+            ],
+            'seatsOptions' => [
+                ['value' => DepartmentQuery::SEATS_VACANT, 'label' => 'Vacancies', 'count' => \count(array_filter($rows, static fn (DepartmentRow $r): bool => $r->vacant > 0))],
+                ['value' => DepartmentQuery::SEATS_FILLED, 'label' => 'All filled', 'count' => \count(array_filter($rows, static fn (DepartmentRow $r): bool => 0 === $r->vacant))],
+            ],
+            'columns' => [
+                'name' => 'Department', 'modules' => 'Modules', 'positions' => 'Positions', 'seats' => 'Seats', 'goals' => 'Goals',
+            ],
             /*
              * WHAT THE DEPARTMENTS DID, over the scope and window the
              * page is showing — the modules' own figures through the
              * performance seam, so a figure here and the same figure on
-             * the Performance page cannot disagree. How MANY departments
-             * there are is a fact about the page, and it reads under the
-             * filters where a count of what is listed belongs.
+             * the Performance page cannot disagree.
              */
             'bandScope' => $bandScope->label,
             'periodKinds' => PeriodKind::labels(),
@@ -261,6 +233,115 @@ final readonly class DepartmentController
             ),
             'csrfToken' => $this->csrf->getToken(self::CSRF_ID)->getValue(),
         ]));
+    }
+
+    /**
+     * THE REGISTER'S ROWS — every department's facts, computed once.
+     *
+     * @param list<Department> $departments
+     *
+     * @return list<DepartmentRow>
+     */
+    private function rows(array $departments): array
+    {
+        $cats = $this->palette->indexes();
+        $rows = [];
+        foreach ($departments as $department) {
+            $uuid = $department->getUuidString() ?? '';
+            // A DEPARTMENT'S POSITIONS ARE THE ONES ITS MEMBERS HOLD, and the
+            // headcount is reached through them — a department holds nobody
+            // directly, and a count that pretended otherwise would be the
+            // first place this page lied about the model.
+            $positions = $this->membership->positionsIn($department);
+            $seats = 0;
+            foreach ($positions as $position) {
+                if ($position->hasUnlimitedSeats()) {
+                    $seats = null;
+                    break;
+                }
+                $seats += (int) $position->getSeatCount();
+            }
+            $modules = $names = $slugs = [];
+            foreach ($department->getModules() as $module) {
+                $names[] = (string) $module->getName();
+                $slugs[] = (string) $module->getSlug();
+            }
+
+            $rows[] = new DepartmentRow(
+                department: $department,
+                uuid: $uuid,
+                name: (string) $department->getName(),
+                area: $department->getArea(),
+                kind: $department->getKind()?->getName(),
+                modules: $names,
+                slugs: $slugs,
+                positions: \count($positions),
+                filled: $this->users->countActiveHoldingAnyPosition($positions),
+                seats: [] === $positions ? 0 : $seats,
+                goals: \count($this->goals->findForDepartment($department)),
+                active: $department->isActive(),
+                category: $cats[$uuid] ?? null,
+            );
+        }
+
+        return $rows;
+    }
+
+    /**
+     * WHERE A DEPARTMENT IS PLACED — org-wide, or one of the areas — with
+     * how many each answer would leave, counted against the whole register.
+     *
+     * @param list<DepartmentRow> $rows
+     * @param list<AreaInterface> $areas
+     *
+     * @return list<array{value: string, label: string, count: int}>
+     */
+    private function placementOptions(array $rows, array $areas): array
+    {
+        $options = [[
+            'value' => DepartmentQuery::ORG,
+            'label' => 'Org-wide',
+            'count' => \count(array_filter($rows, static fn (DepartmentRow $r): bool => null === $r->area)),
+        ]];
+        foreach ($areas as $area) {
+            $uuid = (string) $area->getUuidString();
+            $options[] = [
+                'value' => $uuid,
+                'label' => (string) $area->getName(),
+                'count' => \count(array_filter($rows, static fn (DepartmentRow $r): bool => $r->placementKey() === $uuid)),
+            ];
+        }
+
+        return $options;
+    }
+
+    /**
+     * THE MODULES ANY DEPARTMENT ATTACHES, and "none" for the ones that
+     * attach nothing — a nought is drawn, because an option that vanished
+     * when it emptied could not be told from one that never existed.
+     *
+     * @param list<DepartmentRow> $rows
+     *
+     * @return list<array{value: string, label: string, count: int}>
+     */
+    private function moduleOptions(array $rows): array
+    {
+        $seen = [];
+        foreach ($rows as $row) {
+            foreach ($row->slugs as $i => $slug) {
+                $seen[$slug] ??= ['value' => $slug, 'label' => $row->modules[$i], 'count' => 0];
+                ++$seen[$slug]['count'];
+            }
+        }
+        ksort($seen);
+        $options = array_values($seen);
+        $options[] = [
+            'value' => DepartmentQuery::NO_MODULE,
+            'label' => 'None attached',
+            'count' => \count(array_filter($rows, static fn (DepartmentRow $r): bool => [] === $r->slugs)),
+        ];
+
+        return $options;
     }
 
     /**
@@ -289,91 +370,12 @@ final readonly class DepartmentController
     private function bandScope(DepartmentQuery $query, array $areas): PerformanceScope
     {
         foreach ($areas as $area) {
-            if (null !== $query->area && $query->area === $area->getUuidString()) {
-                return PerformanceScope::area($query->area, (string) $area->getName());
+            if (null !== $query->placement && $query->placement === $area->getUuidString()) {
+                return PerformanceScope::area($query->placement, (string) $area->getName());
             }
         }
 
         return PerformanceScope::organisation();
-    }
-
-    /** Which card is open is a place, so it is a query a link can carry. */
-    private static function openOf(Request $request): ?string
-    {
-        $open = trim($request->query->getString('open'));
-
-        return '' === $open ? null : $open;
-    }
-
-    /**
-     * THE REGISTER AS IT IS DRAWN — org-wide first, then one group per area,
-     * with the reader's filter and search already applied.
-     *
-     * THE GROUPS ARE KEPT WHEN THEY EMPTY OUT UNDER A FILTER and dropped when
-     * they are empty in the data: a heading that says "Ngorongoro · 0" while
-     * you are filtering by another area is noise, and a heading missing
-     * because you searched is a list that looks shorter than it is. So the
-     * filter removes groups and the search only empties them.
-     *
-     * @param list<AreaInterface> $areas
-     *
-     * @return list<array{key: string, label: string, note: string, departments: list<Department>}>
-     */
-    private function register(DepartmentQuery $query, array $areas): array
-    {
-        $groups = [];
-
-        if (DepartmentQuery::AREA !== $query->scope) {
-            $groups[] = [
-                'key' => 'org',
-                'label' => 'Org-wide',
-                'note' => 'Belong to the organization · each reads every area',
-                'departments' => $query->matching($this->departments->findOrgLevelOrdered()),
-            ];
-        }
-
-        if (DepartmentQuery::ORG === $query->scope) {
-            return $groups;
-        }
-
-        foreach ($this->areaGroups() as $group) {
-            $area = $group['area'];
-            $uuid = (string) $area->getUuidString();
-
-            if (null !== $query->area && $uuid !== $query->area) {
-                continue;
-            }
-
-            $groups[] = [
-                'key' => $uuid,
-                'label' => (string) $area->getName(),
-                'note' => 'Belong to this one area · the other areas do not see them',
-                'departments' => $query->matching($group['departments']),
-            ];
-        }
-
-        return $groups;
-    }
-
-    /**
-     * WHAT EACH PILL WOULD LEAVE, counted against the whole register rather
-     * than against what is already filtered — a count that moved as you
-     * filtered could not tell you what picking it would do.
-     *
-     * @param list<Department> $departments
-     *
-     * @return array{all: int, org: int, area: int}
-     */
-    private static function scopeCounts(array $departments): array
-    {
-        $org = 0;
-        foreach ($departments as $department) {
-            if (null === $department->getArea()) {
-                ++$org;
-            }
-        }
-
-        return ['all' => \count($departments), 'org' => $org, 'area' => \count($departments) - $org];
     }
 
     /**
@@ -432,6 +434,33 @@ final readonly class DepartmentController
             // truthfully. One query for the page; a per-card count is how two rows
             // come to disagree about one module.
             'sharing' => $this->departments->countByModule(),
+            'csrfToken' => $this->csrf->getToken(self::CSRF_ID)->getValue(),
+        ]));
+    }
+
+    public const string CONFIGURE = 'team_department_configure';
+
+    /**
+     * WHERE A DEPARTMENT IS CHANGED — its name, its scope, whether it is
+     * active. The register is one table and a table row carries one door,
+     * so the three operations that used to sit in a card's footer live
+     * here, the same shape a person and a position already have: a record,
+     * and a configure page behind it.
+     */
+    #[Route('/departments/{uuid}/configure', name: self::CONFIGURE, requirements: ['uuid' => Requirement::UUID], methods: ['GET'])]
+    #[IsGranted('departments.read')]
+    public function configure(string $uuid): Response
+    {
+        $department = $this->department($uuid);
+        $positions = $this->membership->positionsIn($department);
+
+        return new Response($this->twig->render('@Team/departments/record_configure.html.twig', [
+            'department' => $department,
+            'mark' => $this->mark((string) $department->getName()),
+            'positions' => $positions,
+            'headcount' => $this->users->countActiveHoldingAnyPosition($positions),
+            'areas' => $this->areas(),
+            'returnTo' => $this->router->generate(self::CONFIGURE, ['uuid' => $uuid]),
             'csrfToken' => $this->csrf->getToken(self::CSRF_ID)->getValue(),
         ]));
     }
@@ -790,32 +819,6 @@ final readonly class DepartmentController
     }
 
     /**
-     * THE AREA-LEVEL DEPARTMENTS, GROUPED BY THEIR AREA and ordered by area name
-     * — the shape the register draws first. Each group is its area and the
-     * departments confined to it.
-     *
-     * @return list<array{area: AreaInterface, departments: list<Department>}>
-     */
-    private function areaGroups(): array
-    {
-        $groups = [];
-        foreach ($this->departments->findAreaLevelOrdered() as $department) {
-            $area = $department->getArea();
-            if (null === $area) {
-                continue; // Defensive: findAreaLevelOrdered() already excludes these.
-            }
-            $key = $area->getUuidString() ?? (string) $area->getId();
-            $groups[$key] ??= ['area' => $area, 'departments' => []];
-            $groups[$key]['departments'][] = $department;
-        }
-
-        // usort reindexes to a 0-based list, which is the shape the template reads.
-        usort($groups, static fn (array $a, array $b): int => strcasecmp((string) $a['area']->getName(), (string) $b['area']->getName()));
-
-        return $groups;
-    }
-
-    /**
      * THE INSTALLATION'S AREAS, for the create picker and the confine-to picker —
      * enumerated through the contract, never an area package.
      *
@@ -861,25 +864,6 @@ final readonly class DepartmentController
         }
 
         return $holders;
-    }
-
-    /**
-     * A TWO-LETTER MARK for each department, keyed by uuid — the plate the
-     * register row and the lens both wear, so one department reads as one thing
-     * in both places.
-     *
-     * @param list<Department> $departments
-     *
-     * @return array<string, string>
-     */
-    private function marks(array $departments): array
-    {
-        $marks = [];
-        foreach ($departments as $department) {
-            $marks[$department->getUuidString() ?? ''] = $this->mark((string) $department->getName());
-        }
-
-        return $marks;
     }
 
     /**

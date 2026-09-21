@@ -583,6 +583,15 @@ body::before {
    row, whichever level that row is on, and `closed` is the only state — so a
    folded branch is always still in the document and always reopens. */
 .ntree.closed, .nta-group.closed, .ntgroup.closed { display: none; }
+/* THE OPEN-GROUP GUIDE — a dotted hairline from the parent's elbow to the last
+   child's elbow, on the open group only (a shut group is not drawn at all), and
+   stopping short of the last row's centre so it ends at that row's tick. It sits
+   at the parent level's elbow x: 23 under an area, 35 under a tab, 47 under a
+   module. */
+.ntree > .nta-group:not(.closed) { background: repeating-linear-gradient(to bottom, var(--c-ln2) 0 2px, transparent 2px 5px) 23px 0 / 1px calc(100% - 14px) no-repeat; }
+.ntree .nta-group > .ntgroup:not(.closed),
+.ntree > .ntgroup:not(.closed) { background: repeating-linear-gradient(to bottom, var(--c-ln2) 0 2px, transparent 2px 5px) 35px 0 / 1px calc(100% - 13px) no-repeat; }
+.ntree .ntgroup > .ntgroup:not(.closed) { background: repeating-linear-gradient(to bottom, var(--c-ln2) 0 2px, transparent 2px 5px) 47px 0 / 1px calc(100% - 12px) no-repeat; }
 
 /* DEPTH 2 — A PLACE. The branch of its screens hangs from it. */
 .ntree .nta { padding: 6px 12px 6px 40px; font-size: 12.5px; color: rgb(var(--c-tx)); }
@@ -597,8 +606,12 @@ body::before {
 
 /* DEPTH 3 — an area's own sibling screens (Overview / Modules / Zones / Settings). */
 .ntree .ntt { padding: 5px 12px 5px 52px; font-size: 11.5px; color: rgb(var(--c-fog)); }
-.ntree .ntt::before { content: ""; position: absolute; left: 35px; top: 0; bottom: 0; width: 1px; background: var(--c-ln2); }
-.ntree .ntt:last-child::before { bottom: auto; height: 50%; }
+/* ONE CONNECTOR GRAMMAR AT EVERY LEVEL (ruled 2026-09-22): an ELBOW per row —
+   a stub dropping from the row above and ticking into this one — and never a
+   rail down a sibling set. What joins an OPEN group to its parent is the
+   dotted guide below, drawn on the group itself, so a shut sibling shows only
+   its hook and no line travels the length of the sidebar. */
+.ntree .ntt::before { content: ""; position: absolute; left: 35px; top: -4px; bottom: 50%; width: 1px; background: var(--c-ln2); }
 .ntree .ntt::after { content: ""; position: absolute; left: 35px; top: 50%; width: 9px; height: 1px; background: var(--c-ln2); }
 .ntree .ntt:hover { color: rgb(var(--c-tx)); background: rgb(var(--c-raised)); }
 .ntree .ntt.on { color: rgb(var(--c-acc)); background: rgb(var(--c-acc) / .12); border-left-color: rgb(var(--c-acc)); font-weight: 600; }
@@ -1611,6 +1624,14 @@ table.tbl tr:hover td { background: color-mix(in srgb, rgb(var(--c-acc)) 4%, tra
 /* A ROW'S LINK IS THE ROW'S SUBJECT, so it carries weight the base rule
    does not give it; the colour and the underline are the base rule's. */
 table.tbl a { font-weight: 600; }
+/* A SORTABLE HEADER IS A LINK (ruled 2026-09-22: every register sorts). It
+   keeps the header's own ink — a coloured header would read as a filter —
+   and the sorted column alone says so, with the direction as a mark. */
+table.tbl th a { color: inherit; font-weight: inherit; text-decoration: none; }
+table.tbl th a:hover { color: rgb(var(--c-tx)); }
+table.tbl th.sorted { color: rgb(var(--c-tx)); }
+table.tbl th.sorted::after { content: " \25BE"; color: rgb(var(--c-acc)); }
+table.tbl th.sorted[aria-sort="descending"]::after { content: " \25B4"; }
 table.tbl .num { text-align: right; font-family: var(--font-mono); }
 table.tbl td.num { font-size: 12px; }
 
