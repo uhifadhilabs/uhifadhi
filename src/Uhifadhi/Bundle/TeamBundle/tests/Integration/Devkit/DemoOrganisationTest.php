@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\TeamBundle\Tests\Integration\Devkit;
 
 use PHPUnit\Framework\Attributes\CoversClass;
+use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
 use Uhifadhi\Bundle\TeamBundle\Devkit\TeamContentProvider;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
@@ -22,6 +23,7 @@ use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
+use Uhifadhi\Bundle\TeamBundle\Service\PositionService;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\DevkitContentCollector;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\IntegrationTestCase;
 
@@ -82,6 +84,37 @@ final class DemoOrganisationTest extends IntegrationTestCase
         self::assertCount(3, $this->service(DepartmentRepository::class)->findAllOrdered());
         self::assertCount(5, $this->service(PositionRepository::class)->findAllOrdered());
         self::assertCount(6 + TeamContentProvider::FIELD_STAFF, $this->service(UserRepository::class)->findAllByName());
+    }
+
+    /**
+     * A SECOND SEED TOPS UP A DEMO POSITION THAT GRANTS NOTHING — one seeded
+     * before it had anything to grant — and leaves one somebody has since
+     * composed by hand exactly as it is.
+     */
+    public function testASecondSeedGrantsToADemoPositionThatGrantsNothing(): void
+    {
+        $this->collector()->seed('team');
+
+        $positions = $this->em->getRepository(Position::class);
+        $ranger = $positions->findOneBy(['name' => 'Ranger']);
+        $analyst = $positions->findOneBy(['name' => 'Analyst']);
+        self::assertInstanceOf(Position::class, $ranger);
+        self::assertInstanceOf(Position::class, $analyst);
+
+        // The old seed: nothing granted. And a hand-composed one beside it.
+        $writes = $this->service(PositionService::class);
+        $writes->setGrants($ranger, []);
+        $writes->setGrants($analyst, [TeamConcerns::DIRECTORY.'.read']);
+        $this->em->flush();
+        $this->em->clear();
+
+        $this->collector()->seed('team');
+        $this->em->clear();
+
+        $ranger = $positions->findOneBy(['name' => 'Ranger']);
+        $analyst = $positions->findOneBy(['name' => 'Analyst']);
+        self::assertNotSame([], $ranger?->getGrantValues(), 'The empty demo position was granted.');
+        self::assertSame([TeamConcerns::DIRECTORY.'.read'], $analyst?->getGrantValues(), 'And the hand-composed one was left alone.');
     }
 
     /**

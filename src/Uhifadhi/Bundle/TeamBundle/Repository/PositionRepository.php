@@ -59,6 +59,12 @@ final class PositionRepository extends ServiceEntityRepository
             ->getSingleScalarResult();
     }
 
+    /** The one position of this name in the organization, or null — names are unique org-wide. */
+    public function findOneByName(string $name): ?Position
+    {
+        return $this->findOneBy(['name' => $name]);
+    }
+
     /**
      * EVERY POSITION, BY NAME - the list a picker draws, and a flat one.
      *

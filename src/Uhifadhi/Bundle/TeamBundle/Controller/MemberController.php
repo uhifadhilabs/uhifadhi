@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Controller;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -29,21 +30,27 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Uid\Uuid;
 use Twig\Environment;
 use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
+use Uhifadhi\Bundle\TeamBundle\Entity\Placement;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Exception\LastSuperAdminException;
 use Uhifadhi\Bundle\TeamBundle\Exception\PositionFullException;
+use Uhifadhi\Bundle\TeamBundle\Exception\PositionRetiredException;
+use Uhifadhi\Bundle\TeamBundle\Model\PositionCard;
+use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
 use Uhifadhi\Bundle\TeamBundle\Service\Mail;
 use Uhifadhi\Bundle\TeamBundle\Service\MemberHistory;
 use Uhifadhi\Bundle\TeamBundle\Service\PasswordResetService;
-use Uhifadhi\Bundle\TeamBundle\Service\PostingDoorService;
+use Uhifadhi\Bundle\TeamBundle\Service\PositionBoard;
 use Uhifadhi\Bundle\TeamBundle\Service\SuperAdminInvariant;
 use Uhifadhi\Bundle\TeamBundle\Service\UserService;
-use Uhifadhi\Contracts\Access\Grant;
+use Uhifadhi\Contracts\Access\ScopeKind;
+use Uhifadhi\Contracts\Access\Verb;
+use Uhifadhi\Contracts\Entity\AreaInterface;
 use Uhifadhi\Contracts\People\PersonPosting;
 use Uhifadhi\Contracts\People\PersonPostingProviderInterface;
 
@@ -103,7 +110,7 @@ final readonly class MemberController
      * How many lines the history card shows before it states the bound. A
      * bounded card never grows to the data and never scrolls inside itself.
      */
-    private const int HISTORY = 6;
+    private const int HISTORY = 8;
 
     public function __construct(
         private Environment $twig,
@@ -131,14 +138,18 @@ final readonly class MemberController
          * @var iterable<PersonPostingProviderInterface>
          */
         private iterable $postingProviders,
-        /**
-         * WHERE A POSTING IS MADE, so the record can carry a door to it
-         * rather than naming the page and leaving the reader to look.
-         */
-        private PostingDoorService $postingDoor,
+        private PositionBoard $board,
+        private DepartmentRepository $departments,
+        private EntityManagerInterface $entityManager,
     ) {
     }
 
+    /**
+     * THE RECORD, READ. Ruled 21 Sep: it carries no control at all — the
+     * position, where it applies, the departments, where the person is
+     * stationed, what that grants right now, and the account's history.
+     * Everything that writes is on the configure page beside it.
+     */
     #[Route('/team/{uuid}', name: 'team_member', requirements: ['uuid' => Requirement::UUID], methods: ['GET'])]
     #[IsGranted('directory.read')]
     public function show(string $uuid): Response
@@ -146,69 +157,62 @@ final readonly class MemberController
         $member = $this->member($uuid);
         $postings = $this->postingsFor($member);
         $history = $this->history->of($member, $postings);
+        $position = $member->getPosition();
+        $card = null === $position ? null : $this->board->card($position);
 
         return new Response($this->twig->render('@Team/team/member.html.twig', [
             'member' => $member,
-            'tiers' => TeamRoleEnum::cases(),
-            // §5.6(a): the position picker offers only what this administrator
-            // may assign — every position for an unbounded one, only their own
-            // area's for a bounded (area-X) one. An org-level or other-area
-            // position is not a target they could reach.
-            // A RETIRED POSITION IS ABSENT FROM THE PICKER. It is not
-            // deleted — the register still carries it, greyed — but it
-            // cannot be given to anybody, and offering a thing that is
-            // closed is offering a refusal.
-            'positions' => $this->positions->findAssignable(),
-            // WHAT THAT ACTUALLY GRANTS, RIGHT NOW — every catalogue row with
-            // the REASON this person does or does not hold it. The page's whole
-            // argument is that a position name is not an answer.
-            'effective' => $this->effective($member),
-            // Asked before the page draws, so the refusal appears IN PLACE OF
-            // the control rather than after somebody has pressed it.
-            'isLastSuperAdmin' => $this->invariant->isLastActiveSuperAdmin($member),
-            // Impersonation is OFFERED to a Super Admin only; for anybody else
-            // the row is ABSENT rather than disabled.
-            'mayImpersonate' => $this->signedIn()?->getTeamRole()->canSwitch() ?? false,
-            'isSelf' => $this->signedIn()?->getId() === $member->getId(),
-            // WHERE THEY WORK, read through the seam and never written here: a
-            // posting is made on the station, in the area that owns the ground.
+            'card' => $card,
+            'placement' => $member->getPlacement(),
+            'figures' => $this->figures($card, $member->getTeamRole()->canManageContent()),
+            'byTier' => $member->getTeamRole()->canManageContent(),
+            'departmentsTotal' => \count($this->departments->findAllActiveOrdered()),
+            'stationedAt' => $postings[0] ?? null,
             'postings' => $postings,
-            // AND WHERE ONE IS MADE. Null where this installation mounts no
-            // area pages at all, and the record then states the fact without
-            // offering a door to nowhere.
-            'postingDoor' => $this->postingDoor->url(),
-            // HOW FAR THE POSITION REACHES — how many people sit in the one
-            // this person holds. A position is one post in this model, so the
-            // answer is one or none; it is counted rather than assumed,
-            // because the day a position holds seats it will still be right.
-            'reach' => null === $member->getPosition() ? 0 : $this->users->countActiveHoldingAnyPosition([$member->getPosition()]),
-            // AND WHAT THIS INSTALLATION CAN TRUTHFULLY SAY HAPPENED, derived
-            // from the stored facts that carry a date.
+            'reach' => null === $position ? 0 : $this->users->countActiveHoldingAnyPosition([$position]),
             'history' => \array_slice($history, 0, self::HISTORY),
             'historyTotal' => \count($history),
-            // A LETTER IS OFFERED AND REFUSED where there is no transport —
-            // the control visible, inert, the reason on it — exactly as the
-            // invite screen does it. Hiding it would leave an administrator
-            // hunting for a feature the product has, and swallowing the click
-            // would leave a colleague waiting for an email nobody sent.
+        ]));
+    }
+
+    /**
+     * THE CONFIGURE PAGE — the record mirrored, and everything that writes:
+     * the details, the sign-in and tier, the position with where it applies
+     * and which departments, and the account actions in the side column.
+     */
+    #[Route('/team/{uuid}/configure', name: 'team_member_configure', requirements: ['uuid' => Requirement::UUID], methods: ['GET'])]
+    #[IsGranted('directory.manage')]
+    public function configure(string $uuid): Response
+    {
+        $member = $this->member($uuid);
+        $postings = $this->postingsFor($member);
+        $history = $this->history->of($member, $postings);
+        $position = $member->getPosition();
+        $card = null === $position ? null : $this->board->card($position);
+
+        return new Response($this->twig->render('@Team/team/member_configure.html.twig', [
+            'member' => $member,
+            'card' => $card,
+            'placement' => $member->getPlacement(),
+            'tiers' => TeamRoleEnum::cases(),
+            'choices' => $this->choices(),
+            'areas' => $this->areas(),
+            'departments' => $this->departments->findAllActiveOrdered(),
+            'allowsOrganization' => null === $position || \in_array(ScopeKind::Organization, $position->getAllowedKinds(), true),
+            'allowsArea' => null === $position || \in_array(ScopeKind::Area, $position->getAllowedKinds(), true),
+            'isLastSuperAdmin' => $this->invariant->isLastActiveSuperAdmin($member),
+            'mayImpersonate' => $this->signedIn()?->getTeamRole()->canSwitch() ?? false,
+            'isSelf' => $this->signedIn()?->getId() === $member->getId(),
+            'mayChangeTier' => $this->authority->isUnbounded(),
+            'stationedAt' => $postings[0] ?? null,
+            'reach' => null === $position ? 0 : $this->users->countActiveHoldingAnyPosition([$position]),
+            'history' => \array_slice($history, 0, 7),
+            'historyTotal' => \count($history),
             'mailReady' => $this->mail->isConfigured(),
             'csrfToken' => $this->csrf->getToken(self::CSRF_ID)->getValue(),
         ]));
     }
 
-    /**
-     * A PASSWORD-RESET LINK, SENT BY AN ADMINISTRATOR.
-     *
-     * IT DOES NOT CHANGE THE PASSWORD. It writes a token and mails a link, so
-     * the person still chooses their own — an administrator who could set
-     * somebody's password could sign in as them without the audit line that
-     * impersonation leaves.
-     *
-     * ASKING AGAIN REPLACES THE PREVIOUS LINK, so an old email in an inbox
-     * stops working the moment a new one is sent. A DEACTIVATED ACCOUNT GETS
-     * NONE: a reset that let somebody back through a door the firewall closes
-     * would be a reset that undoes a deactivation.
-     */
     #[Route('/team/{uuid}/reset-link', name: self::RESET_LINK, requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]
     #[IsGranted('personal-details.manage')]
     public function sendResetLink(Request $request, string $uuid): RedirectResponse
@@ -360,8 +364,19 @@ final readonly class MemberController
          */
         try {
             $this->accounts->assignPosition($member, $position);
-        } catch (PositionFullException $refusal) {
+        } catch (PositionFullException|PositionRetiredException $refusal) {
             return $this->back($request, $member, $refusal->getMessage(), 'error');
+        }
+
+        // WHERE IT APPLIES, AND WHICH DEPARTMENTS — the placement's two
+        // dimensions, written in the same save as the seat. A request that
+        // says nothing about them keeps the placement that stands.
+        if ($request->request->has('where') || $request->request->has('all_departments') || $request->request->has('departments')) {
+            try {
+                $this->accounts->place($member, $this->placementFrom($request, $position));
+            } catch (\InvalidArgumentException $refusal) {
+                return $this->back($request, $member, $refusal->getMessage(), 'error');
+            }
         }
 
         return $this->back($request, $member, \sprintf('%s now holds %s.', $member->getFullName(), (string) $position->getName()));
@@ -400,62 +415,6 @@ final readonly class MemberController
         $this->accounts->reactivate($member);
 
         return $this->back($request, $member, \sprintf('%s can sign in again.', $member->getFullName()));
-    }
-
-    /**
-     * EVERY PAIR THE INSTALLATION DECLARES, WITH THE REASON. One column of
-     * rows, never three: the concern and the verb read together as one thing
-     * a person may do, because that is what a grant is. "by tier" for the two
-     * levels above the matrix, "by position" for what the position grants,
-     * "not held" otherwise - and, at the end, the ORPHANS: pairs this position
-     * still holds that no installed module declares any more. They are shown
-     * rather than hidden, because the difference between "you no longer have
-     * this" and "you cannot see that you still have this" is the whole of the
-     * prune-not-purge ruling.
-     *
-     * THE LABELS ARE THE PRODUCT'S WORDS AND THE PAIR IS THE MACHINE'S. Both
-     * are printed: the row is for a human, and the pair is what a route, a
-     * door and a test all name. An orphan has no label to print, so it says
-     * so in place of one.
-     *
-     * @return list<array{value: string, label: string, description: ?string, held: bool, why: string}>
-     */
-    private function effective(User $member): array
-    {
-        $byTier = $member->getTeamRole()->canManageContent();
-        $position = $member->getPosition();
-        $held = $position?->getGrantValues() ?? [];
-
-        $rows = [];
-        $declared = [];
-        foreach ($this->concerns->all() as $concern) {
-            foreach ($concern->verbs() as $verb) {
-                $pair = (string) Grant::of($concern->key(), $verb);
-                $declared[] = $pair;
-                $has = $byTier || \in_array($pair, $held, true);
-                $rows[] = [
-                    'value' => $pair,
-                    'label' => $concern->label().' &middot; '.$verb->label(),
-                    'description' => $concern->description(),
-                    'held' => $has,
-                    'why' => $has ? ($byTier ? 'by tier' : 'by position') : 'not held',
-                ];
-            }
-        }
-
-        foreach ($held as $pair) {
-            if (!\in_array($pair, $declared, true)) {
-                $rows[] = [
-                    'value' => $pair,
-                    'label' => 'no longer described',
-                    'description' => null,
-                    'held' => true,
-                    'why' => 'orphaned grant',
-                ];
-            }
-        }
-
-        return $rows;
     }
 
     private function member(string $uuid): User
@@ -557,6 +516,168 @@ final readonly class MemberController
             $session->getFlashBag()->add($kind, $message);
         }
 
-        return new RedirectResponse($this->router->generate('team_member', ['uuid' => $member->getUuidString()]));
+        // A SAVE MADE ON THE CONFIGURE PAGE COMES BACK TO IT — one save bar
+        // per card, and the next card is right there.
+        $route = 'configure' === $request->request->get('return') ? 'team_member_configure' : 'team_member';
+
+        return new RedirectResponse($this->router->generate($route, ['uuid' => $member->getUuidString()]));
+    }
+
+    /**
+     * THE PLACEMENT AS THE FORM SAYS IT. Where is the organization OR named
+     * areas — the first pill is exclusive with the rest, and a kind the
+     * position does not allow is refused in the entity's own words.
+     * Departments are all OR a chosen few, several allowed.
+     *
+     * @throws \InvalidArgumentException when the form names nowhere, or a kind the position does not allow
+     */
+    private function placementFrom(Request $request, Position $position): Placement
+    {
+        $placement = new Placement();
+        $where = (string) $request->request->get('where', 'areas');
+
+        if ('organization' === $where) {
+            if (!\in_array(ScopeKind::Organization, $position->getAllowedKinds(), true)) {
+                throw new \InvalidArgumentException(\sprintf('%s is not placed across the organization — it allows named areas only.', (string) $position->getName()));
+            }
+            $placement->acrossTheOrganization();
+        } else {
+            if (!\in_array(ScopeKind::Area, $position->getAllowedKinds(), true)) {
+                throw new \InvalidArgumentException(\sprintf('%s is not placed in an area — it applies across the organization.', (string) $position->getName()));
+            }
+            $areas = [];
+            foreach ($this->areas() as $area) {
+                if (\in_array((string) $area->getUuidString(), $this->listOf($request, 'areas'), true)) {
+                    $areas[] = $area;
+                }
+            }
+            if ([] === $areas) {
+                throw new \InvalidArgumentException('Name at least one area, or place them across the whole organization.');
+            }
+            $placement->inAreas($areas);
+        }
+
+        if ($request->request->getBoolean('all_departments')) {
+            $placement->acrossAllDepartments();
+        } else {
+            $chosen = [];
+            foreach ($this->departments->findAllActiveOrdered() as $department) {
+                if (\in_array((string) $department->getUuidString(), $this->listOf($request, 'departments'), true)) {
+                    $chosen[] = $department;
+                }
+            }
+            if ([] === $chosen) {
+                $placement->acrossAllDepartments();
+            } else {
+                $placement->inDepartments($chosen);
+            }
+        }
+
+        return $placement;
+    }
+
+    /** @return list<string> */
+    private function listOf(Request $request, string $key): array
+    {
+        return array_values(array_filter(array_map(
+            static fn (mixed $v): string => \is_string($v) ? $v : '',
+            (array) $request->request->all($key),
+        )));
+    }
+
+    /**
+     * EVERY AREA OF THE INSTALLATION, through the association the placement
+     * already declares — this bundle never names the class that holds them.
+     *
+     * @return list<AreaInterface>
+     */
+    private function areas(): array
+    {
+        $class = $this->entityManager->getClassMetadata(Placement::class)->getAssociationTargetClass('areas');
+
+        /** @var list<AreaInterface> $areas */
+        $areas = $this->entityManager->getRepository($class)->findBy([], ['name' => 'ASC']);
+
+        return $areas;
+    }
+
+    /**
+     * THE PICKER'S ROWS: every position that may be given, with its seats and,
+     * when it is full, who holds it — a full one is listed and refused, never
+     * hidden.
+     *
+     * @return list<array{uuid: string, label: string, full: bool}>
+     */
+    private function choices(): array
+    {
+        $rows = [];
+        foreach ($this->board->register() as $card) {
+            if ($card->position->isRetired()) {
+                continue;
+            }
+            $rows[] = [
+                'uuid' => $card->uuid(),
+                'label' => $card->name().' — '.$this->seatsLabel($card),
+                'full' => $card->isFull(),
+            ];
+        }
+
+        return $rows;
+    }
+
+    private function seatsLabel(PositionCard $card): string
+    {
+        if (null === $card->seats()) {
+            return \sprintf('%d held · unlimited', $card->seatsFilled());
+        }
+        if (!$card->isFull()) {
+            return \sprintf('%d of %d seats', $card->seatsFilled(), $card->seats());
+        }
+        $names = array_map(
+            static fn ($h): string => preg_replace('/^(\w)\S* /u', '$1. ', $h->name) ?? $h->name,
+            \array_slice($card->holders, 0, 2),
+        );
+
+        return \sprintf('%d seat%s · held by %s · full', $card->seats(), 1 === $card->seats() ? '' : 's', implode(', ', $names));
+    }
+
+    /**
+     * THE FOUR FIGURES OF THE BAND — how many concerns the position lets this
+     * person read, record, manage and export, with a sample of names.
+     *
+     * @return array<string, array{n: int, note: string}>
+     */
+    private function figures(?PositionCard $card, bool $byTier = false): array
+    {
+        $out = [];
+        foreach ([Verb::Read, Verb::Record, Verb::Manage, Verb::Export] as $verb) {
+            $names = [];
+            $sensitive = 0;
+            if ($byTier) {
+                foreach ($this->concerns->all() as $concern) {
+                    if (\in_array($verb, $concern->verbs(), true)) {
+                        $names[] = strtolower($concern->label());
+                    }
+                }
+            } elseif (null !== $card) {
+                foreach ($card->groups as $group) {
+                    foreach ($group->rows as $row) {
+                        if ($row->cells[$verb->value] ?? false) {
+                            $names[] = strtolower($row->label);
+                            if ($row->sensitive) {
+                                ++$sensitive;
+                            }
+                        }
+                    }
+                }
+            }
+            $note = implode(', ', \array_slice($names, 0, 3));
+            if ($sensitive > 0) {
+                $note = \sprintf('%d sensitive · %s', $sensitive, $note);
+            }
+            $out[$verb->value] = ['n' => \count($names), 'note' => $note];
+        }
+
+        return $out;
     }
 }

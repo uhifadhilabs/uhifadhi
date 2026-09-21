@@ -58,12 +58,7 @@ final class MemberRecordTest extends WebTestCaseWithSchema
      * composition that declares the 20px between two of them, and a card written
      * straight into the page body has to invent a spacing of its own.
      */
-    /**
-     * THE RECORD IS A SPLIT, and every card is on one side of it: the record
-     * itself in the main column, and what happened to it and what may be done
-     * to it in the rail. A card loose in the page body belongs to neither and
-     * gets the gap of whatever happens to precede it.
-     */
+    /** EVERY CARD ON THE RECORD SITS IN ONE OF THE TWO COLUMNS of the record grid, and each wears its kicker. */
     public function testEveryCardOnTheRecordSitsInTheColumnOrTheRail(): void
     {
         $this->withSuccessor();
@@ -71,24 +66,15 @@ final class MemberRecordTest extends WebTestCaseWithSchema
         $this->em->flush();
 
         $crawler = $this->client->request('GET', '/team/'.$grace->getUuidString());
-
-        $cards = $crawler->filter('.pgbody .c');
-        self::assertGreaterThanOrEqual(6, $cards->count(), 'the record draws a card per section');
-
-        foreach ($cards as $card) {
-            $node = new Crawler($card);
-            $label = $node->filter('.tab')->text('?');
-            $parent = $card->parentNode instanceof \DOMElement ? $card->parentNode->getAttribute('class') : '';
-
-            self::assertMatchesRegularExpression(
-                '/\b(mb-col|mb-rail)\b/',
-                $parent,
-                \sprintf('the card "%s" is loose in the page body rather than in the column or the rail', $label),
-            );
+        $cards = $crawler->filter('.recgrid .col > .c');
+        self::assertGreaterThanOrEqual(3, $cards->count(), 'the record draws a card per section');
+        self::assertSame($cards->count(), $crawler->filter('.pgbody .c')->count(), 'and none outside the grid');
+        foreach ($cards as $node) {
+            self::assertNotSame('', trim((new Crawler($node))->filter('.tab')->text('')), 'every card wears its kicker');
         }
     }
 
-    /** The rail carries the history and the account actions, and nothing else. */
+    /** THE SIDE COLUMN CARRIES WHERE THEY ARE STATIONED, THEN THE HISTORY; the account actions live on the configure page. */
     public function testTheRailCarriesTheHistoryAndTheAccountActions(): void
     {
         $this->withSuccessor();
@@ -96,13 +82,16 @@ final class MemberRecordTest extends WebTestCaseWithSchema
         $this->em->flush();
 
         $crawler = $this->client->request('GET', '/team/'.$grace->getUuidString());
-
         self::assertSame(
-            ['History', 'Account actions'],
-            $crawler->filter('.mb-rail .c .tab')->each(
+            ['Stationed at', 'History'],
+            $crawler->filter('.recgrid .col')->eq(1)->filter('.c > .tab')->each(
                 static fn (Crawler $c): string => trim(str_replace($c->filter('.src')->text(''), '', $c->text())),
             ),
         );
+        self::assertCount(0, $crawler->filter('.mb-danger'), 'No account action on the record.');
+
+        $crawler = $this->client->request('GET', '/team/'.$grace->getUuidString().'/configure');
+        self::assertCount(1, $crawler->filter('.recgrid .col')->eq(1)->filter('.mb-danger'));
     }
 
     /**
@@ -118,7 +107,7 @@ final class MemberRecordTest extends WebTestCaseWithSchema
         $this->em->flush();
 
         $crawler = $this->client->request('GET', '/team/'.$joseph->getUuidString());
-        $lines = $crawler->filter('.mb-log .mb-lrow b')->each(static fn (Crawler $c): string => $c->text());
+        $lines = $crawler->filter('.hlist .hrow .t')->each(static fn (Crawler $c): string => $c->text());
 
         self::assertContains('Invited', $lines);
         self::assertContains('Account created', $lines);
@@ -138,8 +127,8 @@ final class MemberRecordTest extends WebTestCaseWithSchema
         $joseph->markInvitedBy($naomi);
         $this->em->flush();
 
-        $crawler = $this->client->request('GET', '/team/'.$joseph->getUuidString());
-        $button = $crawler->filter('.mb-state button[type="submit"]')->first();
+        $crawler = $this->client->request('GET', '/team/'.$joseph->getUuidString().'/configure');
+        $button = $crawler->filter('.mb-drow form[action$="/invite-again"] button[type="submit"]')->first();
 
         self::assertStringContainsString('Send the link again', $button->text());
         // This kernel configures no mailer, which is the state a fresh
@@ -158,7 +147,7 @@ final class MemberRecordTest extends WebTestCaseWithSchema
         $first = $joseph->getVerificationToken();
 
         $this->client->request('POST', '/team/'.$joseph->getUuidString().'/invite-again', [
-            '_token' => $this->tokenFrom('/team/'.$joseph->getUuidString()),
+            '_token' => $this->tokenFrom('/team/'.$joseph->getUuidString().'/configure'),
         ]);
 
         self::assertResponseRedirects();
@@ -179,10 +168,11 @@ final class MemberRecordTest extends WebTestCaseWithSchema
         $grace = $this->person('Grace', 'Ndosi');
         $this->em->flush();
 
-        $crawler = $this->client->request('GET', '/team/'.$grace->getUuidString());
+        $crawler = $this->client->request('GET', '/team/'.$grace->getUuidString().'/configure');
 
         self::assertStringNotContainsString('Send the link again', $crawler->filter('.pgbody')->text());
-        self::assertStringContainsString('Send a reset link', $crawler->filter('.mb-state')->text());
+        self::assertStringContainsString('Send a password-reset link', $crawler->filter('.mb-danger')->text());
+        self::assertCount(0, $crawler->filter('.mb-drow form[action$="/invite-again"]'));
     }
 
     /**
@@ -221,7 +211,7 @@ final class MemberRecordTest extends WebTestCaseWithSchema
         $grace = $this->person('Grace', 'Ndosi');
         $this->em->flush();
 
-        $token = $this->tokenFrom('/team/'.$grace->getUuidString());
+        $token = $this->tokenFrom('/team/'.$grace->getUuidString().'/configure');
         $this->client->request('POST', '/team/'.$grace->getUuidString().'/deactivate', ['_token' => $token]);
 
         self::assertResponseRedirects();
@@ -242,7 +232,7 @@ final class MemberRecordTest extends WebTestCaseWithSchema
         $grace->deactivate();
         $this->em->flush();
 
-        $token = $this->tokenFrom('/team/'.$grace->getUuidString());
+        $token = $this->tokenFrom('/team/'.$grace->getUuidString().'/configure');
         $this->client->request('POST', '/team/'.$grace->getUuidString().'/reactivate', ['_token' => $token]);
 
         $this->em->clear();
@@ -262,7 +252,7 @@ final class MemberRecordTest extends WebTestCaseWithSchema
         $this->em->flush();
         $this->client->loginUser($naomi);
 
-        $crawler = $this->client->request('GET', '/team/'.$naomi->getUuidString());
+        $crawler = $this->client->request('GET', '/team/'.$naomi->getUuidString().'/configure');
 
         self::assertCount(1, $crawler->filter('.mb-refuse'));
         self::assertStringContainsString('Refused — last active Super Admin', $crawler->filter('.mb-refuse')->text());
@@ -277,7 +267,7 @@ final class MemberRecordTest extends WebTestCaseWithSchema
         $this->em->flush();
         $this->client->loginUser($naomi);
 
-        $token = $this->tokenFrom('/team/'.$naomi->getUuidString());
+        $token = $this->tokenFrom('/team/'.$naomi->getUuidString().'/configure');
         $this->client->request('POST', '/team/'.$naomi->getUuidString().'/tier', [
             '_token' => $token, 'tier' => 'staff',
         ]);
@@ -297,7 +287,7 @@ final class MemberRecordTest extends WebTestCaseWithSchema
         $this->em->flush();
         $this->client->loginUser($naomi);
 
-        $token = $this->tokenFrom('/team/'.$naomi->getUuidString());
+        $token = $this->tokenFrom('/team/'.$naomi->getUuidString().'/configure');
         $this->client->request('POST', '/team/'.$naomi->getUuidString().'/deactivate', ['_token' => $token]);
 
         $this->client->followRedirect();
@@ -312,7 +302,7 @@ final class MemberRecordTest extends WebTestCaseWithSchema
     {
         $naomi = $this->withSuccessor();
 
-        $crawler = $this->client->request('GET', '/team/'.$naomi->getUuidString());
+        $crawler = $this->client->request('GET', '/team/'.$naomi->getUuidString().'/configure');
 
         self::assertCount(0, $crawler->filter('.mb-refuse'));
     }
@@ -324,11 +314,11 @@ final class MemberRecordTest extends WebTestCaseWithSchema
         $grace = $this->person('Grace', 'Ndosi');
         $this->em->flush();
 
-        $crawler = $this->client->request('GET', '/team/'.$grace->getUuidString());
+        $crawler = $this->client->request('GET', '/team/'.$grace->getUuidString().'/configure');
 
         self::assertCount(1, $crawler->filter('.mb-grant'));
         self::assertStringContainsString('every permission you hold', $crawler->filter('.mb-grant')->text());
-        self::assertStringContainsString('transfer before you leave', strtolower($crawler->filter('.mb-grant')->text()));
+        self::assertStringContainsString('including this one', strtolower($crawler->filter('.mb-grant')->text()));
     }
 
     /** And it is absent where there is nothing to warn about. */
@@ -336,7 +326,7 @@ final class MemberRecordTest extends WebTestCaseWithSchema
     {
         $naomi = $this->withSuccessor();
 
-        $crawler = $this->client->request('GET', '/team/'.$naomi->getUuidString());
+        $crawler = $this->client->request('GET', '/team/'.$naomi->getUuidString().'/configure');
 
         self::assertCount(0, $crawler->filter('.mb-grant'));
     }
@@ -352,9 +342,9 @@ final class MemberRecordTest extends WebTestCaseWithSchema
         $joseph->markInvitedBy($naomi);
         $this->em->flush();
 
-        $crawler = $this->client->request('GET', '/team/'.$joseph->getUuidString());
+        $crawler = $this->client->request('GET', '/team/'.$joseph->getUuidString().'/configure');
 
-        self::assertStringContainsString('Invited by Naomi Kileo', $crawler->filter('.mb-state')->text());
+        self::assertStringContainsString('Invited by Naomi Kileo', $crawler->filter('.signin-state')->text());
     }
 
     public function testAnAccountCreatedDirectlySaysNobodyInvitedThem(): void
@@ -363,10 +353,10 @@ final class MemberRecordTest extends WebTestCaseWithSchema
         $hawa = $this->person('Hawa', 'Rajabu')->setVerified(false);
         $this->em->flush();
 
-        $crawler = $this->client->request('GET', '/team/'.$hawa->getUuidString());
+        $crawler = $this->client->request('GET', '/team/'.$hawa->getUuidString().'/configure');
 
-        self::assertStringContainsString('Created with a password, handed over', $crawler->filter('.mb-state')->text());
-        self::assertStringContainsString('no invitation outstanding', $crawler->filter('.mb-state')->text());
+        self::assertStringContainsString('Created with a password, handed over', $crawler->filter('.signin-state')->text());
+        self::assertStringContainsString('no invitation outstanding', $crawler->filter('.signin-state')->text());
     }
 
     public function testSomebodyWhoHasArrivedGetsNoInvitationLine(): void
@@ -375,16 +365,13 @@ final class MemberRecordTest extends WebTestCaseWithSchema
         $grace = $this->person('Grace', 'Ndosi');
         $this->em->flush();
 
-        $crawler = $this->client->request('GET', '/team/'.$grace->getUuidString());
+        $crawler = $this->client->request('GET', '/team/'.$grace->getUuidString().'/configure');
 
-        self::assertStringContainsString('Signed in and verified', $crawler->filter('.mb-state')->text());
-        self::assertStringNotContainsString('invited by', $crawler->filter('.mb-state')->text());
+        self::assertStringContainsString('Signed in and verified', $crawler->filter('.signin-state')->text());
+        self::assertStringNotContainsString('invited by', $crawler->filter('.signin-state')->text());
     }
 
-    /**
-     * "WHAT THAT ACTUALLY GRANTS, RIGHT NOW" — every catalogue row, with the
-     * reason on it. For somebody above the matrix every row reads "by tier".
-     */
+    /** THE LEDGER LISTS WHAT IS GRANTED, THROUGH WHICH POSITION — and nothing that is not. */
     public function testTheEffectiveLedgerSaysWhyOnEveryRow(): void
     {
         $this->withSuccessor();
@@ -394,23 +381,22 @@ final class MemberRecordTest extends WebTestCaseWithSchema
         $this->em->flush();
 
         $crawler = $this->client->request('GET', '/team/'.$grace->getUuidString());
+        $ledger = $crawler->filter('.recgrid .col')->first()->filter('.c')->eq(1);
 
-        self::assertStringContainsString('by position', $crawler->filter('.pm-eff')->text());
-        self::assertStringContainsString('not held', $crawler->filter('.pm-eff')->text());
-        // BOTH NAMES ON EVERY ROW: the product's words for the concern and
-        // the verb, and the pair the voter actually checks.
-        self::assertStringContainsString('surveys.read', $crawler->filter('.pm-eff')->text());
+        self::assertStringContainsString('through', $ledger->filter('.pml-thru')->text());
+        self::assertStringContainsString('Ranger', $ledger->filter('.pml-thru')->text());
+        self::assertCount(1, $ledger->filter('.pmk-row'), 'Only what is granted is listed.');
+        self::assertStringNotContainsString('not held', $ledger->text());
     }
 
+    /** A TIER ABOVE THE MATRIX SAYS SO: every permission, by tier, whatever the position. */
     public function testATierAboveTheMatrixReadsByTierOnEveryRow(): void
     {
         $naomi = $this->withSuccessor();
 
         $crawler = $this->client->request('GET', '/team/'.$naomi->getUuidString());
-
-        self::assertStringNotContainsString('by position', $crawler->filter('.pm-eff')->text());
-        self::assertStringContainsString('by tier', $crawler->filter('.pm-eff')->text());
-        self::assertStringContainsString('the position changes nothing they may do', $crawler->filter('.pgbody')->text());
+        self::assertStringContainsString('by tier', $crawler->filter('.factband')->text());
+        self::assertStringContainsString('Above the matrix', $crawler->filter('.recgrid')->text());
     }
 
     public function testAssigningAPositionWritesIt(): void
@@ -420,7 +406,7 @@ final class MemberRecordTest extends WebTestCaseWithSchema
         $frank = $this->person('Frank', 'Massawe');
         $this->em->flush();
 
-        $token = $this->tokenFrom('/team/'.$frank->getUuidString());
+        $token = $this->tokenFrom('/team/'.$frank->getUuidString().'/configure');
         $this->client->request('POST', '/team/'.$frank->getUuidString().'/position', [
             '_token' => $token, 'position' => $ranger->getUuidString(),
         ]);
@@ -446,14 +432,93 @@ final class MemberRecordTest extends WebTestCaseWithSchema
         $frank = $this->person('Frank', 'Massawe');
         $this->em->flush();
 
-        $crawler = $this->client->request('GET', '/team/'.$frank->getUuidString());
+        $crawler = $this->client->request('GET', '/team/'.$frank->getUuidString().'/configure');
         $picker = $crawler->filter('.mb-assignrow select[name="position"]');
 
         self::assertCount(0, $picker->filter('optgroup'), 'A position belongs to no department, so there is nothing to group by.');
         self::assertSame(
             ['— no position —', 'Analyst', 'Ranger'],
-            $picker->filter('option')->each(static fn (Crawler $c): string => $c->text()),
+            $picker->filter('option')->each(static fn (Crawler $c): string => trim(explode('—', $c->text(), 2)[0]) ?: trim($c->text())),
         );
+    }
+
+    /**
+     * THE RECORD READS AND NEVER WRITES. Ruled 21 Sep: changes happen on the
+     * configure page; the record states the position, where it applies, the
+     * departments, where the person is stationed, what that grants, and the
+     * account's history — with no control at all.
+     */
+    public function testTheRecordCarriesNoControl(): void
+    {
+        $this->withSuccessor();
+        $sergeant = $this->position('Sergeant', ['surveys.read']);
+        $ngorongoro = $this->area('Ngorongoro');
+        $ecology = $this->department('Ecology');
+        $frank = $this->person('Frank', 'Massawe');
+        $frank->setPosition($sergeant);
+        $this->place($frank, [$ngorongoro], [$ecology]);
+        $this->em->flush();
+
+        $crawler = $this->client->request('GET', '/team/'.$frank->getUuidString());
+        self::assertResponseIsSuccessful();
+
+        self::assertCount(0, $crawler->filter('.recgrid form'));
+        self::assertCount(0, $crawler->filter('.recgrid input, .recgrid select, .recgrid button'));
+
+        $sub = preg_replace('/\s+/', ' ', $crawler->filter('p.pgsub')->text()) ?? '';
+        self::assertStringContainsString('Sergeant', $sub);
+        self::assertStringContainsString('Ecology', $sub);
+
+        $band = $crawler->filter('.factband .f .k')->each(static fn (Crawler $k): string => trim($k->text()));
+        self::assertSame(['Reads', 'Records', 'Manages', 'Exports'], $band);
+        self::assertStringContainsString('What Sergeant grants', $crawler->filter('.factband a.more')->text());
+
+        $position = $crawler->filter('#position');
+        self::assertCount(1, $position);
+        self::assertStringContainsString('Sergeant', $position->filter('.pcard b')->first()->text());
+        $pills = $position->filter('.pmx-sk.on')->each(static fn (Crawler $c): string => trim($c->text()));
+        self::assertContains('Ngorongoro', $pills);
+        self::assertContains('Ecology', $pills);
+        self::assertStringContainsString('Change the position', $position->filter('.pcard-foot a.ov-open')->text());
+        self::assertStringEndsWith('/configure', (string) $position->filter('.pcard-foot a.ov-open')->attr('href'));
+
+        // THE LEDGER: verbs, where, and through which position — per concern.
+        $ledger = $crawler->filter('.recgrid .col')->first()->filter('.c')->eq(1);
+        self::assertStringStartsWith('What that actually grants, right now', trim($ledger->filter('.tab')->text()));
+        $row = $ledger->filter('.pmk-row.thru')->first();
+        self::assertCount(1, $row);
+        self::assertStringContainsString('read', $row->filter('.pmc.on')->text());
+        self::assertStringContainsString('Ngorongoro', $row->filter('.pmx-sc')->text());
+        self::assertStringContainsString('Sergeant', $row->filter('.pml-thru')->text());
+        self::assertStringContainsString('See it on the position', $ledger->filter('.pcard-foot a.ov-open')->text());
+
+        // THE SIDE COLUMN: stationed at, then history.
+        $side = $crawler->filter('.recgrid .col')->eq(1)->filter('.c > .tab')->each(static fn (Crawler $t): string => trim(explode('·', $t->text())[0]));
+        self::assertSame(['Stationed at', 'History'], $side);
+        self::assertCount(1, $crawler->filter('.recgrid .col')->eq(1)->filter('.c.stcard .viewer.zplate'));
+
+        // AND THE DOOR OUT IS CONFIGURE, in the head.
+        self::assertStringContainsString('Configure', $crawler->filter('.pgact')->text());
+    }
+
+    /** THE EMPTY STATE: holds no position, nothing granted, a door to give one — and no ledger card at all. */
+    public function testAPersonWithNoPositionReadsTheEmptyState(): void
+    {
+        $this->withSuccessor();
+        $grace = $this->person('Grace', 'Ndosi');
+        $this->em->flush();
+
+        $crawler = $this->client->request('GET', '/team/'.$grace->getUuidString());
+
+        self::assertStringContainsString('Holds no position', $crawler->filter('p.pgsub')->text());
+        self::assertStringStartsWith('—', trim($crawler->filter('.factband .f .v')->first()->text()), 'Read is granted, never assumed: a dash.');
+        self::assertStringContainsString('The positions register', $crawler->filter('.factband a.more')->text());
+
+        $position = $crawler->filter('#position');
+        self::assertStringContainsString('Holds no position.', $position->filter('.pmx-zero')->text());
+        self::assertStringContainsString('Give a position', $position->filter('.pcard-foot a.ov-open')->text());
+
+        self::assertCount(1, $crawler->filter('.recgrid .col')->first()->filter('.c'), 'No ledger card for a person who holds nothing.');
     }
 
     /**
@@ -468,7 +533,7 @@ final class MemberRecordTest extends WebTestCaseWithSchema
         $frank = $this->person('Frank', 'Massawe');
         $this->em->flush();
 
-        $token = $this->tokenFrom('/team/'.$frank->getUuidString());
+        $token = $this->tokenFrom('/team/'.$frank->getUuidString().'/configure');
         $this->client->request('POST', '/team/'.$frank->getUuidString().'/position', [
             '_token' => $token, 'position' => $ranger->getUuidString(),
         ]);
@@ -498,7 +563,7 @@ final class MemberRecordTest extends WebTestCaseWithSchema
         $frank = $this->person('Frank', 'Massawe');
         $this->em->flush();
 
-        $token = $this->tokenFrom('/team/'.$frank->getUuidString());
+        $token = $this->tokenFrom('/team/'.$frank->getUuidString().'/configure');
         $this->client->request('POST', '/team/'.$frank->getUuidString().'/position', [
             '_token' => $token, 'position' => $head->getUuidString(),
         ]);
@@ -540,7 +605,7 @@ final class MemberRecordTest extends WebTestCaseWithSchema
         $frank = $this->person('Frank', 'Massawe');
         $this->em->flush();
 
-        $token = $this->tokenFrom('/team/'.$frank->getUuidString());
+        $token = $this->tokenFrom('/team/'.$frank->getUuidString().'/configure');
         $this->client->request('POST', '/team/'.$frank->getUuidString().'/position', [
             '_token' => $token, 'position' => $head->getUuidString(),
         ]);
@@ -560,7 +625,7 @@ final class MemberRecordTest extends WebTestCaseWithSchema
         $grace->setPosition($ranger);
         $this->em->flush();
 
-        $token = $this->tokenFrom('/team/'.$grace->getUuidString());
+        $token = $this->tokenFrom('/team/'.$grace->getUuidString().'/configure');
         $this->client->request('POST', '/team/'.$grace->getUuidString().'/position', [
             '_token' => $token, 'position' => '',
         ]);
@@ -575,7 +640,7 @@ final class MemberRecordTest extends WebTestCaseWithSchema
         $grace = $this->person('Grace', 'Ndosi');
         $this->em->flush();
 
-        $token = $this->tokenFrom('/team/'.$grace->getUuidString());
+        $token = $this->tokenFrom('/team/'.$grace->getUuidString().'/configure');
         $this->client->request('POST', '/team/'.$grace->getUuidString(), [
             '_token' => $token,
             'firstName' => 'Grace',
@@ -619,7 +684,7 @@ final class MemberRecordTest extends WebTestCaseWithSchema
 
         self::assertResponseIsSuccessful();
         self::assertSame('Grace Ndosi', $crawler->filter('h1.pg')->text());
-        self::assertStringContainsString('Ranger', $crawler->filter('.mb-band')->text(), 'Who they are and what they do is the directory.');
+        self::assertStringContainsString('Ranger', $crawler->filter('p.pgsub')->text(), 'Who they are and what they do is the directory.');
 
         self::assertStringNotContainsString($address, $crawler->html(), 'The address is a contact detail and this reader may not read one.');
         self::assertStringNotContainsString('sign-in state', $crawler->html(), 'And neither is what their account is doing.');
@@ -638,10 +703,10 @@ final class MemberRecordTest extends WebTestCaseWithSchema
         $this->em->flush();
         $address = (string) $grace->getEmail();
 
-        $crawler = $this->client->request('GET', '/team/'.$grace->getUuidString());
+        $crawler = $this->client->request('GET', '/team/'.$grace->getUuidString().'/configure');
 
         self::assertStringContainsString($address, $crawler->html());
-        self::assertStringContainsString('sign-in state', $crawler->html());
+        self::assertStringContainsString('signin-state', $crawler->html());
         self::assertCount(1, $crawler->filter('input[name="email"]'));
     }
 

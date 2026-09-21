@@ -338,6 +338,11 @@ body::before {
 .side .nav { display: flex; flex-direction: column; gap: 5px; margin-top: 4px;
     flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
     scrollbar-width: thin; scrollbar-color: var(--c-ln2) transparent; }
+/* NOTHING IN THE NAV SHRINKS. A flex column lets its children give up height
+   before the column scrolls, so an open subtree squeezed every row above it
+   into a dense stack instead of the list scrolling. The rows keep their size
+   and the nav scrolls, which is what `overflow-y: auto` above is for. */
+.side .nav > * { flex-shrink: 0; }
 .side .nav::-webkit-scrollbar { width: 8px; }
 .side .nav::-webkit-scrollbar-track { background: transparent; }
 .side .nav::-webkit-scrollbar-thumb { background: transparent; border-radius: 99px; border: 2px solid transparent; background-clip: content-box; }

@@ -427,8 +427,8 @@ final class PositionConfigureTest extends WebTestCaseWithSchema
         $this->position('Ranger');
         $this->em->flush();
 
-        $crawler = $this->client->request('GET', '/team/'.$joseph->getUuidString());
-        $offered = $crawler->filter('select[name="position"] option')->each(static fn (Crawler $c): string => $c->text());
+        $crawler = $this->client->request('GET', '/team/'.$joseph->getUuidString().'/configure');
+        $offered = $crawler->filter('select[name="position"] option')->each(static fn (Crawler $c): string => trim(explode('—', $c->text(), 2)[0]));
 
         self::assertNotContains('Sergeant', $offered);
         self::assertContains('Ranger', $offered);

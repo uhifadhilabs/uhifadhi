@@ -3452,6 +3452,9 @@ label.pm-box:focus-within i { outline: 2px solid rgb(var(--c-acc)); outline-offs
 .pmbulk { display:inline-flex;gap:6px;margin-left:10px }
 .pmbulk button { font-family:var(--font-mono);font-size:9px;font-weight:700; letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--ln2);border-radius:999px; padding:0 10px;height:22px;background:none;color:var(--dim);cursor:pointer;line-height:1 }
 .pmbulk button:hover { color:var(--acc);border-color:color-mix(in srgb,var(--acc) 45%,transparent) }
+.pcard { display:flex;flex-direction:column;margin-top:10px }
+/* Inside the position card the pills sit under their label, never at the far edge: the row is a fact, not a matrix cell. */
+.pcard .pmx-sc { justify-content:flex-start }
 .pcol-k { font-family:var(--font-mono);font-size:8.5px;font-weight:700; letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin:14px 0 4px }
 .pcol-k:first-child { margin-top:0 }
 .pwchips { margin:2px 0 2px }

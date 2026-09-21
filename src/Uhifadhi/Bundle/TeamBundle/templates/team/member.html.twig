@@ -1,9 +1,32 @@
-{# ONE PERSON'S RECORD. Everything here writes to team_user; there is nothing on
-   this page the schema cannot store. #}
+{# ONE PERSON'S RECORD, READ.
+
+   RULED 21 SEP: the record wears the station record's skeleton — crumb, the
+   head with the mark and a subline of facts, the fact band, one .recgrid of
+   cards — and carries NO CONTROL. Changes happen on the configure page; the
+   head's Configure is the one door to it. The Position card is one column;
+   the ledger is a card of its own; where they are stationed is a fact, twice;
+   the side column holds Stationed at, then History. A person with no
+   position reads the empty state: the Position card body says so, the ledger
+   card is absent.
+
+   | design element                            | type    | source                          | status |
+   |-------------------------------------------|---------|---------------------------------|--------|
+   | crumb uhifadhi / team / name              | chrome  | routes                          | done   |
+   | .dpthead mark + h1 + facts subline        | data    | member, card, placement, posting| done   |
+   | pgact: Back to the team · Configure       | control | routes, door                    | done   |
+   | .factband Reads/Records/Manages/Exports   | data    | figures()                       | done   |
+   | band door: What <position> grants →       | control | position record                 | done   |
+   | Position card: seat, where, departments   | data    | card, placement                 | done   |
+   | Position card foot: reach · departments   | data    | reach, placement                | done   |
+   | empty state (.pmx-zero) + Give a position | state   | card is null                    | done   |
+   | ledger card: folds, verbs, where, through | data    | card.groups, placement          | done   |
+   | Stationed at: plate, station, code, since | data    | stationedAt                     | done   |
+   | History: latest 8 of N + View all         | data    | history                         | done   |
+#}
 {% extends '@Shell/page.html.twig' %}
 {% import '@Team/team/_bits.html.twig' as bits %}
 
-{% block title %}{{ member.fullName }} &middot; team{% endblock %}
+{% block title %}{{ member.fullName }} · team{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
@@ -16,369 +39,135 @@
     <a href="{{ path('team_index') }}">uhifadhi</a> / <a href="{{ path('team_index') }}">team</a> / {{ member.fullName|lower }}
 {% endblock %}
 
-{% block shell_page_title %}{{ member.fullName }}{% endblock %}
+{% set ground = placement ? placement.groundLabel : null %}
+{% set departmentsLabel = placement ? placement.departmentsLabel : null %}
 
-{# ONE LINE. What a tier is and what a permission is belong to Roles; this
-   page is one person. #}
-{% block shell_page_subtitle %}Everything this installation stores about one person, and what they may do.{% endblock %}
-
-{% block shell_page_actions %}
-    <a class="tgl w-act" href="{{ path('team_index') }}">{{ bits.icon_back() }} Back to the team</a>
-    <button class="cta" type="submit" form="member-form">{{ bits.icon_save() }} Save changes</button>
-{% endblock %}
-
-{% block shell_page %}
-
-{{ include('@Team/team/_scope_banner.html.twig') }}
-
-<div class="mb-band">
-    <span class="avatar">{{ bits.initials(member) }}</span>
-    <div class="mb-id">
-        <h2>{{ member.fullName }}</h2>
-        <div class="mb-idrow">
-            {# THE ADDRESS IS A CONTACT DETAIL, so it stands or falls with the
-               rest of them: `personal-details.read`, not `directory.read`. A
-               colleague who may see that somebody is on the team sees their
-               name, their tier and their position here, and no way to reach
-               them. #}
-            {% if door('personal-details.read') %}<span class="em">{{ member.email }}</span>{% endif %}
-            {{ bits.tier_pill(member.teamRole) }}
-            {% if member.rangerCode %}<span class="mb-code">{{ member.rangerCode|upper }}</span>{% endif %}
-            {% if member.position %}
-                <span class="qual">
-                    {%- if member.departmentLabel %}<span class="q">{{ member.departmentLabel }}</span><span class="sep">/</span>{% endif -%}
-                    <span class="n">{{ member.position.name }}</span>
-                </span>
-            {% endif %}
-        </div>
-    </div>
-    {# IMPERSONATION IS A REAL, SHIPPED CAPABILITY, offered to a Super Admin
-       only — TeamRoleEnum::canSwitch(). For anybody else this control is ABSENT
-       rather than disabled. #}
-    {% if mayImpersonate and not isSelf %}
-        <div class="acts">
-            <a class="softbtn" href="{{ path('team_index') }}?_switch_user={{ member.email|url_encode }}"
-               title="Sign in as this person to reproduce what they see">
-                {{ bits.icon_eye() }} Sign in as {{ member.firstName }}
-            </a>
-        </div>
-    {% endif %}
-</div>
-
-{# THE SPLIT — the incident sheet's rail, on a record page: the record in the
-   main column, and what happened to it and what may be done to it in the
-   rail beside it. #}
-<div class="mb-wrap">
-<div class="mb-col">
-    {# THE SIGN-IN STATE IS THE SENSITIVE HALF OF THE RECORD. Whether somebody
-       has ever signed in, who invited them and when, and the controls that mail
-       them a link are facts about the person rather than about the team, so the
-       whole card is gated on `personal-details.read`. The page itself stays open
-       on `directory.read`: a reader still sees who this is. #}
-    {% if door('personal-details.read') %}
-    <div class="c">
-        <span class="tab">The account<span class="src">&middot; sign-in state</span></span>
-
-        {% if not member.isActive %}
-            <div class="mb-state off">
-                {{ bits.icon_off() }}
-                <span><b>Deactivated &mdash; cannot sign in.</b>
-                {%- if member.disabledAt %} <time datetime="{{ member.disabledAt|date('c') }}" data-localtime-format="day">{{ member.disabledAt|date('j M Y') }}</time> &middot;{% endif %}
-                record kept, work keeps its author.</span>
-                <span class="st-acts">
-                    <form method="post" action="{{ path('team_member_reactivate', {uuid: member.uuidString}) }}">
-                        <input type="hidden" name="_token" value="{{ csrfToken }}">
-                        <button class="softbtn acc" type="submit">{{ bits.icon_undo() }} Reactivate</button>
-                    </form>
-                </span>
-            </div>
-        {% elseif member.isVerified %}
-            <div class="mb-state ok">
-                {{ bits.icon_check() }}
-                <span><b>Signed in and verified.</b> Nothing to resend.</span>
-                <span class="st-acts">
-                    {# OFFERED AND REFUSED where there is no transport, never
-                       hidden: the reason is on the control. #}
-                    <form method="post" action="{{ path('team_member_reset_link', {uuid: member.uuidString}) }}">
-                        <input type="hidden" name="_token" value="{{ csrfToken }}">
-                        <button class="softbtn" type="submit"{% if not mailReady %} disabled title="No mailer configured &mdash; MAILER_DSN is unset"{% endif %}>{{ bits.icon_tag() }} Send a reset link</button>
-                    </form>
-                </span>
-            </div>
-        {% else %}
-            <div class="mb-state wait">
-                {{ bits.icon_warn() }}
-                <span><b>Never signed in.</b>
-                {%- if member.wasInvited %} Invited by {{ member.invitedBy ? member.invitedBy.fullName : 'somebody since removed' }}, {{ bits.ago(member.invitedAt) }}.
-                {%- else %} Created with a password, handed over &middot; no invitation outstanding.{% endif %}</span>
-                {% if member.wasInvited %}
-                    <span class="st-acts">
-                        <form method="post" action="{{ path('team_member_invite_again', {uuid: member.uuidString}) }}">
-                            <input type="hidden" name="_token" value="{{ csrfToken }}">
-                            <button class="softbtn" type="submit"{% if not mailReady %} disabled title="No mailer configured &mdash; MAILER_DSN is unset"{% endif %}>{{ bits.icon_save() }} Send the link again</button>
-                        </form>
-                    </span>
-                {% endif %}
-            </div>
-        {% endif %}
-    </div>
-    {% endif %}
-
-        <div class="c">
-        <span class="tab">The record<span class="src">&middot; the columns team_user has</span></span>
-
-        <form class="mb-form" id="member-form" method="post" action="{{ path('team_member_update', {uuid: member.uuidString}) }}" style="margin-top:14px">
-            <input type="hidden" name="_token" value="{{ csrfToken }}">
-            <div class="mb-f">
-                <span class="lbl">first name</span>
-                <input class="fld" name="firstName" value="{{ member.firstName }}" required maxlength="100">
-                <p class="hint">Required &middot; <code>100</code></p>
-            </div>
-            <div class="mb-f">
-                <span class="lbl">last name</span>
-                <input class="fld" name="lastName" value="{{ member.lastName }}" required maxlength="100">
-                <p class="hint">Required &middot; <code>100</code></p>
-            </div>
-            {# THE SAME DETAIL, WRITTEN RATHER THAN READ. Rendering the input
-               would print the address to somebody who may not read it, so the
-               field is absent without `personal-details.read` — and the update
-               keeps the stored address when the field does not arrive, so a
-               save from this page cannot blank what the page never showed. #}
-            {% if door('personal-details.read') %}
-            <div class="mb-f">
-                <span class="lbl">email</span>
-                <input class="fld" name="email" type="email" value="{{ member.email }}" required maxlength="180">
-                <p class="hint">Sign-in identifier &middot; unique &middot; lowercased on save</p>
-            </div>
-            {% endif %}
-            <div class="mb-f">
-                <span class="lbl">ranger code</span>
-                <input class="fld" name="rangerCode" value="{{ member.rangerCode }}" maxlength="32">
-                <p class="hint">Unique &middot; nullable &mdash; blank stored as NULL</p>
-            </div>
-        </form>
-    </div>
-
-        <div class="c">
-        <span class="tab">Tier<span class="src">&middot; who may administer the team</span></span>
-
-        <form method="post" action="{{ path('team_member_tier', {uuid: member.uuidString}) }}">
-            <input type="hidden" name="_token" value="{{ csrfToken }}">
-            <div class="mb-tiers" style="margin-top:13px">
-                {% for tier in tiers %}
-                    <button type="submit" name="tier" value="{{ tier.value }}"
-                            class="mb-tier{{ member.teamRole == tier ? ' on' : '' }}"
-                            aria-pressed="{{ member.teamRole == tier ? 'true' : 'false' }}"
-                            {{ isLastSuperAdmin and tier != member.teamRole ? 'disabled' : '' }}>
-                        <span class="tt"><i></i><b>{{ tier.label }}</b></span>
-                        <em>{{ tier.description }}</em>
-                        <span class="grants">grants <b{{ tier.canManageContent ? '' : ' class="none"' }}>{{ tier.grants }}</b></span>
-                    </button>
-                {% endfor %}
-            </div>
-        </form>
-
-        {# THE WARNING LIVES AT THE GRANT. Shown whenever this person is not already
-           a Super Admin, because that is exactly when pressing the card hands
-           somebody every permission the presser holds. #}
-        {% if member.teamRole.value != 'super_admin' %}
-            <div class="mb-grant">
-                {{ bits.icon_warn() }}
-                <div><b>Grants every permission you hold, including this one.</b> They can promote others, and
-                demote you. Transfer before you leave.</div>
-            </div>
-        {% endif %}
-
-        {# THE REFUSAL, WITH ITS REASON — not a greyed-out control and not a
-           failure on submit. It unlocks the moment somebody else holds the tier. #}
-        {% if isLastSuperAdmin %}
-            <div class="mb-refuse">
-                {{ bits.icon_warn() }}
-                <span><b>Refused &mdash; last active Super Admin.</b> {{ member.fullName }} is the only one.
-                Demote and deactivate unlock the moment somebody else holds it.</span>
-            </div>
-        {% endif %}
-    </div>
-
-        <div class="c">
-        <span class="tab">Position<span class="src">&middot; the one control that changes what this person may do</span></span>
-
-        {# ROW ONE — THE CONTROL, at the house field width, with its caption and
-           its reach on the same line. #}
-        <div class="mb-assign">
-            <span class="lbl">assigned position</span>
-            <div class="mb-assignrow">
-                <form method="post" action="{{ path('team_member_position', {uuid: member.uuidString}) }}">
-                    <input type="hidden" name="_token" value="{{ csrfToken }}">
-                    {# ONE LIST, because a position's name is unique across the
-                       organization. There is one Analyst. #}
-                    <select class="sel" name="position" onchange="this.form.submit()">
-                        <option value="">&mdash; no position &mdash;</option>
-                        {% for position in positions %}
-                            <option value="{{ position.uuidString }}"{{ member.position == position ? ' selected' : '' }}>{{ position.name }}</option>
-                        {% endfor %}
-                    </select>
-                    <noscript><button class="softbtn" type="submit" style="margin-top:8px">Assign</button></noscript>
-                </form>
-                <span class="hint">One name each, across the organization &middot; no position grants nothing</span>
-                {% if member.position %}
-                    <div class="pm-reach">{{ ux_icon("shell:users", {width: 13, height: 13}) }} held by {{ reach }} {{ reach == 1 ? 'person' : 'people' }}</div>
-                {% endif %}
-            </div>
-        </div>
-
-        {# ROW TWO, FULL WIDTH — what that actually grants, right now, one
-           permission per row, read down. #}
-        <div class="mb-grants">
-            <span class="lbl">what that actually grants, right now</span>
-            <div class="pm-eff mb-eff2">
-                {% for row in effective %}
-                    <div class="pm-effrow{{ row.held ? '' : ' off' }}">
-                        <span class="lhs">
-                            <b>{% if row.why == 'orphaned grant' %}<span class="pm-orphname">{{ row.label }}</span>{% else %}{{ row.label }}{% endif %}</b>
-                            <span class="perm">{{ row.value }}</span>
-                        </span>
-                        <span class="pm-why {{ row.held ? (row.why == 'by tier' ? 'tier' : 'pos') : 'no' }}">
-                            {{- row.held ? bits.icon_tag() : bits.icon_off() }}{{ row.why -}}
-                        </span>
-                    </div>
-                {% endfor %}
-            </div>
-            <p class="hint" style="font-size:11.5px;color:rgb(var(--c-dim));line-height:1.55;margin:13px 0 0">
-                {%- if member.teamRole.canManageContent -%}
-                    Every row says <b>by tier</b> &mdash; the position changes nothing they may do.
-                {%- else -%}
-                    Staff tier grants nothing &mdash; every row here comes from the position.
-                    <a href="{{ path('team_positions') }}">Edit the position &rarr;</a>
-                {%- endif -%}
+{% block shell_page_head %}
+    <div class="dpthead">
+        <span class="mark">{{ bits.initials(member) }}</span>
+        <div>
+            <h1 class="pg">{{ member.fullName }}</h1>
+            <p class="pgsub">
+                <span>{{ card ? card.name : 'Holds no position' }}</span>
+                {%- if stationedAt %} &middot; <span>stationed at {{ stationedAt.stationName }}</span>{% endif -%}
+                {%- if card and departmentsLabel %} &middot; <span>{{ departmentsLabel }}</span>{% endif -%}
+                {%- if member.positionSince %} &middot; <span>since <time datetime="{{ member.positionSince|date('c') }}" data-localtime-format="day">{{ member.positionSince|date('j M Y') }}</time></span>
+                {%- elseif stationedAt %} &middot; <span>since <time datetime="{{ stationedAt.since|date('c') }}" data-localtime-format="day">{{ stationedAt.since|date('j M Y') }}</time></span>{% endif -%}
             </p>
         </div>
     </div>
-
-    {# POSTINGS — ONE FACT, TWO DOORS: the station page and this page. Read-only
-       here, because an assignment is made on the station, in the area. #}
-    <div class="c">
-        <span class="tab">Assignments<span class="src">&middot; {{ postings|length }} &middot; read-only, made in the area</span></span>
-        {# READ-ONLY HERE, AND STILL A DOOR. An assignment is made on the station,
-           in the area that owns the ground — so this card names that page and
-           goes to it, rather than naming it and leaving the reader to look.
-           Gated on both pairs between the reader and the deed — `stations.read`
-           opens the page, `assignments.manage` is the deed — and absent rather
-           than disabled: a door that closes in somebody's face is worse than
-           no door.
-
-           "Nullable · office-based staff have none" was a docblock that had
-           got into the product: a reader is told what is true of this person,
-           not what is true of a column. #}
-        {% if postings is empty %}
-            <div class="mb-empty" style="margin-top:14px">
-                {{ bits.icon_warn() }}
-                <span><b>Not stationed anywhere.</b> Office-based staff hold no assignment.</span>
-                {#  BOTH PAIRS, BECAUSE BOTH ARE BETWEEN THE READER AND THE
-                    DEED. The page behind this door is gated on stations.read
-                    and the deed on it — posting somebody — on
-                    assignments.manage, so drawing it for somebody holding
-                    only one of them is inviting them to a refusal.
-                    `area.edit` was the old machinery's spelling and named
-                    nothing this product enforces. #}
-                {% if postingDoor and door('stations.read') and door('assignments.manage') %}
-                    <a class="more" href="{{ postingDoor }}">Station them &rarr;</a>
-                {% endif %}
-            </div>
-        {% else %}
-            <table class="tbl" style="margin-top:14px">
-                <thead><tr><th>Station</th><th>Zone</th><th>Since</th><th></th></tr></thead>
-                <tbody>
-                {% for posting in postings %}
-                    <tr>
-                        <td><b>{{ posting.stationName }}</b>{% if posting.leader %} <span class="chip ok">leads</span>{% endif %}{% if posting.stationCode %} <span class="mono d">&middot; {{ posting.stationCode }}</span>{% endif %}</td>
-                        <td><span class="mono d">{{ posting.zoneName ?? 'no zone' }}</span></td>
-                        <td><span class="mono d"><time datetime="{{ posting.since|date('c') }}" data-localtime-format="day">{{ posting.since|date('j M Y') }}</time></span></td>
-                        <td style="text-align:right"><span class="mono d">{{ posting.areaName }}</span></td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        {% endif %}
+    <div class="pgact w-pgact">
+        <a class="tgl w-act" href="{{ path('team_index') }}">{{ ux_icon('shell:chevron-left', {width: 15, height: 15}) }} Back to the team</a>
+        {% if door('directory.manage') %}<a class="tgl w-act" href="{{ path('team_member_configure', {uuid: member.uuidString}) }}">{{ ux_icon('shell:settings', {width: 15, height: 15}) }} Configure</a>{% endif %}
     </div>
+{% endblock %}
+
+{% block shell_page %}
+{{ include('@Team/team/_scope_banner.html.twig') }}
+
+{# THE BAND: what the position lets this person do, by verb. Read is granted,
+   never assumed — a person with no position reads a dash on every figure. #}
+<div class="factband">
+    {% for verb, figure in figures %}
+        <span class="f"><span class="k">{{ {read: 'Reads', record: 'Records', manage: 'Manages', export: 'Exports'}[verb] }}</span><span class="v">
+            {%- if byTier %}{{ figure.n }}<em>by tier</em>
+            {%- elseif card %}{{ figure.n }}{% if figure.note %}<em>{{ figure.note }}</em>{% endif %}
+            {%- else %}&mdash;{% if loop.first %}<em>read is granted, never assumed</em>{% endif %}{% endif -%}
+        </span></span>
+    {% endfor %}
+    <span class="sp"></span>
+    {% if card %}
+        <a class="more" href="{{ path('team_position_show', {uuid: card.uuid}) }}">What {{ card.name }} grants &rarr;</a>
+    {% else %}
+        <a class="more" href="{{ path('team_positions') }}">The positions register &rarr;</a>
+    {% endif %}
 </div>
 
-<aside class="mb-rail">
-    {# WHAT THIS INSTALLATION CAN TRUTHFULLY SAY HAPPENED — derived from the
-       stored facts that carry a date, newest first, and bounded. #}
-    <div class="c">
-        <span class="tab">History<span class="src">&middot; latest {{ history|length }}</span></span>
-        <div class="mb-log">
-            {% for event in history %}
-                <div class="mb-lrow">
-                    <span class="mb-ldot{{ loop.first ? ' on' }}"></span>
-                    <span><b>{{ event.title }}</b><span>{{ event.note }}</span></span>
-                    <span class="mb-lwhen"><time datetime="{{ event.when|date('c') }}" data-localtime-format="daystamp">{{ event.when|date('j M Y') }}</time></span>
+<div class="recgrid">
+    <div class="col">
+        {# THE POSITION CARD — one column, one line per thing. #}
+        <div class="c" id="position">
+            <span class="tab">Position<span class="src">&middot; where it applies</span></span>
+            {% if card %}
+                <div class="pcard">
+                    <span class="pcol-k">Assigned position</span>
+                    <div class="psid-f"><span class="v"><b>{{ card.name }}</b><span class="zfrag">
+                        {%- if card.seats is null %}{{ card.seatsFilled }} held &middot; unlimited seats
+                        {%- else %}{{ card.seatsFilled }} of {{ card.seats }} seats &middot; {{ card.seatsFree }} free{% endif -%}
+                    </span></span></div>
+                    <span class="pcol-k">Where</span>
+                    <div class="pmx-sc">
+                        {%- if placement is null %}<span class="pmx-sk none">&mdash;</span><span class="zfrag">placed nowhere yet</span>
+                        {%- elseif placement.wholeOrganization %}<span class="pmx-sk on">The whole organization</span><span class="zfrag">every area at once</span>
+                        {%- else %}{% for area in placement.areas %}<span class="pmx-sk on">{{ area.name }}</span>{% endfor %}<span class="zfrag">not the whole organization</span>{% endif -%}
+                    </div>
+                    <span class="pcol-k">Departments</span>
+                    <div class="pmx-sc">
+                        {%- if placement is null %}<span class="pmx-sk none">&mdash;</span>
+                        {%- elseif placement.allDepartments %}<span class="pmx-sk on">All departments</span><span class="zfrag">{{ departmentsTotal }} of {{ departmentsTotal }}</span>
+                        {%- else %}{% for department in placement.departments %}<span class="pmx-sk on">{{ department.name }}</span>{% endfor %}<span class="zfrag">{{ placement.departments|length }} of {{ departmentsTotal }}</span>{% endif -%}
+                    </div>
                 </div>
+                <div class="pcard-foot">reaches <b>{{ reach }}</b> {{ reach == 1 ? 'person' : 'people' }}<span>&middot;</span><b>{{ placement and not placement.allDepartments ? placement.departments|length : departmentsTotal }}</b> of {{ departmentsTotal }} departments<span class="sp"></span>{% if door('directory.manage') %}<a class="ov-open" href="{{ path('team_member_configure', {uuid: member.uuidString}) }}">Change the position {{ ux_icon('shell:chevron-right') }}</a>{% endif %}</div>
             {% else %}
-                <div class="mb-lrow"><span class="mb-ldot"></span><span><b>Nothing dated yet.</b></span></div>
-            {% endfor %}
+                <div class="pcard"><div class="pmx-zero"><span><b>Holds no position.</b> Sign-in only &middot; nothing granted, read included</span></div></div>
+                <div class="pcard-foot">no seat, no area, no department<span class="sp"></span>{% if door('directory.manage') %}<a class="ov-open" href="{{ path('team_member_configure', {uuid: member.uuidString}) }}">Give a position {{ ux_icon('shell:chevron-right') }}</a>{% endif %}</div>
+            {% endif %}
         </div>
-        {% if historyTotal > history|length %}
-            <div class="sxmore"><span>{{ history|length }} of {{ historyTotal }}</span><span class="sp"></span></div>
+
+        {# THE LEDGER — what that actually grants, right now: concern · verbs ·
+           where · through which position. Only the groups the position holds
+           something in; a card of its own, absent for a person who holds nothing. #}
+        {% if byTier %}
+            <div class="c">
+                <span class="tab">What that actually grants, right now<span class="src">&middot; every concern</span></span>
+                <div class="pmx-zero"><span><b>Above the matrix.</b> {{ member.teamRole.label }} grants every permission, by tier &middot; the position changes nothing they may do</span></div>
+            </div>
+        {% elseif card %}
+            {% set granted = card.grantedGroups %}
+            <div class="c" data-controller="uhifadhi--team-bundle--folds">
+                <span class="tab">What that actually grants, right now<span class="src">&middot; {{ card.concernsGranted }} concern{{ card.concernsGranted == 1 ? '' : 's' }}</span></span>
+                <p class="use">Concern &middot; verbs &middot; where &middot; through which position</p>
+                {% for group in granted %}
+                    <details class="pmf pmfg"{{ loop.first ? ' open' : '' }} data-uhifadhi--team-bundle--folds-target="fold">
+                        <summary><b>{{ group.declarer }}</b><span class="pmx-n">{{ group.granted }} of {{ group.granted }}</span></summary>
+                        <div class="pmf-b">
+                            {% for row in group.grantedRows %}
+                                <div class="pmk-row thru">
+                                    <span class="pmx-cn"><b>{{ row.label }}</b>{% if row.sensitive %}<span class="pmx-sens"> sensitive</span>{% endif %}</span>
+                                    <span class="pmk-chips">{% for verb in row.heldVerbs %}<span class="pmc on">{{ verb.value }}</span>{% endfor %}</span>
+                                    <span class="pmx-sc">
+                                        {%- if placement is null %}<span class="pmx-sk none">&mdash;</span>
+                                        {%- elseif placement.wholeOrganization %}<span class="pmx-sk on">the organization</span>
+                                        {%- else %}{% for area in placement.areas %}<span class="pmx-sk on">{{ area.name }}</span>{% endfor %}{% endif -%}
+                                    </span>
+                                    <span class="pml-thru one"><em>through</em> <b>{{ card.name }}</b></span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </details>
+                {% else %}
+                    <div class="pmx-zero"><span><b>{{ card.name }} grants nothing yet.</b> Somebody holding it can sign in and reach no page behind it</span></div>
+                {% endfor %}
+                <div class="pcard-foot"><span>{{ card.concernsGranted }} concern{{ card.concernsGranted == 1 ? '' : 's' }} &middot; {{ granted|length }} group{{ granted|length == 1 ? '' : 's' }}</span><span class="sp"></span><a class="ov-open" href="{{ path('team_position_show', {uuid: card.uuid}) }}">See it on the position {{ ux_icon('shell:chevron-right') }}</a></div>
+            </div>
         {% endif %}
     </div>
 
-    {# ACCOUNT ACTIONS — THREE, and no fourth. Accounts are never hard-deleted,
-       and a screen does not name an action that does not exist. #}
-    <div class="c">
-        <span class="tab">Account actions<span class="src">&middot; three</span></span>
+    <div class="col">
+        {{ include('@Team/team/_stationed_at.html.twig', {stationedAt: stationedAt}) }}
 
-        <div class="mb-danger">
-            {# MAILING SOMEBODY A LINK TO THEIR OWN ACCOUNT IS A PERSONAL
-               DETAIL BEING ACTED ON, so the control is absent for a reader
-               who may not touch one — the route refuses it on
-               `personal-details.manage`, and a screen does not offer an
-               action it will then refuse. #}
-            {% if member.isActive and door('personal-details.manage') %}
-                <div class="mb-drow">
-                    <div class="dt"><b>Send a password-reset link</b>
-                    <em>Writes a token, mails a link &middot; does not change the password</em></div>
-                    <form method="post" action="{{ path('team_member_reset_link', {uuid: member.uuidString}) }}">
-                        <input type="hidden" name="_token" value="{{ csrfToken }}">
-                        <button class="softbtn" type="submit"{% if not mailReady %} disabled title="No mailer configured &mdash; MAILER_DSN is unset"{% endif %}>{{ bits.icon_tag() }} Send</button>
-                    </form>
-                </div>
-            {% endif %}
-
-            {% if mayImpersonate and not isSelf %}
-                <div class="mb-drow">
-                    <div class="dt"><b>Sign in as this person</b>
-                    <em>Super Admin only &middot; absent for anybody else</em></div>
-                    <a class="softbtn" href="{{ path('team_index') }}?_switch_user={{ member.email|url_encode }}">{{ bits.icon_eye() }} Switch</a>
-                </div>
-            {% endif %}
-
-            {% if member.isActive %}
-                <div class="mb-drow">
-                    <div class="dt"><b>Deactivate the account</b>
-                    <em>Sets inactive, stamps the date &middot; record kept, reversible &middot; refused for the last Super Admin</em></div>
-                    {% if isLastSuperAdmin %}
-                        <span class="mb-absent">{{ bits.icon_off() }} refused &mdash; the last active Super Admin</span>
-                    {% else %}
-                        <form method="post" action="{{ path('team_member_deactivate', {uuid: member.uuidString}) }}">
-                            <input type="hidden" name="_token" value="{{ csrfToken }}">
-                            <button class="softbtn danger" type="submit">{{ bits.icon_off() }} Deactivate</button>
-                        </form>
-                    {% endif %}
-                </div>
-            {% else %}
-                <div class="mb-drow">
-                    <div class="dt"><b>Reactivate the account</b>
-                    <em>Clears the flag and drops the date &middot; a stale &ldquo;disabled at&rdquo; on a live account reads as true and is not</em></div>
-                    <form method="post" action="{{ path('team_member_reactivate', {uuid: member.uuidString}) }}">
-                        <input type="hidden" name="_token" value="{{ csrfToken }}">
-                        <button class="softbtn acc" type="submit">{{ bits.icon_undo() }} Reactivate</button>
-                    </form>
-                </div>
-            {% endif %}
+        <div class="c">
+            <span class="tab">History<span class="src">&middot; latest {{ history|length }} of {{ historyTotal }}</span></span>
+            <a class="more" href="#">View all &rarr;</a>
+            <div class="hlist">
+                {% for event in history %}
+                    <div class="hrow"><span class="w"><time datetime="{{ event.when|date('c') }}" data-localtime-format="daystamp">{{ event.when|date('j M Y · H:i') }}</time></span><span class="t">{{ event.title }}</span><span class="by">{{ event.note ?: '&mdash;'|raw }}</span></div>
+                {% else %}
+                    <div class="hrow"><span class="w">&mdash;</span><span class="t">Nothing dated yet</span><span class="by">&mdash;</span></div>
+                {% endfor %}
+            </div>
         </div>
     </div>
-</aside>
 </div>
 {% endblock %}

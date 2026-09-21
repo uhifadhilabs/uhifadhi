@@ -1,0 +1,271 @@
+{# ONE PERSON'S CONFIGURE PAGE — the record mirrored, and everything that writes.
+
+   RULED 21 SEP: no tabs; the same skeleton and column split as the record;
+   the record reads, configure writes. One save bar per card, with Discard
+   beside the save. WHERE is the organization OR named areas, DEPARTMENTS are
+   all OR a chosen few — the first pill of each group is exclusive with the
+   rest, and a kind the position does not allow is ABSENT, not disabled. The
+   account actions live here in the side column, graded: deactivate wears the
+   fail colour, signing in as somebody is warning-grade, sending a link is quiet.
+   Where they are stationed is shown, not edited: an assignment is made on the area.
+
+   | design element                              | type    | source / route                 | status |
+   |---------------------------------------------|---------|--------------------------------|--------|
+   | crumb … / name / configure                  | chrome  | routes                         | done   |
+   | .dpthead mark + h1 + Configure · details … | chrome  | member                         | done   |
+   | pgact: The record                           | control | team_member                    | done   |
+   | Details: first, last, ranger code + bar     | control | POST team_member_update        | done   |
+   | Details: phone                              | —       | no column stores a phone yet   | held   |
+   | Sign-in: email, tier cards, warnings + bar  | control | POST team_member_update / tier | done   |
+   | Position: picker with seats, holders, full  | control | POST team_member_position      | done   |
+   | Position: where chips (org / areas)         | control | where, areas[]                 | done   |
+   | Position: departments chips (all / named)   | control | all_departments, departments[] | done   |
+   | Position bar: reaches N · M of K depts      | data    | reach, placement               | done   |
+   | Stationed at (read-only)                    | data    | stationedAt                    | done   |
+   | Account: reset · switch · deactivate        | control | the three routes               | done   |
+   | History: latest 7                           | data    | history                        | done   |
+#}
+{% extends '@Shell/page.html.twig' %}
+{% import '@Team/team/_bits.html.twig' as bits %}
+
+{% block title %}{{ member.fullName }} · configure{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {{ include('@Team/_stylesheets.html.twig') }}
+{% endblock %}
+
+{% block shell_page_tabs %}{% endblock %}
+
+{% block shell_breadcrumbs %}
+    <a href="{{ path('team_index') }}">uhifadhi</a> / <a href="{{ path('team_index') }}">team</a> / <a href="{{ path('team_member', {uuid: member.uuidString}) }}">{{ member.fullName|lower }}</a> / configure
+{% endblock %}
+
+{% block shell_page_head %}
+    <div class="dpthead">
+        <span class="mark">{{ bits.initials(member) }}</span>
+        <div>
+            <h1 class="pg">{{ member.fullName }}</h1>
+            <p class="pgsub"><span>Configure</span> &middot; <span>details</span> &middot; <span>sign-in</span> &middot; <span>position</span></p>
+        </div>
+    </div>
+    <div class="pgact w-pgact">
+        <a class="tgl w-act" href="{{ path('team_member', {uuid: member.uuidString}) }}">{{ ux_icon('shell:chevron-left', {width: 15, height: 15}) }} The record</a>
+    </div>
+{% endblock %}
+
+{% block shell_page %}
+{{ include('@Team/team/_scope_banner.html.twig') }}
+
+{% set departmentsTotal = departments|length %}
+{% set chosenDepartments = placement and not placement.allDepartments ? placement.departments|length : departmentsTotal %}
+
+<div class="recgrid">
+    <div class="col">
+        {# DETAILS #}
+        <div class="c">
+            <span class="tab">Details<span class="src">&middot; name, code, contact</span></span>
+            <form method="post" action="{{ path('team_member_update', {uuid: member.uuidString}) }}">
+                <input type="hidden" name="_token" value="{{ csrfToken }}">
+                <input type="hidden" name="return" value="configure">
+                <div class="crgrid">
+                    <div class="crfield grow"><span class="crlab">First name</span><input type="text" class="fld" name="firstName" value="{{ member.firstName }}" required maxlength="100"><span class="zfrag">Required &middot; 100</span></div>
+                    <div class="crfield grow"><span class="crlab">Last name</span><input type="text" class="fld" name="lastName" value="{{ member.lastName }}" required maxlength="100"><span class="zfrag">Required &middot; 100</span></div>
+                </div>
+                <div class="crgrid">
+                    <div class="crfield"><span class="crlab">Ranger code</span><input type="text" class="fld" name="rangerCode" value="{{ member.rangerCode }}" maxlength="32"><span class="zfrag">Unique &middot; nullable</span></div>
+                </div>
+                <div class="staddrow">
+                    <span class="chg"><b>no changes</b><span class="to">three columns of <b>team_user</b></span></span>
+                    <span class="sp"></span>
+                    <button type="reset" class="btn">Discard</button>
+                    <button type="submit" class="cta">Save the details</button>
+                </div>
+            </form>
+        </div>
+
+        {# SIGN-IN: the email and the tier. The email is a contact detail and
+           stands or falls with personal-details.read; the tier is org-wide
+           authority and only an unbounded administrator may touch it. #}
+        <div class="c">
+            <span class="tab">Sign-in<span class="src">&middot; email and tier</span></span>
+            <form id="signin-form" method="post" action="{{ path('team_member_update', {uuid: member.uuidString}) }}">
+                <input type="hidden" name="_token" value="{{ csrfToken }}">
+                <input type="hidden" name="return" value="configure">
+                <input type="hidden" name="firstName" value="{{ member.firstName }}">
+                <input type="hidden" name="lastName" value="{{ member.lastName }}">
+                <input type="hidden" name="rangerCode" value="{{ member.rangerCode }}">
+                {% if door('personal-details.read') %}
+                    <div class="crgrid">
+                        <div class="crfield grow"><span class="crlab">Email</span><input type="email" class="fld" name="email" value="{{ member.email }}" required maxlength="180"><span class="zfrag">The sign-in identifier &middot; unique &middot; lowercased on save</span></div>
+                    </div>
+                    {# THE SIGN-IN STATE IS A FACT UNDER THE ADDRESS: whether they have
+                       ever signed in, and who invited them. #}
+                    <div class="pms-row"><span class="k">state</span><span class="v"><span class="zfrag signin-state">
+                        {%- if not member.isActive %}Deactivated &mdash; cannot sign in
+                        {%- elseif member.isVerified %}Signed in and verified
+                        {%- elseif member.wasInvited %}Never signed in &middot; Invited by {{ member.invitedBy ? member.invitedBy.fullName : 'somebody since removed' }}, {{ bits.ago(member.invitedAt) }}
+                        {%- else %}Never signed in &middot; Created with a password, handed over &middot; no invitation outstanding{% endif -%}
+                    </span></span></div>
+                {% endif %}
+            </form>
+            <form method="post" action="{{ path('team_member_tier', {uuid: member.uuidString}) }}">
+                <input type="hidden" name="_token" value="{{ csrfToken }}">
+                <input type="hidden" name="return" value="configure">
+                <div class="pms-row"><span class="k">tier</span><span class="v"><span class="zfrag">Who may administer the team &middot; three, and only three</span></span></div>
+                <div class="mb-tiers">
+                    {% for tier in tiers %}
+                        <button type="submit" name="tier" value="{{ tier.value }}"
+                                class="mb-tier{{ member.teamRole == tier ? ' on' : '' }}"
+                                aria-pressed="{{ member.teamRole == tier ? 'true' : 'false' }}"
+                                {{ (isLastSuperAdmin and tier != member.teamRole) or not mayChangeTier ? 'disabled' : '' }}>
+                            <span class="tt"><i></i><b>{{ tier.label }}</b></span>
+                            <em>{{ tier.description }}</em>
+                            <span class="grants">grants <b{{ tier.canManageContent ? '' : ' class="none"' }}>{{ tier.grants }}</b></span>
+                        </button>
+                    {% endfor %}
+                </div>
+                {% if member.teamRole.value != 'super_admin' %}
+                    <div class="mb-grant"><div><b>Grants every permission you hold</b> &middot; including this one</div></div>
+                {% endif %}
+                {% if isLastSuperAdmin %}
+                    <div class="mb-refuse"><span><b>Refused &mdash; last active Super Admin.</b> {{ member.fullName }} is the only one</span></div>
+                {% endif %}
+            </form>
+            <div class="staddrow">
+                <span class="chg"><b>no changes</b><span class="to">tier <b>{{ member.teamRole.label }}</b> &middot; unchanged</span></span>
+                <span class="sp"></span>
+                <button type="reset" class="btn" form="signin-form">Discard</button>
+                <button type="submit" class="cta" form="signin-form">Save the sign-in</button>
+            </div>
+        </div>
+
+        {# POSITION: the seat, where it applies, the departments — one save. #}
+        <div class="c">
+            <span class="tab">Position<span class="src">&middot; the seat, where it applies, the departments</span></span>
+            <form method="post" action="{{ path('team_member_position', {uuid: member.uuidString}) }}" data-controller="uhifadhi--team-bundle--placement">
+                <input type="hidden" name="_token" value="{{ csrfToken }}">
+                <input type="hidden" name="return" value="configure">
+                <div class="pcard">
+                    <span class="pcol-k">Assigned position</span>
+                    <div class="mb-assignrow">
+                        <select class="sel" name="position" aria-label="Assigned position">
+                            <option value="">&mdash; no position &mdash;</option>
+                            {% for choice in choices %}
+                                <option value="{{ choice.uuid }}"{{ card and card.uuid == choice.uuid ? ' selected' : '' }}{{ choice.full and not (card and card.uuid == choice.uuid) ? ' disabled' : '' }}>{{ choice.label }}</option>
+                            {% endfor %}
+                        </select>
+                        <span class="hint">Sorted by name</span>
+                        {% if card %}<div class="pm-reach">{{ ux_icon('shell:users', {width: 13, height: 13}) }} reaches {{ reach }} {{ reach == 1 ? 'person' : 'people' }}</div>{% endif %}
+                    </div>
+                    {% if card %}
+                        <div class="pwnote"><b>{% if card.seats is null %}{{ card.seatsFilled }} held &middot; unlimited{% else %}{{ card.seatsFilled }} of {{ card.seats }} seats{% endif %}</b>{% if card.seatsFree is not null %} &middot; {{ card.seatsFree }} free{% endif %} &middot; a full one is refused, naming its holder</div>
+                    {% endif %}
+
+                    {% if allowsOrganization %}
+                        <span class="pcol-k">Organization</span>
+                        <div class="pmk-chips pwchips">
+                            <label class="pmb"><input type="checkbox" name="where" value="organization"{{ placement is null or placement.wholeOrganization ? ' checked' : '' }}><span>The whole organization <em>every area at once</em></span></label>
+                        </div>
+                    {% endif %}
+                    {% if allowsArea %}
+                        <span class="pcol-k">Areas</span>
+                        <div class="pmk-chips pwchips">
+
+                            {% for area in areas %}
+                                <label class="pmb"><input type="checkbox" name="areas[]" value="{{ area.uuidString }}"{{ placement and not placement.wholeOrganization and area in placement.areas ? ' checked' : '' }}><span>{{ area.name }}</span></label>
+                            {% else %}
+                                <span class="zfrag">this installation has no area yet</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <span class="pcol-k">Departments &middot; several allowed</span>
+                    <div class="pmk-chips pwchips">
+                        <label class="pmb"><input type="checkbox" name="all_departments" value="1"{{ placement is null or placement.allDepartments ? ' checked' : '' }}><span>All departments</span></label>
+                        {% for department in departments %}
+                            <label class="pmb"><input type="checkbox" name="departments[]" value="{{ department.uuidString }}"{{ placement and not placement.allDepartments and department in placement.departments ? ' checked' : '' }}><span>{{ department.name }}{% if department.area %} <em>{{ department.area.name }}</em>{% endif %}</span></label>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="staddrow">
+                    <span class="chg"><b>no changes</b><span class="to">reaches <b>{{ reach }}</b> {{ reach == 1 ? 'person' : 'people' }} &middot; <b>{{ chosenDepartments }}</b> of {{ departmentsTotal }} departments</span></span>
+                    <span class="sp"></span>
+                    <button type="reset" class="btn">Discard</button>
+                    <button type="submit" class="cta">Save the position</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col">
+        {{ include('@Team/team/_stationed_at.html.twig', {stationedAt: stationedAt}) }}
+
+        {# ACCOUNT: three actions, graded. #}
+        <div class="c">
+            <span class="tab">Account<span class="src">&middot; three actions</span></span>
+            <div class="mb-danger">
+                {% if member.isActive and door('personal-details.manage') %}
+                    <div class="mb-drow">
+                        <div class="dt"><b>Send a password-reset link</b><em>Writes a token, mails a link &middot; does not change the password</em></div>
+                        <form method="post" action="{{ path('team_member_reset_link', {uuid: member.uuidString}) }}">
+                            <input type="hidden" name="_token" value="{{ csrfToken }}"><input type="hidden" name="return" value="configure">
+                            <button class="softbtn" type="submit"{% if not mailReady %} disabled title="No mailer configured &mdash; MAILER_DSN is unset"{% endif %}>{{ bits.icon_mail() }} Send</button>
+                        </form>
+                    </div>
+                {% endif %}
+                {% if member.isActive and not member.isVerified and member.wasInvited and door('personal-details.manage') %}
+                    <div class="mb-drow">
+                        <div class="dt"><b>Resend the invitation</b><em>A new link &middot; the previous one stops working</em></div>
+                        <form method="post" action="{{ path('team_member_invite_again', {uuid: member.uuidString}) }}">
+                            <input type="hidden" name="_token" value="{{ csrfToken }}"><input type="hidden" name="return" value="configure">
+                            <button class="softbtn" type="submit"{% if not mailReady %} disabled title="No mailer configured &mdash; MAILER_DSN is unset"{% endif %}>{{ bits.icon_mail() }} Send the link again</button>
+                        </form>
+                    </div>
+                {% endif %}
+                {% if mayImpersonate and not isSelf %}
+                    <div class="mb-drow">
+                        <div class="dt"><b>Sign in as this person</b><em>Super Admin only &middot; absent for anybody else</em></div>
+                        <a class="softbtn warn" href="{{ path('team_index') }}?_switch_user={{ member.email|url_encode }}">{{ bits.icon_eye() }} Switch</a>
+                    </div>
+                {% endif %}
+                {% if member.isActive %}
+                    <div class="mb-drow">
+                        <div class="dt"><b>Deactivate the account</b><em>Record kept &middot; reversible &middot; not the last Super Admin</em></div>
+                        {% if isLastSuperAdmin %}
+                            <span class="mb-absent">{{ bits.icon_off() }} refused &mdash; the last active Super Admin</span>
+                        {% else %}
+                            <form method="post" action="{{ path('team_member_deactivate', {uuid: member.uuidString}) }}">
+                                <input type="hidden" name="_token" value="{{ csrfToken }}"><input type="hidden" name="return" value="configure">
+                                <button class="softbtn danger" type="submit">{{ bits.icon_off() }} Deactivate</button>
+                            </form>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="mb-drow">
+                        <div class="dt"><b>Reactivate the account</b><em>Clears the flag and drops the date</em></div>
+                        <form method="post" action="{{ path('team_member_reactivate', {uuid: member.uuidString}) }}">
+                            <input type="hidden" name="_token" value="{{ csrfToken }}"><input type="hidden" name="return" value="configure">
+                            <button class="softbtn acc" type="submit">{{ bits.icon_undo() }} Reactivate</button>
+                        </form>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="c">
+            <span class="tab">History<span class="src">&middot; the account &middot; latest {{ history|length }}</span></span>
+            <a class="more" href="#">View all &rarr;</a>
+            <div class="hlist">
+                {% for event in history %}
+                    <div class="hrow"><span class="w"><time datetime="{{ event.when|date('c') }}" data-localtime-format="daystamp">{{ event.when|date('j M Y · H:i') }}</time></span><span class="t">{{ event.title }}</span><span class="by">{{ event.note ?: '&mdash;'|raw }}</span></div>
+                {% else %}
+                    <div class="hrow"><span class="w">&mdash;</span><span class="t">Nothing dated yet</span><span class="by">&mdash;</span></div>
+                {% endfor %}
+                {% if member.passwordResetRequestedAt is null %}
+                    <div class="hrow"><span class="w">&mdash;</span><span class="t">No reset link has been sent</span><span class="by">&mdash;</span></div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

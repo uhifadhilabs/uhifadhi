@@ -19,6 +19,7 @@ use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Entity\Placement;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
+use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentService;
 use Uhifadhi\Bundle\TeamBundle\Service\PerformanceHistory;
@@ -178,6 +179,7 @@ final readonly class TeamContentProvider implements ContentProviderInterface
         private StaffingFigures $staffing,
         private PerformanceHistory $history,
         private ConcernCatalogue $catalogue,
+        private PositionRepository $positionRows,
     ) {
     }
 
@@ -204,6 +206,17 @@ final readonly class TeamContentProvider implements ContentProviderInterface
     public function load(): void
     {
         if ($this->alreadySeeded()) {
+            // A SECOND SEED TOPS UP, NEVER REDRAWS: a demo position seeded
+            // before it had anything to grant is granted now, by its name,
+            // and only while it still grants nothing — a park that has since
+            // ticked its own cells is left exactly as it is.
+            foreach (self::GRANTS as $key => $pairs) {
+                $position = $this->positionRows->findOneByName(ucwords(str_replace('_', ' ', $key)));
+                if (null !== $position && [] === $position->getGrantValues()) {
+                    $this->grant($position, $pairs);
+                }
+            }
+
             return;
         }
 

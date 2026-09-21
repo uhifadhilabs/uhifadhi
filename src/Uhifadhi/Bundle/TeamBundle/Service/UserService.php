@@ -236,7 +236,8 @@ final readonly class UserService
      * is not advice; the check is here rather than on the screen because a
      * second door that forgot to ask would quietly seat one person too many.
      *
-     * @throws PositionFullException when the position has no seat left
+     * @throws PositionFullException    when the position has no seat left
+     * @throws PositionRetiredException when the position has been retired
      */
     public function assignPosition(User $user, ?Position $position): void
     {

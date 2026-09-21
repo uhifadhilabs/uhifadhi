@@ -241,8 +241,9 @@ final class AreaScopedPersonTest extends WebTestCaseWithSchema
      */
     private function post(string $path, array $fields = []): void
     {
+        // THE TOKEN COMES FROM THE CONFIGURE PAGE: the record carries no form.
         $show = preg_replace('#/(deactivate|reactivate)$#', '', $path) ?? $path;
-        $token = $this->tokenFrom($show);
+        $token = $this->tokenFrom($show.'/configure');
         $this->client->request('POST', $path, ['_token' => $token, ...$fields]);
     }
 
