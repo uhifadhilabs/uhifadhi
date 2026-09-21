@@ -191,7 +191,7 @@ final readonly class TeamSectionOverview
                 (string) \count($held),
                 \sprintf('of %d · %d nobody holds', \count($positions), $unheld),
             ),
-            new SectionFact('Postings', (string) $postings, \sprintf('%d stations', \count($stations))),
+            new SectionFact('Assignments', (string) $postings, \sprintf('%d stations', \count($stations))),
             new SectionFact(
                 'Roles',
                 (string) \count(TeamRoleEnum::cases()),
@@ -256,7 +256,7 @@ final readonly class TeamSectionOverview
                 delta: self::movement(\count($held), $before, TeamFigures::FILLED),
             ),
             new SectionKpi(
-                'Postings',
+                'Assignments',
                 (string) $postings,
                 qualifier: \sprintf('%d stations · %d with nobody', \count($stations), $empty),
                 delta: self::movement($postings, $before, TeamFigures::POSTINGS),

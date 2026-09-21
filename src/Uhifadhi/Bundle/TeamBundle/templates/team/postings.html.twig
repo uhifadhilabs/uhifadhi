@@ -9,7 +9,7 @@
    and the Configure action are written by it. #}
 {% extends '@Shell/page.html.twig' %}
 
-{% block title %}Team &mdash; Assignments{% endblock %}
+{% block title %}Team · Assignments{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
@@ -21,7 +21,7 @@
 {% endblock %}
 
 {% block shell_page_title %}Team{% endblock %}
-{% block shell_page_subtitle %}Who is stationed at which station, across every area &mdash; read-only, made in the area.{% endblock %}
+{% block shell_page_subtitle %}Who is stationed where, across every area &mdash; read-only, made in the area.{% endblock %}
 
 {% block shell_page_actions %}
     {% if stationsUrl %}<a class="tgl w-act" href="{{ stationsUrl }}">Stations on the area</a>{% endif %}
@@ -63,7 +63,7 @@
             {# THE SEARCH IS A FORM, so pressing enter asks the question. The
                other four answers ride with it as hidden fields, or typing a
                name would silently clear them. #}
-            <form class="lsearch" method="get" action="{{ path('team_postings') }}">
+            <form class="lsearch" method="get" action="{{ path('team_assignments') }}">
                 {% for field, value in query.with(constant('Uhifadhi\\Bundle\\TeamBundle\\Model\\PostingQuery::SEARCH'), null) %}
                     <input type="hidden" name="{{ field }}" value="{{ value }}">
                 {% endfor %}

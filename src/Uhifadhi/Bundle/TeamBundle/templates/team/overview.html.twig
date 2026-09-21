@@ -12,7 +12,7 @@
 {% extends '@Shell/page.html.twig' %}
 {% import '@Team/departments/_bits.html.twig' as di %}
 
-{% block title %}Team &mdash; Overview{% endblock %}
+{% block title %}Team · Overview{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
@@ -130,7 +130,7 @@
             {% else %}
                 <div class="rln"><span class="d">Somebody is stationed at every station.</span></div>
             {% endfor %}
-            <div class="sxmore"><span>{{ emptyStations|length }} of {{ emptyStationsTotal }} shown</span><span class="sp"></span><a href="{{ path('team_postings') }}?posted=no">Postings &rarr;</a></div>
+            <div class="sxmore"><span>{{ emptyStations|length }} of {{ emptyStationsTotal }} shown</span><span class="sp"></span><a href="{{ path('team_assignments') }}?posted=no">Postings &rarr;</a></div>
         </div>
     </div>
 
@@ -170,7 +170,7 @@
     <div class="sxdoors">
         <a class="sxdoor" href="{{ path('team_index') }}"><b>People<span class="ar">&rarr;</span></b><span>The {{ people }} accounts, their tier, their position and the state of each account.</span></a>
         <a class="sxdoor" href="{{ path('team_positions') }}"><b>Positions &amp; permissions<span class="ar">&rarr;</span></b><span>The positions and the matrix that decides what each of them may do.</span></a>
-        <a class="sxdoor" href="{{ path('team_postings') }}"><b>Postings<span class="ar">&rarr;</span></b><span>Who is posted to which station, across every area &mdash; read-only, made in the area.</span></a>
+        <a class="sxdoor" href="{{ path('team_assignments') }}"><b>Assignments<span class="ar">&rarr;</span></b><span>Who is stationed where, across every area &mdash; read-only, made in the area.</span></a>
         <a class="sxdoor" href="{{ path('team_departments') }}"><b>Departments<span class="ar">&rarr;</span></b><span>The {{ departments }} departments a position belongs to, and what each of them reads.</span></a>
     </div>
 {% endblock %}

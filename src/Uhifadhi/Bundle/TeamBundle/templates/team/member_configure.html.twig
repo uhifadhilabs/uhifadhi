@@ -101,7 +101,7 @@
                     </div>
                     {# THE SIGN-IN STATE IS A FACT UNDER THE ADDRESS: whether they have
                        ever signed in, and who invited them. #}
-                    <div class="pms-row"><span class="k">state</span><span class="v"><span class="zfrag signin-state">
+                    <div class="pms-row"><span class="k">state</span><span class="v"><span class="zfrag" data-signin-state>
                         {%- if not member.isActive %}Deactivated &mdash; cannot sign in
                         {%- elseif member.isVerified %}Signed in and verified
                         {%- elseif member.wasInvited %}Never signed in &middot; Invited by {{ member.invitedBy ? member.invitedBy.fullName : 'somebody since removed' }}, {{ bits.ago(member.invitedAt) }}
@@ -143,7 +143,7 @@
         {# POSITION: the seat, where it applies, the departments — one save. #}
         <div class="c">
             <span class="tab">Position<span class="src">&middot; the seat, where it applies, the departments</span></span>
-            <form method="post" action="{{ path('team_member_position', {uuid: member.uuidString}) }}" data-controller="uhifadhi--team-bundle--placement">
+            <form method="post" action="{{ path('team_member_position', {uuid: member.uuidString}) }}">
                 <input type="hidden" name="_token" value="{{ csrfToken }}">
                 <input type="hidden" name="return" value="configure">
                 <div class="pcard">
@@ -198,7 +198,7 @@
     </div>
 
     <div class="col">
-        {{ include('@Team/team/_stationed_at.html.twig', {stationedAt: stationedAt}) }}
+        {{ include('@Team/team/_stationed_at.html.twig', {stationedAt: stationedAt, postingDoor: postingDoor}) }}
 
         {# ACCOUNT: three actions, graded. #}
         <div class="c">

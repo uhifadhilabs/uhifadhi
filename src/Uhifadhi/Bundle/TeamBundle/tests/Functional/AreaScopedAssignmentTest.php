@@ -55,7 +55,7 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
         $this->place($grace, [$north]);
         $this->em->flush();
 
-        $token = $this->tokenFrom('/team/'.$grace->getUuidString());
+        $token = $this->tokenFrom('/team/'.$grace->getUuidString().'/configure');
         $this->client->request('POST', '/team/'.$grace->getUuidString().'/position', [
             '_token' => $token, 'position' => $ranger->getUuidString(),
         ]);
@@ -78,7 +78,7 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
         $this->place($grace, [$west]);
         $this->em->flush();
 
-        $token = $this->tokenFrom('/team/'.$grace->getUuidString());
+        $token = $this->tokenFrom('/team/'.$grace->getUuidString().'/configure');
         $this->client->request('POST', '/team/'.$grace->getUuidString().'/position', [
             '_token' => $token, 'position' => $ranger->getUuidString(),
         ]);
@@ -104,7 +104,7 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
         $this->place($grace, [$north, $west]);
         $this->em->flush();
 
-        $token = $this->tokenFrom('/team/'.$grace->getUuidString());
+        $token = $this->tokenFrom('/team/'.$grace->getUuidString().'/configure');
         $this->client->request('POST', '/team/'.$grace->getUuidString().'/position', [
             '_token' => $token, 'position' => $ranger->getUuidString(),
         ]);
@@ -122,7 +122,7 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
         $this->place($grace);
         $this->em->flush();
 
-        $token = $this->tokenFrom('/team/'.$grace->getUuidString());
+        $token = $this->tokenFrom('/team/'.$grace->getUuidString().'/configure');
         $this->client->request('POST', '/team/'.$grace->getUuidString().'/position', [
             '_token' => $token, 'position' => $ranger->getUuidString(),
         ]);
@@ -144,7 +144,7 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
         $grace = $this->person('Grace', 'Ndosi');
         $this->em->flush();
 
-        $token = $this->tokenFrom('/team/'.$grace->getUuidString());
+        $token = $this->tokenFrom('/team/'.$grace->getUuidString().'/configure');
         $this->client->request('POST', '/team/'.$grace->getUuidString().'/position', [
             '_token' => $token, 'position' => $ranger->getUuidString(),
         ]);
@@ -164,7 +164,7 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
         $this->place($grace, [$north]);
         $this->em->flush();
 
-        $token = $this->tokenFrom('/team/'.$grace->getUuidString());
+        $token = $this->tokenFrom('/team/'.$grace->getUuidString().'/configure');
         $this->client->request('POST', '/team/'.$grace->getUuidString().'/position', [
             '_token' => $token, 'position' => '',
         ]);
@@ -185,7 +185,7 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
         $this->place($grace, [$west]);
         $this->em->flush();
 
-        $token = $this->tokenFrom('/team/'.$grace->getUuidString());
+        $token = $this->tokenFrom('/team/'.$grace->getUuidString().'/configure');
         $this->client->request('POST', '/team/'.$grace->getUuidString().'/position', [
             '_token' => $token, 'position' => '',
         ]);
@@ -212,7 +212,7 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
         $this->place($grace, [$north]);
         $this->em->flush();
 
-        $crawler = $this->client->request('GET', '/team/'.$grace->getUuidString());
+        $crawler = $this->client->request('GET', '/team/'.$grace->getUuidString().'/configure');
         $options = $this->pickerOptions($crawler);
 
         self::assertContains('Ranger', $options);
@@ -276,7 +276,7 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
         self::assertInstanceOf(User::class, $stored);
         self::assertNull($stored->getPlacement(), 'Adding somebody places them nowhere.');
 
-        $token = $this->tokenFrom('/team/'.$stored->getUuidString());
+        $token = $this->tokenFrom('/team/'.$stored->getUuidString().'/configure');
         $this->client->request('POST', '/team/'.$stored->getUuidString().'/deactivate', ['_token' => $token]);
 
         self::assertResponseStatusCodeSame(403);
@@ -316,7 +316,7 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
         $this->em->flush();
         $this->client->loginUser($orgAdmin);
 
-        $token = $this->tokenFrom('/team/'.$grace->getUuidString());
+        $token = $this->tokenFrom('/team/'.$grace->getUuidString().'/configure');
         $this->client->request('POST', '/team/'.$grace->getUuidString().'/position', [
             '_token' => $token, 'position' => $ranger->getUuidString(),
         ]);
@@ -337,7 +337,7 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
         $this->em->flush();
         $this->client->loginUser($orgAdmin);
 
-        $token = $this->tokenFrom('/team/'.$grace->getUuidString());
+        $token = $this->tokenFrom('/team/'.$grace->getUuidString().'/configure');
         $this->client->request('POST', '/team/'.$grace->getUuidString().'/position', [
             '_token' => $token, 'position' => $ranger->getUuidString(),
         ]);
@@ -371,7 +371,7 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
     private function pickerOptions(Crawler $crawler): array
     {
         return $crawler->filter('select[name="position"] option')
-            ->each(static fn (Crawler $c): string => trim($c->text()));
+            ->each(static fn (Crawler $c): string => trim(explode('—', $c->text(), 2)[0]) ?: trim($c->text()));
     }
 
     /**

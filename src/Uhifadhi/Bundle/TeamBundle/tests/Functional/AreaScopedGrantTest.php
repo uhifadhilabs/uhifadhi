@@ -188,7 +188,7 @@ final class AreaScopedGrantTest extends WebTestCaseWithSchema
         $grace = $this->person('Grace', 'Ndosi');
         $this->em->flush();
 
-        $token = $this->tokenFrom('/team/'.$grace->getUuidString());
+        $token = $this->tokenFrom('/team/'.$grace->getUuidString().'/configure');
         $this->client->request('POST', '/team/'.$grace->getUuidString().'/tier', [
             '_token' => $token, 'tier' => TeamRoleEnum::Admin->value,
         ]);
@@ -208,7 +208,7 @@ final class AreaScopedGrantTest extends WebTestCaseWithSchema
         $this->em->flush();
         $this->client->loginUser($orgAdmin);
 
-        $token = $this->tokenFrom('/team/'.$grace->getUuidString());
+        $token = $this->tokenFrom('/team/'.$grace->getUuidString().'/configure');
         $this->client->request('POST', '/team/'.$grace->getUuidString().'/tier', [
             '_token' => $token, 'tier' => TeamRoleEnum::Admin->value,
         ]);

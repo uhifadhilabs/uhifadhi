@@ -35,7 +35,7 @@ use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\FakeStationDirectory;
 final class TeamSectionFrameTest extends WebTestCaseWithSchema
 {
     /** The five tabs of the section, and the label lit on each. */
-    private const array TABS = ['Overview', 'People', 'Positions', 'Postings', 'Roles'];
+    private const array TABS = ['Overview', 'People', 'Positions', 'Assignments', 'Roles'];
 
     /** @return \Generator<string, array{string, string}> */
     public static function tabs(): \Generator
@@ -43,7 +43,7 @@ final class TeamSectionFrameTest extends WebTestCaseWithSchema
         yield 'overview' => ['/team/overview', 'Overview'];
         yield 'people' => ['/team', 'People'];
         yield 'positions' => ['/team/positions', 'Positions'];
-        yield 'postings' => ['/team/postings', 'Postings'];
+        yield 'assignments' => ['/team/assignments', 'Assignments'];
         yield 'roles' => ['/team/roles', 'Roles'];
     }
 

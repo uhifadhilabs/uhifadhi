@@ -3481,6 +3481,9 @@ label.pm-box:focus-within i { outline: 2px solid rgb(var(--c-acc)); outline-offs
 .zfrag { font:500 10.5px var(--font-mono);color:var(--dim);line-height:1.65 }
 .crfield .zfrag { min-width:0 }
 .pms-row .v .zfrag { flex:1 1 190px;min-width:0 }
+/* THE STATION PLATE ON A PERSON'S RECORD: the design's box at the design's
+   height, holding the place the area's map takes. */
+.stcard .viewer.zplate.stplate { min-height:0;height:132px;border-radius:10px;overflow:hidden;margin:2px 0 10px;background:rgb(var(--c-raised)) }
 .stcard .viewer.zplate { min-height:0;height:132px;border-radius:10px;overflow:hidden;margin:2px 0 10px }
 .stcard .viewer.zplate>svg { width:100%;height:100% }
 .stcard .rln { padding:6px 0 }

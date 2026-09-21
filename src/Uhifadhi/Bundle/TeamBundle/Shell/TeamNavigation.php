@@ -290,7 +290,7 @@ final readonly class TeamNavigation implements NavigationSourceInterface
             $this->screen('Overview', TeamSectionController::OVERVIEW),
             $this->screen('People', TeamController::PEOPLE),
             $this->screen('Positions', PositionController::REGISTER),
-            $this->screen('Postings', TeamPostingsController::POSTINGS),
+            $this->screen('Assignments', TeamPostingsController::POSTINGS),
             $this->screen('Roles', TeamRolesController::ROLES),
         ]));
 

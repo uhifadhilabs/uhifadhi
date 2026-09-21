@@ -22,7 +22,7 @@ use Uhifadhi\Contracts\Shell\ModuleTab;
 use Uhifadhi\Contracts\Shell\ModuleTabsInterface;
 
 /**
- * THE TEAM SECTION'S TAB SET — Overview · People · Positions · Postings ·
+ * THE TEAM SECTION'S TAB SET — Overview · People · Positions · Assignments ·
  * Roles.
  *
  * A SECTION WEARS THE AREA IDIOM, and the cheapest way to mean that is to use
@@ -61,7 +61,7 @@ final readonly class TeamSectionTabs implements ModuleTabsInterface
             new ModuleTab('Overview', TeamSectionController::OVERVIEW),
             new ModuleTab('People', TeamController::PEOPLE),
             new ModuleTab('Positions', PositionController::REGISTER),
-            new ModuleTab('Postings', TeamPostingsController::POSTINGS),
+            new ModuleTab('Assignments', TeamPostingsController::POSTINGS),
             new ModuleTab('Roles', TeamRolesController::ROLES),
         ];
     }

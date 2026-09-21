@@ -155,7 +155,7 @@
     </div>
 
     <div class="col">
-        {{ include('@Team/team/_stationed_at.html.twig', {stationedAt: stationedAt}) }}
+        {{ include('@Team/team/_stationed_at.html.twig', {stationedAt: stationedAt, postingDoor: postingDoor}) }}
 
         <div class="c">
             <span class="tab">History<span class="src">&middot; latest {{ history|length }} of {{ historyTotal }}</span></span>

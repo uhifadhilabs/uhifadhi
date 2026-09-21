@@ -54,7 +54,7 @@ final readonly class PostingStation
         return implode(' · ', array_filter([
             $this->code,
             $this->zoneName ?? 'no zone',
-            [] === $this->rows ? 'nobody posted' : \sprintf('%d posted', \count($this->rows)),
+            [] === $this->rows ? 'nobody stationed' : \sprintf('%d stationed', \count($this->rows)),
         ]));
     }
 }

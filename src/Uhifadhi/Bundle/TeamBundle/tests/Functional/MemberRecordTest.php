@@ -344,7 +344,7 @@ final class MemberRecordTest extends WebTestCaseWithSchema
 
         $crawler = $this->client->request('GET', '/team/'.$joseph->getUuidString().'/configure');
 
-        self::assertStringContainsString('Invited by Naomi Kileo', $crawler->filter('.signin-state')->text());
+        self::assertStringContainsString('Invited by Naomi Kileo', $crawler->filter('[data-signin-state]')->text());
     }
 
     public function testAnAccountCreatedDirectlySaysNobodyInvitedThem(): void
@@ -355,8 +355,8 @@ final class MemberRecordTest extends WebTestCaseWithSchema
 
         $crawler = $this->client->request('GET', '/team/'.$hawa->getUuidString().'/configure');
 
-        self::assertStringContainsString('Created with a password, handed over', $crawler->filter('.signin-state')->text());
-        self::assertStringContainsString('no invitation outstanding', $crawler->filter('.signin-state')->text());
+        self::assertStringContainsString('Created with a password, handed over', $crawler->filter('[data-signin-state]')->text());
+        self::assertStringContainsString('no invitation outstanding', $crawler->filter('[data-signin-state]')->text());
     }
 
     public function testSomebodyWhoHasArrivedGetsNoInvitationLine(): void
@@ -367,8 +367,8 @@ final class MemberRecordTest extends WebTestCaseWithSchema
 
         $crawler = $this->client->request('GET', '/team/'.$grace->getUuidString().'/configure');
 
-        self::assertStringContainsString('Signed in and verified', $crawler->filter('.signin-state')->text());
-        self::assertStringNotContainsString('invited by', $crawler->filter('.signin-state')->text());
+        self::assertStringContainsString('Signed in and verified', $crawler->filter('[data-signin-state]')->text());
+        self::assertStringNotContainsString('invited by', $crawler->filter('[data-signin-state]')->text());
     }
 
     /** THE LEDGER LISTS WHAT IS GRANTED, THROUGH WHICH POSITION — and nothing that is not. */
@@ -495,7 +495,7 @@ final class MemberRecordTest extends WebTestCaseWithSchema
         // THE SIDE COLUMN: stationed at, then history.
         $side = $crawler->filter('.recgrid .col')->eq(1)->filter('.c > .tab')->each(static fn (Crawler $t): string => trim(explode('·', $t->text())[0]));
         self::assertSame(['Stationed at', 'History'], $side);
-        self::assertCount(1, $crawler->filter('.recgrid .col')->eq(1)->filter('.c.stcard .viewer.zplate'));
+        self::assertCount(1, $crawler->filter('.recgrid .col')->eq(1)->filter('.c.stcard'));
 
         // AND THE DOOR OUT IS CONFIGURE, in the head.
         self::assertStringContainsString('Configure', $crawler->filter('.pgact')->text());
@@ -706,7 +706,7 @@ final class MemberRecordTest extends WebTestCaseWithSchema
         $crawler = $this->client->request('GET', '/team/'.$grace->getUuidString().'/configure');
 
         self::assertStringContainsString($address, $crawler->html());
-        self::assertStringContainsString('signin-state', $crawler->html());
+        self::assertStringContainsString('data-signin-state', $crawler->html());
         self::assertCount(1, $crawler->filter('input[name="email"]'));
     }
 

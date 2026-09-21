@@ -196,7 +196,7 @@ final readonly class PostingBoard
         $allAreas = \count($this->areaDirectory());
 
         return [
-            new SectionFact('Postings', (string) self::countPostings($stations), \sprintf('%d stations', \count($stations))),
+            new SectionFact('Assignments', (string) self::countPostings($stations), \sprintf('%d stations', \count($stations))),
             new SectionFact(
                 'Areas',
                 (string) \count($areasPosted),
@@ -207,7 +207,7 @@ final readonly class PostingBoard
             new SectionFact(
                 'Departments',
                 (string) \count($departments),
-                [] === $departments ? 'none posted' : implode(', ', array_keys($departments)),
+                [] === $departments ? 'none stationed' : implode(', ', array_keys($departments)),
             ),
         ];
     }
@@ -385,7 +385,7 @@ final readonly class PostingBoard
         $empty = \count(array_filter($stations, static fn (PostingStation $s): bool => $s->isEmpty()));
 
         return [
-            new FilterOption(PostingQuery::STAFFED, 'With people posted', \count($stations) - $empty),
+            new FilterOption(PostingQuery::STAFFED, 'With people stationed', \count($stations) - $empty),
             new FilterOption(PostingQuery::EMPTY, 'Nobody posted', $empty),
         ];
     }

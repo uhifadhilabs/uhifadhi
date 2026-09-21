@@ -46,6 +46,7 @@ use Uhifadhi\Bundle\TeamBundle\Service\Mail;
 use Uhifadhi\Bundle\TeamBundle\Service\MemberHistory;
 use Uhifadhi\Bundle\TeamBundle\Service\PasswordResetService;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionBoard;
+use Uhifadhi\Bundle\TeamBundle\Service\PostingDoorService;
 use Uhifadhi\Bundle\TeamBundle\Service\SuperAdminInvariant;
 use Uhifadhi\Bundle\TeamBundle\Service\UserService;
 use Uhifadhi\Contracts\Access\ScopeKind;
@@ -138,6 +139,8 @@ final readonly class MemberController
          * @var iterable<PersonPostingProviderInterface>
          */
         private iterable $postingProviders,
+        /** WHERE A POSTING IS MADE, so an unstationed record can carry a door to it. */
+        private PostingDoorService $postingDoor,
         private PositionBoard $board,
         private DepartmentRepository $departments,
         private EntityManagerInterface $entityManager,
@@ -168,6 +171,7 @@ final readonly class MemberController
             'byTier' => $member->getTeamRole()->canManageContent(),
             'departmentsTotal' => \count($this->departments->findAllActiveOrdered()),
             'stationedAt' => $postings[0] ?? null,
+            'postingDoor' => $this->postingDoor->url(),
             'postings' => $postings,
             'reach' => null === $position ? 0 : $this->users->countActiveHoldingAnyPosition([$position]),
             'history' => \array_slice($history, 0, self::HISTORY),
@@ -205,6 +209,7 @@ final readonly class MemberController
             'isSelf' => $this->signedIn()?->getId() === $member->getId(),
             'mayChangeTier' => $this->authority->isUnbounded(),
             'stationedAt' => $postings[0] ?? null,
+            'postingDoor' => $this->postingDoor->url(),
             'reach' => null === $position ? 0 : $this->users->countActiveHoldingAnyPosition([$position]),
             'history' => \array_slice($history, 0, 7),
             'historyTotal' => \count($history),

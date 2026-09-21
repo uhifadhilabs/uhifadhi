@@ -56,7 +56,7 @@ final class TeamSectionScreensTest extends WebTestCaseWithSchema
 
         self::assertCount(4, $cards, 'A figure row is four to a row, and never five.');
         self::assertSame(
-            ['People', 'Positions', 'Seats filled', 'Postings'],
+            ['People', 'Positions', 'Seats filled', 'Assignments'],
             $cards->filter('.tab')->each(static fn (Crawler $c): string => $c->text()),
         );
     }
@@ -113,7 +113,7 @@ final class TeamSectionScreensTest extends WebTestCaseWithSchema
         $this->installation();
 
         self::assertSame(
-            ['People', 'Positions', 'Held', 'Postings', 'Roles'],
+            ['People', 'Positions', 'Held', 'Assignments', 'Roles'],
             $this->visit('/team/overview')->filter('.factband .f .k')->each(static fn (Crawler $c): string => $c->text()),
         );
     }

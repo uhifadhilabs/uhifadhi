@@ -60,7 +60,6 @@ final class TeamSurfacesTest extends IntegrationTestCase
         self::assertSame([
             'kpis', 'attention',
             'roster_a', 'roster_b', 'roster_f', 'roster_c', 'roster_d', 'roster_e',
-            'tiers',
         ], $catalog->ids());
 
         self::assertSame(
@@ -102,7 +101,7 @@ final class TeamSurfacesTest extends IntegrationTestCase
         $first = $builtins[0];
 
         self::assertSame('The team roster', $first->label);
-        self::assertSame(['kpis', 'attention', 'roster_a', 'tiers'], $first->ids());
+        self::assertSame(['kpis', 'attention', 'roster_a'], $first->ids());
     }
 
     /**

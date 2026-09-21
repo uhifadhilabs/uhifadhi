@@ -21,7 +21,7 @@ use Uhifadhi\Contracts\Area\PostedStation;
 use Uhifadhi\Contracts\Area\StationPost;
 
 /**
- * THE POSTINGS TAB — who is posted where, across every area, read-only.
+ * THE ASSIGNMENTS TAB — who is stationed where, across every area, read-only.
  *
  * THE JOIN IS THE POINT. The ground publishes stations and the uuids standing
  * at them; this bundle says who those uuids are, what rank they hold and which
@@ -46,10 +46,10 @@ final class TeamPostingsTest extends WebTestCaseWithSchema
     public function testEachStationIsABandAndItsPeopleAreTheRowsUnderIt(): void
     {
         $this->ground();
-        $crawler = $this->visit('/team/postings');
+        $crawler = $this->visit('/team/assignments');
 
         self::assertSame(
-            ['Seneto Gate Post · ST-01 · Crater · 2 posted', 'Naiyobi Outpost · ST-08 · Naiyobi · nobody posted'],
+            ['Seneto Gate Post · ST-01 · Crater · 2 stationed', 'Naiyobi Outpost · ST-08 · Naiyobi · nobody stationed'],
             $crawler->filter('tr.sxgrp td')->each(static fn (Crawler $c): string => trim(preg_replace('/\s+/', ' ', $c->text()) ?? '')),
         );
 
@@ -66,7 +66,7 @@ final class TeamPostingsTest extends WebTestCaseWithSchema
 
         self::assertSame(
             ['leads'],
-            $this->visit('/team/postings')->filter('table.tbl .chip')->each(static fn (Crawler $c): string => $c->text()),
+            $this->visit('/team/assignments')->filter('table.tbl .chip')->each(static fn (Crawler $c): string => $c->text()),
         );
     }
 
@@ -80,7 +80,7 @@ final class TeamPostingsTest extends WebTestCaseWithSchema
 
         self::assertStringContainsString(
             'Nobody is stationed here',
-            $this->visit('/team/postings')->filter('table.tbl tbody')->text(),
+            $this->visit('/team/assignments')->filter('table.tbl tbody')->text(),
         );
     }
 
@@ -90,8 +90,8 @@ final class TeamPostingsTest extends WebTestCaseWithSchema
         $this->ground();
 
         self::assertSame(
-            ['Postings', 'Areas', 'Stations', 'Leaders', 'Departments'],
-            $this->visit('/team/postings')->filter('.factband .f .k')->each(static fn (Crawler $c): string => $c->text()),
+            ['Assignments', 'Areas', 'Stations', 'Leaders', 'Departments'],
+            $this->visit('/team/assignments')->filter('.factband .f .k')->each(static fn (Crawler $c): string => $c->text()),
         );
     }
 
@@ -104,7 +104,7 @@ final class TeamPostingsTest extends WebTestCaseWithSchema
     {
         $this->ground();
 
-        $options = $this->visit('/team/postings')->filter('.lfilt details')->eq(0)->filter('.i-ddopt');
+        $options = $this->visit('/team/assignments')->filter('.lfilt details')->eq(0)->filter('.i-ddopt');
 
         self::assertSame(
             ['all areas', 'Ngorongoro', 'Amboni Caves'],
@@ -118,7 +118,7 @@ final class TeamPostingsTest extends WebTestCaseWithSchema
     {
         $this->ground();
 
-        $rows = $this->visit('/team/postings?rank=Ranger')->filter('table.tbl tbody tr:not(.sxgrp)');
+        $rows = $this->visit('/team/assignments?rank=Ranger')->filter('table.tbl tbody tr:not(.sxgrp)');
 
         self::assertCount(1, $rows);
         self::assertStringContainsString('Tumaini Ndosi', $rows->text());
@@ -131,11 +131,11 @@ final class TeamPostingsTest extends WebTestCaseWithSchema
 
         self::assertStringContainsString(
             'Joseph Mollel',
-            $this->visit('/team/postings?q=mollel')->filter('table.tbl tbody')->text(),
+            $this->visit('/team/assignments?q=mollel')->filter('table.tbl tbody')->text(),
         );
         self::assertStringContainsString(
             'Naiyobi',
-            $this->visit('/team/postings?q=naiyobi')->filter('table.tbl tbody')->text(),
+            $this->visit('/team/assignments?q=naiyobi')->filter('table.tbl tbody')->text(),
         );
     }
 
@@ -145,8 +145,8 @@ final class TeamPostingsTest extends WebTestCaseWithSchema
         $this->ground();
 
         self::assertSame(
-            ['Naiyobi Outpost · ST-08 · Naiyobi · nobody posted'],
-            $this->visit('/team/postings?posted=no')->filter('tr.sxgrp td')
+            ['Naiyobi Outpost · ST-08 · Naiyobi · nobody stationed'],
+            $this->visit('/team/assignments?posted=no')->filter('tr.sxgrp td')
                 ->each(static fn (Crawler $c): string => trim(preg_replace('/\s+/', ' ', $c->text()) ?? '')),
         );
     }
@@ -162,7 +162,7 @@ final class TeamPostingsTest extends WebTestCaseWithSchema
 
         self::assertStringContainsString(
             'No station has been recorded on this installation yet.',
-            $this->visit('/team/postings')->filter('table.tbl tbody')->text(),
+            $this->visit('/team/assignments')->filter('table.tbl tbody')->text(),
         );
     }
 
@@ -170,7 +170,7 @@ final class TeamPostingsTest extends WebTestCaseWithSchema
     public function testTheBoardCarriesNoForm(): void
     {
         $this->ground();
-        $crawler = $this->visit('/team/postings');
+        $crawler = $this->visit('/team/assignments');
 
         self::assertCount(0, $crawler->filter('form[method="post"]'));
         self::assertStringContainsString('Team reads it, never writes it.', $crawler->filter('.sxfoot')->text());

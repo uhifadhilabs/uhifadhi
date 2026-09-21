@@ -1071,6 +1071,7 @@ return static function (ContainerConfigurator $container): void {
             service('team.mail'),
             // WHERE THIS PERSON WORKS, from whoever owns the ground.
             tagged_iterator(PersonPostingProviderInterface::TAG),
+            service('team.posting_door'),
             service('team.position_board'),
             service(DepartmentRepository::class),
             service('doctrine.orm.entity_manager'),

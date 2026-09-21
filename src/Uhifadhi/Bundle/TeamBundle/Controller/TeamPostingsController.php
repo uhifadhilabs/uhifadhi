@@ -38,7 +38,7 @@ use Uhifadhi\Bundle\TeamBundle\Service\PostingBoard;
 final readonly class TeamPostingsController
 {
     /** The section's fourth tab. */
-    public const string POSTINGS = 'team_postings';
+    public const string POSTINGS = 'team_assignments';
 
     public function __construct(
         private Environment $twig,
@@ -46,7 +46,7 @@ final readonly class TeamPostingsController
     ) {
     }
 
-    #[Route('/team/postings', name: self::POSTINGS, defaults: TeamController::SURFACE, methods: ['GET'])]
+    #[Route('/team/assignments', name: self::POSTINGS, defaults: TeamController::SURFACE, methods: ['GET'])]
     #[IsGranted('directory.read')]
     public function index(Request $request): Response
     {

@@ -10,8 +10,15 @@
         <div class="rln"><span>Since</span><span class="mono"><time datetime="{{ stationedAt.since|date('c') }}" data-localtime-format="day">{{ stationedAt.since|date('j M Y') }}</time></span></div>
         <div class="stcard-foot"><span class="mono d">an assignment grants nothing</span><span class="sp"></span><a class="ov-open" href="{{ path('area_station_show', {uuid: stationedAt.areaUuid, station: stationedAt.stationUuid}) }}">The station {{ ux_icon('shell:chevron-right') }}</a></div>
     {% else %}
-        <div class="viewer zplate stplate" aria-hidden="true"></div>
-        <div class="rln"><span>Station</span><span class="mono d">not stationed anywhere</span></div>
+        {# NOT STATIONED: a fact about this person, and — for somebody who may
+           make an assignment — the door to where one is made. Absent, not
+           disabled, for anybody else. #}
+        <div class="mb-empty">
+            <span><b>Not stationed anywhere.</b> Office-based staff hold no assignment.</span>
+            {% if postingDoor|default(null) and door('stations.read') and door('assignments.manage') %}
+                <a class="more" href="{{ postingDoor }}">Station them &rarr;</a>
+            {% endif %}
+        </div>
         <div class="stcard-foot"><span class="mono d">an assignment is made on the area</span><span class="sp"></span></div>
     {% endif %}
 </div>
