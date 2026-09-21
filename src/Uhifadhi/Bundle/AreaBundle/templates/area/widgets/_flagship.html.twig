@@ -67,8 +67,9 @@
 
             {% if flagship.attention is not empty %}
                 <div class="ax-hero-att">
+                    {% set shown = constant('Uhifadhi\\Bundle\\AreaBundle\\Controller\\AreaController::ATTENTION_SHOWN') %}
                     <div class="ax-hero-atthd mono">Needs attention &middot; {{ flagship.attention|length }}</div>
-                    {% for item in flagship.attention %}
+                    {% for item in flagship.attention|slice(0, shown) %}
                         <a class="ao-att {{ item.severity.cssClass }}" href="{{ item.url }}">
                             <span class="sev"></span>
                             <span class="bd">
@@ -80,6 +81,9 @@
                             <span class="age">{{ item.ageLabel }}</span>
                         </a>
                     {% endfor %}
+                    {% if flagship.attention|length > shown %}
+                        <a class="ax-attmore mono" href="{{ path('area_show', {uuid: row.area.uuidString}) }}">{{ shown }} of {{ flagship.attention|length }} &middot; all on the area &rarr;</a>
+                    {% endif %}
                 </div>
             {% endif %}
         </div>

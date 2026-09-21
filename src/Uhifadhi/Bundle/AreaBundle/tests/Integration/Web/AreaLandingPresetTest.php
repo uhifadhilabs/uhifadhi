@@ -135,6 +135,27 @@ final class AreaLandingPresetTest extends WebTestCase
     // ---- the arrangement ---------------------------------------------------
 
     /**
+     * AN ATTENTION BOARD IS BOUNDED. Nine things asking for attention draw the
+     * latest six and one line saying so with the door to the rest — on the
+     * Attention board and on The flagship alike. A board that grew with its
+     * list deformed every card beside it.
+     */
+    public function testAnAttentionBoardIsBoundedWhateverTheQueue(): void
+    {
+        $this->boot(self::ALL_AREA_PERMISSIONS, 9);
+        $this->signInAsPerson();
+        $this->aLiveArea();
+
+        foreach (['attention', 'flagship'] as $layout) {
+            $this->adopt($layout);
+            $landing = $this->body('/areas');
+
+            self::assertSame(6, substr_count($landing, 'class="ao-att '), $layout.' draws the latest six');
+            self::assertStringContainsString('6 of 9 &middot; all on the area', $landing, $layout.' says how many wait');
+        }
+    }
+
+    /**
      * ONE LIVE AREA AND A PERSON TO KEEP A LAYOUT FOR. The flagship and the
      * attention board only have something to draw for a live area, and a widget
      * preference is a record about somebody — so the token holds the

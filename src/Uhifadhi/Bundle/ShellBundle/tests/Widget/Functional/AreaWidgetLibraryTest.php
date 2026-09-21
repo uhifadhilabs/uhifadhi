@@ -54,6 +54,22 @@ final class AreaWidgetLibraryTest extends WebTestCase
     }
 
     /**
+     * THE LIBRARY'S BEHAVIOUR ARRIVES WITH THE LIBRARY: the page imports the
+     * widget script under the name the installation publishes for it. Without
+     * that import every Preview is a label and every form keeps its
+     * placeholder id — a library nobody can use.
+     */
+    public function testTheLibraryImportsTheScriptThatDrivesIt(): void
+    {
+        $this->signIn();
+
+        $body = $this->body(self::LIBRARY);
+
+        self::assertSame(200, $this->browser()->getResponse()->getStatusCode());
+        self::assertSame(1, substr_count($body, "<script type=\"module\">import 'uhifadhi/widgets';</script>"), 'imported once, under the published name');
+    }
+
+    /**
      * PREVIEW IS WHY THE PAGE CARRIES A CATALOGUE. Clicking a card re-composes
      * the canvas from what the page already holds, so the page has to hold every
      * preset's layout and a cloneable render of every widget. A page missing

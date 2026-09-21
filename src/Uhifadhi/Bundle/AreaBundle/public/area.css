@@ -1003,6 +1003,9 @@ table.tbl.ax-reg em { font-style: normal; }
 .ax-triwhen { font-size: 9px; color: rgb(var(--c-dim)); }
 .ax-triside .ax-open { opacity: 1; transform: none; color: rgb(var(--c-acc)); }
 .ax-triatts { padding: 4px 17px; }
+/* THE BOARD'S OVERFLOW LINE — how many wait beyond the latest few, and the door to them. */
+.ax-attmore { display: flex; justify-content: flex-end; padding: 6px 2px 2px; font-size: 9.5px; letter-spacing: .05em; color: rgb(var(--c-acc)); text-decoration: none; }
+.ax-attmore:hover { text-decoration: underline; }
 .ax-tristats {
     padding: 11px 17px; border-top: 1px dashed color-mix(in srgb, rgb(var(--c-fog)) 18%, transparent);
     font-size: 10px; color: rgb(var(--c-fog)); letter-spacing: .03em;

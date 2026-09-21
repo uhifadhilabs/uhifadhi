@@ -40,7 +40,13 @@
    ========================================================================== #}
 {% set _surfaces = surfaces|default(null) %}
 {% if _surfaces is null %}
-    {{ include('@Shell/widget/_library_surface.html.twig', {
+    {# THE LIBRARY'S BEHAVIOUR ARRIVES WITH THE LIBRARY. assets/widgets.js previews,
+   copies, renames and composes through the names the surface prints; it boots
+   on load, so a page that draws a library imports it here — once, under the
+   importmap name the installation publishes for it. Without this line every
+   Preview is a label and every id in a form stays a placeholder. #}
+<script type="module">import 'uhifadhi/widgets';</script>
+{{ include('@Shell/widget/_library_surface.html.twig', {
         catalog: catalog,
         builtins: builtins,
         customPresets: customPresets,

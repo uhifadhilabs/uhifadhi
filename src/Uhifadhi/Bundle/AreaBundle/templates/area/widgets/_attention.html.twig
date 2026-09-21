@@ -41,8 +41,11 @@
                 <span class="ax-open">Open {{ ux_icon('shell:arrow-right') }}</span>
             </span>
         </a>
+        {# BOUNDED: the latest few, and a line saying how many more wait on the
+           area — a board that grew with its list deformed every card beside it. #}
+        {% set shown = constant('Uhifadhi\\Bundle\\AreaBundle\\Controller\\AreaController::ATTENTION_SHOWN') %}
         <div class="ax-triatts">
-            {% for item in preset.attention %}
+            {% for item in preset.attention|slice(0, shown) %}
                 <a class="ao-att {{ item.severity.cssClass }}" href="{{ item.url }}">
                     <span class="sev"></span>
                     <span class="bd">
@@ -54,6 +57,9 @@
                     <span class="age">{{ item.ageLabel }}</span>
                 </a>
             {% endfor %}
+            {% if preset.attention|length > shown %}
+                <a class="ax-attmore mono" href="{{ path('area_show', {uuid: row.area.uuidString}) }}">{{ shown }} of {{ preset.attention|length }} &middot; all on the area &rarr;</a>
+            {% endif %}
         </div>
         {% if row.isLive %}
             <div class="ax-tristats mono">{{ row.liveModules }} modules live{% for stat in row.stats %} &middot; {{ stat.value }} {{ stat.label }}{% endfor %}{% if row.liveNow %} &middot; {{ row.liveNow.value }} {{ row.liveNow.label }}{% endif %}</div>
