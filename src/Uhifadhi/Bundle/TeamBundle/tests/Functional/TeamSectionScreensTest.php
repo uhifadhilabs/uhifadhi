@@ -197,30 +197,23 @@ final class TeamSectionScreensTest extends WebTestCaseWithSchema
 
     // ---- positions vocabulary -------------------------------------------
 
-    /** The words each department already writes its positions with. */
-    public function testTheVocabularyScreenListsTheTitlesInUsePerDepartment(): void
+    /**
+     * THE WORDS THIS INSTALLATION WRITES ITS POSITIONS WITH, AS ONE FLAT LIST.
+     *
+     * The screen used to group the names by department and footnote the words
+     * that appeared in more than one — a position's name was unique only inside
+     * its department, so "Analyst" twice was two jobs sharing a word. A position
+     * belongs to no department now and its name is unique across the
+     * organization, so there is one list and each name is on it once.
+     */
+    public function testTheVocabularyScreenListsEveryPositionNameOnce(): void
     {
         $this->installation();
         $rows = $this->visit('/team/configure/positions')->filter('.c')->last()->filter('tbody tr');
 
         self::assertSame(
-            ['Administration', 'Ecology'],
+            ['Analyst', 'Warden'],
             $rows->each(static fn (Crawler $c): string => $c->filter('td')->eq(0)->text()),
-        );
-        self::assertStringContainsString('Analyst', $rows->eq(1)->text());
-    }
-
-    /**
-     * THE SAME WORD TWICE IS LEGAL — two jobs that share a name — and the
-     * screen says which words those are rather than merging them.
-     */
-    public function testAWordInTwoDepartmentsIsNamedAndNeverMerged(): void
-    {
-        $this->installation();
-
-        self::assertStringContainsString(
-            'Analyst',
-            $this->visit('/team/configure/positions')->filter('.c')->last()->filter('.sxfoot')->text(),
         );
     }
 
@@ -300,11 +293,10 @@ final class TeamSectionScreensTest extends WebTestCaseWithSchema
      */
     private function installation(): void
     {
-        $administration = $this->department('Administration');
-        $ecology = $this->department('Ecology');
-        $this->position('Warden', $administration, [PermissionEnum::TeamManage->value]);
-        $this->position('Analyst', $administration);
-        $this->position('Analyst', $ecology);
+        $this->department('Administration');
+        $this->department('Ecology');
+        $this->position('Warden', [PermissionEnum::TeamManage->value]);
+        $this->position('Analyst');
 
         // Two above the matrix by tier, and two Staff holding nothing: the
         // model's zero, and an account that has never signed in.

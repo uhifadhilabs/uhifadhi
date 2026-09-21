@@ -141,7 +141,7 @@ final readonly class PostingBoard
                     personUuid: $post->personUuid,
                     name: $person->getFullName(),
                     rank: $person->getPosition()?->getName(),
-                    department: $person->getDepartment()?->getName(),
+                    department: $person->getDepartmentLabel(),
                     leader: $post->leader,
                 );
             }

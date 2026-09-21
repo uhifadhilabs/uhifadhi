@@ -23,6 +23,7 @@ use Uhifadhi\Bundle\AreaBundle\Entity\Station;
 use Uhifadhi\Bundle\AreaBundle\Enum\PostingSource;
 use Uhifadhi\Bundle\AreaBundle\Service\PostingService;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
+use Uhifadhi\Bundle\TeamBundle\Entity\Placement;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
@@ -140,9 +141,10 @@ abstract class FieldApiTestCase extends WebTestCase
      * Somebody who works in the field: a service number, and a position carrying
      * the permissions named.
      *
-     * The position is filed under NO department unless one is handed in, which is
-     * org-level authority — the reach of somebody the installation has not
-     * confined to one area.
+     * THE PLACEMENT IS THE REACH, not the position: handed a department, the
+     * ranger is placed at that department's area and in it; handed none, they
+     * are placed across the whole organization and every department, which is
+     * the reach of somebody the installation has not confined.
      *
      * A MODULE-DECLARED PERMISSION IS A STRING HERE, deliberately. The
      * enum names only what the TEAM bundle owns; `duty.checkin` is the
@@ -159,7 +161,7 @@ abstract class FieldApiTestCase extends WebTestCase
         ?Department $department = null,
         array $declared = [],
     ): User {
-        $position = new Position()->setName('Field Ranger')->setDepartment($department);
+        $position = new Position()->setName('Field Ranger');
         $core = array_map(static fn (PermissionEnum $p): string => $p->value, PermissionEnum::all());
         $position->setPermissionValues(
             [...array_map(static fn (PermissionEnum $p): string => $p->value, $permissions), ...$declared],
@@ -176,6 +178,14 @@ abstract class FieldApiTestCase extends WebTestCase
             ->setVerified(true)
             ->setRangerCode($rangerCode);
         $user->setPosition($position);
+
+        $placement = new Placement();
+        $area = $department?->getArea();
+        null === $area ? $placement->acrossTheOrganization() : $placement->inAreas([$area]);
+        null === $department ? $placement->acrossAllDepartments() : $placement->inDepartments([$department]);
+        $this->em->persist($placement);
+        $user->setPlacement($placement);
+
         $this->em->persist($user);
         $this->em->flush();
 

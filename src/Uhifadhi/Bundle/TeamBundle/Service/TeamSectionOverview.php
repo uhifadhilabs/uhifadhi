@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Service;
 
+use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
@@ -22,6 +23,7 @@ use Uhifadhi\Bundle\TeamBundle\Model\SectionBar;
 use Uhifadhi\Bundle\TeamBundle\Model\SectionFact;
 use Uhifadhi\Bundle\TeamBundle\Model\SectionKpi;
 use Uhifadhi\Bundle\TeamBundle\Model\SectionLine;
+use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 
@@ -58,6 +60,7 @@ final readonly class TeamSectionOverview
     public function __construct(
         private UserRepository $users,
         private PositionRepository $positions,
+        private DepartmentRepository $departments,
         private PostingBoard $board,
         private PerformanceHistory $history,
     ) {
@@ -121,13 +124,12 @@ final readonly class TeamSectionOverview
         $stations = $this->board->board();
 
         $held = self::heldPositionIds($people);
-        $byDepartment = self::peopleByDepartment($people);
-        $seats = self::seatsByDepartment($positions, $held);
+        $known = $this->departments->findAllOrdered();
+        $byDepartment = self::peopleByDepartment($people, $known);
+        $seats = self::seatsByDepartment($people, $known, $held);
 
         $active = \count(array_filter($people, static fn (User $u): bool => $u->isActive()));
-        $departments = \count(array_unique(array_filter(
-            array_map(static fn (Position $p): ?string => $p->getDepartment()?->getUuidString(), $positions),
-        )));
+        $departments = \count($known);
 
         $postings = 0;
         $emptyStations = [];
@@ -179,9 +181,7 @@ final readonly class TeamSectionOverview
     {
         $active = \count(array_filter($people, static fn (User $u): bool => $u->isActive()));
         $unheld = \count($positions) - \count($held);
-        $departments = \count(array_unique(array_filter(
-            array_map(static fn (Position $p): ?string => $p->getDepartment()?->getUuidString(), $positions),
-        )));
+        $departments = \count($this->departments->findAllOrdered());
 
         return [
             new SectionFact('People', (string) \count($people), \sprintf('%d active · %d deactivated', $active, \count($people) - $active)),
@@ -223,9 +223,7 @@ final readonly class TeamSectionOverview
             PerformanceHistory::monthKey(new \DateTimeImmutable('first day of last month')),
         );
         $active = \count(array_filter($people, static fn (User $u): bool => $u->isActive()));
-        $departments = \count(array_unique(array_filter(
-            array_map(static fn (Position $p): ?string => $p->getDepartment()?->getUuidString(), $positions),
-        )));
+        $departments = \count($this->departments->findAllOrdered());
         $empty = \count(array_filter($stations, static fn (PostingStation $s): bool => $s->isEmpty()));
         $holdsNothing = \count($this->users->findActiveWithoutPosition());
 
@@ -349,16 +347,32 @@ final readonly class TeamSectionOverview
      * row rather than a rounding: it is exactly the person the attention card
      * below is about.
      *
-     * @param list<User> $people
+     * A PERSON IS COUNTED IN EVERY DEPARTMENT THEY ARE PLACED IN, and several
+     * are allowed - so the bars add up to more than the headcount, which is
+     * the honest shape for a placement that names two. Somebody placed
+     * nowhere is counted once under "No department", because an unplaced
+     * person is a real state a director needs to see.
+     *
+     * @param list<User>       $people
+     * @param list<Department> $departments
      *
      * @return list<SectionBar>
      */
-    private static function peopleByDepartment(array $people): array
+    private static function peopleByDepartment(array $people, array $departments): array
     {
         $counts = [];
         foreach ($people as $person) {
-            $name = $person->getDepartment()?->getName() ?? 'No department';
-            $counts[$name] = ($counts[$name] ?? 0) + 1;
+            $placement = $person->getPlacement();
+            $in = [];
+            foreach ($departments as $department) {
+                if (null !== $placement && $placement->coversDepartment($department)) {
+                    $in[] = (string) $department->getName();
+                }
+            }
+
+            foreach ([] === $in ? ['No department'] : $in as $name) {
+                $counts[$name] = ($counts[$name] ?? 0) + 1;
+            }
         }
         arsort($counts);
 
@@ -391,22 +405,35 @@ final readonly class TeamSectionOverview
      * permission set sitting ready rather than an error, so the gap is drawn
      * beside the fill rather than reported as a fault.
      *
-     * @param list<Position>   $positions
+     * A DEPARTMENT'S POSITIONS ARE THE ONES ITS MEMBERS HOLD, derived rather
+     * than filed: a position belongs to nobody now, so the only honest way to
+     * ask which ones a department sees is to ask who is placed in it.
+     *
+     * @param list<User>       $people
+     * @param list<Department> $departments
      * @param array<int, true> $held
      *
      * @return list<SectionBar>
      */
-    private static function seatsByDepartment(array $positions, array $held): array
+    private static function seatsByDepartment(array $people, array $departments, array $held): array
     {
         $totals = $filled = [];
-        foreach ($positions as $position) {
-            $name = $position->getDepartment()?->getName() ?? 'No department';
-            $totals[$name] = ($totals[$name] ?? 0) + 1;
-            $filled[$name] ??= 0;
-            if (isset($held[(int) $position->getId()])) {
-                ++$filled[$name];
+        foreach ($departments as $department) {
+            $name = (string) $department->getName();
+            $seen = [];
+            foreach ($people as $person) {
+                $position = $person->getPosition();
+                if (null === $position || !($person->getPlacement()?->coversDepartment($department) ?? false)) {
+                    continue;
+                }
+                $seen[(int) $position->getId()] = true;
             }
+
+            $totals[$name] = \count($seen);
+            $filled[$name] = \count(array_intersect_key($seen, $held));
         }
+
+        $totals = array_filter($totals, static fn (int $total): bool => $total > 0);
         arsort($totals);
 
         $largest = 0;

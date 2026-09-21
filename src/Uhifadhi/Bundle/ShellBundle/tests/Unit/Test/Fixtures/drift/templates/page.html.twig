@@ -1,5 +1,11 @@
 {# A module page written by somebody who reached past their own vocabulary. #}
 <link rel="stylesheet" href="{{ asset(constant('Uhifadhi\\Bundle\\AtlasBundle\\AtlasBundle::STYLESHEET')) }}">
+<nav class="atabs">
+    <a href="/somewhere" class="on">Overview</a>
+    {# The tab a design was ported from, still pointing where the static
+       workspace pointed it: nowhere. #}
+    <a href="#">Topics</a>
+</nav>
 <div class="page">
     <a class="cta" href="/somewhere">{{ ux_icon('lucide:plus') }} New</a>
     <span class="drift-mark">{{ ux_icon('drift:present') }}</span>

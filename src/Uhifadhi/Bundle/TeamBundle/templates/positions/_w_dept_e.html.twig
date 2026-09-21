@@ -20,7 +20,7 @@
                    href="{{ path('team_positions', {department: department.uuidString}) }}">
                     <i class="dot"></i>
                     <span class="rn">{{ department.name }}</span>
-                    <span class="rc">{{ department.positions|length }}</span>
+                    <span class="rc">{{ positionsByDepartment[department.uuidString]|default([])|length }}</span>
                 </a>
             {% endfor %}
         </div>
@@ -32,7 +32,7 @@
                         <table class="tbl">
                             <thead><tr><th>Position</th><th>Holders</th><th>Permissions</th><th></th></tr></thead>
                             <tbody>
-                                {% for position in current.positions %}
+                                {% for position in positionsByDepartment[current.uuidString]|default([]) %}
                                     <tr>
                                         <td><b>{{ position.name }}</b></td>
                                         <td>{{ holders[position.uuidString]|default(0) }}</td>

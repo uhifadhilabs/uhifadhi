@@ -63,7 +63,7 @@ final class DepartmentGoalsTest extends WebTestCaseWithSchema
     {
         $this->administrator();
         $ecology = $this->department('Ecology');
-        $lead = $this->position('Lead Ecologist', $ecology);
+        $lead = $this->position('Lead Ecologist');
         $this->em->flush();
         $uuid = (string) $ecology->getUuidString();
 

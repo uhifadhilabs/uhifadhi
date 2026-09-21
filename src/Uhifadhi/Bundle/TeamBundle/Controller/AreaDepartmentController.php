@@ -31,6 +31,7 @@ use Uhifadhi\Bundle\TeamBundle\Model\DepartmentQuery;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
+use Uhifadhi\Bundle\TeamBundle\Service\DepartmentMembership;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPalette;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPerformance;
 use Uhifadhi\Contracts\Entity\AreaInterface;
@@ -66,6 +67,7 @@ final readonly class AreaDepartmentController
         private Environment $twig,
         private DepartmentRepository $departments,
         private PositionRepository $positions,
+        private DepartmentMembership $membership,
         private UserRepository $users,
         private EntityManagerInterface $entityManager,
         private DepartmentPerformance $performance,
@@ -148,21 +150,22 @@ final readonly class AreaDepartmentController
     }
 
     /**
-     * EVERYTHING THE CARDS READ, for one page — the positions filed under
-     * each department, who holds them and what the modules publish.
+     * EVERYTHING THE CARDS READ, for one page — the positions a department
+     * sees, who holds them and what the modules publish.
+     *
+     * A DEPARTMENT'S POSITIONS ARE THE ONES ITS MEMBERS HOLD. A position
+     * belongs to nobody, so there is nothing filed under a department and the
+     * placement answers instead.
      *
      * @param list<Department> $departments
      *
-     * @return array{owned: array<string, list<\Uhifadhi\Bundle\TeamBundle\Entity\Position>>, headcount: array<string, int>, holders: array<string, int>, figures: array<string, list<\Uhifadhi\Contracts\Kpi\DepartmentKpi>>, marks: array<string, string>}
+     * @return array{owned: array<string, list<\Uhifadhi\Bundle\TeamBundle\Entity\Position>>, headcount: array<string, int>, holders: array<string, int>, figures: array<string, list<\Uhifadhi\Contracts\Kpi\DepartmentKpi>>, marks: array<string, string>, cats: array<string, int>}
      */
     private function reading(array $departments): array
     {
         $owned = [];
-        foreach ($this->positions->findAllOrdered() as $position) {
-            $department = $position->getDepartment();
-            if (null !== $department) {
-                $owned[$department->getUuidString() ?? ''][] = $position;
-            }
+        foreach ($departments as $department) {
+            $owned[$department->getUuidString() ?? ''] = $this->membership->positionsIn($department);
         }
 
         $holders = [];

@@ -1,23 +1,22 @@
-{# DEPT·A — one table banded by department, with the create row inside its own
-   band. The department is the STRUCTURE of the page rather than a column on it. #}
+{# DEPT·A — one table of every position, with the create row under it.
+
+   IT USED TO BAND BY DEPARTMENT, and the banding was the whole idea: a
+   position was filed under a department and the department was the structure
+   of the page. A position carries no department now — a department is where a
+   PERSON is placed — so the band would be a heading over nothing. #}
 {% import '@Team/positions/_bits.html.twig' as pm %}
 
 <div class="c" data-pm="dept-a">
-    <span class="tab">Department-first<span class="src">&middot; one banded table</span></span>
-    <p class="use" style="margin-top:2px">Every position under the department that owns it, and the control that
-    makes a new one <b>inside the band it will belong to</b> &mdash; so a position is never created without a
-    department by accident.</p>
+    <span class="tab">One table<span class="src">&middot; every position</span></span>
+    <p class="use" style="margin-top:2px">Every position the organization has written, and the control that
+    makes a new one. A name is <b>unique across the organization</b>, so there is one of each and the list needs
+    no headings to keep them apart.</p>
 
     <div class="tm-scroll">
         <table class="tbl">
             <thead><tr><th>Position</th><th>Holders</th><th>Grants</th><th></th></tr></thead>
             <tbody>
-                {% for department, group in groupedPositions %}
-                    <tr class="tm-deptrow"><td colspan="4"><div class="tm-deptband">
-                        <span class="dtag"><i class="dot"></i>{{ department is empty ? 'No department yet' : department }}</span>
-                        <span class="n">{{ group|length }} position{{ group|length == 1 ? '' : 's' }}</span>
-                    </div></td></tr>
-                    {% for position in group %}
+                    {% for position in positions %}
                         {% set held = holders[position.uuidString]|default(0) %}
                         <tr>
                             <td><b>{{ position.name }}</b></td>
@@ -29,12 +28,10 @@
                     <tr><td colspan="4">
                         <form class="assign" method="post" action="{{ path('team_position_create') }}">
                             <input type="hidden" name="_token" value="{{ csrfToken }}">
-                            <input type="hidden" name="department" value="{{ (departments|filter(d => d.name == department)|first).uuidString|default('') }}">
-                            <input type="text" name="name" class="fld" placeholder="New position in {{ department is empty ? 'no department' : department }}" required>
+                            <input type="text" name="name" class="fld" placeholder="New position" required>
                             <button class="softbtn acc" type="submit">{{ pm.icon_plus() }} Add</button>
                         </form>
                     </td></tr>
-                {% endfor %}
             </tbody>
         </table>
     </div>

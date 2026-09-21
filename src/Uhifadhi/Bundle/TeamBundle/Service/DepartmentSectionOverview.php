@@ -52,6 +52,7 @@ final readonly class DepartmentSectionOverview
     public function __construct(
         private DepartmentRepository $departments,
         private PositionRepository $positions,
+        private DepartmentMembership $membership,
         private UserRepository $users,
         private DepartmentGoalRepository $goals,
         private ModuleCatalogue $catalogue,
@@ -175,6 +176,28 @@ final readonly class DepartmentSectionOverview
     }
 
     /**
+     * THE HELD-POSITION ROWS THAT BELONG TO ONE DEPARTMENT - which is to say,
+     * the ones its members hold. A position belongs to nobody, so there is no
+     * column to compare against and the membership answers instead.
+     *
+     * @param array<int, array{position: Position, holders: int}> $held
+     *
+     * @return list<array{position: Position, holders: int}>
+     */
+    private function rowsFor(Department $department, array $held): array
+    {
+        $mine = [];
+        foreach ($this->membership->positionsIn($department) as $position) {
+            $row = $held[(int) $position->getId()] ?? null;
+            if (null !== $row) {
+                $mine[] = $row;
+            }
+        }
+
+        return $mine;
+    }
+
+    /**
      * POSITIONS FILLED PER DEPARTMENT, LONGEST FIRST — the ranked bars, scaled
      * to the largest department. A department with no position keeps its row
      * and says so rather than drawing an empty bar.
@@ -189,11 +212,7 @@ final readonly class DepartmentSectionOverview
         $bars = [];
         foreach ($departments as $department) {
             $total = $filled = $people = 0;
-            foreach ($held as $row) {
-                if ($row['position']->getDepartment()?->getId() !== $department->getId()) {
-                    continue;
-                }
-
+            foreach ($this->rowsFor($department, $held) as $row) {
                 ++$total;
                 $people += $row['holders'];
                 if ($row['holders'] > 0) {
@@ -268,10 +287,7 @@ final readonly class DepartmentSectionOverview
             }
 
             $total = $filled = 0;
-            foreach ($held as $row) {
-                if ($row['position']->getDepartment()?->getId() !== $department->getId()) {
-                    continue;
-                }
+            foreach ($this->rowsFor($department, $held) as $row) {
                 ++$total;
                 if ($row['holders'] > 0) {
                     ++$filled;
@@ -316,7 +332,7 @@ final readonly class DepartmentSectionOverview
 
         $lines = array_map(
             static fn (Position $position): SectionLine => new SectionLine(
-                label: $position->getQualifiedName(),
+                label: (string) $position->getName(),
                 uuid: null,
                 note: 'nobody holds it',
                 tone: 'w',

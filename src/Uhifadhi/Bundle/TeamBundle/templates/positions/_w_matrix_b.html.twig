@@ -37,13 +37,13 @@
         </div>
     {% else %}
         <div class="split">
-            {# THE RAIL, banded by department — because a bare "Analyst" appearing
-               twice in one list is two jobs a reader cannot tell apart. #}
+            {# THE RAIL, one flat list. It used to be banded by department,
+               because a bare "Analyst" appearing twice was two jobs a reader
+               could not tell apart; a name is unique across the organization
+               now, so there is one of each. #}
             <div class="dept-rail">
-                <span class="lbl">positions &middot; {{ positions|length }} in {{ departments|length }} department{{ departments|length == 1 ? '' : 's' }}</span>
-                {% for department, group in groupedPositions %}
-                    <div class="railsplit"><span class="lbl">{{ department is empty ? 'No department yet' : department }}</span></div>
-                    {% for position in group %}
+                <span class="lbl">positions &middot; {{ positions|length }}</span>
+                    {% for position in positions %}
                         {% set held = holders[position.uuidString]|default(0) %}
                         <a class="rail-item{{ selected and selected.id == position.id ? ' on' : '' }}"
                            href="{{ path('team_positions', {position: position.uuidString}) }}">
@@ -57,7 +57,6 @@
                             </span>
                         </a>
                     {% endfor %}
-                {% endfor %}
             </div>
 
             <div class="panes">
@@ -84,7 +83,6 @@
 
                         <div class="pm-head">
                             <span class="hl">
-                                {% if selected.department %}<span class="dtag"><i class="dot"></i>{{ selected.department.name }}</span>{% endif %}
                                 <b>{{ selected.name }}</b>
                                 <span class="pm-reach">{{ pm.icon_people() }} reaches {{ reaches }} {{ reaches == 1 ? 'person' : 'people' }}</span>
                             </span>

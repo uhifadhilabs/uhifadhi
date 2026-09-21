@@ -85,26 +85,19 @@
     </div>
 
     <div class="c" style="margin-bottom:20px">
-        <span class="tab">Position titles in use<span class="src">&middot; {{ positions }} positions &middot; {{ rows|length }} departments</span></span>
+        <span class="tab">Position names in use<span class="src">&middot; {{ positions }} positions &middot; each name written once</span></span>
         <table class="tbl">
-            <thead><tr><th>Department</th><th class="num">Positions</th><th>Titles</th><th></th></tr></thead>
+            <thead><tr><th>Name</th><th></th></tr></thead>
             <tbody>
-            {% for row in rows %}
+            {% for name in names %}
                 <tr>
-                    <td><b>{{ row.name }}</b></td>
-                    <td class="num">{{ row.titles|length }}</td>
-                    <td><span class="fog">{{ row.titles is empty ? '—' : row.titles|join(', ') }}</span></td>
-                    <td><a class="sxq" href="{{ path('team_positions') }}">Open</a></td>
+                    <td><b>{{ name }}</b></td>
+                    <td style="text-align:right"><a class="sxq" href="{{ path('team_positions') }}">Open</a></td>
                 </tr>
             {% else %}
-                <tr><td colspan="4"><span class="mono d">No department yet.</span></td></tr>
+                <tr><td colspan="2"><span class="mono d">No position yet.</span></td></tr>
             {% endfor %}
             </tbody>
         </table>
-        {# TWO DIFFERENT JOBS WITH DIFFERENT PERMISSIONS. Nothing here may merge
-           them. #}
-        {% if sharedWords is not empty %}
-            <div class="sxfoot"><span><b>{{ sharedWords|join(', ') }}</b> {{ sharedWords|length == 1 ? 'appears' : 'appear' }} in more than one department.</span></div>
-        {% endif %}
     </div>
 {% endblock %}

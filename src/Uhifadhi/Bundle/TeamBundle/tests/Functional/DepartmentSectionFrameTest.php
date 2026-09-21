@@ -147,7 +147,7 @@ final class DepartmentSectionFrameTest extends WebTestCaseWithSchema
     {
         if (!$this->signedIn) {
             $admin = $this->person('Naomi', 'Kileo', TeamRoleEnum::Admin);
-            $admin->setPosition($this->position('Warden', null, [PermissionEnum::TeamManage->value]));
+            $admin->setPosition($this->position('Warden', [PermissionEnum::TeamManage->value]));
             $this->em->flush();
             $this->client->loginUser($admin);
             $this->signedIn = true;

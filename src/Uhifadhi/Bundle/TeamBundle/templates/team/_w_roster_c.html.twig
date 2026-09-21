@@ -36,7 +36,6 @@
                 <div class="pgr">
                     {% if person.position %}
                         <span class="qual">
-                            {%- if person.position.department %}<span class="q">{{ person.position.department.name }}</span><span class="sep">/</span>{% endif -%}
                             <span class="n">{{ person.position.name }}</span>
                         </span>
                     {% else %}

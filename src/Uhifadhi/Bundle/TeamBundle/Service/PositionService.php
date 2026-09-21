@@ -15,7 +15,6 @@ namespace Uhifadhi\Bundle\TeamBundle\Service;
 
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
-use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Exception\NameNotUniqueException;
 use Uhifadhi\Bundle\TeamBundle\Exception\UnknownPermissionException;
@@ -24,8 +23,8 @@ use Uhifadhi\Bundle\TeamBundle\Exception\UnknownPermissionException;
  * WHAT A POSITION IS, AND WHAT IT GRANTS — the only writes that shape either.
  *
  * A position is the only thing that grants a staff member any capability at
- * all, so the two facts about it are its FILING (a name inside a department,
- * unique there and nowhere else) and its GRANT (a set of catalogue values).
+ * all, so the two facts about it are its NAME — unique across the whole
+ * organization, because a position belongs to no department — and its GRANT.
  * Both are written here.
  *
  * THE GRANT IS VALIDATED AGAINST THE CATALOGUE, ALWAYS. The list of permissions
@@ -37,8 +36,8 @@ use Uhifadhi\Bundle\TeamBundle\Exception\UnknownPermissionException;
  * would silently rewrite what an administrator granted.
  *
  * IT DECIDES NOTHING ABOUT WHO IS ASKING. Whether the administrator on the
- * other end may file under this department, or confer this permission, is an
- * area-scope question about the signed-in session
+ * other end may confer this permission is an area-scope question about the
+ * signed-in session
  * ({@see \Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority}), settled by the
  * screen before it calls in here.
  */
@@ -51,22 +50,19 @@ final readonly class PositionService
     }
 
     /**
-     * TWO FIELDS, AND THE DEPARTMENT IS THE FIRST OF THEM — the name is unique
-     * inside that department and nowhere else, so *Ecology / Analyst* and
-     * *Protection Service / Analyst* are two different jobs that share a word.
+     * ONE FIELD, AND IT IS THE NAME — unique across the organization, because
+     * a position belongs to nobody. There is one Sergeant, not one per
+     * department, so a reader of a person's record never has to ask which.
      *
-     * A null department is a real state: a position created before anybody
-     * decided which department owns it exists, and its holders read as
-     * Unassigned on the roster.
+     * A NEW POSITION IS BORN EMPTY, and the day it was born is the day it
+     * fell vacant: a position written in March and never filled has stood
+     * empty since March, which is exactly what a director needs to see.
      *
-     * @throws NameNotUniqueException when that department already owns the name
+     * @throws NameNotUniqueException when the organization already has the name
      */
-    public function create(string $name, ?Department $department): Position
+    public function create(string $name): Position
     {
-        // A POST IS BORN EMPTY, and the day it was born is the day it fell
-        // vacant: a position filed in March and never filled has stood
-        // empty since March, which is exactly what a director needs to see.
-        $position = new Position()->setName($name)->setDepartment($department)
+        $position = new Position()->setName($name)
             ->setVacantSince(new \DateTimeImmutable());
 
         $this->entityManager->persist($position);
@@ -75,7 +71,7 @@ final readonly class PositionService
         return $position;
     }
 
-    /** @throws NameNotUniqueException when that department already owns the name */
+    /** @throws NameNotUniqueException when the organization already has the name */
     public function rename(Position $position, string $name): void
     {
         $position->setName($name);
@@ -100,25 +96,9 @@ final readonly class PositionService
     }
 
     /**
-     * FILE A POSITION, OR UNFILE IT. Moving one between departments changes
-     * where its work is READ and nothing about what it grants; the empty
-     * destination is a destination, because a position whose department was a
-     * mistake has to be able to leave it.
-     *
-     * @throws NameNotUniqueException when the destination already owns the name
-     */
-    public function file(Position $position, ?Department $department): void
-    {
-        $position->setDepartment($department);
-
-        $this->flush((string) $position->getName());
-    }
-
-    /**
-     * The unique index inside a department is what actually refuses a repeated
-     * name. Carried out of the storage layer here so a caller catches a fact
-     * about the org chart and words it with the department in it — which it has
-     * to, because the same word in another department is fine.
+     * The unique index on the name is what actually refuses a repeated one.
+     * Carried out of the storage layer here so a caller catches a fact about
+     * the org chart rather than a driver exception.
      *
      * @throws NameNotUniqueException
      */

@@ -1,5 +1,176 @@
 # UPGRADE FROM 0.x to 1.0
 
+## A department is a placement, not an owner
+
+**What changed** (ruled 2026-09-21). A position used to look as though it
+belonged to a department, and that was the wrong shape. A department is not a
+thing a position sits inside; it is one of the two dimensions of **where
+somebody is placed**. Three facts moved at once, because they are one fact:
+
+1. **`Position` carries no department.** `Position::getDepartment()`,
+   `setDepartment()` and `getQualifiedName()` are **gone**, and so is
+   `Department::getPositions()`. A position is written and read as its bare
+   name.
+2. **A position's name is unique across the whole organization.** There is one
+   Sergeant, not one per department, and a reader of somebody's record never
+   has to ask which one. The index `uniq_team_position_department_name` is
+   replaced by `uniq_team_position_name`.
+3. **Reach is recorded against the person.** `User::getPlacement()` answers a
+   new `TeamBundle\Entity\Placement` with two dimensions — the **ground** (the
+   whole organization, or one or more named areas) and the **departments** (all
+   of them, or a named set, several allowed). `User::getDepartment()` is gone;
+   `User::getDepartments()` answers `null` (all), `[]` (none) or the named list,
+   and `User::getDepartmentLabel()` is the one-line fragment a row shows.
+
+The case that settles it is the ordinary one: a data scientist supporting
+Ecology and Protection but not ICT is **still one position**, placed against two
+departments. Under the old shape that person needed either a second position or
+a department of convenience invented to hold them.
+
+**It fails closed.** Somebody with **no** placement reaches no ground, so every
+area-scoped check refuses. Unplaced is not "everywhere".
+
+**What the migration does.** `TeamBundle\Migrations\Version20260921001000`,
+expand → backfill → contract in one transaction. It preserves the reach each
+person had the moment before the upgrade, which the old code DERIVED as
+`position → department → area`:
+
+| Before | After |
+| --- | --- |
+| a position under an **area-level** department | its holders are placed at that area, and in that department |
+| a position under an **organization-level** department | its holders are placed across the organization, and in that department |
+| a position under **no** department, or a person holding **no** position | placed across the organization and across all departments |
+
+**Nobody gains or loses a permission.** What changes is where the answer is
+stored.
+
+**Duplicate names are renamed, not refused.** `Analyst` in Ecology and `Analyst`
+in Protection were two legal rows and are now one name twice, so the second and
+any further one take a numeric suffix — `Analyst (2)` — and the migration
+`RAISE NOTICE`s a line naming each. **Read the migration output** and rename
+them into your organization's own words; the product cannot choose the word for
+you. Refusing the migration instead would leave an installation unable to
+upgrade over rows it was told to write.
+
+**Destructive, and signed.** `team_position.department_id` and the
+department-scoped name index are dropped **in this release**, which is the same
+release that stops reading them. That is deliberate rather than an exception to
+the two-release rule: no code path reads the column after this version, an
+unmapped column would make `doctrine:migrations:diff` report a change on every
+installation forever, and there is no window in which anything could still be
+using it. **Take a backup and run `doctrine:migrations:migrate --dry-run`
+first** — `down()` puts the column and its index back, but not the values.
+
+**What a position gained.**
+
+| Member | Meaning |
+| --- | --- |
+| `getSeatCount(): ?int` / `setSeatCount(?int)` | how many people may hold it; **null is unlimited**, and a count below 1 is refused |
+| `hasUnlimitedSeats(): bool` | the same question, read positively |
+| `getAllowedKinds(): list<ScopeKind>` / `setAllowedKinds()` | which kinds of placement it allows — **`Organization` and/or `Area` only**, because that is what a placement says. `Department` is the placement's *other* dimension and is not gated by the position; `Own` is a scope a **concern** offers, not a way of placing somebody. Anything else is refused, and so is an empty list. |
+| `allows(ScopeKind): bool` | whether a placement of that kind may be made |
+
+Backfilled per position from the reach its holders already had: `["area"]` where
+its department was an area's, `["organization"]` otherwise. Nothing is widened.
+
+**Assigning to a full position is refused,** and the refusal names the holder:
+`UserService::assignPosition()` throws
+`TeamBundle\Exception\PositionFullException`. A deactivated holder does not
+occupy a seat. `UserRepository::findActiveHolders(Position)` is the query behind
+it, and `UserService::place(User, ?Placement)` is how a placement is written.
+
+**`UserService` takes one more argument.** Its constructor is now
+`(EntityManagerInterface, UserPasswordHasherInterface, SuperAdminInvariant,
+PositionVacancy, UserRepository)` — the repository is new and last.
+
+**`AreaAuthority` reads the placement.** `authorityArea()` is replaced by
+**`authorityAreas(): ?list<AreaInterface>`** (null means unbounded), and
+`reaches(Position)` and `assignable(array)` are **gone** — a position carries no
+ground, so which position somebody is moved between says nothing about whose
+boundary the move crosses. **`reachesPerson(User)`** asks the question that
+replaced them.
+
+**A department's members and positions are derived, in one place.**
+`TeamBundle\Service\DepartmentMembership` (service `team.department_membership`)
+answers `membersOf(Department)`, `positionsIn(Department)` and
+`covers(User, Department)`; every screen reads it rather than deriving its own.
+A department's positions are the distinct positions **its members hold**.
+
+**Routes and screens that are gone.** `team_department_file` (filing a position
+under a department) and the departments register's "No department yet" band: a
+position has nothing to be filed under. The Positions-vocabulary configure
+screen no longer groups by department — `PositionVocabulary::read()` returns
+`['names' => list<string>, 'positions' => int]`, and the "appears in more than
+one department" footer is gone with the case it reported. The position pickers
+on the member and invite screens are a flat list in the template variable
+`positions`, not `groupedPositions`.
+
+**What a module must do.** If your module reads `Position::getDepartment()`,
+`Position::getQualifiedName()`, `Department::getPositions()` or
+`User::getDepartment()`, none of them exists. Read the person's placement, or
+ask `DepartmentMembership`. If your module's own screens grouped positions under
+departments, they group under nothing now — the name is unique.
+
+## The access vocabulary: concerns, six verbs, four scopes
+
+**What changed.** `Uhifadhi\Contracts\Access` publishes the vocabulary every
+permission is spelled in, and a bundle or module declares what there is to have
+a permission about:
+
+| Class | What it is |
+| --- | --- |
+| `Verb` | the six, fixed: **read · record · manage · configure · delete · export**. A module cannot invent a seventh. |
+| `ScopeKind` | the four: **organization · area · department · own**. |
+| `ConcernInterface` / `Concern` | a thing the product lets somebody act on: a key, a label, one sentence, the verbs it supports, the scope kinds it offers, whether it is **sensitive**, and the module's own words for "own". |
+| `ConcernSourceInterface` | the seam. Tag `uhifadhi.access.concerns`, applied **by hand** — a reusable bundle is not autoconfigured. |
+| `Grant` | one cell of the matrix, and the one spelling of a pair: `<concern>.<verb>`, the verb being the segment after the **last** dot, so a concern key may carry hyphens and never a dot. |
+
+**A concern exists only by declaration,** and whoever enforces one declares it.
+The core declares its own through the same seam a module uses: the area bundle
+declares areas, zones, stations and assignments; the team bundle the directory,
+personal details, positions and departments; the registry, modules. There is no
+privileged list in the middle of the product, and a module's power cannot appear
+on a page without its owner having said so — or survive the module being
+uninstalled.
+
+**Declaring grants nobody anything.** The matrix gains a group of rows; who
+ticks them is the organization's business. Installing a module must never hand
+an existing person a new power.
+
+**How a module declares its concerns.**
+
+```php
+final readonly class RosterConcerns implements ConcernSourceInterface
+{
+    public function declaredBy(): string { return 'Roster'; }
+
+    public function concerns(): iterable
+    {
+        yield new Concern(
+            key: 'live-positions',
+            label: 'Live positions',
+            description: 'See where a ranger is now, and their ping history.',
+            verbs: [Verb::Read],
+            scopeKinds: [ScopeKind::Organization, ScopeKind::Area, ScopeKind::Own],
+            sensitive: true,
+            ownWords: 'Own team',
+            moduleSlug: 'roster',
+        );
+    }
+}
+```
+
+```php
+// config/services.php — the tag goes on by hand.
+$services->set('roster.access.concerns', RosterConcerns::class)
+    ->tag(ConcernSourceInterface::TAG);
+```
+
+**A fact about a person or a case is its own concern** — live positions, case
+files, money, personal details, the bytes of a file — declared `sensitive: true`
+so an organization can withhold it without withholding the page it sits on.
+
+
 ## One spelling: "organization"
 
 **What changed.** Every word a reader can see now spells it **organization**

@@ -120,6 +120,20 @@ final class VocabularyConformanceTestCaseTest extends TestCase
         self::drifting()->testNoTemplateLinksASheetTheHeadAlreadyCarries();
     }
 
+    /**
+     * A TAB ANCHORED AT NOTHING FAILS. It is the commonest thing a ported
+     * design brings with it: the static workspace has no router, so its tabs
+     * point at `#`, and the strip renders perfectly with every tab dead.
+     */
+    public function testATabAnchoredAtNothingFails(): void
+    {
+        $this->expectException(AssertionFailedError::class);
+        $this->expectExceptionMessageMatches('/anchored at nothing/');
+        $this->expectExceptionMessageMatches('/carries a real `href`/');
+
+        self::drifting()->testNoTabInTheStripIsAnchoredAtNothing();
+    }
+
     /** The reader is watched working too, or a failure could be an empty sweep. */
     public function testTheDriftingBundlesOwnVocabularyIsSeen(): void
     {

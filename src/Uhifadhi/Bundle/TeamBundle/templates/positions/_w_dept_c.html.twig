@@ -1,18 +1,20 @@
-{# DEPT·C — a card per department, SO TWO SAME-NAMED POSITIONS CAN NEVER BE READ
-   AS ONE. Ecology's Analyst and Protection Service's Analyst are in different
-   cards, and no amount of skim-reading merges them. #}
+{# DEPT·C — one card of positions.
+
+   IT USED TO BE A CARD PER DEPARTMENT, and the reason was that two departments
+   could own the same word: Ecology's Analyst and Protection's Analyst had to
+   be in separate cards so no amount of skim-reading merged them. A name is
+   unique across the organization now, so there is one Analyst. #}
 {% import '@Team/positions/_bits.html.twig' as pm %}
 
 <div class="c" data-pm="dept-c">
-    <span class="tab">Department-first<span class="src">&middot; a card each</span></span>
-    <p class="use" style="margin-top:2px">One card per department. The reason this direction exists: two
-    departments may own the same word, and in separate cards <b>they can never be read as one job</b>.</p>
+    <span class="tab">One card<span class="src">&middot; every position</span></span>
+    <p class="use" style="margin-top:2px">Every position in one card. A name is <b>unique across the
+    organization</b>, so no two rows here are the same word meaning two jobs.</p>
 
     <div class="tm-cardgrid" style="margin-top:12px">
-        {% for department, group in groupedPositions %}
             <div class="c pm-deptcard">
-                <span class="tab"><span class="dtag"><i class="dot"></i>{{ department is empty ? 'No department yet' : department }}</span></span>
-                {% for position in group %}
+                <span class="tab"><span class="dtag"><i class="dot"></i>Positions</span></span>
+                {% for position in positions %}
                     {% set held = holders[position.uuidString]|default(0) %}
                     <a class="pm-deptrow" href="{{ path('team_positions', {position: position.uuidString}) }}">
                         <b>{{ position.name }}</b>
@@ -21,6 +23,5 @@
                     </a>
                 {% endfor %}
             </div>
-        {% endfor %}
     </div>
 </div>

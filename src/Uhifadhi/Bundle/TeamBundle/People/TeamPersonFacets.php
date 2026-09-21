@@ -58,7 +58,7 @@ final readonly class TeamPersonFacets implements PersonFacetProviderInterface
             $facets[$uuid] = new PersonFacet(
                 userUuid: $uuid,
                 position: $position?->getName(),
-                department: $position?->getDepartment()?->getName(),
+                department: $user->getDepartmentLabel(),
             );
         }
 

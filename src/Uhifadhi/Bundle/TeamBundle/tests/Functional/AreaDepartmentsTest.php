@@ -88,6 +88,11 @@ final class AreaDepartmentsTest extends WebTestCaseWithSchema
      * hold a position in two departments, and a position may be held by
      * several people. The fact is about THIS AREA'S OWN departments, and a
      * position is filled when somebody holds it.
+     *
+     * TWO PEOPLE IN ONE POSITION IS STILL ONE POSITION, which is the half of
+     * the old arithmetic that can still go wrong: three people placed here
+     * hold two positions between them, and a cell that summed headcount
+     * would read "3 of 2".
      */
     public function testOwnPositionsCountsThisAreasOwnPositionsAndHowManyAreHeld(): void
     {
@@ -97,22 +102,25 @@ final class AreaDepartmentsTest extends WebTestCaseWithSchema
         $wetlands = $this->areaDepartment('Wetland Management', $north);
         $ecology = $this->department('Ecology');
 
-        $warden = $this->position('Wetland Warden', $wetlands);
-        $this->position('Wetland Surveyor', $wetlands);
-        $orgWide = $this->position('Ecologist', $ecology);
+        $warden = $this->position('Wetland Warden');
+        $surveyor = $this->position('Wetland Surveyor');
+        $orgWide = $this->position('Ecologist');
 
-        // TWO PEOPLE IN ONE POSITION is one position filled, not two; and a
-        // person filed under an org-wide department is not this area's.
-        $this->person('Asha', 'Mollel')->setPosition($warden);
-        $this->person('Juma', 'Ngowi')->setPosition($warden);
-        $this->person('Lena', 'Sultani')->setPosition($orgWide);
+        // A DEPARTMENT SEES THE POSITIONS ITS MEMBERS HOLD, so the two
+        // Wetland positions reach this area's own department through the
+        // three people placed in it; the Ecologist is placed org-wide and
+        // belongs to Ecology, which is not this area's own.
+        $this->place($this->person('Asha', 'Mollel')->setPosition($warden), [$north], [$wetlands]);
+        $this->place($this->person('Juma', 'Ngowi')->setPosition($warden), [$north], [$wetlands]);
+        $this->place($this->person('Neema', 'Kessy')->setPosition($surveyor), [$north], [$wetlands]);
+        $this->place($this->person('Lena', 'Sultani')->setPosition($orgWide), null, [$ecology]);
         $this->em->flush();
 
         $band = $this->client->request('GET', '/areas/'.$north->getUuidString().'/departments')
             ->filter('.factband')->text();
 
         self::assertStringContainsString('Own positions', $band);
-        self::assertStringContainsString('1 of 2 filled', $band);
+        self::assertStringContainsString('2 of 2 filled', $band);
     }
 
     /**

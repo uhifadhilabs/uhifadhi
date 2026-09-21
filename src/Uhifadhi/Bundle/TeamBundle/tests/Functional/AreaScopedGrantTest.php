@@ -22,19 +22,27 @@ use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\Area\HostArea;
 /**
  * §5.6(c) — NO PRIVILEGE ESCALATION BY AN AREA ADMINISTRATOR.
  *
- * The person-assignment half (§5.6(a)) and the department half (§5.6(b)) already
- * ship. This is the escalation half: an area-X `team.manage` holder may not grant
- * a permission their own position does not hold, and may not confer team
- * administration at all — team.manage is org-wide authority, and creating another
- * administrator is a widening past their own boundary. Nor may a bounded
- * administrator change a person's tier: Super Admin and Admin are org-wide
- * authority, and promoting somebody to one is the plainest escalation there is.
+ * The person half (§5.6(a)) and the department half (§5.6(b)) are their own
+ * suites. This is the escalation half: an area-X `team.manage` holder may not
+ * grant a permission their own position does not hold, and may not confer team
+ * administration at all — team.manage is organization-wide authority, and
+ * creating another administrator is a widening past their own boundary. Nor may
+ * a bounded administrator change a person's tier: Super Admin and Admin are
+ * organization-wide authority, and promoting somebody to one is the plainest
+ * escalation there is.
  *
- * A tier (Super Admin / Admin) or an org-level `team.manage` holder is UNBOUNDED
- * and touches all of this. Enforcement is server-side (a 403), exactly as the
- * assignment and department controllers do it; the matrix additionally draws the
- * ungrantable rows disabled, matching the "no wider-than-self grant" guard the
- * area-admin design draws.
+ * A tier (Super Admin / Admin), or a `team.manage` holder placed across the
+ * whole organization, is UNBOUNDED and touches all of this. WHICH OF THE TWO
+ * SOMEBODY IS COMES OFF THEIR PLACEMENT, not off the department their position
+ * sat in: the ground is recorded against the person now, and an administrator
+ * placed at one area is the bounded one.
+ *
+ * WHAT THEY MAY CONFER IS STILL READ OFF THEIR POSITION, because that is where
+ * permissions live; the placement decides whether the fence applies at all.
+ * Enforcement is server-side (a 403), exactly as the assignment and department
+ * controllers do it; the matrix additionally draws the ungrantable rows
+ * disabled, matching the "no wider-than-self grant" guard the area-admin design
+ * draws.
  */
 final class AreaScopedGrantTest extends WebTestCaseWithSchema
 {
@@ -45,7 +53,7 @@ final class AreaScopedGrantTest extends WebTestCaseWithSchema
     {
         $north = $this->area('Northern Reserve');
         $this->areaAdminHolding($north, [PermissionEnum::TeamManage->value, PermissionEnum::AreaView->value]);
-        $ranger = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $north), []);
+        $ranger = $this->position('Ranger', []);
         $this->em->flush();
 
         $token = $this->tokenFrom('/team/positions');
@@ -65,7 +73,7 @@ final class AreaScopedGrantTest extends WebTestCaseWithSchema
     {
         $north = $this->area('Northern Reserve');
         $this->areaAdminHolding($north, [PermissionEnum::TeamManage->value, PermissionEnum::AreaView->value]);
-        $ranger = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $north), []);
+        $ranger = $this->position('Ranger', []);
         $this->em->flush();
 
         $token = $this->tokenFrom('/team/positions');
@@ -83,7 +91,7 @@ final class AreaScopedGrantTest extends WebTestCaseWithSchema
     {
         $north = $this->area('Northern Reserve');
         $this->areaAdminHolding($north, [PermissionEnum::TeamManage->value, PermissionEnum::AreaView->value]);
-        $deputy = $this->position('Deputy Warden', $this->areaDepartment('Anti-Poaching', $north), []);
+        $deputy = $this->position('Deputy Warden', []);
         $this->em->flush();
 
         $token = $this->tokenFrom('/team/positions');
@@ -106,7 +114,7 @@ final class AreaScopedGrantTest extends WebTestCaseWithSchema
         $north = $this->area('Northern Reserve');
         $this->areaAdminHolding($north, [PermissionEnum::TeamManage->value, PermissionEnum::AreaView->value]);
         // The position already carries a permission the admin does not hold.
-        $ranger = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $north), [PermissionEnum::AreaDelete->value]);
+        $ranger = $this->position('Ranger', [PermissionEnum::AreaDelete->value]);
         $this->em->flush();
 
         $token = $this->tokenFrom('/team/positions');
@@ -127,7 +135,7 @@ final class AreaScopedGrantTest extends WebTestCaseWithSchema
     {
         $north = $this->area('Northern Reserve');
         $this->areaAdminHolding($north, [PermissionEnum::TeamManage->value, PermissionEnum::AreaView->value]);
-        $ranger = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $north), []);
+        $ranger = $this->position('Ranger', []);
         $this->em->flush();
 
         $crawler = $this->client->request('GET', '/team/positions?position='.$ranger->getUuidString());
@@ -140,13 +148,14 @@ final class AreaScopedGrantTest extends WebTestCaseWithSchema
         self::assertStringContainsString('no wider-than-self grant', $crawler->filter('form.pane')->html());
     }
 
-    /** An org-level team.manage holder is unbounded: they grant anything, team.manage included. */
-    public function testAnOrgLevelAdminMayGrantAnything(): void
+    /** A holder placed across the organization is unbounded: they grant anything, team.manage included. */
+    public function testAnOrganizationWideAdminMayGrantAnything(): void
     {
         $north = $this->area('Northern Reserve');
         $orgAdmin = $this->person('Amina', 'Salehe', TeamRoleEnum::Staff);
-        $orgAdmin->setPosition($this->position('Coordinator', $this->department('Administration'), [PermissionEnum::TeamManage->value]));
-        $ranger = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $north), []);
+        $orgAdmin->setPosition($this->position('Coordinator', [PermissionEnum::TeamManage->value]));
+        $this->place($orgAdmin);
+        $ranger = $this->position('Ranger', []);
         $this->em->flush();
         $this->client->loginUser($orgAdmin);
 
@@ -182,11 +191,12 @@ final class AreaScopedGrantTest extends WebTestCaseWithSchema
         self::assertSame(TeamRoleEnum::Staff, $this->em->getRepository(User::class)->findOneBy(['email' => 'g.ndosi@example.test'])?->getTeamRole());
     }
 
-    /** An org-level team.manage holder is unbounded: they may change a tier. */
-    public function testAnOrgLevelAdminMayChangeATier(): void
+    /** A holder placed across the organization is unbounded: they may change a tier. */
+    public function testAnOrganizationWideAdminMayChangeATier(): void
     {
         $orgAdmin = $this->person('Amina', 'Salehe', TeamRoleEnum::Staff);
-        $orgAdmin->setPosition($this->position('Coordinator', $this->department('Administration'), [PermissionEnum::TeamManage->value]));
+        $orgAdmin->setPosition($this->position('Coordinator', [PermissionEnum::TeamManage->value]));
+        $this->place($orgAdmin);
         $grace = $this->person('Grace', 'Ndosi');
         $this->em->flush();
         $this->client->loginUser($orgAdmin);
@@ -205,16 +215,16 @@ final class AreaScopedGrantTest extends WebTestCaseWithSchema
 
     /**
      * Sign in as an AREA-X administrator whose OWN position carries exactly the
-     * given permissions — a Staff member in an area-level department confined to
-     * $area, so their authority-area is $area and their reach is what they hold.
+     * given permissions — a Staff member PLACED at $area, so they are the
+     * bounded kind, and what they may confer is what they themselves hold.
      *
      * @param list<string> $permissions
      */
     private function areaAdminHolding(HostArea $area, array $permissions): User
     {
-        $office = $this->areaDepartment('Warden Office', $area);
         $admin = $this->person('Naomi', 'Kileo', TeamRoleEnum::Staff);
-        $admin->setPosition($this->position('Warden', $office, $permissions));
+        $admin->setPosition($this->position('Warden', $permissions));
+        $this->place($admin, [$area]);
         $this->em->flush();
         $this->client->loginUser($admin);
 

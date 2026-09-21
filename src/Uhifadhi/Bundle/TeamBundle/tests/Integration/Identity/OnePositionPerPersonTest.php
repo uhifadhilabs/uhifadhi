@@ -14,21 +14,26 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\TeamBundle\Tests\Integration\Identity;
 
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
+use Uhifadhi\Bundle\TeamBundle\Entity\Placement;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
-use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\Area\HostArea;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\IntegrationTestCase;
 
 /**
- * ONE PERSON, ONE POSITION — and the department follows the position.
+ * ONE PERSON, ONE POSITION — AND ONE PLACEMENT BESIDE IT.
  *
- * Multi-position was rejected: a person's authority-area, once the area-aware
- * voter is wired, must read from a single department's scope, and a union of
- * scopes across two positions is a different model with its own open verdicts
- *. These tests lock the single association
- * in as a decision, so a later collection would fail loudly here rather than
- * silently widen the model.
+ * Multi-position was rejected: a union of grants across two positions is a
+ * different model with its own open verdicts. The reason usually offered for
+ * wanting a second position — somebody who serves two departments — is not a
+ * reason any more. A department used to hang off the position, so serving two
+ * meant holding two; the ruling moved the department onto the person's
+ * {@see Placement}, where several are allowed. So the Analyst supporting
+ * Ecology and Protection is one person, one position, one placement naming
+ * two departments.
+ *
+ * These tests lock both single associations in as decisions, so a later
+ * collection would fail loudly here rather than silently widen the model.
  */
 final class OnePositionPerPersonTest extends IntegrationTestCase
 {
@@ -57,14 +62,30 @@ final class OnePositionPerPersonTest extends IntegrationTestCase
         self::assertFalse($metadata->isCollectionValuedAssociation('position'));
     }
 
+    /**
+     * AND SO IS THE PLACEMENT. Breadth lives inside the one row — several
+     * areas, several departments — rather than in several rows, so that
+     * "where does this person reach?" has one place to read and one place to
+     * edit.
+     */
+    public function testThePlacementAssociationIsAlsoToOne(): void
+    {
+        $metadata = $this->em->getClassMetadata(User::class);
+
+        self::assertTrue($metadata->hasAssociation('placement'));
+        self::assertTrue(
+            $metadata->isSingleValuedAssociation('placement'),
+            'A person is placed once; the placement itself holds the breadth.',
+        );
+        self::assertFalse($metadata->isCollectionValuedAssociation('placement'));
+    }
+
     /** Assigning a second position REPLACES the first — there is no accumulation. */
     public function testAssigningAPositionReplacesThePrevious(): void
     {
-        $ecology = new Department()->setName('Ecology');
-        $protection = new Department()->setName('Protection Service');
-        $analyst = new Position()->setName('Analyst')->setDepartment($ecology);
-        $ranger = new Position()->setName('Ranger')->setDepartment($protection);
-        foreach ([$ecology, $protection, $analyst, $ranger] as $entity) {
+        $analyst = new Position()->setName('Analyst');
+        $ranger = new Position()->setName('Ranger');
+        foreach ([$analyst, $ranger] as $entity) {
             $this->em->persist($entity);
         }
 
@@ -83,49 +104,71 @@ final class OnePositionPerPersonTest extends IntegrationTestCase
     }
 
     /**
-     * A PERSON'S DEPARTMENT FOLLOWS THEIR POSITION, and its scope with it. Move
-     * the person to an area-level position and they belong to an area-level
-     * department — the chain the voter will one day read authority from.
+     * A PERSON'S DEPARTMENTS FOLLOW THEIR PLACEMENT, NOT THEIR POSITION. This
+     * used to be the other way round — the department was read through
+     * `position.department` — and the consequence was that changing somebody's
+     * job silently moved them between departments. Now the two facts are
+     * independent: the same placement survives a change of position, and
+     * several departments at once is an ordinary state rather than an
+     * impossible one.
      */
-    public function testTheDepartmentAndScopeFollowThePosition(): void
+    public function testTheDepartmentsFollowThePlacementAndSurviveAChangeOfPosition(): void
     {
-        $area = new HostArea()->setName('Northern Reserve');
-        $this->em->persist($area);
-
-        $orgDept = new Department()->setName('Ecology');
-        $areaDept = new Department()->setName('Wetland Management')->setArea($area);
-        $orgPos = new Position()->setName('Ecologist')->setDepartment($orgDept);
-        $areaPos = new Position()->setName('Wetland Ecologist')->setDepartment($areaDept);
-        foreach ([$orgDept, $areaDept, $orgPos, $areaPos] as $entity) {
+        $ecology = new Department()->setName('Ecology');
+        $protection = new Department()->setName('Protection Service');
+        $ecologist = new Position()->setName('Ecologist');
+        $analyst = new Position()->setName('Analyst');
+        foreach ([$ecology, $protection, $ecologist, $analyst] as $entity) {
             $this->em->persist($entity);
         }
 
-        $person = $this->person()->setPosition($orgPos);
+        $placement = new Placement()->acrossTheOrganization()->inDepartments([$ecology, $protection]);
+        $this->em->persist($placement);
+
+        $person = $this->person()->setPosition($ecologist)->setPlacement($placement);
         $this->em->persist($person);
         $this->em->flush();
 
-        self::assertInstanceOf(Department::class, $person->getDepartment());
-        self::assertTrue($person->getDepartment()->isOrgLevel());
+        self::assertSame(['Ecology', 'Protection Service'], $this->departmentNames($person));
 
-        $person->setPosition($areaPos);
+        $person->setPosition($analyst);
         $this->em->flush();
         $this->em->clear();
 
         $stored = $this->service(UserRepository::class)->findOneBy(['email' => 'dw@example.test']);
         self::assertInstanceOf(User::class, $stored);
-        self::assertInstanceOf(Department::class, $stored->getDepartment());
-        self::assertSame('Wetland Management', $stored->getDepartment()->getName());
-        self::assertTrue($stored->getDepartment()->isAreaLevel());
+        self::assertSame('Analyst', $stored->getPosition()?->getName());
+        self::assertSame(
+            ['Ecology', 'Protection Service'],
+            $this->departmentNames($stored),
+            'the job changed; where the person is placed did not',
+        );
     }
 
-    /** No position, no department — the Unassigned state, honest all the way down. */
-    public function testAPersonWithNoPositionHasNoDepartment(): void
+    /**
+     * UNPLACED IS A STATE, AND IT IS EMPTY RATHER THAN OPEN. Null would mean
+     * "all departments", which is what a person who has not been placed at all
+     * must never read as, so the empty list is the answer and the label has
+     * nothing to say.
+     */
+    public function testAPersonWhoHasNotBeenPlacedIsInNoDepartment(): void
     {
         $person = $this->person();
         $this->em->persist($person);
         $this->em->flush();
 
         self::assertNull($person->getPosition());
-        self::assertNull($person->getDepartment());
+        self::assertNull($person->getPlacement());
+        self::assertSame([], $person->getDepartments());
+        self::assertNull($person->getDepartmentLabel());
+    }
+
+    /** @return list<string> */
+    private function departmentNames(User $user): array
+    {
+        return array_map(
+            static fn (Department $d): string => (string) $d->getName(),
+            $user->getDepartments() ?? [],
+        );
     }
 }

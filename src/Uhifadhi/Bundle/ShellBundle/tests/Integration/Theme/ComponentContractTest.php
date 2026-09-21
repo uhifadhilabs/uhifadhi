@@ -1387,4 +1387,67 @@ final class ComponentContractTest extends ContractTestCase
             'A strip that folds on its own content width cannot promise four, and five is what it drew.',
         );
     }
+
+    /**
+     * THE LAST ROW BEFORE A FOOT DRAWS NO RULE OF ITS OWN.
+     *
+     * A card reads as a header, a body and a foot, and the foot announces
+     * itself with a rule across the top. The body's rows are separated by
+     * rules too, so without this the last row draws one and the foot draws
+     * another a pixel below it — two lines where the design has one, on every
+     * bounded card in the product.
+     *
+     * IT IS THE ROW THAT GIVES ITS RULE UP, not the foot. The foot's rule is
+     * what says foot, and a card whose body drew no rules at all would lose
+     * the boundary if the foot gave its own away.
+     *
+     * The test names every row idiom that can sit against a foot, because the
+     * failure this catches is a fourth one being added later and nobody
+     * remembering the rule exists.
+     *
+     * @param string $row  the row idiom, as its selector
+     * @param string $foot the foot it can sit against
+     */
+    #[DataProvider('everyRowAgainstAFoot')]
+    public function testTheLastRowBeforeAFootDrawsNoRuleOfItsOwn(string $row, string $foot): void
+    {
+        self::assertMatchesRegularExpression(
+            '/'.preg_quote($row, '/').':has\(\+\s*'.preg_quote($foot, '/').'\)/',
+            $this->stylesheet(),
+            \sprintf(
+                '`%s` sitting directly before `%s` keeps its own bottom rule, so the card draws two lines where it has one. '.
+                'The row drops its rule; the foot keeps its own, because the foot\'s rule is what says foot.',
+                $row,
+                $foot,
+            ),
+        );
+    }
+
+    /** @return iterable<string, array{string, string}> */
+    public static function everyRowAgainstAFoot(): iterable
+    {
+        foreach (['.rln' => 'a meta row', '.ao-att' => 'a queue row'] as $row => $what) {
+            foreach (['.sxfoot', '.pvfoot'] as $foot) {
+                yield $what.' before '.$foot => [$row, $foot];
+            }
+        }
+    }
+
+    /**
+     * A REGISTER TABLE IS THE THIRD IDIOM, and its last row is a cell rather
+     * than the element beside the foot — so the rule reaches through the
+     * table, and through the scroller a wide table is wrapped in.
+     */
+    public function testATablesLastRowBeforeAFootDrawsNoRuleEither(): void
+    {
+        $sheet = $this->stylesheet();
+
+        foreach (['table.tbl:has(+ .sxfoot) tr:last-child td', '.tm-scroll:has(+ .sxfoot) table.tbl tr:last-child td'] as $selector) {
+            self::assertStringContainsString(
+                $selector,
+                $sheet,
+                'A register table against a card foot draws its last rule and then the foot draws one under it.',
+            );
+        }
+    }
 }

@@ -13,19 +13,30 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Tests\Unit\Service;
 
+use Doctrine\DBAL\Driver\Exception as DriverException;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
-use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
+use Uhifadhi\Bundle\TeamBundle\Exception\NameNotUniqueException;
 use Uhifadhi\Bundle\TeamBundle\Exception\UnknownPermissionException;
 use Uhifadhi\Bundle\TeamBundle\Service\PermissionCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionService;
+use Uhifadhi\Contracts\Access\ScopeKind;
 
 /**
- * WHAT A POSITION BECOMES when it is created, renamed, filed or granted —
- * asked of the objects, with no database in the room.
+ * WHAT A POSITION BECOMES when it is created, renamed or granted — asked of
+ * the objects, with no database in the room.
+ *
+ * A POSITION USED TO BE FILED UNDER A DEPARTMENT, and the ruling replaced that
+ * with a bare name that is unique across the whole organization: a department
+ * is where somebody is placed, not something that owns a post. So the suite
+ * asks for the name and nothing else, and the two facts the entity now
+ * enforces about a post — how many may hold it, and which kinds of placement
+ * it offers — are specified here beside the service that shapes it, because
+ * they are refusals rather than storage and no database can see them.
  *
  * The catalogue here is a real one with no modules installed, which is the
  * state of a fresh installation: this bundle's own seven and nothing else. That
@@ -33,60 +44,66 @@ use Uhifadhi\Bundle\TeamBundle\Service\PositionService;
  * hold.
  */
 #[CoversClass(PositionService::class)]
+#[CoversClass(Position::class)]
 final class PositionServiceTest extends TestCase
 {
-    public function testAPositionIsNamedInsideItsDepartment(): void
+    public function testAPositionIsCreatedByNameAlone(): void
     {
-        $department = new Department()->setName('Ecology');
-
-        $position = self::service()->create('Analyst', $department);
+        $position = self::service()->create('Analyst');
 
         self::assertSame('Analyst', $position->getName());
-        self::assertSame($department, $position->getDepartment());
-        self::assertSame('Ecology / Analyst', $position->getQualifiedName());
     }
 
-    /** A position created before anybody decided which department owns it exists. */
-    public function testAPositionMayBeFiledUnderNoDepartmentAtAll(): void
+    /**
+     * THE NAME IS UNIQUE ACROSS THE ORGANIZATION. There is one Analyst, not
+     * one per department, so the second one is refused wherever it is written
+     * from. The unique index is what actually refuses; what is asked here is
+     * that the service carries the driver's violation out as a fact about the
+     * org chart, which is the only form a caller can word.
+     */
+    public function testASecondPositionOfTheSameNameAnywhereIsRefused(): void
     {
-        self::assertNull(self::service()->create('Analyst', null)->getDepartment());
+        $service = new PositionService(self::entityManagerThatRefusesTheSecondWrite(), new PermissionCatalogue());
+        $service->create('Analyst');
+
+        $this->expectException(NameNotUniqueException::class);
+
+        $service->create('Analyst');
+    }
+
+    /** A NEW POSITION IS BORN EMPTY, and the day it was born is the day it fell vacant. */
+    public function testANewPositionGrantsNothingAndHasStoodEmptySinceItWasWritten(): void
+    {
+        $position = self::service()->create('Analyst');
+
+        self::assertSame([], $position->getPermissionValues());
+        self::assertNotNull($position->getVacantSince());
     }
 
     public function testRenamingChangesOnlyTheName(): void
     {
-        $department = new Department()->setName('Ecology');
-        $position = self::service()->create('Analyst', $department);
+        $position = self::service()->create('Analyst');
+        self::service()->setPermissions($position, [PermissionEnum::TeamManage->value]);
 
         self::service()->rename($position, 'Senior Analyst');
 
         self::assertSame('Senior Analyst', $position->getName());
-        self::assertSame($department, $position->getDepartment());
-    }
-
-    public function testFilingMovesAPositionAndChangesNothingAboutWhatItGrants(): void
-    {
-        $position = self::service()->create('Analyst', new Department()->setName('Ecology'));
-        self::service()->setPermissions($position, [PermissionEnum::TeamManage->value]);
-
-        self::service()->file($position, $protection = new Department()->setName('Protection Service'));
-
-        self::assertSame($protection, $position->getDepartment());
         self::assertSame([PermissionEnum::TeamManage->value], $position->getPermissionValues());
     }
 
-    /** The empty destination is a destination, not a missing value. */
-    public function testAPositionCanLeaveADepartmentItShouldNeverHaveBeenIn(): void
+    public function testRenamingOntoANameTheOrganizationAlreadyUsesIsRefused(): void
     {
-        $position = self::service()->create('Analyst', new Department()->setName('Ecology'));
+        $service = new PositionService(self::entityManagerThatRefusesTheSecondWrite(), new PermissionCatalogue());
+        $position = $service->create('Analyst');
 
-        self::service()->file($position, null);
+        $this->expectException(NameNotUniqueException::class);
 
-        self::assertNull($position->getDepartment());
+        $service->rename($position, 'Ranger');
     }
 
     public function testTheGrantIsReplacedWholesaleBecauseWhatIsAbsentWasRevoked(): void
     {
-        $position = self::service()->create('Analyst', null);
+        $position = self::service()->create('Analyst');
 
         self::service()->setPermissions($position, [PermissionEnum::TeamManage->value]);
         self::assertSame([PermissionEnum::TeamManage->value], $position->getPermissionValues());
@@ -97,11 +114,86 @@ final class PositionServiceTest extends TestCase
 
     public function testAValueNoInstalledModuleProvidesIsRefusedRatherThanStored(): void
     {
-        $position = self::service()->create('Analyst', null);
+        $position = self::service()->create('Analyst');
 
         $this->expectException(UnknownPermissionException::class);
 
         self::service()->setPermissions($position, ['sightings.record']);
+    }
+
+    // ─── HOW MANY MAY HOLD IT ────────────────────────────────────────────
+
+    /** Null is unlimited, and it is the shape a position is written in. */
+    public function testAPositionSeatsAsManyPeopleAsTheWorkNeedsUntilSomebodySaysOtherwise(): void
+    {
+        $position = self::service()->create('Analyst');
+
+        self::assertNull($position->getSeatCount());
+        self::assertTrue($position->hasUnlimitedSeats());
+
+        $position->setSeatCount(2);
+        self::assertSame(2, $position->getSeatCount());
+        self::assertFalse($position->hasUnlimitedSeats());
+    }
+
+    /**
+     * A POST WITH NO SEATS IS NOT A POST. Closing one is deactivating it, and
+     * seating nobody would read as "nobody may hold this" while leaving it on
+     * every picker.
+     */
+    public function testAPositionWithNoSeatAtAllIsRefused(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        new Position()->setSeatCount(0);
+    }
+
+    public function testANegativeNumberOfSeatsIsRefused(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        new Position()->setSeatCount(-1);
+    }
+
+    // ─── WHICH KINDS OF PLACEMENT IT OFFERS ──────────────────────────────
+
+    public function testAPositionOffersTheGroundItWasWrittenFor(): void
+    {
+        $position = new Position()->setAllowedKinds([ScopeKind::Area]);
+
+        self::assertSame([ScopeKind::Area], $position->getAllowedKinds());
+        self::assertTrue($position->allows(ScopeKind::Area));
+        self::assertFalse($position->allows(ScopeKind::Organization), 'A local post cannot be widened by mistake when somebody is assigned.');
+    }
+
+    /** A position nobody can be placed at is a position nobody can hold. */
+    public function testAPositionThatAllowsNoKindOfPlacementAtAllIsRefused(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        new Position()->setAllowedKinds([]);
+    }
+
+    /**
+     * A PLACEMENT IS MADE AT THE ORGANIZATION OR AT NAMED AREAS, and those are
+     * the only two kinds a position gates. A department is the placement's
+     * OTHER dimension — somebody is placed against departments, not at one —
+     * so a position that claimed to allow it would be gating a thing it has no
+     * say over.
+     */
+    public function testADepartmentIsNotAKindOfGroundAPositionCanAllow(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        new Position()->setAllowedKinds([ScopeKind::Department]);
+    }
+
+    /** And "own" is a scope a CONCERN offers, never a way of placing somebody. */
+    public function testOwnIsNotAKindOfPlacementEither(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        new Position()->setAllowedKinds([ScopeKind::Own]);
     }
 
     private static function service(): PositionService
@@ -110,5 +202,23 @@ final class PositionServiceTest extends TestCase
             self::createStub(EntityManagerInterface::class),
             new PermissionCatalogue(),
         );
+    }
+
+    /**
+     * ONE NAME GOES IN, THE SECOND HITS THE INDEX — the storage layer played
+     * by the only thing it contributes to this question: a unique-constraint
+     * violation on the write that repeats a name.
+     */
+    private static function entityManagerThatRefusesTheSecondWrite(): EntityManagerInterface
+    {
+        $written = 0;
+        $entityManager = self::createStub(EntityManagerInterface::class);
+        $entityManager->method('flush')->willReturnCallback(static function () use (&$written): void {
+            if (++$written > 1) {
+                throw new UniqueConstraintViolationException(self::createStub(DriverException::class), null);
+            }
+        });
+
+        return $entityManager;
     }
 }

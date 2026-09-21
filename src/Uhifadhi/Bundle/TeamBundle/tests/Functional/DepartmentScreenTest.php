@@ -35,6 +35,13 @@ use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentScopeChangeRepository;
  * `.dcard`/`.pitem`/Unassigned-card vocabulary. The rules that hold whatever it
  * is drawn as (a department grants nothing; DELETE and DEACTIVATE are not
  * drawn, so not here) are asserted below.
+ *
+ * A DEPARTMENT IS A PLACEMENT AND NOT AN OWNER. The register used to file
+ * positions under departments — a Move control, and a "No department yet" band
+ * for the loose ones — and the ruling replaced both with the placement: a
+ * department sees the positions its members hold, so nothing is filed and there
+ * is nothing left to be unfiled. Every fixture below therefore PLACES a holder
+ * where the old one filed a position.
  */
 final class DepartmentScreenTest extends WebTestCaseWithSchema
 {
@@ -660,22 +667,6 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
         self::assertInstanceOf(Department::class, $this->em->getRepository(Department::class)->findOneBy(['name' => 'Ecology & Research']));
     }
 
-    public function testAPositionIsFiledIntoADepartmentFromItsMoveControl(): void
-    {
-        $crawler = $this->screen();
-
-        // The loose position sits in the "No department yet" group; move it into Ecology.
-        $form = $crawler->filter('[data-unfiled] .posline')->selectButton('Move')->form();
-        $form['department'] = $this->uuidOf('Ecology');
-        $this->client->submit($form);
-
-        self::assertResponseRedirects('/departments');
-
-        $this->em->clear();
-        $volunteer = $this->em->getRepository(Position::class)->findOneBy(['name' => 'Volunteer']);
-        self::assertSame('Ecology', $volunteer?->getDepartment()?->getName());
-    }
-
     // ---- deactivate, never delete -----------------------------------------
 
     /** DELETE is never drawn; DEACTIVATE is — the standing fleet rule. */
@@ -689,10 +680,11 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
     }
 
     /**
-     * DEACTIVATING flips the flag without deleting: the row stays (greyed), its
-     * positions keep their filing, and the footprint informs in the flash.
+     * DEACTIVATING flips the flag without deleting: the row stays (greyed), the
+     * people placed in it and the positions they hold are untouched, and the
+     * footprint informs in the flash.
      */
-    public function testDeactivatingADepartmentGreysItAndKeepsEverythingFiled(): void
+    public function testDeactivatingADepartmentGreysItAndDeletesNothing(): void
     {
         $crawler = $this->screen();
 
@@ -709,26 +701,18 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
         self::assertFalse($ecology->isActive());
         self::assertNotNull($ecology->getDeactivatedAt());
 
-        // The position filed under it keeps its filing — deactivate, never delete.
-        $analyst = $this->em->getRepository(Position::class)->findOneBy(['name' => 'Analyst', 'department' => $ecology->getId()]);
+        // The person placed in it, and the position they hold, survive the
+        // wind-down — deactivate, never delete.
+        $analyst = $this->em->getRepository(Position::class)->findOneBy(['name' => 'Analyst']);
         self::assertInstanceOf(Position::class, $analyst);
+        $tumaini = $this->em->getRepository(\Uhifadhi\Bundle\TeamBundle\Entity\User::class)
+            ->findOneBy(['email' => 't.njau@example.test']);
+        self::assertInstanceOf(\Uhifadhi\Bundle\TeamBundle\Entity\User::class, $tumaini);
+        self::assertSame('Analyst', $tumaini->getPosition()?->getName());
+        self::assertTrue($tumaini->getPlacement()?->coversDepartment($ecology));
 
         // Greyed in the register.
         self::assertStringContainsString('dcinactive', (string) $this->row($crawler, 'Ecology')->attr('class'));
-    }
-
-    /** A DEACTIVATED department is dropped from the position move control. */
-    public function testADeactivatedDepartmentIsHiddenFromTheMoveControl(): void
-    {
-        $crawler = $this->screen();
-        $form = $this->row($crawler, 'Ecology')->filter('form[action$="/deactivate"]')->selectButton('Deactivate anyway')->form();
-        $this->client->submit($form);
-
-        $crawler = $this->client->request('GET', '/departments');
-        $options = $crawler->filter('[data-unfiled] .moveform select[name="department"] option')
-            ->each(static fn (Crawler $c): string => $c->text());
-
-        self::assertNotContains('Ecology', $options, 'a wound-down department takes no new filings');
     }
 
     /** REACTIVATE brings it back into the register and the pickers. */
@@ -767,8 +751,12 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
         $this->administrator();
         $ng = $this->area('Northern Reserve');
         $wetland = $this->areaDepartment('Wetland Management', $ng);
-        $position = $this->position('Wetland Ecologist', $wetland, [PermissionEnum::AreaView->value]);
-        $this->person('Zawadi', 'Kimaro', TeamRoleEnum::Staff)->setPosition($position);
+        $position = $this->position('Wetland Ecologist', [PermissionEnum::AreaView->value]);
+        $zawadi = $this->person('Zawadi', 'Kimaro', TeamRoleEnum::Staff);
+        $zawadi->setPosition($position);
+        // THE FOOTPRINT IS THE PEOPLE PLACED IN IT, so the notice only has
+        // somebody to widen if somebody is placed there.
+        $this->place($zawadi, [$ng], [$wetland]);
         $this->em->flush();
 
         $crawler = $this->client->request('GET', '/departments');
@@ -786,8 +774,10 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
         $this->administrator();
         $ng = $this->area('Northern Reserve');
         $ecology = $this->department('Ecology');
-        $position = $this->position('Analyst', $ecology, [PermissionEnum::AreaView->value]);
-        $this->person('Zawadi', 'Kimaro', TeamRoleEnum::Staff)->setPosition($position);
+        $position = $this->position('Analyst', [PermissionEnum::AreaView->value]);
+        $zawadi = $this->person('Zawadi', 'Kimaro', TeamRoleEnum::Staff);
+        $zawadi->setPosition($position);
+        $this->place($zawadi, null, [$ecology]);
         $this->em->flush();
 
         $crawler = $this->client->request('GET', '/departments');
@@ -905,7 +895,7 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
     public function testAColleagueWithoutTeamManageIsRefused(): void
     {
         $ranger = $this->person('Juma', 'Mwakalinga', TeamRoleEnum::Staff);
-        $ranger->setPosition($this->position('Ranger', $this->department('Protection'), [PermissionEnum::AreaView->value]));
+        $ranger->setPosition($this->position('Ranger', [PermissionEnum::AreaView->value]));
         $this->em->flush();
         $this->client->loginUser($ranger);
 
@@ -933,10 +923,14 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
     // ---- the cast ---------------------------------------------------------
 
     /**
-     * The register's cast: one area (Northern Reserve), an area-level department in it
-     * (Wetland Management), two org-level (Ecology, Protection Service — the twin
-     * Analysts the per-scope-uniqueness ruling exists for), and one loose
-     * position nobody has filed.
+     * The register's cast: one area (Northern Reserve), an area-level department
+     * in it (Wetland Management), two org-level (Ecology, Protection Service),
+     * and a person placed in each of the three holding a position of their own.
+     *
+     * THE PEOPLE ARE WHAT MAKES A DEPARTMENT HAVE POSITIONS. A position is filed
+     * under nobody and its name is unique across the organization, so the only
+     * way a department comes to see one is for somebody placed in that
+     * department to hold it.
      */
     private function screen(): Crawler
     {
@@ -948,10 +942,17 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
         $ecology = $this->department('Ecology');
         $protection = $this->department('Protection Service');
 
-        $this->position('Wetland Ecologist', $wetland);
-        $this->position('Analyst', $ecology);
-        $this->position('Analyst', $protection);
-        $this->position('Volunteer', null);
+        $zawadi = $this->person('Zawadi', 'Kimaro');
+        $zawadi->setPosition($this->position('Wetland Ecologist'));
+        $this->place($zawadi, [$this->north], [$wetland]);
+
+        $tumaini = $this->person('Tumaini', 'Njau');
+        $tumaini->setPosition($this->position('Analyst'));
+        $this->place($tumaini, null, [$ecology]);
+
+        $baraka = $this->person('Baraka', 'Msuya');
+        $baraka->setPosition($this->position('Ranger'));
+        $this->place($baraka, null, [$protection]);
 
         $this->em->flush();
 
@@ -959,16 +960,21 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
     }
 
     /**
-     * Sign in as an AREA-X administrator — a Staff member whose team.manage
-     * comes through a position in an AREA-LEVEL department confined to $area, so
-     * their authority-area is $area. They own a "Warden Office" department there
-     * to act on.
+     * Sign in as an AREA-X administrator — a Staff member whose position carries
+     * team.manage and whose PLACEMENT is $area alone, so their authority-area is
+     * $area. They own a "Warden Office" department there to act on.
+     *
+     * REACH IS READ OFF THE PLACEMENT NOW. It used to be derived from the
+     * department of the administrator's position, which made somebody's
+     * authority a property of their job title; the ground is recorded against
+     * the person, so that is what this seeds.
      */
     private function areaAdminIn(\Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\Area\HostArea $area): \Uhifadhi\Bundle\TeamBundle\Entity\User
     {
-        $office = $this->areaDepartment('Warden Office', $area);
+        $this->areaDepartment('Warden Office', $area);
         $admin = $this->person('Amina', 'Salehe', TeamRoleEnum::Staff);
-        $admin->setPosition($this->position('Warden', $office, [PermissionEnum::TeamManage->value]));
+        $admin->setPosition($this->position('Warden', [PermissionEnum::TeamManage->value]));
+        $this->place($admin, [$area]);
         $this->em->flush();
         $this->client->loginUser($admin);
 

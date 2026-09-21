@@ -41,7 +41,7 @@
             {% if member.rangerCode %}<span class="mb-code">{{ member.rangerCode|upper }}</span>{% endif %}
             {% if member.position %}
                 <span class="qual">
-                    {%- if member.position.department %}<span class="q">{{ member.position.department.name }}</span><span class="sep">/</span>{% endif -%}
+                    {%- if member.departmentLabel %}<span class="q">{{ member.departmentLabel }}</span><span class="sep">/</span>{% endif -%}
                     <span class="n">{{ member.position.name }}</span>
                 </span>
             {% endif %}
@@ -191,22 +191,17 @@
             <div class="mb-assignrow">
                 <form method="post" action="{{ path('team_member_position', {uuid: member.uuidString}) }}">
                     <input type="hidden" name="_token" value="{{ csrfToken }}">
-                    {# GROUPED BY DEPARTMENT, because that is where a name is
-                       unique. Two of these options may be called "Analyst" and
-                       a flat list would make them one. #}
+                    {# ONE LIST, because a position's name is unique across the
+                       organization. There is one Analyst. #}
                     <select class="sel" name="position" onchange="this.form.submit()">
                         <option value="">&mdash; no position &mdash;</option>
-                        {% for department, positions in groupedPositions %}
-                            <optgroup label="{{ department is empty ? 'No department yet' : department }}">
-                                {% for position in positions %}
-                                    <option value="{{ position.uuidString }}"{{ member.position == position ? ' selected' : '' }}>{{ position.name }}</option>
-                                {% endfor %}
-                            </optgroup>
+                        {% for position in positions %}
+                            <option value="{{ position.uuidString }}"{{ member.position == position ? ' selected' : '' }}>{{ position.name }}</option>
                         {% endfor %}
                     </select>
                     <noscript><button class="softbtn" type="submit" style="margin-top:8px">Assign</button></noscript>
                 </form>
-                <span class="hint">Grouped by department &middot; no position grants nothing</span>
+                <span class="hint">One name each, across the organization &middot; no position grants nothing</span>
                 {% if member.position %}
                     <div class="pm-reach">{{ ux_icon("shell:users", {width: 13, height: 13}) }} held by {{ reach }} {{ reach == 1 ? 'person' : 'people' }}</div>
                 {% endif %}

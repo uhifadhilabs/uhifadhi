@@ -121,7 +121,7 @@ final readonly class TeamController
             'tiers' => TeamRoleEnum::cases(),
             'states' => RosterStateEnum::cases(),
             'departments' => $this->departments->findAllOrdered(),
-            'groupedPositions' => $this->positions->findAllGroupedByDepartment(),
+            'positions' => $this->positions->findAllOrdered(),
             'teamManage' => PermissionEnum::TeamManage,
         ];
     }

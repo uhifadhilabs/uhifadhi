@@ -25,7 +25,7 @@ use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Contracts\Entity\AreaInterface;
 
 /**
- * A part of the organization that owns positions — Ecology, Protection Service,
+ * A part of the organization people are placed in — Ecology, Protection Service,
  * Administration.
  *
  * THIS BUNDLE OWNS IT. Treating a department as an organizational lens owned
@@ -144,13 +144,6 @@ class Department
     private ?DepartmentKind $kind = null;
 
     /**
-     * @var Collection<int, Position>
-     */
-    #[ORM\OneToMany(targetEntity: Position::class, mappedBy: 'department')]
-    #[ORM\OrderBy(['name' => 'ASC'])]
-    private Collection $positions;
-
-    /**
      * THE MODULES THIS DEPARTMENT LEADS WITH — the lens, and the only thing on
      * this entity that says what its people see first.
      *
@@ -227,7 +220,6 @@ class Department
 
     public function __construct()
     {
-        $this->positions = new ArrayCollection();
         $this->scopeChanges = new ArrayCollection();
         $this->goals = new ArrayCollection();
         $this->modules = new ArrayCollection();
@@ -254,14 +246,6 @@ class Department
         $this->name = $name;
 
         return $this;
-    }
-
-    /**
-     * @return Collection<int, Position>
-     */
-    public function getPositions(): Collection
-    {
-        return $this->positions;
     }
 
     /**

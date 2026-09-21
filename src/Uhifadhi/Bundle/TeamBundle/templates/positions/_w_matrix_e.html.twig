@@ -40,7 +40,6 @@
             <span class="tier">{{ who.teamRole.label }}</span>
             {% if who.position %}
                 <span class="qual">
-                    {%- if who.position.department %}<span class="q">{{ who.position.department.name }}</span><span class="sep">/</span>{% endif -%}
                     <span class="n">{{ who.position.name }}</span>
                 </span>
             {% else %}

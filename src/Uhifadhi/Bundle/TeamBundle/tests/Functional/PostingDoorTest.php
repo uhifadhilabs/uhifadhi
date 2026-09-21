@@ -55,10 +55,14 @@ final class PostingDoorTest extends WebTestCaseWithSchema
     public function testTheDoorIsAbsentForSomebodyWhoMayNotWriteToAnArea(): void
     {
         $manager = $this->person('Asha', 'Mollel', TeamRoleEnum::Staff);
-        $manager->setPosition($this->position('Team lead', $this->department('Operations'), [
+        $manager->setPosition($this->position('Team lead', [
             PermissionEnum::TeamManage->value,
             PermissionEnum::AreaView->value,
         ]));
+        // Placed across the organization, so nothing about WHERE they stand
+        // is what closes the door — it is closed because the position grants
+        // no area.edit, which is the only thing this test is about.
+        $this->place($manager);
         $grace = $this->person('Grace', 'Ndosi');
         $this->em->flush();
         $this->client->loginUser($manager);

@@ -74,6 +74,7 @@ use Uhifadhi\Bundle\TeamBundle\Security\PermissionVoter;
 use Uhifadhi\Bundle\TeamBundle\Service\ApiTokenManager;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentDirectory;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentKindService;
+use Uhifadhi\Bundle\TeamBundle\Service\DepartmentMembership;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPalette;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPerformance;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentSectionOverview;
@@ -681,9 +682,19 @@ return static function (ContainerConfigurator $container): void {
         ]);
     $services->alias(PositionVacancy::class, 'team.position_vacancy');
 
+    /*
+     * WHO IS IN A DEPARTMENT, derived from each person's placement. A
+     * department is a placement, not an owner, so neither its members nor
+     * its positions have a column - and the derivation lives in one service
+     * rather than in each screen that needs it.
+     */
+    $services->set('team.department_membership', DepartmentMembership::class)
+        ->args([service(UserRepository::class)]);
+    $services->alias(DepartmentMembership::class, 'team.department_membership');
+
     $services->set('team.staffing_figures', StaffingFigures::class)
         ->args([
-            service(PositionRepository::class),
+            service('team.department_membership'),
             service(UserRepository::class),
         ]);
     $services->alias(StaffingFigures::class, 'team.staffing_figures');
@@ -712,7 +723,7 @@ return static function (ContainerConfigurator $container): void {
             service(DepartmentRepository::class),
             service('team.staffing_figures'),
             service('team.performance_history'),
-            service(PositionRepository::class),
+            service('team.department_membership'),
             service(UserRepository::class),
             service('team.position_vacancy'),
         ])
@@ -842,6 +853,7 @@ return static function (ContainerConfigurator $container): void {
             service('security.user_password_hasher'),
             service('team.super_admin_invariant'),
             service('team.position_vacancy'),
+            service(UserRepository::class),
         ]);
 
     /*
@@ -1015,6 +1027,7 @@ return static function (ContainerConfigurator $container): void {
             service('twig'),
             service(PositionRepository::class),
             service(DepartmentRepository::class),
+            service('team.department_membership'),
             service(UserRepository::class),
             service('team.permissions'),
             service('team.positions'),
@@ -1042,11 +1055,11 @@ return static function (ContainerConfigurator $container): void {
             service('twig'),
             service(DepartmentRepository::class),
             service(PositionRepository::class),
+            service('team.department_membership'),
             service(UserRepository::class),
             service('doctrine.orm.entity_manager'),
             service('team.departments'),
             service(DepartmentGoalRepository::class),
-            service('team.positions'),
             service('security.csrf.token_manager'),
             service('router'),
             service('security.token_storage'),
@@ -1137,6 +1150,7 @@ return static function (ContainerConfigurator $container): void {
         ->args([
             service(DepartmentRepository::class),
             service(PositionRepository::class),
+            service('team.department_membership'),
             service(UserRepository::class),
             service(DepartmentGoalRepository::class),
             service('registry.catalogue'),
@@ -1188,6 +1202,7 @@ return static function (ContainerConfigurator $container): void {
         ->args([
             service(UserRepository::class),
             service(PositionRepository::class),
+            service(DepartmentRepository::class),
             service('team.posting_board'),
             // THE ONLY THING IN THE CORE THAT REMEMBERS: a closed period
             // cannot be recomputed, so a movement is read and never worked
@@ -1220,7 +1235,7 @@ return static function (ContainerConfigurator $container): void {
      * department, and the shared words named rather than merged.
      */
     $services->set('team.position_vocabulary', PositionVocabulary::class)
-        ->args([service(DepartmentRepository::class), service(PositionRepository::class)]);
+        ->args([service(PositionRepository::class)]);
     $services->alias(PositionVocabulary::class, 'team.position_vocabulary');
 
     $services->set('team.controller.configure', TeamConfigureController::class)
@@ -1310,6 +1325,7 @@ return static function (ContainerConfigurator $container): void {
             service('twig'),
             service(DepartmentRepository::class),
             service(PositionRepository::class),
+            service('team.department_membership'),
             service(UserRepository::class),
             service('doctrine.orm.entity_manager'),
             service('team.department_performance'),
@@ -1365,7 +1381,6 @@ return static function (ContainerConfigurator $container): void {
             service('router'),
             service('security.token_storage'),
             service('team.mail'),
-            service('team.area_authority'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(InviteController::class, 'team.controller.invite')->public();

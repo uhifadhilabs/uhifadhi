@@ -1,37 +1,28 @@
 {# TM·D — GROUPED BY POSITION.
 
-   Two levels: departments, and inside each one its positions, each headed by
-   THE PERMISSIONS THAT POSITION GRANTS. Four Rangers hold one identical set —
-   so a wrong grant is not four mistakes to find, it is one band to read.
+   One band per position, headed by THE PERMISSIONS THAT POSITION GRANTS. Four
+   Rangers hold one identical set — so a wrong grant is not four mistakes to
+   find, it is one band to read.
 
-   And this is the only direction in which THE TWO ANALYSTS ARE VISIBLY TWO
-   JOBS: same word, different departments, different permissions, and no screen
-   anywhere can quietly merge them.
+   IT USED TO BAND TWICE, departments outside and positions inside, and the
+   outer band was the only place two same-named Analysts were visibly two jobs.
+   A position carries no department now and its name is unique across the
+   organization, so there is one Analyst and one level of banding.
 
-   It bands twice, so it is the longest of the six, and it hides tier almost
-   completely. #}
+   It hides tier almost completely. #}
 {% import '@Team/team/_bits.html.twig' as bits %}
 
 <div class="c" data-tm data-tm-dir="d">
     <span class="tab">Roster<span class="src">&middot; grouped by position</span></span>
 
-    <p class="use" style="margin:2px 0 14px">Two levels: <b>departments</b>, and inside each one its positions,
-    each headed by <b>the permissions that position grants</b>. People holding one identical set read as one thing
-    &mdash; so a wrong grant is not four mistakes to find, it is one band to read. And this is the only direction
-    in which <b>two same-named positions are visibly two jobs</b>: same word, different departments, different
-    permissions, and no screen anywhere can quietly merge them.</p>
+    <p class="use" style="margin:2px 0 14px">One band per position, each headed by <b>the permissions that
+    position grants</b>. People holding one identical set read as one thing &mdash; so a wrong grant is not four
+    mistakes to find, it is one band to read.</p>
 
     <div class="tm-scroll">
         <table class="tbl">
             <thead><tr><th>Person</th><th>Tier</th><th>Ranger code</th><th>Account</th><th></th></tr></thead>
             <tbody>
-                {% for department, positions in groupedPositions %}
-                    {% set inDept = everybody|filter(p => p.position and (p.position.department ? p.position.department.name : '') == department) %}
-                    <tr class="tm-deptrow"><td colspan="5"><div class="tm-deptband">
-                        <span class="dtag"><i class="dot"></i>{{ department is empty ? 'No department yet' : department }}</span>
-                        <span class="n">{{ positions|length }} position{{ positions|length == 1 ? '' : 's' }} &middot; {{ inDept|length }} {{ inDept|length == 1 ? 'person' : 'people' }}</span>
-                    </div></td></tr>
-
                     {% for position in positions %}
                         {% set holders = everybody|filter(p => p.position == position) %}
                         <tr class="tm-bandrow inner"><td colspan="5"><div class="tm-band">
@@ -60,12 +51,10 @@
                             <tr class="tm-memrow inner"><td colspan="5"><span class="tm-nopos">{{ bits.icon_info() }}nobody holds this yet</span></td></tr>
                         {% endfor %}
                     {% endfor %}
-                {% endfor %}
 
-                {# THE UNPLACED. Somebody with no position belongs to no
-                   department either, so they cannot appear in any band above —
-                   and leaving them off the page would be the roster quietly
-                   losing the people it most needs to show. #}
+                {# THE UNPLACED. Somebody with no position appears in no band
+                   above, and leaving them off the page would be the roster
+                   quietly losing the people it most needs to show. #}
                 {% set unplaced = everybody|filter(p => p.position is null) %}
                 {% if unplaced|length %}
                     <tr class="tm-deptrow"><td colspan="5"><div class="tm-deptband">

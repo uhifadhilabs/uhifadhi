@@ -15,6 +15,8 @@ namespace Uhifadhi\Bundle\TeamBundle\Tests\Integration\Identity;
 
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Uid\UuidV7;
+use Uhifadhi\Bundle\TeamBundle\Entity\Department;
+use Uhifadhi\Bundle\TeamBundle\Entity\Placement;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
@@ -108,6 +110,47 @@ final class UserPersistenceTest extends IntegrationTestCase
         // decided by asking about the person, so a role would be the same
         // authority granted a second time, coarsely, where nobody looks.
         self::assertSame(['ROLE_USER'], $stored->getRoles());
+    }
+
+    /**
+     * THE PLACEMENT IS STORED BESIDE THE POSITION AND ANSWERED SEPARATELY.
+     * Where somebody reaches used to be read through their position's
+     * department; the ruling wrote it against the person instead, so it is a
+     * row of its own and the person's departments come back off it — several
+     * of them, which is the whole reason it exists.
+     */
+    public function testAPlacementIsStoredAgainstThePersonAndReadsBackItsDepartments(): void
+    {
+        $ecology = (new Department())->setName('Ecology');
+        $protection = (new Department())->setName('Protection Service');
+        $this->em->persist($ecology);
+        $this->em->persist($protection);
+
+        $position = (new Position())->setName('Analyst');
+        $this->em->persist($position);
+
+        $placement = (new Placement())->acrossTheOrganization()->inDepartments([$ecology, $protection]);
+        $this->em->persist($placement);
+
+        $analyst = (new User())->setEmail('analyst@example.test')->setFirstName('Thabo')->setLastName('Ndlovu')
+            ->setPassword('x')->setTeamRole(TeamRoleEnum::Staff)
+            ->setPosition($position)->setPlacement($placement);
+        $this->em->persist($analyst);
+        $this->em->flush();
+        $this->em->clear();
+
+        $stored = $this->service(UserRepository::class)->findOneByEmail('analyst@example.test');
+        self::assertInstanceOf(User::class, $stored);
+        self::assertNotNull($stored->getPlacement());
+
+        // Null areas is the whole organization — "everywhere" is an answer
+        // somebody wrote down, not an empty list.
+        self::assertNull($stored->getPlacement()->getAreas());
+        self::assertSame(
+            ['Ecology', 'Protection Service'],
+            array_map(static fn (Department $d): ?string => $d->getName(), $stored->getDepartments() ?? []),
+        );
+        self::assertSame('Ecology +1', $stored->getDepartmentLabel());
     }
 
     public function testASuperAdminHoldsTheTierRolesWithoutAPosition(): void

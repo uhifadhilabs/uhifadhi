@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Tests\Functional;
 
+use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
@@ -99,7 +100,7 @@ final class InviteAndRecoveryTest extends WebTestCaseWithSchema
     public function testCreatingSomebodyWithAPasswordWorksWithNothingConfigured(): void
     {
         $this->administrator();
-        $ranger = $this->position('Ranger', $this->department('Protection Service'), ['area.view']);
+        $ranger = $this->position('Ranger', ['area.view']);
         $this->em->flush();
 
         $token = $this->tokenFrom('/team/invite');
@@ -126,11 +127,35 @@ final class InviteAndRecoveryTest extends WebTestCaseWithSchema
         // AND NOBODY INVITED THEM. The null is the honest difference between
         // the two paths, and the roster reads it.
         self::assertNull($stored->getInvitedAt());
-        self::assertSame('Protection Service / Ranger', $stored->getPosition()?->getQualifiedName());
+        self::assertSame('Ranger', $stored->getPosition()?->getName());
 
         $hasher = static::getContainer()->get('test_public.hasher');
         self::assertInstanceOf(UserPasswordHasherInterface::class, $hasher);
         self::assertTrue($hasher->isPasswordValid($stored, 'a-long-enough-password'));
+    }
+
+    /**
+     * BOTH PICKERS ON THIS SCREEN ARE ONE FLAT LIST. They were grouped into
+     * optgroups, one per department, because a position was filed under one;
+     * the ruling took the department off the position, so there is one
+     * Analyst in the organization and nothing left to group by.
+     */
+    public function testThePositionPickersAreOneFlatListWithNoDepartmentGroups(): void
+    {
+        $this->administrator();
+        $this->position('Ranger', ['area.view']);
+        $this->position('Analyst');
+        $this->em->flush();
+
+        $crawler = $this->client->request('GET', '/team/invite');
+        $pickers = $crawler->filter('select[name="position"]');
+
+        self::assertCount(2, $pickers, 'Both ways offer the same choice.');
+        self::assertCount(0, $pickers->filter('optgroup'));
+        self::assertSame(
+            ['— no position —', 'Analyst', 'Ranger'],
+            $pickers->first()->filter('option')->each(static fn (Crawler $c): string => $c->text()),
+        );
     }
 
     public function testAShortPasswordIsRefusedWithTheRule(): void

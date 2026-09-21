@@ -126,23 +126,36 @@ final class PerformanceTopicsTest extends IntegrationTestCase
      * each post fell vacant — and says how many it could not count,
      * because a post that was already empty before the day was recorded
      * may be the oldest vacancy there is.
+     *
+     * THE POSTS CARRY NO DEPARTMENT. A position used to be filed under one;
+     * the ruling made the department a placement written against each person,
+     * so a vacancy is a fact about the post alone and the organisation-wide
+     * count reads it there.
      */
     public function testTheStaffingTopicCountsThePostsThatHaveStoodEmptyTooLong(): void
     {
         $department = new \Uhifadhi\Bundle\TeamBundle\Entity\Department()->setName('Protection Service');
         $this->em->persist($department);
 
-        $long = new \Uhifadhi\Bundle\TeamBundle\Entity\Position()->setName('Ranger')->setDepartment($department);
+        $long = new \Uhifadhi\Bundle\TeamBundle\Entity\Position()->setName('Ranger');
         $long->setPermissionValues([], []);
         $long->setVacantSince(new \DateTimeImmutable('-96 days'));
-        $fresh = new \Uhifadhi\Bundle\TeamBundle\Entity\Position()->setName('Warden')->setDepartment($department);
+        $fresh = new \Uhifadhi\Bundle\TeamBundle\Entity\Position()->setName('Warden');
         $fresh->setPermissionValues([], []);
         $fresh->setVacantSince(new \DateTimeImmutable('-3 days'));
-        $undated = new \Uhifadhi\Bundle\TeamBundle\Entity\Position()->setName('Scout')->setDepartment($department);
+        $undated = new \Uhifadhi\Bundle\TeamBundle\Entity\Position()->setName('Scout');
         $undated->setPermissionValues([], []);
         $this->em->persist($long);
         $this->em->persist($fresh);
         $this->em->persist($undated);
+
+        // THE POSTS REACH THE DEPARTMENT THROUGH THE PEOPLE WHO HELD THEM.
+        // Each of the three is stood in by somebody placed in Protection
+        // Service and since deactivated, which is how a post comes to be
+        // both the department's and empty.
+        foreach ([$long, $fresh, $undated] as $i => $post) {
+            $this->departedHolder('Rangers'.$i, $post, $department);
+        }
         $this->em->flush();
 
         $staffing = $this->topics()->byKey('staffing', PerformanceScope::organisation(), self::period());
@@ -393,6 +406,29 @@ final class PerformanceTopicsTest extends IntegrationTestCase
         $topics = static::getContainer()->get('test_public.'.PerformanceTopics::class);
 
         return $topics;
+    }
+
+    /**
+     * Somebody who held a post in this department and is no longer active —
+     * the only way a department has a post nobody stands in, now that a
+     * department's posts are the ones its members hold.
+     */
+    private function departedHolder(
+        string $surname,
+        \Uhifadhi\Bundle\TeamBundle\Entity\Position $position,
+        \Uhifadhi\Bundle\TeamBundle\Entity\Department $department,
+    ): void {
+        $placement = new \Uhifadhi\Bundle\TeamBundle\Entity\Placement()
+            ->acrossTheOrganization()->inDepartments([$department]);
+        $this->em->persist($placement);
+
+        $person = new \Uhifadhi\Bundle\TeamBundle\Entity\User()
+            ->setEmail(strtolower($surname).'@example.test')
+            ->setFirstName('Departed')->setLastName($surname)
+            ->setPassword('x')
+            ->setPosition($position)->setPlacement($placement);
+        $person->deactivate();
+        $this->em->persist($person);
     }
 
     private static function period(): FigurePeriod

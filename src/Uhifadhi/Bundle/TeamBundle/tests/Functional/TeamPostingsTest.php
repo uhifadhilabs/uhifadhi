@@ -184,11 +184,16 @@ final class TeamPostingsTest extends WebTestCaseWithSchema
     private function ground(): void
     {
         $protection = $this->department('Protection Service');
-        $sergeant = $this->position('Sergeant', $protection);
-        $ranger = $this->position('Ranger', $protection);
+        $sergeant = $this->position('Sergeant');
+        $ranger = $this->position('Ranger');
 
         $joseph = $this->person('Joseph', 'Mollel')->setPosition($sergeant);
         $tumaini = $this->person('Tumaini', 'Ndosi')->setPosition($ranger);
+        // THE DEPARTMENT BESIDE A NAME IS READ OFF THE PLACEMENT. It used to
+        // arrive through the position; the ruling put it on the person, so
+        // the board only has one to print once somebody has been placed.
+        $this->place($joseph, null, [$protection]);
+        $this->place($tumaini, null, [$protection]);
         $this->administrator();
 
         FakeStationDirectory::$areas = [

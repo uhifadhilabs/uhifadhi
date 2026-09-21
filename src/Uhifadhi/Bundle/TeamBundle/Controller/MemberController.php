@@ -147,7 +147,7 @@ final readonly class MemberController
             // may assign — every position for an unbounded one, only their own
             // area's for a bounded (area-X) one. An org-level or other-area
             // position is not a target they could reach.
-            'groupedPositions' => $this->authority->assignable($this->positions->findAllGroupedByDepartment()),
+            'positions' => $this->positions->findAllOrdered(),
             // WHAT THAT ACTUALLY GRANTS, RIGHT NOW — every catalogue row with
             // the REASON this person does or does not hold it. The page's whole
             // argument is that a position name is not an answer.
@@ -315,7 +315,7 @@ final readonly class MemberController
             // position is verified, can sign in, and can do nothing at all.
             // §5.6(a): unassigning is still touching a person, so a bounded
             // administrator may do it only to somebody already in their area.
-            $this->assertMayAssign($member->getPosition(), null);
+            $this->assertMayAssign($member);
             $this->accounts->assignPosition($member, null);
 
             return $this->back($request, $member, \sprintf('%s now holds no position, and therefore no permissions at all.', $member->getFullName()));
@@ -329,11 +329,11 @@ final readonly class MemberController
         // §5.6(a): a bounded administrator may reassign only among positions
         // their authority reaches — the one held now and the one moved to must
         // both be in their own area.
-        $this->assertMayAssign($member->getPosition(), $position);
+        $this->assertMayAssign($member);
 
         $this->accounts->assignPosition($member, $position);
 
-        return $this->back($request, $member, \sprintf('%s now holds %s.', $member->getFullName(), $position->getQualifiedName()));
+        return $this->back($request, $member, \sprintf('%s now holds %s.', $member->getFullName(), (string) $position->getName()));
     }
 
     /**
@@ -450,24 +450,25 @@ final readonly class MemberController
             return;
         }
 
-        $position = $member->getPosition();
-        if (null !== $position && !$this->authority->reaches($position)) {
-            throw new AccessDeniedException('An area administrator may manage only people seated in their own area.');
+        if (!$this->authority->reachesPerson($member)) {
+            throw new AccessDeniedException('An area administrator may manage only people placed in their own area.');
         }
     }
 
-    private function assertMayAssign(?Position $from, ?Position $to): void
+    /**
+     * REACH IS THE PERSON'S, NOT THE POSITION'S. A position carries no ground
+     * of its own any more, so which position somebody is moved between says
+     * nothing about whose boundary the move crosses; the person's placement
+     * does, and it is the same question either way.
+     */
+    private function assertMayAssign(User $member): void
     {
         if ($this->authority->isUnbounded()) {
             return;
         }
 
-        if (null !== $from && !$this->authority->reaches($from)) {
-            throw new AccessDeniedException('An area administrator may reassign only people who already hold a position in their own area.');
-        }
-
-        if (null !== $to && !$this->authority->reaches($to)) {
-            throw new AccessDeniedException('An area administrator may assign people only to positions in their own area.');
+        if (!$this->authority->reachesPerson($member)) {
+            throw new AccessDeniedException('An area administrator may assign only people placed in their own area.');
         }
     }
 

@@ -33,10 +33,10 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
  * abstains so the role voters can decide them, which also means a permission of an
  * UNINSTALLED module is simply no longer decidable here.
  *
- * AREA-SCOPED. A permission now answers
- * "may this person do X *here*?" A Staff member's authority-area is a DERIVED fact — the scope
- * of their position's department (`user.getDepartment()?.getArea()`), org-level when null —
- * and nothing else stores it. The voter compares the passed target area against it:
+ * AREA-SCOPED. A permission answers "may this person do X *here*?" A Staff member's reach is
+ * their PLACEMENT — the ground recorded against them, the whole organization or a named set of
+ * areas. It is a fact about the person, not about their job title. The voter compares the
+ * passed target area against it:
  *
  *   1. TIER SHORT-CIRCUIT — Super Admin / Admin bypass area-scoping entirely; area never
  *      consulted. Area-scoping only ever narrows a Staff member.
@@ -92,39 +92,18 @@ final class PermissionVoter extends Voter
             return true;
         }
 
-        // 4. Area comparison. Authority-area is the department's scope, derived,
-        //    org-level (null) meaning every area.
-        $authority = $user->getDepartment()?->getArea();
-        if (null === $authority) {
-            return true; // org-level → authority in every area
+        // 4. Area comparison, asked of the placement — the ground recorded
+        //    against this person. Unplaced reaches nothing: the model fails
+        //    closed, so a missing placement is a refusal rather than a pass.
+        $placement = $user->getPlacement();
+        if (null === $placement) {
+            return false;
         }
 
-        // A null (or non-area) subject is "no area in context": grant, because
-        // this area-level actor has authority in their one area, and the genuine
-        // per-area gate applies once an area is named downstream.
-        if (!$subject instanceof AreaInterface) {
-            return true;
-        }
-
-        return $this->sameArea($authority, $subject);
-    }
-
-    /**
-     * The two areas are the same one — compared on the public address (uuid)
-     * first, then the persistence id, so it holds whether or not the two are the
-     * same managed instance.
-     */
-    private function sameArea(AreaInterface $authority, AreaInterface $target): bool
-    {
-        $authorityUuid = $authority->getUuidString();
-        $targetUuid = $target->getUuidString();
-        if (null !== $authorityUuid && null !== $targetUuid) {
-            return $authorityUuid === $targetUuid;
-        }
-
-        $authorityId = $authority->getId();
-        $targetId = $target->getId();
-
-        return null !== $authorityId && $authorityId === $targetId;
+        // A null (or non-area) subject is "no area in context". The placement
+        // answers it: it is covered where the person reaches some ground at
+        // all, and the genuine per-area gate applies once an area is named
+        // downstream.
+        return $placement->coversArea($subject instanceof AreaInterface ? $subject : null);
     }
 }

@@ -38,7 +38,6 @@
                     <div class="pm-holders">
                         {% for position in holdingPositions %}
                             <a class="qual" href="{{ path('team_positions', {position: position.uuidString}) }}">
-                                {%- if position.department %}<span class="q">{{ position.department.name }}</span><span class="sep">/</span>{% endif -%}
                                 <span class="n">{{ position.name }}</span>
                             </a>
                         {% else %}

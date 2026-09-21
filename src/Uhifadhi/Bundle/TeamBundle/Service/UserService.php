@@ -16,12 +16,15 @@ namespace Uhifadhi\Bundle\TeamBundle\Service;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Uhifadhi\Bundle\TeamBundle\Entity\Placement;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Exception\EmailAlreadyUsedException;
 use Uhifadhi\Bundle\TeamBundle\Exception\LastSuperAdminException;
 use Uhifadhi\Bundle\TeamBundle\Exception\PasswordTooShortException;
+use Uhifadhi\Bundle\TeamBundle\Exception\PositionFullException;
+use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 
 /**
  * EVERY WAY AN ACCOUNT COMES INTO BEING OR CHANGES, in one place.
@@ -54,6 +57,7 @@ final readonly class UserService
         private UserPasswordHasherInterface $hasher,
         private SuperAdminInvariant $invariant,
         private PositionVacancy $vacancies,
+        private UserRepository $users,
     ) {
     }
 
@@ -209,10 +213,21 @@ final readonly class UserService
      * SEAT SOMEBODY, OR UNSEAT THEM. A position is the only thing that grants a
      * staff member any capability at all, and null is a real choice: somebody
      * with no position is verified, can sign in, and can do nothing.
+     *
+     * A FULL POSITION REFUSES, AND THE REFUSAL NAMES THE HOLDER. A seat count
+     * is not advice; the check is here rather than on the screen because a
+     * second door that forgot to ask would quietly seat one person too many.
+     *
+     * @throws PositionFullException when the position has no seat left
      */
     public function assignPosition(User $user, ?Position $position): void
     {
         $was = $user->getPosition();
+
+        if (null !== $position && $was !== $position) {
+            $this->assertHasASeat($position);
+        }
+
         $user->setPosition($position);
         $this->entityManager->flush();
 
@@ -221,6 +236,37 @@ final readonly class UserService
         $this->vacancies->refresh($was);
         $this->vacancies->refresh($position);
         $this->entityManager->flush();
+    }
+
+    /**
+     * WHERE SOMEBODY IS PLACED — the ground and the departments, written
+     * against the person because that is whose fact it is.
+     *
+     * NULL UNPLACES THEM, and unplaced is not "everywhere": the model fails
+     * closed, so somebody with no placement reaches no ground at all.
+     */
+    public function place(User $user, ?Placement $placement): void
+    {
+        $user->setPlacement($placement);
+        $this->entityManager->flush();
+    }
+
+    /**
+     * @throws PositionFullException
+     */
+    private function assertHasASeat(Position $position): void
+    {
+        $seats = $position->getSeatCount();
+        if (null === $seats) {
+            return;
+        }
+
+        $holders = $this->users->findActiveHolders($position);
+        if (\count($holders) < $seats) {
+            return;
+        }
+
+        throw new PositionFullException($position, $holders);
     }
 
     /**

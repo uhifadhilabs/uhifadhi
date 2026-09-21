@@ -24,10 +24,15 @@ use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\Area\HostArea;
  *
  * The area-admin design draws a banner ("You are scoped to Southern Reserve") on the
  * team / department / position management chrome, telling a bounded admin WHICH
- * area bounds them. It is shown to a bounded (area-X) `team.manage` holder on
- * every management surface, and to nobody else — an unbounded holder (a tier or
- * an org-level admin) manages every area, so there is no one area to name. The
- * area is named through the contract's AreaInterface::getName().
+ * ground bounds them. It is shown to a bounded (area-X) `team.manage` holder on
+ * every management surface, and to nobody else — an unbounded holder (a tier,
+ * or somebody placed across the whole organization) manages every area, so
+ * there is no one ground to name. The area is named through the contract's
+ * AreaInterface::getName().
+ *
+ * THE GROUND COMES OFF THE PLACEMENT, and a placement may name several areas,
+ * so the banner states the first plus a count rather than one name — one line,
+ * with the full list on the person's own record.
  */
 final class AreaScopedBannerTest extends WebTestCaseWithSchema
 {
@@ -71,7 +76,22 @@ final class AreaScopedBannerTest extends WebTestCaseWithSchema
         self::assertStringContainsString('You are scoped to Northern Reserve', $crawler->filter('.scope-fence')->html());
     }
 
-    /** A tier (Super Admin) is unbounded — no banner, there is no one area. */
+    /** Placed at more than one area, the banner states the first plus a count. */
+    public function testTheBannerCountsTheRestWhenAPlacementNamesSeveralAreas(): void
+    {
+        $admin = $this->person('Naomi', 'Kileo', TeamRoleEnum::Staff);
+        $admin->setPosition($this->position('Warden', [PermissionEnum::TeamManage->value]));
+        $this->place($admin, [$this->area('Northern Reserve'), $this->area('Western Reserve')]);
+        $this->em->flush();
+        $this->client->loginUser($admin);
+
+        $crawler = $this->client->request('GET', '/team');
+
+        self::assertResponseIsSuccessful();
+        self::assertStringContainsString('You are scoped to Northern Reserve +1', $crawler->filter('.scope-fence')->html());
+    }
+
+    /** A tier (Super Admin) is unbounded — no banner, there is no one ground. */
     public function testATierSeesNoBanner(): void
     {
         $this->administrator();
@@ -82,11 +102,12 @@ final class AreaScopedBannerTest extends WebTestCaseWithSchema
         self::assertCount(0, $crawler->filter('.scope-fence'));
     }
 
-    /** An org-level team.manage holder is unbounded too — no banner. */
-    public function testAnOrgLevelHolderSeesNoBanner(): void
+    /** A team.manage holder placed across the organization is unbounded too — no banner. */
+    public function testAnOrganizationWideHolderSeesNoBanner(): void
     {
         $orgAdmin = $this->person('Amina', 'Salehe', TeamRoleEnum::Staff);
-        $orgAdmin->setPosition($this->position('Coordinator', $this->department('Administration'), [PermissionEnum::TeamManage->value]));
+        $orgAdmin->setPosition($this->position('Coordinator', [PermissionEnum::TeamManage->value]));
+        $this->place($orgAdmin);
         $this->em->flush();
         $this->client->loginUser($orgAdmin);
 
@@ -97,14 +118,15 @@ final class AreaScopedBannerTest extends WebTestCaseWithSchema
     }
 
     /**
-     * Sign in as an AREA-X administrator — a Staff member whose team.manage comes
-     * through a position in an area-level department confined to $area.
+     * Sign in as an AREA-X administrator — a Staff member holding team.manage
+     * through their position and PLACED at $area, which is the ground the
+     * banner names.
      */
     private function areaAdminIn(HostArea $area): User
     {
-        $office = $this->areaDepartment('Warden Office', $area);
         $admin = $this->person('Naomi', 'Kileo', TeamRoleEnum::Staff);
-        $admin->setPosition($this->position('Warden', $office, [PermissionEnum::TeamManage->value]));
+        $admin->setPosition($this->position('Warden', [PermissionEnum::TeamManage->value]));
+        $this->place($admin, [$area]);
         $this->em->flush();
         $this->client->loginUser($admin);
 

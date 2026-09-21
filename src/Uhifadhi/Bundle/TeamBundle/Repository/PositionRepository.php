@@ -60,43 +60,14 @@ final class PositionRepository extends ServiceEntityRepository
     }
 
     /**
-     * Every position grouped under its department's name, for the pickers.
+     * EVERY POSITION, BY NAME - the list a picker draws, and a flat one.
      *
-     * THE PICKER IS GROUPED BECAUSE IT HAS TO BE: two of an installation's
-     * positions may be called "Analyst", and a flat list would offer the same
-     * word twice with no way to tell which is which. The optgroup is not
-     * decoration here, it is the disambiguation.
-     *
-     * Positions no department owns are collected under a null key rather than
-     * dropped — the Unassigned state is real, and a picker that hid those
-     * positions would be a picker that cannot assign them.
-     *
-     * @return array<string, list<Position>> department name => positions, the
-     *                                       unassigned ones under ''
-     */
-    public function findAllGroupedByDepartment(): array
-    {
-        /** @var list<Position> $positions */
-        $positions = $this->createQueryBuilder('p')
-            ->leftJoin('p.department', 'd')
-            ->addSelect('d')
-            ->orderBy('d.name', 'ASC')
-            ->addOrderBy('p.name', 'ASC')
-            ->getQuery()
-            ->getResult();
-
-        $grouped = [];
-        foreach ($positions as $position) {
-            $grouped[$position->getDepartment()?->getName() ?? ''][] = $position;
-        }
-
-        return $grouped;
-    }
-
-    /**
-     * Every position, department-first — the order a matrix reads in, and the
-     * order a position is NAMED in: "Protection Service / Analyst", never a
-     * bare "Analyst", because two departments may own the word.
+     * It used to be grouped under department names, and it was grouped
+     * because it had to be: two of an installation's positions could both be
+     * called "Analyst" and a flat list would offer the same word twice with
+     * no way to tell which was which. A POSITION'S NAME IS UNIQUE ACROSS THE
+     * ORGANIZATION NOW, so there is one Analyst, the word disambiguates
+     * itself, and the optgroup would be decoration.
      *
      * @return list<Position>
      */
@@ -104,10 +75,7 @@ final class PositionRepository extends ServiceEntityRepository
     {
         /** @var list<Position> $positions */
         $positions = $this->createQueryBuilder('p')
-            ->leftJoin('p.department', 'd')
-            ->addSelect('d')
-            ->orderBy('d.name', 'ASC')
-            ->addOrderBy('p.name', 'ASC')
+            ->orderBy('p.name', 'ASC')
             ->getQuery()
             ->getResult();
 

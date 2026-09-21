@@ -681,6 +681,92 @@ abstract class VocabularyConformanceTestCase extends TestCase
     }
 
     /**
+     * A TAB STRIP IS NAVIGATION, AND A TAB GOES SOMEWHERE.
+     *
+     * `.atabs` is the shell's strip of page tabs, and every entry in it is a
+     * door to a page: it carries an `href` a browser can follow, a reader can
+     * middle-click, and a crawler, a bookmark and the back button all
+     * understand. An `href="#"` is none of those. It is a link that has agreed
+     * to look like a link and then does nothing, and the two ways it gets
+     * written are both mistakes the page cannot recover from:
+     *
+     *   - A DESIGN PORTED TOO LITERALLY. The static workspace has no router,
+     *     so its tabs point at `#`; ported verbatim, the strip renders
+     *     perfectly and every tab is dead. This is the common one.
+     *   - A CONTROL WEARING A TAB. Something that toggles a pane rather than
+     *     opening a page is a button, and `.atabs` is the wrong vocabulary for
+     *     it: a reader who has learnt that this strip changes the page is
+     *     owed that meaning everywhere.
+     *
+     * A TAB NOT YET BUILT IS NOT AN EXCEPTION. It is drawn with the shell's
+     * own `.soon` treatment and no `href` at all, which says "there is nothing
+     * here yet" rather than "click me and find out".
+     */
+    public function testNoTabInTheStripIsAnchoredAtNothing(): void
+    {
+        $dead = [];
+
+        foreach (self::files(static::bundlePath().'/templates', 'twig') as $path) {
+            $markup = (string) file_get_contents($path);
+
+            // Comments first: a `#` quoted in prose is not a tab.
+            $markup = (string) preg_replace('/\{#.*?#\}/s', '', $markup);
+
+            foreach (self::tabStrips($markup) as $strip) {
+                if (1 === preg_match('/<a\b[^>]*\bhref\s*=\s*"#[^"]*"/', $strip)) {
+                    $dead[] = self::shortPath($path);
+                    break;
+                }
+            }
+        }
+
+        $dead = array_values(array_unique($dead));
+        sort($dead);
+
+        self::assertSame([], $dead, \sprintf(
+            "A tab in an `.atabs` strip is anchored at nothing [%s].\n".
+            'Every entry in the strip is a door to a page and carries a real `href`; a tab that is '.
+            'not built yet is drawn with the shell\'s `.soon` treatment and no `href` at all, and a '.
+            'control that toggles rather than navigates is a button in some other vocabulary.',
+            implode(', ', $dead),
+        ));
+    }
+
+    /**
+     * The markup of every `.atabs` strip in one template — from the opening
+     * tag to its matching close, counting nesting, so a link in a strip is
+     * told apart from one merely near it.
+     *
+     * @return list<string>
+     */
+    private static function tabStrips(string $markup): array
+    {
+        $strips = [];
+
+        preg_match_all('/<(\w+)\b[^>]*class\s*=\s*"[^"]*\batabs\b[^"]*"[^>]*>/', $markup, $opens, \PREG_OFFSET_CAPTURE);
+
+        foreach ($opens[0] as $index => [$tag, $at]) {
+            $element = $opens[1][$index][0];
+            $depth = 1;
+            $cursor = $at + \strlen($tag);
+            $end = \strlen($markup);
+
+            while ($depth > 0 && $cursor < $end) {
+                if (1 !== preg_match('#<(/?)'.preg_quote($element, '#').'\b[^>]*>#', $markup, $step, \PREG_OFFSET_CAPTURE, $cursor)) {
+                    break;
+                }
+
+                $depth += '/' === $step[1][0] ? -1 : 1;
+                $cursor = $step[0][1] + \strlen($step[0][0]);
+            }
+
+            $strips[] = substr($markup, $at, $cursor - $at);
+        }
+
+        return $strips;
+    }
+
+    /**
      * The rules in a sheet whose selector names a CARD — the house card, or
      * a module's own `-card`/`card`-suffixed class. Anything else is a row, a
      * banner, a tile or a tree, and none of them is what the ruling is about.

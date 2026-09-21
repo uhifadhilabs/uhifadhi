@@ -2560,6 +2560,35 @@ table.tbl tr:hover .open-btn {
 }
 .sxfoot .sp { flex: 1; }
 
+/* ---- THE LAST ROW BEFORE A FOOT DROPS ITS RULE --------------------------
+   A card reads as a header, a body and a foot, and the foot announces itself
+   with a rule across the top. The body's own rows are separated by rules too,
+   so the LAST row before the foot draws one and the foot draws another a
+   pixel below it: two lines where the design has one, on every bounded card
+   in the product.
+
+   `.rln:last-child` already says the rest of it — "a rule under the final
+   line is a line under nothing" — and this is the same sentence for the case
+   where the final line is not the last child, because the foot is. The rule
+   belongs to the row rather than to the foot: the foot's rule is what SAYS
+   foot, and a card whose body drew no rules at all would lose the boundary if
+   the foot gave its own up.
+
+   It is stated once, here, for every row idiom that can sit against a foot —
+   a meta row, a queue row, a register table. A module that finds a fourth
+   adds it to this list rather than writing the rule again in its own sheet,
+   which would be two answers to one question. */
+.rln:has(+ .sxfoot),
+.rln:has(+ .pvfoot),
+.rln:has(+ .rdf-foot),
+.ao-att:has(+ .sxfoot),
+.ao-att:has(+ .pvfoot) { border-bottom: 0; }
+
+table.tbl:has(+ .sxfoot) tr:last-child td,
+table.tbl:has(+ .pvfoot) tr:last-child td,
+.tm-scroll:has(+ .sxfoot) table.tbl tr:last-child td,
+.tm-scroll:has(+ .pvfoot) table.tbl tr:last-child td { border-bottom: 0; }
+
 /* A GROUP ROW inside a register table — the band a grouped list breaks on. The
    departments register groups with .deptgroup above its cards; a TABLE groups
    inside itself, so the row is the band. */

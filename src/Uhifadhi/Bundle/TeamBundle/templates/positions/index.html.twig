@@ -40,26 +40,11 @@
         <div class="dcaddhd">
             {{ ux_icon('shell:plus', {width: 15, height: 15}) }}
             <b>Add a position</b>
-            <span class="hint">Pick its department first &mdash; the name is unique only inside it</span>
+            <span class="hint">One name, unique across the organization &mdash; a position belongs to no department</span>
         </div>
         <form class="crcard" method="post" action="{{ path('team_position_create') }}">
             <input type="hidden" name="_token" value="{{ csrfToken }}">
             <div class="crgrid">
-                <div class="crfield">
-                    <span class="crlab">Department</span>
-                    <select name="department" class="fld" aria-label="Department">
-                        {# A bounded area admin files only into the area-level
-                           departments they reach; the loose "no department"
-                           option has no scope, so only an unbounded
-                           administrator is offered it. #}
-                        {% if canFileLoose %}
-                            <option value="">No department yet&hellip;</option>
-                        {% endif %}
-                        {% for department in creatable %}
-                            <option value="{{ department.uuidString }}">{{ department.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
                 <div class="crfield grow">
                     <span class="crlab">Name</span>
                     <input type="text" name="name" class="fld" placeholder="Senior Ranger" aria-label="New position name" required>
@@ -68,7 +53,7 @@
             </div>
             <div class="crhint">
                 {{ ux_icon('shell:info') }}
-                <span><b>Ecology / Analyst</b> and <b>Protection Service / Analyst</b> &mdash; two jobs, one word, so a bare name is never written.</span>
+                <span>There is one <b>Analyst</b>, not one per department &mdash; where each holder works is written on their own record.</span>
             </div>
         </form>
     </div>

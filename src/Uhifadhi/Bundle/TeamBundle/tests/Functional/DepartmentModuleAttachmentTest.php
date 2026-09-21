@@ -271,7 +271,7 @@ final class DepartmentModuleAttachmentTest extends WebTestCaseWithSchema
         $token = $this->tokenFrom('/departments/'.$department->getUuidString());
 
         $ranger = $this->person('Juma', 'Mwakalinga', TeamRoleEnum::Staff);
-        $ranger->setPosition($this->position('Ranger', $department, [PermissionEnum::AreaView->value]));
+        $ranger->setPosition($this->position('Ranger', [PermissionEnum::AreaView->value]));
         $this->em->flush();
         $this->client->loginUser($ranger);
 
@@ -303,7 +303,10 @@ final class DepartmentModuleAttachmentTest extends WebTestCaseWithSchema
         $ecology = $this->department('Ecology');
         $office = $this->areaDepartment('Warden Office', $north);
         $admin = $this->person('Amina', 'Salehe', TeamRoleEnum::Staff);
-        $admin->setPosition($this->position('Warden', $office, [PermissionEnum::TeamManage->value]));
+        $admin->setPosition($this->position('Warden', [PermissionEnum::TeamManage->value]));
+        // THE BOUNDARY IS THE PLACEMENT, not the department of their position:
+        // this administrator is placed in the north and nowhere else.
+        $this->place($admin, [$north]);
         $this->em->flush();
         $this->client->loginUser($admin);
 

@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Devkit;
 
+use Uhifadhi\Bundle\TeamBundle\Entity\Department;
+use Uhifadhi\Bundle\TeamBundle\Entity\Placement;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
@@ -154,24 +156,29 @@ final readonly class TeamContentProvider implements ContentProviderInterface
         $ecology = $this->departments->create('Ecology', null);
         $operations = $this->departments->create('Operations', null);
 
-        $coordinator = $this->positions->create('Coordinator', $operations);
+        // A POSITION BELONGS TO NO DEPARTMENT: it is named once, across the
+        // organization, and where its holders work is written against each of
+        // them below.
+        $coordinator = $this->positions->create('Coordinator');
         $this->positions->setPermissions($coordinator, [PermissionEnum::TeamManage->value]);
 
-        $headRanger = $this->positions->create('Head Ranger', $protection);
-        $ranger = $this->positions->create('Ranger', $protection);
-        $analyst = $this->positions->create('Analyst', $ecology);
+        $headRanger = $this->positions->create('Head Ranger');
+        $ranger = $this->positions->create('Ranger');
+        $analyst = $this->positions->create('Analyst');
 
-        $this->person(self::ACCOUNTS['coordinator'], 'Amara', 'Okonkwo', TeamRoleEnum::SuperAdmin, $coordinator);
-        $this->person(self::ACCOUNTS['head_ranger'], 'Desta', 'Haile', TeamRoleEnum::Admin, $headRanger);
-        $this->person(self::ACCOUNTS['ranger'], 'Kofi', 'Mensah', TeamRoleEnum::Staff, $ranger);
-        $this->person(self::ACCOUNTS['second_ranger'], 'Nadia', 'Sow', TeamRoleEnum::Staff, $ranger);
-        $this->person(self::ACCOUNTS['analyst'], 'Thabo', 'Ndlovu', TeamRoleEnum::Staff, $analyst);
+        $this->person(self::ACCOUNTS['coordinator'], 'Amara', 'Okonkwo', TeamRoleEnum::SuperAdmin, $coordinator, [$operations]);
+        $this->person(self::ACCOUNTS['head_ranger'], 'Desta', 'Haile', TeamRoleEnum::Admin, $headRanger, [$protection]);
+        $this->person(self::ACCOUNTS['ranger'], 'Kofi', 'Mensah', TeamRoleEnum::Staff, $ranger, [$protection]);
+        $this->person(self::ACCOUNTS['second_ranger'], 'Nadia', 'Sow', TeamRoleEnum::Staff, $ranger, [$protection]);
+        // TWO DEPARTMENTS, ONE POSITION - the case the ruling exists for: an
+        // analyst supporting Ecology and Protection is not two jobs.
+        $this->person(self::ACCOUNTS['analyst'], 'Thabo', 'Ndlovu', TeamRoleEnum::Staff, $analyst, [$ecology, $protection]);
 
         // SOMEBODY WITH NO POSITION, because that is a real state the roster has
         // to draw: verified, able to sign in, and able to do nothing at all.
-        $this->person(self::ACCOUNTS['unseated'], 'Yara', 'Benali', TeamRoleEnum::Staff, null);
+        $this->person(self::ACCOUNTS['unseated'], 'Yara', 'Benali', TeamRoleEnum::Staff, null, []);
 
-        $this->fieldStaff($ranger);
+        $this->fieldStaff($ranger, $protection);
 
         $this->twelveMonthsOfHistory([$protection, $ecology, $operations]);
     }
@@ -189,7 +196,7 @@ final readonly class TeamContentProvider implements ContentProviderInterface
      * looks like: one position, many people, which is also the case the
      * positions screen is built to show.
      */
-    private function fieldStaff(Position $ranger): void
+    private function fieldStaff(Position $ranger, Department $protection): void
     {
         for ($n = 0; $n < self::FIELD_STAFF; ++$n) {
             $given = self::GIVEN[$n % \count(self::GIVEN)];
@@ -201,6 +208,7 @@ final readonly class TeamContentProvider implements ContentProviderInterface
                 $family,
                 TeamRoleEnum::Staff,
                 $ranger,
+                [$protection],
             );
         }
     }
@@ -219,7 +227,7 @@ final readonly class TeamContentProvider implements ContentProviderInterface
      * that has not run the devkit has no history, and its pages say "no
      * history yet" rather than drawing a flat line at nought.
      *
-     * @param list<\Uhifadhi\Bundle\TeamBundle\Entity\Department> $departments
+     * @param list<Department> $departments
      */
     private function twelveMonthsOfHistory(array $departments): void
     {
@@ -273,8 +281,21 @@ final readonly class TeamContentProvider implements ContentProviderInterface
         return false;
     }
 
-    private function person(string $email, string $firstName, string $lastName, TeamRoleEnum $tier, ?Position $position): void
+    /**
+     * SOMEBODY, THEIR POSITION AND WHERE THEY ARE PLACED. The demo places
+     * everybody across the organization, because this content seeds no areas
+     * of its own; the departments are the dimension it does exercise.
+     *
+     * @param list<Department> $departments
+     */
+    private function person(string $email, string $firstName, string $lastName, TeamRoleEnum $tier, ?Position $position, array $departments): void
     {
-        $this->accounts->create($email, $firstName, $lastName, bin2hex(random_bytes(24)), $tier, $position);
+        $person = $this->accounts->create($email, $firstName, $lastName, bin2hex(random_bytes(24)), $tier, $position);
+
+        if ([] === $departments) {
+            return;
+        }
+
+        $this->accounts->place($person, new Placement()->acrossTheOrganization()->inDepartments($departments));
     }
 }

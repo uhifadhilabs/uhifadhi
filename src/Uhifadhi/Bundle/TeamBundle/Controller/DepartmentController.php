@@ -46,11 +46,11 @@ use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
+use Uhifadhi\Bundle\TeamBundle\Service\DepartmentMembership;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPalette;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentPerformance;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentService;
 use Uhifadhi\Bundle\TeamBundle\Service\PerformanceTopics;
-use Uhifadhi\Bundle\TeamBundle\Service\PositionService;
 use Uhifadhi\Bundle\TeamBundle\Shell\DepartmentSectionTabs;
 use Uhifadhi\Contracts\Entity\AreaInterface;
 use Uhifadhi\Contracts\Kpi\CurrentPeriodInterface;
@@ -139,11 +139,11 @@ final readonly class DepartmentController
         private Environment $twig,
         private DepartmentRepository $departments,
         private PositionRepository $positions,
+        private DepartmentMembership $membership,
         private UserRepository $users,
         private EntityManagerInterface $entityManager,
         private DepartmentService $departmentWrites,
         private DepartmentGoalRepository $goals,
-        private PositionService $positionWrites,
         private CsrfTokenManagerInterface $csrf,
         private UrlGeneratorInterface $router,
         private TokenStorageInterface $tokens,
@@ -180,20 +180,14 @@ final readonly class DepartmentController
         $departments = $this->departments->findAllOrdered();
 
         /*
-         * THE POSITIONS COME FROM ONE QUERY, not from walking each department's
-         * inverse collection — that is a lazy load per card, and the inverse of a
-         * OneToMany is only as true as whoever maintained it. Reading the owning
-         * side (Position::getDepartment) is reading the fact.
+         * A DEPARTMENT'S POSITIONS ARE THE ONES ITS MEMBERS HOLD. A position
+         * belongs to nobody, so there is no owning side to read and no
+         * department column to group by: the placement is the fact, and the
+         * membership derives it in one place so no two screens disagree.
          */
         $owned = [];
-        $loose = [];
-        foreach ($this->positions->findAllOrdered() as $position) {
-            $department = $position->getDepartment();
-            if (null === $department) {
-                $loose[] = $position;
-                continue;
-            }
-            $owned[$department->getUuidString() ?? ''][] = $position;
+        foreach ($departments as $department) {
+            $owned[$department->getUuidString() ?? ''] = $this->membership->positionsIn($department);
         }
 
         // HEADCOUNT IS REACHED THROUGH THE POSITIONS. A department holds nobody
@@ -236,13 +230,10 @@ final readonly class DepartmentController
             // The move control and the confine picker file INTO a department, so
             // they offer only the active ones; the register above draws the
             // inactive rows greyed from the all-inclusive groups.
-            'fileTargets' => $this->departments->findAllActiveOrdered(),
             'owned' => $owned,
             'headcount' => $headcount,
             'figures' => $figures,
             'holders' => $this->holders(),
-            'loose' => $loose,
-            'looseHeadcount' => $this->users->countActiveHoldingAnyPosition($loose),
             'marks' => $this->marks($departments),
             // A DEPARTMENT NAMES A CATEGORY AND NEVER A COLOUR: the card
             // carries the index and the shell resolves it to the hue, which
@@ -404,13 +395,7 @@ final readonly class DepartmentController
     public function show(string $uuid): Response
     {
         $department = $this->department($uuid);
-        $positions = $owned = [];
-        foreach ($this->positions->findAllOrdered() as $position) {
-            if ($position->getDepartment()?->getId() === $department->getId()) {
-                $positions[] = $position;
-                $owned[] = $position;
-            }
-        }
+        $positions = $owned = $this->membership->positionsIn($department);
 
         // THE TWO HALVES OF THE ATTACHMENT CONTROL, split here rather than in
         // Twig: the modules this department leads with, and the ones it could.
@@ -805,53 +790,6 @@ final readonly class DepartmentController
     }
 
     /**
-     * FILING A POSITION — moving one between departments (or out to none). The
-     * positions page chooses a department when a position is CREATED; this is the
-     * only thing that moves one afterwards, which is why a position seeded before
-     * its department was decided is reachable at all.
-     */
-    #[Route('/departments/positions/{uuid}/file', name: 'team_department_file', requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted(PermissionEnum::TeamManage->value)]
-    public function file(Request $request, string $uuid): Response
-    {
-        $position = $this->positions->findOneByUuid(Uuid::fromString($uuid))
-            ?? throw new NotFoundHttpException('No such position on this installation.');
-        $this->assertCsrf($request);
-
-        $target = trim((string) $request->request->get('department'));
-
-        // THE EMPTY OPTION IS A DESTINATION, not a missing value — a position
-        // whose department was a mistake has to be able to leave it.
-        $department = '' === $target ? null : $this->department($target);
-
-        // §5.6: filing is department management. An area-X admin may move a
-        // position only between departments their authority reaches — the one it
-        // is leaving and the one it is joining must both be within it. A tier or
-        // org-level holder is unbounded and passes.
-        $from = $position->getDepartment();
-        if (null !== $from) {
-            $this->assertMayManage($from);
-        }
-        if (null !== $department) {
-            $this->assertMayManage($department);
-        }
-
-        try {
-            $this->positionWrites->file($position, $department);
-        } catch (NameNotUniqueException) {
-            return $this->back($request, \sprintf(
-                '%s already has a position called “%s”. Two departments may own the same word — that is the point — but one department may not own it twice. Rename one of them first.',
-                $department?->getName() ?? 'The unassigned group',
-                (string) $position->getName(),
-            ), 'error');
-        }
-
-        return $this->back($request, null === $department
-            ? \sprintf('“%s” belongs to no department now, and its holders read as Unassigned on the roster.', (string) $position->getName())
-            : \sprintf('“%s” is filed under %s. Nothing about what it grants has changed.', (string) $position->getName(), (string) $department->getName()));
-    }
-
-    /**
      * THE AREA-LEVEL DEPARTMENTS, GROUPED BY THEIR AREA and ordered by area name
      * — the shape the register draws first. Each group is its area and the
      * departments confined to it.
@@ -945,20 +883,15 @@ final readonly class DepartmentController
     }
 
     /**
-     * WHAT DEACTIVATING THIS DEPARTMENT TOUCHES — the positions filed under it
-     * and the active people who hold them. Informs the confirming flash; it is
+     * WHAT DEACTIVATING THIS DEPARTMENT TOUCHES — the positions its members
+     * hold and the active people who hold them. Informs the confirming flash; it is
      * never a gate.
      *
      * @return array{positions: int, people: int}
      */
     private function footprint(Department $department): array
     {
-        $positions = [];
-        foreach ($this->positions->findAllOrdered() as $position) {
-            if ($position->getDepartment()?->getId() === $department->getId()) {
-                $positions[] = $position;
-            }
-        }
+        $positions = $this->membership->positionsIn($department);
 
         return [
             'positions' => \count($positions),

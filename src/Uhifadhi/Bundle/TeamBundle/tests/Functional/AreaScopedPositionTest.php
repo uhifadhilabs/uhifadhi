@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Tests\Functional;
 
-use Symfony\Component\DomCrawler\Crawler;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
@@ -21,109 +20,94 @@ use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\Area\HostArea;
 
 /**
- * §5.6(b) — WHAT AN AREA ADMINISTRATOR MAY DO TO A POSITION.
+ * §5.6(b), THE POSITION SIDE — A POSITION HAS NO GROUND, SO WRITING ONE IS NOT
+ * AN AREA-SCOPED ACT.
  *
- * The person-assignment half (§5.6(a)), the department half (§5.6(b)'s
- * department side), and the escalation half (§5.6(c)) already ship. This is the
- * position-create/rename side of §5.6(b): an area-X `team.manage` holder may
- * create and rename positions ONLY under a department their authority reaches —
- * an area-level department confined to their own area. Creating or renaming a
- * position under an org-level department, under another area's, or under NO
- * department at all (a loose position, which has no scope to speak of) files a
- * position past the administrator's own boundary, which is escalation.
+ * A position is a job title and nothing else: one *Analyst* for the whole
+ * organization, held by people placed wherever they work. Naming one therefore
+ * confers no authority anywhere and reaches past nobody's boundary, so a
+ * bounded (area-X) `team.manage` holder creates and renames positions exactly
+ * as an unbounded administrator does. What IS fenced is the person — where
+ * somebody is placed, and what a position may be made to grant — and those are
+ * the assignment and escalation suites.
  *
- * A tier (Super Admin / Admin) or an org-level `team.manage` holder is UNBOUNDED
- * and touches all of this. Enforcement is server-side (a 403), exactly as the
- * department and assignment controllers do it; the create picker is additionally
- * narrowed to the departments the administrator may file into, matching the
- * area-admin design (org-level departments drawn read-only, no add control).
+ * THIS SUITE EXISTS TO STOP THE OLD FENCE COMING BACK. A position used to be
+ * filed under a department, the department gave it an area, and creating or
+ * renaming one was refused unless that area was the administrator's own; the
+ * create card even had a department picker narrowed to their area. The ruling
+ * deleted the department from the position, which deleted all of that with it —
+ * a re-added `department` field on this form, or a 403 on either write, is the
+ * old model reappearing.
+ *
+ * The one rule that remains is uniqueness, and the ruling WIDENED it: a
+ * position's name is unique across the whole organization, because there is no
+ * department left for it to be unique only inside.
  */
 final class AreaScopedPositionTest extends WebTestCaseWithSchema
 {
     // ---- creating a position ----------------------------------------------
 
-    /** An area-X admin creates a position under a department in their OWN area. */
-    public function testAnAreaAdminCreatesAPositionUnderADepartmentInTheirOwnArea(): void
+    /** An area-X admin creates a position — it belongs to the organization, not to their area. */
+    public function testAnAreaAdminCreatesAPosition(): void
     {
-        $north = $this->area('Northern Reserve');
-        $this->areaAdminIn($north);
-        $antiPoaching = $this->areaDepartment('Anti-Poaching', $north);
+        $this->areaAdminIn($this->area('Northern Reserve'));
         $this->em->flush();
 
         $token = $this->tokenFrom('/team/positions');
         $this->client->request('POST', '/team/positions', [
-            '_token' => $token, 'name' => 'Field Ranger', 'department' => $antiPoaching->getUuidString(),
+            '_token' => $token, 'name' => 'Field Ranger',
         ]);
 
         self::assertResponseRedirects();
         $this->em->clear();
         $stored = $this->em->getRepository(Position::class)->findOneBy(['name' => 'Field Ranger']);
         self::assertInstanceOf(Position::class, $stored);
-        self::assertSame('Anti-Poaching / Field Ranger', $stored->getQualifiedName());
+        self::assertSame('Field Ranger', $stored->getName(), 'A bare name, because there is no department to qualify it with.');
     }
 
-    /** But NOT under another area's department — that files past their boundary. */
-    public function testAnAreaAdminCannotCreateAPositionUnderAnotherAreasDepartment(): void
+    /**
+     * AND THE FORM HAS NO DEPARTMENT FIELD TO FILE IT UNDER. The picker that
+     * used to narrow the choice to the administrator's own area has nothing
+     * left to narrow: one name is the whole form.
+     */
+    public function testTheCreateCardAsksForANameAndNothingElse(): void
     {
-        $north = $this->area('Northern Reserve');
-        $west = $this->area('Western Reserve');
-        $this->areaAdminIn($north);
-        $elsewhere = $this->areaDepartment('Anti-Poaching', $west);
+        $this->areaAdminIn($this->area('Northern Reserve'));
+        $this->department('Ecology');
+        $this->em->flush();
+
+        $crawler = $this->client->request('GET', '/team/positions');
+        $card = $crawler->filter('#add form.crcard');
+
+        self::assertCount(1, $card->filter('input[name="name"]'));
+        self::assertCount(0, $card->filter('select[name="department"]'), 'A position belongs to no department, so nothing here files it under one.');
+    }
+
+    /** A second position of the same name is refused, and the sentence says ORGANIZATION. */
+    public function testASecondPositionOfTheSameNameIsRefusedAcrossTheWholeOrganization(): void
+    {
+        $this->areaAdminIn($this->area('Northern Reserve'));
+        $this->position('Analyst');
         $this->em->flush();
 
         $token = $this->tokenFrom('/team/positions');
         $this->client->request('POST', '/team/positions', [
-            '_token' => $token, 'name' => 'Field Ranger', 'department' => $elsewhere->getUuidString(),
+            '_token' => $token, 'name' => 'Analyst',
         ]);
 
-        self::assertResponseStatusCodeSame(403);
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('[data-shell-flash="error"]', 'This organization already has a position called');
         $this->em->clear();
-        self::assertNull($this->em->getRepository(Position::class)->findOneBy(['name' => 'Field Ranger']));
-    }
-
-    /** And NOT under an org-level department — that grants an org-wide job. */
-    public function testAnAreaAdminCannotCreateAPositionUnderAnOrgLevelDepartment(): void
-    {
-        $north = $this->area('Northern Reserve');
-        $this->areaAdminIn($north);
-        $ecology = $this->department('Ecology');
-        $this->em->flush();
-
-        $token = $this->tokenFrom('/team/positions');
-        $this->client->request('POST', '/team/positions', [
-            '_token' => $token, 'name' => 'Analyst', 'department' => $ecology->getUuidString(),
-        ]);
-
-        self::assertResponseStatusCodeSame(403);
-        $this->em->clear();
-        self::assertNull($this->em->getRepository(Position::class)->findOneBy(['name' => 'Analyst']));
-    }
-
-    /** And NOT a loose position with no department — a position with no scope. */
-    public function testAnAreaAdminCannotCreateALoosePosition(): void
-    {
-        $north = $this->area('Northern Reserve');
-        $this->areaAdminIn($north);
-        $this->em->flush();
-
-        $token = $this->tokenFrom('/team/positions');
-        $this->client->request('POST', '/team/positions', [
-            '_token' => $token, 'name' => 'Floater', 'department' => '',
-        ]);
-
-        self::assertResponseStatusCodeSame(403);
-        $this->em->clear();
-        self::assertNull($this->em->getRepository(Position::class)->findOneBy(['name' => 'Floater']));
+        self::assertCount(1, $this->em->getRepository(Position::class)->findBy(['name' => 'Analyst']));
     }
 
     // ---- renaming a position ----------------------------------------------
 
-    /** An area-X admin renames a position in a department in their OWN area. */
-    public function testAnAreaAdminRenamesAPositionInTheirOwnArea(): void
+    /** An area-X admin renames a position — any of them, because none of them is anybody's. */
+    public function testAnAreaAdminRenamesAPosition(): void
     {
-        $north = $this->area('Northern Reserve');
-        $this->areaAdminIn($north);
-        $ranger = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $north), []);
+        $this->areaAdminIn($this->area('Northern Reserve'));
+        $ranger = $this->position('Ranger');
         $this->em->flush();
 
         $token = $this->tokenFrom('/team/positions');
@@ -136,31 +120,17 @@ final class AreaScopedPositionTest extends WebTestCaseWithSchema
         self::assertNotNull($this->em->getRepository(Position::class)->findOneBy(['name' => 'Senior Ranger']));
     }
 
-    /** But NOT a position under another area's department. */
-    public function testAnAreaAdminCannotRenameAPositionUnderAnotherAreasDepartment(): void
+    /**
+     * Including one whose holders all work somewhere else entirely. Where the
+     * holders are placed is their fact, not the position's, so it cannot make
+     * the title out of bounds.
+     */
+    public function testAnAreaAdminRenamesAPositionHeldOnlyByPeopleInAnotherArea(): void
     {
-        $north = $this->area('Northern Reserve');
-        $west = $this->area('Western Reserve');
-        $this->areaAdminIn($north);
-        $elsewhere = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $west), []);
-        $this->em->flush();
-
-        $token = $this->tokenFrom('/team/positions');
-        $this->client->request('POST', '/team/positions/'.$elsewhere->getUuidString().'/rename', [
-            '_token' => $token, 'name' => 'Senior Ranger',
-        ]);
-
-        self::assertResponseStatusCodeSame(403);
-        $this->em->clear();
-        self::assertNotNull($this->em->getRepository(Position::class)->findOneBy(['name' => 'Ranger']), 'Nothing was renamed.');
-    }
-
-    /** And NOT an org-level position. */
-    public function testAnAreaAdminCannotRenameAnOrgLevelPosition(): void
-    {
-        $north = $this->area('Northern Reserve');
-        $this->areaAdminIn($north);
-        $analyst = $this->position('Analyst', $this->department('Ecology'), []);
+        $this->areaAdminIn($this->area('Northern Reserve'));
+        $analyst = $this->position('Analyst');
+        $grace = $this->person('Grace', 'Ndosi')->setPosition($analyst);
+        $this->place($grace, [$this->area('Western Reserve')]);
         $this->em->flush();
 
         $token = $this->tokenFrom('/team/positions');
@@ -168,116 +138,61 @@ final class AreaScopedPositionTest extends WebTestCaseWithSchema
             '_token' => $token, 'name' => 'Senior Analyst',
         ]);
 
-        self::assertResponseStatusCodeSame(403);
+        self::assertResponseRedirects();
+        $this->em->clear();
+        self::assertNotNull($this->em->getRepository(Position::class)->findOneBy(['name' => 'Senior Analyst']));
     }
 
-    /** And NOT a loose position (no department, no scope). */
-    public function testAnAreaAdminCannotRenameALoosePosition(): void
+    // ---- the unbounded do the same thing ----------------------------------
+
+    /** An administrator placed across the organization creates positions the same way. */
+    public function testAnOrganizationWideAdminCreatesAPositionTheSameWay(): void
     {
-        $north = $this->area('Northern Reserve');
-        $this->areaAdminIn($north);
-        $loose = $this->position('Floater', null, []);
-        $this->em->flush();
-
-        $token = $this->tokenFrom('/team/positions');
-        $this->client->request('POST', '/team/positions/'.$loose->getUuidString().'/rename', [
-            '_token' => $token, 'name' => 'Utility',
-        ]);
-
-        self::assertResponseStatusCodeSame(403);
-    }
-
-    // ---- the create picker ------------------------------------------------
-
-    /** The create picker offers only the admin's own area's departments. */
-    public function testTheCreatePickerOffersOnlyTheAdminsAreaDepartments(): void
-    {
-        $north = $this->area('Northern Reserve');
-        $west = $this->area('Western Reserve');
-        $this->areaAdminIn($north);
-        $this->areaDepartment('Anti-Poaching', $north);
-        $this->areaDepartment('Scouts', $west);
-        $this->department('Ecology');
-        $this->em->flush();
-
-        $crawler = $this->client->request('GET', '/team/positions');
-        $options = $this->departmentOptions($crawler);
-
-        self::assertContains('Anti-Poaching', $options, 'the admin’s own area department is offered');
-        self::assertNotContains('Scouts', $options, 'another area’s department is not');
-        self::assertNotContains('Ecology', $options, 'an org-level department is not');
-        // The loose "No department yet…" option has no scope, so a bounded admin
-        // may not file into it — it is absent too.
-        self::assertNotContains('No department yet…', $options, 'the loose option is not offered to a bounded admin');
-    }
-
-    // ---- the unbounded remain unbounded -----------------------------------
-
-    /** An org-level team.manage holder is unbounded: they create anywhere. */
-    public function testAnOrgLevelAdminMayCreateUnderAnyDepartment(): void
-    {
-        $west = $this->area('Western Reserve');
         $orgAdmin = $this->person('Amina', 'Salehe', TeamRoleEnum::Staff);
-        $orgAdmin->setPosition($this->position('Coordinator', $this->department('Administration'), [PermissionEnum::TeamManage->value]));
-        $elsewhere = $this->areaDepartment('Anti-Poaching', $west);
+        $orgAdmin->setPosition($this->position('Coordinator', [PermissionEnum::TeamManage->value]));
+        $this->place($orgAdmin);
         $this->em->flush();
         $this->client->loginUser($orgAdmin);
 
         $token = $this->tokenFrom('/team/positions');
         $this->client->request('POST', '/team/positions', [
-            '_token' => $token, 'name' => 'Field Ranger', 'department' => $elsewhere->getUuidString(),
+            '_token' => $token, 'name' => 'Field Ranger',
         ]);
 
         self::assertResponseRedirects();
         $this->em->clear();
-        self::assertSame('Anti-Poaching / Field Ranger', $this->em->getRepository(Position::class)->findOneBy(['name' => 'Field Ranger'])?->getQualifiedName());
+        self::assertNotNull($this->em->getRepository(Position::class)->findOneBy(['name' => 'Field Ranger']));
     }
 
-    /** And the create picker offers every department, loose option included. */
-    public function testTheCreatePickerOffersEverythingToAnUnboundedAdmin(): void
+    /** And a tier sees the same one-field card, because there is only one card. */
+    public function testTheCreateCardIsTheSameForATier(): void
     {
-        $north = $this->area('Northern Reserve');
         $this->administrator();
-        $this->areaDepartment('Anti-Poaching', $north);
         $this->department('Ecology');
         $this->em->flush();
 
         $crawler = $this->client->request('GET', '/team/positions');
-        $options = $this->departmentOptions($crawler);
+        $card = $crawler->filter('#add form.crcard');
 
-        self::assertContains('Anti-Poaching', $options);
-        self::assertContains('Ecology', $options);
-        self::assertContains('No department yet…', $options);
+        self::assertCount(1, $card->filter('input[name="name"]'));
+        self::assertCount(0, $card->filter('select[name="department"]'));
     }
 
     // ---- the cast ---------------------------------------------------------
 
     /**
-     * Sign in as an AREA-X administrator — a Staff member whose team.manage comes
-     * through a position in an area-level department confined to $area, so their
-     * authority-area is $area.
+     * Sign in as an AREA-X administrator — a Staff member holding team.manage
+     * through their position and PLACED at $area, the bounded kind whose
+     * refusals this suite is about not getting.
      */
     private function areaAdminIn(HostArea $area): User
     {
-        $office = $this->areaDepartment('Warden Office', $area);
         $admin = $this->person('Naomi', 'Kileo', TeamRoleEnum::Staff);
-        $admin->setPosition($this->position('Warden', $office, [PermissionEnum::TeamManage->value]));
+        $admin->setPosition($this->position('Warden', [PermissionEnum::TeamManage->value]));
+        $this->place($admin, [$area]);
         $this->em->flush();
         $this->client->loginUser($admin);
 
         return $admin;
-    }
-
-    /**
-     * The department labels the create picker offers on the positions page.
-     *
-     * @return list<string>
-     */
-    private function departmentOptions(Crawler $crawler): array
-    {
-        // THE CREATE CARD, at the top of the register's own page — the house
-        // idiom, and no longer a form squeezed into the header row.
-        return $crawler->filter('#add form.crcard select[name="department"] option')
-            ->each(static fn (Crawler $c): string => trim($c->text()));
     }
 }

@@ -15,7 +15,6 @@ namespace Uhifadhi\Bundle\TeamBundle\Security;
 
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
-use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Contracts\Entity\AreaInterface;
@@ -26,11 +25,11 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
  *
  * The voter answers "may this person do X here?" for a single permission. This
  * answers the coarser structural question the department writes need: is the
- * administrator UNBOUNDED (a tier, or an org-level team.manage holder — able to
- * mint org departments, change scope, touch any area), or confined to ONE area
- * (an area-X admin, who may manage only area-level departments in X)?
+ * administrator UNBOUNDED (a tier, or somebody placed across the whole
+ * organization — able to mint org departments, change scope, touch any area),
+ * or confined to the areas they were placed at?
  *
- * The ruling it enforces: an area-X `team.manage` holder MAY create, rename and
+ * The ruling it enforces: an area-X administrator MAY create, rename and
  * deactivate area-level departments in X; may NOT create org-level departments,
  * change any department's scope, or touch org-level or other areas' departments.
  * Any of the forbidden acts widens power past the admin's own boundary — minting
@@ -38,9 +37,11 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
  * escalation. This service is where "past their boundary" is computed; the
  * controller is where it is refused.
  *
- * IT READS THE SAME DERIVED AUTHORITY-AREA THE VOTER DOES —
- * `actor.position.department.scope`, org-level (null) meaning every area — so the
- * two can never disagree about where an administrator's authority reaches.
+ * IT READS THE PLACEMENT, WHICH IS WHERE REACH NOW LIVES. It used to derive
+ * the boundary from `actor.position.department.area`, a chain that made
+ * somebody's reach a property of their job title; the ruled model records it
+ * against the person. Unplaced is not unbounded — it reaches nothing, because
+ * the model fails closed.
  */
 final readonly class AreaAuthority
 {
@@ -58,9 +59,9 @@ final readonly class AreaAuthority
 
     /**
      * UNBOUNDED — reaches every area. A tier (Super Admin / Admin, which bypass
-     * area-scoping) or an org-level team.manage holder (department scope null).
-     * These are the only administrators who may mint an org-level department,
-     * change a scope, or manage a department outside a single area.
+     * area-scoping) or somebody placed across the whole organization. These are
+     * the only administrators who may mint an org-level department, change a
+     * scope, or manage a department outside a single area.
      */
     public function isUnbounded(): bool
     {
@@ -73,24 +74,29 @@ final readonly class AreaAuthority
             return true;
         }
 
-        // An org-level position (department scope null) is org-wide authority.
-        return null === $actor->getDepartment()?->getArea();
+        return $actor->getPlacement()?->isWholeOrganization() ?? false;
     }
 
     /**
-     * The one area a bounded administrator is confined to, or null when they are
-     * unbounded (or not signed in).
+     * THE AREAS A BOUNDED ADMINISTRATOR IS CONFINED TO, or null when they are
+     * unbounded. An empty list is somebody placed nowhere, and reaches nothing.
+     *
+     * @return list<AreaInterface>|null
      */
-    public function authorityArea(): ?AreaInterface
+    public function authorityAreas(): ?array
     {
-        return $this->isUnbounded() ? null : $this->actor()?->getDepartment()?->getArea();
+        if ($this->isUnbounded()) {
+            return null;
+        }
+
+        return $this->actor()?->getPlacement()?->getAreas() ?? [];
     }
 
     /**
      * Whether the administrator's authority reaches the given area. Unbounded
-     * reaches everywhere; a bounded one reaches only its own area, and never the
-     * org-level bucket (a null area), because managing an org-level department is
-     * an unbounded act.
+     * reaches everywhere; a bounded one reaches only the areas it was placed at,
+     * and never the org-level bucket (a null area), because managing an
+     * org-level department is an unbounded act.
      */
     public function covers(?AreaInterface $area): bool
     {
@@ -98,48 +104,24 @@ final readonly class AreaAuthority
             return true;
         }
 
-        $authority = $this->authorityArea();
-        if (null === $authority || null === $area) {
+        if (null === $area) {
             return false;
         }
 
-        $authorityUuid = $authority->getUuidString();
-        $areaUuid = $area->getUuidString();
-        if (null !== $authorityUuid && null !== $areaUuid) {
-            return $authorityUuid === $areaUuid;
-        }
+        $placement = $this->actor()?->getPlacement();
 
-        $authorityId = $authority->getId();
-
-        return null !== $authorityId && $authorityId === $area->getId();
-    }
-
-    /**
-     * Whether the administrator's authority reaches a POSITION — the unit a
-     * person is assigned to (§5.6(a), the person-assignment half). Unbounded
-     * reaches every position; a bounded (area-X) administrator reaches only a
-     * position filed under an area-level department confined to their own area.
-     *
-     * A position under an org-level department, under another area's, or filed
-     * under NO department at all (a loose position, which has no scope to speak
-     * of) is beyond a bounded administrator — assigning a person into it, or
-     * moving one out of it, would reach past their boundary.
-     */
-    public function reaches(Position $position): bool
-    {
-        return $this->reachesDepartment($position->getDepartment());
+        return null !== $placement && !$placement->reachesNothing() && $placement->coversArea($area);
     }
 
     /**
      * Whether the administrator's authority reaches a DEPARTMENT — the unit a
-     * position is filed under (§5.6(b), the position-create/rename half).
-     * Unbounded reaches every department; a bounded (area-X) administrator
-     * reaches only an area-level department confined to their own area.
+     * screen files work under. Unbounded reaches every department; a bounded
+     * (area-X) administrator reaches only an area-level department confined to
+     * an area they were placed at, and only one their own placement names.
      *
-     * An org-level department, another area's, or NO department at all (a loose
-     * position, which has no scope to speak of) is beyond a bounded
-     * administrator — creating a position under it, or renaming one filed under
-     * it, would file work past their boundary.
+     * An org-level department, another area's, or none at all is beyond a
+     * bounded administrator — creating work under it would file that work past
+     * their boundary.
      */
     public function reachesDepartment(?Department $department): bool
     {
@@ -147,15 +129,51 @@ final readonly class AreaAuthority
             return true;
         }
 
-        return null !== $department
-            && $department->isAreaLevel()
-            && $this->covers($department->getArea());
+        if (null === $department || !$department->isAreaLevel()) {
+            return false;
+        }
+
+        return $this->covers($department->getArea())
+            && ($this->actor()?->getPlacement()?->coversDepartment($department) ?? false);
     }
 
     /**
-     * THE PERMISSIONS THIS ADMINISTRATOR MAY CONFER on a position (§5.6(c), the
-     * no-escalation half). `null` means UNBOUNDED — a tier or org-level holder,
-     * who may grant anything the catalogue offers.
+     * Whether the administrator's authority reaches a PERSON — the question
+     * assignment asks, now that a position carries no ground of its own.
+     *
+     * A POSITION IS NO LONGER THE UNIT OF REACH. It used to be: a position sat
+     * in a department, the department sat in an area, and "may I assign
+     * somebody to this position" was answerable from the position alone. A
+     * position belongs to nobody now, so the question is about the PERSON being
+     * moved: a bounded administrator may work on somebody whose ground lies
+     * inside their own, and nobody else.
+     */
+    public function reachesPerson(User $person): bool
+    {
+        if ($this->isUnbounded()) {
+            return true;
+        }
+
+        $theirs = $person->getPlacement();
+        if (null === $theirs || $theirs->isWholeOrganization()) {
+            // Nobody bounded may work on somebody placed everywhere, and
+            // somebody placed nowhere lies in no area to be reached in.
+            return false;
+        }
+
+        foreach ($theirs->getAreas() ?? [] as $area) {
+            if (!$this->covers($area)) {
+                return false;
+            }
+        }
+
+        return [] !== ($theirs->getAreas() ?? []);
+    }
+
+    /**
+     * THE PERMISSIONS THIS ADMINISTRATOR MAY CONFER on a position (the
+     * no-escalation half). `null` means UNBOUNDED — a tier or an
+     * organization-wide holder, who may grant anything the catalogue offers.
      *
      * A bounded (area-X) administrator may grant only what their OWN position
      * holds — granting a permission they do not themselves have widens power past
@@ -191,34 +209,5 @@ final readonly class AreaAuthority
         $grantable = $this->grantablePermissions();
 
         return null === $grantable || \in_array($permission, $grantable, true);
-    }
-
-    /**
-     * Narrow a grouped-position picker to what this administrator may ASSIGN a
-     * person to (§5.6(a)) — every position for an unbounded administrator, only
-     * their own area's for a bounded one. A group left with no reachable
-     * position drops out entirely, so the picker offers only real targets — the
-     * confined reassignment control the area-admin design draws, whose list holds
-     * only the administrator's own area's positions.
-     *
-     * @param array<string, list<Position>> $grouped department name => positions
-     *
-     * @return array<string, list<Position>>
-     */
-    public function assignable(array $grouped): array
-    {
-        if ($this->isUnbounded()) {
-            return $grouped;
-        }
-
-        $filtered = [];
-        foreach ($grouped as $department => $positions) {
-            $kept = array_values(array_filter($positions, fn (Position $position): bool => $this->reaches($position)));
-            if ([] !== $kept) {
-                $filtered[$department] = $kept;
-            }
-        }
-
-        return $filtered;
     }
 }

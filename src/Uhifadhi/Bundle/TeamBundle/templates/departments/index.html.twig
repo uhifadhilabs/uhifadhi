@@ -182,7 +182,7 @@
                        register's own counts belong, now that the band carries what
                        the departments DID rather than how many there are. #}
                     <span class="cnt">{{ counts.all }} departments &middot; {{ counts.org }} org-wide &middot; {{ counts.area }} area-level
-                        &middot; {{ positionCount }} positions{% if loose|length %} &middot; {{ loose|length }} unfiled{% endif %}</span>
+                        &middot; {{ positionCount }} positions</span>
                 </div>
             </div>
 
@@ -239,47 +239,5 @@
             </div>
         {% endif %}
 
-        {# THE LOOSE POSITIONS — every position nobody has filed. Not a department:
-           a position may be created before anybody decided which part of the
-           organization owns it, and its holders read as Unassigned until one is
-           chosen. The register states this in words so it is never read as a
-           department called "No department yet". #}
-        {% if loose|length %}
-            <div class="deptgroup">
-                <span class="gh">No department yet</span>
-                <span class="gc">{{ loose|length }}</span>
-                <span class="gnote">Not a department &mdash; positions nobody has filed</span>
-                <span class="gl"></span>
-            </div>
-            <div class="posfile" data-unfiled style="border-top:1px solid var(--c-ln);border-radius:12px">
-                <p class="aa-prose" style="margin:2px 0 6px">This is <b>not a department</b>. Each position below
-                    reads as <b>Unassigned</b> on the roster until you file it &mdash; pick a department in its Move
-                    control.</p>
-                {% for position in loose %}
-                    {% set held = holders[position.uuidString]|default(0) %}
-                    <div class="posline">
-                        <span class="pl-nm"><a href="{{ path('team_positions', {position: position.uuidString}) }}">{{ position.name }}</a></span>
-                        <span class="pl-mem">
-                            {%- if held %}{{ held }} holder{{ held == 1 ? '' : 's' }}
-                            {%- else %}nobody yet{% endif %}
-                            &middot; {{ position.permissionValues|length }} permission{{ position.permissionValues|length == 1 ? '' : 's' }}
-                        </span>
-                        <span class="pl-act">
-                            <form class="moveform" method="post" action="{{ path('team_department_file', {uuid: position.uuidString}) }}">
-                                <input type="hidden" name="_token" value="{{ csrfToken }}">
-                                <span class="mlab">File under</span>
-                                <select name="department" aria-label="File {{ position.name }} under">
-                                    <option value="" selected>No department yet&hellip;</option>
-                                    {% for d in fileTargets %}
-                                        <option value="{{ d.uuidString }}">{{ d.name }}{{ d.area ? ' · ' ~ d.area.name : '' }}</option>
-                                    {% endfor %}
-                                </select>
-                                <button class="softbtn" type="submit">Move</button>
-                            </form>
-                        </span>
-                    </div>
-                {% endfor %}
-            </div>
-        {% endif %}
     </div>
 {% endblock %}

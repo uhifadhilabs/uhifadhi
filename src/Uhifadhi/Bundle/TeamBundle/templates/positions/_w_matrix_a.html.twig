@@ -41,7 +41,7 @@
                             {% set held = holders[position.uuidString]|default(0) %}
                             <th>
                                 <a class="pm-colh" href="{{ path('team_positions', {position: position.uuidString}) }}">
-                                    <span class="pm-dept"><i class="dot"></i>{{ position.department ? position.department.name : 'no department' }}</span>
+                                    <span class="pm-dept"><i class="dot"></i>{{ position.seatCount is null ? 'unlimited seats' : (position.seatCount == 1 ? 'one seat' : position.seatCount ~ ' seats') }}</span>
                                     <b>{{ position.name }}</b>
                                     <span class="held">{% if held %}{{ held }} {{ held == 1 ? 'person' : 'people' }}{% else %}nobody yet{% endif %}</span>
                                 </a>

@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\TeamBundle\Tests\Integration\Roster;
 
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
+use Uhifadhi\Bundle\TeamBundle\Entity\Placement;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\RosterStateEnum;
@@ -57,8 +58,8 @@ final class RosterQueryTest extends IntegrationTestCase
         $this->em->persist($protection);
         $this->em->persist($ecology);
 
-        $ranger = (new Position())->setName('Ranger')->setDepartment($protection);
-        $analyst = (new Position())->setName('Analyst')->setDepartment($ecology);
+        $ranger = (new Position())->setName('Ranger');
+        $analyst = (new Position())->setName('Analyst');
         $this->em->persist($ranger);
         $this->em->persist($analyst);
 
@@ -66,14 +67,19 @@ final class RosterQueryTest extends IntegrationTestCase
         $this->person('Salum', 'Mwaipopo', 's.mwaipopo@example.test', TeamRoleEnum::Admin);
 
         $grace = $this->person('Grace', 'Ndosi', 'g.ndosi@example.test');
-        $grace->setPosition($ranger)->setRangerCode('R-104')->setVerified(true);
+        $grace->setPosition($ranger)->setRangerCode('R-104')->setVerified(true)
+            ->setPlacement($this->placedIn([$protection]));
 
+        // ONE POSITION, TWO DEPARTMENTS — the case the ruling exists for, and
+        // therefore the case the department filter has to get right.
         $elias = $this->person('Elias', 'Mtui', 'e.mtui@example.test');
-        $elias->setPosition($analyst)->setVerified(true);
+        $elias->setPosition($analyst)->setVerified(true)
+            ->setPlacement($this->placedIn([$ecology, $protection]));
 
         // Never signed in, and invited by nobody: created with a password.
         $this->person('Joseph', 'Mrema', 'j.mrema@example.test')
-            ->setPosition($ranger)->setRangerCode('R-121');
+            ->setPosition($ranger)->setRangerCode('R-121')
+            ->setPlacement($this->placedIn([$protection]));
 
         // Deactivated, and STILL LISTED — the roster is where "left" and "never
         // existed" are told apart.
@@ -97,6 +103,22 @@ final class RosterQueryTest extends IntegrationTestCase
         $this->em->persist($user);
 
         return $user;
+    }
+
+    /**
+     * WHERE SOMEBODY IS PLACED. The ground is the whole organization
+     * throughout this suite — the roster is a list of people, not a map — so
+     * the only dimension these fixtures vary is the departments.
+     *
+     * @param list<Department>|null $departments null being "across all of them"
+     */
+    private function placedIn(?array $departments): Placement
+    {
+        $placement = (new Placement())->acrossTheOrganization();
+        null === $departments ? $placement->acrossAllDepartments() : $placement->inDepartments($departments);
+        $this->em->persist($placement);
+
+        return $placement;
     }
 
     /** @return list<string> */
@@ -264,17 +286,66 @@ final class RosterQueryTest extends IntegrationTestCase
         );
     }
 
-    public function testTheDepartmentNarrowsThroughThePosition(): void
+    /**
+     * THE DEPARTMENT NARROWS THROUGH THE PLACEMENT. It used to narrow through
+     * the position — a position belonged to a department, so the filter was a
+     * fact about the job. The ruling moved the department onto the person, and
+     * the visible difference is here: one Analyst appears under BOTH the
+     * departments he supports, without a second position existing to carry him.
+     */
+    public function testTheDepartmentNarrowsThroughThePlacement(): void
     {
         $this->seedCast();
 
-        $ecology = $this->em->getRepository(Department::class)->findOneBy(['name' => 'Ecology']);
-        self::assertInstanceOf(Department::class, $ecology);
-
         self::assertSame(
             ['e.mtui@example.test'],
-            $this->emails(new RosterQuery(department: $ecology->getUuidString())),
+            $this->emails(new RosterQuery(department: $this->departmentUuid('Ecology'))),
         );
+
+        self::assertSame(
+            ['e.mtui@example.test', 'g.ndosi@example.test', 'j.mrema@example.test'],
+            $this->emails(new RosterQuery(department: $this->departmentUuid('Protection Service'))),
+            'the Analyst supporting both departments is listed under each of them',
+        );
+    }
+
+    /**
+     * SOMEBODY PLACED ACROSS ALL DEPARTMENTS MATCHES EVERY DEPARTMENT FILTER.
+     * That is what their placement says, and a list that quietly left them out
+     * of each department would disagree with the voter about the same person.
+     */
+    public function testAPersonPlacedAcrossAllDepartmentsMatchesEveryDepartmentFilter(): void
+    {
+        $this->seedCast();
+
+        $warden = (new Position())->setName('Chief Warden');
+        $this->em->persist($warden);
+        $this->person('Amina', 'Lyimo', 'a.lyimo@example.test')
+            ->setPosition($warden)->setPlacement($this->placedIn(null));
+        $this->em->flush();
+        $this->em->clear();
+
+        self::assertContains('a.lyimo@example.test', $this->emails(new RosterQuery(department: $this->departmentUuid('Ecology'))));
+        self::assertContains('a.lyimo@example.test', $this->emails(new RosterQuery(department: $this->departmentUuid('Protection Service'))));
+    }
+
+    /** AN UNPLACED PERSON IS IN NO DEPARTMENT, so no department filter finds them. */
+    public function testAnUnplacedPersonMatchesNoDepartmentFilter(): void
+    {
+        $this->seedCast();
+
+        // Frank Massawe is the model's zero: verified, holds nothing, placed
+        // nowhere.
+        self::assertNotContains('f.massawe@example.test', $this->emails(new RosterQuery(department: $this->departmentUuid('Ecology'))));
+        self::assertNotContains('f.massawe@example.test', $this->emails(new RosterQuery(department: $this->departmentUuid('Protection Service'))));
+    }
+
+    private function departmentUuid(string $name): string
+    {
+        $department = $this->em->getRepository(Department::class)->findOneBy(['name' => $name]);
+        self::assertInstanceOf(Department::class, $department);
+
+        return (string) $department->getUuidString();
     }
 
     public function testAPageIsTwentyFiveAndSaysWhatItIsPartOf(): void

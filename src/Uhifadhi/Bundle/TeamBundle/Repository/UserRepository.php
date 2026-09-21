@@ -59,9 +59,9 @@ class UserRepository extends ServiceEntityRepository
 
         /** @var list<User> $users */
         $users = $this->createQueryBuilder('u')
-            ->addSelect('p', 'd')
+            ->addSelect('p', 'pl')
             ->leftJoin('u.position', 'p')
-            ->leftJoin('p.department', 'd')
+            ->leftJoin('u.placement', 'pl')
             ->where('u.uuid IN (:uuids)')
             ->setParameter('uuids', $uuids)
             ->getQuery()
@@ -125,8 +125,10 @@ class UserRepository extends ServiceEntityRepository
         $qb = $this->createQueryBuilder('u')
             ->leftJoin('u.position', 'p')
             ->addSelect('p')
-            ->leftJoin('p.department', 'd')
-            ->addSelect('d')
+            // A DEPARTMENT IS A PLACEMENT, so the roster reaches one through
+            // the person rather than through their job title.
+            ->leftJoin('u.placement', 'pl')
+            ->addSelect('pl')
             ->orderBy('u.firstName', 'ASC')
             ->addOrderBy('u.lastName', 'ASC')
             // The tie-break nobody sees and every pager needs: two people with
@@ -156,9 +158,16 @@ class UserRepository extends ServiceEntityRepository
 
         if (null !== $query->department) {
             $uuid = Uuid::isValid($query->department) ? Uuid::fromString($query->department) : null;
-            null !== $uuid
-                ? $qb->andWhere('d.uuid = :department')->setParameter('department', $uuid, UuidType::NAME)
-                : $qb->andWhere('1 = 0');
+            if (null !== $uuid) {
+                // EITHER PLACED ACROSS ALL DEPARTMENTS OR NAMED IN THIS ONE.
+                // Somebody placed everywhere is in this department too, and a
+                // filter that left them out would disagree with the voter.
+                $qb->leftJoin('pl.departments', 'pd')
+                    ->andWhere('pl.allDepartments = true OR pd.uuid = :department')
+                    ->setParameter('department', $uuid, UuidType::NAME);
+            } else {
+                $qb->andWhere('1 = 0');
+            }
         }
 
         match ($query->state) {
@@ -172,9 +181,11 @@ class UserRepository extends ServiceEntityRepository
         $qb->setFirstResult(($page - 1) * RosterQuery::PER_PAGE)
             ->setMaxResults(RosterQuery::PER_PAGE);
 
-        // fetchJoinCollection: false — every join above is to-one, so the
-        // paginator does not need its extra distinct-identifier pass.
-        $paginator = new Paginator($qb->getQuery(), false);
+        // fetchJoinCollection: true — the department filter joins a to-MANY
+        // (a placement names several departments), so the paginator needs its
+        // distinct-identifier pass or a person in two departments is counted
+        // twice and the page is short.
+        $paginator = new Paginator($qb->getQuery(), null !== $query->department);
 
         /** @var list<User> $items */
         $items = array_values(iterator_to_array($paginator));
@@ -265,6 +276,34 @@ class UserRepository extends ServiceEntityRepository
             ->setParameter('positions', $positions)
             ->getQuery()
             ->getSingleScalarResult();
+    }
+
+    /**
+     * EVERYBODY ACTIVE WHO HOLDS THIS POSITION RIGHT NOW - the list a full
+     * position's refusal names, and the reason it is a list rather than a
+     * count: "that position is full" is not actionable and "Joseph Mollel
+     * holds it" is.
+     *
+     * DEACTIVATED PEOPLE DO NOT OCCUPY A SEAT. Somebody who left in March is
+     * not standing in the post, and counting them would make a vacancy
+     * unfillable until an administrator went and deleted a record the model
+     * deliberately keeps.
+     *
+     * @return list<User>
+     */
+    public function findActiveHolders(Position $position): array
+    {
+        /** @var list<User> $holders */
+        $holders = $this->createQueryBuilder('u')
+            ->andWhere('u.position = :position')
+            ->andWhere('u.isActive = true')
+            ->setParameter('position', $position)
+            ->orderBy('u.lastName', 'ASC')
+            ->addOrderBy('u.firstName', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        return $holders;
     }
 
     /**

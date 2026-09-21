@@ -16,6 +16,7 @@ namespace Uhifadhi\Bundle\TeamBundle\Twig;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
+use Uhifadhi\Contracts\Entity\AreaInterface;
 
 /**
  * THE ONE FACT THE "SCOPED TO <AREA>" BANNER NEEDS — the name of the area a
@@ -30,7 +31,7 @@ use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
  * the fence is stated in one partial, fed from one place.
  *
  * IT NAMES THE AREA THROUGH THE CONTRACT, NEVER AN AREA PACKAGE. The name comes
- * off {@see \Uhifadhi\Contracts\Entity\AreaInterface::getName()} on the
+ * off {@see AreaInterface::getName()} on the
  * authority-area {@see AreaAuthority} already resolves for the voter, so this
  * module points at an area exactly as it points at a person, and requires
  * neither package to do it. A `null` answer is the whole signal: no area means
@@ -51,12 +52,23 @@ final class AreaScopeExtension extends AbstractExtension
     }
 
     /**
-     * The name of the area this administrator is confined to, or null when they
-     * are unbounded (a tier or org-level holder) or not signed in — the null the
-     * banner reads as "show nothing".
+     * The ground this administrator is confined to, in one fragment, or null
+     * when they are unbounded (a tier or an organization-wide placement) or
+     * not signed in — the null the banner reads as "show nothing".
+     *
+     * A PLACEMENT MAY NAME SEVERAL AREAS, so the fragment is the first plus a
+     * count rather than one name: the banner has one line, and the person's
+     * record has the full list.
      */
     public function scopeArea(): ?string
     {
-        return $this->authority->authorityArea()?->getName();
+        $areas = $this->authority->authorityAreas();
+        if (null === $areas || [] === $areas) {
+            return null;
+        }
+
+        $names = array_map(static fn (AreaInterface $a): string => (string) $a->getName(), $areas);
+
+        return 1 === \count($names) ? $names[0] : \sprintf('%s +%d', $names[0], \count($names) - 1);
     }
 }

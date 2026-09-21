@@ -19,10 +19,12 @@ use Psr\Cache\CacheItemPoolInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
+use Uhifadhi\Bundle\TeamBundle\Entity\Placement;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
+use Uhifadhi\Contracts\Access\ScopeKind;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\Area\HostArea;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\TestKernel;
 
@@ -136,10 +138,17 @@ abstract class WebTestCaseWithSchema extends WebTestCase
         return $department;
     }
 
-    /** @param list<string> $permissions */
-    protected function position(string $name, ?Department $department, array $permissions = []): Position
+    /**
+     * A POSITION CARRIES NO DEPARTMENT, and the argument that used to say so
+     * is gone from the signature rather than ignored, so a suite written
+     * against the old model fails loudly instead of quietly filing nothing.
+     *
+     * @param list<string>    $permissions
+     * @param list<ScopeKind> $allows      which kinds of placement it offers
+     */
+    protected function position(string $name, array $permissions = [], array $allows = [ScopeKind::Organization, ScopeKind::Area]): Position
     {
-        $position = (new Position())->setName($name)->setDepartment($department);
+        $position = (new Position())->setName($name)->setAllowedKinds($allows);
         $position->setPermissionValues(
             $permissions,
             [...array_map(static fn (PermissionEnum $p): string => $p->value, PermissionEnum::all()), 'surveys.record'],
@@ -147,6 +156,26 @@ abstract class WebTestCaseWithSchema extends WebTestCase
         $this->em->persist($position);
 
         return $position;
+    }
+
+    /**
+     * WHERE SOMEBODY IS PLACED — the second half of every check, written
+     * against the person. Null areas is the whole organization; a list is the
+     * named ground. Null departments is all of them.
+     *
+     * @param list<HostArea>|null   $areas
+     * @param list<Department>|null $departments
+     */
+    protected function place(User $person, ?array $areas = null, ?array $departments = null): Placement
+    {
+        $placement = new Placement();
+        null === $areas ? $placement->acrossTheOrganization() : $placement->inAreas($areas);
+        null === $departments ? $placement->acrossAllDepartments() : $placement->inDepartments($departments);
+
+        $this->em->persist($placement);
+        $person->setPlacement($placement);
+
+        return $placement;
     }
 
     /** Somebody who can reach every gated screen, so a suite can get in. */

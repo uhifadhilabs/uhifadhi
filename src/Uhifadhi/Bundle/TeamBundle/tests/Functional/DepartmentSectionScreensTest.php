@@ -57,10 +57,12 @@ final class DepartmentSectionScreensTest extends WebTestCaseWithSchema
         $crawler = $this->overview();
         $figures = $crawler->filter('.kstrip .c.kpi b.disp')->each(static fn (Crawler $c): string => $c->text());
 
-        // Two positions, one of them held; one person. (The count of
-        // departments is the band's, not the strip's.)
-        self::assertStringStartsWith('1', $figures[0]);
-        self::assertSame('1', $figures[1]);
+        // Three positions reach a department — two through Ecology's members
+        // and one through Protection Service's — and each of them is held,
+        // because a position only reaches a department by being held there.
+        // (The count of departments is the band's, not the strip's.)
+        self::assertStringStartsWith('3', $figures[0]);
+        self::assertSame('3', $figures[1]);
     }
 
     /**
@@ -235,20 +237,33 @@ final class DepartmentSectionScreensTest extends WebTestCaseWithSchema
         return $this->screen('/departments/modules');
     }
 
+    /**
+     * THE CAST IS BUILT OUT OF PLACEMENTS. A department's positions are the
+     * ones its members hold, so Ecology comes to have two by having two
+     * people placed in it, and Wetland Management has none because nobody is
+     * placed there. Field Assistant is held by nobody at all, which is how a
+     * position reaches the vacancies card without reaching a department.
+     */
     private function screen(string $path): Crawler
     {
         $ecology = $this->department('Ecology');
-        $this->department('Protection Service');
+        $protection = $this->department('Protection Service');
         $this->areaDepartment('Wetland Management', $this->area('Northern Reserve'));
 
-        $analyst = $this->position('Analyst', $ecology);
-        $this->position('Field Assistant', $ecology);
+        $analyst = $this->position('Analyst');
+        $this->position('Field Assistant');
 
         $admin = $this->person('Naomi', 'Kileo', TeamRoleEnum::Admin);
-        $admin->setPosition($this->position('Warden', null, [PermissionEnum::TeamManage->value]));
+        $admin->setPosition($this->position('Warden', [PermissionEnum::TeamManage->value]));
+        $this->place($admin, null, [$ecology]);
 
         $ranger = $this->person('Juma', 'Mollel');
         $ranger->setPosition($analyst);
+        $this->place($ranger, null, [$ecology]);
+
+        $baraka = $this->person('Baraka', 'Msuya');
+        $baraka->setPosition($this->position('Surveyor'));
+        $this->place($baraka, null, [$protection]);
 
         $this->em->flush();
         $this->client->loginUser($admin);

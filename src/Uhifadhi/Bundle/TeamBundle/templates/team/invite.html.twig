@@ -77,14 +77,10 @@ moment it exists and the person goes straight to signing in.</p>
                         <span class="lbl">position</span>
                         <select class="sel" name="position" style="height:34px;max-width:340px">
                             <option value="">&mdash; no position &mdash;</option>
-                            {% for department, positions in groupedPositions %}
-                                <optgroup label="{{ department is empty ? 'No department yet' : department }}">
-                                    {% for position in positions %}<option value="{{ position.uuidString }}">{{ position.name }}</option>{% endfor %}
-                                </optgroup>
-                            {% endfor %}
+                            {% for position in positions %}<option value="{{ position.uuidString }}">{{ position.name }}</option>{% endfor %}
                         </select>
-                        <p class="hint">Grouped by department, because a position&rsquo;s name is unique only
-                        inside one. Optional, and honestly so: leaving it empty creates somebody who can sign in
+                        <p class="hint">One list, because a position&rsquo;s name is unique across the
+                        organization. Optional, and honestly so: leaving it empty creates somebody who can sign in
                         and do nothing. Better than guessing.</p>
                     </div>
                     <div class="mb-f wide"><button class="cta" type="submit">{{ bits.icon_plus() }} Create the account</button></div>
@@ -149,11 +145,7 @@ moment it exists and the person goes straight to signing in.</p>
                         <span class="lbl">position &mdash; optional</span>
                         <select class="sel" name="position" style="height:34px;max-width:340px" {{ mailerConfigured ? '' : 'disabled' }}>
                             <option value="">&mdash; decide later &mdash;</option>
-                            {% for department, positions in groupedPositions %}
-                                <optgroup label="{{ department is empty ? 'No department yet' : department }}">
-                                    {% for position in positions %}<option value="{{ position.uuidString }}">{{ position.name }}</option>{% endfor %}
-                                </optgroup>
-                            {% endfor %}
+                            {% for position in positions %}<option value="{{ position.uuidString }}">{{ position.name }}</option>{% endfor %}
                         </select>
                     </div>
                     <div class="mb-f wide">

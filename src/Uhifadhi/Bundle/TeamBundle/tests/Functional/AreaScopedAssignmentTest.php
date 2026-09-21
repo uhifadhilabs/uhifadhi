@@ -22,32 +22,37 @@ use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\Area\HostArea;
 /**
  * §5.6(a) — WHAT AN AREA ADMINISTRATOR MAY DO TO A PERSON.
  *
- * The department-side of area-scoped team.manage already ships (an area-X admin
- * manages only the area-level departments in their own area). This is the
- * person-assignment half of the same ruling: an area-X `team.manage` holder may
- * assign and unassign people ONLY among positions their authority reaches — a
- * position filed under an area-level department confined to their area. Assigning
- * somebody into an org-level position, or into another area's, or touching a
- * person already seated outside the area, would place authority past the
- * administrator's own boundary, which is escalation. A tier (Super Admin / Admin)
- * or an org-level `team.manage` holder is UNBOUNDED and touches anyone.
+ * An area-X `team.manage` holder may assign and unassign only people their
+ * authority reaches: somebody whose every placed area lies inside their own.
+ * Somebody placed across the whole organization is above them, and somebody
+ * placed nowhere at all is in no area they could reach them in — the model
+ * fails closed, so both are refused. A tier (Super Admin / Admin) or an
+ * organization-wide placement is UNBOUNDED and touches anyone.
  *
- * Enforcement is server-side (a 403), exactly as the department controller does
- * it; the pickers on the member record and the invite page are narrowed to what
- * the administrator may assign, matching the confined reassignment control the
- * area-admin design draws ("the target list holds only Southern Reserve positions").
+ * THE FENCE IS ROUND THE PERSON, NOT ROUND THE POSITION. It used to be round
+ * the position — a position was filed under a department, the department sat
+ * in an area, and "may I seat somebody here?" was answerable from the target
+ * alone. A position is a job title with no ground now, so it says nothing
+ * about whose boundary a move crosses; where the person is placed does, and it
+ * is the same question whichever position they are moved between. That is also
+ * why both pickers offer every position as one flat list: there is no such
+ * thing as another area's position to keep out of it.
+ *
+ * Enforcement is server-side (a 403), exactly as the department controller
+ * does it.
  */
 final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
 {
     // ---- the member record: reassigning a person --------------------------
 
-    /** An area-X admin assigns a person to a position in their OWN area. */
-    public function testAnAreaAdminAssignsAPersonToAPositionInTheirOwnArea(): void
+    /** An area-X admin assigns somebody placed in their OWN area. */
+    public function testAnAreaAdminAssignsAPersonPlacedInTheirOwnArea(): void
     {
         $north = $this->area('Northern Reserve');
         $this->areaAdminIn($north);
-        $ranger = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $north), [PermissionEnum::AreaView->value]);
+        $ranger = $this->position('Ranger', [PermissionEnum::AreaView->value]);
         $grace = $this->person('Grace', 'Ndosi');
+        $this->place($grace, [$north]);
         $this->em->flush();
 
         $token = $this->tokenFrom('/team/'.$grace->getUuidString());
@@ -59,22 +64,23 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
         $this->em->clear();
         $stored = $this->em->getRepository(User::class)->findOneBy(['email' => 'g.ndosi@example.test']);
         self::assertInstanceOf(User::class, $stored);
-        self::assertSame('Anti-Poaching / Ranger', $stored->getPosition()?->getQualifiedName());
+        self::assertSame('Ranger', $stored->getPosition()?->getName());
     }
 
-    /** But NOT to another area's position — that reaches past their boundary. */
-    public function testAnAreaAdminCannotAssignToAnotherAreasPosition(): void
+    /** But NOT somebody placed in another area — that reaches past their boundary. */
+    public function testAnAreaAdminCannotAssignAPersonPlacedInAnotherArea(): void
     {
         $north = $this->area('Northern Reserve');
         $west = $this->area('Western Reserve');
         $this->areaAdminIn($north);
-        $elsewhere = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $west), [PermissionEnum::AreaView->value]);
+        $ranger = $this->position('Ranger', [PermissionEnum::AreaView->value]);
         $grace = $this->person('Grace', 'Ndosi');
+        $this->place($grace, [$west]);
         $this->em->flush();
 
         $token = $this->tokenFrom('/team/'.$grace->getUuidString());
         $this->client->request('POST', '/team/'.$grace->getUuidString().'/position', [
-            '_token' => $token, 'position' => $elsewhere->getUuidString(),
+            '_token' => $token, 'position' => $ranger->getUuidString(),
         ]);
 
         self::assertResponseStatusCodeSame(403);
@@ -82,50 +88,80 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
         self::assertNull($this->em->getRepository(User::class)->findOneBy(['email' => 'g.ndosi@example.test'])?->getPosition());
     }
 
-    /** And NOT to an org-level position — that grants org-wide authority. */
-    public function testAnAreaAdminCannotAssignToAnOrgLevelPosition(): void
+    /**
+     * Nor somebody placed in their own area AND another one. A placement is
+     * reached only when ALL of its ground lies inside the administrator's; half
+     * of it would let a bounded administrator move somebody who also works
+     * where they have no authority at all.
+     */
+    public function testAnAreaAdminCannotAssignAPersonPlacedPartlyOutsideTheirArea(): void
+    {
+        $north = $this->area('Northern Reserve');
+        $west = $this->area('Western Reserve');
+        $this->areaAdminIn($north);
+        $ranger = $this->position('Ranger', [PermissionEnum::AreaView->value]);
+        $grace = $this->person('Grace', 'Ndosi');
+        $this->place($grace, [$north, $west]);
+        $this->em->flush();
+
+        $token = $this->tokenFrom('/team/'.$grace->getUuidString());
+        $this->client->request('POST', '/team/'.$grace->getUuidString().'/position', [
+            '_token' => $token, 'position' => $ranger->getUuidString(),
+        ]);
+
+        self::assertResponseStatusCodeSame(403);
+    }
+
+    /** And NOT somebody placed across the whole organization — they stand above an area. */
+    public function testAnAreaAdminCannotAssignAPersonPlacedAcrossTheOrganization(): void
     {
         $north = $this->area('Northern Reserve');
         $this->areaAdminIn($north);
-        $orgPosition = $this->position('Analyst', $this->department('Ecology'), [PermissionEnum::AreaView->value]);
+        $ranger = $this->position('Ranger', [PermissionEnum::AreaView->value]);
+        $grace = $this->person('Grace', 'Ndosi');
+        $this->place($grace);
+        $this->em->flush();
+
+        $token = $this->tokenFrom('/team/'.$grace->getUuidString());
+        $this->client->request('POST', '/team/'.$grace->getUuidString().'/position', [
+            '_token' => $token, 'position' => $ranger->getUuidString(),
+        ]);
+
+        self::assertResponseStatusCodeSame(403);
+    }
+
+    /**
+     * AND NOT SOMEBODY PLACED NOWHERE AT ALL — the model fails closed. An
+     * unplaced person stands in no area, so no bounded administrator stands in
+     * one with them; placing them is the unbounded act that makes them
+     * somebody's to manage.
+     */
+    public function testAnAreaAdminCannotAssignAnUnplacedPerson(): void
+    {
+        $north = $this->area('Northern Reserve');
+        $this->areaAdminIn($north);
+        $ranger = $this->position('Ranger', [PermissionEnum::AreaView->value]);
         $grace = $this->person('Grace', 'Ndosi');
         $this->em->flush();
 
         $token = $this->tokenFrom('/team/'.$grace->getUuidString());
         $this->client->request('POST', '/team/'.$grace->getUuidString().'/position', [
-            '_token' => $token, 'position' => $orgPosition->getUuidString(),
+            '_token' => $token, 'position' => $ranger->getUuidString(),
         ]);
 
         self::assertResponseStatusCodeSame(403);
+        $this->em->clear();
+        self::assertNull($this->em->getRepository(User::class)->findOneBy(['email' => 'g.ndosi@example.test'])?->getPosition());
     }
 
-    /** A person already seated OUTSIDE the area cannot be reassigned either. */
-    public function testAnAreaAdminCannotReassignAPersonSeatedOutsideTheirArea(): void
+    /** Unassigning somebody placed in the admin's own area is allowed. */
+    public function testAnAreaAdminUnassignsSomebodyPlacedInTheirOwnArea(): void
     {
         $north = $this->area('Northern Reserve');
         $this->areaAdminIn($north);
-        $orgPosition = $this->position('Analyst', $this->department('Ecology'), [PermissionEnum::AreaView->value]);
-        $mine = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $north), [PermissionEnum::AreaView->value]);
-        $grace = $this->person('Grace', 'Ndosi')->setPosition($orgPosition);
-        $this->em->flush();
-
-        // Even moving them INTO the admin's own area is refused — the person is
-        // not theirs to move, because they sit in an org-level department.
-        $token = $this->tokenFrom('/team/'.$grace->getUuidString());
-        $this->client->request('POST', '/team/'.$grace->getUuidString().'/position', [
-            '_token' => $token, 'position' => $mine->getUuidString(),
-        ]);
-
-        self::assertResponseStatusCodeSame(403);
-    }
-
-    /** Unassigning somebody in the admin's own area is allowed. */
-    public function testAnAreaAdminUnassignsSomebodyInTheirOwnArea(): void
-    {
-        $north = $this->area('Northern Reserve');
-        $this->areaAdminIn($north);
-        $mine = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $north), [PermissionEnum::AreaView->value]);
-        $grace = $this->person('Grace', 'Ndosi')->setPosition($mine);
+        $ranger = $this->position('Ranger', [PermissionEnum::AreaView->value]);
+        $grace = $this->person('Grace', 'Ndosi')->setPosition($ranger);
+        $this->place($grace, [$north]);
         $this->em->flush();
 
         $token = $this->tokenFrom('/team/'.$grace->getUuidString());
@@ -138,13 +174,15 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
         self::assertNull($this->em->getRepository(User::class)->findOneBy(['email' => 'g.ndosi@example.test'])?->getPosition());
     }
 
-    /** But unassigning somebody OUTSIDE the area is refused. */
-    public function testAnAreaAdminCannotUnassignSomebodyOutsideTheirArea(): void
+    /** But unassigning somebody placed outside it is refused — taking is touching. */
+    public function testAnAreaAdminCannotUnassignSomebodyPlacedOutsideTheirArea(): void
     {
         $north = $this->area('Northern Reserve');
+        $west = $this->area('Western Reserve');
         $this->areaAdminIn($north);
-        $orgPosition = $this->position('Analyst', $this->department('Ecology'), [PermissionEnum::AreaView->value]);
-        $grace = $this->person('Grace', 'Ndosi')->setPosition($orgPosition);
+        $ranger = $this->position('Ranger', [PermissionEnum::AreaView->value]);
+        $grace = $this->person('Grace', 'Ndosi')->setPosition($ranger);
+        $this->place($grace, [$west]);
         $this->em->flush();
 
         $token = $this->tokenFrom('/team/'.$grace->getUuidString());
@@ -157,34 +195,44 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
         self::assertNotNull($this->em->getRepository(User::class)->findOneBy(['email' => 'g.ndosi@example.test'])?->getPosition(), 'Nothing was written.');
     }
 
-    /** The member picker offers only the admin's own area's positions. */
-    public function testTheMemberPickerOffersOnlyTheAdminsAreaPositions(): void
+    /**
+     * THE PICKER IS ONE FLAT LIST OF EVERY POSITION, for a bounded
+     * administrator as much as anybody else. A position carries no ground, so
+     * there is nothing about one of them to keep out of the list — and nothing
+     * to group them under either.
+     */
+    public function testTheMemberPickerOffersEveryPositionAsOneFlatList(): void
     {
         $north = $this->area('Northern Reserve');
-        $west = $this->area('Western Reserve');
         $this->areaAdminIn($north);
-        $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $north), [PermissionEnum::AreaView->value]);
-        $this->position('Scout', $this->areaDepartment('Anti-Poaching', $west), [PermissionEnum::AreaView->value]);
-        $this->position('Analyst', $this->department('Ecology'), [PermissionEnum::AreaView->value]);
+        $this->position('Ranger', [PermissionEnum::AreaView->value]);
+        $this->position('Scout', [PermissionEnum::AreaView->value]);
+        $this->position('Analyst', [PermissionEnum::AreaView->value]);
         $grace = $this->person('Grace', 'Ndosi');
+        $this->place($grace, [$north]);
         $this->em->flush();
 
         $crawler = $this->client->request('GET', '/team/'.$grace->getUuidString());
         $options = $this->pickerOptions($crawler);
 
-        self::assertContains('Ranger', $options, 'the admin’s own area position is offered');
-        self::assertNotContains('Scout', $options, 'another area’s position is not');
-        self::assertNotContains('Analyst', $options, 'an org-level position is not');
+        self::assertContains('Ranger', $options);
+        self::assertContains('Scout', $options);
+        self::assertContains('Analyst', $options);
+        self::assertCount(0, $crawler->filter('select[name="position"] optgroup'), 'One list, because a position belongs to no department.');
     }
 
     // ---- the invite page: adding somebody ---------------------------------
 
-    /** An area-X admin creates somebody straight into their own area's position. */
-    public function testAnAreaAdminCreatesSomebodyIntoTheirOwnAreasPosition(): void
+    /**
+     * An area-X admin creates somebody straight into any position. The pick
+     * confers no ground, so there is nothing to fence here: what decides whose
+     * person this is, is the placement written on their record afterwards.
+     */
+    public function testAnAreaAdminCreatesSomebodyIntoAnyPosition(): void
     {
         $north = $this->area('Northern Reserve');
         $this->areaAdminIn($north);
-        $ranger = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $north), [PermissionEnum::AreaView->value]);
+        $analyst = $this->position('Analyst', [PermissionEnum::AreaView->value]);
         $this->em->flush();
 
         $token = $this->tokenFrom('/team/invite');
@@ -192,23 +240,26 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
             '_token' => $token,
             'firstName' => 'Joseph', 'lastName' => 'Mrema',
             'email' => 'j.mrema@example.test', 'password' => 'a-long-enough-password',
-            'position' => $ranger->getUuidString(),
+            'position' => $analyst->getUuidString(),
         ]);
 
         self::assertResponseRedirects();
         $this->em->clear();
         $stored = $this->em->getRepository(User::class)->findOneBy(['email' => 'j.mrema@example.test']);
         self::assertInstanceOf(User::class, $stored);
-        self::assertSame('Anti-Poaching / Ranger', $stored->getPosition()?->getQualifiedName());
+        self::assertSame('Analyst', $stored->getPosition()?->getName());
     }
 
-    /** But NOT into another area's position, and no half-made account survives. */
-    public function testAnAreaAdminCannotCreateSomebodyIntoAnotherAreasPosition(): void
+    /**
+     * AND THE PERSON THEY ADDED IS NOT YET THEIRS TO MANAGE. Creating an
+     * account places nobody, so the new colleague reaches no ground — and the
+     * administrator who added them cannot then edit them until somebody
+     * unbounded places them.
+     */
+    public function testSomebodyJustAddedIsPlacedNowhereAndSoBeyondTheAdminWhoAddedThem(): void
     {
         $north = $this->area('Northern Reserve');
-        $west = $this->area('Western Reserve');
         $this->areaAdminIn($north);
-        $elsewhere = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $west), [PermissionEnum::AreaView->value]);
         $this->em->flush();
 
         $token = $this->tokenFrom('/team/invite');
@@ -216,89 +267,96 @@ final class AreaScopedAssignmentTest extends WebTestCaseWithSchema
             '_token' => $token,
             'firstName' => 'Joseph', 'lastName' => 'Mrema',
             'email' => 'j.mrema@example.test', 'password' => 'a-long-enough-password',
-            'position' => $elsewhere->getUuidString(),
+            'position' => '',
         ]);
 
-        self::assertResponseStatusCodeSame(403);
+        self::assertResponseRedirects();
         $this->em->clear();
-        self::assertNull($this->em->getRepository(User::class)->findOneBy(['email' => 'j.mrema@example.test']), 'No half-made account is left behind.');
-    }
+        $stored = $this->em->getRepository(User::class)->findOneBy(['email' => 'j.mrema@example.test']);
+        self::assertInstanceOf(User::class, $stored);
+        self::assertNull($stored->getPlacement(), 'Adding somebody places them nowhere.');
 
-    /** And NOT into an org-level position. */
-    public function testAnAreaAdminCannotCreateSomebodyIntoAnOrgLevelPosition(): void
-    {
-        $north = $this->area('Northern Reserve');
-        $this->areaAdminIn($north);
-        $orgPosition = $this->position('Analyst', $this->department('Ecology'), [PermissionEnum::AreaView->value]);
-        $this->em->flush();
-
-        $token = $this->tokenFrom('/team/invite');
-        $this->client->request('POST', '/team', [
-            '_token' => $token,
-            'firstName' => 'Joseph', 'lastName' => 'Mrema',
-            'email' => 'j.mrema@example.test', 'password' => 'a-long-enough-password',
-            'position' => $orgPosition->getUuidString(),
-        ]);
+        $token = $this->tokenFrom('/team/'.$stored->getUuidString());
+        $this->client->request('POST', '/team/'.$stored->getUuidString().'/deactivate', ['_token' => $token]);
 
         self::assertResponseStatusCodeSame(403);
     }
 
-    /** The invite picker offers only the admin's own area's positions. */
-    public function testTheInvitePickerOffersOnlyTheAdminsAreaPositions(): void
+    /** The invite picker is one flat list of every position too. */
+    public function testTheInvitePickerOffersEveryPositionAsOneFlatList(): void
     {
         $north = $this->area('Northern Reserve');
-        $west = $this->area('Western Reserve');
         $this->areaAdminIn($north);
-        $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $north), [PermissionEnum::AreaView->value]);
-        $this->position('Scout', $this->areaDepartment('Anti-Poaching', $west), [PermissionEnum::AreaView->value]);
-        $this->position('Analyst', $this->department('Ecology'), [PermissionEnum::AreaView->value]);
+        $this->position('Ranger', [PermissionEnum::AreaView->value]);
+        $this->position('Scout', [PermissionEnum::AreaView->value]);
+        $this->position('Analyst', [PermissionEnum::AreaView->value]);
         $this->em->flush();
 
         $crawler = $this->client->request('GET', '/team/invite');
         $options = $this->pickerOptions($crawler);
 
         self::assertContains('Ranger', $options);
-        self::assertNotContains('Scout', $options);
-        self::assertNotContains('Analyst', $options);
+        self::assertContains('Scout', $options);
+        self::assertContains('Analyst', $options);
+        self::assertCount(0, $crawler->filter('select[name="position"] optgroup'));
     }
 
     // ---- the unbounded remain unbounded -----------------------------------
 
-    /** An org-level team.manage holder is unbounded: they assign anywhere. */
-    public function testAnOrgLevelTeamManageHolderAssignsToAnyArea(): void
+    /** Somebody placed across the organization is unbounded: they assign anywhere. */
+    public function testAnOrganizationWideHolderAssignsInAnyArea(): void
     {
         $west = $this->area('Western Reserve');
-        // The admin's own position is org-level (no area), so their authority is
-        // org-wide — they may seat somebody in any area's position.
         $orgAdmin = $this->person('Amina', 'Salehe', TeamRoleEnum::Staff);
-        $orgAdmin->setPosition($this->position('Coordinator', $this->department('Administration'), [PermissionEnum::TeamManage->value]));
-        $elsewhere = $this->position('Ranger', $this->areaDepartment('Anti-Poaching', $west), [PermissionEnum::AreaView->value]);
+        $orgAdmin->setPosition($this->position('Coordinator', [PermissionEnum::TeamManage->value]));
+        $this->place($orgAdmin);
+        $ranger = $this->position('Ranger', [PermissionEnum::AreaView->value]);
+        $grace = $this->person('Grace', 'Ndosi');
+        $this->place($grace, [$west]);
+        $this->em->flush();
+        $this->client->loginUser($orgAdmin);
+
+        $token = $this->tokenFrom('/team/'.$grace->getUuidString());
+        $this->client->request('POST', '/team/'.$grace->getUuidString().'/position', [
+            '_token' => $token, 'position' => $ranger->getUuidString(),
+        ]);
+
+        self::assertResponseRedirects();
+        $this->em->clear();
+        self::assertSame('Ranger', $this->em->getRepository(User::class)->findOneBy(['email' => 'g.ndosi@example.test'])?->getPosition()?->getName());
+    }
+
+    /** And they may seat somebody nobody has placed yet, which is how placing starts. */
+    public function testAnOrganizationWideHolderAssignsAnUnplacedPerson(): void
+    {
+        $orgAdmin = $this->person('Amina', 'Salehe', TeamRoleEnum::Staff);
+        $orgAdmin->setPosition($this->position('Coordinator', [PermissionEnum::TeamManage->value]));
+        $this->place($orgAdmin);
+        $ranger = $this->position('Ranger', [PermissionEnum::AreaView->value]);
         $grace = $this->person('Grace', 'Ndosi');
         $this->em->flush();
         $this->client->loginUser($orgAdmin);
 
         $token = $this->tokenFrom('/team/'.$grace->getUuidString());
         $this->client->request('POST', '/team/'.$grace->getUuidString().'/position', [
-            '_token' => $token, 'position' => $elsewhere->getUuidString(),
+            '_token' => $token, 'position' => $ranger->getUuidString(),
         ]);
 
         self::assertResponseRedirects();
-        $this->em->clear();
-        self::assertSame('Anti-Poaching / Ranger', $this->em->getRepository(User::class)->findOneBy(['email' => 'g.ndosi@example.test'])?->getPosition()?->getQualifiedName());
     }
 
     // ---- the cast ---------------------------------------------------------
 
     /**
-     * Sign in as an AREA-X administrator — a Staff member whose team.manage comes
-     * through a position in an area-level department confined to $area, so their
-     * authority-area is $area.
+     * Sign in as an AREA-X administrator — a Staff member holding team.manage
+     * through their position and PLACED at $area, which is where their reach
+     * now comes from.
      */
     private function areaAdminIn(HostArea $area): User
     {
-        $office = $this->areaDepartment('Warden Office', $area);
         $admin = $this->person('Naomi', 'Kileo', TeamRoleEnum::Staff);
-        $admin->setPosition($this->position('Warden', $office, [PermissionEnum::TeamManage->value]));
+        $admin->setPosition($this->position('Warden', [PermissionEnum::TeamManage->value]));
+        $this->place($admin, [$area]);
         $this->em->flush();
         $this->client->loginUser($admin);
 

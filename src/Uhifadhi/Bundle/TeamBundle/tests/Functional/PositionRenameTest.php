@@ -110,7 +110,7 @@ final class PositionRenameTest extends WebTestCaseWithSchema
     private function matrix(): \Symfony\Component\DomCrawler\Crawler
     {
         $this->administrator();
-        $ranger = $this->position('Ranger', $this->department('Protection Service'), ['area.view']);
+        $ranger = $this->position('Ranger', ['area.view']);
         $this->em->flush();
 
         return $this->client->request('GET', '/team/positions?position='.$ranger->getUuidString());

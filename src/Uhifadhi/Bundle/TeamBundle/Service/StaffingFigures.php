@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\TeamBundle\Service;
 
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
-use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 
 /**
@@ -38,7 +37,7 @@ final readonly class StaffingFigures
     public const string PEOPLE = 'staffing.people';
 
     public function __construct(
-        private PositionRepository $positions,
+        private DepartmentMembership $membership,
         private UserRepository $users,
     ) {
     }
@@ -59,11 +58,10 @@ final readonly class StaffingFigures
         $people = 0;
         $seats = 0;
 
-        foreach ($this->positions->findAllOrdered() as $position) {
-            if ($position->getDepartment()?->getId() !== $department->getId()) {
-                continue;
-            }
-
+        // A DEPARTMENT'S POSITIONS ARE THE ONES ITS MEMBERS HOLD. A position
+        // belongs to nobody, so the only honest way to ask which ones a
+        // department has is to ask who is placed in it.
+        foreach ($this->membership->positionsIn($department) as $position) {
             ++$seats;
             $holding = $this->users->countActiveHoldingAnyPosition([$position]);
             $people += $holding;

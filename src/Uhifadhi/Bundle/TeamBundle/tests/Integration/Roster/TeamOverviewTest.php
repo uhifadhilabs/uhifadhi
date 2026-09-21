@@ -61,15 +61,25 @@ final class TeamOverviewTest extends IntegrationTestCase
     /** @var array<string, Department> departments made in this test, before any flush */
     private array $madeDepartments = [];
 
-    /** @param list<PermissionEnum> $permissions */
-    private function position(string $name, string $department, array $permissions = []): Position
+    /**
+     * A DEPARTMENT IS A ROW OF ITS OWN, and no position points at it. The
+     * overview counts departments because an installation has them, not
+     * because positions are filed under them.
+     */
+    private function department(string $name): Department
     {
-        $dept = $this->madeDepartments[$department] ??= new Department()->setName($department);
-        if (null === $dept->getId()) {
-            $this->em->persist($dept);
+        $department = $this->madeDepartments[$name] ??= new Department()->setName($name);
+        if (null === $department->getId()) {
+            $this->em->persist($department);
         }
 
-        $position = (new Position())->setName($name)->setDepartment($dept);
+        return $department;
+    }
+
+    /** @param list<PermissionEnum> $permissions */
+    private function position(string $name, array $permissions = []): Position
+    {
+        $position = (new Position())->setName($name);
         $position->setPermissionValues(
             array_map(static fn (PermissionEnum $p): string => $p->value, $permissions),
             array_map(static fn (PermissionEnum $p): string => $p->value, PermissionEnum::all()),
@@ -120,11 +130,14 @@ final class TeamOverviewTest extends IntegrationTestCase
 
     public function testThePositionsCountNamesItsDepartmentsAndHowManyAreHeld(): void
     {
-        $ranger = $this->position('Ranger', 'Protection Service');
-        $this->position('Analyst', 'Ecology');
-        // A position nobody holds, created before its first person — the twin
-        // the per-department-uniqueness ruling exists for.
-        $this->position('Analyst', 'Protection Service');
+        $this->department('Protection Service');
+        $this->department('Ecology');
+
+        $ranger = $this->position('Ranger');
+        $this->position('Analyst');
+        // A position nobody holds, created before its first person — held and
+        // written down are different facts, and the strip prints both.
+        $this->position('Veterinary Officer');
         $this->person('Grace', 'Ndosi')->setPosition($ranger);
         $this->em->flush();
 
@@ -143,9 +156,9 @@ final class TeamOverviewTest extends IntegrationTestCase
      */
     public function testTheAdministratorCountNamesBothMechanisms(): void
     {
-        $senior = $this->position('Senior Ranger', 'Protection Service', [PermissionEnum::TeamManage]);
-        $liaison = $this->position('Community Liaison Officer', 'Administration', [PermissionEnum::TeamManage]);
-        $plain = $this->position('Ranger', 'Protection Service', [PermissionEnum::AreaView]);
+        $senior = $this->position('Senior Ranger', [PermissionEnum::TeamManage]);
+        $liaison = $this->position('Community Liaison Officer', [PermissionEnum::TeamManage]);
+        $plain = $this->position('Ranger', [PermissionEnum::AreaView]);
 
         $this->person('Naomi', 'Kileo', TeamRoleEnum::SuperAdmin);
         $this->person('Salum', 'Mwaipopo', TeamRoleEnum::Admin);
@@ -196,7 +209,7 @@ final class TeamOverviewTest extends IntegrationTestCase
     {
         $this->person('Naomi', 'Kileo', TeamRoleEnum::SuperAdmin);
         $frank = $this->person('Frank', 'Massawe');
-        $this->person('Grace', 'Ndosi')->setPosition($this->position('Ranger', 'Protection Service'));
+        $this->person('Grace', 'Ndosi')->setPosition($this->position('Ranger'));
         $this->em->flush();
 
         $overview = $this->overview()->build();
@@ -253,7 +266,7 @@ final class TeamOverviewTest extends IntegrationTestCase
      */
     public function testThePaneIsEmptyWhenNobodyNeedsADecision(): void
     {
-        $ranger = $this->position('Ranger', 'Protection Service');
+        $ranger = $this->position('Ranger');
         $this->person('Naomi', 'Kileo', TeamRoleEnum::SuperAdmin);
         $this->person('Asha', 'Mollel', TeamRoleEnum::SuperAdmin);
         $this->person('Grace', 'Ndosi')->setPosition($ranger);

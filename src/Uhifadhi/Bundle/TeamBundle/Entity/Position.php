@@ -20,41 +20,49 @@ use Uhifadhi\Bundle\TeamBundle\Entity\Trait\UuidTrait;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Exception\UnknownPermissionException;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
+use Uhifadhi\Contracts\Access\ScopeKind;
 
 /**
- * A named position that bundles a set of granular permissions. An administrator
- * defines positions and ticks their permissions; every Staff user assigned a
- * position inherits them, and a Staff user with no position holds nothing at
- * all. Super Admin and Admin ignore positions — they hold everything by tier.
+ * WHAT HOLDING IT GRANTS - the concerns and verbs, and which kinds of
+ * placement it allows. It carries no department.
  *
- * A POSITION BELONGS TO A DEPARTMENT, AND ITS NAME IS UNIQUE ONLY INSIDE IT.
- * The previous release enforced `unique(name)` across the whole installation
- * and said in this very docblock that the rule it wanted was department-scoped
- * but could not be written, because a department was somebody else's entity.
- * It is this bundle's entity now ({@see Department}) for exactly that reason: a
- * constraint cannot be spelled across a module boundary. So the index is
- * `unique(department, name)`, and *Ecology / Analyst* and *Protection Service /
- * Analyst* are two jobs that share a word.
+ * PERMISSIONS ARE SET ON POSITIONS; REACH IS SET ON THE PERSON. A position is
+ * written once and held by as many people as the work needs - every Sergeant
+ * grants the same things. Where each of those Sergeants may exercise it is a
+ * separate fact, recorded against each person ({@see Placement}). So renaming
+ * a position or adding a verb changes everybody who holds it at once, and
+ * moving somebody between areas changes nobody but them.
  *
- * The consequence reaches every screen and is not negotiable there: a position
- * is written DEPARTMENT-FIRST, never as a bare name. A bare "Analyst" is not a
- * shorter way of saying the same thing — it is a different and ambiguous thing.
+ * A DEPARTMENT IS A PLACEMENT, NOT AN OWNER. A position belonging to a
+ * department was the wrong shape: a data scientist supporting Ecology and
+ * Protection is still ONE position, placed against two departments, and under
+ * the old shape they needed either a second position or a department of
+ * convenience invented to hold them. So the department left this class, and
+ * with it the department-scoped name: THE NAME IS UNIQUE ACROSS THE WHOLE
+ * ORGANIZATION. There is one Sergeant, not one per department, and a reader
+ * of a person's record never has to ask which one.
  *
- * THE DEPARTMENT IS NULLABLE, and the null is a state rather than an unfinished
- * field: a position created before anybody decided which department owns it is
- * a position that exists, and the roster's Unassigned band is where its holders
- * appear. Postgres treats NULL as distinct in a unique index, so two
- * department-less positions may share a name — which is the honest behaviour
- * for rows nobody has filed yet, and it resolves itself the moment they are.
+ * ITS ONE LEVER OVER REACH IS {@see $allowedKinds}, and it is a lever over
+ * KINDS, never over values. A position meant to be local cannot be widened by
+ * mistake when somebody is assigned, because the wider kind is not on offer;
+ * one meant to be organization-wide cannot be quietly narrowed for one person,
+ * for the same reason. The two kinds a PLACEMENT can be made at are
+ * organization and area - the ground - because that is what a placement says.
+ * Department is the placement's other dimension and is not gated here, and
+ * {@see ScopeKind::Own} is a thing a CONCERN offers, not a way of placing
+ * somebody.
  */
 #[ORM\Entity(repositoryClass: PositionRepository::class)]
 #[ORM\Table(name: 'team_position')]
-#[ORM\UniqueConstraint(name: 'uniq_team_position_department_name', fields: ['department', 'name'])]
+#[ORM\UniqueConstraint(name: 'uniq_team_position_name', fields: ['name'])]
 #[ORM\HasLifecycleCallbacks]
 class Position
 {
     use TimestampableTrait;
     use UuidTrait;
+
+    /** The kinds a placement can actually be made at. See the class banner. */
+    public const array PLACEMENT_KINDS = [ScopeKind::Organization, ScopeKind::Area];
 
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -64,10 +72,37 @@ class Position
     #[ORM\Column(length: 120)]
     private ?string $name = null;
 
-    /** Nullable: the Unassigned state is real. See the class banner. */
-    #[ORM\ManyToOne(targetEntity: Department::class, inversedBy: 'positions')]
-    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
-    private ?Department $department = null;
+    /**
+     * HOW MANY PEOPLE MAY HOLD IT, and null is unlimited rather than unknown.
+     *
+     * Some posts are singular and some are not: Head of Protection is one
+     * seat, Data Analyst is many. Assigning somebody to a full position is
+     * refused, and the refusal names who already holds it - which is the
+     * whole point of storing a number rather than a flag.
+     */
+    #[ORM\Column(name: 'seat_count', nullable: true)]
+    private ?int $seatCount = null;
+
+    /**
+     * WHICH KINDS OF PLACEMENT IT ALLOWS - organization, area, or both.
+     *
+     * Stored as the scope kinds' own values so the column reads, and never
+     * empty: a position nobody can be placed at is a position nobody can
+     * hold.
+     *
+     * @var list<string>
+     */
+    #[ORM\Column(name: 'allowed_kinds', type: Types::JSON)]
+    private array $allowedKinds = [ScopeKind::Area->value];
+
+    /**
+     * The granted permissions, stored as plain strings - core values and
+     * module-declared ones alike, in the order they were granted.
+     *
+     * @var list<string>
+     */
+    #[ORM\Column(type: Types::JSON)]
+    private array $permissions = [];
 
     /**
      * THE DAY THIS POST FELL EMPTY, and null while somebody stands in it.
@@ -80,15 +115,6 @@ class Position
      */
     #[ORM\Column(name: 'vacant_since', type: 'datetime_immutable', nullable: true)]
     private ?\DateTimeImmutable $vacantSince = null;
-
-    /**
-     * The granted permissions, stored as plain strings — core values and
-     * module-declared ones alike, in the order they were granted.
-     *
-     * @var list<string>
-     */
-    #[ORM\Column(type: Types::JSON)]
-    private array $permissions = [];
 
     /** Reserved: a position whose label is fixed. Unused today. */
     #[ORM\Column]
@@ -123,38 +149,79 @@ class Position
         return $this;
     }
 
-    public function getDepartment(): ?Department
+    /** Null is unlimited. */
+    public function getSeatCount(): ?int
     {
-        return $this->department;
+        return $this->seatCount;
     }
 
-    public function setDepartment(?Department $department): static
+    /**
+     * @throws \InvalidArgumentException when the count is not a number of seats
+     */
+    public function setSeatCount(?int $seatCount): static
     {
-        $this->department = $department;
+        if (null !== $seatCount && $seatCount < 1) {
+            throw new \InvalidArgumentException(\sprintf('A position has at least one seat, or unlimited seats. %d is neither - to close a position, deactivate it rather than seating nobody.', $seatCount));
+        }
+
+        $this->seatCount = $seatCount;
 
         return $this;
     }
 
-    /**
-     * The way this position is written anywhere a person reads it:
-     * "Protection Service / Analyst", or the bare name where nothing owns it
-     * yet. Here rather than in a template, because every screen has to spell it
-     * the same way and a bare name is ambiguous by construction.
-     */
-    public function getQualifiedName(): string
+    public function hasUnlimitedSeats(): bool
     {
-        $name = $this->name ?? '';
+        return null === $this->seatCount;
+    }
 
-        return null !== $this->department
-            ? $this->department->getName().' / '.$name
-            : $name;
+    /** @return list<ScopeKind> */
+    public function getAllowedKinds(): array
+    {
+        $kinds = [];
+        foreach ($this->allowedKinds as $value) {
+            $kind = ScopeKind::tryFrom($value);
+            if (null !== $kind) {
+                $kinds[] = $kind;
+            }
+        }
+
+        return $kinds;
     }
 
     /**
-     * THE RAW GRANTED VALUES — the only reading surface, because it is the only
-     * one that can tell the truth. An enum-typed accessor drops every
-     * module-declared permission on the floor, since a module's value is not a
-     * case of an enum this bundle owns.
+     * @param list<ScopeKind> $kinds
+     *
+     * @throws \InvalidArgumentException when a kind is not one a placement can be made at
+     */
+    public function setAllowedKinds(array $kinds): static
+    {
+        if ([] === $kinds) {
+            throw new \InvalidArgumentException('A position allows at least one kind of placement. One that allows none is one nobody can be placed at, and therefore one nobody can hold.');
+        }
+
+        $values = [];
+        foreach ($kinds as $kind) {
+            if (!\in_array($kind, self::PLACEMENT_KINDS, true)) {
+                throw new \InvalidArgumentException(\sprintf('A placement is made at the organization or at named areas, so "%s" is not a kind a position can allow. Department is the placement\'s other dimension and is not gated by the position; "own" is a scope a concern offers, not a way of placing somebody.', $kind->value));
+            }
+            $values[$kind->value] = true;
+        }
+
+        $this->allowedKinds = array_keys($values);
+
+        return $this;
+    }
+
+    public function allows(ScopeKind $kind): bool
+    {
+        return \in_array($kind->value, $this->allowedKinds, true);
+    }
+
+    /**
+     * THE RAW GRANTED VALUES - the only reading surface, because it is the
+     * only one that can tell the truth. An enum-typed accessor drops every
+     * module-declared permission on the floor, since a module's value is not
+     * a case of an enum this bundle owns.
      *
      * @return list<string>
      */
@@ -166,35 +233,28 @@ class Position
     /**
      * THE ONLY WRITE PATH, AND IT VALIDATES.
      *
-     * A setter taking the core enum alone is the obvious one to reach for and
-     * is deliberately absent: it can only discard what a module declared, so an
-     * administrator would tick a module's row, save, and watch it come back
-     * unticked with nothing anywhere saying why.
-     *
      * The live catalogue is a REQUIRED second argument rather than something
      * this entity fetches, because an entity that reached for a service to
-     * validate itself would be an entity you cannot construct in a test — and
+     * validate itself would be an entity you cannot construct in a test - and
      * because making it required is what stops the unvalidated call from
      * existing at all.
      *
      * WHAT IS ACCEPTED is the live catalogue UNION the strings this position
      * already holds, and the union is the design:
      *
-     *   · the catalogue half makes an unknown NEW string fail loudly;
-     *   · the already-held half is the prune-not-purge ruling in code. A module
-     *     uninstalled last week left grants behind in positions' JSON; those
-     *     values are in nobody's catalogue now, and saving an unrelated change
-     *     to the position must not quietly strip them. Editing a position is
-     *     not a migration. They stay, they stop resolving, the matrix draws
-     *     them muted, and revoking one still works — it is a grant, not a
+     *   - the catalogue half makes an unknown NEW string fail loudly;
+     *   - the already-held half is prune-not-purge in code. A module
+     *     uninstalled last week left grants behind in positions' JSON; saving
+     *     an unrelated change must not quietly strip them. Editing a position
+     *     is not a migration. They stay, they stop resolving, the matrix draws
+     *     them muted, and revoking one still works - it is a grant, not a
      *     fixture.
      *
      * @param list<string> $values    what the position should hold after this call
-     * @param list<string> $catalogue every permission value this installation
-     *                                currently offers ({@see \Uhifadhi\Bundle\TeamBundle\Service\PermissionCatalogue::values()})
+     * @param list<string> $catalogue every permission value this installation currently offers
      *
-     * @throws UnknownPermissionException if a submitted value is neither in the
-     *                                    catalogue nor already granted here
+     * @throws UnknownPermissionException if a submitted value is neither in
+     *                                    the catalogue nor already granted here
      */
     public function setPermissionValues(array $values, array $catalogue): static
     {
@@ -219,7 +279,7 @@ class Position
         return \in_array($value, $this->permissions, true);
     }
 
-    /** A convenience for the one caller that genuinely holds an enum case: the voter's own tests and core code. */
+    /** A convenience for the one caller that genuinely holds an enum case: core code and its tests. */
     public function hasPermission(PermissionEnum $permission): bool
     {
         return $this->hasPermissionValue($permission->value);
@@ -239,6 +299,6 @@ class Position
 
     public function __toString(): string
     {
-        return $this->getQualifiedName();
+        return $this->name ?? '';
     }
 }

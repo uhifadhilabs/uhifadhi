@@ -39,6 +39,7 @@ use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
 use Uhifadhi\Bundle\TeamBundle\Service\PermissionCatalogue;
+use Uhifadhi\Bundle\TeamBundle\Service\DepartmentMembership;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionService;
 use Uhifadhi\Bundle\TeamBundle\Widget\PositionWidgets;
 use Uhifadhi\Contracts\Entity\UserInterface as ModuleUserInterface;
@@ -75,6 +76,7 @@ final readonly class PositionController
         private Environment $twig,
         private PositionRepository $positions,
         private DepartmentRepository $departments,
+        private DepartmentMembership $membership,
         private UserRepository $users,
         private PermissionCatalogue $catalogue,
         private PositionService $positionWrites,
@@ -113,29 +115,20 @@ final readonly class PositionController
             return $this->back($request, 'A position needs a name.', 'error');
         }
 
-        $department = $this->department(trim((string) $request->request->get('department')));
-
-        // §5.6(b): a bounded (area-X) administrator may create a position only
-        // under a department their authority reaches — an area-level one in their
-        // own area. Filing under an org-level department, another area's, or none
-        // at all (a loose position) files work past their boundary. A tier or
-        // org-level holder is unbounded and passes.
-        $this->assertMayFile($department);
-
         try {
-            $position = $this->positionWrites->create($name, $department);
+            $position = $this->positionWrites->create($name);
         } catch (NameNotUniqueException) {
             // The index would have said this in SQL. The person who typed the
-            // name wants the sentence — and the sentence has to name the
-            // DEPARTMENT, because the same word in another one is fine.
+            // name wants the sentence — and the sentence says ORGANIZATION,
+            // because a position belongs to no department and there is one of
+            // each name.
             return $this->back($request, \sprintf(
-                '%s already has a position called “%s”. A name is unique inside its department and nowhere else, so the same word in another department is fine.',
-                $department?->getName() ?? 'The unassigned group',
+                'This organization already has a position called “%s”. A position belongs to no department, so its name is unique across the whole organization — rename one of them.',
                 $name,
             ), 'error');
         }
 
-        return $this->back($request, \sprintf('“%s” exists. It grants nothing until you tick something.', $position->getQualifiedName()));
+        return $this->back($request, \sprintf('“%s” exists. It grants nothing until you tick something.', (string) $position->getName()));
     }
 
     /**
@@ -177,7 +170,7 @@ final readonly class PositionController
 
         return $this->back($request, \sprintf(
             '“%s” now holds %d permission%s, and the change reaches %d %s.',
-            $position->getQualifiedName(),
+            (string) $position->getName(),
             \count($granted),
             1 === \count($granted) ? '' : 's',
             $reaches,
@@ -192,10 +185,6 @@ final readonly class PositionController
         $position = $this->position($uuid);
         $this->assertCsrf($request);
 
-        // §5.6(b): a bounded administrator may rename a position only where they
-        // could have created it — under a department their authority reaches.
-        $this->assertMayFile($position->getDepartment());
-
         $name = trim((string) $request->request->get('name'));
         if ('' === $name) {
             return $this->back($request, 'A position needs a name.', 'error', $position);
@@ -204,7 +193,7 @@ final readonly class PositionController
         try {
             $this->positionWrites->rename($position, $name);
         } catch (NameNotUniqueException) {
-            return $this->back($request, \sprintf('That department already has a position called “%s”.', $name), 'error');
+            return $this->back($request, \sprintf('This organization already has a position called “%s”.', $name), 'error');
         }
 
         return $this->back($request, 'Renamed.', 'success', $position);
@@ -235,20 +224,24 @@ final readonly class PositionController
             $holders[$position->getUuidString() ?? ''] = $this->users->countActiveHoldingAnyPosition([$position]);
         }
 
+        $departments = $this->departments->findAllOrdered();
+        $byDepartment = [];
+        foreach ($departments as $department) {
+            $byDepartment[$department->getUuidString() ?? ''] = $this->membership->positionsIn($department);
+        }
+
         return [
             'catalogue' => $this->catalogue->all(),
             'grouped' => $this->catalogue->groupedByUmbrella(),
             'silentModules' => $this->catalogue->silentModules(),
             'moduleNames' => $this->catalogue->moduleNames(),
             'positions' => $positions,
-            'groupedPositions' => $this->positions->findAllGroupedByDepartment(),
-            'departments' => $this->departments->findAllOrdered(),
-            // §5.6(b): what the create picker may file INTO — every department for
-            // an unbounded administrator, only the area-level ones in their own
-            // area for a bounded (area-X) one. The loose "no department" option is
-            // a filing with no scope, so a bounded administrator is not offered it.
-            'creatable' => $this->creatableDepartments(),
-            'canFileLoose' => $this->authority->reachesDepartment(null),
+            'departments' => $departments,
+            // A DEPARTMENT'S POSITIONS ARE THE ONES ITS MEMBERS HOLD. A
+            // position belongs to nobody, so a widget that reads by
+            // department reads the derivation rather than a column that no
+            // longer exists.
+            'positionsByDepartment' => $byDepartment,
             'selected' => $selected,
             'holders' => $holders,
             'orphans' => $this->orphans($positions),
@@ -327,50 +320,6 @@ final readonly class PositionController
         $chosen = array_values(array_filter($granted, static fn (string $value): bool => \in_array($value, $grantable, true)));
 
         return array_values(array_unique([...$chosen, ...$frozen]));
-    }
-
-    /**
-     * THE DEPARTMENTS THE CREATE PICKER MAY FILE INTO (§5.6(b)) — every department
-     * for an unbounded administrator, only the area-level ones the bounded (area-X)
-     * administrator's authority reaches. The org-level and other-area departments
-     * the whole org chart still draws (the widgets read `departments`) drop out of
-     * the picker, so the form offers only real targets.
-     *
-     * @return list<Department>
-     */
-    private function creatableDepartments(): array
-    {
-        return array_values(array_filter(
-            $this->departments->findAllOrdered(),
-            fn (Department $department): bool => $this->authority->reachesDepartment($department),
-        ));
-    }
-
-    /**
-     * REFUSE A POSITION FILED PAST THE ADMINISTRATOR'S BOUNDARY (§5.6(b)). A tier
-     * or org-level administrator is unbounded and may file anywhere; a bounded
-     * (area-X) one may create or rename a position only under an area-level
-     * department in their own area — never an org-level one, another area's, or no
-     * department at all. {@see AreaAuthority::reachesDepartment()} computes the
-     * boundary; this is the 403 behind the picker the create form already narrows.
-     */
-    private function assertMayFile(?Department $department): void
-    {
-        if (!$this->authority->reachesDepartment($department)) {
-            throw new AccessDeniedException('An area administrator may create or rename positions only under an area-level department in their own area.');
-        }
-    }
-
-    private function department(string $uuid): ?Department
-    {
-        if ('' === $uuid || !Uuid::isValid($uuid)) {
-            // NULLABLE, AND THE NULL IS A STATE. A position created before
-            // anybody decided which department owns it is a position that
-            // exists, and its holders show in the roster's Unassigned band.
-            return null;
-        }
-
-        return $this->departments->findOneByUuid(Uuid::fromString($uuid));
     }
 
     private function position(string $uuid): Position

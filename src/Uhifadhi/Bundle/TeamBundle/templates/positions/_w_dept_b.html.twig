@@ -1,6 +1,10 @@
 {# DEPT·B — one department at a time, chosen by a chip row that ALWAYS STATES
    THE SCOPE. A filtered list that does not say what it is filtered to is a list
-   somebody reads as the whole thing. #}
+   somebody reads as the whole thing.
+
+   A DEPARTMENT'S POSITIONS ARE THE ONES ITS MEMBERS HOLD. The position itself
+   belongs to nobody, so the chip counts and the filtered list both read the
+   derivation the controller hands in rather than a column on the position. #}
 {% import '@Team/positions/_bits.html.twig' as pm %}
 
 <div class="c" data-pm="dept-b">
@@ -11,7 +15,7 @@
         <a class="fchip{{ chosen ? '' : ' on' }}" href="{{ path('team_positions') }}">All <span class="n">{{ positions|length }}</span></a>
         {% for department in departments %}
             <a class="fchip{{ chosen == department.uuidString ? ' on' : '' }}" href="{{ path('team_positions', {department: department.uuidString}) }}">
-                {{ department.name }} <span class="n">{{ department.positions|length }}</span>
+                {{ department.name }} <span class="n">{{ positionsByDepartment[department.uuidString]|default([])|length }}</span>
             </a>
         {% endfor %}
         <span class="tm-shown">
@@ -24,12 +28,11 @@
         <table class="tbl">
             <thead><tr><th>Position</th><th>Department</th><th>Holders</th><th></th></tr></thead>
             <tbody>
-                {# The inline `for … if` was removed in Twig 3. #}
-                {% set shown = chosen ? positions|filter(p => p.department and p.department.uuidString == chosen) : positions %}
+                {% set shown = chosen ? positionsByDepartment[chosen]|default([]) : positions %}
                 {% for position in shown %}
                     <tr>
                         <td><b>{{ position.name }}</b></td>
-                        <td>{% if position.department %}<span class="dtag"><i class="dot"></i>{{ position.department.name }}</span>{% else %}<span class="dtag un"><i class="dot un"></i>none</span>{% endif %}</td>
+                        <td><span class="dtag"><i class="dot"></i>the organization</span></td>
                         <td>{{ holders[position.uuidString]|default(0) }}</td>
                         <td class="tm-acts"><a class="open-btn" href="{{ path('team_positions', {position: position.uuidString}) }}">Edit</a></td>
                     </tr>

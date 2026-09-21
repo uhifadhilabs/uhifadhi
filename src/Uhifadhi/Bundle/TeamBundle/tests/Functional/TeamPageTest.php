@@ -17,7 +17,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-use Uhifadhi\Bundle\TeamBundle\Entity\Department;
+use Uhifadhi\Bundle\TeamBundle\Entity\Placement;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
@@ -87,10 +87,17 @@ final class TeamPageTest extends WebTestCase
         return $user;
     }
 
-    /** @param list<PermissionEnum> $permissions */
-    private function position(string $name, Department $department, array $permissions = []): Position
+    /**
+     * A POSITION CARRIES NO DEPARTMENT. It used to take one and its name was
+     * unique only inside it; the ruling made the name unique across the
+     * organization, so the argument is gone from the signature rather than
+     * ignored.
+     *
+     * @param list<PermissionEnum> $permissions
+     */
+    private function position(string $name, array $permissions = []): Position
     {
-        $position = (new Position())->setName($name)->setDepartment($department);
+        $position = (new Position())->setName($name);
         $position->setPermissionValues(
             array_map(static fn (PermissionEnum $p): string => $p->value, $permissions),
             array_map(static fn (PermissionEnum $p): string => $p->value, PermissionEnum::all()),
@@ -100,20 +107,11 @@ final class TeamPageTest extends WebTestCase
         return $position;
     }
 
-    private function department(string $name): Department
-    {
-        $department = (new Department())->setName($name);
-        $this->em->persist($department);
-
-        return $department;
-    }
-
     /** A settled installation: everybody arrived, everybody holds something, two Super Admins. */
     private function settled(): User
     {
-        $protection = $this->department('Protection Service');
-        $senior = $this->position('Senior Ranger', $protection, [PermissionEnum::TeamManage, PermissionEnum::AreaView]);
-        $ranger = $this->position('Ranger', $protection, [PermissionEnum::AreaView]);
+        $senior = $this->position('Senior Ranger', [PermissionEnum::TeamManage, PermissionEnum::AreaView]);
+        $ranger = $this->position('Ranger', [PermissionEnum::AreaView]);
 
         $naomi = $this->person('Naomi', 'Kileo', TeamRoleEnum::SuperAdmin);
         $this->person('Asha', 'Mollel', TeamRoleEnum::SuperAdmin);
@@ -131,9 +129,16 @@ final class TeamPageTest extends WebTestCase
      */
     public function testAStaffMemberHoldingTeamManageReachesThePage(): void
     {
-        $protection = $this->department('Protection Service');
-        $senior = $this->position('Senior Ranger', $protection, [PermissionEnum::TeamManage]);
+        $senior = $this->position('Senior Ranger', [PermissionEnum::TeamManage]);
         $grace = $this->person('Grace', 'Ndosi')->setPosition($senior);
+        // A PERMISSION IS ONLY HELD SOMEWHERE. The position says what Grace
+        // may do and the placement says where; the model fails closed, so
+        // somebody placed nowhere reaches nothing however much they hold.
+        $placement = new Placement();
+        $placement->acrossTheOrganization();
+        $placement->acrossAllDepartments();
+        $this->em->persist($placement);
+        $grace->setPlacement($placement);
         $this->person('Naomi', 'Kileo', TeamRoleEnum::SuperAdmin);
         $this->em->flush();
 
@@ -208,7 +213,7 @@ final class TeamPageTest extends WebTestCase
     {
         $naomi = $this->person('Naomi', 'Kileo', TeamRoleEnum::SuperAdmin);
         $this->person('Grace', 'Ndosi')->setPosition(
-            $this->position('Ranger', $this->department('Protection Service'), [PermissionEnum::AreaView]),
+            $this->position('Ranger', [PermissionEnum::AreaView]),
         );
         $this->em->flush();
 
@@ -221,10 +226,16 @@ final class TeamPageTest extends WebTestCase
     }
 
     /**
-     * THE THREE-LINE POSITION CELL: the qualified name, what it grants, and the
-     * administrator mark. Never a bare name — two departments may own the word.
+     * THE POSITION CELL: the position's name, what it grants, and the
+     * administrator mark.
+     *
+     * IT USED TO BE QUALIFIED BY A DEPARTMENT, because a position's name was
+     * unique only inside one and "Analyst" on its own was ambiguous. A position
+     * belongs to no department now and its name is unique across the
+     * organization, so the name IS the whole identification and there is no
+     * second line to qualify it with.
      */
-    public function testThePositionCellIsQualifiedAndSaysWhatItGrants(): void
+    public function testThePositionCellNamesThePositionAndSaysWhatItGrants(): void
     {
         $naomi = $this->settled();
 
@@ -232,8 +243,8 @@ final class TeamPageTest extends WebTestCase
         $crawler = $this->client->request('GET', '/team');
 
         $cell = $crawler->filter('.tm-pos.qual')->first();
-        self::assertSame('Protection Service', $cell->filter('.q')->text());
         self::assertSame('Senior Ranger', $cell->filter('.n')->text());
+        self::assertCount(0, $cell->filter('.q'), 'a name unique across the organization needs no qualifier');
 
         self::assertStringContainsString('2 granted', $crawler->html());
         // Scoped to the table: the tier explainer below it also spells
@@ -295,25 +306,29 @@ final class TeamPageTest extends WebTestCase
     }
 
     /**
-     * THE POSITION FILTER IS GROUPED BY DEPARTMENT, and it has to be: two
-     * positions may be called "Analyst", and a flat list would offer the same
-     * word twice with no way to tell which is which.
+     * THE POSITION FILTER IS ONE FLAT LIST, each name offered once.
+     *
+     * It was grouped by department, and had to be while two positions could
+     * both be called "Analyst" — a flat list would then have offered the same
+     * word twice with no way to tell which was which. The name is unique
+     * across the organization now, so the grouping has nothing left to
+     * disambiguate and the optgroups are gone.
      */
-    public function testThePositionFilterIsGroupedByDepartment(): void
+    public function testThePositionFilterIsOneFlatListWithEveryNameOnce(): void
     {
         $naomi = $this->settled();
-        $ecology = $this->department('Ecology');
-        $this->position('Analyst', $ecology);
+        $this->position('Analyst');
         $this->em->flush();
 
         $this->client->loginUser($naomi);
         $crawler = $this->client->request('GET', '/team');
 
-        $groups = $crawler->filter('select[name="position"] optgroup');
-        self::assertGreaterThanOrEqual(2, $groups->count());
-        self::assertContains('Ecology', $groups->each(static fn ($g): string => $g->attr('label') ?? ''));
-        // And "— no position —" is a value, because holding nothing is a state.
-        self::assertStringContainsString('no position', $crawler->filter('select[name="position"]')->text());
+        $select = $crawler->filter('select[name="position"]');
+        self::assertCount(0, $select->filter('optgroup'));
+        self::assertSame(
+            ['Any position', 'Analyst', 'Ranger', 'Senior Ranger', '— no position —'],
+            $select->filter('option')->each(static fn (\Symfony\Component\DomCrawler\Crawler $c): string => $c->text()),
+        );
     }
 
     /**

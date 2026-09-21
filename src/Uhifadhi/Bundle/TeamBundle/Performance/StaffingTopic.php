@@ -16,8 +16,8 @@ namespace Uhifadhi\Bundle\TeamBundle\Performance;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Model\DepartmentMark;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
-use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
+use Uhifadhi\Bundle\TeamBundle\Service\DepartmentMembership;
 use Uhifadhi\Bundle\TeamBundle\Service\PerformanceHistory;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionVacancy;
 use Uhifadhi\Bundle\TeamBundle\Service\StaffingFigures;
@@ -78,7 +78,7 @@ final readonly class StaffingTopic implements PerformanceTopicProviderInterface,
         private DepartmentRepository $departments,
         private StaffingFigures $staffing,
         private PerformanceHistory $history,
-        private PositionRepository $positions,
+        private DepartmentMembership $membership,
         private UserRepository $users,
         private PositionVacancy $vacancy,
     ) {
@@ -166,24 +166,25 @@ final readonly class StaffingTopic implements PerformanceTopicProviderInterface,
         $now = new \DateTimeImmutable();
 
         $raised = [];
-        foreach ($this->positions->findAllOrdered() as $position) {
-            $department = $position->getDepartment();
-            if (null === $department || !$this->holds($departments, $department) || null === $position->getVacantSince()) {
-                continue;
-            }
+        foreach ($departments as $department) {
+            foreach ($this->membership->positionsIn($department) as $position) {
+                if (null === $position->getVacantSince()) {
+                    continue;
+                }
 
-            $days = $this->vacancy->daysVacant($position, $now);
-            if (null === $days || $days < self::THRESHOLD_DAYS) {
-                continue;
-            }
+                $days = $this->vacancy->daysVacant($position, $now);
+                if (null === $days || $days < self::THRESHOLD_DAYS) {
+                    continue;
+                }
 
-            $raised[] = [$days, new TopicDecision(
-                what: \sprintf('%s has stood empty %d days', (string) $position->getName(), $days),
-                ask: 'Fill the post, or close it — an empty post is work nobody is doing or a post nobody needs.',
-                departmentName: (string) $department->getName(),
-                departmentMark: DepartmentMark::of((string) $department->getName()),
-                tone: MovementTone::Bad,
-            )];
+                $raised[] = [$days, new TopicDecision(
+                    what: \sprintf('%s has stood empty %d days', (string) $position->getName(), $days),
+                    ask: 'Fill the post, or close it — an empty post is work nobody is doing or a post nobody needs.',
+                    departmentName: (string) $department->getName(),
+                    departmentMark: DepartmentMark::of((string) $department->getName()),
+                    tone: MovementTone::Bad,
+                )];
+            }
         }
 
         // WORST FIRST, which here is longest empty: a post nobody has
@@ -331,23 +332,26 @@ final readonly class StaffingTopic implements PerformanceTopicProviderInterface,
     {
         $empty = [];
         $undated = 0;
-        foreach ($this->positions->findAllOrdered() as $position) {
-            $department = $position->getDepartment();
-            if (null === $department || !$this->holds($departments, $department)) {
-                continue;
-            }
+        $seen = [];
+        foreach ($departments as $department) {
+            foreach ($this->membership->positionsIn($department) as $position) {
+                if (isset($seen[(int) $position->getId()])) {
+                    continue;
+                }
+                $seen[(int) $position->getId()] = true;
 
-            if (null === $position->getVacantSince()) {
-                // HELD, OR EMPTY SINCE BEFORE ANYBODY WROTE THE DAY DOWN.
-                // Which it is, is answered by whether somebody holds it.
-                if (0 === $this->users->countActiveHoldingAnyPosition([$position])) {
-                    ++$undated;
+                if (null === $position->getVacantSince()) {
+                    // HELD, OR EMPTY SINCE BEFORE ANYBODY WROTE THE DAY DOWN.
+                    // Which it is, is answered by whether somebody holds it.
+                    if (0 === $this->users->countActiveHoldingAnyPosition([$position])) {
+                        ++$undated;
+                    }
+
+                    continue;
                 }
 
-                continue;
+                $empty[] = $position;
             }
-
-            $empty[] = $position;
         }
 
         $over = $this->vacancy->overThreshold($empty, self::THRESHOLD_DAYS);
@@ -364,18 +368,6 @@ final readonly class StaffingTopic implements PerformanceTopicProviderInterface,
                 : \sprintf('unfilled past %d days · %d more stood empty before the day was recorded', self::THRESHOLD_DAYS, $undated),
             polarity: ColumnPolarity::Down,
         );
-    }
-
-    /** @param list<Department> $departments */
-    private function holds(array $departments, Department $department): bool
-    {
-        foreach ($departments as $one) {
-            if ($one->getId() === $department->getId()) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     /**

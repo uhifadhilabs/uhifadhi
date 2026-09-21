@@ -332,21 +332,58 @@ class User implements ModuleUserInterface, PasswordAuthenticatedUserInterface, U
     }
 
     /**
-     * THE DEPARTMENT THIS PERSON BELONGS TO — reached through their position, and
-     * only through it. There is no `user.department` column: a person holds ONE
-     * position (this is a single association, not a collection — multi-position
-     * was rejected), a position is filed under at most one department, and that
-     * chain is the department. Null all the way down is honest — a person with no
-     * position, or a position filed under nothing, belongs to no department and
-     * reads as Unassigned.
+     * WHERE THIS PERSON IS PLACED - the ground and the departments, and the
+     * second half of every permission check.
      *
-     * This is the same chain the area-aware voter will read a Staff member's
-     * authority-area from once it is wired (department → scope → area); today it
-     * only says where on the roster the person is banded.
+     * IT IS THEIRS, NOT THEIR POSITION'S. The position says what holding it
+     * grants; this says how far that reaches. So moving somebody between
+     * areas changes nobody but them, and two people holding the same position
+     * can reach two different amounts of ground.
+     *
+     * NULL IS A REAL STATE AND IT FAILS CLOSED: somebody who has not been
+     * placed reaches no ground, so every check about ground refuses. It is
+     * not the same as being placed across the organization, and nothing here
+     * turns one into the other.
      */
-    public function getDepartment(): ?Department
+    #[ORM\OneToOne(cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[ORM\JoinColumn(name: 'placement_id', nullable: true, onDelete: 'SET NULL')]
+    private ?Placement $placement = null;
+
+    public function getPlacement(): ?Placement
     {
-        return $this->position?->getDepartment();
+        return $this->placement;
+    }
+
+    public function setPlacement(?Placement $placement): static
+    {
+        $this->placement = $placement;
+
+        return $this;
+    }
+
+    /**
+     * THE DEPARTMENTS THIS PERSON IS IN - read off the placement, and nowhere
+     * else. A department is a placement, not something a position owns, so
+     * membership follows where somebody was put.
+     *
+     * Three answers, and they are different facts: null means every
+     * department (placed across all of them); an empty list means none, which
+     * is what an unplaced person has; a list is the named set.
+     *
+     * @return list<Department>|null
+     */
+    public function getDepartments(): ?array
+    {
+        return null === $this->placement ? [] : $this->placement->getDepartments();
+    }
+
+    /**
+     * THE DEPARTMENTS IN ONE FRAGMENT, for a row with one cell for them. Null
+     * where the person is in none - which is what an unplaced person is.
+     */
+    public function getDepartmentLabel(): ?string
+    {
+        return $this->placement?->departmentsLabel();
     }
 
     public function isActive(): bool

@@ -18,6 +18,7 @@ use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 use Uhifadhi\Bundle\TeamBundle\Command\PerformanceSnapshotCommand;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
+use Uhifadhi\Bundle\TeamBundle\Entity\Placement;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
@@ -109,29 +110,50 @@ final class PerformanceSnapshotCommandTest extends IntegrationTestCase
         return $tester->getDisplay();
     }
 
-    /** One department, two positions, one of them held. */
+    /**
+     * ONE DEPARTMENT, TWO POSITIONS, ONE OF THEM STOOD IN.
+     *
+     * A DEPARTMENT'S POSITIONS ARE THE ONES ITS MEMBERS HOLD. A position used
+     * to be filed under a department, so a department's posts were a column;
+     * the ruling made a department a placement, so they are derived from the
+     * people placed in it — and the second post is here because the ranger
+     * who held it was deactivated, which is exactly what a vacancy is.
+     */
     private function aStaffedDepartment(): Department
     {
         $ecology = new Department()->setName('Ecology');
         $this->em->persist($ecology);
 
         $permissions = array_map(static fn (PermissionEnum $p): string => $p->value, PermissionEnum::all());
-        $held = new Position()->setName('Lead Ecologist')->setDepartment($ecology);
+        $held = new Position()->setName('Lead Ecologist');
         $held->setPermissionValues([], $permissions);
-        $vacant = new Position()->setName('Field Ecologist')->setDepartment($ecology);
+        $vacant = new Position()->setName('Field Ecologist');
         $vacant->setPermissionValues([], $permissions);
         $this->em->persist($held);
         $this->em->persist($vacant);
 
-        $person = new User()
-            ->setEmail('a.mollel@example.test')->setFirstName('Asha')->setLastName('Mollel')
-            ->setPassword('x')->setVerified(true);
-        $person->setPosition($held);
-        $this->em->persist($person);
+        $this->placedInEcology('Asha', 'Mollel', $held, $ecology);
+        $this->placedInEcology('Baraka', 'Sawe', $vacant, $ecology)->deactivate();
 
         $this->em->flush();
 
         return $ecology;
+    }
+
+    /** Somebody holding a position and placed in this one department. */
+    private function placedInEcology(string $first, string $last, Position $position, Department $department): User
+    {
+        $placement = new Placement()->acrossTheOrganization()->inDepartments([$department]);
+        $this->em->persist($placement);
+
+        $person = new User()
+            ->setEmail(strtolower($first[0].'.'.$last).'@example.test')
+            ->setFirstName($first)->setLastName($last)
+            ->setPassword('x')->setVerified(true)
+            ->setPosition($position)->setPlacement($placement);
+        $this->em->persist($person);
+
+        return $person;
     }
 
     private function history(): PerformanceHistory

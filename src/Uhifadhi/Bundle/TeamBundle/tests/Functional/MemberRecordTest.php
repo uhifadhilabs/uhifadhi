@@ -389,7 +389,7 @@ final class MemberRecordTest extends WebTestCaseWithSchema
     public function testTheEffectiveLedgerSaysWhyOnEveryRow(): void
     {
         $this->withSuccessor();
-        $ranger = $this->position('Ranger', $this->department('Protection Service'), ['area.view']);
+        $ranger = $this->position('Ranger', ['area.view']);
         $grace = $this->person('Grace', 'Ndosi');
         $grace->setPosition($ranger);
         $this->em->flush();
@@ -417,7 +417,7 @@ final class MemberRecordTest extends WebTestCaseWithSchema
     public function testAssigningAPositionWritesIt(): void
     {
         $this->withSuccessor();
-        $ranger = $this->position('Ranger', $this->department('Protection Service'), ['area.view']);
+        $ranger = $this->position('Ranger', ['area.view']);
         $frank = $this->person('Frank', 'Massawe');
         $this->em->flush();
 
@@ -429,14 +429,89 @@ final class MemberRecordTest extends WebTestCaseWithSchema
         $this->em->clear();
         $stored = $this->em->getRepository(User::class)->findOneBy(['email' => 'f.massawe@example.test']);
         self::assertInstanceOf(User::class, $stored);
-        self::assertSame('Protection Service / Ranger', $stored->getPosition()?->getQualifiedName());
+        self::assertSame('Ranger', $stored->getPosition()?->getName());
+    }
+
+    /**
+     * THE PICKER IS ONE FLAT LIST. It used to be grouped into optgroups, one
+     * per department, because a position was filed under one; the ruling took
+     * the department off the position, so there is one Analyst in the
+     * organization and a reader choosing from this list never has to ask
+     * which.
+     */
+    public function testThePositionPickerIsOneFlatListWithNoDepartmentGroups(): void
+    {
+        $this->withSuccessor();
+        $this->position('Ranger', ['area.view']);
+        $this->position('Analyst');
+        $frank = $this->person('Frank', 'Massawe');
+        $this->em->flush();
+
+        $crawler = $this->client->request('GET', '/team/'.$frank->getUuidString());
+        $picker = $crawler->filter('.mb-assignrow select[name="position"]');
+
+        self::assertCount(0, $picker->filter('optgroup'), 'A position belongs to no department, so there is nothing to group by.');
+        self::assertSame(
+            ['— no position —', 'Analyst', 'Ranger'],
+            $picker->filter('option')->each(static fn (Crawler $c): string => $c->text()),
+        );
+    }
+
+    /**
+     * THE FLASH NAMES THE BARE POSITION — the whole name there is. It used to
+     * print "Protection Service / Ranger", and half of that is a fact about a
+     * post that no longer exists.
+     */
+    public function testTheFlashNamesTheBarePosition(): void
+    {
+        $this->withSuccessor();
+        $ranger = $this->position('Ranger', ['area.view']);
+        $frank = $this->person('Frank', 'Massawe');
+        $this->em->flush();
+
+        $token = $this->tokenFrom('/team/'.$frank->getUuidString());
+        $this->client->request('POST', '/team/'.$frank->getUuidString().'/position', [
+            '_token' => $token, 'position' => $ranger->getUuidString(),
+        ]);
+
+        $crawler = $this->client->followRedirect();
+        self::assertStringContainsString('Frank Massawe now holds Ranger.', $crawler->html());
+    }
+
+    /**
+     * A DEACTIVATED HOLDER DOES NOT OCCUPY A SEAT. Somebody who has left is
+     * kept on the roster rather than deleted, and a singular post whose only
+     * holder left is a post that stands empty — a seat count that counted
+     * former holders would make every one-seat position unfillable the first
+     * time somebody moved on.
+     */
+    public function testSomebodyWhoHasLeftFreesTheSeatTheyHeld(): void
+    {
+        $this->withSuccessor();
+        $head = $this->position('Head of Protection', ['area.view']);
+        $head->setSeatCount(1);
+        $joseph = $this->person('Joseph', 'Mollel');
+        $joseph->setPosition($head);
+        $joseph->deactivate();
+        $frank = $this->person('Frank', 'Massawe');
+        $this->em->flush();
+
+        $token = $this->tokenFrom('/team/'.$frank->getUuidString());
+        $this->client->request('POST', '/team/'.$frank->getUuidString().'/position', [
+            '_token' => $token, 'position' => $head->getUuidString(),
+        ]);
+
+        $this->em->clear();
+        $stored = $this->em->getRepository(User::class)->findOneBy(['email' => 'f.massawe@example.test']);
+        self::assertInstanceOf(User::class, $stored);
+        self::assertSame('Head of Protection', $stored->getPosition()?->getName());
     }
 
     /** "No position" is a real choice, and the flash says what it costs. */
     public function testTakingThePositionAwayIsARealChoice(): void
     {
         $this->withSuccessor();
-        $ranger = $this->position('Ranger', $this->department('Protection Service'), ['area.view']);
+        $ranger = $this->position('Ranger', ['area.view']);
         $grace = $this->person('Grace', 'Ndosi');
         $grace->setPosition($ranger);
         $this->em->flush();
@@ -476,9 +551,14 @@ final class MemberRecordTest extends WebTestCaseWithSchema
     public function testSwitchUserIsAbsentForAnAdministratorWhoIsNotASuperAdmin(): void
     {
         $this->person('Naomi', 'Kileo', TeamRoleEnum::SuperAdmin);
-        $senior = $this->position('Senior Ranger', $this->department('Protection Service'), ['team.manage']);
+        $senior = $this->position('Senior Ranger', ['team.manage']);
         $grace = $this->person('Grace', 'Ndosi');
         $grace->setPosition($senior);
+        // THE POSITION GRANTS AND THE PLACEMENT REACHES, and the model fails
+        // closed: somebody holding team.manage with nowhere to exercise it
+        // reaches no ground at all, so the administrator in this scene is
+        // placed across the organization before they administer anything.
+        $this->place($grace);
         $target = $this->person('Zawadi', 'Naisenya');
         $this->em->flush();
         $this->client->loginUser($grace);

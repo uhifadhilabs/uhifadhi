@@ -30,6 +30,10 @@ use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
  *   · an orphaned grant is drawn muted and SURVIVES a save that does not touch
  *     it, because editing a position is not a migration;
  *   · a module-declared permission round-trips through the save.
+ *
+ * THE CREATE FORM USED TO ASK FOR A DEPARTMENT FIRST and the name was unique
+ * inside it; the ruling took the department off the position, so the form asks
+ * for a name and the organization holds one of each.
  */
 final class PositionMatrixTest extends WebTestCaseWithSchema
 {
@@ -102,7 +106,7 @@ final class PositionMatrixTest extends WebTestCaseWithSchema
     public function testEachUmbrellaIsABoundedGroupNamingWhoBroughtIt(): void
     {
         $this->administrator();
-        $this->position('Ranger', $this->department('Protection Service'), ['area.view']);
+        $this->position('Ranger', ['area.view']);
         $this->em->flush();
 
         $crawler = $this->client->request('GET', '/team/positions');
@@ -120,7 +124,7 @@ final class PositionMatrixTest extends WebTestCaseWithSchema
     public function testEveryRowCarriesItsSentence(): void
     {
         $this->administrator();
-        $this->position('Ranger', $this->department('Protection Service'), []);
+        $this->position('Ranger', []);
         $this->em->flush();
 
         $crawler = $this->client->request('GET', '/team/positions');
@@ -143,7 +147,7 @@ final class PositionMatrixTest extends WebTestCaseWithSchema
     public function testAModuleThatDeclaresNothingIsStillOnThePage(): void
     {
         $this->administrator();
-        $this->position('Ranger', $this->department('Protection Service'), []);
+        $this->position('Ranger', []);
         $this->em->flush();
 
         $crawler = $this->client->request('GET', '/team/positions');
@@ -155,7 +159,7 @@ final class PositionMatrixTest extends WebTestCaseWithSchema
     public function testTickingABoxGrantsItAndTheFlashSaysWhoItReaches(): void
     {
         $naomi = $this->administrator();
-        $ranger = $this->position('Ranger', $this->department('Protection Service'), []);
+        $ranger = $this->position('Ranger', []);
         $grace = $this->person('Grace', 'Ndosi');
         $grace->setPosition($ranger);
         $this->em->flush();
@@ -191,7 +195,7 @@ final class PositionMatrixTest extends WebTestCaseWithSchema
     public function testTickingABoxAndPressingSaveOnTheRenderedPageGrantsIt(): void
     {
         $this->administrator();
-        $ranger = $this->position('Ranger', $this->department('Protection Service'), []);
+        $ranger = $this->position('Ranger', []);
         $this->em->flush();
 
         $url = '/team/positions?position='.$ranger->getUuidString();
@@ -230,7 +234,7 @@ final class PositionMatrixTest extends WebTestCaseWithSchema
     public function testAModuleDeclaredPermissionRoundTripsThroughTheSave(): void
     {
         $this->administrator();
-        $ranger = $this->position('Ranger', $this->department('Protection Service'), []);
+        $ranger = $this->position('Ranger', []);
         $this->em->flush();
 
         $token = $this->tokenFrom('/team/positions');
@@ -252,7 +256,7 @@ final class PositionMatrixTest extends WebTestCaseWithSchema
     public function testAnOrphanedGrantIsDrawnAndSurvivesASave(): void
     {
         $this->administrator();
-        $botanist = (new Position())->setName('Botanist')->setDepartment($this->department('Ecology'));
+        $botanist = new Position()->setName('Botanist');
         // How it got there: the module was installed at the time.
         $botanist->setPermissionValues(['vegetation.survey'], ['vegetation.survey']);
         $this->em->persist($botanist);
@@ -282,7 +286,7 @@ final class PositionMatrixTest extends WebTestCaseWithSchema
     public function testAnOrphanedGrantCanBeRevoked(): void
     {
         $this->administrator();
-        $botanist = (new Position())->setName('Botanist')->setDepartment($this->department('Ecology'));
+        $botanist = new Position()->setName('Botanist');
         $botanist->setPermissionValues(['vegetation.survey'], ['vegetation.survey']);
         $this->em->persist($botanist);
         $this->em->flush();
@@ -300,46 +304,43 @@ final class PositionMatrixTest extends WebTestCaseWithSchema
     }
 
     /**
-     * TWO DEPARTMENTS MAY EACH OWN AN "ANALYST", and creating the second is not
-     * an error. The message when a name really IS taken names the department,
-     * because the same word elsewhere is fine.
+     * ONE NAME, ONE POSITION, ORGANIZATION-WIDE. A position belongs to no
+     * department, so a second "Analyst" is the same job entered twice however
+     * the organization is drawn on a chart — and the refusal says exactly
+     * that, because an administrator who was used to filing one per department
+     * needs to be told what changed rather than left staring at a form.
      */
-    public function testTheSameNameInTwoDepartmentsIsTwoPositions(): void
+    public function testASecondPositionOfTheSameNameIsRefusedAndTheSentenceSaysWhy(): void
     {
         $this->administrator();
-        $ecology = $this->department('Ecology');
-        $protection = $this->department('Protection Service');
-        $this->em->flush();
 
         $token = $this->tokenFrom('/team/positions');
-        foreach ([$ecology, $protection] as $department) {
+        $this->client->request('POST', '/team/positions', ['_token' => $token, 'name' => 'Analyst']);
+        $this->client->request('POST', '/team/positions', ['_token' => $token, 'name' => 'Analyst']);
+
+        $crawler = $this->client->followRedirect();
+        self::assertResponseIsSuccessful('The matrix has to come back, or the refusal is a crash rather than a sentence.');
+        self::assertStringContainsString('This organization already has a position called', $crawler->html());
+        self::assertStringContainsString('A position belongs to no department', $crawler->html());
+
+        $this->em->clear();
+        self::assertCount(1, $this->em->getRepository(Position::class)->findBy(['name' => 'Analyst']));
+    }
+
+    /** Two different names are two positions, written from the same form. */
+    public function testTwoDifferentNamesAreTwoPositions(): void
+    {
+        $this->administrator();
+
+        $token = $this->tokenFrom('/team/positions');
+        foreach (['Analyst', 'Ranger'] as $name) {
             $this->client->request('POST', '/team/positions', [
-                '_token' => $token,
-                'department' => $department->getUuidString(),
-                'name' => 'Analyst',
+                '_token' => $token, 'name' => $name,
             ]);
         }
 
         $this->em->clear();
-        self::assertCount(2, $this->em->getRepository(Position::class)->findBy(['name' => 'Analyst']));
-    }
-
-    public function testTheSameNameTwiceInOneDepartmentIsRefusedWithTheDepartmentNamed(): void
-    {
-        $this->administrator();
-        $ecology = $this->department('Ecology');
-        $this->em->flush();
-
-        $token = $this->tokenFrom('/team/positions');
-        $this->client->request('POST', '/team/positions', [
-            '_token' => $token, 'department' => $ecology->getUuidString(), 'name' => 'Analyst',
-        ]);
-        $this->client->request('POST', '/team/positions', [
-            '_token' => $token, 'department' => $ecology->getUuidString(), 'name' => 'Analyst',
-        ]);
-
-        $crawler = $this->client->followRedirect();
-        self::assertStringContainsString('Ecology already has a position called', $crawler->html());
+        self::assertCount(2, $this->em->getRepository(Position::class)->findAll());
     }
 
     /**
@@ -363,7 +364,7 @@ final class PositionMatrixTest extends WebTestCaseWithSchema
     public function testASaveWithoutACsrfTokenIsRefused(): void
     {
         $this->administrator();
-        $ranger = $this->position('Ranger', $this->department('Protection Service'), []);
+        $ranger = $this->position('Ranger', []);
         $this->em->flush();
 
         $this->client->request('POST', '/team/positions/'.$ranger->getUuidString().'/permissions', [

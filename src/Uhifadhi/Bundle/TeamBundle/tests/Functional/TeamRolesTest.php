@@ -141,8 +141,8 @@ final class TeamRolesTest extends WebTestCaseWithSchema
     private function installation(): void
     {
         $administration = $this->department('Administration');
-        $warden = $this->position('Warden', $administration, [PermissionEnum::TeamManage->value]);
-        $ranger = $this->position('Ranger', $administration);
+        $warden = $this->position('Warden', [PermissionEnum::TeamManage->value]);
+        $ranger = $this->position('Ranger');
 
         $this->person('Salum', 'Mwaipopo', TeamRoleEnum::Admin)->setPosition($warden);
         $this->person('Frank', 'Massawe')->setPosition($warden);

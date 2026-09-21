@@ -15,24 +15,30 @@ namespace Uhifadhi\Bundle\TeamBundle\Tests\Integration\Identity;
 
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
+use Uhifadhi\Bundle\TeamBundle\Entity\Placement;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
+use Uhifadhi\Bundle\TeamBundle\Entity\User;
+use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
+use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
+use Uhifadhi\Bundle\TeamBundle\Service\DepartmentMembership;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\IntegrationTestCase;
 
 /**
- * A DEPARTMENT IS A REAL ENTITY AND THIS BUNDLE OWNS IT.
+ * A DEPARTMENT IS A REAL ENTITY AND THIS BUNDLE OWNS IT — AND IT IS A
+ * PLACEMENT, NOT AN OWNER.
  *
- * The previous release argued the opposite: a department was called an
- * organizational lens another module owns, and a position's name was therefore
- * unique across the whole installation. That was wrong about the organizations
- * this product is for. Two departments really do carry the same post — Ecology
- * has an Analyst and Protection Service has an Analyst, and they are two
- * different jobs with different permission sets that happen to share a word. A
- * model forbidding the pair forces one of them to be renamed to something
- * nobody says out loud.
+ * The previous release let a position belong to a department, and scoped the
+ * position's name to it: Ecology had an Analyst, Protection Service had an
+ * Analyst, and they were two rows. The ruling replaced that. A data scientist
+ * supporting Ecology and Protection is ONE Analyst placed against two
+ * departments, and the old shape could only express them by inventing a
+ * second position or a department of convenience.
  *
- * So the constraint is `unique(department, name)`, and the org-wide one is
- * gone. A position's name is unique INSIDE its department and nowhere else.
+ * So the department left the position, and with it the department-scoped
+ * name: THE NAME IS UNIQUE ACROSS THE ORGANIZATION, there is one Analyst, and
+ * who is in a department — and therefore which positions it sees — is read off
+ * each person's {@see Placement} by {@see DepartmentMembership}.
  */
 final class DepartmentTest extends IntegrationTestCase
 {
@@ -57,87 +63,123 @@ final class DepartmentTest extends IntegrationTestCase
     }
 
     /**
-     * THE CASE THE RULING EXISTS FOR. Both positions are called "Analyst" and
-     * both save, because the pair is two jobs rather than one duplicated.
+     * THE NAME IS THE POSITION'S IDENTITY, ORGANIZATION-WIDE. There is one
+     * Analyst, held by as many people as the work needs, and a reader of
+     * somebody's record never has to ask which Analyst is meant.
      */
-    public function testTwoDepartmentsMayEachOwnAPositionOfTheSameName(): void
+    public function testTwoPositionsMayNotShareAName(): void
     {
-        $ecology = (new Department())->setName('Ecology');
-        $protection = (new Department())->setName('Protection Service');
-
-        $this->em->persist($ecology);
-        $this->em->persist($protection);
-        $this->em->persist((new Position())->setName('Analyst')->setDepartment($ecology));
-        $this->em->persist((new Position())->setName('Analyst')->setDepartment($protection));
-        $this->em->flush();
-        $this->em->clear();
-
-        $positions = $this->em->getRepository(Position::class)->findBy(['name' => 'Analyst']);
-
-        self::assertCount(2, $positions);
-    }
-
-    /** Inside one department the name is still the position's identity. */
-    public function testOneDepartmentMayNotOwnTwoPositionsOfTheSameName(): void
-    {
-        $ecology = (new Department())->setName('Ecology');
-        $this->em->persist($ecology);
-        $this->em->persist((new Position())->setName('Analyst')->setDepartment($ecology));
-        $this->em->persist((new Position())->setName('Analyst')->setDepartment($ecology));
+        $this->em->persist((new Position())->setName('Analyst'));
+        $this->em->persist((new Position())->setName('Analyst'));
 
         $this->expectException(UniqueConstraintViolationException::class);
         $this->em->flush();
     }
 
     /**
-     * THE UNASSIGNED STATE IS REAL. A position's department is nullable, and the
-     * null is a state rather than an unfinished field: a position created before
-     * anybody decided which department owns it is a position that exists.
+     * THE ORGANIZATION-WIDE INDEX IS NAMED HERE, so that it is a decision
+     * somebody asserted rather than a diff nobody read — and so that the
+     * department-scoped index the old model carried cannot creep back.
      */
-    public function testAPositionMayHaveNoDepartment(): void
-    {
-        $position = (new Position())->setName('Chief Warden');
-
-        $this->em->persist($position);
-        $this->em->flush();
-        $this->em->clear();
-
-        $stored = $this->em->getRepository(Position::class)->findOneBy(['name' => 'Chief Warden']);
-
-        self::assertInstanceOf(Position::class, $stored);
-        self::assertNull($stored->getDepartment());
-    }
-
-    /**
-     * NOTHING IS UNIQUE ORG-WIDE. The installation-wide index a reader might
-     * expect is named too, so that its absence is a decision somebody asserted
-     * rather than a diff nobody read.
-     */
-    public function testThePositionNameIsNotUniqueAcrossTheInstallation(): void
+    public function testThePositionNameIsUniqueAcrossTheInstallation(): void
     {
         $constraints = $this->em->getClassMetadata(Position::class)->table['uniqueConstraints'] ?? [];
 
         self::assertSame(
-            ['uniq_team_position_department_name' => ['fields' => ['department', 'name']]],
+            ['uniq_team_position_name' => ['fields' => ['name']]],
             $constraints,
-            'One unique constraint, and it is the department-scoped one. There is no uniq_team_position_name.',
+            'One unique constraint, and it is the organization-wide one. There is no uniq_team_position_department_name.',
         );
     }
 
-    /** A department reads back the positions filed under it. */
-    public function testADepartmentKnowsItsPositions(): void
+    /**
+     * A DEPARTMENT'S POSITIONS ARE DERIVED, not filed. They are the distinct
+     * positions held by the people placed in it, which is why somebody
+     * supporting two departments shows up in both lists holding the one
+     * position they actually hold.
+     */
+    public function testADepartmentSeesThePositionsItsMembersHold(): void
+    {
+        $ecology = (new Department())->setName('Ecology');
+        $protection = (new Department())->setName('Protection Service');
+        $this->em->persist($ecology);
+        $this->em->persist($protection);
+
+        $analyst = (new Position())->setName('Analyst');
+        $vet = (new Position())->setName('Veterinary Officer');
+        $sergeant = (new Position())->setName('Sergeant');
+        $this->em->persist($analyst);
+        $this->em->persist($vet);
+        $this->em->persist($sergeant);
+
+        $this->placePerson('Asha', 'Mwinyi', $analyst, [$ecology, $protection]);
+        $this->placePerson('Baraka', 'Sawe', $vet, [$ecology]);
+        $this->placePerson('Joseph', 'Mollel', $sergeant, [$protection]);
+        $this->em->flush();
+
+        $membership = new DepartmentMembership($this->service(UserRepository::class));
+
+        self::assertSame(
+            ['Analyst', 'Veterinary Officer'],
+            array_map(static fn (Position $p): ?string => $p->getName(), $membership->positionsIn($ecology)),
+        );
+        self::assertSame(
+            ['Analyst', 'Sergeant'],
+            array_map(static fn (Position $p): ?string => $p->getName(), $membership->positionsIn($protection)),
+        );
+    }
+
+    /**
+     * SOMEBODY PLACED ACROSS ALL DEPARTMENTS IS IN EVERY ONE OF THEM — the
+     * answer the voter gives, so the answer a department's list has to give
+     * too.
+     */
+    public function testAPersonPlacedAcrossAllDepartmentsIsAMemberOfEachOne(): void
+    {
+        $ecology = (new Department())->setName('Ecology');
+        $protection = (new Department())->setName('Protection Service');
+        $this->em->persist($ecology);
+        $this->em->persist($protection);
+
+        $warden = (new Position())->setName('Chief Warden');
+        $this->em->persist($warden);
+        $this->placePerson('Grace', 'Ngowi', $warden, null);
+        $this->em->flush();
+
+        $membership = new DepartmentMembership($this->service(UserRepository::class));
+
+        self::assertSame(
+            ['Grace Ngowi'],
+            array_map(static fn (User $u): string => $u->getFullName(), $membership->membersOf($ecology)),
+        );
+        self::assertSame(
+            ['Grace Ngowi'],
+            array_map(static fn (User $u): string => $u->getFullName(), $membership->membersOf($protection)),
+        );
+    }
+
+    /**
+     * BEING UNPLACED IS A REAL STATE, and it is membership of nothing rather
+     * than membership of everything — the same fail-closed reading the voter
+     * gives it.
+     */
+    public function testAnUnplacedPersonIsInNoDepartment(): void
     {
         $ecology = (new Department())->setName('Ecology');
         $this->em->persist($ecology);
-        $this->em->persist((new Position())->setName('Analyst')->setDepartment($ecology));
-        $this->em->persist((new Position())->setName('Veterinary Officer')->setDepartment($ecology));
+
+        $warden = (new Position())->setName('Chief Warden');
+        $this->em->persist($warden);
+        $unplaced = (new User())->setEmail('u@example.test')->setFirstName('Unplaced')->setLastName('Person')
+            ->setPassword('x')->setTeamRole(TeamRoleEnum::Staff)->setPosition($warden);
+        $this->em->persist($unplaced);
         $this->em->flush();
-        $this->em->clear();
 
-        $stored = $this->service(DepartmentRepository::class)->findOneByName('Ecology');
-        self::assertInstanceOf(Department::class, $stored);
+        $membership = new DepartmentMembership($this->service(UserRepository::class));
 
-        self::assertCount(2, $stored->getPositions());
+        self::assertSame([], $membership->membersOf($ecology));
+        self::assertSame([], $membership->positionsIn($ecology));
+        self::assertFalse($membership->covers($unplaced, $ecology));
     }
 
     /**
@@ -189,5 +231,27 @@ final class DepartmentTest extends IntegrationTestCase
         self::assertContains('Ecology', $activeNames);
         self::assertNotContains('Tourism Concessions', $activeNames);
         self::assertContains('Tourism Concessions', $allNames, 'the register still draws it, greyed');
+    }
+
+    /**
+     * Somebody holding a position and placed at the named departments — null
+     * departments being "across all of them".
+     *
+     * @param list<Department>|null $departments
+     */
+    private function placePerson(string $first, string $last, Position $position, ?array $departments): User
+    {
+        $placement = (new Placement())->acrossTheOrganization();
+        null === $departments ? $placement->acrossAllDepartments() : $placement->inDepartments($departments);
+        $this->em->persist($placement);
+
+        $user = (new User())
+            ->setEmail(strtolower($first[0].'.'.$last).'@example.test')
+            ->setFirstName($first)->setLastName($last)->setPassword('x')
+            ->setTeamRole(TeamRoleEnum::Staff)
+            ->setPosition($position)->setPlacement($placement);
+        $this->em->persist($user);
+
+        return $user;
     }
 }

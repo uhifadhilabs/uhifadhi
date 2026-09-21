@@ -185,7 +185,7 @@ final class SidebarRowTest extends WebTestCaseWithSchema
     public function testAColleagueWithoutTeamManageSeesNoRow(): void
     {
         $ranger = $this->person('Juma', 'Mwakalinga', TeamRoleEnum::Staff);
-        $ranger->setPosition($this->position('Ranger', $this->department('Protection'), [PermissionEnum::AreaView->value]));
+        $ranger->setPosition($this->position('Ranger', [PermissionEnum::AreaView->value]));
         $this->em->flush();
         $this->client->loginUser($ranger);
 

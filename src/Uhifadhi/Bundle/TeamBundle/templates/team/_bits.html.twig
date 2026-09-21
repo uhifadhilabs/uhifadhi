@@ -74,7 +74,6 @@
         {%- endif -%}
     {%- else -%}
         <a class="tm-pos qual" href="{{ positionsPath }}">
-            {%- if position.department %}<span class="q">{{ position.department.name }}</span><span class="sep">/</span>{% endif -%}
             <span class="n">{{ position.name }}</span>
         </a>
         {%- if user.teamRole.canManageContent -%}

@@ -436,9 +436,11 @@ final class PerformanceOverviewTest extends WebTestCaseWithSchema
         $ecology = $this->department('Ecology');
         $protection = $this->department('Protection Service');
 
-        $this->position('Wetland Ecologist', $wetland);
-        $this->position('Analyst', $ecology);
-        $this->position('Analyst', $protection);
+        // A DEPARTMENT'S STAFFING IS THE PEOPLE PLACED IN IT, so the topics
+        // only have a figure to report where somebody stands.
+        $this->place($this->person('Zawadi', 'Kimaro')->setPosition($this->position('Wetland Ecologist')), [$this->north], [$wetland]);
+        $this->place($this->person('Tumaini', 'Njau')->setPosition($this->position('Analyst')), null, [$ecology]);
+        $this->place($this->person('Baraka', 'Msuya')->setPosition($this->position('Ranger')), null, [$protection]);
 
         $this->em->flush();
 

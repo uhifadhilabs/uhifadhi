@@ -21,7 +21,6 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
-use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -32,7 +31,6 @@ use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
-use Uhifadhi\Bundle\TeamBundle\Security\AreaAuthority;
 use Uhifadhi\Bundle\TeamBundle\Service\Mail;
 use Uhifadhi\Bundle\TeamBundle\Service\UserService;
 
@@ -85,7 +83,6 @@ final readonly class InviteController
         private UrlGeneratorInterface $router,
         private TokenStorageInterface $tokens,
         private Mail $mail,
-        private AreaAuthority $authority,
     ) {
     }
 
@@ -96,7 +93,7 @@ final readonly class InviteController
         return new Response($this->twig->render('@Team/team/invite.html.twig', [
             // §5.6(a): a bounded administrator adds people only into their own
             // area's positions, so the picker offers only those.
-            'groupedPositions' => $this->authority->assignable($this->positions->findAllGroupedByDepartment()),
+            'positions' => $this->positions->findAllOrdered(),
             // The one deployment fact this page turns on.
             'mailerConfigured' => $this->mail->isConfigured(),
             'passwordMinLength' => User::PASSWORD_MIN_LENGTH,
@@ -187,15 +184,11 @@ final readonly class InviteController
 
         $position = $this->positions->findOneByUuid(Uuid::fromString($chosen));
 
-        // §5.6(a): a bounded (area-X) administrator may add a person only into a
-        // position their authority reaches — never an org-level or another
-        // area's, which would seat somebody with authority past the admin's own
-        // boundary. A tier or org-level holder is unbounded and passes. An
-        // unknown position resolves to null and simply seats nobody, exactly as
-        // an empty pick does; there is nothing out-of-authority about that.
-        if (null !== $position && !$this->authority->reaches($position)) {
-            throw new AccessDeniedException('An area administrator may add people only into positions in their own area.');
-        }
+        // A POSITION CARRIES NO GROUND, so which one an invited person is put
+        // into says nothing about whose boundary the invitation crosses. What
+        // does is where they will be placed, and that is decided on their
+        // record - so the pick itself is open, and the placement is fenced
+        // where it is written.
 
         return $position;
     }

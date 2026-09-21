@@ -15,7 +15,7 @@ namespace Uhifadhi\Bundle\TeamBundle\Tests\Integration\Security;
 
 use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
-use Uhifadhi\Bundle\TeamBundle\Entity\Department;
+use Uhifadhi\Bundle\TeamBundle\Entity\Placement;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
@@ -26,14 +26,23 @@ use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\Area\HostArea;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\IntegrationTestCase;
 
 /**
- * WHO HOLDS WHAT. Super Admin and Admin hold every permission by tier; Staff —
- * which is now everybody else — hold exactly their position's, module-declared
- * values among them. Anything outside the catalogue is none of this voter's
+ * WHO HOLDS WHAT, AND WHERE. Super Admin and Admin hold every permission by
+ * tier; Staff — which is now everybody else — hold exactly their position's
+ * values, module-declared ones among them, and only on the ground their
+ * PLACEMENT names. Anything outside the catalogue is none of this voter's
  * business.
  *
  * `team.manage` is decided here like any other row, which is the whole of what
  * retiring the Manager tier bought: administering the team is a permission a
  * position grants and this voter answers for, not a column beside the matrix.
+ *
+ * REACH USED TO BE READ THROUGH THE POSITION — `position.department.area`, so
+ * that where somebody worked was a property of their job title. The ruling
+ * replaced that with a {@see Placement} written against the PERSON, and the
+ * two halves are now asked separately: the position says what is granted, the
+ * placement says where. The consequence this suite cares about most is that
+ * the model FAILS CLOSED — somebody with no placement reaches nothing, however
+ * generous their position.
  */
 final class PermissionVoterTest extends IntegrationTestCase
 {
@@ -61,10 +70,16 @@ final class PermissionVoterTest extends IntegrationTestCase
         );
     }
 
-    private function staffWith(Position $position): User
+    /**
+     * A Staff member holding a position. The placement is passed explicitly —
+     * including as null, which is the unplaced case and a refusal rather than
+     * an oversight.
+     */
+    private function staffWith(Position $position, ?Placement $placement = null): User
     {
         return (new User())->setEmail('s@example.test')->setFirstName('S')->setLastName('T')
-            ->setPassword('x')->setTeamRole(TeamRoleEnum::Staff)->setPosition($position);
+            ->setPassword('x')->setTeamRole(TeamRoleEnum::Staff)
+            ->setPosition($position)->setPlacement($placement);
     }
 
     public function testAdminAndAboveHoldEveryPermissionByTier(): void
@@ -88,7 +103,7 @@ final class PermissionVoterTest extends IntegrationTestCase
             PermissionEnum::AreaView->value,
             PermissionEnum::TeamManage->value,
         ]);
-        $grace = $this->staffWith($position);
+        $grace = $this->staffWith($position, $this->placedAcrossTheOrganization());
 
         self::assertSame(VoterInterface::ACCESS_GRANTED, $this->vote($grace, ['team.manage']));
         self::assertSame(VoterInterface::ACCESS_GRANTED, $this->vote($grace, ['area.view']));
@@ -100,7 +115,7 @@ final class PermissionVoterTest extends IntegrationTestCase
     public function testRevokingTeamManageEndsTheAuthority(): void
     {
         $position = $this->positionGranting('Warden', [PermissionEnum::TeamManage->value]);
-        $grace = $this->staffWith($position);
+        $grace = $this->staffWith($position, $this->placedAcrossTheOrganization());
         self::assertSame(VoterInterface::ACCESS_GRANTED, $this->vote($grace, ['team.manage']));
 
         $position->setPermissionValues([], $this->service(PermissionCatalogue::class)->values());
@@ -111,10 +126,11 @@ final class PermissionVoterTest extends IntegrationTestCase
     public function testStaffHoldExactlyTheirPositionIncludingAModulesDeclaration(): void
     {
         $position = $this->positionGranting('Recorder', ['area.view', 'surveys.record']);
+        $placement = $this->placedAcrossTheOrganization();
 
-        self::assertSame(VoterInterface::ACCESS_GRANTED, $this->vote($this->staffWith($position), ['area.view']));
-        self::assertSame(VoterInterface::ACCESS_GRANTED, $this->vote($this->staffWith($position), ['surveys.record']));
-        self::assertSame(VoterInterface::ACCESS_DENIED, $this->vote($this->staffWith($position), ['module.create']));
+        self::assertSame(VoterInterface::ACCESS_GRANTED, $this->vote($this->staffWith($position, $placement), ['area.view']));
+        self::assertSame(VoterInterface::ACCESS_GRANTED, $this->vote($this->staffWith($position, $placement), ['surveys.record']));
+        self::assertSame(VoterInterface::ACCESS_DENIED, $this->vote($this->staffWith($position, $placement), ['module.create']));
     }
 
     public function testStaffWithNoPositionHoldNothing(): void
@@ -138,6 +154,28 @@ final class PermissionVoterTest extends IntegrationTestCase
     // ---- AREA-SCOPED: "may this person do X *here*?" -----------------------
 
     /**
+     * THE MODEL FAILS CLOSED. A position may grant `area.view` as loudly as it
+     * likes: until somebody has been PLACED, there is no ground for the grant
+     * to apply to, and the answer is no — in a named area and for the
+     * no-area-in-context question alike.
+     *
+     * This is the specification the whole shape exists to make true. Reach
+     * used to be inherited from the position's department, so a position with
+     * a permission was very nearly a permission granted everywhere; now the
+     * second half has to be written down on purpose, and the absence of it is
+     * a refusal rather than a gap somebody discovers in production.
+     */
+    public function testAStaffMemberWithNoPlacementIsRefusedWhatTheirPositionGrants(): void
+    {
+        $south = $this->area('Southern Reserve');
+        $position = $this->positionGranting('Field', [PermissionEnum::AreaView->value]);
+        $unplaced = $this->staffWith($position, null);
+
+        self::assertSame(VoterInterface::ACCESS_DENIED, $this->voteOn($unplaced, 'area.view', $south));
+        self::assertSame(VoterInterface::ACCESS_DENIED, $this->voteOn($unplaced, 'area.view', null));
+    }
+
+    /**
      * AN AREA-LEVEL STAFF MEMBER holds their permission IN THEIR OWN AREA and
      * NOT in another. This is the thesis of area-scoped authority: the same
      * grant answers differently per area.
@@ -146,10 +184,28 @@ final class PermissionVoterTest extends IntegrationTestCase
     {
         $south = $this->area('Southern Reserve');
         $north = $this->area('Northern Reserve');
-        $ranger = $this->areaLevelStaffWith([PermissionEnum::AreaView->value], $south);
+        $ranger = $this->areaLevelStaffWith([PermissionEnum::AreaView->value], [$south]);
 
         self::assertSame(VoterInterface::ACCESS_GRANTED, $this->voteOn($ranger, 'area.view', $south));
         self::assertSame(VoterInterface::ACCESS_DENIED, $this->voteOn($ranger, 'area.view', $north));
+    }
+
+    /**
+     * A PLACEMENT NAMES A SET, NOT A PLACE. Somebody covering two reserves is
+     * one person holding one position on two pieces of ground, and a third
+     * reserve is still none of theirs — the case the old one-area-per-position
+     * shape could only express by inventing a second position.
+     */
+    public function testAPlacementNamingTwoAreasGrantsInBothAndRefusesInAThird(): void
+    {
+        $south = $this->area('Southern Reserve');
+        $north = $this->area('Northern Reserve');
+        $east = $this->area('Eastern Reserve');
+        $ranger = $this->areaLevelStaffWith([PermissionEnum::AreaView->value], [$south, $north]);
+
+        self::assertSame(VoterInterface::ACCESS_GRANTED, $this->voteOn($ranger, 'area.view', $south));
+        self::assertSame(VoterInterface::ACCESS_GRANTED, $this->voteOn($ranger, 'area.view', $north));
+        self::assertSame(VoterInterface::ACCESS_DENIED, $this->voteOn($ranger, 'area.view', $east));
     }
 
     /**
@@ -160,27 +216,43 @@ final class PermissionVoterTest extends IntegrationTestCase
     public function testANullSubjectGrantsForAnAreaLevelHolder(): void
     {
         $south = $this->area('Southern Reserve');
-        $ranger = $this->areaLevelStaffWith([PermissionEnum::AreaView->value], $south);
+        $ranger = $this->areaLevelStaffWith([PermissionEnum::AreaView->value], [$south]);
 
         self::assertSame(VoterInterface::ACCESS_GRANTED, $this->voteOn($ranger, 'area.view', null));
     }
 
-    /** AN ORG-LEVEL STAFF MEMBER (department scope null) holds it in every area. */
-    public function testAnOrgLevelStaffMemberIsGrantedInEveryArea(): void
+    /** AN ORGANIZATION-WIDE PLACEMENT holds it in every area. */
+    public function testAnOrganizationWidePlacementIsGrantedInEveryArea(): void
     {
         $south = $this->area('Southern Reserve');
         $north = $this->area('Northern Reserve');
 
-        $orgDept = (new Department())->setName('Ecology'); // no area → org-level
-        $this->em->persist($orgDept);
-        $position = (new Position())->setName('Analyst')->setDepartment($orgDept)
-            ->setPermissionValues([PermissionEnum::AreaView->value], $this->service(PermissionCatalogue::class)->values());
+        $position = $this->positionGranting('Analyst', [PermissionEnum::AreaView->value]);
         $this->em->persist($position);
+        $analyst = $this->staffWith($position, $this->placedAcrossTheOrganization());
         $this->em->flush();
-        $analyst = $this->staffWith($position);
 
         self::assertSame(VoterInterface::ACCESS_GRANTED, $this->voteOn($analyst, 'area.view', $south));
         self::assertSame(VoterInterface::ACCESS_GRANTED, $this->voteOn($analyst, 'area.view', $north));
+    }
+
+    /**
+     * "THE WHOLE ORGANIZATION" MEANS THE ORGANIZATION AS IT WILL BE, not the
+     * list of areas that happened to exist on the day the placement was
+     * written. A reserve gazetted afterwards is covered without anybody
+     * revisiting the record — which is exactly why the breadth is stored as
+     * its own answer rather than as a snapshot of every area.
+     */
+    public function testAnOrganizationWidePlacementCoversAnAreaCreatedAfterwards(): void
+    {
+        $position = $this->positionGranting('Analyst', [PermissionEnum::AreaView->value]);
+        $this->em->persist($position);
+        $analyst = $this->staffWith($position, $this->placedAcrossTheOrganization());
+        $this->em->flush();
+
+        $gazettedLater = $this->area('Western Reserve');
+
+        self::assertSame(VoterInterface::ACCESS_GRANTED, $this->voteOn($analyst, 'area.view', $gazettedLater));
     }
 
     /**
@@ -191,7 +263,7 @@ final class PermissionVoterTest extends IntegrationTestCase
     {
         $south = $this->area('Southern Reserve');
         $north = $this->area('Northern Reserve');
-        $planner = $this->areaLevelStaffWith([PermissionEnum::AreaCreate->value], $south);
+        $planner = $this->areaLevelStaffWith([PermissionEnum::AreaCreate->value], [$south]);
 
         self::assertSame(VoterInterface::ACCESS_GRANTED, $this->voteOn($planner, 'area.create', $north));
         self::assertSame(VoterInterface::ACCESS_GRANTED, $this->voteOn($planner, 'area.create', null));
@@ -202,7 +274,7 @@ final class PermissionVoterTest extends IntegrationTestCase
     {
         $south = $this->area('Southern Reserve');
         $north = $this->area('Northern Reserve');
-        $recorder = $this->areaLevelStaffWith(['surveys.record'], $south);
+        $recorder = $this->areaLevelStaffWith(['surveys.record'], [$south]);
 
         self::assertSame(VoterInterface::ACCESS_GRANTED, $this->voteOn($recorder, 'surveys.record', $south));
         self::assertSame(VoterInterface::ACCESS_DENIED, $this->voteOn($recorder, 'surveys.record', $north));
@@ -218,6 +290,27 @@ final class PermissionVoterTest extends IntegrationTestCase
         self::assertSame(VoterInterface::ACCESS_GRANTED, $this->voteOn($admin, 'area.view', $south));
     }
 
+    /**
+     * THE TIER BYPASS IGNORES THE PLACEMENT ENTIRELY. An Admin placed at one
+     * reserve — or at none at all, which refuses a Staff member everything —
+     * still holds every permission everywhere: area-scoping only ever narrows
+     * a Staff member, and step one of the check never reaches the placement.
+     */
+    public function testTheTierBypassIgnoresThePlacement(): void
+    {
+        $south = $this->area('Southern Reserve');
+        $north = $this->area('Northern Reserve');
+
+        $narrowlyPlaced = (new User())->setEmail('a4@example.test')->setFirstName('A')->setLastName('D')
+            ->setPassword('x')->setTeamRole(TeamRoleEnum::Admin)
+            ->setPlacement($this->placedAtAreas([$south]));
+        $unplaced = (new User())->setEmail('a5@example.test')->setFirstName('A')->setLastName('E')
+            ->setPassword('x')->setTeamRole(TeamRoleEnum::Admin);
+
+        self::assertSame(VoterInterface::ACCESS_GRANTED, $this->voteOn($narrowlyPlaced, 'area.view', $north));
+        self::assertSame(VoterInterface::ACCESS_GRANTED, $this->voteOn($unplaced, 'area.view', $north));
+    }
+
     private function area(string $name): HostArea
     {
         $area = (new HostArea())->setName($name);
@@ -227,17 +320,41 @@ final class PermissionVoterTest extends IntegrationTestCase
         return $area;
     }
 
-    /** @param list<string> $values */
-    private function areaLevelStaffWith(array $values, HostArea $area): User
+    /** The whole organization, every department — the widest ground there is. */
+    private function placedAcrossTheOrganization(): Placement
     {
-        $department = (new Department())->setName('Unit · '.$area->getName())->setArea($area);
-        $this->em->persist($department);
-        $position = (new Position())->setName('Field')->setDepartment($department)
-            ->setPermissionValues($values, $this->service(PermissionCatalogue::class)->values());
+        $placement = (new Placement())->acrossTheOrganization()->acrossAllDepartments();
+        $this->em->persist($placement);
+
+        return $placement;
+    }
+
+    /**
+     * Named ground, every department — the departments dimension is not what
+     * the voter's area question is about, so it is held open here.
+     *
+     * @param list<HostArea> $areas
+     */
+    private function placedAtAreas(array $areas): Placement
+    {
+        $placement = (new Placement())->inAreas($areas)->acrossAllDepartments();
+        $this->em->persist($placement);
+
+        return $placement;
+    }
+
+    /**
+     * @param list<string>   $values
+     * @param list<HostArea> $areas
+     */
+    private function areaLevelStaffWith(array $values, array $areas): User
+    {
+        $position = $this->positionGranting('Field', $values);
         $this->em->persist($position);
+        $staff = $this->staffWith($position, $this->placedAtAreas($areas));
         $this->em->flush();
 
-        return $this->staffWith($position);
+        return $staff;
     }
 
     private function voteOn(User $user, string $attribute, mixed $subject): int

@@ -15,6 +15,9 @@ namespace Uhifadhi\Bundle\TeamBundle\Tests\Integration\Devkit;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use Uhifadhi\Bundle\TeamBundle\Devkit\TeamContentProvider;
+use Uhifadhi\Bundle\TeamBundle\Entity\Department;
+use Uhifadhi\Bundle\TeamBundle\Entity\Position;
+use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
@@ -150,6 +153,68 @@ final class DemoOrganisationTest extends IntegrationTestCase
         foreach ($this->service(UserRepository::class)->findAllByName() as $user) {
             self::assertContains($user->getTeamRole(), TeamRoleEnum::cases());
         }
+    }
+
+    /**
+     * THE CASE THE RULING EXISTS FOR IS IN THE DEMO DATA. An analyst
+     * supporting Ecology and Protection is ONE position placed against two
+     * departments — under the old shape, where a position belonged to a
+     * department, the demo could only show them as two Analysts or as one
+     * filed under a department of convenience. Seeding it means every screen
+     * that draws a department meets the case on the first dev install rather
+     * than in production.
+     */
+    public function testTheAnalystIsPlacedInTwoDepartmentsAtOnce(): void
+    {
+        $this->collector()->seed('team');
+        $this->em->clear();
+
+        $analyst = $this->service(UserRepository::class)->findOneByEmail('thabo.ndlovu@example.test');
+        self::assertInstanceOf(User::class, $analyst);
+        self::assertSame('Analyst', $analyst->getPosition()?->getName());
+
+        self::assertSame(
+            ['Ecology', 'Protection Service'],
+            array_map(static fn (Department $d): ?string => $d->getName(), $analyst->getDepartments() ?? []),
+        );
+        self::assertSame('Ecology +1', $analyst->getDepartmentLabel());
+    }
+
+    /**
+     * AND SO IS THE OTHER END OF IT. The person holding nothing is placed
+     * nowhere either, which is the state the model refuses everything in —
+     * an empty list of departments rather than the null that means "all".
+     */
+    public function testTheUnseatedPersonIsPlacedNowhere(): void
+    {
+        $this->collector()->seed('team');
+        $this->em->clear();
+
+        $yara = $this->service(UserRepository::class)->findOneByEmail('yara.benali@example.test');
+        self::assertInstanceOf(User::class, $yara);
+
+        self::assertNull($yara->getPosition());
+        self::assertNull($yara->getPlacement());
+        self::assertSame([], $yara->getDepartments(), 'no placement is no departments, never all of them');
+    }
+
+    /**
+     * EVERY POSITION IS NAMED ONCE ACROSS THE ORGANIZATION, which is what
+     * makes four positions enough for an organization with three departments
+     * — the rangers of Protection Service and the analyst who also serves it
+     * share the names the register prints.
+     */
+    public function testEveryPositionNameIsDistinct(): void
+    {
+        $this->collector()->seed('team');
+        $this->em->clear();
+
+        $names = array_map(
+            static fn (Position $p): ?string => $p->getName(),
+            $this->service(PositionRepository::class)->findAllOrdered(),
+        );
+
+        self::assertSame($names, array_values(array_unique($names)));
     }
 
     private function collector(): DevkitContentCollector
