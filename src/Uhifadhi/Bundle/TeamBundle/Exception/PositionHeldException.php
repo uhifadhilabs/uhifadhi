@@ -11,6 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
+namespace Uhifadhi\Bundle\TeamBundle\Exception;
 
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 

@@ -9,6 +9,8 @@ declare(strict_types=1);
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
+ */
+
 namespace Uhifadhi\Bundle\TeamBundle\Model;
 
 use Uhifadhi\Contracts\Access\ScopeKind;
@@ -27,9 +29,9 @@ use Uhifadhi\Contracts\Access\Verb;
 final readonly class GrantRow
 {
     /**
-     * @param array<string, bool>     $cells      verb value => whether the position holds it
-     * @param array<string, bool>     $scopeKinds scope kind value => whether the position allows it
-     * @param list<Verb>              $verbs      the verbs the concern declares, in the fixed order
+     * @param array<string, bool> $cells      verb value => whether the position holds it
+     * @param array<string, bool> $scopeKinds scope kind value => whether the position allows it
+     * @param list<Verb>          $verbs      the verbs the concern declares, in the fixed order
      */
     public function __construct(
         public string $key,

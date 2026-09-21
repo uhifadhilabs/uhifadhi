@@ -23,6 +23,7 @@ use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Exception\NameNotUniqueException;
 use Uhifadhi\Bundle\TeamBundle\Exception\UnknownGrantException;
+use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionService;
 use Uhifadhi\Contracts\Access\ScopeKind;
 
@@ -68,7 +69,7 @@ final class PositionServiceTest extends TestCase
      */
     public function testASecondPositionOfTheSameNameAnywhereIsRefused(): void
     {
-        $service = new PositionService(self::entityManagerThatRefusesTheSecondWrite(), self::catalogue());
+        $service = new PositionService(self::entityManagerThatRefusesTheSecondWrite(), self::catalogue(), self::holders());
         $service->create('Analyst');
 
         $this->expectException(NameNotUniqueException::class);
@@ -98,7 +99,7 @@ final class PositionServiceTest extends TestCase
 
     public function testRenamingOntoANameTheOrganizationAlreadyUsesIsRefused(): void
     {
-        $service = new PositionService(self::entityManagerThatRefusesTheSecondWrite(), self::catalogue());
+        $service = new PositionService(self::entityManagerThatRefusesTheSecondWrite(), self::catalogue(), self::holders());
         $position = $service->create('Analyst');
 
         $this->expectException(NameNotUniqueException::class);
@@ -221,7 +222,22 @@ final class PositionServiceTest extends TestCase
 
     private static function service(): PositionService
     {
-        return new PositionService(self::createStub(EntityManagerInterface::class), self::catalogue());
+        return new PositionService(self::createStub(EntityManagerInterface::class), self::catalogue(), self::holders());
+    }
+
+    /**
+     * NOBODY HOLDS ANYTHING, which is the state every case here is about: a
+     * position's name and its grant are written the same way whether or not
+     * somebody stands in it. The seat floor and the refusal to retire a held
+     * position are the two writes that DO ask, and they are driven through
+     * the real repository in the integration suite.
+     */
+    private static function holders(): UserRepository
+    {
+        $users = self::createStub(UserRepository::class);
+        $users->method('findActiveHolders')->willReturn([]);
+
+        return $users;
     }
 
     /**

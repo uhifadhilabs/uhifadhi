@@ -93,7 +93,11 @@ final readonly class InviteController
         return new Response($this->twig->render('@Team/team/invite.html.twig', [
             // §5.6(a): a bounded administrator adds people only into their own
             // area's positions, so the picker offers only those.
-            'positions' => $this->positions->findAllOrdered(),
+            // A RETIRED POSITION IS ABSENT FROM THE PICKER. It is not
+            // deleted — the register still carries it, greyed — but it
+            // cannot be given to anybody, and offering a thing that is
+            // closed is offering a refusal.
+            'positions' => $this->positions->findAssignable(),
             // The one deployment fact this page turns on.
             'mailerConfigured' => $this->mail->isConfigured(),
             'passwordMinLength' => User::PASSWORD_MIN_LENGTH,

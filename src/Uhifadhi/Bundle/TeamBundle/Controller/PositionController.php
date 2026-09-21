@@ -10,6 +10,7 @@ declare(strict_types=1);
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
 namespace Uhifadhi\Bundle\TeamBundle\Controller;
 
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -128,19 +129,88 @@ final readonly class PositionController
     {
         $kind = ScopeKind::tryFrom(trim((string) $request->query->get('kind')));
         $cards = $this->board->register();
+        $shown = null === $kind ? $cards : array_values(array_filter(
+            $cards,
+            static fn (PositionCard $card): bool => \in_array($kind, $card->allowedKinds(), true),
+        ));
 
         return new Response($this->twig->render('@Team/positions/index.html.twig', [
             'cards' => $cards,
-            'shown' => null === $kind ? $cards : array_values(array_filter(
-                $cards,
-                static fn (PositionCard $card): bool => \in_array($kind, $card->allowedKinds(), true),
-            )),
+            'shown' => $shown,
+            // WHICH CARDS ARE OPEN LIVES IN THE ADDRESS, the way the
+            // departments register's does: the label beside the chevron is
+            // the server's answer, so there is no state in the browser to
+            // keep in step and a reader can send somebody the page they are
+            // looking at.
+            'openCards' => $this->openCards($request, $shown),
+            'folds' => $this->foldHrefs($request, $shown),
             'kind' => $kind,
             'kinds' => [ScopeKind::Organization, ScopeKind::Area, ScopeKind::Department, ScopeKind::Own],
+            // WHAT A PLACEMENT MAY BE MADE AT, and the whole of it: a
+            // placement is at the organization or at named areas. Department
+            // is the placement's other dimension and `own` is a scope a
+            // concern offers, so neither is a box the create form draws.
+            'placeableKinds' => [ScopeKind::Organization, ScopeKind::Area],
             'holding' => $this->users->countActiveHoldingAnyPosition($this->positions->findAllOrdered()),
             'declared' => \count($this->catalogue->all()),
             'csrfToken' => $this->csrf->getToken(self::CSRF_ID)->getValue(),
         ]));
+    }
+
+    /**
+     * WHICH CARDS ARE OPEN — `all` (the shipped state), `none`, or a
+     * comma-separated set of uuids.
+     *
+     * @param list<PositionCard> $shown
+     *
+     * @return array<string, bool> uuid => open
+     */
+    private function openCards(Request $request, array $shown): array
+    {
+        $open = trim((string) $request->query->get('open', 'all'));
+        $named = 'all' === $open || 'none' === $open ? [] : explode(',', $open);
+
+        $state = [];
+        foreach ($shown as $card) {
+            $state[$card->uuid()] = 'all' === $open || \in_array($card->uuid(), $named, true);
+        }
+
+        return $state;
+    }
+
+    /**
+     * THE LINKS THE DISCLOSURES POINT AT: one per card that toggles just that
+     * card, plus the two that fold or open the lot.
+     *
+     * @param list<PositionCard> $shown
+     *
+     * @return array<string, string>
+     */
+    private function foldHrefs(Request $request, array $shown): array
+    {
+        $state = $this->openCards($request, $shown);
+        $kind = trim((string) $request->query->get('kind'));
+        $query = static fn (string $open): array => array_filter(['kind' => $kind, 'open' => $open]);
+
+        $hrefs = [
+            'all' => $this->router->generate(self::REGISTER, $query('all')),
+            'none' => $this->router->generate(self::REGISTER, $query('none')),
+        ];
+
+        foreach ($shown as $card) {
+            $wanted = array_keys(array_filter(
+                $state,
+                static fn (bool $on, string $uuid): bool => $card->uuid() === $uuid ? !$on : $on,
+                \ARRAY_FILTER_USE_BOTH,
+            ));
+
+            $hrefs[$card->uuid()] = $this->router->generate(
+                self::REGISTER,
+                $query([] === $wanted ? 'none' : implode(',', $wanted)),
+            ).'#p-'.$card->uuid();
+        }
+
+        return $hrefs;
     }
 
     /**

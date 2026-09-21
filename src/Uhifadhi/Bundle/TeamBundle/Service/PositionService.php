@@ -120,9 +120,9 @@ final readonly class PositionService
      *
      * @param list<ScopeKind> $allowedKinds
      *
-     * @throws NameNotUniqueException      when the organization already has the name
-     * @throws SeatsBelowHoldersException  when the count is below the holders
-     * @throws \InvalidArgumentException   when the kinds are not a placement's kinds
+     * @throws NameNotUniqueException     when the organization already has the name
+     * @throws SeatsBelowHoldersException when the count is below the holders
+     * @throws \InvalidArgumentException  when the kinds are not a placement's kinds
      */
     public function setIdentity(Position $position, string $name, ?int $seatCount, array $allowedKinds): void
     {

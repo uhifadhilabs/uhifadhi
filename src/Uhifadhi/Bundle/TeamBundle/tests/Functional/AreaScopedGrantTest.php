@@ -142,15 +142,17 @@ final class AreaScopedGrantTest extends WebTestCaseWithSchema
         $ranger = $this->position('Ranger', []);
         $this->em->flush();
 
-        $crawler = $this->client->request('GET', '/team/positions?position='.$ranger->getUuidString());
+        // THE MATRIX IS ON THE POSITION'S CONFIGURE PAGE NOW, one position
+        // at a time, rather than on the register behind a query parameter.
+        $crawler = $this->client->request('GET', '/team/positions/'.$ranger->getUuidString().'/configure');
 
         // A pair the admin holds is grantable — its box is enabled.
-        self::assertCount(0, $crawler->filter('form.pane input.pm-check[value="directory.read"][disabled]'), 'A pair the admin holds is grantable.');
+        self::assertCount(0, $crawler->filter('input[name="grants[]"][value="directory.read"][disabled]'), 'A pair the admin holds is grantable.');
         // One they do not hold is disabled, and so is team administration
         // even though they DO hold it: conferring it mints another
         // administrator, which is an organization-wide act.
-        self::assertCount(1, $crawler->filter('form.pane input.pm-check[value="surveys.read"][disabled]'), 'A pair beyond their authority is disabled.');
-        self::assertCount(1, $crawler->filter('form.pane input.pm-check[value="positions.configure"][disabled]'), 'Team administration is never grantable by a bounded administrator.');
+        self::assertCount(1, $crawler->filter('input[name="grants[]"][value="surveys.read"][disabled]'), 'A pair beyond their authority is disabled.');
+        self::assertCount(1, $crawler->filter('input[name="grants[]"][value="positions.configure"][disabled]'), 'Team administration is never grantable by a bounded administrator.');
     }
 
     /** A holder placed across the organization is unbounded: they grant anything, team.manage included. */

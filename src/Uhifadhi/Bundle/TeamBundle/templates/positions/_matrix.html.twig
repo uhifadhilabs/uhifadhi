@@ -1,0 +1,170 @@
+{# THE CONCERN MATRIX, DRAWN ONCE FOR EVERY SURFACE THAT READS IT.
+
+   DESIGN → CODE COVERAGE
+   source: DesignsProjects/team-module/team/positions/show.html (read) and
+           .../positions/configure.html (editable), the `.pmf.pmfg` folds.
+   | design element                         | type    | source                       | status |
+   | fold per declarer (.pmf.pmfg)          | chrome  | PositionBoard::card().groups | done   |
+   | caret (.pmf-car)                       | chrome  | shell:chevron-down           | done   |
+   | group name (<b>)                       | data    | GrantGroup::declarer         | done   |
+   | "declared by …" (.pmx-by[.core])       | data    | GrantGroup::module           | done*  |
+   | "n of m" (.pmx-n)                      | data    | GrantGroup::granted/total    | done   |
+   | grant all / none (.pmbulk)             | control | configure only, Stimulus     | done   |
+   | row per concern (.pmk-row)             | chrome  | GrantGroup::rows             | done   |
+   | concern name (.pmx-cn b)               | data    | GrantRow::label              | done   |
+   | sensitive mark (.pmx-sens)             | data    | GrantRow::sensitive          | done   |
+   | verb chip / box (.pmc / .pmb)          | data    | GrantRow::cells              | done   |
+   | scope chips (.pmx-sc .pmx-sk)          | data    | GrantRow::scopeKinds         | done   |
+   | own's own words (.pmx-sk.own)          | data    | GrantRow::ownWords           | done   |
+   | ungranted row (— , [data-ungranted])   | state   | GrantRow::isGranted()        | done   |
+   *the design captions the group with a composer package name; the concern
+    contract publishes a module SLUG and nothing else, so the caption names
+    the module, or the core. Named in the round's report as a divergence.
+
+   A BOX ONLY WHERE THE CONCERN DECLARES THE VERB. `GrantRow::verbs` carries
+   the declared ones and no others, so a loop over it cannot draw a cell that
+   would mean nothing — which is the ruling, enforced by the shape of the data
+   rather than by a condition somebody has to remember to write. #}
+
+{# THE SCOPE KINDS, READ-ONLY EVERYWHERE. A position is defined once for the
+   organization and where it applies is the holder's, so these state what the
+   position ALLOWS and are never a control here: the values are chosen on the
+   person's record. A row that grants nothing has no scope to state, and says
+   so with a dash rather than with an empty box. #}
+{% macro scopes(row) %}
+    <span class="pmx-sc">
+        {%- if not row.isGranted -%}
+            <span class="pmx-sk none">&mdash;</span>
+        {%- else -%}
+            {%- for kind in row.offeredKinds -%}
+                {%- if kind.value == 'own' -%}
+                    <span class="pmx-sk own">{{ row.ownWords ?? 'own' }}</span>
+                {%- else -%}
+                    <span class="pmx-sk{{ row.allows(kind) ? ' on' : '' }}">{{ kind.value }}</span>
+                {%- endif -%}
+            {%- endfor -%}
+        {%- endif -%}
+    </span>
+{% endmacro %}
+
+{% macro concern_name(row) %}
+    <span class="pmx-cn">
+        <b>{{ row.label }}</b>
+        {%- if row.sensitive %} <span class="pmx-sens">{{ ux_icon('shell:triangle-alert') }} sensitive</span>{% endif -%}
+    </span>
+{% endmacro %}
+
+{% macro group_head(group, bulk) %}
+    {% import _self as mx %}
+    <summary>
+        <span class="pmf-car">{{ ux_icon('shell:chevron-down') }}</span>
+        <b>{{ group.declarer }}</b>
+        <span class="pmx-by{{ group.isCore ? ' core' : '' }}"><i></i>declared by {{ group.isCore ? 'the core' : 'the ' ~ group.module ~ ' module' }}</span>
+        {%- if bulk %}
+            <span class="pmbulk">
+                <button type="button" data-action="uhifadhi--team-bundle--grants#all">grant all</button>
+                <button type="button" data-action="uhifadhi--team-bundle--grants#none">none</button>
+            </span>
+        {% endif -%}
+        <span class="pmx-n">{{ group.granted }} of {{ group.total }}</span>
+    </summary>
+{% endmacro %}
+
+{# THE READ VIEW — the record's, and the register's preview uses the chips
+   without the folds. #}
+{% macro read(card) %}
+    {% import _self as mx %}
+    {% for group in card.groups %}
+        <details class="pmf pmfg"{{ loop.first ? ' open' : '' }}>
+            {{ mx.group_head(group, false) }}
+            <div class="pmf-b">
+                {% for row in group.rows %}
+                    <div class="pmk-row"{{ row.isGranted ? '' : ' data-ungranted' }}>
+                        {{ mx.concern_name(row) }}
+                        <span class="pmk-chips">
+                            {%- for verb in row.verbs -%}
+                                <span class="pmc{{ row.cells[verb.value] ? ' on' : '' }}" aria-label="{{ row.label }} {{ verb.value }}">{{ verb.value }}</span>
+                            {%- endfor -%}
+                        </span>
+                        {{ mx.scopes(row) }}
+                    </div>
+                {% endfor %}
+            </div>
+        </details>
+    {% endfor %}
+{% endmacro %}
+
+{# THE EDITOR — the same object with the chips turned on, so the row height
+   does not move between reading and editing and there is one shape to learn.
+
+   THE FORM POSTS ONLY WHAT IS TICKED, so what is absent is what was revoked.
+   `grantable` is §5.6(c): a bounded administrator may confer only what their
+   own position holds, and the cells outside it are DISABLED with the reason
+   on them rather than quietly dropped. #}
+{% macro edit(card, grantable) %}
+    {% import _self as mx %}
+    {% for group in card.groups %}
+        <details class="pmf pmfg"{{ loop.first ? ' open' : '' }}
+                 data-controller="uhifadhi--team-bundle--grants"
+                 data-uhifadhi--team-bundle--grants-target="group">
+            {{ mx.group_head(group, true) }}
+            <div class="pmf-b">
+                {% for row in group.rows %}
+                    <div class="pmk-row"{{ row.isGranted ? '' : ' data-ungranted' }}>
+                        {{ mx.concern_name(row) }}
+                        <span class="pmk-chips">
+                            {%- for verb in row.verbs -%}
+                                {%- set pair = row.key ~ '.' ~ verb.value -%}
+                                {%- set refused = grantable is not null and pair not in grantable -%}
+                                <label class="pmb">
+                                    <input type="checkbox" name="grants[]" value="{{ pair }}"
+                                           {{ row.cells[verb.value] ? 'checked' : '' }}
+                                           {{ refused ? 'disabled title="Beyond your own position — an area administrator may grant only what they hold."' : '' }}
+                                           data-uhifadhi--team-bundle--grants-target="box"
+                                           data-action="uhifadhi--team-bundle--grants#changed"
+                                           data-was="{{ row.cells[verb.value] ? '1' : '0' }}"
+                                           data-verb="{{ verb.value }}" data-concern="{{ row.label }}"
+                                           aria-label="{{ row.label }} {{ verb.value }}">
+                                    <span>{{ verb.value }}</span>
+                                </label>
+                            {%- endfor -%}
+                        </span>
+                        {{ mx.scopes(row) }}
+                    </div>
+                {% endfor %}
+            </div>
+        </details>
+    {% endfor %}
+{% endmacro %}
+
+{# PAIRS NOTHING INSTALLED DECLARES ANY MORE, and still held. Pruned, not
+   purged: they are drawn as ticked boxes of their own precisely so that a
+   save that does not touch them keeps them — editing a position is not a
+   migration — and so that somebody can find out they are there and revoke
+   them. #}
+{% macro orphans(orphans) %}
+    {% if orphans is not empty %}
+        <details class="pmf pmfg">
+            <summary>
+                <span class="pmf-car">{{ ux_icon('shell:chevron-down') }}</span>
+                <b>Declared by nothing installed</b>
+                <span class="pmx-by"><i></i>the module that declared these is gone</span>
+                <span class="pmx-n">{{ orphans|length }}</span>
+            </summary>
+            <div class="pmf-b">
+                {% for pair in orphans %}
+                    <div class="pmk-row">
+                        <span class="pmx-cn"><b>{{ pair }}</b></span>
+                        <span class="pmk-chips">
+                            <label class="pmb">
+                                <input type="checkbox" name="grants[]" value="{{ pair }}" checked aria-label="{{ pair }}">
+                                <span>still held</span>
+                            </label>
+                        </span>
+                        <span class="pmx-sc"><span class="pmx-sk none">&mdash;</span></span>
+                    </div>
+                {% endfor %}
+            </div>
+        </details>
+    {% endif %}
+{% endmacro %}

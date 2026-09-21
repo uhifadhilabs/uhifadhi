@@ -1,0 +1,149 @@
+{# THE POSITION RECORD, on the station record's skeleton.
+
+   DESIGN → CODE COVERAGE
+   source: DesignsProjects/team-module/team/positions/show.html
+   structural reference: uhifadhi-web/areas/ngorongoro/stations/detail.html
+   | design element                          | type    | source                       | status |
+   | crumb … / positions / <name>            | chrome  | shell                        | done   |
+   | .dpthead mark + h1 + facts subline      | data    | PositionCard                 | done   |
+   | "Back to positions" action              | control | team_positions               | done   |
+   | "Configure" action                      | control | team_position_configure      | done   |
+   | band: Seats filled (n of m)             | data    | PositionCard::seatsFilled    | done   |
+   | band: Seats free (+ "a full one refuses")| data   | PositionCard::seatsFree      | done   |
+   | band: Holders                           | data    | PositionCard::holders        | done   |
+   | band: Concerns granted (of n · n sens.) | data    | PositionCard                 | done   |
+   | band door "Edit the grants →"           | control | team_position_configure      | done   |
+   | .recgrid, two columns                   | chrome  | shell                        | done   |
+   | "What it grants" card + .pmbar          | chrome  | _matrix.html.twig            | done   |
+   | Fold all / Open all                     | control | <details> per fold           | done*  |
+   | the folds, read-only                    | data    | _matrix.read()               | done   |
+   | orphaned grants                         | state   | PositionBoard::orphans()     | done   |
+   | card foot "n groups · n sensitive" +    |         |                              |        |
+   |   door "Edit the grants →"              | control | team_position_configure      | done   |
+   | Holders card (name · where · since)     | data    | PositionCard::holders        | done   |
+   | Holders "View all →" + bounded          | control | team_index                   | done   |
+   | Holders foot "n seats free"             | data    | PositionCard::seatsFree      | done   |
+   | History card, latest 8 of n             | data    | PositionHistory              | done   |
+   | the notes section                       | —       | —                            | excluded: design notes are not product |
+   *the two buttons are a browser behaviour over native <details> and need
+    script; they are absent rather than drawn inert — a control that looks
+    operable and is not is worse than no control. Named in the round's report.
+
+   NO TAB STRIP, and no uuid on the page: a record carries no section tabs,
+   and an identifier nobody types is not a fact a reader needs. #}
+{% extends '@Shell/page.html.twig' %}
+{% import '@Team/positions/_matrix.html.twig' as mx %}
+
+{% block title %}{{ card.name }} &middot; positions{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {{ include('@Team/_stylesheets.html.twig') }}
+{% endblock %}
+
+{% block shell_page_tabs %}{% endblock %}
+
+{% block shell_breadcrumbs %}
+    <a href="{{ path('team_index') }}">uhifadhi</a> / <a href="{{ path('team_index') }}">team</a> / <a href="{{ path('team_positions') }}">positions</a> / {{ card.name|lower }}
+{% endblock %}
+
+{% block shell_page_head %}
+    <div class="dpthead">
+        <span class="mark">{{ card.mark }}</span>
+        <div>
+            <h1 class="pg">{{ card.name }}</h1>
+            <p class="pgsub">
+                <span>{{ card.seatsFilled }} holder{{ card.seatsFilled == 1 ? '' : 's' }}</span> &middot;
+                <span>{% if card.seats is null %}unlimited seats{% else %}{{ card.seatsFilled }} of {{ card.seats }} seats{% endif %}</span> &middot;
+                <span>{{ card.allowedKinds|length == 2 ? 'placed in one area or across the organization' : 'placed ' ~ (card.allowedKinds|first).reach }}</span>
+                {%- if card.position.isRetired %} &middot; <span>retired</span>{% endif -%}
+            </p>
+        </div>
+    </div>
+    {# THE HEAD IS OVERRIDDEN WHOLE because a record wears the mark beside its
+       name, so the actions are drawn here rather than in the shell's own
+       `shell_page_actions` socket — which this override replaces. #}
+    <div class="pgact w-pgact">
+        <a class="tgl w-act" href="{{ path('team_positions') }}">{{ ux_icon('shell:chevron-left', {width: 15, height: 15}) }} Back to positions</a>
+        {% if door('positions.configure') %}<a class="tgl w-act" href="{{ path('team_position_configure', {uuid: card.uuid}) }}">{{ ux_icon('shell:settings', {width: 15, height: 15}) }} Configure</a>{% endif %}
+    </div>
+{% endblock %}
+
+{% block shell_page %}
+    <div class="factband" style="margin-bottom:18px">
+        <span class="f"><span class="k">Seats filled</span><span class="v">{{ card.seatsFilled }}<em>{{ card.seats is null ? 'of unlimited' : 'of ' ~ card.seats }}</em></span></span>
+        <span class="f"><span class="k">Seats free</span><span class="v">{{ card.seatsFree is null ? '—' : card.seatsFree }}<em>{{ card.seats is null ? 'unlimited seats' : 'a full one refuses' }}</em></span></span>
+        <span class="f"><span class="k">Holders</span><span class="v">{{ card.seatsFilled }}<em>{{ card.seatsFilled == 1 ? 'person' : 'people' }}</em></span></span>
+        <span class="f"><span class="k">Concerns granted</span><span class="v">{{ card.concernsGranted }}<em>of {{ card.concernsDeclared }}{% if card.sensitiveGranted %} &middot; {{ card.sensitiveGranted }} sensitive{% endif %}</em></span></span>
+        <span class="sp"></span>
+        {% if door('positions.configure') %}<a class="more" href="{{ path('team_position_configure', {uuid: card.uuid}) }}">Edit the grants &rarr;</a>{% endif %}
+    </div>
+
+    <div class="recgrid">
+        <div class="col">
+            <div class="c">
+                <span class="tab">What it grants<span class="src">&middot; {{ card.concernsGranted }} of {{ card.concernsDeclared }} concerns &middot; read-only</span></span>
+                <div class="pmbar">
+                    <span class="pmbar-n"><b>{{ card.concernsGranted }} of {{ card.concernsDeclared }} concerns</b> &middot; {{ card.groups|length }} group{{ card.groups|length == 1 ? '' : 's' }} &middot; the six verbs, fixed</span>
+                </div>
+                {{ mx.read(card) }}
+                {{ mx.orphans(orphans) }}
+                <div class="pcard-foot">
+                    <span>{{ card.groups|length }} group{{ card.groups|length == 1 ? '' : 's' }}{% if card.sensitiveGranted %} &middot; {{ card.sensitiveGranted }} sensitive{% endif %}</span>
+                    <span class="sp"></span>
+                    {% if door('positions.configure') %}<a class="ov-open" href="{{ path('team_position_configure', {uuid: card.uuid}) }}">Edit the grants {{ ux_icon('shell:chevron-right') }}</a>{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col">
+            {# READ-ONLY, BECAUSE A POSITION IS GIVEN ON THE PERSON'S OWN
+               RECORD. Every name here is a door to that record, and nothing
+               on this page changes who holds it. #}
+            <div class="c">
+                <span class="tab">Holders<span class="src">&middot; {{ card.holders|slice(0, 8)|length }} of {{ card.holders|length }}</span></span>
+                <a class="more" href="{{ path('team_index') }}">View all &rarr;</a>
+                {% if card.holders is empty %}
+                    <div class="pmx-zero">
+                        {{ ux_icon('shell:triangle-alert') }}
+                        <span><b>Nobody holds this position.</b> It has stood empty since it was written</span>
+                    </div>
+                {% else %}
+                <div class="pshold stack">
+                    {% for holder in card.holders|slice(0, 8) %}
+                        <div class="pshold-r">
+                            <a class="nm" href="{{ path('team_member', {uuid: holder.uuid}) }}">{{ holder.name }}</a>
+                            <a class="ov-open" href="{{ path('team_member', {uuid: holder.uuid}) }}" aria-label="{{ holder.name }}&rsquo;s record">Record {{ ux_icon('shell:chevron-right') }}</a>
+                            <span class="wh">{{ holder.where }}</span>
+                            <span class="sn">{% if holder.since %}since <time datetime="{{ holder.since|date('c') }}" data-localtime-format="day">{{ holder.since|date('j M Y') }}</time>{% else %}since unknown{% endif %}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                <div class="pcard-foot">
+                    <span>{% if card.seatsFree is null %}<b>unlimited</b> seats{% else %}<b>{{ card.seatsFree }}</b> seat{{ card.seatsFree == 1 ? '' : 's' }} free{% endif %}</span>
+                    <span class="sp"></span>
+                    <span>given on the person&rsquo;s record</span>
+                </div>
+            </div>
+
+            {# WHAT THIS INSTALLATION CAN TRUTHFULLY SAY HAPPENED — derived
+               from the stored facts that carry a date, newest first, and
+               bounded. #}
+            <div class="c">
+                <span class="tab">History<span class="src">&middot; latest {{ history|length }} of {{ historyTotal }}</span></span>
+                <div class="hlist">
+                    {% for event in history %}
+                        <div class="hrow">
+                            <span class="w"><time datetime="{{ event.when|date('c') }}" data-localtime-format="daystamp">{{ event.when|date('j M Y') }}</time></span>
+                            <span class="t">{{ event.title }}</span>
+                            <span class="by">{{ event.note }}</span>
+                        </div>
+                    {% else %}
+                        <div class="hrow"><span class="w">&mdash;</span><span class="t">Nothing dated yet.</span></div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

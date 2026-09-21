@@ -1,9 +1,41 @@
-{# POSITIONS AND PERMISSIONS — a widget surface, and the heart of this bundle. #}
+{# THE POSITIONS REGISTER — one collapsible card per position, on the
+   department register's idiom.
+
+   DESIGN → CODE COVERAGE
+   source: DesignsProjects/team-module/team/positions/index.html
+   | design element                     | type    | source                     | status |
+   | crumb                              | chrome  | shell                      | done   |
+   | h1 "Team" + subline                | chrome  | shell                      | done   |
+   | "Add a position" cta -> #add       | control | anchor                     | done   |
+   | Widget library door                | control | —                          | retired: the surface is a redirect for one release |
+   | Configure action, last in the row  | control | team_configure             | done   |
+   | section tab strip (.atabs)         | chrome  | shell                      | done   |
+   | create card (.dcadd) name + seats  | control | POST team_position_create  | done   |
+   | create card: allowed kinds         | control | POST team_position_create  | done   |
+   | "The tiers" (.pmx-above, three)    | chrome  | static                     | done   |
+   | scope filter row (.rgbar .rgf x5)  | control | ?kind=                     | done   |
+   | "by name · n positions · n people  |         |                            |        |
+   |  · n declared concerns" (.rgbar-n) | data    | cards / holding / declared | done   |
+   | Collapse all / Expand all          | control | ?open=none / ?open=all     | done   |
+   | card head: mark, name, seats line  | data    | PositionCard               | done   |
+   | head: scope kinds (.rgkinds)       | data    | PositionCard::allowedKinds | done   |
+   | head: Collapse/Expand + Open door  | control | ?open= / team_position_show| done   |
+   | body: chips by declarer (.rggrid)  | data    | PositionCard::grantedGroups| done   |
+   | body: "grants nothing" (.rgnone)   | state   | PositionCard::grantsNothing| done   |
+   | foot: verb summary (.rgsum-l)      | data    | PositionCard::summary()    | done   |
+   | foot: n sensitive (.rgsensw)       | data    | PositionCard::sensitive    | done   |
+   | foot: holder avatars (.rgav)       | data    | PositionCard::holders      | done   |
+   | empty register (.pmx-zero)         | state   | cards is empty             | done   |
+   | "First-run state" / "Register      | control | —                          | design app only, excluded by the design's own comment |
+   |  options" toggles                  |         |                            |        |
+   | the notes section                  | —       | —                          | excluded: design notes are not product |
+
+   THE BODY IS A PREVIEW AND NEVER AN EDITOR. The matrix lives once, on the
+   position record. #}
 {% extends '@Shell/page.html.twig' %}
 {% import '@Team/team/_bits.html.twig' as bits %}
-{% import '@Team/positions/_bits.html.twig' as pm %}
 
-{% block title %}Positions &amp; permissions{% endblock %}
+{% block title %}Positions{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
@@ -15,41 +47,55 @@
 {% endblock %}
 
 {% block shell_page_title %}Team{% endblock %}
-
-{# ONE LINE: what THIS tab is for. That a position belongs to no department
-   and that its name is unique across the organization are the model, stated
-   on the section's configure page rather than shouted at every visit. #}
-{% block shell_page_subtitle %}What each position may do.{% endblock %}
+{% block shell_page_subtitle %}Every position, what it grants, and who holds it.{% endblock %}
 
 {% block shell_page_actions %}
     {# THE SECTION'S PRIMARY ACTION, the accent cta, first in the row. It does
        not open a second form: it jumps to the create card that is already open
        at the top of the page, the way a configure page states a setting. #}
-    <a class="cta" href="#add">{{ bits.icon_plus() }} Add a position</a>
-    <a class="tgl w-act" href="{{ path('team_position_widgets') }}">{{ bits.icon_grid() }} Widget library</a>
+    {% if door('positions.configure') %}<a class="cta" href="#add">{{ ux_icon('shell:plus', {width: 15, height: 15}) }} Add a position</a>{% endif %}
+    {# ONE CONFIGURE ACTION, ALWAYS LAST IN THE ROW. #}
+    {% if door('positions.configure') %}<a class="tgl w-act" href="{{ path('team_configure') }}">{{ ux_icon('shell:settings', {width: 15, height: 15}) }} Configure</a>{% endif %}
 {% endblock %}
 
 {% block shell_page %}
     {{ include('@Team/team/_scope_banner.html.twig') }}
 
+    {% if door('positions.configure') %}
     {# ALWAYS OPEN, THE HOUSE CREATE CARD. A position belongs to no department
-       and its name is unique across the organization, so the name is the only
-       field there is — where each holder works is written on their own
-       record, not here. #}
+       and its name is unique across the organization, so there is nothing to
+       file it under — the three fields are what a position IS: the name, how
+       many may hold it, and the kinds of placement it allows. #}
     <div class="dcadd" id="add">
         <div class="dcaddhd">
             {{ ux_icon('shell:plus', {width: 15, height: 15}) }}
             <b>Add a position</b>
-            <span class="hint">One name, unique across the organization &mdash; a position belongs to no department</span>
+            <span class="hint">The name is unique for the organization</span>
         </div>
         <form class="crcard" method="post" action="{{ path('team_position_create') }}">
             <input type="hidden" name="_token" value="{{ csrfToken }}">
             <div class="crgrid">
                 <div class="crfield grow">
                     <span class="crlab">Name</span>
-                    <input type="text" name="name" class="fld" placeholder="Senior Ranger" aria-label="New position name" required>
+                    <input type="text" name="name" class="fld" placeholder="Sergeant" aria-label="New position name" required>
                 </div>
-                <button class="cta" type="submit">{{ bits.icon_plus() }} Add position</button>
+                <div class="crfield">
+                    <span class="crlab">Seats</span>
+                    <input type="number" name="seats" class="fld" value="1" min="1" style="width:92px" aria-label="Seats">
+                    <span class="zfrag">Blank is unlimited</span>
+                </div>
+                <div class="crfield">
+                    <span class="crlab">Allows</span>
+                    <span class="pmk-chips">
+                        {% for kind in placeableKinds %}
+                            <label class="pmb">
+                                <input type="checkbox" name="allows[]" value="{{ kind.value }}"{{ kind.value == 'area' ? ' checked' : '' }} aria-label="Allows {{ kind.value }}">
+                                <span>{{ kind.value }}</span>
+                            </label>
+                        {% endfor %}
+                    </span>
+                </div>
+                <button class="cta" type="submit">{{ ux_icon('shell:plus', {width: 15, height: 15}) }} Add position</button>
             </div>
             <div class="crhint">
                 {{ ux_icon('shell:info') }}
@@ -57,17 +103,128 @@
             </div>
         </form>
     </div>
-    {# See the team page: these are the shell's cell classes, and the
-       span is `.w-span-N` because bare `w-N` is Tailwind's width scale. #}
-    <div class="w-grid">
-        {% for widget in widgets %}
-            {% if widget.on %}
-                <div data-w="{{ widget.id }}" class="w-cell w-span-{{ widget.cols }}">
-                    <div class="w-inner">
-                        {{ include('@Team/positions/_w_' ~ widget.id ~ '.html.twig') }}
+    {% endif %}
+
+    {# ABOVE THE MATRIX, NOT ROWS IN IT. Super admin and Admin are not composed
+       of concerns and cannot be, so drawing them as rows would be a lie the
+       matrix tells about itself. #}
+    <h2 class="zone">The tiers</h2>
+    <div class="pmx-above">
+        <div class="pmx-tier"><b>Super admin &mdash; above the matrix</b><span>Tiers and impersonation &middot; at least one active</span></div>
+        <div class="pmx-tier"><b>Admin &mdash; above the matrix</b><span>Everything the matrix can express &middot; not a row here</span></div>
+        <div class="pmx-tier plain"><b>Staff &mdash; the matrix</b><span>Exactly what their position grants &middot; nothing by default</span></div>
+    </div>
+
+    <h2 class="zone">The positions</h2>
+
+    {# THE SCOPE FILTER. Four kinds and an all — a segmented row rather than a
+       grouped dropdown, because a position allows KINDS, there are exactly
+       four of them, and burying four one-click choices in a panel is worse
+       than showing them. The choice is a query parameter, so it is shareable
+       and it survives a save's redirect. #}
+    <div class="rgbar">
+        <span class="rgbar-k">scope</span>
+        <a class="rgf{{ kind is null ? ' on' : '' }}" href="{{ path('team_positions') }}">All positions</a>
+        {% for offer in kinds %}
+            <a class="rgf{{ kind == offer ? ' on' : '' }}" href="{{ path('team_positions', {kind: offer.value}) }}">{{ offer.value }}</a>
+        {% endfor %}
+        <span class="rgbar-n">by name &middot; <b>{{ shown|length }} position{{ shown|length == 1 ? '' : 's' }}</b> &middot; <b>{{ holding }}</b> {{ holding == 1 ? 'person' : 'people' }} holding one &middot; {{ declared }} declared concerns</span>
+        <span class="rgbar-acts">
+            <a class="tgl w-act" href="{{ folds.none }}">Collapse all</a>
+            <a class="tgl w-act" href="{{ folds.all }}">Expand all</a>
+        </span>
+    </div>
+
+    {% if shown is empty %}
+        <div class="pmx-zero c">
+            {{ ux_icon('shell:triangle-alert') }}
+            <span>{% if cards is empty %}<b>No positions yet.</b> One Super Admin, nothing else{% else %}<b>No position allows that scope.</b> {{ cards|length }} exist under the other kinds{% endif %}</span>
+        </div>
+    {% else %}
+    <div class="dcstack dcreg">
+        {% for card in shown %}
+            {% set open = openCards[card.uuid] %}
+            <article class="dcard{{ open ? ' on' : '' }}" id="p-{{ card.uuid }}">
+                <div class="dc-hd">
+                    <span class="ov-mk{{ open ? ' on' : '' }}">{{ card.mark }}</span>
+                    <div class="dc-bd">
+                        <span class="nmrow">
+                            <a class="ov-nm" href="{{ path('team_position_show', {uuid: card.uuid}) }}">{{ card.name }}</a>
+                            {% if card.position.isRetired %}<span class="chip stoff">retired</span>{% endif %}
+                        </span>
+                        <div class="dc-sub">
+                            {%- if card.seats is null -%}
+                                <b>{{ card.seatsFilled }}</b> holding <span class="rgx open">unlimited seats</span>
+                            {%- else -%}
+                                <b>{{ card.seatsFilled }} of {{ card.seats }}</b> seat{{ card.seats == 1 ? '' : 's' }}
+                                {% if card.isFull %}<span class="rgx full">{{ ux_icon('shell:triangle-alert') }} full</span>
+                                {%- else %}<span class="rgx open">{{ card.seatsFree }} free</span>{% endif %}
+                            {%- endif %}
+                            &middot; <b>{{ card.seatsFilled }}</b> holder{{ card.seatsFilled == 1 ? '' : 's' }}
+                            &middot; {{ card.concernsGranted }} of {{ card.concernsDeclared }} concerns
+                        </div>
+                    </div>
+                    <span class="rgkinds">
+                        {%- if card.grantsNothing -%}
+                            <span class="pmx-sk nil">grants nothing</span>
+                        {%- else -%}
+                            {%- for allowed in card.allowedKinds %}<span class="pmx-sk on">{{ allowed.value }}</span>{% endfor -%}
+                        {%- endif -%}
+                    </span>
+                    <div class="dc-act">
+                        {# IT IS A LINK, so which card is open stays in the
+                           address and the label is the server's answer. #}
+                        <a class="ovx xdisc" href="{{ folds[card.uuid] }}"
+                           aria-expanded="{{ open ? 'true' : 'false' }}"
+                           aria-label="{{ open ? 'Collapse' : 'Expand' }} {{ card.name }}">
+                            <span class="t">{{ open ? 'Collapse' : 'Expand' }}</span>{{ ux_icon('shell:chevron-down') }}
+                        </a>
+                        <a class="ov-open" href="{{ path('team_position_show', {uuid: card.uuid}) }}" title="Open {{ card.name }}">Open {{ ux_icon('shell:chevron-right') }}</a>
                     </div>
                 </div>
-            {% endif %}
+                {% if open %}
+                <div class="dc-body">
+                    {% if card.grantsNothing %}
+                        <div class="rgnone">
+                            {{ ux_icon('shell:triangle-alert') }}
+                            <span><b>Grants nothing.</b> No module contributes a single concern to it.</span>
+                        </div>
+                    {% else %}
+                        <div class="rggrid">
+                            {% for group in card.grantedGroups %}
+                                <div class="rggrid-g">
+                                    <span class="rggrid-k">{{ group.declarer }}</span>
+                                    <span class="rggrid-v">
+                                        {%- for row in group.grantedRows -%}
+                                            <span class="rgchip{{ row.sensitive ? ' sens' : '' }}">{{ row.label }}{{ row.sensitive ? ' ⚠' : '' }}</span>
+                                        {%- endfor -%}
+                                    </span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+                <div class="dc-foot">
+                    <div class="rgsum">
+                        <span class="rgsum-l">
+                            {%- if card.grantsNothing -%}
+                                <b>Grants nothing.</b>
+                            {%- else -%}
+                                {%- for word, count in card.summary %}{{ loop.first ? '' : ' · ' }}{{ word }} <b>{{ count }}</b>{% endfor -%}
+                                {%- if card.sensitiveGranted %} &middot; <span class="rgsensw">{{ card.sensitiveGranted }} sensitive</span>{% endif -%}
+                            {%- endif -%}
+                        </span>
+                        <span class="rgav-stack">
+                            {%- for holder in card.holders|slice(0, 3) -%}
+                                <span class="rgav" title="{{ holder.name }} &mdash; {{ holder.where }}">{{ holder.initials }}</span>
+                            {%- endfor -%}
+                            {%- if card.holders|length > 3 %}<span class="rgav more">+{{ card.holders|length - 3 }}</span>{% endif -%}
+                        </span>
+                    </div>
+                </div>
+            </article>
         {% endfor %}
     </div>
+    {% endif %}
 {% endblock %}

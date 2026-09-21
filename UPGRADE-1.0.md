@@ -1,5 +1,130 @@
 # UPGRADE FROM 0.x to 1.0
 
+## Positions are a register, a record and a configure page
+
+**What changed** (ruled 2026-09-21). The positions screen used to be ONE page:
+a widget canvas of thirteen widgets and seven presets, with the grants matrix
+edited on it behind a `?position=` query parameter. It is three screens now,
+and each of them does one thing.
+
+| Route | What it is |
+| --- | --- |
+| `team_positions` (`GET /team/positions`) | the REGISTER — one collapsible card per position, on the department register's idiom. A preview, never an editor. |
+| `team_position_show` (`GET /team/positions/{uuid}`) | the RECORD — the station record's skeleton, the matrix READ-ONLY, the holders and the history beside it. No tabs. |
+| `team_position_configure` (`GET /team/positions/{uuid}/configure`) | ONE page holding everything a position can be changed to: the identity, the matrix, and retiring it. No tabs. |
+
+**The writes.** `POST /team/positions/{uuid}/identity` (`team_position_identity`)
+writes the name, the seat count and the kinds of placement together, because
+they are refused together. `POST /team/positions/{uuid}/permissions` is
+unchanged and still posts `grants[]`. `POST /team/positions/{uuid}/retire`
+(`team_position_retire`) closes a position, and closes nothing else.
+
+**`team_position_rename` is deprecated** and still works: post the identity
+instead. It goes in 1.1.
+
+**Every write now redirects to the position's configure page** rather than to
+the register, so the sentence is read beside the thing it is about. Creating
+one still goes to the register, because there is no position to go back to.
+
+### The matrix widget surface is retired
+
+`team_position_widgets` and its eight sibling routes — save, reset, the two
+preset routes and the three custom-preset routes — are **302 redirects to the
+register** for this release. Nothing 404s, and nothing arranges anything: the
+register's whole content was replaced, so there is no layout left to keep.
+
+`TeamBundle\Widget\PositionWidgets`, its seven presets and the thirteen
+`templates/positions/_w_*.html.twig` partials are marked `@deprecated` and
+**deleted in 1.1**. If your installation overrode one of those templates, the
+override is dead markup now; delete it with the release that deletes ours.
+
+`TeamBundle\Controller\PositionWidgetsController` keeps its class name and its
+route names and takes **one** constructor argument (the router) instead of
+five.
+
+### Positions are retired, never deleted
+
+Owner, 21 Sep 2026: *"we don't delete things."* A position is closed the way a
+shift is closed and an account is deactivated.
+
+| Member | Meaning |
+| --- | --- |
+| `Position::getRetiredAt(): ?\DateTimeImmutable` | the day it was closed; **null is a position still in use**, which is a positive fact rather than "unknown" |
+| `Position::isRetired(): bool` | the same question, read positively |
+| `Position::retire(\DateTimeImmutable)` / `::reinstate()` | the stamp, and clearing it |
+
+**A retired position cannot be given to anybody.**
+`UserService::assignPosition()` throws
+`TeamBundle\Exception\PositionRetiredException`, and
+`PositionRepository::findAssignable()` — not `findAllOrdered()` — is what the
+member and invite pickers read, so a retired one is **absent from every picker
+and present in the register, greyed**. An administrator told a name is already
+taken has to be able to find the row that is holding it.
+
+**Retiring is refused while anybody holds it**, and the refusal names the
+count: `TeamBundle\Exception\PositionHeldException`. **The seat count is
+refused the same way** — it cannot fall below the people already sitting in it
+(`TeamBundle\Exception\SeatsBelowHoldersException`), because choosing which
+two of six holders lose their seat is not a decision a product may make.
+
+### A holding carries the day it started
+
+`User::getPositionSince()` / `::setPositionSince()`, column
+`team_user.position_since`, stamped by `UserService::assignPosition()` **only
+when the holding actually changes** — re-saving a form that names the position
+somebody already holds must not reset a date a reader trusts. **Null is
+"unknown"**, the honest answer for a holding written before the day was
+recorded; the migration invents nothing.
+
+### Two constructors changed
+
+- `TeamBundle\Service\PositionService` is now
+  `(EntityManagerInterface, ConcernCatalogue, UserRepository)` — the repository
+  is new and last, and it is what answers "how many people hold this" for the
+  two refusals above. It gained `setIdentity()`, `retire()` and `reinstate()`.
+- `TeamBundle\Controller\PositionController` is
+  `(Environment, PositionRepository, UserRepository, ConcernCatalogue,
+  PositionBoard, PositionHistory, PositionService, CsrfTokenManagerInterface,
+  UrlGeneratorInterface, AreaAuthority)`. It no longer takes the department
+  repository, the department membership, the token storage or the widget
+  service, and **`widgetContext()` is gone** — the widget surface it fed is
+  retired.
+
+### Two new services, and what they are for
+
+`TeamBundle\Service\PositionBoard` (`team.position_board`) is the ONE
+derivation all three screens read: `register()`, `card(Position)`,
+`holders(Position)` and `orphans(Position)`. "12 of 21 concerns · 2 sensitive"
+is on the register card's head, in the record's fact band and in the configure
+page's bar, and the moment a template counts it for itself the three disagree.
+`TeamBundle\Service\PositionHistory` (`team.position_history`) answers what
+the installation can truthfully say happened to a position, from the stored
+facts that carry a date — the same discipline as `MemberHistory`.
+
+Their value objects are `TeamBundle\Model\{PositionCard, GrantGroup, GrantRow,
+HolderRow}`.
+
+### The migration
+
+`TeamBundle\Migrations\Version20260921003000`, expand only and nothing to
+backfill: `team_position.retired_at` and `team_user.position_since`, both
+nullable for the life of the table.
+
+**It writes no `COMMENT ON COLUMN … (DC2Type:datetime_immutable)`, and that is
+correct.** DBAL 4 removed type comments — there is no `DC2Type` left in the
+library — so `doctrine:migrations:diff` on this platform emits the bare
+`ALTER`, and a hand-written comment would make every installation's next diff
+generate a migration removing it. `tests/Core/MigrationsCoverSchemaTest` is
+what holds the two together.
+
+### A new Stimulus controller
+
+`uhifadhi--team-bundle--grants` (`assets/controllers/grants_controller.js`),
+lazy: the configure page's per-module **grant all / none** and the save bar's
+**change preview**. It writes nothing — the matrix saves by hand with no
+JavaScript at all — and it leaves a disabled box alone, because a disabled box
+is a pair beyond a bounded administrator's own position.
+
 ## A department is a placement, not an owner
 
 **What changed** (ruled 2026-09-21). A position used to look as though it

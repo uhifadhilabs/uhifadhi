@@ -89,6 +89,8 @@ use Uhifadhi\Bundle\TeamBundle\Service\PasswordResetService;
 use Uhifadhi\Bundle\TeamBundle\Service\PerformanceHistory;
 use Uhifadhi\Bundle\TeamBundle\Service\PerformanceTopics;
 use Uhifadhi\Bundle\TeamBundle\Service\PermissionCatalogue;
+use Uhifadhi\Bundle\TeamBundle\Service\PositionBoard;
+use Uhifadhi\Bundle\TeamBundle\Service\PositionHistory;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionService;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionTitleService;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionVacancy;
@@ -918,6 +920,22 @@ return static function (ContainerConfigurator $container): void {
      * THE ORG CHART'S SHAPE. The audit line a scope change leaves is the
      * entity's own doing; this supplies who and why, and stores the result.
      */
+    /*
+     * WHAT EVERY POSITION SCREEN READS. The register's cards, the record's
+     * matrix and the configure page's editor are three renderings of this one
+     * derivation: the moment a template counts "12 of 21 concerns" for itself
+     * the three disagree and nobody notices until an administrator does.
+     */
+    $services->set('team.position_board', PositionBoard::class)
+        ->args([
+            service(PositionRepository::class),
+            service(UserRepository::class),
+            service('team.access.catalogue'),
+        ]);
+
+    /* What this installation can truthfully say happened to a position. */
+    $services->set('team.position_history', PositionHistory::class);
+
     $services->set('team.departments', DepartmentService::class)
         ->args([service('doctrine.orm.entity_manager')]);
 
@@ -1073,15 +1091,13 @@ return static function (ContainerConfigurator $container): void {
         ->args([
             service('twig'),
             service(PositionRepository::class),
-            service(DepartmentRepository::class),
-            service('team.department_membership'),
             service(UserRepository::class),
             service('team.access.catalogue'),
+            service('team.position_board'),
+            service('team.position_history'),
             service('team.positions'),
             service('security.csrf.token_manager'),
             service('router'),
-            service('security.token_storage'),
-            service('shell.widget.service'),
             service('team.area_authority'),
         ])
         ->tag('controller.service_arguments');

@@ -1,0 +1,210 @@
+{# CONFIGURING A POSITION — ONE PAGE, NO TABS. It mirrors the record: the same
+   skeleton, the same column split, everything a position can be changed to.
+
+   DESIGN → CODE COVERAGE
+   source: DesignsProjects/team-module/team/positions/configure.html
+   | design element                           | type    | source                      | status |
+   | crumb … / positions / <name> / configure  | chrome  | shell                       | done   |
+   | .dpthead mark + h1 + "Configure · identity· what it grants" | chrome | static | done  |
+   | "The record" action                       | control | team_position_show          | done   |
+   | Identity card: Name field                 | control | POST team_position_identity | done   |
+   | Identity: seats one/a number/unlimited    | control | POST (seatMode + seats)     | done   |
+   | Identity: seats floor "n held"            | data    | PositionCard::seatsFilled   | done   |
+   | Identity: allows organization/area        | control | POST (allows[])             | done   |
+   | Identity: "own is declared per module"    | chrome  | static                      | done   |
+   | Identity save bar + change preview        | control | one .staddrow               | done   |
+   | "What it grants" card + .pmbar            | chrome  | _matrix.html.twig           | done   |
+   | grant all / none per module               | control | Stimulus grants controller  | done   |
+   | the checkbox matrix                       | control | _matrix.edit()              | done   |
+   | orphaned grants                           | state   | PositionBoard::orphans()    | done   |
+   | sticky save bar, LEFT TEXT = the preview  | control | Stimulus grants controller  | done   |
+   | Holders card, read-only                   | data    | PositionCard::holders       | done   |
+   | Actions card: Retire (destructive, refused| control | POST team_position_retire   | done   |
+   |   while held, naming the count)           |         |                             |        |
+   | per-concern scope CHECKBOXES in the matrix| control | —                           | NOT PORTED: a position's allowed kinds are ONE fact, stated on the Identity card; there is nothing on the model to vary them per concern. The chips are read-only, as on the record. Named in the round's report as needing a verdict. |
+   | Fold all / Open all                       | control | <details>                   | absent rather than inert (see show.html.twig) |
+   | the notes section                         | —       | —                           | excluded: design notes are not product |
+
+   THE HOLDERS ARE BESIDE THE EDITOR. Read-only, because a person is given a
+   position on their own record — and present, because changing what this
+   position grants changes what these people may do. #}
+{% extends '@Shell/page.html.twig' %}
+{% import '@Team/positions/_matrix.html.twig' as mx %}
+
+{% block title %}Configure {{ card.name }}{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {{ include('@Team/_stylesheets.html.twig') }}
+{% endblock %}
+
+{% block shell_page_tabs %}{% endblock %}
+
+{% block shell_breadcrumbs %}
+    <a href="{{ path('team_index') }}">uhifadhi</a> / <a href="{{ path('team_index') }}">team</a> / <a href="{{ path('team_positions') }}">positions</a> / <a href="{{ path('team_position_show', {uuid: card.uuid}) }}">{{ card.name|lower }}</a> / configure
+{% endblock %}
+
+{% block shell_page_head %}
+    <div class="dpthead">
+        <span class="mark">{{ card.mark }}</span>
+        <div>
+            <h1 class="pg">{{ card.name }}</h1>
+            <p class="pgsub"><span>Configure</span> &middot; <span>identity</span> &middot; <span>what it grants</span></p>
+        </div>
+    </div>
+    <div class="pgact w-pgact">
+        <a class="tgl w-act" href="{{ path('team_position_show', {uuid: card.uuid}) }}">{{ ux_icon('shell:chevron-left', {width: 15, height: 15}) }} The record</a>
+    </div>
+{% endblock %}
+
+{% block shell_page %}
+    <div class="recgrid">
+        <div class="col">
+            {# THE THREE FACTS A POSITION IS, saved together because they are
+               refused together: the seat count cannot fall below the people
+               already sitting in it, and choosing which of them loses a seat
+               is not a decision a product may make. #}
+            <div class="c">
+                <span class="tab">Identity<span class="src">&middot; name, seats, scope kinds</span></span>
+                <form method="post" action="{{ path('team_position_identity', {uuid: card.uuid}) }}"
+                      data-controller="uhifadhi--team-bundle--grants">
+                    <input type="hidden" name="_token" value="{{ csrfToken }}">
+                    <div class="crgrid" style="margin-top:8px">
+                        <div class="crfield grow">
+                            <span class="crlab">Name</span>
+                            <input type="text" class="fld" name="name" value="{{ card.name }}" required maxlength="120" aria-label="Name">
+                        </div>
+                    </div>
+                    <div class="pms-row">
+                        <span class="k">seats</span>
+                        <span class="v">
+                            <span class="fyn" role="radiogroup" aria-label="Seat count">
+                                {% for mode, label in {'one': 'one', 'number': 'a number', 'unlimited': 'unlimited'} %}
+                                    {% set on = card.seats is null ? mode == 'unlimited' : (card.seats == 1 and mode == 'one' ? true : (card.seats > 1 and mode == 'number')) %}
+                                    <button type="submit" name="seatMode" value="{{ mode }}" class="{{ on ? 'on' : '' }}" aria-pressed="{{ on ? 'true' : 'false' }}">{{ label }}</button>
+                                {% endfor %}
+                            </span>
+                            <input type="number" class="fld" name="seats" value="{{ card.seats ?? card.seatsFilled }}" min="{{ max(1, card.seatsFilled) }}" style="width:84px" aria-label="Seats">
+                            <span class="zfrag">{% if card.seatsFilled %}{{ card.seatsFilled }} held &middot; it cannot go below {{ card.seatsFilled }}{% else %}nobody holds it &middot; any count is allowed{% endif %}</span>
+                        </span>
+                    </div>
+                    {# ORGANIZATION AND AREA ONLY, and that is correct: a
+                       placement is made at the organization or at named
+                       areas. Department is the placement's OTHER dimension,
+                       asked on the person; `own` is a scope a concern offers,
+                       not a way of placing somebody. #}
+                    <div class="pms-row">
+                        <span class="k">allows</span>
+                        <span class="v">
+                            {% for kind in placeableKinds %}
+                                <label class="pmb">
+                                    <input type="checkbox" name="allows[]" value="{{ kind.value }}"{{ card.position.allows(kind) ? ' checked' : '' }} aria-label="Allows {{ kind.value }}">
+                                    <span>{{ kind.value }}</span>
+                                </label>
+                            {% endfor %}
+                            <span class="zfrag">own is declared per module</span>
+                        </span>
+                    </div>
+                    <div class="staddrow">
+                        <span class="chg">
+                            <b>identity</b>
+                            <span class="to">reaches <b>{{ card.seatsFilled }}</b> holder{{ card.seatsFilled == 1 ? '' : 's' }}</span>
+                        </span>
+                        <span class="sp"></span>
+                        <button type="submit" class="cta" name="seatMode" value="{{ card.seats is null ? 'unlimited' : (card.seats == 1 ? 'one' : 'number') }}">Save the identity</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="c">
+                <span class="tab">What it grants<span class="src">&middot; a box per declared verb &middot; {{ card.concernsGranted }} of {{ card.concernsDeclared }} concerns</span></span>
+                <form method="post" action="{{ path('team_position_permissions', {uuid: card.uuid}) }}">
+                    <input type="hidden" name="_token" value="{{ csrfToken }}">
+                    <div class="pmbar">
+                        <span class="pmbar-n"><b>{{ card.concernsGranted }} of {{ card.concernsDeclared }} concerns</b> &middot; {{ card.groups|length }} group{{ card.groups|length == 1 ? '' : 's' }} &middot; the six verbs, fixed</span>
+                    </div>
+                    {{ mx.edit(card, grantable) }}
+                    {{ mx.orphans(orphans) }}
+                    {# ONE BAR. The change preview is the bar's own LEFT TEXT —
+                       a second band with its own ground butted against the
+                       save row read as one broken box. The counts are the
+                       server's zero state; the Stimulus controller replaces
+                       them with the fragments as boxes are ticked. #}
+                    <div class="staddrow sticky" data-controller="uhifadhi--team-bundle--grants"
+                         data-uhifadhi--team-bundle--grants-reach-value="{{ card.seatsFilled }}">
+                        <span class="chg" data-uhifadhi--team-bundle--grants-target="preview">
+                            <b>no changes</b>
+                            <span class="to">reaches <b>{{ card.seatsFilled }}</b> holder{{ card.seatsFilled == 1 ? '' : 's' }}</span>
+                        </span>
+                        <span class="sp"></span>
+                        <button type="submit" class="cta">Save the grants</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="col">
+            <div class="c">
+                <span class="tab">Holders<span class="src">&middot; {{ card.holders|slice(0, 8)|length }} of {{ card.holders|length }}</span></span>
+                <a class="more" href="{{ path('team_index') }}">View all &rarr;</a>
+                {% if card.holders is empty %}
+                    <div class="pmx-zero">
+                        {{ ux_icon('shell:triangle-alert') }}
+                        <span><b>Nobody holds this position.</b> It can be retired</span>
+                    </div>
+                {% else %}
+                <div class="pshold stack">
+                    {% for holder in card.holders|slice(0, 8) %}
+                        <div class="pshold-r">
+                            <a class="nm" href="{{ path('team_member', {uuid: holder.uuid}) }}">{{ holder.name }}</a>
+                            <a class="ov-open" href="{{ path('team_member', {uuid: holder.uuid}) }}" aria-label="{{ holder.name }}&rsquo;s record">Record {{ ux_icon('shell:chevron-right') }}</a>
+                            <span class="wh">{{ holder.where }}</span>
+                            <span class="sn">{% if holder.since %}since <time datetime="{{ holder.since|date('c') }}" data-localtime-format="day">{{ holder.since|date('j M Y') }}</time>{% else %}since unknown{% endif %}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                <div class="pcard-foot">
+                    <span>{% if card.seatsFree is null %}<b>unlimited</b> seats{% else %}<b>{{ card.seatsFree }}</b> seat{{ card.seatsFree == 1 ? '' : 's' }} free{% endif %}</span>
+                    <span class="sp"></span>
+                    <span>given on the person&rsquo;s record</span>
+                </div>
+            </div>
+
+            {# RETIRING, NOT DELETING. A position is closed the way a shift is
+               closed and an account is deactivated: the row stays, everything
+               it granted keeps its history, and it can come back. It wears
+               the person record's action row exactly. #}
+            <div class="c">
+                <span class="tab">Actions<span class="src">&middot; one</span></span>
+                <div class="mb-danger" style="margin-top:6px">
+                    <div class="mb-drow">
+                        {% if card.position.isRetired %}
+                            <div class="dt"><b>Reinstate this position</b>
+                            <em>It can be given to somebody again the moment it is open</em></div>
+                            <form method="post" action="{{ path('team_position_retire', {uuid: card.uuid}) }}">
+                                <input type="hidden" name="_token" value="{{ csrfToken }}">
+                                <button class="softbtn acc" type="submit">{{ ux_icon('shell:power') }} Reinstate</button>
+                            </form>
+                        {% else %}
+                            <div class="dt"><b>Retire this position</b>
+                            <em>Record kept &middot; reversible &middot; refused while anyone holds it</em></div>
+                            {% if card.seatsFilled %}
+                                {# REFUSED IN PLACE, WITH ITS REASON — not a
+                                   control that looks operable and then fails.
+                                   It unlocks the moment the last holder
+                                   moves. #}
+                                <span class="mb-absent">{{ ux_icon('shell:power') }} refused &mdash; {{ card.seatsFilled }} {{ card.seatsFilled == 1 ? 'person holds' : 'people hold' }} it</span>
+                            {% else %}
+                                <form method="post" action="{{ path('team_position_retire', {uuid: card.uuid}) }}">
+                                    <input type="hidden" name="_token" value="{{ csrfToken }}">
+                                    <button class="softbtn danger" type="submit">{{ ux_icon('shell:power') }} Retire</button>
+                                </form>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

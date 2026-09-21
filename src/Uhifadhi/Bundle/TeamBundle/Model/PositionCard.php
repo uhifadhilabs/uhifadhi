@@ -10,6 +10,7 @@ declare(strict_types=1);
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
 namespace Uhifadhi\Bundle\TeamBundle\Model;
 
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
@@ -53,13 +54,23 @@ final readonly class PositionCard
         return (string) $this->position->getUuidString();
     }
 
-    /** The two-letter mark a card and a record header wear. */
+    /**
+     * THE TWO-LETTER MARK a card and a record header wear: the initials of
+     * the first two words, or the first two letters of a one-word name —
+     * "Head of Department" is HD and "Sergeant" is SE.
+     */
     public function mark(): string
     {
-        $words = preg_split('/\s+/', trim($this->name())) ?: [];
-        $letters = array_map(static fn (string $w): string => mb_strtoupper(mb_substr($w, 0, 1)), $words);
+        $words = array_values(array_filter(preg_split('/\s+/', trim($this->name())) ?: []));
+        if ([] === $words) {
+            return '?';
+        }
 
-        return implode('', \array_slice($letters, 0, 2)) ?: '?';
+        $mark = 1 === \count($words)
+            ? mb_substr($words[0], 0, 2)
+            : mb_substr($words[0], 0, 1).mb_substr($words[1], 0, 1);
+
+        return mb_strtoupper($mark);
     }
 
     public function seatsFilled(): int

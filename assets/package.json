@@ -34,6 +34,12 @@
                 "fetch": "eager",
                 "enabled": true
             },
+            "grants": {
+                "main": "../src/Uhifadhi/Bundle/TeamBundle/assets/controllers/grants_controller.js",
+                "name": "uhifadhi--team-bundle--grants",
+                "fetch": "lazy",
+                "enabled": true
+            },
             "permission-group": {
                 "main": "../src/Uhifadhi/Bundle/TeamBundle/assets/controllers/permission_group_controller.js",
                 "name": "uhifadhi--team-bundle--permission-group",

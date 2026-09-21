@@ -154,7 +154,11 @@ final readonly class MemberController
             // may assign — every position for an unbounded one, only their own
             // area's for a bounded (area-X) one. An org-level or other-area
             // position is not a target they could reach.
-            'positions' => $this->positions->findAllOrdered(),
+            // A RETIRED POSITION IS ABSENT FROM THE PICKER. It is not
+            // deleted — the register still carries it, greyed — but it
+            // cannot be given to anybody, and offering a thing that is
+            // closed is offering a refusal.
+            'positions' => $this->positions->findAssignable(),
             // WHAT THAT ACTUALLY GRANTS, RIGHT NOW — every catalogue row with
             // the REASON this person does or does not hold it. The page's whole
             // argument is that a position name is not an answer.
