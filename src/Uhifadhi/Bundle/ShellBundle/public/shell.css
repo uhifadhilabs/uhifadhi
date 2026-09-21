@@ -2269,7 +2269,7 @@ table.tbl tr:hover .open-btn {
 .i-ddopt {
     display: flex; align-items: center; gap: 9px; width: 100%; text-align: left;
     padding: 7px 9px; border-radius: 7px;
-    font-size: 12px; color: rgb(var(--c-tx)); text-decoration: none;
+    font-size: 12px; line-height: 1.2; color: rgb(var(--c-tx)); text-decoration: none;
 }
 .i-ddopt:hover { background: rgb(var(--c-raised)); }
 /* THE CHOSEN OPTION IS A TINTED ROW, not coloured text: a panel of twelve is
