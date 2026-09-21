@@ -122,7 +122,7 @@ final readonly class AreaController
      * the honest-absent state for everything nobody contributed.
      */
     #[Route('/areas/{uuid}', name: 'area_show', requirements: ['uuid' => Requirement::UUID], methods: ['GET'])]
-    #[IsGranted('areas.read')]
+    #[IsGranted('areas.read', subject: 'area')]
     public function show(
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
     ): Response {
@@ -347,7 +347,7 @@ final readonly class AreaController
      * before still cannot be bounced into it.
      */
     #[Route('/areas/{uuid}/settings', name: 'area_settings', requirements: ['uuid' => Requirement::UUID], methods: ['GET'])]
-    #[IsGranted('areas.configure')]
+    #[IsGranted('areas.configure', subject: 'area')]
     public function settings(
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
     ): Response {

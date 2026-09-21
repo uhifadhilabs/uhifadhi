@@ -38,6 +38,7 @@ use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\DevkitContentCollector
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\FakeModuleProvider;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\FakeStationDirectory;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\FakeTopicProvider;
+use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\GroundConcernSource;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\GuardedController;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\RosterKpiProvider;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\ShellPageController;
@@ -261,6 +262,15 @@ final class TestKernel extends Kernel
         // to be about, and only two of the three could be exercised.
         $container->services()
             ->set(DeclaringConcernSource::class)
+            ->tag(ConcernSourceInterface::TAG);
+
+        // And the GROUND's concerns, which belong to the area bundle this
+        // one must be testable without. A person's record draws a door to
+        // where a posting is made, and that door names the area's pairs; a
+        // kernel that declared none of them would close the door for reasons
+        // that have nothing to do with what is being tested.
+        $container->services()
+            ->set(GroundConcernSource::class)
             ->tag(ConcernSourceInterface::TAG);
 
         // And one that declares NOTHING, which is what most modules do. The

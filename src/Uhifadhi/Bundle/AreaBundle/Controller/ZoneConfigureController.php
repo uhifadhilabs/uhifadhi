@@ -113,7 +113,7 @@ final readonly class ZoneConfigureController
     }
 
     #[Route('/areas/{uuid}/zones/settings', name: self::ROUTE, requirements: ['uuid' => Requirement::UUID], methods: ['GET'])]
-    #[IsGranted('zones.read')]
+    #[IsGranted('zones.read', subject: 'area')]
     public function configure(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
@@ -212,7 +212,7 @@ final readonly class ZoneConfigureController
      * exist.
      */
     #[Route('/areas/{uuid}/zones/export.geojson', name: 'area_zones_export', requirements: ['uuid' => Requirement::UUID], methods: ['GET'])]
-    #[IsGranted('zones.export')]
+    #[IsGranted('zones.export', subject: 'area')]
     public function export(
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
     ): Response {

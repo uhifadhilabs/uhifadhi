@@ -262,9 +262,10 @@
         {# READ-ONLY HERE, AND STILL A DOOR. An assignment is made on the station,
            in the area that owns the ground — so this card names that page and
            goes to it, rather than naming it and leaving the reader to look.
-           Gated on `area.edit`, which is what making an assignment costs, and
-           absent rather than disabled: a door that closes in somebody's face
-           is worse than no door.
+           Gated on both pairs between the reader and the deed — `stations.read`
+           opens the page, `assignments.manage` is the deed — and absent rather
+           than disabled: a door that closes in somebody's face is worse than
+           no door.
 
            "Nullable · office-based staff have none" was a docblock that had
            got into the product: a reader is told what is true of this person,
@@ -273,7 +274,14 @@
             <div class="mb-empty" style="margin-top:14px">
                 {{ bits.icon_warn() }}
                 <span><b>Not stationed anywhere.</b> Office-based staff hold no assignment.</span>
-                {% if postingDoor and door('area.edit') %}
+                {#  BOTH PAIRS, BECAUSE BOTH ARE BETWEEN THE READER AND THE
+                    DEED. The page behind this door is gated on stations.read
+                    and the deed on it — posting somebody — on
+                    assignments.manage, so drawing it for somebody holding
+                    only one of them is inviting them to a refusal.
+                    `area.edit` was the old machinery's spelling and named
+                    nothing this product enforces. #}
+                {% if postingDoor and door('stations.read') and door('assignments.manage') %}
                     <a class="more" href="{{ postingDoor }}">Station them &rarr;</a>
                 {% endif %}
             </div>

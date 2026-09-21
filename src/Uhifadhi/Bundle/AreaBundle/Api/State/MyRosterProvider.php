@@ -44,8 +44,8 @@ final class MyRosterProvider extends DutyProvider
 
     protected function read(array $uriVariables): array
     {
-        $ranger = $this->api->requireRanger();
         $area = $this->api->area(self::uri($uriVariables, 'areaUuid'));
+        $ranger = $this->api->requireRanger($area);
 
         $today = new \DateTimeImmutable('today');
 

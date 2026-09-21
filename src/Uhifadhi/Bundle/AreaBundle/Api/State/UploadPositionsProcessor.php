@@ -34,8 +34,8 @@ final class UploadPositionsProcessor extends DutyProcessor
 
     protected function handle(array $uriVariables): Response
     {
-        $ranger = $this->api->requireRanger();
         $area = $this->api->area(self::uri($uriVariables, 'areaUuid'));
+        $ranger = $this->api->requireRanger($area);
 
         $stored = $this->checkIns->ping($area, $ranger, $this->api->body());
 

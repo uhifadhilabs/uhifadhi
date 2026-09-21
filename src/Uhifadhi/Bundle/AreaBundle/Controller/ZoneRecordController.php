@@ -97,7 +97,7 @@ final readonly class ZoneRecordController
         requirements: ['uuid' => Requirement::UUID, 'zone' => Requirement::UUID],
         methods: ['GET'],
     )]
-    #[IsGranted('zones.read')]
+    #[IsGranted('zones.read', subject: 'area')]
     public function show(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,

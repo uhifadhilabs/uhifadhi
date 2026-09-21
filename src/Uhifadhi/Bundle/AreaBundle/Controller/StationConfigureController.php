@@ -94,7 +94,7 @@ final readonly class StationConfigureController
     }
 
     #[Route('/areas/{uuid}/stations/settings', name: self::ROUTE, requirements: ['uuid' => Requirement::UUID], methods: ['GET'])]
-    #[IsGranted('stations.read')]
+    #[IsGranted('stations.read', subject: 'area')]
     public function configure(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,

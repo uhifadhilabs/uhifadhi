@@ -15,9 +15,12 @@ namespace Uhifadhi\Core\Tests\Core;
 
 use PHPUnit\Framework\Attributes\CoversNothing;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouterInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
 use Uhifadhi\Contracts\Access\Grant;
+use Uhifadhi\Contracts\Access\ScopeKind;
 use Uhifadhi\Core\Tests\Application\Kernel;
 
 /**
@@ -182,6 +185,69 @@ final class EveryRouteNamesItsPairTest extends KernelTestCase
         ));
     }
 
+    /**
+     * EVERY GATE ON A PER-AREA CONCERN IS ASKED WITH ITS AREA.
+     *
+     * `#[IsGranted('zones.read')]` with no `subject:` asks the voter with a
+     * NULL subject, and a null subject means "no area in context" — which
+     * any placement that reaches some ground at all satisfies. On a route
+     * whose path names an area, that is the second of the three questions
+     * being asked and always answered yes: somebody placed only at one area
+     * opens another one's page.
+     *
+     * IT IS A REFUSAL RATHER THAN A LIST. The gap was held as thirteen route
+     * names while it was being closed; a list of exceptions is a list that
+     * grows, so what survives the closing is the rule — a new area-scoped
+     * route that forgets its subject fails here, on the build, rather than
+     * joining a register nobody reads.
+     *
+     * WHICH CONCERNS THIS IS ABOUT IS THE DECLARATION'S ANSWER, not a
+     * spelling of the path. A concern is per-area when it offers
+     * {@see ScopeKind::Area} — ground, zones, stations, assignments, duty,
+     * an area's modules. Departments and the directory are about people and
+     * offer organization or department instead, so a departments page inside
+     * an area is NOT gated on the ground and must not be made to look as
+     * though it is.
+     *
+     * IT READS THE ATTRIBUTE, not the source text, because the subject is
+     * what this is about and a regex over an argument list would be reading
+     * the spelling rather than the value. A gate written in code passes its
+     * subject as an argument and is out of this test's reach; the ones this
+     * model is about are all attributes.
+     */
+    public function testEveryRouteGatingAPerAreaConcernPassesItsArea(): void
+    {
+        $catalogue = $this->catalogue();
+        $blind = [];
+
+        foreach ($this->appRoutes() as $name => $route) {
+            $path = $route->getPath();
+            if (!str_starts_with($path, '/areas/') || !str_contains($path, '{uuid}')) {
+                continue;
+            }
+
+            foreach (self::attributeGatesOn($route) as $gate) {
+                if (!\is_string($gate->attribute) || null !== $gate->subject) {
+                    continue;
+                }
+
+                if (true === $catalogue->concern(explode('.', $gate->attribute)[0])?->offers(ScopeKind::Area)) {
+                    $blind[] = $name.' -> '.$gate->attribute;
+                }
+            }
+        }
+
+        sort($blind);
+
+        self::assertSame([], $blind, \sprintf(
+            "These routes name an area in their path and ask a per-area pair without it [%s].\n".
+            'Pass the area: `#[IsGranted(\'<pair>\', subject: \'area\')]`, with the controller taking the '.
+            'resolved area rather than a bare uuid. Without it the placement question is asked with no '.
+            'ground and is always answered yes.',
+            implode(', ', $blind),
+        ));
+    }
+
     public function testEveryDeclaredPairIsEnforcedSomewhere(): void
     {
         $enforced = [];
@@ -215,6 +281,38 @@ final class EveryRouteNamesItsPairTest extends KernelTestCase
             'declaring that verb until something does.',
             implode(', ', $idle),
         ));
+    }
+
+    /**
+     * The `#[IsGranted]` attributes on the controller method a route leads
+     * to, as instances — so the subject is read as a value.
+     *
+     * @return list<IsGranted>
+     */
+    private static function attributeGatesOn(Route $route): array
+    {
+        $controller = $route->getDefault('_controller');
+        if (!\is_string($controller) || !str_contains($controller, '::')) {
+            return [];
+        }
+
+        [$class, $method] = explode('::', $controller, 2);
+        if (!class_exists($class) || !method_exists($class, $method)) {
+            return [];
+        }
+
+        $gates = [];
+        foreach (new \ReflectionMethod($class, $method)->getAttributes(IsGranted::class) as $attribute) {
+            $gates[] = $attribute->newInstance();
+        }
+
+        // A CLASS-LEVEL GATE COVERS EVERY METHOD UNDER IT, so it is as much
+        // this route's gate as one written above the signature.
+        foreach (new \ReflectionClass($class)->getAttributes(IsGranted::class) as $attribute) {
+            $gates[] = $attribute->newInstance();
+        }
+
+        return $gates;
     }
 
     /**
@@ -279,7 +377,7 @@ final class EveryRouteNamesItsPairTest extends KernelTestCase
      * Every route this installation mounts, by name — the same collection a
      * request is matched against, so nothing this walks is hypothetical.
      *
-     * @return array<string, \Symfony\Component\Routing\Route>
+     * @return array<string, Route>
      */
     private function appRoutes(): array
     {

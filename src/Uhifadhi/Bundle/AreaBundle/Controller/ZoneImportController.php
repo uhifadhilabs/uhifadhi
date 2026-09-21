@@ -72,7 +72,7 @@ final readonly class ZoneImportController
     }
 
     #[Route('/areas/{uuid}/zones/import/preview', name: 'area_zones_import_preview', requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted('zones.configure')]
+    #[IsGranted('zones.configure', subject: 'area')]
     public function preview(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
@@ -117,7 +117,7 @@ final readonly class ZoneImportController
     }
 
     #[Route('/areas/{uuid}/zones/import/confirm', name: 'area_zones_import_confirm', requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted('zones.configure')]
+    #[IsGranted('zones.configure', subject: 'area')]
     public function confirm(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,

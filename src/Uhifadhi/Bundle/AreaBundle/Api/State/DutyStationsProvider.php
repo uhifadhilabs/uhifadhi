@@ -34,8 +34,8 @@ final class DutyStationsProvider extends DutyProvider
 
     protected function read(array $uriVariables): array
     {
-        $this->api->requireRanger();
         $area = $this->api->area(self::uri($uriVariables, 'areaUuid'));
+        $this->api->requireRanger($area);
 
         return ['stations' => $this->stations->listFor($area, $this->api->query('near'))];
     }

@@ -236,6 +236,54 @@ nothing enforces is a box an administrator can tick that changes nothing, and
 on a route naming an undeclared pair, and on a declared pair nothing enforces.
 **Declare the verb in the same change that ships the thing enforcing it.**
 
+### A per-area gate is asked WITH its area
+
+**What changed.** Every route whose path names an area and whose pair is about
+the ground now passes it:
+
+```php
+#[Route('/areas/{uuid}/zones', name: 'area_zones', requirements: ['uuid' => Requirement::UUID], methods: ['GET'])]
+#[IsGranted('zones.read', subject: 'area')]
+public function index(
+    Request $request,
+    #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
+): Response
+```
+
+**Why.** `#[IsGranted('zones.read')]` with no `subject:` asks the voter with a
+null subject, and a null subject means *no area in context* — which any
+placement satisfying any ground at all passes. So the second of the three
+questions was asked and always answered yes, and somebody placed only at one
+area opened another area's page. Fourteen routes were in that state.
+
+**Which concerns this is about is the declaration's answer, not the path's.** A
+concern is per-area when it offers `ScopeKind::Area` — `areas`, `zones`,
+`stations`, `assignments`, `duty`, `modules`. `departments`, `directory`,
+`positions` and `personal-details` are about people and offer organization or
+department, so an area's Departments tab is **not** gated on the ground and
+must not be made to look as though it is.
+
+**It is a build refusal now, not a list.**
+`tests/Core/EveryRouteNamesItsPairTest::testEveryRouteGatingAPerAreaConcernPassesItsArea`
+fails a route that names an area in its path and asks a per-area pair without
+it, and
+`tests/Core/RouteByComposedPositionTest::testEveryAreaScopedRouteRefusesTheRightPositionInTheWrongArea`
+drives every one of them as somebody holding exactly the right pairs at a
+different area and requires a 403.
+
+**A gate written in code passes its subject as an argument**, and two did not:
+`DutyApiContext::requireRanger()` now **takes the area** —
+`requireRanger(AreaOfInterest $area)` — so a handset whose ranger is posted at
+one area can no longer write a day into another; callers resolve the area
+first. The area tab strip (`AreaShellSource`) asks `modules.read` with the area
+it is drawn for, so the tab is not offered to somebody who would be refused on
+the click.
+
+**Upgrading a module.** Sweep your own `#[IsGranted]` attributes: any route
+under `/areas/{uuid}/…` gating one of your per-area concerns needs
+`subject: 'area'` and a controller signature taking the resolved area rather
+than a bare `string $uuid`. `AccessConformanceTestCase` holds you to it.
+
 ### Doors go through one helper
 
 A door — a link, a button, a section leading somewhere a permission guards — is

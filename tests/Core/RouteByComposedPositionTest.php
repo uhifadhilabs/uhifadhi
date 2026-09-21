@@ -28,6 +28,7 @@ use Uhifadhi\Bundle\TeamBundle\Entity\Placement;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
+use Uhifadhi\Contracts\Access\ScopeKind;
 use Uhifadhi\Core\Tests\Application\Kernel;
 
 /**
@@ -162,10 +163,10 @@ final class RouteByComposedPositionTest extends WebTestCase
      * the model work.
      *
      * IT IS ASKED OF THE CHECKER WITH THE AREA IN HAND, which is where the
-     * model is answered. A route cannot stand in for it today, because no
-     * route passes its area to its gate — see
-     * {@see testTheAreaScopedRoutesThatDoNotPassTheirAreaToTheGate}, which
-     * holds that gap as a named list rather than leaving it to be discovered.
+     * model is answered. The same refusal is then proved through every
+     * area-scoped route in
+     * {@see testEveryAreaScopedRouteRefusesTheRightPositionInTheWrongArea};
+     * this one is the shortest reading of it, with no routing in the way.
      */
     public function testTheRightPositionInTheWrongAreaIsRefused(): void
     {
@@ -191,92 +192,83 @@ final class RouteByComposedPositionTest extends WebTestCase
     }
 
     /**
-     * THE ROUTES THAT ASK THEIR PAIR WITHOUT THE GROUND IT IS ABOUT.
+     * THE FIRST DIMENSION, ON EVERY ROUTE THAT HAS ONE — the right position,
+     * the wrong ground, asked as a request rather than of the checker.
      *
-     * `#[IsGranted('areas.read')]` with no `subject:` asks the voter with a
-     * NULL subject, and a null subject means "no area in context" — which any
-     * placement that reaches some ground at all satisfies. So on these routes
-     * the second question is asked and always answered yes: somebody placed
-     * only at Mbozi opens Ngorongoro's page.
+     * THIS IS WHERE THE GAP WAS. Until the subject was passed, thirteen
+     * area-scoped routes asked their pair with a NULL subject, and this
+     * suite held them as a named list of known holes. The list is gone: the
+     * rule that replaced it ({@see EveryRouteNamesItsPairTest::testEveryRouteGatingAPerAreaConcernPassesItsArea})
+     * refuses a route that forgets its subject on the build, and this proves
+     * the refusal is about behaviour and not only about an attribute being
+     * present.
      *
-     * IT IS A GAP AND NOT A DESIGN. Nothing is leaking that was not leaking
-     * before — the previous model behaved the same way, for the same reason —
-     * but the ruled model says the check uses the position and the placement
-     * TOGETHER, and on these routes it uses only the position. Closing it
-     * means each of these passing its area: `#[IsGranted('areas.read',
-     * subject: 'area')]` on a controller whose signature takes the resolved
-     * `AreaInterface $area` rather than a bare `string $uuid`.
-     *
-     * THE LIST IS HERE SO IT SHRINKS. A new area-scoped route that forgets
-     * the subject fails this test rather than joining the gap silently, and
-     * every line removed from the list is the gap closing.
-     *
-     * @return list<string>
+     * A ROUTE WHOSE PAIRS ARE ALL ABOUT PEOPLE IS NOT ONE OF THESE, and
+     * skipping it is the model rather than a convenience: departments, the
+     * directory, positions and personal details offer organization or
+     * department and never an area, so an area's departments tab is not
+     * gated on the ground it is drawn under. Asking it to refuse somebody
+     * placed elsewhere would be asking it to enforce a scope its concern
+     * does not offer.
      */
-    private static function knownToAskWithoutTheirArea(): array
+    public function testEveryAreaScopedRouteRefusesTheRightPositionInTheWrongArea(): void
     {
-        return [
-            'area_departments',
-            'area_departments_configure',
-            'area_edit',
-            'area_module_customize',
-            'area_modules',
-            'area_settings',
-            'area_show',
-            'area_stations',
-            'area_stations_configure',
-            'area_zones',
-            'area_zones_configure',
-            'area_zones_export',
-            'team_department_show',
-        ];
-    }
-
-    public function testTheAreaScopedRoutesThatDoNotPassTheirAreaToTheGate(): void
-    {
-        $known = self::knownToAskWithoutTheirArea();
-        $here = $this->area('Ngorongoro');
+        $hereUuid = (string) $this->area('Ngorongoro')->getUuidString();
         $this->area('Mbozi');
 
-        $hereUuid = (string) $here->getUuidString();
-        $unlisted = [];
-        $closed = [];
+        $opened = [];
+        $asked = 0;
 
         foreach ($this->gatedRoutes() as $name => [$path, $pairs]) {
-            if (!str_contains($path, '{uuid}')) {
+            if (!str_contains($path, '{uuid}') || !$this->aboutTheGround($pairs)) {
                 continue;
             }
 
+            ++$asked;
+
             // Re-read the ground each time: the sign-in below reboots the
             // kernel and detaches whatever the last one held.
-            $placedAt = $this->area('Mbozi');
-            $this->signIn($this->composed($pairs, new Placement()->inAreas([$placedAt])->acrossAllDepartments()));
+            $elsewhere = $this->area('Mbozi');
+            $this->signIn($this->composed($pairs, new Placement()->inAreas([$elsewhere])->acrossAllDepartments()));
             $this->client->request('GET', str_replace('{uuid}', $hereUuid, $path));
 
-            $refused = 403 === $this->client->getResponse()->getStatusCode();
-
-            if (!$refused && !\in_array($name, $known, true)) {
-                $unlisted[] = $name;
-            }
-
-            if ($refused && \in_array($name, $known, true)) {
-                $closed[] = $name;
+            if (403 !== $this->client->getResponse()->getStatusCode()) {
+                $opened[] = $name.' ('.implode(' + ', $pairs).')';
             }
         }
 
-        sort($unlisted);
-        sort($closed);
+        sort($opened);
 
-        self::assertSame([], $unlisted, \sprintf(
-            "These area-scoped routes ask their pair without the area it is about, and are not on the known list [%s].\n".
-            'Pass the area: `#[IsGranted(\'<pair>\', subject: \'area\')]`, with the controller taking the resolved area rather than a bare uuid.',
-            implode(', ', $unlisted),
+        self::assertSame([], $opened, \sprintf(
+            "These area-scoped routes open for somebody holding the right pairs at a DIFFERENT area [%s].\n".
+            'The gate is asking its pair without the area it is about — pass it: '.
+            '`#[IsGranted(\'<pair>\', subject: \'area\')]`.',
+            implode(', ', $opened),
         ));
 
-        self::assertSame([], $closed, \sprintf(
-            'These routes now DO pass their area and are still on the known-gap list [%s] — take them off it.',
-            implode(', ', $closed),
-        ));
+        self::assertGreaterThan(0, $asked, 'No area-scoped GET route was asked, so this proof proved nothing.');
+    }
+
+    /**
+     * Whether every pair a route names is about the ground — a concern that
+     * offers {@see ScopeKind::Area}. A route that also names a people
+     * concern is left out rather than guessed at: the position this suite
+     * composes would hold both, and which of the two refused would be
+     * unreadable from the result.
+     *
+     * @param list<string> $pairs
+     */
+    private function aboutTheGround(array $pairs): bool
+    {
+        $catalogue = $this->catalogue();
+
+        foreach ($pairs as $pair) {
+            if (true !== $catalogue->concern(explode('.', $pair)[0])?->offers(ScopeKind::Area)) {
+                return false;
+            }
+        }
+
+        return [] !== $pairs;
     }
 
     /**

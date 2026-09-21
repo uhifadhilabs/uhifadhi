@@ -261,6 +261,110 @@ abstract class AccessConformanceTestCase extends TestCase
         ));
     }
 
+    /**
+     * EVERY ROUTE UNDER AN AREA THAT GATES A PER-AREA CONCERN PASSES IT.
+     *
+     * `#[IsGranted('watches.read')]` with no `subject:` asks the voter with a
+     * null subject, and a null subject means "no area in context" — which any
+     * placement reaching some ground at all satisfies. On a route whose path
+     * names an area that is the second question being asked and always
+     * answered yes: somebody placed at one area opens another area's page.
+     *
+     * ONLY THIS PACKAGE'S OWN CONCERNS ARE JUDGED, and only the ones that
+     * offer {@see ScopeKind::Area}: a concern about people offers
+     * organization or department and is not about the ground its page is
+     * drawn under, so requiring a subject there would be requiring a scope
+     * the declaration does not offer.
+     *
+     * IT READS THE SOURCE rather than the router, because a module's
+     * conformance runs without a kernel. A gate written in code passes its
+     * subject as an argument and is out of reach here — sweep those by hand.
+     */
+    public function testEveryRouteUnderAnAreaPassesItToItsPerAreaGates(): void
+    {
+        $blind = [];
+
+        foreach (self::shippedSource() as $path) {
+            foreach (self::gatesUnderAnArea((string) file_get_contents($path)) as $pair) {
+                $concern = self::concern(explode('.', $pair)[0]);
+                if (null !== $concern && $concern->offers(ScopeKind::Area)) {
+                    $blind[] = basename($path).' -> '.$pair;
+                }
+            }
+        }
+
+        sort($blind);
+
+        self::assertSame([], $blind, \sprintf(
+            "These routes name an area in their path and ask a per-area pair without it [%s].\n".
+            'Pass the area: `#[IsGranted(\'<pair>\', subject: \'area\')]`, with the controller taking the '.
+            'resolved area rather than a bare uuid.',
+            implode(', ', $blind),
+        ));
+    }
+
+    /**
+     * The pairs gated WITHOUT a subject on routes whose path names an area,
+     * read off one shipped file.
+     *
+     * @return list<string>
+     */
+    private static function gatesUnderAnArea(string $source): array
+    {
+        $pairs = [];
+
+        // One chunk per route: from its `#[Route(` to the signature it sits
+        // above, so a gate is only ever credited to the route it belongs to.
+        foreach (\array_slice(explode('#[Route(', $source), 1) as $chunk) {
+            $head = explode('function ', $chunk, 2)[0];
+
+            if (1 !== preg_match("/'(\/[^']*)'/", $head, $path)) {
+                continue;
+            }
+
+            if (!str_starts_with($path[1], '/areas/') || 1 !== preg_match('/\{\w*[Uu]uid\}/', $path[1])) {
+                continue;
+            }
+
+            preg_match_all("/#\[IsGranted\(\s*'([a-z0-9]+(?:-[a-z0-9]+)*\.[a-z]+)'\s*\)\]/", $head, $gates);
+            foreach ($gates[1] as $pair) {
+                $pairs[] = $pair;
+            }
+        }
+
+        return $pairs;
+    }
+
+    /**
+     * Every PHP file this package ships, so a gate can be found wherever it
+     * is written. A gate inside a test is a fixture, not an enforcement.
+     *
+     * @return list<string>
+     */
+    private static function shippedSource(): array
+    {
+        $directory = static::bundlePath().'/src';
+        if (!is_dir($directory)) {
+            $directory = static::bundlePath();
+        }
+
+        $paths = [];
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($directory, \FilesystemIterator::SKIP_DOTS),
+        );
+
+        /** @var \SplFileInfo $file */
+        foreach ($iterator as $file) {
+            if ('php' === $file->getExtension() && !str_contains($file->getPathname(), '/tests/')) {
+                $paths[] = $file->getPathname();
+            }
+        }
+
+        sort($paths);
+
+        return $paths;
+    }
+
     /** @return list<ConcernInterface> */
     private static function concerns(): array
     {

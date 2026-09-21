@@ -37,8 +37,8 @@ final class UpdateCheckInProcessor extends DutyProcessor
 
     protected function handle(array $uriVariables): Response
     {
-        $this->api->requireRanger();
         $area = $this->api->area(self::uri($uriVariables, 'areaUuid'));
+        $this->api->requireRanger($area);
         $clientRef = self::uri($uriVariables, 'clientRef');
 
         $checkIn = $this->checkIns->findByRef($area, $clientRef)

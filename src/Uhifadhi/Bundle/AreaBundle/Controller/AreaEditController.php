@@ -92,7 +92,7 @@ final readonly class AreaEditController
      * values are the lead.
      */
     #[Route('/areas/{uuid}/edit', name: 'area_edit', requirements: ['uuid' => Requirement::UUID], methods: ['GET', 'POST'])]
-    #[IsGranted('areas.configure')]
+    #[IsGranted('areas.configure', subject: 'area')]
     public function edit(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
@@ -123,7 +123,7 @@ final readonly class AreaEditController
      * confirmation.
      */
     #[Route('/areas/{uuid}/boundary/replace', name: 'area_boundary_replace', requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted('areas.configure')]
+    #[IsGranted('areas.configure', subject: 'area')]
     public function replaceBoundary(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,

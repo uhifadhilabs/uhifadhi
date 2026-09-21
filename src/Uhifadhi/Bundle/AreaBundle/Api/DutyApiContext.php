@@ -61,18 +61,26 @@ final readonly class DutyApiContext
     }
 
     /**
-     * THE ACCOUNT THE TOKEN NAMES, and whether it may report a day.
+     * THE ACCOUNT THE TOKEN NAMES, and whether it may report a day ON THIS
+     * GROUND.
+     *
+     * THE AREA IS NOT OPTIONAL, and that is the whole of it: duty is a
+     * per-area concern, so asking the pair without the area asks the
+     * placement question with nothing to answer it about — and a handset
+     * whose ranger is posted at one area could then write a day into
+     * another. Every endpoint here names its area in the URI, so there is
+     * never a moment when it is not known.
      *
      * @throws DutyApiException
      */
-    public function requireRanger(): UserInterface
+    public function requireRanger(AreaOfInterest $area): UserInterface
     {
         $user = $this->tokens->getToken()?->getUser();
         if (!$user instanceof UserInterface) {
             throw DutyApiException::unauthorized();
         }
 
-        if (!$this->authorization->isGranted(self::CHECK_IN)) {
+        if (!$this->authorization->isGranted(self::CHECK_IN, $area)) {
             throw DutyApiException::forbidden();
         }
 

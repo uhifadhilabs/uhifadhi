@@ -76,7 +76,7 @@ final readonly class StationEditController
      * write.
      */
     #[Route('/areas/{uuid}/stations/add', name: 'area_station_add', requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted('stations.configure')]
+    #[IsGranted('stations.configure', subject: 'area')]
     public function add(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
@@ -118,7 +118,7 @@ final readonly class StationEditController
     }
 
     #[Route('/areas/{uuid}/stations/{station}/rename', name: 'area_station_rename', requirements: ['uuid' => Requirement::UUID, 'station' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted('stations.configure')]
+    #[IsGranted('stations.configure', subject: 'area')]
     public function rename(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
@@ -142,7 +142,7 @@ final readonly class StationEditController
      * says how far it went and which way.
      */
     #[Route('/areas/{uuid}/stations/{station}/point', name: 'area_station_move', requirements: ['uuid' => Requirement::UUID, 'station' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted('stations.configure')]
+    #[IsGranted('stations.configure', subject: 'area')]
     public function move(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
@@ -166,7 +166,7 @@ final readonly class StationEditController
      * descriptions of the place rather than facts the system derives.
      */
     #[Route('/areas/{uuid}/stations/{station}/describe', name: 'area_station_describe', requirements: ['uuid' => Requirement::UUID, 'station' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted('stations.configure')]
+    #[IsGranted('stations.configure', subject: 'area')]
     public function describe(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
@@ -204,7 +204,7 @@ final readonly class StationEditController
      * picking a radius of its own.
      */
     #[Route('/areas/{uuid}/stations/{station}/catchment', name: 'area_station_catchment', requirements: ['uuid' => Requirement::UUID, 'station' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted('stations.configure')]
+    #[IsGranted('stations.configure', subject: 'area')]
     public function catchment(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
@@ -229,7 +229,7 @@ final readonly class StationEditController
      * every record already made against it still points at it.
      */
     #[Route('/areas/{uuid}/stations/{station}/activity', name: 'area_station_activity', requirements: ['uuid' => Requirement::UUID, 'station' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted('stations.configure')]
+    #[IsGranted('stations.configure', subject: 'area')]
     public function activity(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
@@ -262,7 +262,7 @@ final readonly class StationEditController
      * by is part of the row.
      */
     #[Route('/areas/{uuid}/stations/{station}/postings', name: 'area_station_post', requirements: ['uuid' => Requirement::UUID, 'station' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted('assignments.manage')]
+    #[IsGranted('assignments.manage', subject: 'area')]
     public function post(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
@@ -287,7 +287,7 @@ final readonly class StationEditController
 
     /** A posting ENDS; it is never deleted. Last season's patrol still has its crew. */
     #[Route('/areas/{uuid}/postings/{posting}/end', name: 'area_posting_end', requirements: ['uuid' => Requirement::UUID, 'posting' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted('assignments.manage')]
+    #[IsGranted('assignments.manage', subject: 'area')]
     public function end(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
@@ -307,7 +307,7 @@ final readonly class StationEditController
      * states who leads and refuses to change it.
      */
     #[Route('/areas/{uuid}/postings/{posting}/lead', name: 'area_posting_lead', requirements: ['uuid' => Requirement::UUID, 'posting' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted('assignments.manage')]
+    #[IsGranted('assignments.manage', subject: 'area')]
     public function lead(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,

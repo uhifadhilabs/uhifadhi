@@ -88,7 +88,7 @@ final readonly class AreaModulesController
      * — so the grid sits at its root.
      */
     #[Route('/areas/{uuid}/modules', name: 'area_modules', requirements: ['uuid' => Requirement::UUID], methods: ['GET'])]
-    #[IsGranted(self::VIEW)]
+    #[IsGranted(self::VIEW, subject: 'area')]
     public function grid(
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
     ): Response {
@@ -106,7 +106,7 @@ final readonly class AreaModulesController
      * a module called "customize".
      */
     #[Route('/areas/{uuid}/modules/customize', name: 'area_module_customize', requirements: ['uuid' => Requirement::UUID], methods: ['GET'], priority: 1)]
-    #[IsGranted(self::COMPOSE)]
+    #[IsGranted(self::COMPOSE, subject: 'area')]
     public function customize(
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
     ): Response {
@@ -130,7 +130,7 @@ final readonly class AreaModulesController
      * ago has done nothing wrong. They get the page back, without it.
      */
     #[Route('/areas/{uuid}/modules/customize/install', name: 'area_module_install', requirements: ['uuid' => Requirement::UUID], methods: ['POST'], priority: 1)]
-    #[IsGranted(self::COMPOSE)]
+    #[IsGranted(self::COMPOSE, subject: 'area')]
     public function install(
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
         Request $request,
@@ -147,7 +147,7 @@ final readonly class AreaModulesController
      * by the registry rather than half-parked here.
      */
     #[Route('/areas/{uuid}/modules/customize/uninstall', name: 'area_module_uninstall', requirements: ['uuid' => Requirement::UUID], methods: ['POST'], priority: 1)]
-    #[IsGranted(self::COMPOSE)]
+    #[IsGranted(self::COMPOSE, subject: 'area')]
     public function uninstall(
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
         Request $request,
@@ -164,7 +164,7 @@ final readonly class AreaModulesController
      * after it.
      */
     #[Route('/areas/{uuid}/modules/customize/reorder', name: 'area_module_reorder', requirements: ['uuid' => Requirement::UUID], methods: ['POST'], priority: 1)]
-    #[IsGranted(self::COMPOSE)]
+    #[IsGranted(self::COMPOSE, subject: 'area')]
     public function reorder(
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,
         Request $request,

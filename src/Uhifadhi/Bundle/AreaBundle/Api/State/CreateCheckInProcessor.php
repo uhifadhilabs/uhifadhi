@@ -34,8 +34,8 @@ final class CreateCheckInProcessor extends DutyProcessor
 
     protected function handle(array $uriVariables): Response
     {
-        $ranger = $this->api->requireRanger();
         $area = $this->api->area(self::uri($uriVariables, 'areaUuid'));
+        $ranger = $this->api->requireRanger($area);
 
         [$checkIn, $duplicate] = $this->checkIns->claim($area, $ranger, $this->api->body());
 

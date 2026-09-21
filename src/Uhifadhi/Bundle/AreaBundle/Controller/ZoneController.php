@@ -102,7 +102,7 @@ final readonly class ZoneController
     }
 
     #[Route('/areas/{uuid}/zones', name: self::ROUTE, requirements: ['uuid' => Requirement::UUID], methods: ['GET'])]
-    #[IsGranted('zones.read')]
+    #[IsGranted('zones.read', subject: 'area')]
     public function index(
         Request $request,
         #[MapEntity(mapping: ['uuid' => 'uuid'])] AreaOfInterest $area,

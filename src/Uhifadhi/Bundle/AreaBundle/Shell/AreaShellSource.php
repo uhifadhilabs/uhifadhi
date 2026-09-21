@@ -166,7 +166,12 @@ final class AreaShellSource implements AreaShellSourceInterface
 
         $tabs = [];
         foreach (self::SCREENS as [$label, $routeName, $permission]) {
-            if (null !== $permission && !$this->authorization->isGranted($permission)) {
+            // ASKED WITH THE AREA THE STRIP IS DRAWN FOR. A tab is a door,
+            // and a door asks the question its gate asks — the pair AND the
+            // ground. Asking without the area would draw Modules for
+            // somebody placed at another area, who is then refused on the
+            // click.
+            if (null !== $permission && !$this->authorization->isGranted($permission, $area)) {
                 continue;
             }
             $url = $this->url($routeName, $uuid);

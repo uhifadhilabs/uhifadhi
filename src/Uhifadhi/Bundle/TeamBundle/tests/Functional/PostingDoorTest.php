@@ -24,9 +24,11 @@ use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
  * belongs to the station, in the area that owns the ground. Naming the page
  * without a door to it is not.
  *
- * AND IT COSTS `area.edit`, not the `area.view` that merely opens the page.
- * Somebody who may read an area and not write to it gets the record and no
- * door, because an offer that refuses is worse than no offer.
+ * AND IT COSTS BOTH PAIRS BETWEEN THE READER AND THE DEED: `stations.read`,
+ * which opens the page behind it, and `assignments.manage`, which is the
+ * thing the door invites them to do. Somebody holding only one of them gets
+ * the record and no door, because an offer that refuses is worse than no
+ * offer.
  */
 final class PostingDoorTest extends WebTestCaseWithSchema
 {
@@ -66,7 +68,8 @@ final class PostingDoorTest extends WebTestCaseWithSchema
         ]));
         // Placed across the organization, so nothing about WHERE they stand
         // is what closes the door — it is closed because the position grants
-        // no area.edit, which is the only thing this test is about.
+        // nothing about the ground, which is the only thing this test is
+        // about.
         $this->place($manager);
         $grace = $this->person('Grace', 'Ndosi');
         $this->em->flush();
