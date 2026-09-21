@@ -167,6 +167,35 @@ final class TeamPostingsTest extends WebTestCaseWithSchema
     }
 
     /** THE BOARD WRITES NOTHING: a posting is made on the station, in the area. */
+    /**
+     * EVERY HEADER SORTS ITS ONE COLUMN, within each station's band: the
+     * headers are links, the sorted one says so, and the default order
+     * stands the leader first.
+     */
+    public function testEveryHeaderSortsItsColumnWithinTheBand(): void
+    {
+        $this->ground();
+
+        $crawler = $this->visit('/team/assignments');
+        self::assertSame(['Person', 'Rank', 'Department'], $crawler->filter('thead th a')->each(static fn (Crawler $c): string => $c->text()));
+        self::assertSame('Person', $crawler->filter('th.sorted a')->text());
+        self::assertSame(['Joseph Mollel', 'Tumaini Ndosi'], $this->namesUnder($crawler));
+
+        $byName = $this->visit('/team/assignments?sort=person&dir=desc');
+        self::assertSame(['Tumaini Ndosi', 'Joseph Mollel'], $this->namesUnder($byName));
+        self::assertSame('descending', $byName->filter('th.sorted')->attr('aria-sort'));
+
+        $byRank = $this->visit('/team/assignments?sort=rank');
+        self::assertSame('Rank', $byRank->filter('th.sorted a')->text());
+        self::assertStringContainsString('dir=desc', (string) $byRank->filter('th.sorted a')->attr('href'));
+    }
+
+    /** @return list<string> */
+    private function namesUnder(Crawler $crawler): array
+    {
+        return $crawler->filter('table.tbl tbody tr:not(.sxgrp) td:first-child a')->each(static fn (Crawler $c): string => $c->text());
+    }
+
     public function testTheBoardCarriesNoForm(): void
     {
         $this->ground();

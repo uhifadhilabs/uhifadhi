@@ -33,6 +33,14 @@ final readonly class PostingQuery
     public const string RANK = 'rank';
     public const string POSTED = 'posted';
     public const string SEARCH = 'q';
+    public const string SORT = 'sort';
+    public const string DIRECTION = 'dir';
+
+    public const string ASC = 'asc';
+    public const string DESC = 'desc';
+
+    /** The sortable columns, in the table's order; the first is the default. */
+    public const array SORTS = ['person', 'rank', 'department'];
 
     /**
      * GROUND THAT BELONGS TO NO ZONE IS A PLACE, so it is an ANSWER and not an
@@ -52,6 +60,8 @@ final readonly class PostingQuery
         public ?string $rank = null,
         public ?string $posted = null,
         public string $search = '',
+        public string $sort = 'person',
+        public string $direction = self::ASC,
     ) {
     }
 
@@ -67,7 +77,60 @@ final readonly class PostingQuery
             // emptying it: a stale link should show the board.
             posted: \in_array($posted, [self::STAFFED, self::EMPTY], true) ? $posted : null,
             search: trim($request->query->getString(self::SEARCH)),
+            sort: \in_array($sort = trim($request->query->getString(self::SORT, 'person')), self::SORTS, true) ? $sort : 'person',
+            direction: self::DESC === trim($request->query->getString(self::DIRECTION, self::ASC)) ? self::DESC : self::ASC,
         );
+    }
+
+    /**
+     * A STATION'S ROWS IN THE ORDER THE SORT ASKS FOR — one column, one
+     * direction, the name as the tie-breaker; and in the DEFAULT order the
+     * leader stands first, because a station's band is read from its lead —
+     * an order the reader asked for is the order they get, leader included.
+     *
+     * @param list<PostingRow> $rows
+     *
+     * @return list<PostingRow>
+     */
+    public function order(array $rows): array
+    {
+        $sign = self::DESC === $this->direction ? -1 : 1;
+        usort($rows, function (PostingRow $a, PostingRow $b) use ($sign): int {
+            if ('person' === $this->sort && self::ASC === $this->direction && $a->leader !== $b->leader) {
+                return $a->leader ? -1 : 1;
+            }
+            $cmp = match ($this->sort) {
+                'rank' => strcasecmp($a->rank ?? '', $b->rank ?? ''),
+                'department' => strcasecmp($a->department ?? '', $b->department ?? ''),
+                default => strcasecmp($a->name, $b->name),
+            };
+
+            return $sign * $cmp ?: strcasecmp($a->name, $b->name);
+        });
+
+        return $rows;
+    }
+
+    /** Clicking the sorted column turns it over; any other sorts ascending. */
+    public function directionFor(string $column): string
+    {
+        return $column === $this->sort && self::ASC === $this->direction ? self::DESC : self::ASC;
+    }
+
+    /**
+     * The address of the board sorted by a column.
+     *
+     * @return array<string, string>
+     */
+    public function sortedBy(string $column): array
+    {
+        $params = $this->with(self::SORT, 'person' === $column ? null : $column);
+        unset($params[self::DIRECTION]);
+        if (self::DESC === $this->directionFor($column)) {
+            $params[self::DIRECTION] = self::DESC;
+        }
+
+        return $params;
     }
 
     public function isFiltered(): bool
@@ -90,6 +153,8 @@ final readonly class PostingQuery
             self::RANK => $this->rank,
             self::POSTED => $this->posted,
             self::SEARCH => '' === $this->search ? null : $this->search,
+            self::SORT => 'person' === $this->sort ? null : $this->sort,
+            self::DIRECTION => self::ASC === $this->direction ? null : $this->direction,
         ], static fn (?string $v): bool => null !== $v);
 
         if (null === $value) {

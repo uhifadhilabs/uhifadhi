@@ -75,7 +75,17 @@
         </div>
 
         <table class="tbl">
-            <thead><tr><th>Person</th><th>Rank</th><th>Department</th><th></th></tr></thead>
+            {# EVERY HEADER SORTS ITS ONE COLUMN, inside each station's band;
+               the sorted header says so and turns over when clicked. #}
+            <thead><tr>
+                {% for column, label in {person: 'Person', rank: 'Rank', department: 'Department'} %}
+                    {% set sorted = query.sort == column %}
+                    <th{{ sorted ? ' class="sorted"' }} aria-sort="{{ sorted ? (query.direction == 'desc' ? 'descending' : 'ascending') : 'none' }}">
+                        <a href="{{ path('team_assignments', query.sortedBy(column)) }}">{{ label }}</a>
+                    </th>
+                {% endfor %}
+                <th></th>
+            </tr></thead>
             <tbody>
             {% for station in stations %}
                 {# THE BAND A GROUPED TABLE BREAKS ON — the station, its code,

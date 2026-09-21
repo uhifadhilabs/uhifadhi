@@ -268,7 +268,9 @@ final readonly class PostingBoard
                 areaUuid: $station->areaUuid,
                 areaName: $station->areaName,
                 zoneName: $station->zoneName,
-                rows: $rows,
+                // THE ROWS UNDER A BAND SORT BY THE HEADER the reader asked
+                // for; the bands themselves keep the ground's order.
+                rows: $query->order($rows),
                 url: $station->url,
             );
         }
