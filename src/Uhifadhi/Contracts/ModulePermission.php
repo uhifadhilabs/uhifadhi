@@ -38,6 +38,14 @@ namespace Uhifadhi\Contracts;
  * Write it as a sentence about the holder, in the product's voice: "Look at
  * what somebody else recorded and mark it settled", not "Grants tiebreak
  * access". It is read by the person deciding whether to hand this power over.
+ *
+ * DEPRECATED, AND KEPT FOR ONE RELEASE. A module declares a
+ * {@see Access\Concern} now — a thing to act on, with the
+ * verbs it supports and the scopes it offers — instead of one flat permission
+ * string per action. The two live side by side for one release so a module
+ * can be released against either.
+ *
+ * @deprecated since 1.0, declare a {@see Access\Concern} through {@see Access\ConcernSourceInterface}
  */
 final readonly class ModulePermission
 {

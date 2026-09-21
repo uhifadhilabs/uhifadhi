@@ -29,6 +29,15 @@ use Uhifadhi\Contracts\PermissionDeclarationInterface;
  * reaches the phone in the token, and the phone shows the Duty tab
  * because of it. An account without it is an account that reads the
  * park and does not report a day.
+ *
+ * DEPRECATED, AND KEPT FOR ONE RELEASE. The ground declares
+ * {@see AreaConcerns} now. `duty.checkin`
+ * survives here because it is a WIRE CONTRACT with a handset that cannot be
+ * upgraded on the afternoon the server is: the gate already asks
+ * `duty.record`, and the token payload follows a release later, once no
+ * phone in the field is still reading the old word.
+ *
+ * @deprecated since 1.0, use {@see AreaConcerns}
  */
 final readonly class AreaPermissions implements PermissionDeclarationInterface
 {

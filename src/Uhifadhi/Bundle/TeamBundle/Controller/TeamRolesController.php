@@ -29,6 +29,13 @@ use Uhifadhi\Bundle\TeamBundle\Service\RolesBoard;
  * and invents no third.
  *
  * IT WRITES NOTHING. The matrix is edited on Positions.
+ *
+ * DEPRECATED, AND KEPT FOR ONE RELEASE. What authority exists is the
+ * positions register's question now, and it answers it from the declared
+ * concerns rather than from the fixed seven. The route stays mounted for a
+ * release because an installation's own links and bookmarks point at it.
+ *
+ * @deprecated since 1.0, use the positions register
  */
 final readonly class TeamRolesController
 {

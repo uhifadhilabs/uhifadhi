@@ -27,6 +27,10 @@ namespace Uhifadhi\Bundle\TeamBundle\Model;
  * explain it. A nullable description would have made the answer "sometimes",
  * and a matrix that explains some of its rows is one an administrator stops
  * reading.
+ *
+ * DEPRECATED, AND KEPT FOR ONE RELEASE.
+ *
+ * @deprecated since 1.0, use {@see \Uhifadhi\Contracts\Access\Concern}
  */
 final readonly class Permission
 {

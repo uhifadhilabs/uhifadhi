@@ -42,6 +42,13 @@ use Uhifadhi\Contracts\ModuleProviderInterface;
  * IT READS THE PROVIDERS LIVE. The tagged iterator is walked on every call, not
  * folded in the constructor, for the same reason the registry does it: what is
  * installed is a fact about the running container, not about deploy time.
+ *
+ * DEPRECATED, AND KEPT FOR ONE RELEASE.
+ * {@see \Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue} is what folds the
+ * installation's declarations together now, and it asks the declarers rather
+ * than holding a list of its own.
+ *
+ * @deprecated since 1.0, use {@see \Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue}
  */
 final readonly class PermissionCatalogue
 {

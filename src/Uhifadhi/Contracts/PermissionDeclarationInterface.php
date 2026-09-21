@@ -39,6 +39,10 @@ namespace Uhifadhi\Contracts;
  *
  *     $services->set('area.permissions', AreaPermissions::class)
  *         ->tag(PermissionDeclarationInterface::TAG);
+ *
+ * DEPRECATED, AND KEPT FOR ONE RELEASE.
+ *
+ * @deprecated since 1.0, implement {@see Access\ConcernSourceInterface}
  */
 interface PermissionDeclarationInterface
 {

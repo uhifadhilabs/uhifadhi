@@ -38,6 +38,17 @@ namespace Uhifadhi\Bundle\TeamBundle\Enum;
  * administrator cannot read, and the rule is that there are no such rows.
  *
  * Single-org: there is no party axis. An installation is one authority.
+ *
+ * DEPRECATED, AND KEPT FOR ONE RELEASE. The fixed seven are replaced by
+ * declared concerns crossed with the six verbs: a concern is declared by
+ * whoever enforces it ({@see \Uhifadhi\Contracts\Access\ConcernSourceInterface})
+ * and a position grants (concern, verb) pairs. Nothing in this enum can be
+ * declared by a module, which is why it is going. It is still read by the
+ * handset's token payload and by the roles board, so deleting it now would
+ * 500 every installation that upgraded; it is removed in the release after
+ * the positions UI stops writing to it.
+ *
+ * @deprecated since 1.0, use the declared concerns and {@see \Uhifadhi\Contracts\Access\Grant} instead
  */
 enum PermissionEnum: string
 {

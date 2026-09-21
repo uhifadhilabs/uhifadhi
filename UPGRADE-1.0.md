@@ -321,6 +321,44 @@ through the helper.
   "premise changed — redesign or delete pending a design verdict". They are not
   deleted, because which of them still earns its place is a design decision.
 
+## The old permission machinery is deprecated, not yet gone
+
+**What changed.** Everything that spoke the fixed seven permissions is marked
+`@deprecated` and still works. Nothing is deleted in this release.
+
+| Deprecated | Replaced by |
+|---|---|
+| `TeamBundle\Enum\PermissionEnum` | declared concerns × the six verbs, spelled `Contracts\Access\Grant` |
+| `TeamBundle\Service\PermissionCatalogue` | `TeamBundle\Access\ConcernCatalogue` |
+| `TeamBundle\Security\PermissionVoter` | `TeamBundle\Security\GrantVoter` |
+| `TeamBundle\Model\Permission` | `Contracts\Access\Concern` |
+| `Contracts\ModulePermission` | `Contracts\Access\Concern` |
+| `Contracts\PermissionDeclarationInterface` | `Contracts\Access\ConcernSourceInterface` |
+| `RegistryBundle\Service\ModulePermissionCatalogue` | the tagged concern sources |
+| `AreaBundle\Access\AreaPermissions` | `AreaBundle\Access\AreaConcerns` |
+| the Roles tab, `GET /team/roles` | the positions register |
+
+**Why it is two releases and not one.** Deleting a shipped class outright 500s
+every installation that references it, and installations do: a module released
+against `ModulePermission`, a template linking `/team/roles`, a handset reading
+`duty.checkin` off a token it was issued weeks ago. So each of these is
+deprecated with its replacement named, ships one more release unchanged, and
+is dropped in the next. **`Position::$permissions` (the `permissions` column)
+stays on the table for the same release**, alongside the grants the new model
+writes; the contract migration that drops it is marked `@destructive` and
+belongs to the release after this one.
+
+**`duty.checkin` is the one that is deliberately slower than the rest.** It is
+a wire contract with a field app that is not upgraded on the afternoon the
+server is. The GATE already asks `duty.record`; only the token PAYLOAD still
+carries the old word, and it follows once no phone in the field is reading it.
+
+**What a module should do now.** Declare a `ConcernSourceInterface` (tag
+`uhifadhi.access.concerns`, by hand), gate on pairs, draw doors with `door()`,
+and extend `AccessConformanceTestCase`. Keep the `ModulePermission`
+declaration for one release if installations may be running the older core;
+the two catalogues coexist deliberately.
+
 ## The access vocabulary: concerns, six verbs, four scopes
 
 **What changed.** `Uhifadhi\Contracts\Access` publishes the vocabulary every

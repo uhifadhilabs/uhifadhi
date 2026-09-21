@@ -55,6 +55,13 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
  * convenience that turns a `{uuid}` route param into the Area for controllers that want it.
  *
  * @extends Voter<string, ?AreaInterface>
+ *
+ * DEPRECATED, AND KEPT FOR ONE RELEASE.
+ * {@see GrantVoter} decides a pair now, and
+ * it asks three questions rather than two. This one still answers the old
+ * seven so an installation mid-upgrade is not locked out of its own pages.
+ *
+ * @deprecated since 1.0, use {@see GrantVoter}
  */
 final class PermissionVoter extends Voter
 {

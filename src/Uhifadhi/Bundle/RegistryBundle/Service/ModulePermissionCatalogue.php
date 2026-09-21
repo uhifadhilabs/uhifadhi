@@ -40,6 +40,10 @@ use Uhifadhi\Contracts\ModuleProviderInterface;
  * IT DIES WITH THE MODULE. Uninstalling the bundle removes the provider, and the
  * declaration goes with it — a value left behind is a power an admin can still
  * assign over code that is no longer installed.
+ *
+ * DEPRECATED, AND KEPT FOR ONE RELEASE.
+ *
+ * @deprecated since 1.0, a module's powers reach the catalogue through {@see \Uhifadhi\Contracts\Access\ConcernSourceInterface}
  */
 final readonly class ModulePermissionCatalogue
 {
