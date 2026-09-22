@@ -101,7 +101,7 @@ final class TeamSectionFrameTest extends WebTestCaseWithSchema
 
         self::assertGreaterThan(0, $actions->count());
         self::assertSame('Configure', trim($actions->last()->text()));
-        self::assertSame('/team/configure/positions', $actions->last()->attr('href'));
+        self::assertSame('/team/configure', $actions->last()->attr('href'));
     }
 
     /** The configure page shows its SECTIONS where a data tab shows the strip. */
@@ -110,18 +110,10 @@ final class TeamSectionFrameTest extends WebTestCaseWithSchema
         $crawler = $this->visit('/team/configure');
 
         self::assertSame(
-            ['Positions vocabulary', 'Team settings'],
+            ['Team settings'],
             $crawler->filter('.atabs a')->each(static fn (Crawler $c): string => $c->text()),
         );
         self::assertSame(['Team settings'], $crawler->filter('.atabs a.on')->each(static fn (Crawler $c): string => $c->text()));
-    }
-
-    /** And the vocabulary section is a screen of its own, lit in the same strip. */
-    public function testTheVocabularySectionLightsItsOwnEntry(): void
-    {
-        $crawler = $this->visit('/team/configure/positions');
-
-        self::assertSame(['Positions vocabulary'], $crawler->filter('.atabs a.on')->each(static fn (Crawler $c): string => $c->text()));
     }
 
     /**

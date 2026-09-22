@@ -404,12 +404,17 @@ final class SidebarTreeStateTest extends ContractTestCase
      * page to page and dies with the tab: a fresh load reads the same for
      * everyone, which is the whole reason the state is derived server-side.
      */
-    public function testAManualFoldIsKeptForTheSessionAndNoLonger(): void
+    /**
+     * A MANUAL FOLD LASTS THE PAGE AND NO LONGER (ruled 2026-09-22, derived
+     * only): the controller stores nothing, so the next navigation derives
+     * the tree afresh and every page reads the same for everyone.
+     */
+    public function testAManualFoldLastsThePageAndIsStoredNowhere(): void
     {
         $controller = (string) file_get_contents(__DIR__.'/../../../assets/controllers/sidebar_tree_controller.js');
 
-        self::assertStringContainsString('window.sessionStorage', $controller);
+        self::assertStringNotContainsString('sessionStorage', $controller);
         self::assertStringNotContainsString('localStorage', $controller);
-        self::assertStringContainsString('data-nav-key', $controller);
+        self::assertStringContainsString("classList.toggle('closed'", $controller);
     }
 }

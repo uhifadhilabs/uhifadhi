@@ -8,6 +8,12 @@
 
 Not released yet.
 
+ * THE POSITION TITLES ARE GONE (ruled 2026-09-22). `PositionTitle`, its
+   table, the vocabulary screen at /team/configure/positions and its writes
+   were a list nothing read once position names became unique across the
+   organization. Team's configure surface is one screen, Team settings, which
+   is also where a position is added now.
+
  * THIS BUNDLE BOOTS WITHOUT THE ATLAS. Its performance screens caption the
    period they read; for a moment they took it from a service of the
    atlas's, BY ID, and the container then required the atlas at compile —

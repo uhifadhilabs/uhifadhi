@@ -66,7 +66,6 @@ use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentScopeChangeRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\InstallationPeriodFigureRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
-use Uhifadhi\Bundle\TeamBundle\Repository\PositionTitleRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Security\ActiveUserChecker;
 use Uhifadhi\Bundle\TeamBundle\Security\ApiTokenAuthenticator;
@@ -91,9 +90,7 @@ use Uhifadhi\Bundle\TeamBundle\Service\PermissionCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionBoard;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionHistory;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionService;
-use Uhifadhi\Bundle\TeamBundle\Service\PositionTitleService;
 use Uhifadhi\Bundle\TeamBundle\Service\PositionVacancy;
-use Uhifadhi\Bundle\TeamBundle\Service\PositionVocabulary;
 use Uhifadhi\Bundle\TeamBundle\Service\PostingBoard;
 use Uhifadhi\Bundle\TeamBundle\Service\PostingDoorService;
 use Uhifadhi\Bundle\TeamBundle\Service\RolesBoard;
@@ -1269,38 +1266,12 @@ return static function (ContainerConfigurator $container): void {
         ->tag('controller.service_arguments');
     $services->alias(TeamSectionController::class, 'team.controller.section')->public();
 
-    /*
-     * THE ONE DOOR A POSITION TITLE IS WRITTEN THROUGH — trimmed, not empty,
-     * unique. Rules about a word live beside the word and not in the screen
-     * that happens to ask, so a second caller gets the same answer.
-     */
-    $services->set('team.position_titles', PositionTitleService::class)
-        ->args([service('doctrine.orm.entity_manager'), service(PositionTitleRepository::class)]);
-    $services->alias(PositionTitleService::class, 'team.position_titles');
-
-    $services->set(PositionTitleRepository::class)
-        ->args([service('doctrine')])
-        ->tag('doctrine.repository_service');
-
-    /*
-     * THE WORDS THIS INSTALLATION WRITES ITS POSITIONS WITH, read per
-     * department — one pass over the positions rather than a query per
-     * department, and the shared words named rather than merged.
-     */
-    $services->set('team.position_vocabulary', PositionVocabulary::class)
-        ->args([service(PositionRepository::class)]);
-    $services->alias(PositionVocabulary::class, 'team.position_vocabulary');
-
     $services->set('team.controller.configure', TeamConfigureController::class)
         ->args([
             service('twig'),
             service(UserRepository::class),
             service(DepartmentRepository::class),
-            service(PositionTitleRepository::class),
-            service('team.position_titles'),
-            service('team.position_vocabulary'),
             service('security.csrf.token_manager'),
-            service('router'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(TeamConfigureController::class, 'team.controller.configure')->public();

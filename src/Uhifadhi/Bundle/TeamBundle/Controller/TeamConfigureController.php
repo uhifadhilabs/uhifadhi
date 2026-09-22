@@ -13,27 +13,15 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Controller;
 
-use Symfony\Component\HttpFoundation\RedirectResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\Session\FlashBagAwareSessionInterface;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Symfony\Component\Routing\Requirement\Requirement;
-use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Symfony\Component\Uid\Uuid;
 use Twig\Environment;
 use Uhifadhi\Bundle\TeamBundle\Access\TeamConcerns;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
-use Uhifadhi\Bundle\TeamBundle\Exception\DuplicatePositionTitleException;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
-use Uhifadhi\Bundle\TeamBundle\Repository\PositionTitleRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
-use Uhifadhi\Bundle\TeamBundle\Service\PositionTitleService;
-use Uhifadhi\Bundle\TeamBundle\Service\PositionVocabulary;
 use Uhifadhi\Contracts\Access\Verb;
 
 /**
@@ -55,33 +43,20 @@ use Uhifadhi\Contracts\Access\Verb;
  * and listed, and naming the absent action would only teach a reader to look
  * for it.
  *
- * POSITIONS VOCABULARY IS THE ONE THAT WRITES, and it writes exactly one
- * thing: the title a position may be called. What a position may DO is the
- * matrix, on Positions, and nothing here grants anything.
+ * ONE SCREEN, TEAM SETTINGS (ruled 2026-09-22): it states the installation's
+ * policies and carries the one write this surface has — adding a position.
  */
 final readonly class TeamConfigureController
 {
-    public const string CSRF_ID = 'team_position_title';
-
     /** The section's settings — the last entry in the strip, and the house's rank. */
     public const string SETTINGS = 'team_configure';
 
     /** The words a position is written with. */
-    public const string VOCABULARY = 'team_configure_positions';
-
-    public const string TITLE_CREATE = 'team_position_title_create';
-
-    public const string TITLE_RENAME = 'team_position_title_rename';
-
     public function __construct(
         private Environment $twig,
         private UserRepository $users,
         private DepartmentRepository $departments,
-        private PositionTitleRepository $titles,
-        private PositionTitleService $titleWrites,
-        private PositionVocabulary $vocabulary,
         private CsrfTokenManagerInterface $csrf,
-        private UrlGeneratorInterface $router,
     ) {
     }
 
@@ -125,7 +100,6 @@ final readonly class TeamConfigureController
             'mayAdminister' => $mayAdminister,
             'byTier' => $byTier,
             'tiers' => TeamRoleEnum::cases(),
-            'titles' => \count($this->titles->findAllOrdered()),
             'departments' => \count($this->departments->findAllActiveOrdered()),
             // THE ADD-A-POSITION CARD posts to the positions register's own
             // write, so it carries that write's token, not the vocabulary's.
@@ -133,7 +107,7 @@ final readonly class TeamConfigureController
         ]));
     }
 
-    /**
+    /*
      * WHAT A POSITION MAY BE CALLED — titles, and the departments already
      * using each word.
      *
@@ -142,78 +116,4 @@ final readonly class TeamConfigureController
      * else, so `Analyst` in Ecology and `Analyst` in Protection Service are
      * two different jobs. Nothing on this screen may merge them.
      */
-    #[Route('/team/configure/positions', name: self::VOCABULARY, defaults: TeamController::SURFACE, methods: ['GET'])]
-    #[IsGranted(PositionController::CONFIGURE)]
-    public function vocabulary(): Response
-    {
-        return new Response($this->twig->render('@Team/team/configure_positions.html.twig', [
-            'titles' => $this->titles->findAllOrdered(),
-            // A WORD IN TWO DEPARTMENTS IS TWO JOBS, and the screen names
-            // which words those are rather than leaving a reader to spot them.
-            ...$this->vocabulary->read(),
-            'csrfToken' => $this->csrf->getToken(self::CSRF_ID)->getValue(),
-        ]));
-    }
-
-    #[Route('/team/configure/positions/titles', name: self::TITLE_CREATE, methods: ['POST'])]
-    #[IsGranted(PositionController::CONFIGURE)]
-    public function createTitle(Request $request): RedirectResponse
-    {
-        $this->guard($request);
-
-        $name = trim((string) $request->request->get('name'));
-        if ('' === $name) {
-            return $this->back($request, 'A title needs a name.');
-        }
-
-        try {
-            $this->titleWrites->create($name, $request->request->getBoolean('leads'));
-        } catch (DuplicatePositionTitleException $clash) {
-            return $this->back($request, $clash->getMessage());
-        }
-
-        return $this->back($request, \sprintf('“%s” is a position title.', $name), 'success');
-    }
-
-    #[Route('/team/configure/positions/titles/{uuid}/rename', name: self::TITLE_RENAME, requirements: ['uuid' => Requirement::UUID], methods: ['POST'])]
-    #[IsGranted(PositionController::CONFIGURE)]
-    public function renameTitle(Request $request, string $uuid): RedirectResponse
-    {
-        $this->guard($request);
-
-        $title = $this->titles->findOneByUuid(Uuid::fromString($uuid));
-        if (null === $title) {
-            throw new NotFoundHttpException('No title by that identifier.');
-        }
-
-        $name = trim((string) $request->request->get('name'));
-        if ('' === $name) {
-            return $this->back($request, 'A title needs a name.');
-        }
-
-        try {
-            $this->titleWrites->rename($title, $name, $request->request->getBoolean('leads'));
-        } catch (DuplicatePositionTitleException $clash) {
-            return $this->back($request, $clash->getMessage());
-        }
-
-        return $this->back($request, \sprintf('The title is called “%s”.', $name), 'success');
-    }
-
-    private function guard(Request $request): void
-    {
-        if (!$this->csrf->isTokenValid(new CsrfToken(self::CSRF_ID, (string) $request->request->get('_token')))) {
-            throw new NotFoundHttpException('That form is stale.');
-        }
-    }
-
-    private function back(Request $request, string $message, string $tone = 'error'): RedirectResponse
-    {
-        $session = $request->hasSession() ? $request->getSession() : null;
-        if ($session instanceof FlashBagAwareSessionInterface) {
-            $session->getFlashBag()->add($tone, $message);
-        }
-
-        return new RedirectResponse($this->router->generate(self::VOCABULARY));
-    }
 }

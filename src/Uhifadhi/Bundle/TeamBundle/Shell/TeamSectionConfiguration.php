@@ -60,13 +60,9 @@ final readonly class TeamSectionConfiguration implements ConfigurationSectionsIn
     public function sections(): array
     {
         return [
-            // NO WIDGET LIBRARY (owner 2026-09-22): the People register is app
-            // mechanics — one table — and widgets stay on the data surfaces.
-            ConfigurationSection::screen(
-                'positions-vocabulary',
-                'Positions vocabulary',
-                TeamConfigureController::VOCABULARY,
-            ),
+            // ONE SCREEN (owner 2026-09-22): no widget library — a register is app
+            // mechanics — and no positions vocabulary — a list nothing read once
+            // position names became unique across the organization.
             ConfigurationSection::screen(
                 ConfigurationSection::SETTINGS,
                 'Team settings',

@@ -16,7 +16,6 @@ namespace Uhifadhi\Bundle\TeamBundle\Tests\Functional;
 use Symfony\Component\DomCrawler\Crawler;
 use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
-use Uhifadhi\Bundle\TeamBundle\Repository\PositionTitleRepository;
 use Uhifadhi\Bundle\TeamBundle\Service\PerformanceHistory;
 use Uhifadhi\Bundle\TeamBundle\Service\TeamFigures;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\Fixtures\FakeStationDirectory;
@@ -201,98 +200,6 @@ final class TeamSectionScreensTest extends WebTestCaseWithSchema
         self::assertCount(1, $forms);
         self::assertStringEndsWith('/team/positions', (string) $forms->attr('action'));
         self::assertCount(1, $forms->filter('input[name="name"]'));
-    }
-
-    // ---- positions vocabulary -------------------------------------------
-
-    /**
-     * THE WORDS THIS INSTALLATION WRITES ITS POSITIONS WITH, AS ONE FLAT LIST.
-     *
-     * The screen used to group the names by department and footnote the words
-     * that appeared in more than one — a position's name was unique only inside
-     * its department, so "Analyst" twice was two jobs sharing a word. A position
-     * belongs to no department now and its name is unique across the
-     * organization, so there is one list and each name is on it once.
-     */
-    public function testTheVocabularyScreenListsEveryPositionNameOnce(): void
-    {
-        $this->installation();
-        $rows = $this->visit('/team/configure/positions')->filter('.c')->last()->filter('tbody tr');
-
-        self::assertSame(
-            ['Analyst', 'Warden'],
-            $rows->each(static fn (Crawler $c): string => $c->filter('td')->eq(0)->text()),
-        );
-    }
-
-    /** A title is added from the create card at the top of its own screen. */
-    public function testATitleIsAddedFromTheCreateCard(): void
-    {
-        $this->installation();
-        $crawler = $this->visit('/team/configure/positions');
-
-        $this->client->submit($crawler->filter('#add-title form')->form([
-            'name' => 'Armoury Officer',
-            'leads' => '1',
-        ]));
-        self::assertResponseRedirects('/team/configure/positions');
-
-        $title = $this->titles()->findOneByName('Armoury Officer');
-        self::assertNotNull($title);
-        self::assertTrue($title->leadsStation());
-    }
-
-    /** One word, once: a second title by the same name is refused and says so. */
-    public function testASecondTitleByTheSameNameIsRefused(): void
-    {
-        $this->installation();
-        $this->submitTitle('Armoury Officer');
-        $this->submitTitle('Armoury Officer');
-
-        $crawler = $this->client->followRedirect();
-        self::assertStringContainsString('There is already a position title called "Armoury Officer".', $crawler->text());
-        self::assertCount(1, $this->titles()->findAllOrdered());
-    }
-
-    /** A title with no name is not a title, and the screen says so. */
-    public function testATitleNeedsAName(): void
-    {
-        $this->installation();
-        $this->submitTitle('   ');
-
-        self::assertStringContainsString('A title needs a name.', $this->client->followRedirect()->text());
-        self::assertSame([], $this->titles()->findAllOrdered());
-    }
-
-    /** And it is renamed in place, from its own row. */
-    public function testATitleIsRenamedFromItsOwnRow(): void
-    {
-        $this->installation();
-        $this->submitTitle('Armoury Officer');
-        $this->client->followRedirect();
-
-        $crawler = $this->visit('/team/configure/positions');
-        $this->client->submit($crawler->filter('.c form.staddrow')->first()->form([
-            'name' => 'Armourer',
-            'leads' => '0',
-        ]));
-
-        self::assertNotNull($this->titles()->findOneByName('Armourer'));
-        self::assertNull($this->titles()->findOneByName('Armoury Officer'));
-    }
-
-    private function submitTitle(string $name): void
-    {
-        $crawler = $this->visit('/team/configure/positions');
-        $this->client->submit($crawler->filter('#add-title form')->form(['name' => $name]));
-    }
-
-    private function titles(): PositionTitleRepository
-    {
-        /** @var PositionTitleRepository $repository */
-        $repository = static::getContainer()->get(PositionTitleRepository::class);
-
-        return $repository;
     }
 
     /**

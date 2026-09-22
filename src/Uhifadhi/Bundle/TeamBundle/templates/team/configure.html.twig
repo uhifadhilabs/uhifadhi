@@ -108,16 +108,4 @@
         </div>
     </div>
 
-    <div class="c" style="margin-bottom:20px">
-        <span class="tab">Positions vocabulary<span class="src">&middot; its own section</span></span>
-        <div class="sxlead">
-            <span class="t">{{ ux_icon('shell:file-text', {width: 15, height: 15}) }}<span><b>The words a position is written with.</b> Titles and ranks, not permissions.</span></span>
-            <span class="a"><a class="cta" href="{{ path('team_configure_positions') }}">Open Positions vocabulary</a></span>
-        </div>
-        <div class="rln"><span>Position name</span><span class="mono d">unique inside its department, not across the installation</span></div>
-        <div class="rln"><span>Titles offered</span><span class="mono d">{{ titles }} &middot; editable</span></div>
-        <div class="rln"><span>Departments a position may belong to</span><span class="mono d">every department on the register &middot; {{ departments }} active</span></div>
-        <div class="rln"><span>Seats per position</span><span class="mono d">one &middot; a position with no holder is legal</span></div>
-        <div class="use" style="margin-bottom:0">Names only &mdash; what a position may do is the matrix, on Positions.</div>
-    </div>
 {% endblock %}
