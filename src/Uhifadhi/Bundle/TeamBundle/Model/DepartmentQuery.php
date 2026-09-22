@@ -40,6 +40,8 @@ final readonly class DepartmentQuery
     public const string SORT = 'sort';
     public const string DIRECTION = 'dir';
     public const string FOCUS = 'focus';
+    /** The rows folded open, comma-separated uuids. */
+    public const string OPEN = 'open';
 
     /** The one placement answer that is not an area: org-wide. */
     public const string ORG = 'org';
@@ -69,6 +71,8 @@ final readonly class DepartmentQuery
         public string $sort = 'name',
         public string $direction = self::ASC,
         public ?string $focus = null,
+        /** @var list<string> */
+        public array $open = [],
     ) {
     }
 
@@ -90,7 +94,13 @@ final readonly class DepartmentQuery
             sort: \in_array($sort, self::SORTS, true) ? $sort : 'name',
             direction: self::DESC === $direction ? self::DESC : self::ASC,
             focus: self::orNull($request->query->getString(self::FOCUS)),
+            open: array_values(array_filter(array_map(trim(...), explode(',', $request->query->getString(self::OPEN))))),
         );
+    }
+
+    public function isOpen(string $uuid): bool
+    {
+        return \in_array($uuid, $this->open, true);
     }
 
     private static function orNull(string $value): ?string
@@ -218,6 +228,9 @@ final readonly class DepartmentQuery
             // THE FOCUS DOES NOT SURVIVE A FILTER. Marking a row the filter
             // just removed is a mark on nothing.
             self::FOCUS => self::FOCUS === $key ? null : $this->focus,
+            // WHAT IS OPEN SURVIVES A SORT OR A FILTER: a reader who opened two
+            // rows and then sorted still has them open.
+            self::OPEN => [] === $this->open ? null : implode(',', $this->open),
         ], static fn (?string $v): bool => null !== $v);
 
         if (null === $value) {

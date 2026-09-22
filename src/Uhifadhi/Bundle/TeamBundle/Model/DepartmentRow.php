@@ -29,8 +29,9 @@ use Uhifadhi\Contracts\Entity\AreaInterface;
 final readonly class DepartmentRow
 {
     /**
-     * @param list<string> $modules the attached modules' names, in catalogue order
-     * @param list<string> $slugs   the same modules' slugs
+     * @param list<string>                                                      $modules      the attached modules' names, in catalogue order
+     * @param list<string>                                                      $slugs        the same modules' slugs
+     * @param list<array{uuid: string, name: string, filled: int, seats: ?int}> $positionRows the positions its members hold, for the fold
      */
     public function __construct(
         public Department $department,
@@ -46,6 +47,7 @@ final readonly class DepartmentRow
         public int $goals,
         public bool $active,
         public ?int $category,
+        public array $positionRows = [],
     ) {
         $this->vacant = null === $seats ? 0 : max(0, $seats - $filled);
     }

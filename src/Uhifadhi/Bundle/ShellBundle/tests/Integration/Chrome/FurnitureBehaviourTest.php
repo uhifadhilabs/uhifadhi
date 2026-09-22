@@ -156,7 +156,7 @@ final class FurnitureBehaviourTest extends ContractTestCase
         self::assertIsArray($symfony);
         $controllers = $symfony['controllers'] ?? null;
         self::assertIsArray($controllers);
-        self::assertSame(['theme', 'confirm-modal', 'sidebar', 'sidebar-tree', 'localtime', 'scope'], array_keys($controllers));
+        self::assertSame(['theme', 'confirm-modal', 'sidebar', 'sidebar-tree', 'localtime', 'scope', 'register-fold'], array_keys($controllers));
 
         foreach ($controllers as $name => $config) {
             self::assertIsArray($config);

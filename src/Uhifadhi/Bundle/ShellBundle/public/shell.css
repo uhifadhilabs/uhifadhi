@@ -1632,6 +1632,35 @@ table.tbl th a:hover { color: rgb(var(--c-tx)); }
 table.tbl th.sorted { color: rgb(var(--c-tx)); }
 table.tbl th.sorted::after { content: " \25BE"; color: rgb(var(--c-acc)); }
 table.tbl th.sorted[aria-sort="descending"]::after { content: " \25B4"; }
+
+/* ---- A REGISTER ROW THAT FOLDS OPEN (ruled 2026-09-22, the fold contract) --
+   Markup: the folding row carries `data-fold-id` and a chevron cell; ONE
+   `tr.foldrow` follows it holding `.foldbox > .fold-in > content`. The header
+   row draws NO rule; the fold row carries the house dashed rule in BOTH states
+   (1px tall while shut), so opening only grows the panel above a rule that
+   never moves. The panel's spacing is the content's MARGIN inside the clipped
+   track — never padding on the track, which would zero and jump. The track
+   eases 0fr → 1fr over 600ms; the chevron turns on the same curve. The click
+   is the `register-fold` controller's; the open set rides in the address. */
+table.tbl .fchev-h { width: 22px; }
+table.tbl td.fchev-c { width: 22px; padding-right: 0; }
+.fchev {
+    display: inline-block; width: 14px; color: rgb(var(--c-dim)); font-size: 11px; text-decoration: none;
+    transition: transform .6s cubic-bezier(.4, 0, .2, 1);
+}
+.fchev:hover { color: rgb(var(--c-tx)); }
+table.tbl tr.open .fchev { transform: rotate(90deg); }
+table.tbl tr[data-fold-id] td { border-bottom: 0; }
+table.tbl tr.foldrow td {
+    padding: 0 14px 0 36px;
+    border-bottom: 1px dashed color-mix(in srgb, rgb(var(--c-fog)) 18%, transparent);
+    background: color-mix(in srgb, rgb(var(--c-fog)) 4%, transparent);
+}
+table.tbl tr.foldrow:hover td { background: color-mix(in srgb, rgb(var(--c-fog)) 4%, transparent); }
+table.tbl tr.foldrow .foldbox { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .6s cubic-bezier(.4, 0, .2, 1); }
+table.tbl tr.foldrow.open .foldbox { grid-template-rows: 1fr; }
+table.tbl tr.foldrow .fold-in { overflow: hidden; min-height: 0; }
+table.tbl tr.foldrow .fold-in > * { margin: 12px 0 16px; }
 table.tbl .num { text-align: right; font-family: var(--font-mono); }
 table.tbl td.num { font-size: 12px; }
 

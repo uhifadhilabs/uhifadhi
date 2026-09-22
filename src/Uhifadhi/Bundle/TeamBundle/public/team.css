@@ -3530,3 +3530,41 @@ table.tbl.dreg tr.dcinactive td { opacity: .55; }
 table.tbl.dreg tr.dempty td { padding: 22px 10px; color: rgb(var(--c-fog)); }
 table.tbl.dreg tr.dempty b { display: block; color: rgb(var(--c-tx)); }
 table.tbl.dreg tr.dempty:hover td { background: none; }
+
+/* ---- THE FOLD'S CARDS — the positions under a department, the holders under
+   a position: the house's small card grid, inside a register's fold row. */
+table.tbl tr.foldrow .poscards { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+table.tbl tr.foldrow .poscard {
+    display: block; border: 1px solid var(--c-ln); border-radius: 10px; padding: 10px 12px;
+    background: rgb(var(--c-p1)); color: rgb(var(--c-tx)); text-decoration: none; font-size: 12px;
+}
+table.tbl tr.foldrow .poscard:hover { border-color: rgb(var(--c-fog)); text-decoration: none; }
+table.tbl tr.foldrow .poscard b { display: block; margin: 4px 0 6px; font-weight: 600; }
+table.tbl tr.foldrow .poscardhd { display: flex; justify-content: space-between; font: 10px var(--font-mono); color: rgb(var(--c-dim)); min-height: 12px; }
+table.tbl tr.foldrow .poscardfoot .k { font-size: 11px; color: rgb(var(--c-fog)); }
+table.tbl tr.foldrow .poscard.add { border-style: dashed; color: rgb(var(--c-dim)); display: grid; place-items: center; }
+table.tbl tr.foldrow .poscard.add .t { display: inline-flex; align-items: center; gap: 6px; }
+table.tbl tr.foldrow .zdnone { grid-column: 1 / -1; }
+/* THE POSITIONS REGISTER shares the departments table's rules. */
+table.tbl.preg td { vertical-align: middle; }
+table.tbl.preg .who { display: flex; align-items: center; gap: 10px; }
+table.tbl.preg .pmk { width: 26px; height: 26px; border-radius: 7px; display: grid; place-items: center; font: 700 10px var(--font-mono); background: rgb(var(--c-raised)); color: rgb(var(--c-fog)); flex: none; }
+table.tbl.preg .sub { font-size: 11px; color: rgb(var(--c-dim)); margin-top: 2px; }
+table.tbl.preg .ov-nm { font-weight: 600; }
+table.tbl.preg td.act { text-align: right; white-space: nowrap; }
+table.tbl.preg tr.dcinactive td { opacity: .55; }
+table.tbl.preg tr.dempty td { padding: 22px 10px; color: rgb(var(--c-fog)); }
+table.tbl.preg tr.dempty b { display: block; color: rgb(var(--c-tx)); }
+table.tbl.preg .avs { display: inline-flex; }
+table.tbl.preg .av { width: 22px; height: 22px; border-radius: 50%; background: rgb(var(--c-raised)); border: 2px solid rgb(var(--c-p2)); margin-left: -6px; display: grid; place-items: center; font: 700 8.5px var(--font-mono); color: rgb(var(--c-fog)); }
+table.tbl.preg .av:first-child { margin-left: 0; }
+table.tbl.preg .av.more { color: rgb(var(--c-dim)); }
+
+/* MEASURED AGAINST THE DESIGN (2026-09-22, positions B / departments G): the
+   register's type sizes and row rhythm, the chevron's ink, the fold card's name. */
+table.tbl.dreg td, table.tbl.preg td { font-size: 12.5px; padding: 10px; }
+table.tbl.dreg .mono, table.tbl.preg .mono { font-size: 12.5px; }
+table.tbl.dreg .ov-nm, table.tbl.preg .ov-nm { font-size: 13px; }
+table.tbl.dreg .fchev, table.tbl.preg .fchev { color: rgb(var(--c-acc)); }
+table.tbl tr.foldrow .poscard b { color: rgb(var(--c-acc)); }
+table.tbl.dreg tr.foldrow td, table.tbl.preg tr.foldrow td { padding: 0 14px 0 36px; }

@@ -31,6 +31,7 @@ use Symfony\Component\Uid\Uuid;
 use Twig\Environment;
 use Uhifadhi\Bundle\RegistryBundle\Service\ModuleCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Entity\Department;
+use Uhifadhi\Bundle\TeamBundle\Entity\Position;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Enum\GoalDirectionEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\GoalStateEnum;
@@ -245,6 +246,7 @@ final readonly class DepartmentController
     private function rows(array $departments): array
     {
         $cats = $this->palette->indexes();
+        $holders = $this->holders();
         $rows = [];
         foreach ($departments as $department) {
             $uuid = $department->getUuidString() ?? '';
@@ -281,6 +283,12 @@ final readonly class DepartmentController
                 goals: \count($this->goals->findForDepartment($department)),
                 active: $department->isActive(),
                 category: $cats[$uuid] ?? null,
+                positionRows: array_map(static fn (Position $position): array => [
+                    'uuid' => (string) $position->getUuidString(),
+                    'name' => (string) $position->getName(),
+                    'filled' => $holders[(string) $position->getUuidString()] ?? 0,
+                    'seats' => $position->getSeatCount(),
+                ], $positions),
             );
         }
 

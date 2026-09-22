@@ -105,116 +105,119 @@
         <div class="pmx-tier plain"><b>Staff &mdash; the matrix</b><span>Exactly what their position grants &middot; nothing by default</span></div>
     </div>
 
-    <h2 class="zone">The positions</h2>
-
-    {# THE SCOPE FILTER. Four kinds and an all — a segmented row rather than a
-       grouped dropdown, because a position allows KINDS, there are exactly
-       four of them, and burying four one-click choices in a panel is worse
-       than showing them. The choice is a query parameter, so it is shareable
-       and it survives a save's redirect. #}
-    <div class="rgbar">
-        <span class="rgbar-k">scope</span>
-        <a class="rgf{{ kind is null ? ' on' : '' }}" href="{{ path('team_positions') }}">All positions</a>
-        {% for offer in kinds %}
-            <a class="rgf{{ kind == offer ? ' on' : '' }}" href="{{ path('team_positions', {kind: offer.value}) }}">{{ offer.value }}</a>
-        {% endfor %}
-        <span class="rgbar-n">by name &middot; <b>{{ shown|length }} position{{ shown|length == 1 ? '' : 's' }}</b> &middot; <b>{{ holding }}</b> {{ holding == 1 ? 'person' : 'people' }} holding one &middot; {{ declared }} declared concerns</span>
-        <span class="rgbar-acts">
-            <a class="tgl w-act" href="{{ folds.none }}">Collapse all</a>
-            <a class="tgl w-act" href="{{ folds.all }}">Expand all</a>
-        </span>
+    {# THE REGISTER IS A HOUSE CARD WHOSE TAB NAMES THE TABLE (owner 2026-09-22:
+       the frame's header band in the design is the register's own header
+       here), the filters and the table inside it — as the assignments
+       register is drawn. ONE TABLE (ruled 2026-09-22, option B): the People-table idiom — three
+       grouped dropdowns, a search, what is shown, sortable headers — a
+       two-line name cell (the position over where it may be placed) and one
+       fact per column; a chevron folds a row open to its holders. Every
+       option and every header is a link: the address is the state. #}
+    <div class="c">
+    <span class="tab">Positions<span class="src">&middot; {{ total }} &middot; what each grants, and who holds it</span></span>
+    <div class="lfilt">
+        {{ include('@Team/_partial/_filter.html.twig', {
+            key: constant('Uhifadhi\\Bundle\\TeamBundle\\Model\\PositionQuery::PLACEMENT'),
+            label: 'placement', all: 'any placement', chosen: query.placement, options: placementOptions, query: query,
+        }, with_context: false) }}
+        {{ include('@Team/_partial/_filter.html.twig', {
+            key: constant('Uhifadhi\\Bundle\\TeamBundle\\Model\\PositionQuery::SEATS'),
+            label: 'seats', all: 'any seats', chosen: query.seats, options: seatsOptions, query: query,
+        }, with_context: false) }}
+        {{ include('@Team/_partial/_filter.html.twig', {
+            key: constant('Uhifadhi\\Bundle\\TeamBundle\\Model\\PositionQuery::GRANTS'),
+            label: 'grants', all: 'any grants', chosen: query.grants, options: grantsOptions, query: query,
+        }, with_context: false) }}
+        <form class="lsearch" method="get" action="{{ path('team_positions') }}">
+            {% for field, value in query.with(constant('Uhifadhi\\Bundle\\TeamBundle\\Model\\PositionQuery::SEARCH'), null) %}
+                <input type="hidden" name="{{ field }}" value="{{ value }}">
+            {% endfor %}
+            {{ ux_icon('shell:search', {width: 14, height: 14}) }}
+            <input class="fld" type="search" name="{{ constant('Uhifadhi\\Bundle\\TeamBundle\\Model\\PositionQuery::SEARCH') }}"
+                   value="{{ query.search }}" placeholder="Find a position&hellip;" aria-label="Find a position">
+        </form>
+        <span class="tm-shown">showing <b>{{ rows|length }}</b> of {{ total }} &middot; <b>{{ holding }}</b> holding one &middot; {{ declared }} concerns declared</span>
     </div>
 
-    {% if shown is empty %}
-        <div class="pmx-zero c">
-            {{ ux_icon('shell:triangle-alert') }}
-            <span>{% if cards is empty %}<b>No positions yet.</b> One Super Admin, nothing else{% else %}<b>No position allows that scope.</b> {{ cards|length }} exist under the other kinds{% endif %}</span>
-        </div>
-    {% else %}
-    <div class="dcstack dcreg">
-        {% for card in shown %}
-            {% set open = openCards[card.uuid] %}
-            <article class="dcard{{ open ? ' on' : '' }}" id="p-{{ card.uuid }}">
-                <div class="dc-hd">
-                    <span class="ov-mk{{ open ? ' on' : '' }}">{{ card.mark }}</span>
-                    <div class="dc-bd">
-                        <span class="nmrow">
-                            <a class="ov-nm" href="{{ path('team_position_show', {uuid: card.uuid}) }}">{{ card.name }}</a>
+    <table class="tbl preg" data-controller="uhifadhi--shell-bundle--register-fold">
+        <thead><tr>
+            <th class="fchev-h"></th>
+            {% for column, label in columns %}
+                {% set sorted = query.sort == column %}
+                <th{{ sorted ? ' class="sorted"' }} aria-sort="{{ sorted ? (query.direction == 'desc' ? 'descending' : 'ascending') : 'none' }}">
+                    <a href="{{ path('team_positions', query.sortedBy(column)) }}">{{ label }}</a>
+                </th>
+            {% endfor %}
+            <th></th>
+        </tr></thead>
+        <tbody>
+        {% for card in rows %}
+            {% set show = path('team_position_show', {uuid: card.uuid}) %}
+            {% set open = query.isOpen(card.uuid) %}
+            <tr id="p-{{ card.uuid }}" class="prow{{ open ? ' open' : '' }}{{ card.position.isRetired ? ' dcinactive' : '' }}"
+                data-position="{{ card.uuid }}" data-fold-id="{{ card.uuid }}" data-fold-name="{{ card.name }}">
+                <td class="fchev-c"><a class="fchev" href="{{ path('team_positions', query.with('open', open ? null : card.uuid)) }}"
+                       data-action="uhifadhi--shell-bundle--register-fold#toggle" aria-expanded="{{ open ? 'true' : 'false' }}"
+                       aria-label="{{ open ? 'Collapse' : 'Expand' }} {{ card.name }}">&#9656;</a></td>
+                <td>
+                    <div class="who">
+                        <span class="pmk">{{ card.mark }}</span>
+                        <div>
+                            <a class="ov-nm" href="{{ show }}">{{ card.name }}</a>
                             {% if card.position.isRetired %}<span class="chip stoff">retired</span>{% endif %}
-                        </span>
-                        <div class="dc-sub">
-                            {%- if card.seats is null -%}
-                                <b>{{ card.seatsFilled }}</b> holding <span class="rgx open">unlimited seats</span>
-                            {%- else -%}
-                                <b>{{ card.seatsFilled }} of {{ card.seats }}</b> seat{{ card.seats == 1 ? '' : 's' }}
-                                {% if card.isFull %}<span class="rgx full">{{ ux_icon('shell:triangle-alert') }} full</span>
-                                {%- else %}<span class="rgx open">{{ card.seatsFree }} free</span>{% endif %}
-                            {%- endif %}
-                            &middot; <b>{{ card.seatsFilled }}</b> holder{{ card.seatsFilled == 1 ? '' : 's' }}
-                            &middot; {{ card.concernsGranted }} of {{ card.concernsDeclared }} concerns
+                            <div class="sub">
+                                {%- if card.grantsNothing and card.allowedKinds is empty -%}grants nothing
+                                {%- elseif card.allowedKinds is empty -%}placed nowhere
+                                {%- else -%}{{ card.allowedKinds|map(k => k.value)|join(' · ') }}{%- endif -%}
+                            </div>
                         </div>
                     </div>
-                    <span class="rgkinds">
-                        {%- if card.grantsNothing -%}
-                            <span class="pmx-sk nil">grants nothing</span>
-                        {%- else -%}
-                            {%- for allowed in card.allowedKinds %}<span class="pmx-sk on">{{ allowed.value }}</span>{% endfor -%}
-                        {%- endif -%}
-                    </span>
-                    <div class="dc-act">
-                        {# IT IS A LINK, so which card is open stays in the
-                           address and the label is the server's answer. #}
-                        <a class="ovx xdisc" href="{{ folds[card.uuid] }}"
-                           aria-expanded="{{ open ? 'true' : 'false' }}"
-                           aria-label="{{ open ? 'Collapse' : 'Expand' }} {{ card.name }}">
-                            <span class="t">{{ open ? 'Collapse' : 'Expand' }}</span>{{ ux_icon('shell:chevron-down') }}
-                        </a>
-                        <a class="ov-open" href="{{ path('team_position_show', {uuid: card.uuid}) }}" title="Open {{ card.name }}">Open {{ ux_icon('shell:chevron-right') }}</a>
-                    </div>
-                </div>
-                {% if open %}
-                <div class="dc-body">
-                    {% if card.grantsNothing %}
-                        <div class="rgnone">
-                            {{ ux_icon('shell:triangle-alert') }}
-                            <span><b>Grants nothing.</b> No module contributes a single concern to it.</span>
-                        </div>
+                </td>
+                <td>
+                    {% if card.seats is null %}
+                        <span class="mono">{{ card.seatsFilled }}</span><span class="mono d"> / unlimited</span>
                     {% else %}
-                        <div class="rggrid">
-                            {% for group in card.grantedGroups %}
-                                <div class="rggrid-g">
-                                    <span class="rggrid-k">{{ group.declarer }}</span>
-                                    <span class="rggrid-v">
-                                        {%- for row in group.grantedRows -%}
-                                            <span class="rgchip{{ row.sensitive ? ' sens' : '' }}">{{ row.label }}{{ row.sensitive ? ' ⚠' : '' }}</span>
-                                        {%- endfor -%}
-                                    </span>
-                                </div>
-                            {% endfor %}
-                        </div>
+                        <span class="mono">{{ card.seatsFilled }}</span><span class="mono d"> / {{ card.seats }}</span>
+                        {% if card.isFull %} <span class="chip">full</span>{% else %} <span class="chip warn">{{ card.seatsFree }} vacant</span>{% endif %}
                     {% endif %}
+                </td>
+                <td><span class="mono d">
+                    {%- if card.grantsNothing -%}Grants nothing
+                    {%- else -%}{%- for word, count in card.summary %}{{ loop.first ? '' : ' · ' }}{{ word }} {{ count }}{% endfor -%}{%- endif -%}
+                </span></td>
+                <td>{% if card.sensitiveGranted %}<span class="chip warn">{{ card.sensitiveGranted }} sensitive</span>{% else %}<span class="mono d">&mdash;</span>{% endif %}</td>
+                <td>
+                    <span class="avs">
+                        {%- for holder in card.holders|slice(0, 4) -%}
+                            <span class="av" title="{{ holder.name }} &mdash; {{ holder.where }}">{{ holder.initials }}</span>
+                        {%- endfor -%}
+                        {%- if card.holders|length > 4 %}<span class="av more">+{{ card.holders|length - 4 }}</span>{% endif -%}
+                        {%- if card.holders is empty %}<span class="mono d">nobody</span>{% endif -%}
+                    </span>
+                </td>
+                <td class="act"><a class="open-btn" href="{{ show }}">Open</a></td>
+            </tr>
+            <tr class="foldrow{{ open ? ' open' : '' }}"><td colspan="7"><div class="foldbox"><div class="fold-in">
+                <div class="poscards">
+                    {% for holder in card.holders %}
+                        <a class="poscard" href="{{ path('team_member', {uuid: holder.uuid}) }}">
+                            <div class="poscardhd"><span></span><span>{{ holder.initials }}</span></div>
+                            <b>{{ holder.name }}</b>
+                            <div class="poscardfoot"><span class="k">{{ holder.where }}</span></div>
+                        </a>
+                    {% else %}
+                        <div class="zdnone"><b>Nobody holds {{ card.name }} yet</b><span>a position is given on a person&rsquo;s record</span></div>
+                    {% endfor %}
+                    <a class="poscard add" href="{{ path('team_index') }}"><span class="t">{{ ux_icon('shell:plus') }} Seat somebody</span></a>
                 </div>
-                {% endif %}
-                <div class="dc-foot">
-                    <div class="rgsum">
-                        <span class="rgsum-l">
-                            {%- if card.grantsNothing -%}
-                                <b>Grants nothing.</b>
-                            {%- else -%}
-                                {%- for word, count in card.summary %}{{ loop.first ? '' : ' · ' }}{{ word }} <b>{{ count }}</b>{% endfor -%}
-                                {%- if card.sensitiveGranted %} &middot; <span class="rgsensw">{{ card.sensitiveGranted }} sensitive</span>{% endif -%}
-                            {%- endif -%}
-                        </span>
-                        <span class="rgav-stack">
-                            {%- for holder in card.holders|slice(0, 3) -%}
-                                <span class="rgav" title="{{ holder.name }} &mdash; {{ holder.where }}">{{ holder.initials }}</span>
-                            {%- endfor -%}
-                            {%- if card.holders|length > 3 %}<span class="rgav more">+{{ card.holders|length - 3 }}</span>{% endif -%}
-                        </span>
-                    </div>
-                </div>
-            </article>
+            </div></div></td></tr>
+        {% else %}
+            <tr class="dempty"><td colspan="7">
+                {% if total == 0 %}<b>No positions yet.</b><span>One Super Admin, nothing else &mdash; add the first one above</span>
+                {% else %}<b>No position matches</b><span>clear the search, or widen a filter</span>{% endif %}
+            </td></tr>
         {% endfor %}
+        </tbody>
+    </table>
     </div>
-    {% endif %}
 {% endblock %}

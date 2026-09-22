@@ -152,6 +152,8 @@
                department over its placement and kind) and ONE FACT PER
                COLUMN, so every header sorts exactly one thing. Every option
                and every header is a link: the address is the state. #}
+            <div class="c">
+            <span class="tab">Departments<span class="src">&middot; {{ total }} &middot; where people are placed, and what each reads</span></span>
             <div class="lfilt">
                 {{ include('@Team/_partial/_filter.html.twig', {
                     key: constant('Uhifadhi\\Bundle\\TeamBundle\\Model\\DepartmentQuery::PLACEMENT'),
@@ -183,8 +185,14 @@
                 <span class="tm-shown">showing <b>{{ rows|length }}</b> of {{ total }}</span>
             </div>
 
-            <table class="tbl dreg">
+            {# THE FOLD (ruled 2026-09-22, option G): a chevron folds a row open
+               to the positions its members hold, as cards, with the add tile;
+               the open set rides in the address (`open=a,b`). The shell's
+               `register-fold` controller owns the click, the shell sheet the
+               motion — this template only draws the rows and the fold rows. #}
+            <table class="tbl dreg" data-controller="uhifadhi--shell-bundle--register-fold">
                 <thead><tr>
+                    <th class="fchev-h"></th>
                     {% for column, label in columns %}
                         {% set sorted = query.sort == column %}
                         <th{{ sorted ? ' class="sorted"' }} aria-sort="{{ sorted ? (query.direction == 'desc' ? 'descending' : 'ascending') : 'none' }}">
@@ -196,8 +204,12 @@
                 <tbody>
                 {% for row in rows %}
                     {% set show = path('team_department_show', {uuid: row.uuid}) %}
-                    <tr id="d-{{ row.uuid }}" class="drow{{ row.active ? '' : ' dcinactive' }}{{ query.focus == row.uuid ? ' dcfocus' : '' }}"
-                        data-department="{{ row.uuid }}"{% if row.category %} data-cat="{{ row.category }}"{% endif %}>
+                    {% set open = query.isOpen(row.uuid) %}
+                    <tr id="d-{{ row.uuid }}" class="drow{{ open ? ' open' : '' }}{{ row.active ? '' : ' dcinactive' }}{{ query.focus == row.uuid ? ' dcfocus' : '' }}"
+                        data-department="{{ row.uuid }}" data-fold-id="{{ row.uuid }}" data-fold-name="{{ row.name }}"{% if row.category %} data-cat="{{ row.category }}"{% endif %}>
+                        <td class="fchev-c"><a class="fchev" href="{{ path('team_departments', query.with('open', open ? null : row.uuid)) }}"
+                               data-action="uhifadhi--shell-bundle--register-fold#toggle" aria-expanded="{{ open ? 'true' : 'false' }}"
+                               aria-label="{{ open ? 'Collapse' : 'Expand' }} {{ row.name }}">&#9656;</a></td>
                         <td>
                             <div class="who">
                                 <span class="dmark" aria-hidden="true"></span>
@@ -223,14 +235,32 @@
                         <td><span class="mono d">{{ row.goals ? row.goals ~ (row.goals == 1 ? ' goal' : ' goals') : 'no goal set' }}</span></td>
                         <td class="act"><a class="open-btn" href="{{ show }}">Open</a></td>
                     </tr>
+                    <tr class="foldrow{{ open ? ' open' : '' }}"><td colspan="7"><div class="foldbox"><div class="fold-in">
+                        <div class="poscards">
+                            {% for position in row.positionRows %}
+                                <a class="poscard" href="{{ path('team_position_show', {uuid: position.uuid}) }}">
+                                    <div class="poscardhd"><span class="pospin{{ position.filled ? '' : ' hollow' }}"></span></div>
+                                    <b>{{ position.name }}</b>
+                                    <div class="poscardfoot"><span class="k">
+                                        {%- if position.seats is null %}{{ position.filled }} holding &middot; unlimited seats
+                                        {%- else %}{{ position.filled }} of {{ position.seats }} seat{{ position.seats == 1 ? '' : 's' }}{% endif -%}
+                                    </span></div>
+                                </a>
+                            {% else %}
+                                <div class="zdnone"><b>No position filed under {{ row.name }}</b><span>a department holds nobody directly &mdash; it holds the positions people fill</span></div>
+                            {% endfor %}
+                            <a class="poscard add" href="{{ path('team_positions') }}#add"><span class="t">{{ ux_icon('shell:plus') }} Add a position</span></a>
+                        </div>
+                    </div></div></td></tr>
                 {% else %}
-                    <tr class="dempty"><td colspan="6">
+                    <tr class="dempty"><td colspan="7">
                         <b>No department matches</b>
                         <span>{{ query.isFiltered ? 'clear the search, or widen a filter' : 'file one with the form above' }}</span>
                     </td></tr>
                 {% endfor %}
                 </tbody>
             </table>
+            </div>
         {% else %}
             <div class="pm-first">
                 {{ pm.icon_plus() }}

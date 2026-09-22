@@ -42,6 +42,12 @@ use Uhifadhi\Contracts\Access\ScopeKind;
  */
 final class PositionRegisterTest extends WebTestCaseWithSchema
 {
+    /** @return list<string> */
+    private function named(Crawler $crawler): array
+    {
+        return $crawler->filter('table.preg tr.prow .ov-nm')->each(static fn (Crawler $c): string => $c->text());
+    }
+
     /**
      * THE HEADER IS THE SECTION'S, NOT THE SCREEN'S. A section wears the area
      * idiom: every tab is headed "Team" and the strip says which one you are
@@ -91,18 +97,17 @@ final class PositionRegisterTest extends WebTestCaseWithSchema
         self::assertResponseStatusCodeSame(403);
     }
 
-    /** On day one there are no positions, and the register says so. */
     public function testWithNoPositionsTheRegisterSaysSoRatherThanDrawingNothing(): void
     {
         $this->administrator();
         $crawler = $this->client->request('GET', '/team/positions');
 
-        self::assertCount(0, $crawler->filter('.dcstack.dcreg .dcard'));
-        self::assertStringContainsString('No positions yet', $crawler->html());
+        self::assertCount(0, $crawler->filter('table.preg tr.prow'));
+        self::assertStringContainsString('No positions yet', $crawler->filter('table.preg tr.dempty')->text());
     }
 
-    /** ONE CARD PER POSITION, by name, on the department register's idiom. */
-    public function testThereIsOneCardPerPosition(): void
+    /** ONE ROW PER POSITION, by name, on the People table's idiom (ruled 2026-09-22, option B). */
+    public function testThereIsOneRowPerPosition(): void
     {
         $this->administrator();
         $this->position('Sergeant');
@@ -111,17 +116,32 @@ final class PositionRegisterTest extends WebTestCaseWithSchema
 
         $crawler = $this->client->request('GET', '/team/positions');
 
-        self::assertSame(
-            ['Ranger', 'Sergeant'],
-            $crawler->filter('.dcstack.dcreg .dcard .ov-nm')->each(static fn (Crawler $c): string => $c->text()),
-        );
+        self::assertSame(['Ranger', 'Sergeant'], $this->named($crawler));
+        self::assertCount(0, $crawler->filter('.dcstack, .dcard'), 'the card board is gone');
+        self::assertSame(['Position', 'Seats', 'Grants', 'Sensitive', 'Holders'], $crawler->filter('thead th a')->each(static fn (Crawler $c): string => $c->text()));
+    }
+
+    /** Every header sorts its one column through the address. */
+    public function testEveryHeaderSortsItsColumn(): void
+    {
+        $this->administrator();
+        $sergeant = $this->position('Sergeant')->setSeatCount(4);
+        $this->position('Ranger')->setSeatCount(2);
+        $this->person('Joseph', 'Mollel')->setPosition($sergeant);
+        $this->em->flush();
+
+        self::assertSame(['Sergeant', 'Ranger'], $this->named($this->client->request('GET', '/team/positions?sort=seats&dir=desc')));
+        self::assertSame(['Sergeant', 'Ranger'], $this->named($this->client->request('GET', '/team/positions?sort=holders&dir=desc')));
+        $crawler = $this->client->request('GET', '/team/positions?sort=seats');
+        self::assertSame('Seats', $crawler->filter('th.sorted a')->text());
+        self::assertStringContainsString('dir=desc', (string) $crawler->filter('th.sorted a')->attr('href'));
     }
 
     /**
-     * THE SEATS ARE ON THE HEAD, and a full one is marked as refusing the
-     * next person — the whole reason the count is there.
+     * THE SEATS COLUMN states filled over count, and a full one is marked as
+     * refusing the next person — the whole reason the count is there.
      */
-    public function testTheHeadStatesTheSeatsAndWhetherTheNextPersonIsRefused(): void
+    public function testTheSeatsColumnStatesTheSeatsAndWhetherTheNextPersonIsRefused(): void
     {
         $this->administrator();
         $sergeant = $this->position('Sergeant')->setSeatCount(1);
@@ -130,15 +150,15 @@ final class PositionRegisterTest extends WebTestCaseWithSchema
         $this->em->flush();
 
         $crawler = $this->client->request('GET', '/team/positions');
-        $heads = $crawler->filter('.dcard .dc-sub')->each(static fn (Crawler $c): string => $c->text());
+        $seats = $crawler->filter('tr.prow td:nth-child(3)')->each(static fn (Crawler $c): string => preg_replace('/\s+/', ' ', trim($c->text())) ?? '');
 
-        self::assertStringContainsString('unlimited seats', $heads[0], 'Ranger seats anybody.');
-        self::assertStringContainsString('1 of 1', $heads[1]);
-        self::assertStringContainsString('full', $heads[1]);
+        self::assertStringContainsString('unlimited', $seats[0], 'Ranger seats anybody.');
+        self::assertStringContainsString('1 / 1', $seats[1]);
+        self::assertStringContainsString('full', $seats[1]);
     }
 
-    /** A free seat is counted, not merely implied by the two numbers. */
-    public function testAnOpenPositionNamesHowManySeatsAreFree(): void
+    /** A free seat is counted as a vacancy, not merely implied by the two numbers. */
+    public function testAnOpenPositionNamesHowManySeatsAreVacant(): void
     {
         $this->administrator();
         $sergeant = $this->position('Sergeant')->setSeatCount(8);
@@ -147,15 +167,17 @@ final class PositionRegisterTest extends WebTestCaseWithSchema
 
         $crawler = $this->client->request('GET', '/team/positions');
 
-        self::assertStringContainsString('7 free', $crawler->filter('.dcard .dc-sub')->text());
+        self::assertSame('7 vacant', $crawler->filter('tr.prow .chip.warn')->text());
+        self::assertSame(['Sergeant'], $this->named($this->client->request('GET', '/team/positions?seats=vacant')));
+        self::assertSame([], $this->named($this->client->request('GET', '/team/positions?seats=full')));
     }
 
     /**
-     * THE BODY IS A PREVIEW, grouped by whoever declared the concern, with
-     * the sensitive ones marked — and it carries nothing that writes. The
-     * matrix lives once, on the record.
+     * THE GRANTS COLUMN is a summary by verb and the sensitive count sits
+     * beside it — and the register carries nothing that writes. The matrix
+     * lives once, on the record.
      */
-    public function testTheBodyPreviewsTheConcernsGroupedByDeclarerAndMarksTheSensitiveOnes(): void
+    public function testTheGrantsColumnSummarisesByVerbAndCountsTheSensitiveOnes(): void
     {
         $this->administrator();
         $this->position('Sergeant', ['surveys.read', TeamConcerns::PERSONAL_DETAILS.'.read']);
@@ -163,16 +185,14 @@ final class PositionRegisterTest extends WebTestCaseWithSchema
 
         $crawler = $this->client->request('GET', '/team/positions');
 
-        self::assertSame(
-            ['Team', 'Surveys'],
-            $crawler->filter('.dcard .rggrid-k')->each(static fn (Crawler $c): string => $c->text()),
-        );
-        self::assertStringContainsString('Personal details', $crawler->filter('.dcard .rgchip.sens')->text());
-        self::assertCount(0, $crawler->filter('.dcard input'), 'The register previews; it never edits.');
+        self::assertStringContainsString('reads 2', $crawler->filter('tr.prow td:nth-child(4)')->text());
+        self::assertSame('1 sensitive', $crawler->filter('tr.prow td:nth-child(5) .chip')->text());
+        self::assertCount(0, $crawler->filter('table.preg input'), 'The register previews; it never edits.');
+        self::assertSame(['Sergeant'], $this->named($this->client->request('GET', '/team/positions?grants=sensitive')));
     }
 
-    /** The foot counts by verb and names the holders. */
-    public function testTheFootCountsByVerbAndCarriesTheHolders(): void
+    /** The holders column stacks the holders; the fold opens to them as cards. */
+    public function testTheHoldersColumnStacksTheHoldersAndTheFoldNamesThem(): void
     {
         $this->administrator();
         $sergeant = $this->position('Sergeant', ['surveys.read', 'surveys.record']);
@@ -181,15 +201,37 @@ final class PositionRegisterTest extends WebTestCaseWithSchema
 
         $crawler = $this->client->request('GET', '/team/positions');
 
-        self::assertStringContainsString('reads 1', $crawler->filter('.dcard .rgsum-l')->text());
-        self::assertStringContainsString('records 1', $crawler->filter('.dcard .rgsum-l')->text());
-        self::assertSame('JM', $crawler->filter('.dcard .rgav')->text());
+        self::assertSame('JM', $crawler->filter('tr.prow .avs .av')->text());
+        $fold = $crawler->filter('tr.prow')->first()->nextAll()->first();
+        self::assertSame('foldrow', $fold->attr('class'));
+        self::assertStringContainsString('Joseph Mollel', $fold->filter('.poscard b')->text());
+        self::assertStringContainsString('Seat somebody', $fold->filter('.poscard.add')->text());
+    }
+
+    /** Which rows are open lives in the address; a shut fold row is still in the document for the fold to animate. */
+    public function testWhichRowsAreOpenLivesInTheAddress(): void
+    {
+        $this->administrator();
+        $sergeant = $this->position('Sergeant');
+        $this->em->flush();
+        $uuid = (string) $sergeant->getUuidString();
+
+        $shut = $this->client->request('GET', '/team/positions');
+        self::assertSame('false', $shut->filter('tr.prow .fchev')->attr('aria-expanded'));
+        self::assertCount(1, $shut->filter('tr.foldrow:not(.open)'));
+        self::assertStringContainsString('open='.$uuid, (string) $shut->filter('tr.prow .fchev')->attr('href'));
+
+        $open = $this->client->request('GET', '/team/positions?open='.$uuid);
+        self::assertSame('true', $open->filter('tr.prow .fchev')->attr('aria-expanded'));
+        self::assertCount(1, $open->filter('tr.prow.open'));
+        self::assertCount(1, $open->filter('tr.foldrow.open'));
+        self::assertSame('uhifadhi--shell-bundle--register-fold', $open->filter('table.preg')->attr('data-controller'));
     }
 
     /**
      * FAIL CLOSED, AND SAID OUT LOUD. Nothing is granted by default, read
      * included, so a position may perfectly well grant nothing — and an
-     * empty body would read as a rendering fault instead of as the model.
+     * empty cell would read as a rendering fault instead of as the model.
      */
     public function testAPositionThatGrantsNothingSaysSo(): void
     {
@@ -199,44 +241,26 @@ final class PositionRegisterTest extends WebTestCaseWithSchema
 
         $crawler = $this->client->request('GET', '/team/positions');
 
-        self::assertStringContainsString('Grants nothing', $crawler->filter('.dcard .rgnone')->text());
-        self::assertSame('grants nothing', $crawler->filter('.dcard .rgkinds .pmx-sk')->text());
+        self::assertSame('Grants nothing', trim($crawler->filter('tr.prow td:nth-child(4)')->text()));
+        self::assertSame(['Community Liaison'], $this->named($this->client->request('GET', '/team/positions?grants=none')));
     }
 
     /**
-     * THE SCOPE FILTER IS IN THE ADDRESS, so the choice is shareable and it
-     * survives a save's redirect.
+     * THE PLACEMENT FILTER IS IN THE ADDRESS, so the choice is shareable and
+     * it survives a save's redirect; the placement reads under the name.
      */
-    public function testTheScopeFilterNarrowsTheRegisterAndLivesInTheAddress(): void
+    public function testThePlacementFilterNarrowsTheRegisterAndLivesInTheAddress(): void
     {
         $this->administrator();
         $this->position('Sergeant', [], [ScopeKind::Organization]);
         $this->position('Ranger', [], [ScopeKind::Area]);
         $this->em->flush();
 
-        $crawler = $this->client->request('GET', '/team/positions?kind=area');
+        $crawler = $this->client->request('GET', '/team/positions?placement=area');
 
-        self::assertSame(['Ranger'], $crawler->filter('.dcard .ov-nm')->each(static fn (Crawler $c): string => $c->text()));
-        self::assertSame('area', $crawler->filter('.rgbar .rgf.on')->text());
-    }
-
-    /**
-     * WHICH CARDS ARE OPEN IS THE SERVER'S ANSWER, so the label beside the
-     * chevron cannot drift out of step with the card under it.
-     */
-    public function testWhichCardsAreOpenLivesInTheAddress(): void
-    {
-        $this->administrator();
-        $this->position('Sergeant', ['surveys.read']);
-        $this->em->flush();
-
-        $open = $this->client->request('GET', '/team/positions');
-        self::assertSame('Collapse', $open->filter('.dcard .xdisc .t')->text());
-        self::assertCount(1, $open->filter('.dcard .dc-body'));
-
-        $shut = $this->client->request('GET', '/team/positions?open=none');
-        self::assertSame('Expand', $shut->filter('.dcard .xdisc .t')->text());
-        self::assertCount(0, $shut->filter('.dcard .dc-body'));
+        self::assertSame(['Ranger'], $this->named($crawler));
+        self::assertSame('area', trim($crawler->filter('tr.prow .sub')->text()));
+        self::assertSame('Area', $crawler->filter('.lfilt .i-ddval')->first()->text());
     }
 
     /**
@@ -252,8 +276,8 @@ final class PositionRegisterTest extends WebTestCaseWithSchema
 
         $crawler = $this->client->request('GET', '/team/positions');
 
-        self::assertCount(1, $crawler->filter('.dcard'));
-        self::assertSame('retired', $crawler->filter('.dcard .chip.stoff')->text());
+        self::assertCount(1, $crawler->filter('tr.prow'));
+        self::assertSame('retired', $crawler->filter('tr.prow .chip.stoff')->text());
     }
 
     /**
@@ -279,11 +303,12 @@ final class PositionRegisterTest extends WebTestCaseWithSchema
         $this->client->followRedirect();
         $crawler = $this->client->request('GET', '/team/positions');
 
-        self::assertStringContainsString('0 of 8', $crawler->filter('.dcard .dc-sub')->text());
-        self::assertStringContainsString('8 free', $crawler->filter('.dcard .dc-sub')->text());
-        // It grants nothing yet, so the head's chip slot says that rather
-        // than the kinds — the kinds it allows are read on the record.
-        self::assertSame('grants nothing', $crawler->filter('.dcard .rgkinds .pmx-sk')->text());
+        $seats = preg_replace('/\s+/', ' ', trim($crawler->filter('tr.prow td:nth-child(3)')->text())) ?? '';
+        self::assertStringContainsString('0 / 8', $seats);
+        self::assertStringContainsString('8 vacant', $seats);
+        // It grants nothing yet, so the grants column says that; the kinds it
+        // allows read under the name.
+        self::assertSame('Grants nothing', trim($crawler->filter('tr.prow td:nth-child(4)')->text()));
         self::assertSame(
             [ScopeKind::Area],
             $this->em->getRepository(Position::class)->findOneBy(['name' => 'Sergeant'])?->getAllowedKinds(),

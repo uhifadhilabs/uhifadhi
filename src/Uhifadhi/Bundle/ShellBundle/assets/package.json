@@ -34,6 +34,12 @@
                 "name": "uhifadhi--shell-bundle--scope",
                 "fetch": "eager",
                 "enabled": true
+            },
+            "register-fold": {
+                "main": "controllers/register_fold_controller.js",
+                "fetch": "eager",
+                "enabled": true,
+                "name": "uhifadhi--shell-bundle--register-fold"
             }
         },
         "importmap": {
