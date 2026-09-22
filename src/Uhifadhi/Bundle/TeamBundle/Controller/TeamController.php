@@ -16,11 +16,9 @@ namespace Uhifadhi\Bundle\TeamBundle\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Environment;
 use Uhifadhi\Bundle\RegistryBundle\RegistryBundle;
-use Uhifadhi\Bundle\ShellBundle\Widget\Service\WidgetService;
 use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\RosterStateEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
@@ -29,8 +27,6 @@ use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\PositionRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\UserRepository;
 use Uhifadhi\Bundle\TeamBundle\Service\TeamOverview;
-use Uhifadhi\Bundle\TeamBundle\Widget\TeamWidgets;
-use Uhifadhi\Contracts\Entity\UserInterface as ModuleUserInterface;
 
 /**
  * THE TEAM PAGE — everybody who can sign in to this installation.
@@ -83,8 +79,6 @@ final readonly class TeamController
         private PositionRepository $positions,
         private DepartmentRepository $departments,
         private TeamOverview $overview,
-        private WidgetService $widgets,
-        private TokenStorageInterface $tokens,
     ) {
     }
 
@@ -92,12 +86,10 @@ final readonly class TeamController
     #[IsGranted('directory.read')]
     public function index(Request $request): Response
     {
-        $catalog = new TeamWidgets()->catalog();
-
-        return new Response($this->twig->render('@Team/team/index.html.twig', [
-            'widgets' => $this->widgets->resolve($catalog, $this->signedIn()),
-            ...$this->widgetContext($request),
-        ]));
+        // ONE TABLE (owner 2026-09-22): a register is app mechanics, so it is
+        // one shape with no library and no presets — the People table, its
+        // filters and its pager. Widgets stay on the data surfaces.
+        return new Response($this->twig->render('@Team/team/index.html.twig', $this->context($request)));
     }
 
     /**
@@ -115,7 +107,13 @@ final readonly class TeamController
      *
      * @return array<string, mixed>
      */
-    public function widgetContext(Request $request): array
+    /**
+     * WHAT THE PEOPLE TABLE READS: the paged roster, the counts, and the
+     * vocabulary its filters offer.
+     *
+     * @return array<string, mixed>
+     */
+    public function context(Request $request): array
     {
         $query = RosterQuery::fromRequest($request);
 
@@ -136,7 +134,7 @@ final readonly class TeamController
         ];
     }
 
-    /**
+    /*
      * The signed-in person as the CONTRACT sees them, which is what the widget
      * framework stores a layout against — it never type-hints this bundle's
      * User, and this call site is not where that would start.
@@ -147,10 +145,4 @@ final readonly class TeamController
      * in practice, and relying on a gate to make a null impossible is how a
      * later change to the gate becomes a 500 here.
      */
-    private function signedIn(): ?ModuleUserInterface
-    {
-        $user = $this->tokens->getToken()?->getUser();
-
-        return $user instanceof ModuleUserInterface ? $user : null;
-    }
 }

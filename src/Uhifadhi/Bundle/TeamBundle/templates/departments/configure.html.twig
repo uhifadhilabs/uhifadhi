@@ -11,6 +11,8 @@
    from the sections contract — the same one position a data tab's strip
    occupies. #}
 {% extends '@Shell/page.html.twig' %}
+{% import '@Team/positions/_bits.html.twig' as pm %}
+{% import '@Team/departments/_bits.html.twig' as di %}
 
 {% block title %}Departments{% endblock %}
 
@@ -28,6 +30,65 @@
 
 {% block shell_page %}
     <div data-dp>
+        {# ADDING A DEPARTMENT — here, and only here (owner 2026-09-22): the
+           register shows what exists; creation is configuration. #}
+        {% set hasAreas = areas|length > 0 %}
+        {# CREATE — the scope question first (area-first by default, the narrow
+           correctable choice), then the name, and for an area, which one. #}
+        <form class="crcard" method="post" action="{{ path('team_department_create') }}"
+              data-controller="uhifadhi--team-bundle--department"
+              data-scope="{{ hasAreas ? 'area' : 'org' }}"
+              data-create-department
+              data-uhifadhi--team-bundle--department-hint-area-value="<b>Just an area.</b> This department will belong only to the area you pick above and will not appear in the others &mdash; the safer default, and easy to widen later."
+              data-uhifadhi--team-bundle--department-hint-org-value="<b>Org-wide.</b> This department will belong to the organization and appear in every area as an inherited department.">
+            <input type="hidden" name="_token" value="{{ csrfToken }}">
+            <input type="hidden" name="scope" value="{{ hasAreas ? 'area' : 'org' }}"
+                   data-uhifadhi--team-bundle--department-target="scopeField">
+            <div class="crgrid">
+                <div class="crfield">
+                    <span class="crlab">Scope &mdash; just this area, or org-wide?</span>
+                    <div class="seg" role="tablist">
+                        <button type="button" class="{{ hasAreas ? 'on' : '' }}" data-scope-set="area"
+                                {{ hasAreas ? '' : 'disabled' }}
+                                data-uhifadhi--team-bundle--department-target="segment"
+                                data-action="uhifadhi--team-bundle--department#setScope">{{ di.icon_area() }} Just an area</button>
+                        <button type="button" class="{{ hasAreas ? '' : 'on' }}" data-scope-set="org"
+                                data-uhifadhi--team-bundle--department-target="segment"
+                                data-action="uhifadhi--team-bundle--department#setScope">{{ di.icon_org() }} Org-wide</button>
+                    </div>
+                </div>
+                <div class="crfield crpick">
+                    <span class="crlab">Which area?</span>
+                    <select name="area" aria-label="Area">
+                        {% for area in areas %}
+                            <option value="{{ area.uuidString }}">{{ area.name }}</option>
+                        {% else %}
+                            <option value="">No areas yet</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="crfield grow">
+                    <span class="crlab">Name</span>
+                    <input type="text" class="fld" name="name" placeholder="New department"
+                           aria-label="New department name" required>
+                </div>
+                <button class="cta" type="submit">{{ pm.icon_plus() }} Add department</button>
+            </div>
+            <div class="crhint">
+                {{ pm.icon_info() }}
+                <span data-uhifadhi--team-bundle--department-target="hint">
+                    {% if hasAreas %}
+                        <b>Just an area.</b> This department will belong only to the area you pick above and will not
+                        appear in the others &mdash; the safer default, and easy to widen later.
+                    {% else %}
+                        <b>Org-wide.</b> There are no areas yet, so a department can only be organization-wide for now.
+                        It will belong to the organization and appear in every area.
+                    {% endif %}
+                </span>
+            </div>
+        </form>
+
+
         <div class="grid g2">
             <div class="c">
                 <span class="tab">The register<span class="src">&middot; how it reads</span></span>

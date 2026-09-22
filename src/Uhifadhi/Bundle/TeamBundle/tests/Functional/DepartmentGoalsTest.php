@@ -180,7 +180,7 @@ final class DepartmentGoalsTest extends WebTestCaseWithSchema
     {
         // THE TOKEN IS THE REGISTER'S: one CSRF id serves every department
         // write, and the register always renders a form that carries it.
-        $token = $this->tokenFrom('/departments');
+        $token = $this->tokenFrom('/departments/configure');
 
         $this->client->request('POST', $url, [...$fields, '_token' => $token]);
     }

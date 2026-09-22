@@ -64,63 +64,9 @@
 
 {% block shell_page %}
     {{ include('@Team/team/_scope_banner.html.twig') }}
-    {% set hasAreas = areas|length > 0 %}
     <div data-dp>
-        {# CREATE — the scope question first (area-first by default, the narrow
-           correctable choice), then the name, and for an area, which one. #}
-        <form class="crcard" method="post" action="{{ path('team_department_create') }}"
-              data-controller="uhifadhi--team-bundle--department"
-              data-scope="{{ hasAreas ? 'area' : 'org' }}"
-              data-create-department
-              data-uhifadhi--team-bundle--department-hint-area-value="<b>Just an area.</b> This department will belong only to the area you pick above and will not appear in the others &mdash; the safer default, and easy to widen later."
-              data-uhifadhi--team-bundle--department-hint-org-value="<b>Org-wide.</b> This department will belong to the organization and appear in every area as an inherited department.">
-            <input type="hidden" name="_token" value="{{ csrfToken }}">
-            <input type="hidden" name="scope" value="{{ hasAreas ? 'area' : 'org' }}"
-                   data-uhifadhi--team-bundle--department-target="scopeField">
-            <div class="crgrid">
-                <div class="crfield">
-                    <span class="crlab">Scope &mdash; just this area, or org-wide?</span>
-                    <div class="seg" role="tablist">
-                        <button type="button" class="{{ hasAreas ? 'on' : '' }}" data-scope-set="area"
-                                {{ hasAreas ? '' : 'disabled' }}
-                                data-uhifadhi--team-bundle--department-target="segment"
-                                data-action="uhifadhi--team-bundle--department#setScope">{{ di.icon_area() }} Just an area</button>
-                        <button type="button" class="{{ hasAreas ? '' : 'on' }}" data-scope-set="org"
-                                data-uhifadhi--team-bundle--department-target="segment"
-                                data-action="uhifadhi--team-bundle--department#setScope">{{ di.icon_org() }} Org-wide</button>
-                    </div>
-                </div>
-                <div class="crfield crpick">
-                    <span class="crlab">Which area?</span>
-                    <select name="area" aria-label="Area">
-                        {% for area in areas %}
-                            <option value="{{ area.uuidString }}">{{ area.name }}</option>
-                        {% else %}
-                            <option value="">No areas yet</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="crfield grow">
-                    <span class="crlab">Name</span>
-                    <input type="text" class="fld" name="name" placeholder="New department"
-                           aria-label="New department name" required>
-                </div>
-                <button class="cta" type="submit">{{ pm.icon_plus() }} Add department</button>
-            </div>
-            <div class="crhint">
-                {{ pm.icon_info() }}
-                <span data-uhifadhi--team-bundle--department-target="hint">
-                    {% if hasAreas %}
-                        <b>Just an area.</b> This department will belong only to the area you pick above and will not
-                        appear in the others &mdash; the safer default, and easy to widen later.
-                    {% else %}
-                        <b>Org-wide.</b> There are no areas yet, so a department can only be organization-wide for now.
-                        It will belong to the organization and appear in every area.
-                    {% endif %}
-                </span>
-            </div>
-        </form>
-
+        {# CREATING A DEPARTMENT LIVES ON THE SECTION'S CONFIGURE PAGE (owner
+           2026-09-22: add is configuration, a register is presentation). #}
         {% set anyDepartments = departments|length > 0 %}
 
         {% if anyDepartments %}
@@ -239,7 +185,6 @@
                         <div class="poscards">
                             {% for position in row.positionRows %}
                                 <a class="poscard" href="{{ path('team_position_show', {uuid: position.uuid}) }}">
-                                    <div class="poscardhd"><span class="pospin{{ position.filled ? '' : ' hollow' }}"></span></div>
                                     <b>{{ position.name }}</b>
                                     <div class="poscardfoot"><span class="k">
                                         {%- if position.seats is null %}{{ position.filled }} holding &middot; unlimited seats

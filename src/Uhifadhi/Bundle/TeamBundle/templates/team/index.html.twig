@@ -1,13 +1,4 @@
-{# THE TEAM PAGE — a widget surface, rendered through the shell's page frame.
-
-   The page types no furniture of its own: no `<div class="page">`, no crumb
-   markup, no flash loop. Those are the frame's, and a module that carried a copy
-   of them is a module the frame stops reaching.
-
-   THE BODY IS THE PERSON'S OWN RESOLVED LAYOUT, in their own order, with the
-   widgets they switched off simply absent. Which widgets, how wide and in what
-   order comes from the widget framework resolving TeamWidgets — the design's
-   composition until this person changes it. #}
+{# THE PEOPLE REGISTER — one table (owner 2026-09-22). #}
 {% extends '@Shell/page.html.twig' %}
 {% import '@Team/team/_bits.html.twig' as bits %}
 
@@ -30,26 +21,12 @@
 {% block shell_page_actions %}
     <a class="cta" href="{{ path('team_invite') }}">{{ bits.icon_plus() }} Add somebody</a>
     <a class="tgl w-act" href="{{ path('team_positions') }}">{{ bits.icon_tag() }} Positions &amp; permissions</a>
-    <a class="tgl w-act" href="{{ path('team_widgets') }}">{{ bits.icon_grid() }} Widget library</a>
 {% endblock %}
 
 {% block shell_page %}
     {{ include('@Team/team/_scope_banner.html.twig') }}
-    {# THE CELL CLASSES ARE THE SHELL'S, not a shorthand of this bundle's.
-       Its grid is `.w-grid > .w-cell.w-span-N`, and the span is deliberately
-       NOT spelled `.w-12`: bare `w-<number>` is Tailwind's width scale, so a
-       host compiling Tailwind would render a full-width widget 48 pixels wide.
-       This page wrote `.w12`, which is nobody's class at all — every widget
-       took one of twelve columns. #}
-    <div class="w-grid">
-        {% for widget in widgets %}
-            {% if widget.on %}
-                <div data-w="{{ widget.id }}" class="w-cell w-span-{{ widget.cols }}">
-                    <div class="w-inner">
-                        {{ include('@Team/team/_w_' ~ widget.id ~ '.html.twig') }}
-                    </div>
-                </div>
-            {% endif %}
-        {% endfor %}
-    </div>
+    {# ONE TABLE (owner 2026-09-22): the People register is app mechanics, so
+       it is one shape — the table, its filters, its pager — with no library
+       and no presets. Widgets stay on the data surfaces. #}
+    {{ include('@Team/team/_people.html.twig') }}
 {% endblock %}

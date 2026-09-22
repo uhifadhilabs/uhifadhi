@@ -289,7 +289,7 @@ final class PositionRegisterTest extends WebTestCaseWithSchema
     public function testTheCreateCardWritesTheNameAndTheSeats(): void
     {
         $this->administrator();
-        $crawler = $this->client->request('GET', '/team/positions');
+        $crawler = $this->client->request('GET', '/team/configure');
 
         self::assertCount(0, $crawler->filter('#add select[name="department"]'));
         self::assertCount(0, $crawler->filter('#add input[name="allows[]"]'), 'The kinds a position allows are not on the add row.');
@@ -322,7 +322,7 @@ final class PositionRegisterTest extends WebTestCaseWithSchema
         $this->position('Sergeant');
         $this->em->flush();
 
-        $crawler = $this->client->request('GET', '/team/positions');
+        $crawler = $this->client->request('GET', '/team/configure');
         $form = $crawler->filter('#add form')->form();
         $form['name'] = 'Sergeant';
         $this->client->submit($form);

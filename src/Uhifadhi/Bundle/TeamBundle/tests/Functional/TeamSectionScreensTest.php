@@ -188,11 +188,19 @@ final class TeamSectionScreensTest extends WebTestCaseWithSchema
     }
 
     /** SETTINGS IS READ-ONLY: it states the rules and changes none of them. */
-    public function testTheSettingsScreenWritesNothing(): void
+    /**
+     * THE SETTINGS SCREEN'S ONE WRITE IS ADDING A POSITION (owner 2026-09-22:
+     * creation is configuration, a register is presentation). Everything else
+     * on it states a setting.
+     */
+    public function testTheSettingsScreenWritesNothingButANewPosition(): void
     {
         $this->installation();
+        $forms = $this->visit('/team/configure')->filter('form[method="post"]');
 
-        self::assertCount(0, $this->visit('/team/configure')->filter('form[method="post"]'));
+        self::assertCount(1, $forms);
+        self::assertStringEndsWith('/team/positions', (string) $forms->attr('action'));
+        self::assertCount(1, $forms->filter('input[name="name"]'));
     }
 
     // ---- positions vocabulary -------------------------------------------

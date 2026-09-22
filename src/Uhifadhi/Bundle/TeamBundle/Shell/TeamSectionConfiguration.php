@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace Uhifadhi\Bundle\TeamBundle\Shell;
 
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamConfigureController;
-use Uhifadhi\Bundle\TeamBundle\Controller\TeamWidgetsController;
 use Uhifadhi\Contracts\Shell\ConfigurationSection;
 use Uhifadhi\Contracts\Shell\ConfigurationSectionsInterface;
 
@@ -61,11 +60,8 @@ final readonly class TeamSectionConfiguration implements ConfigurationSectionsIn
     public function sections(): array
     {
         return [
-            ConfigurationSection::screen(
-                ConfigurationSection::WIDGETS,
-                'Widget library',
-                TeamWidgetsController::ROUTE,
-            ),
+            // NO WIDGET LIBRARY (owner 2026-09-22): the People register is app
+            // mechanics — one table — and widgets stay on the data surfaces.
             ConfigurationSection::screen(
                 'positions-vocabulary',
                 'Positions vocabulary',

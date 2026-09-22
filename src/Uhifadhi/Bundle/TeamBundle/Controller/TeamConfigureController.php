@@ -127,6 +127,9 @@ final readonly class TeamConfigureController
             'tiers' => TeamRoleEnum::cases(),
             'titles' => \count($this->titles->findAllOrdered()),
             'departments' => \count($this->departments->findAllActiveOrdered()),
+            // THE ADD-A-POSITION CARD posts to the positions register's own
+            // write, so it carries that write's token, not the vocabulary's.
+            'csrfToken' => $this->csrf->getToken(PositionController::CSRF_ID)->getValue(),
         ]));
     }
 

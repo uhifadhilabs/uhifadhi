@@ -205,43 +205,6 @@ final class TeamPageTest extends WebTestCase
         self::assertStringNotContainsString('Needs a decision', $crawler->html());
     }
 
-    public function testTheAttentionPaneAppearsWhenSomebodyHasNeverSignedIn(): void
-    {
-        $this->settled();
-        $joseph = $this->person('Joseph', 'Mrema')->setVerified(false);
-        $naomi = $this->em->getRepository(User::class)->findOneBy(['email' => 'n.kileo@example.test']);
-        self::assertInstanceOf(User::class, $naomi);
-        $joseph->markInvitedBy($naomi);
-        $this->em->flush();
-
-        $this->client->loginUser($naomi);
-        $crawler = $this->client->request('GET', '/team');
-
-        self::assertCount(1, $crawler->filter('.tm-att'));
-        self::assertStringContainsString('Joseph Mrema has never signed in', $crawler->html());
-        self::assertStringContainsString('Naomi Kileo invited them', $crawler->html());
-    }
-
-    /**
-     * THE STANDING RISK IS NOT A TASK: it carries no action, because resolving
-     * it means promoting somebody and that is a decision rather than a button.
-     */
-    public function testTheSoleSuperAdminRowCarriesNoAction(): void
-    {
-        $naomi = $this->person('Naomi', 'Kileo', TeamRoleEnum::SuperAdmin);
-        $this->person('Grace', 'Ndosi')->setPosition(
-            $this->position('Ranger', [PermissionEnum::AreaView]),
-        );
-        $this->em->flush();
-
-        $this->client->loginUser($naomi);
-        $crawler = $this->client->request('GET', '/team');
-
-        $standing = $crawler->filter('.tm-attrow.standing');
-        self::assertCount(1, $standing);
-        self::assertCount(0, $standing->filter('.ad'), 'A standing risk has no done, so it has no button.');
-    }
-
     /**
      * THE POSITION CELL: the position's name, what it grants, and the
      * administrator mark.
@@ -269,7 +232,7 @@ final class TeamPageTest extends WebTestCase
         // permission means.
         self::assertCount(
             1,
-            $crawler->filter('[data-w="roster_a"] .tm-mgr'),
+            $crawler->filter('.c[data-tm] .tm-mgr'),
             'The one position carrying team.manage is marked, in the roster.',
         );
     }
@@ -405,56 +368,18 @@ final class TeamPageTest extends WebTestCase
         self::assertStringContainsString('Reactivate', $crawler->filter('tr.tm-off')->text());
     }
 
-    /** The KPI strip leads the page — standing rule, no exceptions. */
-    public function testTheCountsAreTheFirstThingOnThePage(): void
+    /** THE PEOPLE REGISTER IS ONE TABLE (owner 2026-09-22): no library, no presets, no widget grid. */
+    public function testThePeopleRegisterIsOneTableWithNoLibrary(): void
     {
         $naomi = $this->settled();
 
         $this->client->loginUser($naomi);
         $crawler = $this->client->request('GET', '/team');
 
-        $first = $crawler->filter('.w-grid > div')->first();
-        self::assertSame('kpis', $first->attr('data-w'));
-    }
-
-    /**
-     * ONE NUMBER, TWO MECHANISMS — and the sub-line names both, because the
-     * tier column can no longer answer this on its own.
-     */
-    /**
-     * FOUR TO A ROW, AND EVERY ONE OF THEM ABOUT A PERSON.
-     *
-     * The people fold used to carry five, the fifth being the count of
-     * POSITIONS — the next page's own headline, drawn here with its
-     * placement stripped off. A figure row is four to a row (ruled), and the
-     * card to give up is the one whose question another page answers better.
-     */
-    public function testThePeopleFoldIsFourCardsAndEveryOneIsAboutAPerson(): void
-    {
-        $naomi = $this->settled();
-
-        $this->client->loginUser($naomi);
-        $crawler = $this->client->request('GET', '/team');
-
-        $cards = $crawler->filter('[data-w="kpis"] .c.kpi');
-        self::assertCount(4, $cards, 'A figure row is four to a row, and never five.');
-        self::assertSame(
-            ['People', 'Never signed in', 'Hold nothing', 'Can administer'],
-            $cards->filter('.tab')->each(static fn (\Symfony\Component\DomCrawler\Crawler $c): string => $c->text()),
-        );
-    }
-
-    public function testTheAdministratorCountNamesBothMechanisms(): void
-    {
-        $naomi = $this->settled();
-
-        $this->client->loginUser($naomi);
-        $crawler = $this->client->request('GET', '/team');
-
-        $kpi = $crawler->filter('[data-w="kpis"]')->text();
-        self::assertStringContainsString('Can administer', $kpi);
-        self::assertStringContainsString('2 by tier', $kpi);
-        self::assertStringContainsString('1 by', $kpi);
+        self::assertCount(0, $crawler->filter('.w-grid'));
+        self::assertCount(1, $crawler->filter('.c[data-tm] table.tbl'));
+        self::assertStringContainsString('People', $crawler->filter('.c[data-tm] > .tab')->text());
+        self::assertCount(0, $crawler->filter('.pgact a[href="/team/widgets"]'));
     }
 
     /**
@@ -470,7 +395,7 @@ final class TeamPageTest extends WebTestCase
         $crawler = $this->client->request('GET', '/team');
 
         self::assertCount(0, $crawler->filter('.dp-kstrip'));
-        self::assertStringContainsString('You are the only person here', $crawler->html());
+        self::assertStringContainsString('One account, and it is yours', $crawler->html());
         // And no tool row: a table with one row and a filter bar filtering
         // nothing is a table pretending to be a list.
         self::assertCount(0, $crawler->filter('form.tm-tools'));

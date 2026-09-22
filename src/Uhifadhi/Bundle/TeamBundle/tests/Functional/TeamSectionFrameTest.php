@@ -101,7 +101,7 @@ final class TeamSectionFrameTest extends WebTestCaseWithSchema
 
         self::assertGreaterThan(0, $actions->count());
         self::assertSame('Configure', trim($actions->last()->text()));
-        self::assertSame('/team/widgets', $actions->last()->attr('href'));
+        self::assertSame('/team/configure/positions', $actions->last()->attr('href'));
     }
 
     /** The configure page shows its SECTIONS where a data tab shows the strip. */
@@ -110,7 +110,7 @@ final class TeamSectionFrameTest extends WebTestCaseWithSchema
         $crawler = $this->visit('/team/configure');
 
         self::assertSame(
-            ['Widget library', 'Positions vocabulary', 'Team settings'],
+            ['Positions vocabulary', 'Team settings'],
             $crawler->filter('.atabs a')->each(static fn (Crawler $c): string => $c->text()),
         );
         self::assertSame(['Team settings'], $crawler->filter('.atabs a.on')->each(static fn (Crawler $c): string => $c->text()));

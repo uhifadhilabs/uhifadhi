@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Controller;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -26,12 +27,14 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Uid\Uuid;
 use Twig\Environment;
+use Uhifadhi\Bundle\TeamBundle\Entity\Department;
 use Uhifadhi\Bundle\TeamBundle\Enum\DepartmentScopeEnum;
 use Uhifadhi\Bundle\TeamBundle\Exception\DuplicateDepartmentKindException;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentGoalRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentKindRepository;
 use Uhifadhi\Bundle\TeamBundle\Repository\DepartmentRepository;
 use Uhifadhi\Bundle\TeamBundle\Service\DepartmentKindService;
+use Uhifadhi\Contracts\Entity\AreaInterface;
 
 /**
  * HOW THE DEPARTMENTS SECTION IS SET UP — its two configure screens.
@@ -74,7 +77,24 @@ final readonly class DepartmentConfigureController
         private DepartmentKindService $kindWrites,
         private CsrfTokenManagerInterface $csrf,
         private UrlGeneratorInterface $router,
+        private EntityManagerInterface $entityManager,
     ) {
+    }
+
+    /**
+     * THE AREAS THE CREATE FORM OFFERS, through the department's own
+     * association — the ground package's entity, never named here.
+     *
+     * @return list<AreaInterface>
+     */
+    private function areas(): array
+    {
+        $class = $this->entityManager->getClassMetadata(Department::class)->getAssociationTargetClass('area');
+
+        /** @var list<AreaInterface> $areas */
+        $areas = $this->entityManager->getRepository($class)->findBy([], ['name' => 'ASC']);
+
+        return $areas;
     }
 
     #[Route('/departments/configure', name: self::SETTINGS, defaults: DepartmentController::SURFACE, methods: ['GET'])]
@@ -82,6 +102,8 @@ final readonly class DepartmentConfigureController
     public function settings(): Response
     {
         return new Response($this->twig->render('@Team/departments/configure.html.twig', [
+            'areas' => $this->areas(),
+            'csrfToken' => $this->csrf->getToken(DepartmentController::CSRF_ID)->getValue(),
             'scopes' => DepartmentScopeEnum::cases(),
             'kinds' => $this->kinds->findAllOrdered(),
             'departments' => \count($this->departments->findAllActiveOrdered()),

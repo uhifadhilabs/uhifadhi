@@ -400,7 +400,7 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
         $this->area('Western Reserve');
         $this->em->flush();
 
-        $crawler = $this->client->request('GET', '/departments');
+        $crawler = $this->client->request('GET', '/departments/configure');
 
         $options = $crawler->filter('form[data-create-department] select[name="area"] option')
             ->each(static fn (Crawler $c): string => $c->text());
@@ -417,7 +417,7 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
         $this->area('Western Reserve');
         $this->em->flush();
 
-        $crawler = $this->client->request('GET', '/departments');
+        $crawler = $this->client->request('GET', '/departments/configure');
         $form = $crawler->selectButton('Add department')->form();
         $form['scope'] = 'area';
         $form['area'] = (string) $north->getUuidString();
@@ -440,7 +440,7 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
         $this->area('Northern Reserve');
         $this->em->flush();
 
-        $crawler = $this->client->request('GET', '/departments');
+        $crawler = $this->client->request('GET', '/departments/configure');
         $form = $crawler->selectButton('Add department')->form();
         $form['scope'] = 'org';
         $form['name'] = 'Administration';
@@ -464,7 +464,7 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
         $this->areaDepartment('Anti-Poaching', $north);
         $this->em->flush();
 
-        $crawler = $this->client->request('GET', '/departments');
+        $crawler = $this->client->request('GET', '/departments/configure');
         $form = $crawler->selectButton('Add department')->form();
         $form['scope'] = 'area';
         $form['area'] = (string) $west->getUuidString();
@@ -478,7 +478,8 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
     /** But two ORG-WIDE departments of one name are the same one entered twice. */
     public function testASecondOrgWideDepartmentWithTheSameNameIsRefused(): void
     {
-        $crawler = $this->screen();
+        $this->screen();
+        $crawler = $this->client->request('GET', '/departments/configure');
 
         $form = $crawler->selectButton('Add department')->form();
         $form['scope'] = 'org';
@@ -498,7 +499,7 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
         $this->area('Northern Reserve');
         $this->em->flush();
 
-        $crawler = $this->client->request('GET', '/departments');
+        $crawler = $this->client->request('GET', '/departments/configure');
         $this->client->submit($crawler->selectButton('Add department')->form());
 
         $crawler = $this->client->followRedirect();
@@ -734,7 +735,7 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
         $north = $this->area('Northern Reserve');
         $this->areaAdminIn($north);
 
-        $crawler = $this->client->request('GET', '/departments');
+        $crawler = $this->client->request('GET', '/departments/configure');
         $form = $crawler->selectButton('Add department')->form();
         $form['scope'] = 'area';
         $form['area'] = (string) $north->getUuidString();
@@ -754,7 +755,7 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
         $north = $this->area('Northern Reserve');
         $this->areaAdminIn($north);
 
-        $crawler = $this->client->request('GET', '/departments');
+        $crawler = $this->client->request('GET', '/departments/configure');
         $form = $crawler->selectButton('Add department')->form();
         $form['scope'] = 'org';
         $form['name'] = 'Administration';
@@ -772,7 +773,7 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
         $west = $this->area('Western Reserve');
         $this->areaAdminIn($north);
 
-        $crawler = $this->client->request('GET', '/departments');
+        $crawler = $this->client->request('GET', '/departments/configure');
         $form = $crawler->selectButton('Add department')->form();
         $form['scope'] = 'area';
         $form['area'] = (string) $west->getUuidString();
@@ -812,7 +813,7 @@ final class DepartmentScreenTest extends WebTestCaseWithSchema
 
         // Org department: refused.
         $this->client->request('POST', '/departments/'.$ecology->getUuidString().'/deactivate', [
-            '_token' => $this->tokenFrom('/departments'),
+            '_token' => $this->tokenFrom('/departments/configure'),
         ]);
         self::assertResponseStatusCodeSame(403);
     }

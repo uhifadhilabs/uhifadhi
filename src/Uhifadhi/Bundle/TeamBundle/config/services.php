@@ -44,7 +44,6 @@ use Uhifadhi\Bundle\TeamBundle\Controller\TeamController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamPostingsController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamRolesController;
 use Uhifadhi\Bundle\TeamBundle\Controller\TeamSectionController;
-use Uhifadhi\Bundle\TeamBundle\Controller\TeamWidgetsController;
 use Uhifadhi\Bundle\TeamBundle\Devkit\TeamContentProvider;
 use Uhifadhi\Bundle\TeamBundle\EventListener\ApiErrorListener;
 use Uhifadhi\Bundle\TeamBundle\EventListener\ModuleHistoryListener;
@@ -124,7 +123,6 @@ use Uhifadhi\Bundle\TeamBundle\Twig\MatrixExtension;
 use Uhifadhi\Bundle\TeamBundle\Twig\MatrixRuntime;
 use Uhifadhi\Bundle\TeamBundle\Widget\DepartmentWidgets;
 use Uhifadhi\Bundle\TeamBundle\Widget\PositionWidgets;
-use Uhifadhi\Bundle\TeamBundle\Widget\TeamWidgets;
 use Uhifadhi\Contracts\Access\ConcernSourceInterface;
 use Uhifadhi\Contracts\Area\StationDirectoryInterface;
 use Uhifadhi\Contracts\Kpi\CurrentPeriodInterface;
@@ -180,7 +178,6 @@ use Uhifadhi\Contracts\Shell\ModuleTabsInterface;
  *   team.devkit.content         the demo organization devkit seeds in a dev install
  *   team.controller.security    the sign-in screen
  *   team.controller.team        the roster
- *   team.controller.team_widgets  its widget library
  *   team.controller.member      one person's record
  *   team.controller.position    the permission matrix
  *   team.controller.position_widgets  its widget library
@@ -997,9 +994,6 @@ return static function (ContainerConfigurator $container): void {
      * registry entry — nothing renders differently until the day somebody runs
      * `widget:prune` and it reads their stored layouts as orphans.
      */
-    $services->set('team.widget_surface.roster', TeamWidgets::class)
-        ->tag(WidgetSurfaceInterface::TAG);
-
     $services->set('team.widget_surface.positions', PositionWidgets::class)
         ->tag(WidgetSurfaceInterface::TAG);
 
@@ -1018,7 +1012,6 @@ return static function (ContainerConfigurator $container): void {
             service(PositionRepository::class),
             service(DepartmentRepository::class),
             service('team.overview'),
-            service('shell.widget.service'),
             service('security.token_storage'),
         ])
         ->tag('controller.service_arguments');
@@ -1031,16 +1024,6 @@ return static function (ContainerConfigurator $container): void {
      * context for the preview would be the one place the two screens could
      * disagree about what a widget shows.
      */
-    $services->set('team.controller.team_widgets', TeamWidgetsController::class)
-        ->args([
-            service('twig'),
-            service('router'),
-            service('shell.widget.service'),
-            service('shell.widget.endpoint'),
-            service('team.controller.team'),
-        ])
-        ->tag('controller.service_arguments');
-    $services->alias(TeamWidgetsController::class, 'team.controller.team_widgets')->public();
 
     /*
      * ONE PERSON'S RECORD, and the writes that change it. There is no delete
@@ -1380,7 +1363,7 @@ return static function (ContainerConfigurator $container): void {
             service('team.department_kind_service'),
             service('security.csrf.token_manager'),
             service('router'),
-            service('request_stack'),
+            service('doctrine.orm.entity_manager'),
         ])
         ->tag('controller.service_arguments');
     $services->alias(DepartmentConfigureController::class, 'team.controller.department_configure')->public();

@@ -53,7 +53,7 @@
     {# THE SECTION'S PRIMARY ACTION, the accent cta, first in the row. It does
        not open a second form: it jumps to the create card that is already open
        at the top of the page, the way a configure page states a setting. #}
-    {% if door('positions.configure') %}<a class="cta" href="#add">{{ ux_icon('shell:plus', {width: 15, height: 15}) }} Add a position</a>{% endif %}
+    {% if door('positions.configure') %}<a class="cta" href="{{ path('team_configure') }}#add">{{ ux_icon('shell:plus', {width: 15, height: 15}) }} Add a position</a>{% endif %}
     {# AND NO CONFIGURE ENTRY HERE. The frame writes exactly one, last in the
        row, on every surface in the product — a page that types its own draws
        the word twice, which is what this one did. #}
@@ -62,38 +62,8 @@
 {% block shell_page %}
     {{ include('@Team/team/_scope_banner.html.twig') }}
 
-    {% if door('positions.configure') %}
-    {# ALWAYS OPEN, THE HOUSE CREATE CARD. A position belongs to no department
-       and its name is unique across the organization, so there is nothing to
-       file it under — the three fields are what a position IS: the name, how
-       many may hold it, and the kinds of placement it allows. #}
-    <div class="dcadd" id="add">
-        <div class="dcaddhd">
-            {{ ux_icon('shell:plus', {width: 15, height: 15}) }}
-            <b>Add a position</b>
-            <span class="hint">The name is unique for the organization</span>
-        </div>
-        <form class="crcard" method="post" action="{{ path('team_position_create') }}">
-            <input type="hidden" name="_token" value="{{ csrfToken }}">
-            <div class="crgrid">
-                <div class="crfield grow">
-                    <span class="crlab">Name</span>
-                    <input type="text" name="name" class="fld" placeholder="Sergeant" aria-label="New position name" required>
-                </div>
-                <div class="crfield">
-                    <span class="crlab">Seats</span>
-                    <input type="number" name="seats" class="fld" value="1" min="1" style="width:92px" aria-label="Seats">
-                    <span class="zfrag">Blank is unlimited</span>
-                </div>
-                <button class="cta" type="submit">{{ ux_icon('shell:plus', {width: 15, height: 15}) }} Add position</button>
-            </div>
-            <div class="crhint">
-                {{ ux_icon('shell:info') }}
-                <span>There is one <b>Analyst</b>, not one per department &mdash; where each holder works is written on their own record.</span>
-            </div>
-        </form>
-    </div>
-    {% endif %}
+    {# ADDING A POSITION LIVES ON THE TEAM SECTION'S CONFIGURE PAGE (owner
+       2026-09-22: add is configuration, a register is presentation). #}
 
     {# ABOVE THE MATRIX, NOT ROWS IN IT. Super admin and Admin are not composed
        of concerns and cannot be, so drawing them as rows would be a lie the

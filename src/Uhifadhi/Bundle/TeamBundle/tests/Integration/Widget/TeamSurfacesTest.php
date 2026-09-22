@@ -18,7 +18,6 @@ use Uhifadhi\Bundle\ShellBundle\Widget\Model\WidgetPreset;
 use Uhifadhi\Bundle\ShellBundle\Widget\Registry\WidgetSurfaceRegistry;
 use Uhifadhi\Bundle\TeamBundle\Tests\Integration\IntegrationTestCase;
 use Uhifadhi\Bundle\TeamBundle\Widget\PositionWidgets;
-use Uhifadhi\Bundle\TeamBundle\Widget\TeamWidgets;
 
 /**
  * BOTH TEAM SCREENS ARE WIDGET SURFACES, and this bundle hard-requires
@@ -37,85 +36,21 @@ use Uhifadhi\Bundle\TeamBundle\Widget\TeamWidgets;
  */
 final class TeamSurfacesTest extends IntegrationTestCase
 {
-    public function testBothSurfacesAreInTheRegistry(): void
+    public function testThePositionsSurfaceIsInTheRegistryAndThePeopleOneIsNot(): void
     {
         $registry = static::getContainer()->get('test_public.'.WidgetSurfaceRegistry::class);
         self::assertInstanceOf(WidgetSurfaceRegistry::class, $registry);
 
-        self::assertTrue($registry->has(TeamWidgets::SURFACE));
+        // NO PEOPLE SURFACE (owner 2026-09-22): a register is app mechanics,
+        // one table; widgets stay on the data surfaces.
+        self::assertFalse($registry->has('team'));
         self::assertTrue($registry->has(PositionWidgets::SURFACE));
     }
 
     /** The surface string is what every stored row is keyed by, so it is pinned. */
     public function testTheSurfaceKeysAreStable(): void
     {
-        self::assertSame('team', TeamWidgets::SURFACE);
         self::assertSame('team_positions', PositionWidgets::SURFACE);
-    }
-
-    public function testTheRosterShipsNineWidgetsInTwoGroups(): void
-    {
-        $catalog = new TeamWidgets()->catalog();
-
-        self::assertSame([
-            'kpis', 'attention',
-            'roster_a', 'roster_b', 'roster_f', 'roster_c', 'roster_d', 'roster_e',
-        ], $catalog->ids());
-
-        self::assertSame(
-            ['roster', 'context'],
-            array_map(static fn (WidgetGroup $g): string => $g->id, $catalog->groups()),
-        );
-    }
-
-    /**
-     * ALL SIX DIRECTIONS SHIP AS PRESETS — including f, "The org chart". The
-     * standing rule is that a drawn direction is adoptable rather than
-     * discarded, and f is the one a first draft would have dropped as a
-     * near-duplicate of b. It is not: b bands by tier and f bands by department,
-     * and shipping both is how the "tiers or departments?" question was answered
-     * — it was refused.
-     */
-    public function testAllSixRosterDirectionsAreAdoptable(): void
-    {
-        $catalog = new TeamWidgets()->catalog();
-
-        self::assertSame(
-            ['roster_a', 'roster_b', 'roster_f', 'roster_c', 'roster_d', 'roster_e'],
-            array_map(static fn (WidgetPreset $p): string => $p->id, $catalog->presets()),
-        );
-    }
-
-    /**
-     * THE SHIPPED COMPOSITION IS NOT ONE OF THE SIX. It is the roster table with
-     * the attention pane above it and the tier explainer below — the arrangement
-     * a fresh installation's first visit wants, because that visit is the one
-     * where something needs doing.
-     */
-    public function testTheShippedCompositionLeadsTheStripUnderItsOwnName(): void
-    {
-        $catalog = new TeamWidgets()->catalog();
-        $builtins = $catalog->builtins();
-
-        self::assertNotSame([], $builtins);
-        $first = $builtins[0];
-
-        self::assertSame('The team roster', $first->label);
-        self::assertSame(['kpis', 'attention', 'roster_a'], $first->ids());
-    }
-
-    /**
-     * KPI CARDS ALWAYS SIT AT THE TOP — the standing workspace rule, with no
-     * exceptions. A layout's key order IS its render order, so this is a
-     * property of every preset on the surface and not of one template.
-     */
-    public function testEveryRosterPresetLeadsWithTheKpis(): void
-    {
-        $catalog = new TeamWidgets()->catalog();
-
-        foreach ($catalog->builtins() as $preset) {
-            self::assertSame('kpis', $preset->ids()[0], $preset->id.' does not lead with the counts.');
-        }
     }
 
     public function testTheMatrixSurfaceShipsThirteenWidgetsInThreeGroups(): void
@@ -197,7 +132,7 @@ final class TeamSurfacesTest extends IntegrationTestCase
      */
     public function testEveryPresetCarriesItsTradeOffLine(): void
     {
-        foreach ([new TeamWidgets()->catalog(), new PositionWidgets()->catalog()] as $catalog) {
+        foreach ([new PositionWidgets()->catalog()] as $catalog) {
             foreach ($catalog->presets() as $preset) {
                 self::assertNotSame('', trim($preset->description), $preset->id.' has no trade-off line.');
                 self::assertGreaterThan(60, mb_strlen($preset->description), $preset->id.'\'s line is too short to name a cost.');
@@ -209,7 +144,6 @@ final class TeamSurfacesTest extends IntegrationTestCase
     public function testEveryWidgetHasATemplate(): void
     {
         foreach ([
-            [new TeamWidgets()->catalog(), __DIR__.'/../../../templates/team/_w_%s.html.twig'],
             [new PositionWidgets()->catalog(), __DIR__.'/../../../templates/positions/_w_%s.html.twig'],
         ] as [$catalog, $pattern]) {
             foreach ($catalog->ids() as $id) {
