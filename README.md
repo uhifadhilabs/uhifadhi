@@ -279,6 +279,16 @@ in that block: a name there is a promise that this package *is* that package.
 The root [CHANGELOG-1.0.md](CHANGELOG-1.0.md) and [UPGRADE-1.0.md](UPGRADE-1.0.md)
 are the release notes; each bundle also keeps its own `CHANGELOG.md`.
 
+**A tag is not done until the fleet gate is green.** The starter repository
+(`uhifadhilabs/skeleton`) carries `composer fleet-gate`, which creates a project
+with its README's own commands and installs this core and every official module
+into it, one by one, signing in after each. Before tagging, run
+`composer fleet-gate:head` there, which installs from the sibling checkouts on
+your machine; after tagging, run `composer fleet-gate`, which installs from the
+published repositories. A core tag is what exposes a module that was adapted on
+its branch but never released, so the released run always installs every
+module. The starter's `docs/fleet-gate.md` has the steps and how to read a red run.
+
 ## License
 
 **AGPL-3.0-or-later** — see [LICENSE](LICENSE). Use, modify and self-host
