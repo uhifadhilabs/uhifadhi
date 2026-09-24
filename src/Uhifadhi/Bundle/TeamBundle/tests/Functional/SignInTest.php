@@ -190,7 +190,8 @@ final class SignInTest extends WebTestCase
         // An unknown token still renders its own refusal rather than bouncing
         // to /login: reaching the screen is the public part, not the token.
         $this->client->request('GET', '/invite/'.str_repeat('f', 64));
-        self::assertSame(Response::HTTP_OK, $this->client->getResponse()->getStatusCode());
+        self::assertResponseIsSuccessful('an unknown invitation renders its refusal on the screen itself');
+        self::assertStringNotContainsString('name="_password"', (string) $this->client->getResponse()->getContent(), 'and it is not the sign-in form');
     }
 
     public function testAnAlreadySignedInVisitorIsNotShownTheFormAgain(): void

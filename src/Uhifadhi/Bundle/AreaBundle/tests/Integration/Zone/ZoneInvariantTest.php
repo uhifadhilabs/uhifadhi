@@ -140,8 +140,9 @@ final class ZoneInvariantTest extends IntegrationTestCase
         $east = $this->zones()->create($area, 'East', self::A_EAST_HALF);
 
         // "East" sorts before "West".
-        self::assertSame($east->getId(), $this->zones()->zoneOf($area, -29.5, -3.2)?->getId());
-        self::assertSame($east->getId(), $this->zones()->zoneOf($area, -29.5, -3.2)?->getId());
+        $found = $this->zones()->zoneOf($area, -29.5, -3.2);
+        self::assertNotNull($found, 'the point lies in both halves, so one of them answers');
+        self::assertSame($east->getId(), $found->getId());
     }
 
     /**
