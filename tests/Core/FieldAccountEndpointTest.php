@@ -14,8 +14,8 @@ declare(strict_types=1);
 namespace Uhifadhi\Core\Tests\Core;
 
 use Symfony\Component\HttpFoundation\Response;
-use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
+use Uhifadhi\Bundle\TeamBundle\Enum\PermissionEnum;
 use Uhifadhi\Bundle\TeamBundle\Enum\TeamRoleEnum;
 use Uhifadhi\Contracts\Access\Grant;
 

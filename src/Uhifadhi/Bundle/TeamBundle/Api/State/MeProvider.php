@@ -17,11 +17,11 @@ use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProviderInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
 use Uhifadhi\Bundle\TeamBundle\Api\ContractFormat;
 use Uhifadhi\Bundle\TeamBundle\ApiResource\Me;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Exception\ApiProblemException;
-use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
 
 /**
  * Answers `GET /api/me`: the bearer account, and every permission it holds.
