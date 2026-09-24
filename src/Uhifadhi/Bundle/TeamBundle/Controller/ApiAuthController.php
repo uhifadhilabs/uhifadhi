@@ -23,7 +23,7 @@ use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Exception\ApiProblemException;
 use Uhifadhi\Bundle\TeamBundle\Service\ApiTokenManager;
 use Uhifadhi\Bundle\TeamBundle\Service\FieldSignIn;
-use Uhifadhi\Bundle\TeamBundle\Service\PermissionCatalogue;
+use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
 
 /**
  * WHERE A FIELD CLIENT SIGNS IN — the one endpoint reachable without a token.
@@ -56,7 +56,7 @@ final class ApiAuthController
     public function __construct(
         private readonly FieldSignIn $signIn,
         private readonly ApiTokenManager $tokens,
-        private readonly PermissionCatalogue $permissions,
+        private readonly ConcernCatalogue $permissions,
         private readonly RateLimiterFactoryInterface $perIdentifier,
         private readonly RateLimiterFactoryInterface $perAddress,
     ) {

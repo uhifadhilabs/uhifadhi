@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Uhifadhi\Bundle\TeamBundle\Access;
 
+use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Contracts\Access\ConcernInterface;
 use Uhifadhi\Contracts\Access\ConcernSourceInterface;
 use Uhifadhi\Contracts\Access\Grant;
@@ -130,6 +131,34 @@ final readonly class ConcernCatalogue
     public function has(Grant $grant): bool
     {
         return $this->concern($grant->concern)?->supports($grant->verb) ?? false;
+    }
+
+    /**
+     * WHAT ONE ACCOUNT HOLDS, as the wire spells it — the same answer the
+     * GrantVoter gives, minus the area and the department, which a field
+     * client learns from its posting rather than from this list.
+     *
+     * A tier that manages content holds every pair; anybody else holds the
+     * grants on their position that this catalogue can still spell (a grant
+     * whose module was uninstalled is not offered as if it were live).
+     *
+     * @return list<string>
+     */
+    public function heldBy(User $user): array
+    {
+        if ($user->getTeamRole()->canManageContent()) {
+            return $this->pairs();
+        }
+
+        $held = [];
+        foreach ($user->getPosition()?->getGrantValues() ?? [] as $value) {
+            $grant = Grant::tryParse($value);
+            if (null !== $grant && $this->has($grant)) {
+                $held[] = $value;
+            }
+        }
+
+        return $held;
     }
 
     /**

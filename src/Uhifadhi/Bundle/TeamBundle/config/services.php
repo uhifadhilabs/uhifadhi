@@ -438,7 +438,7 @@ return static function (ContainerConfigurator $container): void {
         ->args([
             service('team.field_sign_in'),
             service('team.api_token.manager'),
-            service('team.permissions'),
+            service('team.access.catalogue'),
             // The two budgets the endpoint spends before it weighs a
             // credential. The ids are the framework's own naming of the
             // limiters this bundle prepends — see TeamBundle::prependExtension.
@@ -470,7 +470,7 @@ return static function (ContainerConfigurator $container): void {
     $services->set('team.api.me_provider', MeProvider::class)
         ->args([
             service('security.token_storage'),
-            service('team.permissions'),
+            service('team.access.catalogue'),
         ])
         ->tag('api_platform.state_provider', ['key' => MeProvider::class]);
 

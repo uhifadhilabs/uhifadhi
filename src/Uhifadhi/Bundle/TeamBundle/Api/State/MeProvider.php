@@ -21,7 +21,7 @@ use Uhifadhi\Bundle\TeamBundle\Api\ContractFormat;
 use Uhifadhi\Bundle\TeamBundle\ApiResource\Me;
 use Uhifadhi\Bundle\TeamBundle\Entity\User;
 use Uhifadhi\Bundle\TeamBundle\Exception\ApiProblemException;
-use Uhifadhi\Bundle\TeamBundle\Service\PermissionCatalogue;
+use Uhifadhi\Bundle\TeamBundle\Access\ConcernCatalogue;
 
 /**
  * Answers `GET /api/me`: the bearer account, and every permission it holds.
@@ -42,7 +42,7 @@ final readonly class MeProvider implements ProviderInterface
 {
     public function __construct(
         private TokenStorageInterface $tokens,
-        private PermissionCatalogue $permissions,
+        private ConcernCatalogue $permissions,
     ) {
     }
 
