@@ -61,8 +61,9 @@ final class ApiTokenIssuanceTest extends WebTestCaseWithSchema
             $body['ranger'],
         );
 
-        // The grants the position holds, spelled `<concern>.<verb>` as the web enforces them.
-        self::assertSame(['areas.read'], $body['permissions']);
+        // The grants the position holds, spelled `<concern>.<verb>` as the web
+        // enforces them; this kernel carries the team's own concerns only.
+        self::assertSame(['directory.read'], $body['permissions']);
     }
 
     /** The token that comes back is the one the client can then authenticate with. */
@@ -220,7 +221,7 @@ final class ApiTokenIssuanceTest extends WebTestCaseWithSchema
         $body = $this->body();
         self::assertIsArray($body['permissions']);
         self::assertContains('directory.manage', $body['permissions']);
-        self::assertContains('areas.configure', $body['permissions']);
+        self::assertContains('positions.configure', $body['permissions']);
         self::assertIsArray($body['ranger']);
         self::assertSame('Super Admin', $body['ranger']['role'], 'the tier names the unfiled');
     }
@@ -256,7 +257,7 @@ final class ApiTokenIssuanceTest extends WebTestCaseWithSchema
     {
         $position = new Position()->setName('Ranger');
         $position->setPermissionValues([PermissionEnum::AreaView->value], [PermissionEnum::AreaView->value]);
-        $position->setGrantValues(['areas.read'], ['areas.read']);
+        $position->setGrantValues(['directory.read'], ['directory.read']);
 
         $user = new User()
             ->setEmail('w.mbise@example.test')
